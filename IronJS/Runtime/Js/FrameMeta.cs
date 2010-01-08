@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿
 namespace IronJS.Runtime.Js
 {
+    using System.Dynamic;
+    using IronJS.Runtime.Utils;
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-
-    using System;
-    using System.Dynamic;
-    using System.Collections.Generic;
-    using IronJS.Runtime.Utils;
 
     class FrameMeta<T> : DynamicMetaObject
     {

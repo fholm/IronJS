@@ -1,0 +1,5 @@
+IronJS.Testing/bin/**/*
+IronJS.Testing/obj/**/*
+IronJS/bin/**/*
+IronJS/obj/**/*
+*.sou

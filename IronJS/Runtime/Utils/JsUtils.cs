@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Linq.Expressions;
-using System.Dynamic;
-using Microsoft.Scripting.Utils;
 using IronJS.Runtime.Binders;
 
 namespace IronJS.Runtime.Utils
 {
     using Et = System.Linq.Expressions.Expression;
     using Js = IronJS.Runtime.Js;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     static class JsUtils
     {

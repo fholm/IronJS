@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Linq.Expressions;
-using System.Reflection.Emit;
 using IronJS.Runtime.Js;
 
 namespace IronJS.Testing

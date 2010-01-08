@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using IronJS.Runtime.Binders;
 
 namespace IronJS.Runtime.Js
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Js = IronJS.Runtime.Js;
     using System.Dynamic;
+    using Et = System.Linq.Expressions.Expression;
 
     public class Frame<T> : IDynamicMetaObjectProvider
     {

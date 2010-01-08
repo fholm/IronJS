@@ -1,8 +1,6 @@
-﻿using System;
-
+﻿
 namespace IronJS.Runtime.Utils
 {
-    using Et2 = System.Linq.Expressions.Expression;
     using Meta2 = System.Dynamic.DynamicMetaObject;
     using Restrict2 = System.Dynamic.BindingRestrictions;
 

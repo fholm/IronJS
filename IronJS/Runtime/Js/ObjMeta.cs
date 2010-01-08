@@ -1,17 +1,15 @@
-﻿using System;
-using System.Dynamic;
-using System.Linq;
+﻿using System.Dynamic;
 using System.Linq.Expressions;
-using Microsoft.Scripting.Utils;
-using IronJS.Runtime.Utils;
 using IronJS.Runtime.Binders;
+using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     internal class ObjMeta : Meta
     {

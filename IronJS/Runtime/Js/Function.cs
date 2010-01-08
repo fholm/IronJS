@@ -1,20 +1,20 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
+
 namespace IronJS.Runtime.Js
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Dynamic;
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
     public class Function : IDynamicMetaObjectProvider
     {
-        internal readonly Delegate Lambda;
+        internal readonly Action<Frame> Lambda;
         internal readonly List<string> Params;
 
-        internal Function(Delegate func, List<string> parms)
+        internal Function(Action<Frame> lambda, List<string> parms)
         {
-            Lambda = func;
+            Lambda = lambda;
             Params = parms;
         }
     
@@ -26,6 +26,5 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
-
     }
 }

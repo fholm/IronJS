@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Reflect;
+using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
@@ -9,7 +10,7 @@ namespace IronJS.Runtime.Js
 
     public enum VarType { Global, Local }
 
-    public class Frame : IDynamicMetaObjectProvider
+    public class Frame
     {
         readonly Frame _parent;
 
@@ -53,7 +54,7 @@ namespace IronJS.Runtime.Js
         {
             object value; 
 
-            if (_values.objectryGetValue(key, out value))
+            if (_values.TryGetValue(key, out value))
                 return value;
 
             if (_parent != null)
@@ -67,23 +68,16 @@ namespace IronJS.Runtime.Js
             return new Frame(this);
         }
 
-        #region IDynamicMetaObjectProvider Members
+        #region Static
 
-        Meta IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
-        {
-            return new FrameMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static methods
-
-        internal static Et Var(Et frame, string name, Et value)
+        internal static Et Var(Et frame, string name, Et value, VarType type)
         {
             return Et.Call(
                 frame,
                 Method.GetMethod<Frame>("Push"),
-                value
+                Et.Constant(name),
+                value,
+                Et.Constant(type)
             );
         }
 
@@ -92,7 +86,7 @@ namespace IronJS.Runtime.Js
             return Et.Call(
                 frame,
                 Method.GetMethod<Frame>("Pull"),
-                name
+                Et.Constant(name)
             );
         }
 
@@ -101,7 +95,7 @@ namespace IronJS.Runtime.Js
             return Et.Convert(
                 Frame.Var(
                     frame,
-                    name
+                    Et.Constant(name)
                 )
             );
         }

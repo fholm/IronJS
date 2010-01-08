@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1D95D363-4B2A-49F1-9614-7CA00129AAA5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IronJS</RootNamespace>
+    <AssemblyName>IronJS</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\Libs\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamic, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Compiler\Ast\AssignNode.cs" />
+    <Compile Include="Compiler\Ast\AutoPropertyNode.cs" />
+    <Compile Include="Compiler\Ast\BlockNode.cs" />
+    <Compile Include="Compiler\Ast\Builder.cs" />
+    <Compile Include="Compiler\Ast\CallNode.cs" />
+    <Compile Include="Compiler\Ast\ClrNewNode.cs" />
+    <Compile Include="Compiler\Ast\BinaryOpNode.cs" />
+    <Compile Include="Compiler\Ast\IdentifierNode.cs" />
+    <Compile Include="Compiler\Ast\IfNode.cs" />
+    <Compile Include="Compiler\Ast\LambdaNode.cs" />
+    <Compile Include="Compiler\Ast\MemberAccessNode.cs" />
+    <Compile Include="Compiler\Ast\NewNode.cs" />
+    <Compile Include="Compiler\Ast\Node.cs" />
+    <Compile Include="Compiler\Ast\NullNode.cs" />
+    <Compile Include="Compiler\Ast\NumberNode.cs" />
+    <Compile Include="Compiler\Ast\StringNode.cs" />
+    <Compile Include="Compiler\Ast\WhileNode.cs" />
+    <Compile Include="Compiler\CompilerError.cs" />
+    <Compile Include="Runtime\Js\Closure.cs" />
+    <Compile Include="Runtime\Js\ClosureMeta.cs" />
+    <Compile Include="Runtime\Js\Function.cs" />
+    <Compile Include="Compiler\Tree\Generator.cs" />
+    <Compile Include="Runtime\Js\FunctionMeta.cs" />
+    <Compile Include="Runtime\Js\FrameMeta.cs" />
+    <Compile Include="Runtime\Js\Frame.cs" />
+    <Compile Include="Extensions\IListExt.cs" />
+    <Compile Include="Runtime\Binders\JsSetMemberBinder.cs" />
+    <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
+    <Compile Include="Compiler\Parser\ES3Lexer.cs" />
+    <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />
+    <Compile Include="Compiler\Parser\ES3Parser.cs" />
+    <Compile Include="Error.cs" />
+    <Compile Include="Extensions\ITreeExt.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime\Binders\JsGetMemberBinder.cs" />
+    <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
+    <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
+    <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\RuntimeError.cs" />
+    <Compile Include="Runtime\Utils\EtUtils.cs" />
+    <Compile Include="Runtime\Utils\JsUtils.cs" />
+    <Compile Include="Runtime\Utils\RestrictUtils.cs" />
+    <Compile Include="Runtime\Js\Obj.cs" />
+    <Compile Include="Runtime\Js\ObjMeta.cs" />
+    <Compile Include="Runtime\Js\Property.cs" />
+    <Compile Include="Runtime\Js\Undefined.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Runtime\InterOp\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

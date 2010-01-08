@@ -4,7 +4,7 @@ namespace IronJS.Runtime
 {
     public static class BuiltIns
     {
-        public static object Add(object left, object right)
+        public static object Add(double left, double right)
         {
             return (double) left + (double) right;
         }

@@ -6,48 +6,73 @@ namespace IronJS.Runtime.Js
 {
     using System.Dynamic;
     using Et = System.Linq.Expressions.Expression;
+    using Meta = System.Dynamic.DynamicMetaObject;
 
-    public class Frame<T> : IDynamicMetaObjectProvider 
-                 where T  : class
+    public enum VarType { Global, Local }
+
+    public class Frame : IDynamicMetaObjectProvider
     {
-        readonly Frame<T> _parent;
+        readonly Frame _parent;
 
-        readonly Dictionary<object, T> _values =
-             new Dictionary<object, T>();
+        readonly Dictionary<object, object> _values =
+             new Dictionary<object, object>();
 
-        public Frame(Frame<T> parent)
+        public Frame(Frame parent)
         {
             _parent = parent;
         }
 
-        public T Push(object key, T value)
+        public object Push(object key, object value, VarType type)
         {
-            return _values[key] = value;
+            if (type == VarType.Local)
+            {
+                _values[key] = value;
+            }
+            else
+            {
+                if (_values.ContainsKey(key))
+                {
+                    _values[key] = value;
+                }
+                else
+                {
+                    if (_parent == null)
+                    {
+                        _values[key] = value;
+                    }
+                    else
+                    {
+                        return _parent.Push(key, value, VarType.Global);
+                    }
+                }
+            }
+
+            return value;
         }
 
-        public T Pull(object key)
+        public object Pull(object key)
         {
-            T value; 
+            object value; 
 
-            if (_values.TryGetValue(key, out value))
+            if (_values.objectryGetValue(key, out value))
                 return value;
 
             if (_parent != null)
                 return _parent.Pull(key);
 
-            throw new MissingFieldException("No variable named " + key + " exists");
+            return Js.Undefined.Instance;
         }
 
-        public Frame<T> Create()
+        public Frame Enter()
         {
-            return new Frame<T>(this);
+            return new Frame(this);
         }
 
         #region IDynamicMetaObjectProvider Members
 
-        DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
+        Meta IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
         {
-            return new FrameMeta<T>(parameter, this);
+            return new FrameMeta<object>(parameter, this);
         }
 
         #endregion
@@ -83,15 +108,15 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        internal static Et Create(Et target, Et parent)
+        internal static Et Enter(Et target, Et parent)
         {
             return Et.Assign(
                 target,
                 Et.Call(
                     parent, 
-                    typeof(Frame<T>).GetMethod(
-                        "Create", 
-                        Type.EmptyTypes
+                    typeof(Frame).GetMethod(
+                        "Enter", 
+                        objectype.Emptyobjectypes
                     )
                 )
             );

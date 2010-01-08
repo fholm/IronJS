@@ -53,9 +53,7 @@ namespace IronJS.Runtime.Binders
                     Et.Call(
                         methodInfo, 
                         EtUtils.ConvertToParamTypes(
-                            ArrayUtils.RemoveFirst(
-                                ArrayUtils.RemoveFirst(args)
-                            ), 
+                            ArrayUtils.RemoveFirst(args),
                             methodInfo.GetParameters()
                         )
                     ),

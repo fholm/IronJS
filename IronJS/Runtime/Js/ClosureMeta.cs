@@ -1,9 +1,10 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using IronJS.Runtime.Utils;
+
 namespace IronJS.Runtime.Js
 {
-    using System.Collections.Generic;
-    using System.Dynamic;
-    using IronJS.Runtime.Utils;
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
@@ -25,22 +26,22 @@ namespace IronJS.Runtime.Js
             var invk = func.Lambda.GetType().GetMethod("Invoke");
             var functionField = EtUtils.Cast<Function>(Et.Field(selfExpr, "Function"));
 
-            var closureFrame = Et.Field(selfExpr, "Frame");
-            var closureTable = Et.Field(selfExpr, "Table");
-            var callFrame = Et.Parameter(typeof(Frame<object>), "#callframe");
-
             var target = Et.Field(functionField, "Lambda");
+            var callFrame = Et.Parameter(typeof(Frame), "#callframe");
+            var closureFrame = Et.Field(selfExpr, "Frame");
+
             var exprs = new List<Et>();
 
-            exprs.Add(Frame<object>.Create(callFrame, closureFrame));
+            exprs.Add(Frame.Enter(callFrame, closureFrame));
 
-            for (int i = 2; i < args.Length; ++i)
+            for (int i = 1; i < args.Length; ++i)
             {
                 exprs.Add(
-                    Frame<object>.Var(
+                    Frame.Var(
                         callFrame,
-                        func.Params[i - 2],
-                        args[i].Expression
+                        func.Params[i - 1],
+                        args[i].Expression,
+                        VarType.Local
                     )
                 );
             }
@@ -49,8 +50,7 @@ namespace IronJS.Runtime.Js
                 EtUtils.Box(Et.Call(
                     Et.Convert(target, func.Lambda.GetType()),
                     invk,
-                    EtUtils.Cast<Frame<Function>>(closureTable),
-                    EtUtils.Cast<Frame<object>>(callFrame)
+                    EtUtils.Cast<Frame>(callFrame)
                 ))
             );
 
@@ -59,12 +59,18 @@ namespace IronJS.Runtime.Js
                     new[] { callFrame },
                     exprs
                 ),
-                RestrictUtils.BuildCallRestrictions(
-                    this,
-                    args,
-                    RestrictFlag.Instance
+                Restrict.GetInstanceRestriction(
+                    target, 
+                    func.Lambda
+                ).Merge(
+                    RestrictUtils.BuildCallRestrictions(
+                        this,
+                        args,
+                        RestrictFlag.Type
+                    )
                 )
             );
+            
         }
     }
 }

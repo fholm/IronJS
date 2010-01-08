@@ -17,14 +17,17 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            Frame<Function> funcTable;
-            Frame<object> globalScope = new Frame<object>(null);
+            Frame globalFrame = new Frame();
 
-            globalScope.Push("print", typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"));
+            globalFrame.Push(
+                "print", 
+                typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
+                VarType.Global
+            );
 
-            var compiled = treeGenerator.Build(astNodes, out funcTable);
+            var compiled = treeGenerator.Build(astNodes);
 
-            compiled(funcTable, globalScope);
+            compiled(globalFrame);
         }
     }
 }

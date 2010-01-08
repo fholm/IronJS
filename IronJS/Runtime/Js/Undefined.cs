@@ -6,6 +6,7 @@ namespace IronJS.Runtime.Js
 
     sealed class Undefined
     {
+        static readonly object _sync = new object();
         static Undefined _instance;
         internal static Undefined Instance
         {
@@ -13,7 +14,7 @@ namespace IronJS.Runtime.Js
             {
                 if (_instance == null)
                 {
-                    lock (this)
+                    lock (_sync)
                     {
                         if(_instance != null)
                             _instance = new Undefined();

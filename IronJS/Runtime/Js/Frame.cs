@@ -17,6 +17,12 @@ namespace IronJS.Runtime.Js
         readonly Dictionary<object, object> _values =
              new Dictionary<object, object>();
 
+        public Frame()
+            : this(null)
+        {
+
+        }
+
         public Frame(Frame parent)
         {
             _parent = parent;
@@ -74,7 +80,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 frame,
-                Method.GetMethod<Frame>("Push"),
+                typeof(Frame).GetMethod("Push"),
                 Et.Constant(name),
                 value,
                 Et.Constant(type)
@@ -85,7 +91,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 frame,
-                Method.GetMethod<Frame>("Pull"),
+                typeof(Frame).GetMethod("Pull"),
                 Et.Constant(name)
             );
         }
@@ -95,8 +101,9 @@ namespace IronJS.Runtime.Js
             return Et.Convert(
                 Frame.Var(
                     frame,
-                    Et.Constant(name)
-                )
+                    name
+                ),
+                typeof(T)
             );
         }
 

@@ -8,6 +8,7 @@ using IronJS.Runtime;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using IronJS.Reflect;
 using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Tree
@@ -17,59 +18,96 @@ namespace IronJS.Compiler.Tree
 
     public class Generator
     {
-        internal int FuncCounter;
-        internal Frame<Function> Table;
-
         internal Stack<ParameterExpression> FrameExprStack;
-        internal Stack<ParameterExpression> TableExprStack;
+        internal List<Tuple<Et, List<string>>> LambdaExprs;
+        internal ParameterExpression TableExpr;
 
         internal ParameterExpression FrameExpr
         {
             get { return FrameExprStack.Peek(); }
         }
 
-        internal ParameterExpression TableExpr
+        internal int LambdaId
         {
-            get { return TableExprStack.Peek(); }
+            get { return LambdaExprs.Count - 1; }
         }
 
-        public Action<Frame<Function>, Frame<object>> Build(List<Ast.Node> astNodes, out Frame<Function> funcTable)
+        public Action<Frame> Build(List<Ast.Node> astNodes)
         {
-            FuncCounter = 0;
-
+            LambdaExprs = new List<Tuple<Et, List<string>>>();
             FrameExprStack = new Stack<ParameterExpression>();
-            TableExprStack = new Stack<ParameterExpression>();
+            TableExpr = Et.Parameter(typeof(Table), "#functbl");
 
-            funcTable = Table = new Frame<Function>(null);
+            EnterFrame();
 
-            EnterScope();
-
-            var exprs = new List<Et>();
+            var globalExprs = new List<Et>();
 
             foreach (var node in astNodes)
-                exprs.Add(Generate(node));
+            {
+                globalExprs.Add(Generate(node));
+            }
 
-            return Et.Lambda<Action<Frame<Function>, Frame<object>>>(
-                Et.Block(exprs),
-                TableExpr,
+            var buildLambdaExprs = new List<Et>();
+
+            buildLambdaExprs.Add(
+                Et.Assign(
+                    TableExpr,
+                    AstUtils.SimpleNewHelper(
+                        typeof(Table).GetConstructor(Type.EmptyTypes)
+                    )
+                )
+            );
+
+            //TODO: remove after debugging
+            buildLambdaExprs.Add(
+                Frame.Var(
+                    FrameExpr, 
+                    "functbl", 
+                    TableExpr, 
+                    VarType.Local
+                )
+            );
+
+            var tablePushMi = typeof(Table).GetMethod("Push");
+            var functionCtor = typeof(Function).GetConstructor(
+                new[] { 
+                    typeof(Action<Frame>), 
+                    typeof(List<string>)
+                }
+            );
+
+            foreach (var lambda in LambdaExprs)
+            {
+                buildLambdaExprs.Add(
+                    Et.Call(
+                        TableExpr,
+                        tablePushMi,
+                        AstUtils.SimpleNewHelper(functionCtor, lambda.V1, Et.Constant(lambda.V2))
+                    )
+                );
+            }
+
+            var allExprs = CollectionUtils.Concat(
+                buildLambdaExprs, 
+                globalExprs
+            );
+
+            return Et.Lambda<Action<Frame>>(
+                Et.Block(
+                    new[] { TableExpr },
+                    allExprs
+                ),
                 FrameExpr
             ).Compile();
         }
 
-        private string NewFuncName()
+        private void EnterFrame()
         {
-            return "#function" + (FuncCounter++).ToString();
+            FrameExprStack.Push(Et.Parameter(typeof(Frame), "#frame"));
         }
 
-        private void EnterScope()
+        private void ExitFrame()
         {
-            TableExprStack.Push(Et.Parameter(typeof(Frame<Function>), "#table"));
-            FrameExprStack.Push(Et.Parameter(typeof(Frame<object>), "#frame"));
-        }
-
-        private void ExitScope()
-        {
-            TableExprStack.Pop();
             FrameExprStack.Pop();
         }
 
@@ -105,26 +143,21 @@ namespace IronJS.Compiler.Tree
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
-            switch (node.Op)
-            {
-                case Ast.BinaryOp.Add:
-                    var left = EtUtils.Cast<double>(Generate(node.Left));
-                    var right = EtUtils.Cast<double>(Generate(node.Right));
-                    return Et.Add(left, right, typeof(BuiltIns).GetMethod("Add"));
-
-                default:
-                    throw new CompilerError("Unsuported binary op '" + node.Op + "'");
-            }
+            return Et.Add(
+                EtUtils.Cast<double>(Generate(node.Left)),
+                EtUtils.Cast<double>(Generate(node.Right)),
+                typeof(BuiltIns).GetMethod("Add")
+            );
         }
 
         private Et GenerateNumber(Ast.NumberNode node)
         {
-            return Et.Constant(node.Value);
+            return Et.Constant(node.Value, typeof(object));
         }
 
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
-            return Frame<object>.Var(FrameExpr, node.Name);
+            return Frame.Var(FrameExpr, node.Name);
         }
 
         private Et GenerateCall(Ast.CallNode node)
@@ -134,19 +167,16 @@ namespace IronJS.Compiler.Tree
 
             return Et.Dynamic(
                 new JsInvokeBinder(
-                    new CallInfo(args.Length + 1), 
+                    new CallInfo(args.Length),
                     InvokeFlag.Function
                 ),
                 typeof(object),
                 ArrayUtils.Insert(
                     target,
-                    ArrayUtils.Insert(
-                        TableExpr,
-                        FrameExpr,
-                        args
-                    )
+                    FrameExpr,
+                    args
                 )
-            ); 
+            );
         }
 
         private Et GenerateBlock(Ast.BlockNode node)
@@ -156,55 +186,61 @@ namespace IronJS.Compiler.Tree
 
         private Et GenerateLambda(Ast.LambdaNode node)
         {
-            EnterScope();
+            EnterFrame();
 
-            var funcName = NewFuncName();
             var argsList = node.Args.Select(x => x.Name).ToList();
             var bodyExpr = Generate(node.Body);
-            var compiled = 
-                Et.Lambda<Action<Frame<Function>, Frame<object>>>(
-                    bodyExpr, 
-                    TableExpr, 
-                    FrameExpr
-                ).Compile();
+            var lambdaEt = Et.Lambda<Action<Frame>>(
+                bodyExpr,
+                FrameExpr
+            );
 
-            Table.Push(funcName, new Function(compiled, argsList));
+            LambdaExprs.Add(
+                Tuple.Create(
+                    (Et) lambdaEt, 
+                    argsList
+                )
+            );
 
-            ExitScope();
+            ExitFrame();
 
-            return GenerateClosure(GetFunction(funcName));
+            return AstUtils.SimpleNewHelper(
+                typeof(Closure).GetConstructor(new[] 
+                { 
+                    typeof(Frame), 
+                    typeof(Function)
+                }),
+                FrameExpr,
+                Et.Call(
+                    TableExpr,
+                    typeof(Table).GetMethod("Pull"),
+                    Et.Constant(LambdaId)
+                )
+            );
         }
 
         private Et GenerateClosure(Et funcExpr)
         {
-            return AstUtils.SimpleNewHelper(
-                typeof(Closure).GetConstructor(new[] 
-                { 
-                    typeof(Frame<Function>), 
-                    typeof(Frame<object>),
-                    typeof(Function)
-                }),
-                TableExpr,
-                FrameExpr,
-                EtUtils.Cast<Function>(funcExpr)
-            );
+            throw new NotImplementedException();
         }
 
         private Et GetFunction(string funcName)
         {
-            return Et.Dynamic(
-                new JsGetMemberBinder(funcName),
-                typeof(object),
-                TableExpr
-            );
+            throw new NotImplementedException();
         }
 
         private Et GenerateAssign(Ast.AssignNode node)
         {
-            if(node.Target is Ast.IdentifierNode)
+            if (node.Target is Ast.IdentifierNode)
             {
                 var idNode = (Ast.IdentifierNode) node.Target;
-                return Frame<object>.Var(FrameExpr, idNode.Name, Generate(node.Value));
+
+                return Frame.Var(
+                    FrameExpr, 
+                    idNode.Name, 
+                    Generate(node.Value), 
+                    idNode.IsLocal ? VarType.Local : VarType.Global
+                );
             }
 
             throw new NotImplementedException();

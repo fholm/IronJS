@@ -27,7 +27,7 @@ namespace IronJS.Runtime.Js
 
         public T Pull(object key)
         {
-            T value;
+            T value; 
 
             if (_values.TryGetValue(key, out value))
                 return value;

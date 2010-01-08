@@ -143,7 +143,7 @@ namespace IronJS.Compiler.Tree
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
-            switch(node.Op)
+            switch (node.Op)
             {
                 case Ast.BinaryOp.Add:
                     return Et.Add(
@@ -151,9 +151,10 @@ namespace IronJS.Compiler.Tree
                         EtUtils.Cast<double>(Generate(node.Right)),
                         typeof(BuiltIns).GetMethod("Add")
                     );
-                    
+
                 default:
                     throw new CompilerError("Unsuported binary op '" + node.Op + "'");
+            }
         }
 
         private Et GenerateNumber(Ast.NumberNode node)

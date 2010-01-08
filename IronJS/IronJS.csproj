@@ -69,6 +69,7 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
+    <Compile Include="Reflect\Method.cs" />
     <Compile Include="Runtime\Js\Closure.cs" />
     <Compile Include="Runtime\Js\ClosureMeta.cs" />
     <Compile Include="Runtime\Js\Function.cs" />

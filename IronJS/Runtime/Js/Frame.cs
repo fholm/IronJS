@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using IronJS.Runtime.Binders;
+﻿using System.Collections.Generic;
+using System.Dynamic;
+using IronJS.Reflect;
 
 namespace IronJS.Runtime.Js
 {
-    using System.Dynamic;
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
@@ -72,39 +71,38 @@ namespace IronJS.Runtime.Js
 
         Meta IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
         {
-            return new FrameMeta<object>(parameter, this);
+            return new FrameMeta(parameter, this);
         }
 
         #endregion
 
-        internal static Et Var(Et scope, string name, Et value)
+        #region Static methods
+
+        internal static Et Var(Et frame, string name, Et value)
         {
-            return Et.Dynamic(
-                new JsSetMemberBinder(name),
-                typeof(object),
-                scope,
+            return Et.Call(
+                frame,
+                Method.GetMethod<Frame>("Push"),
                 value
             );
         }
 
-        internal static Et Var(Et scope, string name)
+        internal static Et Var(Et frame, string name)
         {
-            return Et.Dynamic(
-                new JsGetMemberBinder(name),
-                typeof(object),
-                scope
+            return Et.Call(
+                frame,
+                Method.GetMethod<Frame>("Pull"),
+                name
             );
         }
 
-        internal static Et Var<Y>(Et scope, string name)
+        internal static Et Var<T>(Et frame, string name)
         {
             return Et.Convert(
-                Et.Dynamic(
-                    new JsGetMemberBinder(name),
-                    typeof(object),
-                    scope
-                ),
-                typeof(Y)
+                Frame.Var(
+                    frame,
+                    name
+                )
             );
         }
 
@@ -114,12 +112,11 @@ namespace IronJS.Runtime.Js
                 target,
                 Et.Call(
                     parent, 
-                    typeof(Frame).GetMethod(
-                        "Enter", 
-                        objectype.Emptyobjectypes
-                    )
+                    Method.GetMethod<Frame>("Enter")
                 )
             );
         }
+
+        #endregion
     }
 }

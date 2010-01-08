@@ -12,7 +12,13 @@ namespace IronJS.Runtime.Js
             get
             {
                 if (_instance == null)
-                    _instance = new Undefined();
+                {
+                    lock (this)
+                    {
+                        if(_instance != null)
+                            _instance = new Undefined();
+                    }
+                }
 
                 return _instance;
             }

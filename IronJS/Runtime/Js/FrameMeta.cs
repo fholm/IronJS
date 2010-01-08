@@ -7,8 +7,7 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
 
-    class FrameMeta<T> : DynamicMetaObject 
-              where T  : class
+    class FrameMeta : DynamicMetaObject 
     {
         public FrameMeta(Et parameter, object value)
             : base(parameter, Restrict.Empty, value)
@@ -22,8 +21,8 @@ namespace IronJS.Runtime.Js
             var valueExpr = EtUtils.Box(value.Expression);
 
             var target = Et.Call(
-                Et.Convert(this.Expression, typeof(Frame<T>)),
-                typeof(Frame<T>).GetMethod("Push"),
+                Et.Convert(this.Expression, typeof(Frame)),
+                typeof(Frame).GetMethod("Push"),
                 keyExpr,
                 valueExpr
             );
@@ -41,8 +40,8 @@ namespace IronJS.Runtime.Js
         {
             var callExpr =
                 Et.Call(
-                    Et.Convert(this.Expression, typeof(Frame<T>)),
-                    typeof(Frame<T>).GetMethod("Pull"),
+                    Et.Convert(this.Expression, typeof(Frame)),
+                    typeof(Frame).GetMethod("Pull"),
                     Et.Constant(binder.Name)
                 );
 

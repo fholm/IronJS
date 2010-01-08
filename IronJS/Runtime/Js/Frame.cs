@@ -7,7 +7,8 @@ namespace IronJS.Runtime.Js
     using System.Dynamic;
     using Et = System.Linq.Expressions.Expression;
 
-    public class Frame<T> : IDynamicMetaObjectProvider
+    public class Frame<T> : IDynamicMetaObjectProvider 
+                 where T  : class
     {
         readonly Frame<T> _parent;
 
@@ -26,8 +27,10 @@ namespace IronJS.Runtime.Js
 
         public T Pull(object key)
         {
-            if (_values.ContainsKey(key))
-                return _values[key];
+            T value;
+
+            if (_values.TryGetValue(key, out value))
+                return value;
 
             if (_parent != null)
                 return _parent.Pull(key);

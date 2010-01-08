@@ -7,7 +7,8 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
 
-    class FrameMeta<T> : DynamicMetaObject
+    class FrameMeta<T> : DynamicMetaObject 
+              where T  : class
     {
         public FrameMeta(Et parameter, object value)
             : base(parameter, Restrict.Empty, value)

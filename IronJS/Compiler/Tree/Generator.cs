@@ -143,11 +143,17 @@ namespace IronJS.Compiler.Tree
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
-            return Et.Add(
-                EtUtils.Cast<double>(Generate(node.Left)),
-                EtUtils.Cast<double>(Generate(node.Right)),
-                typeof(BuiltIns).GetMethod("Add")
-            );
+            switch(node.Op)
+            {
+                case Ast.BinaryOp.Add:
+                    return Et.Add(
+                        EtUtils.Cast<double>(Generate(node.Left)),
+                        EtUtils.Cast<double>(Generate(node.Right)),
+                        typeof(BuiltIns).GetMethod("Add")
+                    );
+                    
+                default:
+                    throw new CompilerError("Unsuported binary op '" + node.Op + "'");
         }
 
         private Et GenerateNumber(Ast.NumberNode node)
@@ -217,16 +223,6 @@ namespace IronJS.Compiler.Tree
                     Et.Constant(LambdaId)
                 )
             );
-        }
-
-        private Et GenerateClosure(Et funcExpr)
-        {
-            throw new NotImplementedException();
-        }
-
-        private Et GetFunction(string funcName)
-        {
-            throw new NotImplementedException();
         }
 
         private Et GenerateAssign(Ast.AssignNode node)

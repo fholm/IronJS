@@ -5,7 +5,7 @@ namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
 
-    enum BinaryOp { Eq, Lt, Add }
+    enum BinaryOp { Eq, Lt, Add, Sub, Mul, Div, Mod, Gt, GtEq, LtEq, NotEq, EqEq, NotEqEq, Inc, ShiftLeft, ShiftRight, ShiftRightZero, And, Or, Xor, LogicalOr, LogicalAnd }
 
     class BinaryOpNode : Node
     {

@@ -1,14 +1,50 @@
 ﻿
-var foo = { bar: function (lol) { print(arguments); return lol; }, baz: "hello world" };
 
+foo = 1 + 1;
+foo = 1 - 1;
+foo = 1 * 1;
+foo = 1 / 1;
+foo = 1 % 1
 
-var bar = function () {
-    bar();
-};
+foo += 1;
+foo -= 1;
+foo *= 1;
+foo /= 1;
+foo %= 1;
 
-bar();
+foo = 1 < 1
+foo = 1 > 1
+foo = 1 <= 1
+foo = 1 >= 1
 
-print(foo);
-print(foo.bar);
-print(foo.bar("wtf!?", "foo", "bar", "baz", "daz", "jazz", "zazz"));
-print(foo.baz);
+foo = 1 == 1
+foo = 1 != 1
+foo = 1 === 1
+foo = 1 !== 1
+
+foo++
+foo--
+++foo
+--foo
+
+foo = 1 >> 1
+foo = 1 << 1
+foo <<= 1
+foo >>= 1
+foo = 1 >>> 1
+foo >>>= 1
+
+foo = 1 & 1
+foo = 1 | 1
+foo = 1 ^ 1
+foo &= 1
+foo |= 1
+foo ^= 1
+
+foo = 1 && 2
+foo = 1 || 2
+
+foo = ~1
+foo = !1
+foo = -1
+

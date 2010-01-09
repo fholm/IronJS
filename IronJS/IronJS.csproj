@@ -71,6 +71,7 @@
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
+    <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsSetMemberBinder.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />

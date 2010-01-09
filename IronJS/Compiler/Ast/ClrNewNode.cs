@@ -4,6 +4,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class ClrNewNode : Node
     {
         public readonly Node TypeName;
@@ -33,6 +35,11 @@ namespace IronJS.Compiler.Ast
 
             writer.AppendLine(argsIndentStr + ")");
             writer.AppendLine(indentStr + ")");
+        }
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
         }
     }
 }

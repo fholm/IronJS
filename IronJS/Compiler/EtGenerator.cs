@@ -10,7 +10,7 @@ using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 
-namespace IronJS.Compiler.Tree
+namespace IronJS.Compiler
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
@@ -21,6 +21,7 @@ namespace IronJS.Compiler.Tree
         internal Stack<LabelTarget> ReturnLabels;
         internal Stack<ParameterExpression> FrameExprStack;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
+        internal List<Et> GlobalExprs;
 
         internal ParameterExpression FrameExpr
         {
@@ -39,9 +40,10 @@ namespace IronJS.Compiler.Tree
 
         public Action<Frame> Build(List<Ast.Node> astNodes)
         {
+            GlobalExprs = new List<Et>();
+            ReturnLabels = new Stack<LabelTarget>();
             LambdaExprs = new List<Tuple<Et, List<string>>>();
             FrameExprStack = new Stack<ParameterExpression>();
-            ReturnLabels = new Stack<LabelTarget>();
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
 
             EnterFrame();

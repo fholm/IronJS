@@ -2,6 +2,8 @@
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class NewNode : Node
     {
         public readonly Node Target;
@@ -27,6 +29,11 @@ namespace IronJS.Compiler.Ast
             : this(targets, args)
         {
             Properties = properties;
+        }
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

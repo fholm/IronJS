@@ -5,6 +5,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class AutoPropertyNode : Node
     {
         public readonly string Name;
@@ -15,6 +17,11 @@ namespace IronJS.Compiler.Ast
         {
             Name = name;
             Value = value;
+        }
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class IfNode : Node
     {
         public readonly Node Test;
@@ -29,6 +31,11 @@ namespace IronJS.Compiler.Ast
             ElseBranch.Print(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
+        }
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
         }
     }
 }

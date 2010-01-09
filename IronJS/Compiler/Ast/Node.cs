@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     public enum NodeType
     {
         Assign, Identifier, Number, Null,
@@ -14,7 +17,7 @@ namespace IronJS.Compiler.Ast
         Return
     }
 
-    public class Node
+    abstract public class Node
     {
         public readonly NodeType Type;
         public readonly int Line;
@@ -52,5 +55,11 @@ namespace IronJS.Compiler.Ast
         {
             return Type.ToString();
         }
+
+        #region abstract
+
+        public abstract Et Walk(EtGenerator etgen);
+
+        #endregion
     }
 }

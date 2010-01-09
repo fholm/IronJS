@@ -5,6 +5,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class ReturnNode : Node
     {
         public readonly Node Value;
@@ -15,5 +17,9 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

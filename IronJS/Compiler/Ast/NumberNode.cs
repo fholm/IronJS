@@ -3,6 +3,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class NumberNode : Node
     {
         public readonly double Value;
@@ -17,6 +19,11 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + Type + " " + Value + ")");
+        }
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
         }
     }
 }

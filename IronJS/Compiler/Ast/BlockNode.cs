@@ -4,6 +4,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class BlockNode : Node
     {
         public readonly List<Node> Nodes;
@@ -39,6 +41,9 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

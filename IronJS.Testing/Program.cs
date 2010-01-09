@@ -9,25 +9,8 @@ namespace IronJS.Testing
     {
         static void Main(string[] args)
         {
-            var bar = Expression.Parameter(typeof(int), "bar");
-            var label = Expression.Label(typeof(int));
-
-            var l = Expression.Lambda<Func<int, int>>(
-                Expression.Block(
-                    Expression.Condition(
-                        Expression.Equal(Expression.Modulo(bar, Expression.Constant(2)), Expression.Constant(0)),
-                        Expression.Return(label, Expression.Multiply(bar, Expression.Constant(10))),
-                        Expression.Return(label, Expression.Multiply(bar, Expression.Constant(20)))
-                    ),
-                    Expression.Label(label, Expression.Default(typeof(int)))
-                ),
-                new[] { bar }
-            );
-
-            l.Compile();
-
             var astBuilder = new Compiler.Ast.Builder();
-            var treeGenerator = new Compiler.Tree.EtGenerator();
+            var etGenerator = new Compiler.EtGenerator();
 
             var astNodes = astBuilder.Build("IronJS.js", Encoding.UTF8);
 
@@ -42,7 +25,7 @@ namespace IronJS.Testing
                 VarType.Global
             );
 
-            var compiled = treeGenerator.Build(astNodes);
+            var compiled = etGenerator.Build(astNodes);
 
             compiled(globalFrame);
         }

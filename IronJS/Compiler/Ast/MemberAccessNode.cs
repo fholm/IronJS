@@ -3,6 +3,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class MemberAccessNode : Node
     {
         public readonly Node Target;
@@ -24,5 +26,9 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + ")");
         }
 
+        public override Et Walk(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

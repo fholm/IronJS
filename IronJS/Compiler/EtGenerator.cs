@@ -182,14 +182,11 @@ namespace IronJS.Compiler.Tree
         private Et GenerateBlock(Ast.BlockNode node)
         {
             if (node.Nodes.Count == 0)
-            {
-                return Et.Block(
-                    Et.Default(typeof(object))
-                );
-            }
-            {
-                return Et.Block();
-            }
+                return Et.Default(typeof(object));
+
+            return Et.Block(
+                node.Nodes.Select(x => Generate(x))
+            );
         }
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)

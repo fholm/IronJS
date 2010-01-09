@@ -84,16 +84,16 @@
     <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
-    <Compile Include="Runtime\Js\Closure.cs">
+    <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\ClosureMeta.cs">
+    <Compile Include="Runtime\Js\ObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Frame.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\Function.cs">
+    <Compile Include="Runtime\Js\Lambda.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Property.cs">

@@ -15,7 +15,6 @@ namespace IronJS.Runtime.Js
         object _value;
 
         internal PropertyAttrs Attributes;
-        internal readonly string Name;
 
         internal object Value
         {
@@ -31,21 +30,20 @@ namespace IronJS.Runtime.Js
                 }
                 else
                 {
-                    throw new RuntimeError("Property '{0}' is read-only", Name);
+                    throw new RuntimeError("Property is read-only");
                 }
             }
         }
 
-        internal Property(string name, object value)
-            : this(name, value, 0)
+        internal Property(object value)
+            : this(value, 0)
         {
 
         }
 
-        internal Property(string name, object value, PropertyAttrs attrs)
+        internal Property(object value, PropertyAttrs attrs)
         {
-            Name = name;
-            Value = value;
+            _value = value; // optimization, we can skip going through Value here
             Attributes = attrs;
         }
 

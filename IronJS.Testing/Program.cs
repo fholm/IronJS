@@ -7,6 +7,11 @@ namespace IronJS.Testing
 {
     class Program
     {
+        static void OverFlow()
+        {
+            OverFlow();
+        }
+
         static void Main(string[] args)
         {
             var astBuilder = new Compiler.Ast.AstGenerator();

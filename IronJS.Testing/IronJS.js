@@ -1,8 +1,8 @@
 ﻿
 
-var foo = function (baz) {
-    return "test";
+var foo = function () {
+    print(arguments);
+    foo();
 };
 
-var bar = foo(2);
-print(bar);
+foo();

@@ -7,16 +7,16 @@ namespace IronJS.Runtime.Js
 {
     class Table
     {
-        readonly List<Function> Functions =
-             new List<Function>();
+        readonly List<Lambda> Functions =
+             new List<Lambda>();
 
-        public int Push(Function func)
+        public int Push(Lambda func)
         {
             Functions.Add(func);
             return Functions.Count - 1;
         }
 
-        public Function Pull(int i)
+        public Lambda Pull(int i)
         {
             return Functions[i];
         }

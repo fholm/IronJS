@@ -77,7 +77,7 @@ namespace IronJS.Compiler
             );
 
             var tablePushMi = typeof(Table).GetMethod("Push");
-            var functionCtor = typeof(Function).GetConstructor(
+            var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
                     typeof(Func<Frame, object>), 
                     typeof(List<string>)
@@ -220,7 +220,6 @@ namespace IronJS.Compiler
                 typeof(object),
                 ArrayUtils.Insert(
                     target,
-                    FrameExpr,
                     args
                 )
             );
@@ -253,10 +252,10 @@ namespace IronJS.Compiler
             ExitFrame();
 
             return AstUtils.SimpleNewHelper(
-                typeof(Closure).GetConstructor(
+                typeof(Obj).GetConstructor(
                     new[] { 
                         typeof(Frame), 
-                        typeof(Function)
+                        typeof(Lambda)
                     }
                 ),
                 FrameExpr,

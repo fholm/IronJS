@@ -9,8 +9,8 @@ namespace IronJS.Runtime.Binders
 
     class JsInvokeMemberBinder : InvokeMemberBinder
     {
-        public JsInvokeMemberBinder(string name, CallInfo callInfo)
-            : base(name, false, callInfo)
+        public JsInvokeMemberBinder(object name, CallInfo callInfo)
+            : base(name.ToString(), false, callInfo)
         {
 
         }

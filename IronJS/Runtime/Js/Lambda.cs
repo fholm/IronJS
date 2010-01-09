@@ -7,14 +7,14 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
-    public class Function
+    public class Lambda
     {
-        internal readonly Func<Frame, object> Lambda;
+        internal readonly Func<Frame, object> Delegate;
         internal readonly List<string> Params;
 
-        public Function(Func<Frame, object> lambda, List<string> parms)
+        public Lambda(Func<Frame, object> delegat, List<string> parms)
         {
-            Lambda = lambda;
+            Delegate = delegat;
             Params = parms;
         }
     }

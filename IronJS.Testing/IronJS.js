@@ -1,7 +1,12 @@
 ﻿
+var bar = new Object();
+
+bar.foo = 1;
+
+print(bar);
 
 var foo = function () {
-    foo();
+    print("foo");
 };
 
-foo();
+print(foo);

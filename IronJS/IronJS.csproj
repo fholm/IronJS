@@ -84,6 +84,8 @@
     <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Js\Nan.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -105,6 +107,7 @@
     </Compile>
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs" />
+    <Compile Include="Runtime\Utils\FrameUtils.cs" />
     <Compile Include="Runtime\Utils\JsUtils.cs" />
     <Compile Include="Runtime\Utils\ObjUtils.cs" />
     <Compile Include="Runtime\Utils\RestrictUtils.cs" />

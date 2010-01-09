@@ -28,6 +28,16 @@ namespace IronJS.Runtime.Js
             _parent = parent;
         }
 
+        public object Arg(object key)
+        {
+            object value;
+
+            if (_values.TryGetValue(key, out value))
+                return value;
+
+            return null;
+        }
+
         public object Push(object key, object value, VarType type)
         {
             if (type == VarType.Local)
@@ -75,48 +85,6 @@ namespace IronJS.Runtime.Js
         }
 
         #region Static
-
-        internal static Et Var(Et frame, string name, Et value, VarType type)
-        {
-            return Et.Call(
-                frame,
-                typeof(Frame).GetMethod("Push"),
-                Et.Constant(name),
-                value,
-                Et.Constant(type)
-            );
-        }
-
-        internal static Et Var(Et frame, string name)
-        {
-            return Et.Call(
-                frame,
-                typeof(Frame).GetMethod("Pull"),
-                Et.Constant(name)
-            );
-        }
-
-        internal static Et Var<T>(Et frame, string name)
-        {
-            return Et.Convert(
-                Frame.Var(
-                    frame,
-                    name
-                ),
-                typeof(T)
-            );
-        }
-
-        internal static Et Enter(Et target, Et parent)
-        {
-            return Et.Assign(
-                target,
-                Et.Call(
-                    parent, 
-                    typeof(Frame).GetMethod("Enter", Type.EmptyTypes)
-                )
-            );
-        }
 
         #endregion
     }

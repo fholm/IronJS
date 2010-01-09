@@ -4,12 +4,12 @@ namespace IronJS.Runtime.Js
 {
     using Et = System.Linq.Expressions.Expression;
 
-    public sealed class Undefined
+    public sealed class Nan
     {
-        static Undefined _instance;
+        static Nan _instance;
         static readonly object _sync = new object();
 
-        public static Undefined Instance
+        public static Nan Instance
         {
             get
             {
@@ -17,8 +17,8 @@ namespace IronJS.Runtime.Js
                 {
                     lock (_sync)
                     {
-                        if(_instance == null)
-                            _instance = new Undefined();
+                        if (_instance == null)
+                            _instance = new Nan();
                     }
                 }
 
@@ -34,14 +34,14 @@ namespace IronJS.Runtime.Js
             }
         }
 
-        private Undefined()
+        private Nan()
         {
 
         }
 
         public override string ToString()
         {
-            return "undefined";
+            return "NaN";
         }
     }
 }

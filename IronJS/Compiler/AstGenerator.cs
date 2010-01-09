@@ -133,6 +133,9 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildReturn(ITree node)
         {
+            if (node.ChildCount == 0)
+                return new ReturnNode(new NullNode());
+
             return new ReturnNode(Build(node.GetChildSafe(0)));
         }
 

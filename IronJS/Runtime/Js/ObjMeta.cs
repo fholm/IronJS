@@ -9,6 +9,7 @@ using IronJS.Runtime.Utils;
 namespace IronJS.Runtime.Js
 {
     using Et = System.Linq.Expressions.Expression;
+    using Parm = System.Linq.Expressions.ParameterExpression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
@@ -24,8 +25,18 @@ namespace IronJS.Runtime.Js
 
         }
 
+        public override Meta BindSetMember(SetMemberBinder binder, Meta value)
+        {
+            //TODO: insert defer
+            return Et.Call(
+
+            );
+        }
+
         public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
         {
+            //TODO: insert defer
+
             if (binder is JsInvokeBinder)
             {
                 var jsBinder = (JsInvokeBinder)binder;
@@ -46,7 +57,7 @@ namespace IronJS.Runtime.Js
                         ).Merge(
                             Restrict.GetExpressionRestriction(
                                 Et.Equal(
-                                    Et.Property(
+                                    Et.Field(
                                         selfExpr,
                                         "Class"
                                     ),
@@ -88,7 +99,7 @@ namespace IronJS.Runtime.Js
                 // this creates a new call frame
                 // with the current one as parent
                 exprs.Add(
-                    Frame.Enter(
+                    FrameUtils.Enter(
                         callFrameExpr,
                         Et.Field(
                             selfExpr, 
@@ -105,49 +116,46 @@ namespace IronJS.Runtime.Js
                     )
                 );
 
-                switch (jsBinder.CallType)
-                {
-                    case InvokeFlag.Function:
-                        SetupFunctionCallFrame(exprs, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
-                        break;
-
-                    case InvokeFlag.Method:
-                        SetupMethodCallFrame(exprs, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
-                        break;
-
-                    case InvokeFlag.Constructor:
-                        SetupConstructorCallFrame(exprs, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
-                        break;
-                }
+                // add the 'callee' property to the
+                // 'arguments'-object
+                exprs.Add(
+                    ObjUtils.SetOwnProperty(
+                        argumentsExpr,
+                        "callee",
+                        this.Expression
+                    )
+                );
 
                 // add the 'arguments' parameter
                 // to the callframe
                 exprs.Add(
-                    Frame.Var(
-                        callFrameExpr, 
-                        "arguments", 
-                        argumentsExpr, 
+                    FrameUtils.Push(
+                        callFrameExpr,
+                        "arguments",
+                        argumentsExpr,
                         VarType.Local
                     )
                 );
 
-                // finally, emit the call
-                // expression tree
-                exprs.Add(
-                    EtUtils.Box(
-                        Et.Call(
-                            callTargetExpr,
-                            LambdaInvoke,
-                            callFrameExpr
-                        )
-                    )
-                );
+                Et exprTree = null;
+
+                switch (jsBinder.CallType)
+                {
+                    case InvokeFlag.Function:
+                        exprTree = SetupFunctionCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        break;
+
+                    case InvokeFlag.Method:
+                        exprTree = SetupMethodCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        break;
+
+                    case InvokeFlag.Constructor:
+                        exprTree = SetupConstructorCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        break;
+                }
 
                 return new Meta(
-                    Et.Block(
-                        new[] { callFrameExpr, argumentsExpr },
-                        exprs
-                    ),
+                    exprTree,
 
                     // standard call restriction, on type
                     RestrictUtils.BuildCallRestrictions(
@@ -171,29 +179,113 @@ namespace IronJS.Runtime.Js
             return binder.FallbackInvoke(this, args);
         }
 
-        private void SetupConstructorCallFrame(List<Et> exprs, ParameterExpression callFrameExpr, ParameterExpression argumentsExpr, Lambda lambda, Meta[] args)
+        private Et SetupConstructorCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
+        {
+            var thisParm = Et.Parameter(
+                typeof(object), 
+                "#this"
+            );
+
+            // create new object
+            exprs.Add(
+                Et.Assign(
+                    thisParm,
+                    Et.Call(
+                        EtUtils.Cast<Obj>(this.Expression),
+                        typeof(Obj).GetMethod("Construct")
+                    )
+                )
+            );
+
+            // hidden 'this' parameter
+            exprs.Add(
+                FrameUtils.Push(
+                    callFrameExpr,
+                    "this",
+                    thisParm,
+                    VarType.Local
+                )
+            );
+
+            // finally, emit the call et
+            exprs.Add(
+                EtUtils.Box(
+                    Et.Call(
+                        callTargetExpr,
+                        LambdaInvoke,
+                        callFrameExpr
+                    )
+                )
+            );
+
+            // we want to return
+            // the new object created
+            // instead of the result
+            // of the function call
+            exprs.Add(thisParm);
+
+            return Et.Block(
+                new[] { callFrameExpr, argumentsExpr, thisParm },
+                exprs
+            );
+
+        }
+
+        private Et SetupMethodCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
         {
             throw new NotImplementedException();
         }
 
-        private void SetupMethodCallFrame(List<Et> exprs, ParameterExpression callFrameExpr, ParameterExpression argumentsExpr, Lambda lambda, Meta[] args)
+        private Et SetupFunctionCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
         {
-            throw new NotImplementedException();
+            PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
+
+            // hidden 'this' parameter
+            exprs.Add(
+                FrameUtils.Push(
+                    callFrameExpr,
+                    "this",
+                    Et.Default(typeof(object)),
+                    VarType.Local
+                )
+            );
+
+            // finally, emit the call et
+            exprs.Add(
+                EtUtils.Box(
+                    Et.Call(
+                        callTargetExpr,
+                        LambdaInvoke,
+                        callFrameExpr
+                    )
+                )
+            );
+
+            return Et.Block(
+                new[] { callFrameExpr, argumentsExpr },
+                exprs
+            );
         }
 
-        private void SetupFunctionCallFrame(List<Et> exprs, ParameterExpression callFrameExpr, ParameterExpression argumentsExpr, Lambda lambda, Meta[] args)
+        private void PushArgsOnFrame(List<Et> exprs, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
         {
             for (int i = 0; i < args.Length; ++i)
             {
-                exprs.Add(
-                    Frame.Var(
-                        callFrameExpr,
-                        lambda.Params[i],
-                        args[i].Expression,
-                        VarType.Local
-                    )
-                );
+                // only args with param names
+                // should be pushed on the frame
+                if (i < lambda.Params.Count)
+                {
+                    exprs.Add(
+                        FrameUtils.Push(
+                            callFrameExpr,
+                            lambda.Params[i],
+                            args[i].Expression,
+                            VarType.Local
+                        )
+                    );
+                }
 
+                // push args on 'arguments'-object
                 exprs.Add(
                     ObjUtils.SetOwnProperty(
                         argumentsExpr,
@@ -202,25 +294,6 @@ namespace IronJS.Runtime.Js
                     )
                 );
             }
-
-            // 'arguments' parameter
-            exprs.Add(
-                ObjUtils.SetOwnProperty(
-                    argumentsExpr,
-                    "callee",
-                    this.Expression
-                )
-            );
-
-            // hidden 'this' parameter
-            exprs.Add(
-                Frame.Var(
-                    callFrameExpr,
-                    "this",
-                    Et.Default(typeof(object)),
-                    VarType.Local
-                )
-            );
         }
     }
 }

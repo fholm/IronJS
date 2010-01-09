@@ -2,6 +2,8 @@
 using System.Text;
 using System.Linq.Expressions;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
+using IronJS.Runtime;
 
 namespace IronJS.Testing
 {
@@ -22,9 +24,9 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            Frame globalFrame = new Frame();
+            Context context = Context.Setup();
 
-            globalFrame.Push(
+            context.Globals.Push(
                 "print", 
                 typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
                 VarType.Global
@@ -32,7 +34,7 @@ namespace IronJS.Testing
 
             var compiled = etGenerator.Build(astNodes);
 
-            compiled(globalFrame);
+            compiled(context.Globals);
         }
     }
 }

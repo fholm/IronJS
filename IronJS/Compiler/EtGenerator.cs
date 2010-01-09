@@ -18,6 +18,7 @@ namespace IronJS.Compiler
     public class EtGenerator
     {
         internal ParameterExpression TableExpr;
+        internal ParameterExpression GlobalFrameExpr;
         internal Stack<LabelTarget> ReturnLabels;
         internal Stack<ParameterExpression> FrameExprStack;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
@@ -48,6 +49,8 @@ namespace IronJS.Compiler
 
             EnterFrame();
 
+            GlobalFrameExpr = FrameExpr;
+
             var globalExprs = new List<Et>();
 
             foreach (var node in astNodes)
@@ -68,7 +71,7 @@ namespace IronJS.Compiler
 
             //TODO: remove after debugging
             buildLambdaExprs.Add(
-                Frame.Var(
+                FrameUtils.Push(
                     FrameExpr, 
                     "functbl", 
                     TableExpr, 
@@ -146,6 +149,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Return:
                     return GenerateReturn((Ast.ReturnNode)node);
 
+                case Ast.NodeType.New:
+                    return GenerateNew((Ast.NewNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -159,6 +165,24 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateNew(Ast.NewNode node)
+        {
+            var target = Generate(node.Target);
+            var args = node.Args.ToEtArray(x => Generate(x));
+
+            return Et.Dynamic(
+                new JsInvokeBinder(
+                    new CallInfo(args.Length),
+                    InvokeFlag.Constructor
+                ),
+                typeof(object),
+                ArrayUtils.Insert(
+                    target,
+                    args
+                )
+            );
         }
 
         private Et GenerateReturn(Ast.ReturnNode node)
@@ -178,7 +202,7 @@ namespace IronJS.Compiler
 
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
-            return Frame.Var(FrameExpr, node.Name);
+            return FrameUtils.Pull(FrameExpr, node.Name);
         }
 
         private Et GenerateBlock(Ast.BlockNode node)
@@ -234,7 +258,10 @@ namespace IronJS.Compiler
             var bodyExprs = bodyNode.Nodes.Select(x => Generate(x)).ToList();
 
             bodyExprs.Add(
-                Et.Label(ReturnLabel, Expression.Default(typeof(object)))
+                Et.Label(
+                    ReturnLabel, 
+                    Expression.Default(typeof(object))
+                )
             );
 
             var lambdaEt = Et.Lambda<Func<Frame, object>>(
@@ -251,19 +278,51 @@ namespace IronJS.Compiler
 
             ExitFrame();
 
-            return AstUtils.SimpleNewHelper(
-                typeof(Obj).GetConstructor(
-                    new[] { 
-                        typeof(Frame), 
-                        typeof(Lambda)
-                    }
+            // temp storage for the new object
+            var tmpObj = Et.Variable(
+                typeof(Obj), 
+                "#tmpobj"
+            );
+
+            /*
+             * 1) Create a new object with the current frame and current lambda as params
+             * 2) Assign the #FunctionPrototype object to it's Prototype field
+             * 3) return it
+             */
+
+            return Et.Block(
+                new[] { tmpObj },
+                // 1
+                Et.Assign(
+                    tmpObj,
+                    AstUtils.SimpleNewHelper( 
+                        typeof(Obj).GetConstructor(
+                            new[] { 
+                                typeof(Frame), 
+                                typeof(Lambda)
+                            }
+                        ),
+                        FrameExpr,
+                        Et.Call(
+                            TableExpr,
+                            typeof(Table).GetMethod("Pull"),
+                            Et.Constant(LambdaId)
+                        )
+                    )
                 ),
-                FrameExpr,
-                Et.Call(
-                    TableExpr,
-                    typeof(Table).GetMethod("Pull"),
-                    Et.Constant(LambdaId)
-                )
+                // 2
+                Et.Assign(
+                    Et.MakeMemberAccess(
+                        tmpObj,
+                        typeof(Obj).GetField("Prototype")
+                    ),
+                    FrameUtils.Pull<Obj>(
+                        GlobalFrameExpr,
+                        "#FunctionPrototype"
+                    )
+                ),
+                // 3
+                tmpObj
             );
         }
 
@@ -273,13 +332,25 @@ namespace IronJS.Compiler
             {
                 var idNode = (Ast.IdentifierNode) node.Target;
 
-                return Frame.Var(
+                return FrameUtils.Push(
                     FrameExpr, 
                     idNode.Name, 
                     Generate(node.Value), 
                     idNode.IsLocal ? VarType.Local : VarType.Global
                 );
             }
+            else if(node.Target is Ast.MemberAccessNode)
+            {
+                var maNode = (Ast.MemberAccessNode) node.Target;
+
+                return Et.Dynamic(
+                    new JsSetMemberBinder(maNode.Name),
+                    typeof(object),
+                    Generate(maNode.Target),
+                    Generate(node.Value)
+                );
+            }
+
 
             throw new NotImplementedException();
         }

@@ -19,7 +19,12 @@ namespace IronJS.Compiler.Ast
 
         public List<Node> Build(string fileName, Encoding encoding)
         {
-            return Build(System.IO.File.ReadAllText(fileName, encoding));
+            return Build(
+                System.IO.File.ReadAllText(
+                    fileName, 
+                    encoding
+                )
+            );
         }
 
         public List<Node> Build(string source)
@@ -149,9 +154,18 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildObject(ITree node)
         {
-            var namedProps = node.Map(x => new AutoPropertyNode(x.GetChildSafe(0).Text, Build(x.GetChildSafe(1))));
+            var namedProps = node.Map(
+                    x => new AutoPropertyNode(
+                        x.GetChildSafe(0).Text, 
+                        Build(x.GetChildSafe(1))
+                    )   
+                );
 
-            return new NewNode(new IdentifierNode("Object"), new List<Node>(), namedProps);
+            return new NewNode(
+                new IdentifierNode("Object"), 
+                new List<Node>(), 
+                namedProps
+            );
         }
 
         private Node BuildWhile(ITree node)
@@ -176,7 +190,11 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                return BuildLambda(node.GetChildSafe(0), node.GetChildSafe(1), "<lambda>");
+                return BuildLambda(
+                    node.GetChildSafe(0), 
+                    node.GetChildSafe(1), 
+                    "<lambda>"
+                );
             }
         }
 
@@ -201,7 +219,9 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildString(ITree node)
         {
-            return new StringNode(node.Text.Substring(1, node.Text.Length - 2));
+            return new StringNode(
+                node.Text.Substring(1, node.Text.Length - 2)
+            );
         }
 
         private Node BuildBlock(ITree node)
@@ -233,7 +253,10 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildMemberAccess(ITree node)
         {
-            return new MemberAccessNode(Build(node.GetChildSafe(0)), node.GetChildSafe(1).Text);
+            return new MemberAccessNode(
+                Build(node.GetChildSafe(0)), 
+                node.GetChildSafe(1).Text
+            );
         }
 
         private Node BuildCall(ITree node)
@@ -247,7 +270,11 @@ namespace IronJS.Compiler.Ast
             else
             {
                 var argsTree = node.GetChildSafe(1);
-                return new CallNode(Build(callTree), argsTree.Map(x => { return Build(x); }));
+
+                return new CallNode(
+                    Build(callTree), 
+                    argsTree.Map(x => { return Build(x); })
+                );
             }
         }
 
@@ -271,7 +298,10 @@ namespace IronJS.Compiler.Ast
             var lhs = node.GetChildSafe(0);
             var rhs = node.GetChildSafe(1);
 
-            return new AssignNode(Build(lhs), Build(rhs));
+            return new AssignNode(
+                Build(lhs), 
+                Build(rhs)
+            );
         }
 
         static public string Name(int type)

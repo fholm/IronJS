@@ -10,11 +10,9 @@ namespace IronJS.Compiler.Ast
     public enum NodeType
     {
         Assign, Identifier, Number, Null,
-        MemberAccess, Call, If, Eq, Block,
-        String, ClrNew, Lambda, While,
-        BinaryOp, Object, New,
-        AutoProperty,
-        Return
+        MemberAccess, Call, If, Eq, Block, 
+        String, ClrNew, Lambda, While, BinaryOp, 
+        Object, New, AutoProperty, Return
     }
 
     abstract public class Node

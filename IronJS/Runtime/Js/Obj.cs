@@ -13,7 +13,10 @@ namespace IronJS.Runtime.Js
 
     public class Obj : IDynamicMetaObjectProvider
     {
+        // 8.6.2 'Scope'
         public readonly Frame Frame;
+
+        // 8.6.2 'Call'
         public readonly Lambda Lambda;
 
         internal readonly Dictionary<object, Property> Properties =
@@ -40,6 +43,7 @@ namespace IronJS.Runtime.Js
             Class = ObjClass.Function;
         }
 
+        // 8.6.2
         public Obj Construct()
         {
             var newObject = new Obj();
@@ -51,6 +55,59 @@ namespace IronJS.Runtime.Js
                                 : GetObjectPrototype();
 
             return newObject;
+        }
+
+        // 8.6.2
+        public object Get(object key)
+        {
+            Property prop;
+
+            if (Properties.TryGetValue(key.ToString(), out prop))
+                return prop.Value;
+
+            if (Prototype != null)
+                return Prototype.Get(key);
+
+            return Js.Undefined.Instance;
+        }
+
+        // 8.6.2
+        public object Put(object key, object value, Js.PropertyAttrs attrs)
+        {
+            Obj obj = this;
+
+            while (obj != null)
+            {
+                if (Properties.ContainsKey(key))
+                    return Properties[key].Value = value;
+
+                obj = obj.Prototype;
+            }
+
+            Properties[key] = new Property(value, attrs);
+            return value;
+        }
+
+        // 8.6.2.
+        public bool CanPut(object key)
+        {
+            Obj obj = this;
+
+            while (obj != null)
+            {
+                if (Properties.ContainsKey(key))
+                    return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
+
+                obj = obj.Prototype;
+            }
+
+            return true;
+        }
+        
+        // 8.6.2
+        public bool Delete(object key)
+        {
+            return Properties.Remove(key);
         }
 
         public object GetOwnProperty(object key)
@@ -67,6 +124,11 @@ namespace IronJS.Runtime.Js
         {
             Properties[key] = new Property(value);
             return value;
+        }
+
+        public override string ToString()
+        {
+            return "[object " + Class + "]";
         }
 
         #region IDynamicMetaObjectProvider Members

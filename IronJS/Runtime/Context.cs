@@ -25,12 +25,18 @@ namespace IronJS.Runtime
             ctx.Globals = new Frame();
 
             ctx.ObjectPrototype = new Obj();
-            ctx.FunctionPrototype = new Obj();
+            ctx.FunctionPrototype = new Obj(
+                ctx.Globals,
+                new Lambda(
+                    new Func<Frame, object>(FunctionPrototypeLambda),
+                    new string[] { }.ToList()
+                )
+            );
 
             ctx.Object = new Obj(
                 ctx.Globals, 
                 new Lambda(
-                    new Func<Frame, object>(ObjectConstructor),
+                    new Func<Frame, object>(ObjectConstructorLambda),
                     new[] { "value" }.ToList()
                 )
             );
@@ -38,7 +44,7 @@ namespace IronJS.Runtime
             ctx.Function = new Obj(
                 ctx.Globals,
                 new Lambda(
-                    new Func<Frame, object>(FunctionConstructor),
+                    new Func<Frame, object>(FunctionConstructorLambda),
                     new string[] { }.ToList()
                 )
             );
@@ -69,12 +75,17 @@ namespace IronJS.Runtime
             return ctx;
         }
 
-        static public object FunctionConstructor(Frame frame)
+        static public object FunctionPrototypeLambda(Frame frame)
+        {
+            return Js.Undefined.Instance;
+        }
+
+        static public object FunctionConstructorLambda(Frame frame)
         {
             return null;
         }
 
-        static public object ObjectConstructor(Frame frame)
+        static public object ObjectConstructorLambda(Frame frame)
         {
             var value = frame.Arg("value");
 

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js
 {
@@ -25,11 +26,73 @@ namespace IronJS.Runtime.Js
 
         }
 
+        public override Meta BindGetMember(GetMemberBinder binder)
+        {
+            //TODO: insert defer
+
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<Obj>(this.Expression),
+                    typeof(Obj).GetMethod("Get"),
+                    Et.Constant(binder.Name)
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression,
+                    this.LimitType
+                )
+            );
+        }
+
         public override Meta BindSetMember(SetMemberBinder binder, Meta value)
         {
             //TODO: insert defer
-            return Et.Call(
 
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<Obj>(this.Expression),
+                    typeof(Obj).GetMethod("Put"),
+                    Et.Constant(binder.Name),
+                    EtUtils.Box(value.Expression),
+                    Et.Constant(
+                        (binder is JsSetMemberBinder)
+                        ? ((JsSetMemberBinder)binder).Attrs
+                        : 0
+                    )
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression, 
+                    this.LimitType
+                )
+            );
+        }
+
+        public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
+        {
+            //TODO: insert defer
+
+            return new Meta(
+                Et.Dynamic(
+                    new JsInvokeBinder(
+                        new CallInfo(args.Length + 2),
+                        InvokeFlag.Method
+                    ),
+                    typeof(object),
+                    ArrayUtils.Insert(
+                        // The Js.Obj we shall call
+                        Et.Dynamic(
+                            new JsGetMemberBinder(binder.Name),
+                            typeof(object),
+                            this.Expression
+                        ),
+                        this.Expression, // 'this'-argument
+                        DynamicUtils.GetExpressions(args) // other arguments
+                    )
+                ),
+                RestrictUtils.BuildCallRestrictions(
+                    this,
+                    args,
+                    RestrictFlag.Type
+                )
             );
         }
 
@@ -137,21 +200,47 @@ namespace IronJS.Runtime.Js
                     )
                 );
 
-                Et exprTree = null;
+                Et exprTree;
 
                 switch (jsBinder.CallType)
                 {
                     case InvokeFlag.Function:
-                        exprTree = SetupFunctionCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        exprTree = SetupCallFrame(
+                            exprs, 
+                            callTargetExpr, 
+                            callFrameExpr, 
+                            argumentsExpr, 
+                            selfObj.Lambda, 
+                            args,
+                            Et.Default(typeof(object))
+                        );
                         break;
 
                     case InvokeFlag.Method:
-                        exprTree = SetupMethodCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        exprTree = SetupCallFrame(
+                            exprs,
+                            callTargetExpr,
+                            callFrameExpr,
+                            argumentsExpr,
+                            selfObj.Lambda,
+                            ArrayUtils.RemoveFirst(args),
+                            args[0].Expression
+                        );
                         break;
 
                     case InvokeFlag.Constructor:
-                        exprTree = SetupConstructorCallFrame(exprs, callTargetExpr, callFrameExpr, argumentsExpr, selfObj.Lambda, args);
+                        exprTree = SetupConstructorCallFrame(
+                            exprs,
+                            callTargetExpr,
+                            callFrameExpr,
+                            argumentsExpr,
+                            selfObj.Lambda,
+                            args
+                        );
                         break;
+
+                    default:
+                        throw new NotImplementedException();
                 }
 
                 return new Meta(
@@ -207,7 +296,7 @@ namespace IronJS.Runtime.Js
                 )
             );
 
-            // finally, emit the call et
+            // finally, emit the call
             exprs.Add(
                 EtUtils.Box(
                     Et.Call(
@@ -228,16 +317,11 @@ namespace IronJS.Runtime.Js
                 new[] { callFrameExpr, argumentsExpr, thisParm },
                 exprs
             );
-
         }
 
-        private Et SetupMethodCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
+        private Et SetupCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args, Et that)
         {
-            throw new NotImplementedException();
-        }
-
-        private Et SetupFunctionCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
-        {
+            //TODO: extract methods from this + SetupFunctionCallFrame, duplicate functionality
             PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
 
             // hidden 'this' parameter
@@ -245,12 +329,12 @@ namespace IronJS.Runtime.Js
                 FrameUtils.Push(
                     callFrameExpr,
                     "this",
-                    Et.Default(typeof(object)),
+                    that,
                     VarType.Local
                 )
             );
 
-            // finally, emit the call et
+            // finally, emit the call
             exprs.Add(
                 EtUtils.Box(
                     Et.Call(
@@ -279,7 +363,7 @@ namespace IronJS.Runtime.Js
                         FrameUtils.Push(
                             callFrameExpr,
                             lambda.Params[i],
-                            args[i].Expression,
+                            EtUtils.Box(args[i].Expression),
                             VarType.Local
                         )
                     );
@@ -290,7 +374,7 @@ namespace IronJS.Runtime.Js
                     ObjUtils.SetOwnProperty(
                         argumentsExpr,
                         i,
-                        args[i].Expression
+                        EtUtils.Box(args[i].Expression)
                     )
                 );
             }

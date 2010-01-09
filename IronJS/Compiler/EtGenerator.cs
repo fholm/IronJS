@@ -152,6 +152,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.New:
                     return GenerateNew((Ast.NewNode)node);
 
+                case Ast.NodeType.MemberAccess:
+                    return GenerateMemberAccess((Ast.MemberAccessNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -165,6 +168,15 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateMemberAccess(Ast.MemberAccessNode node)
+        {
+            return Et.Dynamic(
+                new JsGetMemberBinder(node.Name),
+                typeof(object),
+                Generate(node.Target)
+            );
         }
 
         private Et GenerateNew(Ast.NewNode node)
@@ -233,20 +245,42 @@ namespace IronJS.Compiler
 
         private Et GenerateCall(Ast.CallNode node)
         {
-            var target = Generate(node.Target);
             var args = node.Args.ToEtArray(x => Generate(x));
 
-            return Et.Dynamic(
-                new JsInvokeBinder(
-                    new CallInfo(args.Length),
-                    InvokeFlag.Function
-                ),
-                typeof(object),
-                ArrayUtils.Insert(
-                    target,
-                    args
-                )
-            );
+            if (node.Target is Ast.IdentifierNode)
+            {
+                var target = Generate(node.Target);
+
+                return Et.Dynamic(
+                    new JsInvokeBinder(
+                        new CallInfo(args.Length),
+                        InvokeFlag.Function
+                    ),
+                    typeof(object),
+                    ArrayUtils.Insert(
+                        target,
+                        args
+                    )
+                );
+            }
+            else if(node.Target is Ast.MemberAccessNode)
+            {
+                var target = (Ast.MemberAccessNode)node.Target;
+
+                return Et.Dynamic(
+                    new JsInvokeMemberBinder(
+                        target.Name,
+                        new CallInfo(args.Length + 1)
+                    ),
+                    typeof(object),
+                    ArrayUtils.Insert(
+                        Generate(target.Target),
+                        args
+                    )
+                );
+            }
+
+            throw new NotImplementedException();
         }
 
         private Et GenerateLambda(Ast.LambdaNode node)

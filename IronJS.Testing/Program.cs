@@ -9,11 +9,6 @@ namespace IronJS.Testing
 {
     class Program
     {
-        static void OverFlow()
-        {
-            OverFlow();
-        }
-
         static void Main(string[] args)
         {
             var astBuilder = new Compiler.Ast.AstGenerator();
@@ -35,6 +30,6 @@ namespace IronJS.Testing
             var compiled = etGenerator.Build(astNodes);
 
             compiled(context.Globals);
-        }
+            }
     }
 }

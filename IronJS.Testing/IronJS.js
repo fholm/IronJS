@@ -1,27 +1,14 @@
 ﻿
-var bar = {};
+var foo = { bar: function (lol) { print(arguments); return lol; }, baz: "hello world" };
 
-bar.baz = 1;
 
-bar.foo = function (x, y) {
-    print(this.baz);
-    print(x);
-    print(y);
+var bar = function () {
+    bar();
 };
 
-
-bar.foo(10, 20);
-
-bar.foo.baz = {};
-
-print(bar);
-
-print(bar.foo);
-
-print(bar.foo.baz);
-
-var foo = function () {
-    print("foo");
-};
+bar();
 
 print(foo);
+print(foo.bar);
+print(foo.bar("wtf!?", "foo", "bar", "baz", "daz", "jazz", "zazz"));
+print(foo.baz);

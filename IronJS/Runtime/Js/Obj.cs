@@ -13,14 +13,14 @@ namespace IronJS.Runtime.Js
 
     public class Obj : IDynamicMetaObjectProvider
     {
+        internal readonly Dictionary<object, Property> Properties =
+            new Dictionary<object, Property>();
+
         // 8.6.2 'Scope'
         public readonly Frame Frame;
 
         // 8.6.2 'Call'
         public readonly Lambda Lambda;
-
-        internal readonly Dictionary<object, Property> Properties =
-            new Dictionary<object, Property>();
 
         // 8.6.2
         public Obj Prototype;
@@ -29,7 +29,7 @@ namespace IronJS.Runtime.Js
         public readonly ObjClass Class;
 
         // 8.6.2
-        internal object Value;
+        public object Value;
 
         public Obj()
         {
@@ -70,9 +70,24 @@ namespace IronJS.Runtime.Js
 
             return Js.Undefined.Instance;
         }
-
         // 8.6.2
-        public object Put(object key, object value, Js.PropertyAttrs attrs)
+        public object Put(object key, object value)
+        {
+            Obj obj = this;
+
+            while (obj != null)
+            {
+                if (Properties.ContainsKey(key))
+                    return Properties[key].Value = value;
+
+                obj = obj.Prototype;
+            }
+
+            Properties[key] = new Property(value);
+            return value;
+        }
+
+        public object PutWithAttrs(object key, object value, Js.PropertyAttrs attrs)
         {
             Obj obj = this;
 
@@ -108,6 +123,11 @@ namespace IronJS.Runtime.Js
         public bool Delete(object key)
         {
             return Properties.Remove(key);
+        }
+
+        public object HasOwnProperty(object key)
+        {
+            return Properties.ContainsKey(key);
         }
 
         public object GetOwnProperty(object key)

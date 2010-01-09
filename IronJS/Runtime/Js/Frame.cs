@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 
@@ -6,7 +7,6 @@ namespace IronJS.Runtime.Js
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
-    using System;
 
     public enum VarType { Global, Local }
 

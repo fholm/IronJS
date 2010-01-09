@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Dynamic;
-using System.Linq.Expressions;
 using System.Reflection;
 using IronJS.Runtime.Utils;
-using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Binders
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
-
-    using Js = IronJS.Runtime.Js;
-    using Runtime = IronJS.Runtime;
 
     enum InvokeFlag { Constructor, Method, Function }
 
@@ -32,7 +27,7 @@ namespace IronJS.Runtime.Binders
             // handles invocation of Undefined
             if (Object.ReferenceEquals(target.Value, Js.Undefined.Instance))
             {
-                return Runtime.Utils.EtUtils.CreateThrow(
+                return EtUtils.CreateThrow(
                     target, 
                     args, 
                     Restrict.GetInstanceRestriction(

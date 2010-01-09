@@ -26,6 +26,11 @@ namespace IronJS.Runtime.Js
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <returns></returns>
         public override Meta BindGetMember(GetMemberBinder binder)
         {
             //TODO: insert defer
@@ -43,6 +48,12 @@ namespace IronJS.Runtime.Js
             );
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public override Meta BindSetMember(SetMemberBinder binder, Meta value)
         {
             //TODO: insert defer
@@ -50,7 +61,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Put"),
+                    typeof(Obj).GetMethod("PutWithAttrs"),
                     Et.Constant(binder.Name),
                     EtUtils.Box(value.Expression),
                     Et.Constant(
@@ -66,6 +77,12 @@ namespace IronJS.Runtime.Js
             );
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
         {
             //TODO: insert defer
@@ -78,11 +95,11 @@ namespace IronJS.Runtime.Js
                     ),
                     typeof(object),
                     ArrayUtils.Insert(
-                        // The Js.Obj we shall call
-                        Et.Dynamic(
-                            new JsGetMemberBinder(binder.Name),
-                            typeof(object),
-                            this.Expression
+                        // the Js.Obj we're calling
+                        Et.Call(
+                            EtUtils.Cast<Obj>(this.Expression),
+                            typeof(Obj).GetMethod("Get"),
+                            Et.Constant(binder.Name)
                         ),
                         this.Expression, // 'this'-argument
                         DynamicUtils.GetExpressions(args) // other arguments
@@ -96,6 +113,12 @@ namespace IronJS.Runtime.Js
             );
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
         {
             //TODO: insert defer
@@ -217,6 +240,10 @@ namespace IronJS.Runtime.Js
                         break;
 
                     case InvokeFlag.Method:
+                        // uses same call frame as
+                        // normal function calls
+                        // except 'this' is replaced
+                        // by first arguments expression
                         exprTree = SetupCallFrame(
                             exprs,
                             callTargetExpr,
@@ -244,6 +271,7 @@ namespace IronJS.Runtime.Js
                 }
 
                 return new Meta(
+                    // exprs
                     exprTree,
 
                     // standard call restriction, on type
@@ -268,6 +296,16 @@ namespace IronJS.Runtime.Js
             return binder.FallbackInvoke(this, args);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="exprs"></param>
+        /// <param name="callTargetExpr"></param>
+        /// <param name="callFrameExpr"></param>
+        /// <param name="argumentsExpr"></param>
+        /// <param name="lambda"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
         private Et SetupConstructorCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
         {
             var thisParm = Et.Parameter(
@@ -319,9 +357,19 @@ namespace IronJS.Runtime.Js
             );
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="exprs"></param>
+        /// <param name="callTargetExpr"></param>
+        /// <param name="callFrameExpr"></param>
+        /// <param name="argumentsExpr"></param>
+        /// <param name="lambda"></param>
+        /// <param name="args"></param>
+        /// <param name="that"></param>
+        /// <returns></returns>
         private Et SetupCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args, Et that)
         {
-            //TODO: extract methods from this + SetupFunctionCallFrame, duplicate functionality
             PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
 
             // hidden 'this' parameter
@@ -351,8 +399,24 @@ namespace IronJS.Runtime.Js
             );
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="exprs"></param>
+        /// <param name="callFrameExpr"></param>
+        /// <param name="argumentsExpr"></param>
+        /// <param name="lambda"></param>
+        /// <param name="args"></param>
         private void PushArgsOnFrame(List<Et> exprs, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
         {
+            exprs.Add(
+                ObjUtils.SetOwnProperty(
+                    argumentsExpr,
+                    "length",
+                    EtUtils.Box(Et.Constant(args.Length))
+                )
+            );
+
             for (int i = 0; i < args.Length; ++i)
             {
                 // only args with param names

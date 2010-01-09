@@ -43,7 +43,7 @@ namespace IronJS.Runtime.Js
 
         internal Property(object value, PropertyAttrs attrs)
         {
-            _value = value; // optimization, we can skip going through Value here
+            _value = value; // optimization, we can skip going through 'Value'-property here
             Attributes = attrs;
         }
 

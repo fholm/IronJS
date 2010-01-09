@@ -163,11 +163,19 @@ namespace IronJS.Compiler
                 case Ast.NodeType.String:
                     return GenerateString((Ast.StringNode)node);
 
+                case Ast.NodeType.Null:
+                    return GenerateNull((Ast.NullNode)node);
+
                 #endregion
 
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateNull(Ast.NullNode node)
+        {
+            return Et.Default(typeof(object));
         }
 
         private Et GenerateMemberAccess(Ast.MemberAccessNode node)
@@ -183,17 +191,47 @@ namespace IronJS.Compiler
         {
             var target = Generate(node.Target);
             var args = node.Args.ToEtArray(x => Generate(x));
+            var tmp = Et.Variable(typeof(Obj), "#tmp");
+            var exprs = new List<Et>();
 
-            return Et.Dynamic(
-                new JsInvokeBinder(
-                    new CallInfo(args.Length),
-                    InvokeFlag.Constructor
-                ),
-                typeof(object),
-                ArrayUtils.Insert(
-                    target,
-                    args
+            exprs.Add(
+                Et.Assign(
+                    tmp,
+                    EtUtils.Cast<Obj>(
+                        Et.Dynamic(
+                            new JsInvokeBinder(
+                                new CallInfo(args.Length),
+                                InvokeFlag.Constructor
+                            ),
+                            typeof(object),
+                            ArrayUtils.Insert(
+                                target,
+                                args
+                            )
+                        )
+                    )
                 )
+            );
+
+            foreach(var propNode in node.Properties)
+            {
+                exprs.Add(
+                    Et.Call(
+                        tmp,
+                        typeof(Obj).GetMethod("Put"),
+                        Et.Constant(propNode.Name, typeof(object)),
+                        EtUtils.Box(Generate(propNode.Value))
+                    )
+                );
+            }
+
+            exprs.Add(
+                EtUtils.Box(tmp)
+            );
+
+            return Et.Block(
+                new[] { tmp },
+                exprs
             );
         }
 

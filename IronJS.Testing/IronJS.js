@@ -1,15 +1,8 @@
 ﻿
 
 var foo = function (baz) {
-
-    var bar = function (boo) {
-        var daz = function () {
-            foo(boo + boo);
-        }
-        daz();
-    };
-
-    bar(baz + 2);
+    return "test";
 };
 
-foo(2);
+var bar = foo(2);
+print(bar);

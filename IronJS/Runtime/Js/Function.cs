@@ -9,10 +9,10 @@ namespace IronJS.Runtime.Js
 
     public class Function
     {
-        internal readonly Action<Frame> Lambda;
+        internal readonly Func<Frame, object> Lambda;
         internal readonly List<string> Params;
 
-        public Function(Action<Frame> lambda, List<string> parms)
+        public Function(Func<Frame, object> lambda, List<string> parms)
         {
             Lambda = lambda;
             Params = parms;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Linq.Expressions;
 using IronJS.Runtime.Js;
 
 namespace IronJS.Testing
@@ -8,9 +9,25 @@ namespace IronJS.Testing
     {
         static void Main(string[] args)
         {
+            var bar = Expression.Parameter(typeof(int), "bar");
+            var label = Expression.Label(typeof(int));
+
+            var l = Expression.Lambda<Func<int, int>>(
+                Expression.Block(
+                    Expression.Condition(
+                        Expression.Equal(Expression.Modulo(bar, Expression.Constant(2)), Expression.Constant(0)),
+                        Expression.Return(label, Expression.Multiply(bar, Expression.Constant(10))),
+                        Expression.Return(label, Expression.Multiply(bar, Expression.Constant(20)))
+                    ),
+                    Expression.Label(label, Expression.Default(typeof(int)))
+                ),
+                new[] { bar }
+            );
+
+            l.Compile();
+
             var astBuilder = new Compiler.Ast.Builder();
-            var treeGenerator = new Compiler.Tree.Generator();
-            var context = new Runtime.Context();
+            var treeGenerator = new Compiler.Tree.EtGenerator();
 
             var astNodes = astBuilder.Build("IronJS.js", Encoding.UTF8);
 

@@ -88,6 +88,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.OBJECT:
                     return BuildObject(node);
 
+                case EcmaParser.RETURN:
+                    return BuildReturn(node);
+
                 /*
                  * Literals
                  */
@@ -122,6 +125,11 @@ namespace IronJS.Compiler.Ast
                 default:
                     throw new Compiler.CompilerError("Unrecognized token '{0}'", node, Name(node));
             }
+        }
+
+        private Node BuildReturn(ITree node)
+        {
+            return new ReturnNode(Build(node.GetChildSafe(0)));
         }
 
         private Node BuildVarAssign(ITree node)

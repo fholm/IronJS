@@ -66,11 +66,11 @@
     <Compile Include="Compiler\Ast\Node.cs" />
     <Compile Include="Compiler\Ast\NullNode.cs" />
     <Compile Include="Compiler\Ast\NumberNode.cs" />
+    <Compile Include="Compiler\Ast\ReturnNode.cs" />
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
-    <Compile Include="Reflect\Method.cs" />
-    <Compile Include="Compiler\Tree\Generator.cs" />
+    <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsSetMemberBinder.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
@@ -84,7 +84,6 @@
     <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
-    <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\Closure.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -95,12 +94,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Function.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Obj.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\ObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Property.cs">

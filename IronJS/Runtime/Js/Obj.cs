@@ -7,7 +7,6 @@ namespace IronJS.Runtime.Js
 {
     public class Obj : IDynamicMetaObjectProvider
     {
-        internal Context Context;
         internal readonly string Name;
 
         internal bool IsCallable { get { return Call != null; } }
@@ -44,10 +43,9 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         public Delegate Call;
 
-        public Obj(string name, Context context)
+        public Obj(string name)
         {
             Name = name;
-            Context = context;
         }
 
         // 8.6.2

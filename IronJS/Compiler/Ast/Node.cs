@@ -10,7 +10,8 @@ namespace IronJS.Compiler.Ast
         MemberAccess, Call, If, Eq, Block,
         String, ClrNew, Lambda, While,
         BinaryOp, Object, New,
-        AutoProperty
+        AutoProperty,
+        Return
     }
 
     public class Node

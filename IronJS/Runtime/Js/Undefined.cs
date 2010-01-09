@@ -6,8 +6,9 @@ namespace IronJS.Runtime.Js
 
     sealed class Undefined
     {
-        static readonly object _sync = new object();
         static Undefined _instance;
+        static readonly object _sync = new object();
+
         internal static Undefined Instance
         {
             get

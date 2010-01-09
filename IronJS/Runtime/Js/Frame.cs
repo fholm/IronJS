@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
-using IronJS.Reflect;
 using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
+    using System;
 
     public enum VarType { Global, Local }
 
@@ -113,7 +113,7 @@ namespace IronJS.Runtime.Js
                 target,
                 Et.Call(
                     parent, 
-                    Method.GetMethod<Frame>("Enter")
+                    typeof(Frame).GetMethod("Enter", Type.EmptyTypes)
                 )
             );
         }

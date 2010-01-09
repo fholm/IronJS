@@ -14,10 +14,5 @@ namespace IronJS.Runtime
             Console.WriteLine(o);
             return o;
         }
-
-        public static object Inspect(Js.Obj arguments, Js.Obj that, object o)
-        {
-            return o;
-        }
     }
 }

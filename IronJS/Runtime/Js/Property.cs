@@ -10,9 +10,9 @@ namespace IronJS.Runtime.Js
         DontDelete = 4
     }
 
-    class Property
+    sealed class Property
     {
-        protected object _value;
+        object _value;
 
         internal PropertyAttrs Attributes;
         internal readonly string Name;

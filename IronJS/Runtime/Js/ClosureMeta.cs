@@ -23,16 +23,22 @@ namespace IronJS.Runtime.Js
             var selfValue = (Closure)this.Value;
 
             var func = selfValue.Function;
-            var invk = func.Lambda.GetType().GetMethod("Invoke");
-            var functionField = EtUtils.Cast<Function>(Et.Field(selfExpr, "Function"));
+            var lambdaType = func.Lambda.GetType();
+            var invokeMethod = lambdaType.GetMethod("Invoke");
+            var function = EtUtils.Cast<Function>(Et.Field(selfExpr, "Function"));
 
-            var target = Et.Field(functionField, "Lambda");
+            var callTarget = Et.Field(function, "Lambda");
             var callFrame = Et.Parameter(typeof(Frame), "#callframe");
             var closureFrame = Et.Field(selfExpr, "Frame");
 
             var exprs = new List<Et>();
 
-            exprs.Add(Frame.Enter(callFrame, closureFrame));
+            exprs.Add(
+                Frame.Enter(
+                    callFrame, 
+                    closureFrame
+                )
+            );
 
             for (int i = 1; i < args.Length; ++i)
             {
@@ -47,11 +53,16 @@ namespace IronJS.Runtime.Js
             }
 
             exprs.Add(
-                EtUtils.Box(Et.Call(
-                    Et.Convert(target, func.Lambda.GetType()),
-                    invk,
-                    EtUtils.Cast<Frame>(callFrame)
-                ))
+                EtUtils.Box(
+                    Et.Call(
+                        Et.Convert(
+                            callTarget, 
+                            lambdaType
+                        ),
+                        invokeMethod,
+                        EtUtils.Cast<Frame>(callFrame)
+                    )
+                )
             );
 
             return new Meta(
@@ -60,7 +71,7 @@ namespace IronJS.Runtime.Js
                     exprs
                 ),
                 Restrict.GetInstanceRestriction(
-                    target, 
+                    callTarget, 
                     func.Lambda
                 ).Merge(
                     RestrictUtils.BuildCallRestrictions(

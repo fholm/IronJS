@@ -19,16 +19,7 @@ namespace IronJS.Runtime.Js
         internal readonly Dictionary<object, Property> Properties =
             new Dictionary<object, Property>();
 
-        internal readonly List<Property> PropertyList =
-            new List<Property>();
-
         // 8.6.2
-        /*
-         * This is the internal
-         * prototype of this object,
-         * this is not the same as the
-         * public property 'prototype'.
-         */
         internal Obj Prototype;
 
         // 8.6.2
@@ -49,7 +40,7 @@ namespace IronJS.Runtime.Js
             Class = ObjClass.Function;
         }
 
-        public object SetOwn(object key, object value)
+        public object SetOwnProperty(object key, object value)
         {
             Properties[key] = new Property(value);
             return value;
@@ -63,27 +54,5 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
-
-        #region static
-
-        static internal Et SetMember(Et target, object name, Et value)
-        {
-            return Et.Call(
-                target,
-                typeof(Obj).GetMethod("SetOwn"),
-                EtUtils.Box(Et.Constant(name)),
-                value
-            );
-        }
-
-        static internal Et CreateNew()
-        {
-            return AstUtils.SimpleNewHelper(
-                typeof(Obj).GetConstructor(Type.EmptyTypes)
-            );
-        }
-
-        #endregion 
-
     }
 }

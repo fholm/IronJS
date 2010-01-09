@@ -101,7 +101,7 @@ namespace IronJS.Runtime.Js
                 exprs.Add(
                     Et.Assign(
                         argumentsExpr,
-                        Obj.CreateNew()
+                        ObjUtils.CreateNew()
                     )
                 );
 
@@ -195,7 +195,7 @@ namespace IronJS.Runtime.Js
                 );
 
                 exprs.Add(
-                    Obj.SetMember(
+                    ObjUtils.SetOwnProperty(
                         argumentsExpr,
                         i,
                         args[i].Expression
@@ -205,7 +205,7 @@ namespace IronJS.Runtime.Js
 
             // 'arguments' parameter
             exprs.Add(
-                Obj.SetMember(
+                ObjUtils.SetOwnProperty(
                     argumentsExpr,
                     "callee",
                     this.Expression

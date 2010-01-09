@@ -106,6 +106,7 @@
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs" />
     <Compile Include="Runtime\Utils\JsUtils.cs" />
+    <Compile Include="Runtime\Utils\ObjUtils.cs" />
     <Compile Include="Runtime\Utils\RestrictUtils.cs" />
     <Compile Include="Tuple.cs" />
   </ItemGroup>

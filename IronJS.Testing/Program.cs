@@ -9,7 +9,7 @@ namespace IronJS.Testing
     {
         static void Main(string[] args)
         {
-            var astBuilder = new Compiler.Ast.Builder();
+            var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
             var astNodes = astBuilder.Build("IronJS.js", Encoding.UTF8);

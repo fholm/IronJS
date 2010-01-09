@@ -54,7 +54,7 @@
     <Compile Include="Compiler\Ast\AssignNode.cs" />
     <Compile Include="Compiler\Ast\AutoPropertyNode.cs" />
     <Compile Include="Compiler\Ast\BlockNode.cs" />
-    <Compile Include="Compiler\Ast\Builder.cs" />
+    <Compile Include="Compiler\AstGenerator.cs" />
     <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\ClrNewNode.cs" />
     <Compile Include="Compiler\Ast\BinaryOpNode.cs" />

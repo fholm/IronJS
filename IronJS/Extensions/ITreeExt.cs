@@ -12,7 +12,7 @@ namespace IronJS.Extensions
             var child = that.GetChild(n);
 
             if (child == null)
-                throw new Compiler.CompilerError("Expected child at index {0} on {1}", that, n, Compiler.Ast.Builder.Name(that));
+                throw new Compiler.CompilerError("Expected child at index {0} on {1}", that, n, Compiler.Ast.AstGenerator.Name(that));
 
             if (!child.IsNil && child.Type == 0)
                 throw new Compiler.CompilerError("Unexpected '{0}'", that, child.Text);

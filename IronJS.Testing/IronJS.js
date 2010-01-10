@@ -70,12 +70,36 @@ function foo () {
 
 print(void foo());
 
+
+foo = 4;
+bar = 4;
+
+if (foo > bar) {
+    print(foo + " > " + bar);
+} else {
+    print(foo + " <= " + bar);
+}
+
+
+print(foo > bar ? "foo>bar" : "foo<=bar");
+
+print("1" == 1); // true
+
+print("1" === 1); // false
+print(1 === 2); // false
+print(1 === 1); // true
+
+print("1" !== 1); // true
+print(1 !== 2); // true
+print(1 !== 1); // false
+
+print(-14 >>> 2)
+
+foo = -14
+
+print(foo >>>= 2)
+
 /*
 //foo = 1 === 1
 //foo = 1 !== 1
-*/
-
-/*
-//foo = 1 >>> 1
-//foo >>>= 1
 */

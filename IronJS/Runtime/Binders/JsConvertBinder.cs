@@ -26,6 +26,8 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackConvert(Meta target, Meta errorSuggestion)
         {
+            //TODO: insert defer
+
             var restrictions = 
                 Restrict.GetTypeRestriction(
                     target.Expression,

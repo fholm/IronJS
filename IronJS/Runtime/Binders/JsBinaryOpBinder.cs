@@ -49,6 +49,7 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackBinaryOperation(Meta target, Meta arg, Meta error)
         {
+            //TODO: insert defer
             //TODO: optimize common double + double case for all operations
             //TODO: handle infinity + zero stuff correct
 

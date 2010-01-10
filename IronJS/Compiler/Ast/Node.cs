@@ -18,7 +18,9 @@ namespace IronJS.Compiler.Ast
         PostfixOperator,
         TypeOf,
         Boolean,
-        Void
+        Void,
+        StrictCompare,
+        UnsignedRightShift
     }
 
     abstract public class Node

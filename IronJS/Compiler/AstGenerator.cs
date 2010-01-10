@@ -12,6 +12,10 @@ namespace IronJS.Compiler.Ast
     using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
     using System.Linq.Expressions;
 
+    //TODO: implement delete operator
+    //TODO: implement >>> and >>>= operator
+    //TODO: implement === and !== operator
+
     public class AstGenerator
     {
         public List<Node> Build(string fileName, Encoding encoding)
@@ -70,6 +74,7 @@ namespace IronJS.Compiler.Ast
                     return BuildMemberAccess(node);
 
                 case EcmaParser.IF:
+                case EcmaParser.QUE:
                     return BuildIf(node);
 
                 case EcmaParser.BLOCK:
@@ -166,16 +171,13 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.NEQ:
                     return BuildBinaryOp(node, ExpressionType.NotEqual);
 
-                /*
-                //TODO: add support for !== and ===
                 // 1 === 2
                 case EcmaParser.SAME:
-                    return BuildBinaryOp(node, ExpressionType.EqEq);
+                    return BuildStrictCompare(node, ExpressionType.Equal);
 
-                // 1 !=== 2
+                // 1 !== 2
                 case EcmaParser.NSAME:
-                    return BuildBinaryOp(node, ExpressionType.NotEqEq);
-                */
+                    return BuildStrictCompare(node, ExpressionType.NotEqual);
 
                 // 1 < 2
                 case EcmaParser.LT:
@@ -201,11 +203,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.SHL:
                     return BuildBinaryOp(node, ExpressionType.LeftShift);
 
-                /* TODO: add support for >>>
                 // 1 >>> 2
                 case EcmaParser.SHU:
-                    return BuildBinaryOp(node, ExpressionType.ShiftRightZero);
-                */
+                    return BuildUnsignedRightShift(node);
 
                 // foo >>= 1
                 case EcmaParser.SHRASS:
@@ -215,11 +215,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.SHLASS:
                     return BuildBinaryOpAssign(node, ExpressionType.LeftShift);
 
-                /* TODO: add support for >>>=
                 // foo >>>= 1
                 case EcmaParser.SHUASS:
-                    return BuildBinaryOp(node, ExpressionType.ShiftRightZero);
-                */
+                    return BuildUnsignedRightShiftAssign(node);
 
                 // 1 & 2
                 case EcmaParser.AND:
@@ -311,6 +309,34 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildUnsignedRightShiftAssign(ITree node)
+        {
+            return new AssignNode(
+                Build(node.GetChildSafe(0)),
+                new UnsignedRightShiftNode(
+                    Build(node.GetChildSafe(0)),
+                    Build(node.GetChildSafe(1))
+                )
+            );
+        }
+
+        private Node BuildUnsignedRightShift(ITree node)
+        {
+            return new UnsignedRightShiftNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1))
+            );
+        }
+
+        private Node BuildStrictCompare(ITree node, ExpressionType type)
+        {
+            return new StrictCompareNode(
+                Build(node.GetChildSafe(0)), 
+                Build(node.GetChildSafe(1)),
+                type
+            );
         }
 
         private Node BuildVoidOp(ITree node)
@@ -513,8 +539,8 @@ namespace IronJS.Compiler.Ast
         {
             return new IfNode(
                 Build(node.GetChildSafe(0)), 
-                (BlockNode) Build(node.GetChildSafe(1)), 
-                Build(node.GetChild(2)) as BlockNode // can be null
+                Build(node.GetChildSafe(1)), 
+                Build(node.GetChild(2)) // can be null
             );
         }
 

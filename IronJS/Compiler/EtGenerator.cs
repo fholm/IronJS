@@ -173,6 +173,15 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Void:
                     return GenerateVoid((Ast.VoidNode)node);
 
+                case Ast.NodeType.If:
+                    return GenerateIf((Ast.IfNode)node);
+
+                case Ast.NodeType.StrictCompare:
+                    return GenerateStrictCompare((Ast.StrictCompareNode)node);
+
+                case Ast.NodeType.UnsignedRightShift:
+                    return GenerateUnsignedRightShift((Ast.UnsignedRightShiftNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -191,8 +200,68 @@ namespace IronJS.Compiler
             }
         }
 
+        private Et GenerateUnsignedRightShift(Ast.UnsignedRightShiftNode node)
+        {
+            //TODO: to much boxing/conversion going on, fix
+            return EtUtils.Box(
+                Et.Convert(
+                    Et.Call(
+                        typeof(BuiltIns).GetMethod("UnsignedRightShift"),
+
+                        Et.Convert(
+                            Et.Dynamic(
+                                new JsConvertBinder(typeof(double)),
+                                typeof(double),
+                                Generate(node.Left)
+                            ),
+                            typeof(int)
+                        ),
+
+                        Et.Convert(
+                            Et.Dynamic(
+                                new JsConvertBinder(typeof(double)),
+                                typeof(double),
+                                Generate(node.Right)
+                            ),
+                            typeof(int)
+                        )
+
+                    ),
+                    typeof(double)
+                )
+            );
+        }
+
+        private Et GenerateStrictCompare(Ast.StrictCompareNode node)
+        {
+            Et expr = Et.Call(
+                typeof(BuiltIns).GetMethod("StrictEquality"),
+                Generate(node.Left),
+                Generate(node.Right)
+            );
+
+            if(node.Op == ExpressionType.NotEqual)
+                expr = Et.Not(Et.Convert(expr, typeof(bool)));
+
+            return expr;
+        }
+
+        private Et GenerateIf(Ast.IfNode node)
+        {
+            return Et.Condition(
+                Et.Dynamic(
+                    new JsConvertBinder(typeof(bool)),
+                    typeof(bool),
+                    Generate(node.Test)
+                ),
+                Generate(node.TrueBranch),
+                Generate(node.ElseBranch)
+            );
+        }
+
         private Et GenerateVoid(Ast.VoidNode node)
         {
+            // 11.4.2
             return Et.Block(
                 Generate(node.Target),
                 Undefined.Expr
@@ -209,6 +278,7 @@ namespace IronJS.Compiler
 
         private Et GenerateTypeOf(Ast.TypeOfNode node)
         {
+            // 11.4.3
             return Et.Call(
                 typeof(BuiltIns).GetMethod("TypeOf"),
                 Generate(node.Target)

@@ -77,6 +77,8 @@
     <Compile Include="Compiler\Ast\PrefixOperatorNode.cs" />
     <Compile Include="Compiler\Ast\TypeOfNode.cs" />
     <Compile Include="Compiler\Ast\VoidNode.cs" />
+    <Compile Include="Compiler\Ast\StrictCompareNode.cs" />
+    <Compile Include="Compiler\Ast\UnsignedRightShiftNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

@@ -22,7 +22,7 @@ namespace IronJS.Runtime.Js
                 return Et.Constant(false, typeof(bool));
 
             if (obj.LimitType == typeof(bool))
-                return obj.Expression;
+                return Et.Convert(obj.Expression, typeof(bool));
 
             if (obj.LimitType == typeof(double))
                 return Et.GreaterThan(

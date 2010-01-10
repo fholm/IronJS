@@ -128,13 +128,15 @@ namespace IronJS.Runtime.Js
 
             if (obj.LimitType == typeof(string))
             {
+                //TODO: fix so that . instead of , valid in "3,14" as "3.14" fails atm
                 var tmp = Et.Parameter(typeof(double), "#tmp");
+                var method = typeof(double).GetMethod("TryParse", new[] { typeof(string), typeof(double).MakeByRefType() });
 
                 return Et.Block(
                     new[] { tmp },
-                    Et.IfThenElse(
+                    Et.Condition(
                         Et.Call(
-                            typeof(double).GetMethod("TryParse"),
+                            method,
                             Et.Convert(obj.Expression, typeof(string)),
                             tmp
                         ),

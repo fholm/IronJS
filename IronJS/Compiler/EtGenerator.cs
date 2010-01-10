@@ -161,6 +161,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Logical:
                     return GenerateLogical((Ast.LogicalNode)node);
 
+                case Ast.NodeType.PostfixOperator:
+                    return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -179,9 +182,50 @@ namespace IronJS.Compiler
             }
         }
 
+        private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)
+        {
+            var target = Generate(node.Target);
+            var tmp = Et.Parameter(typeof(double), "#tmp");
+
+            return Et.Block(
+                new[] { tmp },
+
+                // the value we will return
+                Et.Assign(
+                    tmp, 
+                    Et.Dynamic(
+                        new JsConvertBinder(typeof(double)),
+                        typeof(double),
+                        target
+                    )
+                ),
+
+                // calc new value
+                BuildAssign(
+                    node.Target,
+                    EtUtils.Box(
+                        Et.Add(
+                            tmp, 
+                            Et.Constant(
+                                node.Op == ExpressionType.PostIncrementAssign
+                                         ? 1.0 
+                                         : -1.0,
+                                typeof(double)
+                            )
+                        )
+                    )
+                ),
+
+                tmp // return the old value
+            );
+
+            throw new NotImplementedException();
+        }
+
         private Et GenerateLogical(Ast.LogicalNode node)
         {
             var tmp = Et.Parameter(typeof(object), "#tmp");
+
             return Et.Block(
                 new[] { tmp },
                 Et.Assign(tmp, Generate(node.Left)),
@@ -431,29 +475,33 @@ namespace IronJS.Compiler
 
         private Et GenerateAssign(Ast.AssignNode node)
         {
-            if (node.Target is Ast.IdentifierNode)
+            return BuildAssign(node.Target, Generate(node.Value));
+        }
+
+        private Et BuildAssign(Ast.Node target, Et value)
+        {
+            if (target is Ast.IdentifierNode)
             {
-                var idNode = (Ast.IdentifierNode) node.Target;
+                var idNode = (Ast.IdentifierNode)target;
 
                 return FrameUtils.Push(
-                    FrameExpr, 
-                    idNode.Name, 
-                    Generate(node.Value), 
+                    FrameExpr,
+                    idNode.Name,
+                    value,
                     idNode.IsLocal ? VarType.Local : VarType.Global
                 );
             }
-            else if(node.Target is Ast.MemberAccessNode)
+            else if (target is Ast.MemberAccessNode)
             {
-                var maNode = (Ast.MemberAccessNode) node.Target;
+                var maNode = (Ast.MemberAccessNode)target;
 
                 return Et.Dynamic(
                     new JsSetMemberBinder(maNode.Name),
                     typeof(object),
                     Generate(maNode.Target),
-                    Generate(node.Value)
+                    value
                 );
             }
-
 
             throw new NotImplementedException();
         }

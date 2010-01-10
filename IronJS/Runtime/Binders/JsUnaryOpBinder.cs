@@ -5,6 +5,8 @@ using System.Text;
 using System.Dynamic;
 using System.Linq.Expressions;
 using IronJS.Compiler.Ast;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Binders
 {
@@ -14,17 +16,50 @@ namespace IronJS.Runtime.Binders
 
     class JsUnaryOpBinder : UnaryOperationBinder
     {
-        ExpressionType Op;
-
         public JsUnaryOpBinder(ExpressionType op)
-            : base(ExpressionType.Not)
+            : base(op)
         {
-            Op = op;
+
         }
 
         public override Meta FallbackUnaryOperation(Meta target, Meta errorSuggestion)
         {
-            throw new NotImplementedException();
+            Et expr = null;
+
+            switch (Operation)
+            {
+                case ExpressionType.OnesComplement:
+                    expr = Et.OnesComplement(
+                        EtUtils.CastForBitOp(
+                            TypeConverter.ToNumber(target)
+                        )
+                    );
+                    break;
+
+                case ExpressionType.Not:
+                    expr = Et.Not(
+                        TypeConverter.ToBoolean(target)
+                    );
+                    break;
+
+                case ExpressionType.Negate:
+                    expr = Et.Negate(
+                        TypeConverter.ToNumber(target)
+                    );
+                    break;
+
+                case ExpressionType.UnaryPlus:
+                    expr = TypeConverter.ToNumber(target);
+                    break;
+            }
+
+            return new Meta(
+                EtUtils.Box(expr),
+                Restrict.GetTypeRestriction(
+                    target.Expression,
+                    target.LimitType
+                )
+            );
         }
     }
 }

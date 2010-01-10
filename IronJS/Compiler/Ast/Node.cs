@@ -14,7 +14,8 @@ namespace IronJS.Compiler.Ast
         String, ClrNew, Lambda, While, BinaryOp,
         Object, New, AutoProperty, Return,
         UnaryOp,
-        Logical
+        Logical,
+        PostfixOperator
     }
 
     abstract public class Node

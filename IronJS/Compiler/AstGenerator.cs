@@ -250,23 +250,28 @@ namespace IronJS.Compiler.Ast
                     return BuildLogicalNode(node, ExpressionType.OrElse);
 
                 /*
-                 * Unary operators
+                 * Increment/Decrement operators
                  */
+
                 // foo++
                 case EcmaParser.PINC:
-                    return BuildUnuaryOp(node, ExpressionType.PostIncrementAssign);
+                    return BuildIncDecNode(node, ExpressionType.PostIncrementAssign);
 
                 // foo--
                 case EcmaParser.PDEC:
-                    return BuildUnuaryOp(node, ExpressionType.PostDecrementAssign);
+                    return BuildIncDecNode(node, ExpressionType.PostDecrementAssign);
 
                 // ++foo
                 case EcmaParser.INC:
-                    return BuildUnuaryOp(node, ExpressionType.PreIncrementAssign);
+                    return BuildIncDecNode(node, ExpressionType.PreIncrementAssign);
 
                 // --foo
                 case EcmaParser.DEC:
-                    return BuildUnuaryOp(node, ExpressionType.PreDecrementAssign);
+                    return BuildIncDecNode(node, ExpressionType.PreDecrementAssign);
+
+                /*
+                 * Unary operators
+                 */
 
                 //TODO: make sure ~, ! and - have the right ExpressionType
 
@@ -294,6 +299,42 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildIncDecNode(ITree node, ExpressionType type)
+        {
+            switch (type)
+            {
+                case ExpressionType.PreIncrementAssign:
+                case ExpressionType.PreDecrementAssign:
+                    return new AssignNode(
+                        Build(node.GetChildSafe(0)),
+                        new BinaryOpNode(
+                            Build(node.GetChildSafe(0)),
+                            new NumberNode(1.0),
+                            type == ExpressionType.PreIncrementAssign
+                                  ? ExpressionType.Add
+                                  : ExpressionType.Subtract
+                        )
+                    );
+                    break;
+
+                case ExpressionType.PostIncrementAssign:
+                    return new PostfixOperatorNode(
+                        Build(node.GetChildSafe(0)),
+                        ExpressionType.PostIncrementAssign
+                    );
+                    break;
+
+                case ExpressionType.PostDecrementAssign:
+                    return new PostfixOperatorNode(
+                        Build(node.GetChildSafe(0)),
+                        ExpressionType.PostDecrementAssign
+                    );
+                    break;
+            }
+
+            throw new NotImplementedException();
         }
 
         private Node BuildLogicalNode(ITree node, ExpressionType op)

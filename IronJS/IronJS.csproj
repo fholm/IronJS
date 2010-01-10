@@ -73,6 +73,7 @@
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
+    <Compile Include="Compiler\Ast\PrefixOperatorNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

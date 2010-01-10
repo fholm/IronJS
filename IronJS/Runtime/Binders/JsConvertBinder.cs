@@ -40,6 +40,22 @@ namespace IronJS.Runtime.Binders
                 );
             }
 
+            if (Type == typeof(double))
+            {
+                return new Meta(
+                    TypeConverter.ToNumber(target),
+                    restrictions
+                );
+            }
+
+            if (Type == typeof(string))
+            {
+                return new Meta(
+                    TypeConverter.ToString(target),
+                    restrictions
+                );
+            }
+
             return EtUtils.CreateThrow(
                 target,
                 new Meta[] {},

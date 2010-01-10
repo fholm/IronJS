@@ -2,6 +2,8 @@
 
 namespace IronJS.Runtime
 {
+    public enum ToPrimitiveHint { Number , String }
+
     public static class BuiltIns
     {
         public static object Add(double left, double right)
@@ -14,5 +16,8 @@ namespace IronJS.Runtime
             Console.WriteLine(o);
             return o;
         }
+
+  
+
     }
 }

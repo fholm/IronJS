@@ -146,6 +146,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.BinaryOp:
                     return GenerateBinaryOp((Ast.BinaryOpNode)node);
 
+                case Ast.NodeType.UnaryOp:
+                    return GenerateUnaryOp((Ast.UnaryOpNode)node);
+
                 case Ast.NodeType.Return:
                     return GenerateReturn((Ast.ReturnNode)node);
 
@@ -171,6 +174,15 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateUnaryOp(Ast.UnaryOpNode node)
+        {
+            return Et.Dynamic(
+                new JsUnaryOpBinder(node.Op),
+                typeof(object),
+                Generate(node.Target)
+            );
         }
 
         private Et GenerateNull(Ast.NullNode node)
@@ -267,18 +279,12 @@ namespace IronJS.Compiler
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
-            switch (node.Op)
-            {
-                case Ast.BinaryOp.Add:
-                    return Et.Add(
-                        EtUtils.Cast<double>(Generate(node.Left)),
-                        EtUtils.Cast<double>(Generate(node.Right)),
-                        typeof(BuiltIns).GetMethod("Add")
-                    );
-
-                default:
-                    throw new CompilerError("Unsuported binary op '" + node.Op + "'");
-            }
+            return Et.Dynamic(
+                new JsBinaryOpBinder(node.Op),
+                typeof(object),
+                Generate(node.Left),
+                Generate(node.Right)
+            );
         }
 
         private Et GenerateCall(Ast.CallNode node)

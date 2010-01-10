@@ -57,6 +57,12 @@ namespace IronJS.Runtime.Js
             return newObject;
         }
 
+        ///
+        public object DefaultValue(ToPrimitiveHint hint)
+        {
+            return Value;
+        }
+
         // 8.6.2
         public object Get(object key)
         {

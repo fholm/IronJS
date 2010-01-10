@@ -273,6 +273,10 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.NEG:
                     return BuildUnuaryOp(node, UnaryOp.Negate);
 
+                // +foo
+                case EcmaParser.POS:
+                    return BuildUnuaryOp(node, UnaryOp.Positive);
+
                 //
                 default:
                     throw new Compiler.CompilerError(

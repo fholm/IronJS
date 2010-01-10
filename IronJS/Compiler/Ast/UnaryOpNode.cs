@@ -7,7 +7,7 @@ namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
 
-    enum UnaryOp { PostInc, PostDec, Dec, Inc, Inv, Not, Negate }
+    enum UnaryOp { PostInc, PostDec, Dec, Inc, Inv, Not, Negate, Positive }
 
     class UnaryOpNode : Node
     {

@@ -99,6 +99,96 @@ foo = -14
 
 print(foo >>>= 2)
 
+var n = 10;
+foo = function () {
+    --n;
+    return n > 0;
+};
+
+n = 10000;
+
+while (n > 0) {
+    --n;
+}
+
+i = 0;
+
+print("-------");
+
+for (i = 0; i < 2; ++i) {
+    print(i);
+}
+
+print("-------");
+
+for (; i < 4; ++i) {
+    print(i);
+}
+
+print("-------");
+
+for (i = 0; i < 8; ) {
+    print(i);
+    ++i;
+}
+
+print("-------");
+
+i = 0;
+for ( ; i < 16; ) {
+    print(i);
+    ++i;
+}
+
+print("-------");
+
+
+for(i = 0; i < 10; ++i) {
+    if(i > 4)
+    {
+        print("breaking on: " + i);
+        break;
+    }
+    print(i);
+}
+
+// nested break
+for (i = 0; i < 10; ++i) {
+
+    if (i > 3) {
+        print("breaking outer");
+        break;
+    }
+
+    print("outer:" + i);
+
+    for (j = 0; j < 5; ++j) {
+        if (j > 2) {
+            print("break inner");
+            break;
+        }
+        
+        print("inner:"+j);
+    }
+}
+
+
+/* WORKS, but loops forever
+i = 0;
+for (;;) {
+    print(i);
+    ++i;
+}
+*/
+
+
+/*
+bar_lbl:
+while (true) {
+    break bar_lbl;
+}
+*/
+
 /*
 //foo = 1 === 1
 //foo = 1 !== 1

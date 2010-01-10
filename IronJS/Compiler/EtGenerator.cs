@@ -20,6 +20,8 @@ namespace IronJS.Compiler
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
         internal Stack<LabelTarget> ReturnLabels;
+        internal Stack<LabelTarget> BreakLabels;
+        internal Stack<LabelTarget> ContinueLabels;
         internal Stack<ParameterExpression> FrameExprStack;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
         internal List<Et> GlobalExprs;
@@ -39,12 +41,24 @@ namespace IronJS.Compiler
             get { return ReturnLabels.Peek(); }   
         }
 
+        internal LabelTarget BreakLabel
+        {
+            get { return BreakLabels.Peek(); }
+        }
+
+        internal LabelTarget ContinueLabel
+        {
+            get { return ContinueLabels.Peek(); }
+        }
+
         public Action<Frame> Build(List<Ast.Node> astNodes)
         {
             GlobalExprs = new List<Et>();
             ReturnLabels = new Stack<LabelTarget>();
             LambdaExprs = new List<Tuple<Et, List<string>>>();
             FrameExprStack = new Stack<ParameterExpression>();
+            BreakLabels = new Stack<LabelTarget>();
+            ContinueLabels = new Stack<LabelTarget>();
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
 
             EnterFrame();
@@ -112,6 +126,18 @@ namespace IronJS.Compiler
             ).Compile();
         }
 
+        private void EnterLoop()
+        {
+            BreakLabels.Push(Et.Label(typeof(void), "#break"));
+            ContinueLabels.Push(Et.Label(typeof(void), "#continue"));
+        }
+
+        private void ExitLoop()
+        {
+            ContinueLabels.Pop();
+            BreakLabels.Pop();
+        }
+
         private void EnterFrame()
         {
             ReturnLabels.Push(Et.Label(typeof(object), "#return"));
@@ -126,6 +152,9 @@ namespace IronJS.Compiler
 
         private Et Generate(Ast.Node node)
         {
+            if (node == null)
+                return AstUtils.Empty();
+
             switch (node.Type)
             {
                 case Ast.NodeType.Assign:
@@ -182,6 +211,15 @@ namespace IronJS.Compiler
                 case Ast.NodeType.UnsignedRightShift:
                     return GenerateUnsignedRightShift((Ast.UnsignedRightShiftNode)node);
 
+                case Ast.NodeType.While:
+                    return GenerateWhile((Ast.WhileNode)node);
+
+                case Ast.NodeType.ForStep:
+                    return GenerateForStep((Ast.ForStepNode)node);
+
+                case Ast.NodeType.Break:
+                    return GenerateBreak((Ast.BreakNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -200,6 +238,76 @@ namespace IronJS.Compiler
             }
         }
 
+        private Et GenerateBreak(Ast.BreakNode node)
+        {
+            if (node.Label == null)
+            {
+                return Et.Break(BreakLabel);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private Et GenerateForStep(Ast.ForStepNode node)
+        {
+            EnterLoop();
+            
+            var body = Generate(node.Body);
+            var init = Generate(node.Init);
+            var incr = Generate(node.Incr);
+            var test =
+                Et.Dynamic(
+                    new JsConvertBinder(typeof(bool)),
+                    typeof(bool),
+                    Generate(node.Test)
+                );
+
+            var loop = AstUtils.Loop(
+                test,
+                incr,
+                body,
+                null,
+                BreakLabel,
+                ContinueLabel
+            );
+
+            ExitLoop();
+
+            return Et.Block(
+                init,
+                loop
+            );
+        }
+
+        // while(test) { <expr>, <expr> ... <expr> }
+        private Et GenerateWhile(Ast.WhileNode node)
+        {
+            EnterLoop();
+
+            var body = Generate(node.Body);
+
+            var test =
+                Et.Dynamic(
+                    new JsConvertBinder(typeof(bool)),
+                    typeof(bool),
+                    Generate(node.Test)
+                );
+
+            var loop = AstUtils.Loop(
+                test,
+                null,
+                body,
+                null,
+                BreakLabel,
+                ContinueLabel
+            );
+            
+            ExitLoop();
+
+            return loop;
+        }
+
+        /// -14 >>> 2
         private Et GenerateUnsignedRightShift(Ast.UnsignedRightShiftNode node)
         {
             //TODO: to much boxing/conversion going on, fix
@@ -232,6 +340,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // foo === bar, foo !== bar
         private Et GenerateStrictCompare(Ast.StrictCompareNode node)
         {
             Et expr = Et.Call(
@@ -246,6 +355,7 @@ namespace IronJS.Compiler
             return expr;
         }
 
+        // if (test) { TrueBranch } else { ElseBranch }
         private Et GenerateIf(Ast.IfNode node)
         {
             return Et.Condition(
@@ -259,6 +369,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // void foo
         private Et GenerateVoid(Ast.VoidNode node)
         {
             // 11.4.2
@@ -268,6 +379,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // true, false
         private Et GenerateBoolean(Ast.BooleanNode node)
         {
             return Et.Constant(
@@ -276,6 +388,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // typeof foo
         private Et GenerateTypeOf(Ast.TypeOfNode node)
         {
             // 11.4.3
@@ -285,6 +398,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // foo++, foo--
         private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)
         {
             var target = Generate(node.Target);
@@ -325,6 +439,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
+        // foo || bar, foo && bar
         private Et GenerateLogical(Ast.LogicalNode node)
         {
             var tmp = Et.Parameter(typeof(object), "#tmp");
@@ -348,6 +463,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // !foo, -foo, etc.
         private Et GenerateUnaryOp(Ast.UnaryOpNode node)
         {
             return Et.Dynamic(
@@ -357,11 +473,13 @@ namespace IronJS.Compiler
             );
         }
 
+        // null
         private Et GenerateNull(Ast.NullNode node)
         {
             return Et.Default(typeof(object));
         }
 
+        // foo.bar
         private Et GenerateMemberAccess(Ast.MemberAccessNode node)
         {
             return Et.Dynamic(
@@ -371,6 +489,9 @@ namespace IronJS.Compiler
             );
         }
 
+        // foo = {}
+        // foo = new X
+        // foo = new X()
         private Et GenerateNew(Ast.NewNode node)
         {
             var target = Generate(node.Target);
@@ -421,26 +542,31 @@ namespace IronJS.Compiler
 
         private Et GenerateReturn(Ast.ReturnNode node)
         {
+            // return <expr>
             return Et.Return(ReturnLabel, Generate(node.Value), typeof(object));
         }
 
         private Et GenerateString(Ast.StringNode node)
         {
+            // 'foo'
             return Et.Constant(node.Value, typeof(object));
         }
 
         private Et GenerateNumber(Ast.NumberNode node)
         {
+            // 1.0
             return Et.Constant(node.Value, typeof(object));
         }
 
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
+            // foo
             return FrameUtils.Pull(FrameExpr, node.Name);
         }
 
         private Et GenerateBlock(Ast.BlockNode node)
         {
+            // { <expr>, <expr>, ... <expr> }
             if (node.Nodes.Count == 0)
                 return Et.Default(typeof(object));
 
@@ -451,6 +577,7 @@ namespace IronJS.Compiler
 
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
+            // left @ right
             return Et.Dynamic(
                 new JsBinaryOpBinder(node.Op),
                 typeof(object),
@@ -463,6 +590,7 @@ namespace IronJS.Compiler
         {
             var args = node.Args.ToEtArray(x => Generate(x));
 
+            // foo();
             if (node.Target is Ast.IdentifierNode)
             {
                 var target = Generate(node.Target);
@@ -479,6 +607,8 @@ namespace IronJS.Compiler
                     )
                 );
             }
+
+            // foo.bar();
             else if(node.Target is Ast.MemberAccessNode)
             {
                 var target = (Ast.MemberAccessNode)node.Target;
@@ -510,7 +640,7 @@ namespace IronJS.Compiler
             bodyExprs.Add(
                 Et.Label(
                     ReturnLabel, 
-                    Expression.Default(typeof(object))
+                    Undefined.Expr // 12.9
                 )
             );
 

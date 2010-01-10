@@ -86,14 +86,27 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.FUNCTION:
                     return BuildFunction(node);
 
-                case EcmaParser.WHILE:
-                    return BuildWhile(node);
-
                 case EcmaParser.OBJECT:
                     return BuildObject(node);
 
                 case EcmaParser.RETURN:
                     return BuildReturn(node);
+
+                case EcmaParser.EXPR:
+                    return Build(node.GetChildSafe(0));
+
+                /*
+                 * Loops
+                 */
+
+                case EcmaParser.WHILE:
+                    return BuildWhile(node);
+
+                case EcmaParser.FOR:
+                    return BuildFor(node);
+
+                case EcmaParser.BREAK:
+                    return BuildBreak(node);
 
                 /*
                  * Literals
@@ -309,6 +322,58 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildBreak(ITree node)
+        {
+            if (node.ChildCount == 0)
+            {
+                return new BreakNode(null);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private Node BuildFor(ITree node)
+        {
+            var body = Build(node.GetChildSafe(1));
+            var type = node.GetChildSafe(0);
+
+            if (type.Type == EcmaParser.FORSTEP)
+            {
+                var init = type.GetChildSafe(0);
+                var test = type.GetChildSafe(1);
+                var incr = type.GetChildSafe(2);
+
+                var initNode = init.ChildCount > 0
+                             ? Build(init)
+                             : new NullNode();
+
+                var testNode = test.ChildCount > 0
+                             ? Build(test)
+                             : new BooleanNode(true);
+
+                var incrNode = incr.ChildCount > 0
+                             ? Build(incr)
+                             : new NullNode();
+
+                return new ForStepNode(
+                    initNode,
+                    testNode,
+                    incrNode,
+                    body
+                );
+            }
+            else if(type.Type == EcmaParser.FORITER)
+            {
+                return new ForInNode(
+                    Build(type.GetChildSafe(0)),
+                    Build(type.GetChildSafe(1)),
+                    body
+                );
+            }
+
+            throw new NotImplementedException();
         }
 
         private Node BuildUnsignedRightShiftAssign(ITree node)

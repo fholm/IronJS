@@ -70,6 +70,7 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
+    <Compile Include="Compiler\BreakNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="Compiler\Ast\VoidNode.cs" />
     <Compile Include="Compiler\Ast\StrictCompareNode.cs" />
     <Compile Include="Compiler\Ast\UnsignedRightShiftNode.cs" />
+    <Compile Include="Compiler\Ast\ForStepNode.cs" />
+    <Compile Include="Compiler\ForInNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

@@ -7,8 +7,8 @@ namespace IronJS.Compiler.Ast
 
     class WhileNode : Node
     {
-        private Node Test;
-        private Node Body;
+        public readonly Node Test;
+        public readonly Node Body;
 
         public WhileNode(Node test, Node body)
             : base(NodeType.While)

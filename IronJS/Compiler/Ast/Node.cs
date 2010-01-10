@@ -20,7 +20,10 @@ namespace IronJS.Compiler.Ast
         Boolean,
         Void,
         StrictCompare,
-        UnsignedRightShift
+        UnsignedRightShift,
+        ForStep,
+        ForIn,
+        Break
     }
 
     abstract public class Node

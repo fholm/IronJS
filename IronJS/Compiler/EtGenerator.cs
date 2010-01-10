@@ -164,6 +164,15 @@ namespace IronJS.Compiler
                 case Ast.NodeType.PostfixOperator:
                     return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
 
+                case Ast.NodeType.TypeOf:
+                    return GenerateTypeOf((Ast.TypeOfNode)node);
+
+                case Ast.NodeType.Boolean:
+                    return GenerateBoolean((Ast.BooleanNode)node);
+
+                case Ast.NodeType.Void:
+                    return GenerateVoid((Ast.VoidNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -180,6 +189,30 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateVoid(Ast.VoidNode node)
+        {
+            return Et.Block(
+                Generate(node.Target),
+                Undefined.Expr
+            );
+        }
+
+        private Et GenerateBoolean(Ast.BooleanNode node)
+        {
+            return Et.Constant(
+                node.Value, 
+                typeof(object)
+            );
+        }
+
+        private Et GenerateTypeOf(Ast.TypeOfNode node)
+        {
+            return Et.Call(
+                typeof(BuiltIns).GetMethod("TypeOf"),
+                Generate(node.Target)
+            );
         }
 
         private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)

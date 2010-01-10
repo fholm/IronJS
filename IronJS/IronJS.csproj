@@ -69,11 +69,14 @@
     <Compile Include="Compiler\Ast\ReturnNode.cs" />
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
+    <Compile Include="Compiler\Ast\BooleanNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
     <Compile Include="Compiler\Ast\PrefixOperatorNode.cs" />
+    <Compile Include="Compiler\Ast\TypeOfNode.cs" />
+    <Compile Include="Compiler\Ast\VoidNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

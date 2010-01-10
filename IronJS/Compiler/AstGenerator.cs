@@ -102,6 +102,10 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.NULL:
                     return BuildNull(node);
 
+                case EcmaParser.TRUE:
+                case EcmaParser.FALSE:
+                    return BuildBoolean(node);
+
                 /*
                  * Assignments
                  */
@@ -291,6 +295,14 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.POS:
                     return BuildUnuaryOp(node, ExpressionType.UnaryPlus);
 
+                // typeof foo
+                case EcmaParser.TYPEOF:
+                    return BuildTypeOfOp(node);
+
+                // void foo
+                case EcmaParser.VOID:
+                    return BuildVoidOp(node);
+
                 //
                 default:
                     throw new Compiler.CompilerError(
@@ -299,6 +311,21 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildVoidOp(ITree node)
+        {
+            return new VoidNode(Build(node.GetChildSafe(0)));
+        }
+
+        private Node BuildBoolean(ITree node)
+        {
+            return new BooleanNode(node.Type == 5);
+        }
+
+        private Node BuildTypeOfOp(ITree node)
+        {
+            return new TypeOfNode(Build(node.GetChildSafe(0)));
         }
 
         private Node BuildIncDecNode(ITree node, ExpressionType type)

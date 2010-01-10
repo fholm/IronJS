@@ -1,6 +1,5 @@
 ﻿
-
-print("1" + (1 + 2);
+print("1" + (1 + 2));
 
 print(1 - 4);
 print(2 * 5);
@@ -56,6 +55,20 @@ print(foo++);
 print(foo--);
 print(++foo);
 print(--foo);
+
+print(typeof "asd");
+print(typeof 123);
+print(typeof undefined);
+print(typeof null);
+print(typeof {});
+print(typeof function () { });
+print(typeof true);
+
+function foo () {
+    print("void-test:");
+};
+
+print(void foo());
 
 /*
 //foo = 1 === 1

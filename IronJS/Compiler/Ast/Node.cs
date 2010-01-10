@@ -15,7 +15,10 @@ namespace IronJS.Compiler.Ast
         Object, New, AutoProperty, Return,
         UnaryOp,
         Logical,
-        PostfixOperator
+        PostfixOperator,
+        TypeOf,
+        Boolean,
+        Void
     }
 
     abstract public class Node

@@ -16,17 +16,6 @@ namespace IronJS.Runtime.Js
 
     public static class TypeConverter
     {
-        public static object ToPrimitive(object o, ToPrimitiveHint hint)
-        {
-            if (o is Js.Obj)
-                (o as Js.Obj).DefaultValue(hint);
-
-            if (o is string || o is double || o is bool || o == Js.Undefined.Instance)
-                return o;
-
-            return o.ToString();
-        }
-
         public static Et ToBoolean(Meta obj)
         {
             if(obj.HasValue && obj.Value == null)
@@ -156,25 +145,6 @@ namespace IronJS.Runtime.Js
             }
 
             return Et.Constant(1.0, typeof(double));
-        }
-
-        public static object ToInteger(object v)
-        {
-            return 0;
-            /*
-            //TODO: implement ToInt32, ToUInt32, ToUint16
-            var o = ToNumber(v);
-
-            if (o == Js.Nan.Instance)
-                return +0;
-
-            var n = (double)o;
-
-            if (n == 0.0 || double.IsNegativeInfinity(n) || double.IsPositiveInfinity(n))
-                return n;
-
-            return Math.Sign(n) * Math.Floor(Math.Abs(n));
-            */
         }
 
         public static object ToObject(object o)

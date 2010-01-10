@@ -25,6 +25,19 @@ namespace IronJS.Runtime.Utils
             return Et2.Convert(expr, typeof(object));
         }
 
+        internal static Et2 CastForBitOp(Et2 expr)
+        {
+            // we need to go object > double > int
+            // instead of object > int (which fill fail)
+            return Et2.Convert(
+                Et2.Convert(
+                    expr,
+                    typeof(double)
+                ),
+                typeof(int)
+            );
+        }
+
         /// <summary>
         /// 
         /// </summary>

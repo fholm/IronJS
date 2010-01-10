@@ -19,19 +19,33 @@ namespace IronJS.Runtime.Binders
     class JsConvertBinder : ConvertBinder
     {
         public JsConvertBinder(Type type)
-            : base(type, true)
+            : base(type, false)
         {
 
         }
 
         public override Meta FallbackConvert(Meta target, Meta errorSuggestion)
         {
-            return new Meta(
-                TypeConverter.ToBoolean(target),
+            var restrictions = 
                 Restrict.GetTypeRestriction(
                     target.Expression,
                     target.LimitType
-                )
+                );
+
+            if (Type == typeof(bool))
+            {
+                return new Meta(
+                    TypeConverter.ToBoolean(target),
+                    restrictions
+                );
+            }
+
+            return EtUtils.CreateThrow(
+                target,
+                new Meta[] {},
+                restrictions,
+                typeof(Compiler.CompilerError),
+                "No conversions for type '" + Type.Name + "' available"
             );
         }
     }

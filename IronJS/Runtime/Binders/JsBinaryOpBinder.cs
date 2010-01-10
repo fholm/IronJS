@@ -134,12 +134,17 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.And: 
                 case ExpressionType.Or:
                 case ExpressionType.ExclusiveOr:
+                case ExpressionType.RightShift:
+                case ExpressionType.LeftShift:
                     //TODO: convert to number first
-                    expr = EtUtils.Cast<double>(
-                        Et.And(
-                            EtUtils.Cast<int>(target.Expression),
-                            EtUtils.Cast<int>(arg.Expression)
-                        )
+                    expr = Et.Convert(
+                        Et.MakeBinary(
+                            Operation,
+                            EtUtils.CastForBitOp(target.Expression),
+                            EtUtils.CastForBitOp(arg.Expression)
+                        ),
+                        typeof(double) // and then back to double here, 
+                                       // since all JS numbers are doubles
                     );
                     break;
 

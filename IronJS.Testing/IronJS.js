@@ -30,6 +30,18 @@ print(1 != 1);
 print(1 && 2);
 print(0 || 3);
 
+print(1 | 2);
+print(1 & 2);
+print(1 ^ 2);
+
+print(1 << 2);
+print(5 >> 2);
+
+print(~1);
+print(!1);
+print(-1);
+print(+2);
+
 /*
 //foo = 1 === 1
 //foo = 1 !== 1
@@ -38,26 +50,15 @@ foo++
 foo--
 ++foo
 --foo
+*/
 
-foo = 1 >> 1
-foo = 1 << 1
+/*
 foo <<= 1
 foo >>= 1
 //foo = 1 >>> 1
 //foo >>>= 1
 
-foo = 1 & 1
-foo = 1 | 1
-foo = 1 ^ 1
 foo &= 1
 foo |= 1
 foo ^= 1
-
-//foo = 1 && 2
-//foo = 1 || 2
-
-foo = ~1
-foo = !1
-foo = -1
-foo = +2
 */

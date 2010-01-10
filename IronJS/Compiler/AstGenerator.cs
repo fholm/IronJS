@@ -243,12 +243,11 @@ namespace IronJS.Compiler.Ast
 
                 // true && false
                 case EcmaParser.LAND:
-                    return BuildBinaryOp(node, ExpressionType.AndAlso);
+                    return BuildLogicalNode(node, ExpressionType.AndAlso);
 
                 // true || false
                 case EcmaParser.LOR:
-                    return BuildBinaryOp(node, ExpressionType.OrElse);
-
+                    return BuildLogicalNode(node, ExpressionType.OrElse);
 
                 /*
                  * Unary operators
@@ -295,6 +294,15 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildLogicalNode(ITree node, ExpressionType op)
+        {
+            return new LogicalNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1)),
+                op
+            );
         }
 
         private Node BuildUnuaryOp(ITree node, ExpressionType op)

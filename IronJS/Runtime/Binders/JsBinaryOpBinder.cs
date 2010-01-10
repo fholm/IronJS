@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using IronJS.Runtime;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Binders
 {
@@ -14,7 +15,6 @@ namespace IronJS.Runtime.Binders
     using ParamEt = System.Linq.Expressions.ParameterExpression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
-    using IronJS.Runtime.Utils;
 
     class JsBinaryOpBinder : BinaryOperationBinder
     {
@@ -120,12 +120,27 @@ namespace IronJS.Runtime.Binders
                     }
                     break;
 
+                // 11.9.1
                 case ExpressionType.Equal:
                     expr = Equality(target, arg, ref typeRestriction);
                     break;
 
+                // 11.9.2
                 case ExpressionType.NotEqual:
                     expr = Et.Not(Equality(target, arg, ref typeRestriction));
+                    break;
+
+                // 11.10
+                case ExpressionType.And: 
+                case ExpressionType.Or:
+                case ExpressionType.ExclusiveOr:
+                    //TODO: convert to number first
+                    expr = EtUtils.Cast<double>(
+                        Et.And(
+                            EtUtils.Cast<int>(target.Expression),
+                            EtUtils.Cast<int>(arg.Expression)
+                        )
+                    );
                     break;
 
             }

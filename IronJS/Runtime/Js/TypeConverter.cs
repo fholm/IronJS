@@ -10,6 +10,7 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using IronJS.Runtime.Utils;
 
     public enum ToPrimitiveHint { Number, String, NoHint }
 
@@ -26,18 +27,37 @@ namespace IronJS.Runtime.Js
             return o.ToString();
         }
 
-        public static object ToBoolean(object o)
+        public static Et ToBoolean(Meta obj)
         {
-            if (o is double)
-                return ((double)o) > 0.0;
+            if(obj.HasValue && obj.Value == null)
+                return Et.Constant(false, typeof(bool));
 
-            if (o == Js.Undefined.Instance || o == null)
-                return false;
+            if (obj.LimitType == typeof(bool))
+                return obj.Expression;
 
-            if (o is string)
-                return ((string)o).Length > 0;
+            if (obj.LimitType == typeof(double))
+                return Et.GreaterThan(
+                    Et.Convert(obj.Expression, typeof(double)),
+                    Et.Constant(0.0, typeof(double))
+                );
 
-            return true;
+            if (obj.LimitType == typeof(Js.Undefined))
+                return Et.Constant(false, typeof(bool));
+
+            if (obj.LimitType == typeof(string))
+                return Et.GreaterThan(
+                    Et.Property(
+                        Et.Convert(
+                            obj.Expression,
+                            typeof(string)
+                        ),
+                        "Length"
+                    ),
+                    Et.Constant(0, typeof(int))
+                );
+
+            // last step
+            return Et.Constant(true, typeof(bool));
         }
 
         public static Et ToString(Meta obj)

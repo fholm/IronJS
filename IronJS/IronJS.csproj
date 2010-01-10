@@ -72,8 +72,10 @@
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
+    <Compile Include="Compiler\Ast\LogicalNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
+    <Compile Include="Runtime\Binders\JsConvertBinder.cs" />
     <Compile Include="Runtime\Binders\JsSetMemberBinder.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />

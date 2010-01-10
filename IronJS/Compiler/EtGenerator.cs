@@ -158,6 +158,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.MemberAccess:
                     return GenerateMemberAccess((Ast.MemberAccessNode)node);
 
+                case Ast.NodeType.Logical:
+                    return GenerateLogical((Ast.LogicalNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -174,6 +177,28 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateLogical(Ast.LogicalNode node)
+        {
+            var tmp = Et.Parameter(typeof(object), "#tmp");
+            return Et.Block(
+                new[] { tmp },
+                Et.Assign(tmp, Generate(node.Left)),
+                Et.Condition(
+                    Et.Dynamic(
+                        new JsConvertBinder(typeof(bool)),
+                        typeof(bool),
+                        tmp
+                    ),
+                    node.Op == ExpressionType.AndAlso 
+                             ? Generate(node.Right)  // &&
+                             : tmp,                  // ||
+                    node.Op == ExpressionType.AndAlso 
+                             ? tmp                   // &&
+                             : Generate(node.Right)  // ||
+                )
+            );
         }
 
         private Et GenerateUnaryOp(Ast.UnaryOpNode node)

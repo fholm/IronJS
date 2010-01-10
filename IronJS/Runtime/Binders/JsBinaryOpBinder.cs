@@ -169,6 +169,9 @@ namespace IronJS.Runtime.Binders
         private Et Equality(Meta target, Meta arg, ref bool typeRestriction)
         {
             //TODO: verify all boolean cases with 11.9.3
+            
+            var targetAsLimit = Et.Convert(target.Expression, target.LimitType);
+            var argAsLimit = Et.Convert(arg.Expression, arg.LimitType);
 
             // step 1
             if (target.LimitType == arg.LimitType)
@@ -192,9 +195,10 @@ namespace IronJS.Runtime.Binders
                  || target.LimitType == typeof(bool)
                 )
                 {
-                    return Et.Equal(
-                        target.Expression,
-                        arg.Expression
+                    return Et.MakeBinary(
+                        ExpressionType.Equal,
+                        targetAsLimit,
+                        argAsLimit
                     );
                 }
                 // step 13
@@ -239,14 +243,14 @@ namespace IronJS.Runtime.Binders
                     if (target.LimitType == typeof(double))
                     {
                         return Et.Equal(
-                            target.Expression,
+                            targetAsLimit,
                             TypeConverter.ToNumber(arg)
                         );
                     }
                     else if (target.LimitType == typeof(string))
                     {
                         return Et.Equal(
-                            target.Expression,
+                            targetAsLimit,
                             TypeConverter.ToString(arg)
                         );
                     }
@@ -262,14 +266,14 @@ namespace IronJS.Runtime.Binders
                     {
                         return Et.Equal(
                             TypeConverter.ToNumber(target),
-                            arg.Expression
+                            argAsLimit
                         );
                     }
                     else if (arg.LimitType == typeof(string))
                     {
                         return Et.Equal(
                             TypeConverter.ToString(target),
-                            arg.Expression
+                            argAsLimit
                         );
                     }
                     else

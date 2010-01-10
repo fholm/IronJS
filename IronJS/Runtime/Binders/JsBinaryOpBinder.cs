@@ -136,7 +136,7 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.ExclusiveOr:
                 case ExpressionType.RightShift:
                 case ExpressionType.LeftShift:
-                    //TODO: convert to number first
+                    //TODO: convert to number/check so we're not casting aa Js.Obj, string, etc. to double > int
                     expr = Et.Convert(
                         Et.MakeBinary(
                             Operation,
@@ -179,16 +179,22 @@ namespace IronJS.Runtime.Binders
                     );
             }
 
-
             return new Meta(
                 EtUtils.Box(expr), 
                 restrictions
             );
         }
 
+        /// <summary>
+        /// This function implements the horrible JavaScript equality comparison
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="arg"></param>
+        /// <param name="typeRestriction"></param>
+        /// <returns></returns>
         private Et Equality(Meta target, Meta arg, ref bool typeRestriction)
         {
-            //TODO: verify all boolean cases with 11.9.3
+            //TODO: verify all boolean cases from 11.9.3
             
             var targetAsLimit = Et.Convert(target.Expression, target.LimitType);
             var argAsLimit = Et.Convert(arg.Expression, arg.LimitType);

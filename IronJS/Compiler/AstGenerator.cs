@@ -324,6 +324,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
+        // 12.8
         private Node BuildBreak(ITree node)
         {
             if (node.ChildCount == 0)
@@ -339,6 +340,7 @@ namespace IronJS.Compiler.Ast
             var body = Build(node.GetChildSafe(1));
             var type = node.GetChildSafe(0);
 
+            // 12.6.3
             if (type.Type == EcmaParser.FORSTEP)
             {
                 var init = type.GetChildSafe(0);
@@ -364,6 +366,7 @@ namespace IronJS.Compiler.Ast
                     body
                 );
             }
+            // 12.6.4
             else if(type.Type == EcmaParser.FORITER)
             {
                 return new ForInNode(
@@ -435,21 +438,18 @@ namespace IronJS.Compiler.Ast
                                   : ExpressionType.Subtract
                         )
                     );
-                    break;
 
                 case ExpressionType.PostIncrementAssign:
                     return new PostfixOperatorNode(
                         Build(node.GetChildSafe(0)),
                         ExpressionType.PostIncrementAssign
                     );
-                    break;
 
                 case ExpressionType.PostDecrementAssign:
                     return new PostfixOperatorNode(
                         Build(node.GetChildSafe(0)),
                         ExpressionType.PostDecrementAssign
                     );
-                    break;
             }
 
             throw new NotImplementedException();

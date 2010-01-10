@@ -238,6 +238,8 @@ namespace IronJS.Compiler
             }
         }
 
+        // 12.8
+        // break, break <label>
         private Et GenerateBreak(Ast.BreakNode node)
         {
             if (node.Label == null)
@@ -248,6 +250,8 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
+        // 12.6.3
+        // for(init, test, incr) { <expr>, <expr> ... <expr> }
         private Et GenerateForStep(Ast.ForStepNode node)
         {
             EnterLoop();
@@ -279,6 +283,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // 12.6.2
         // while(test) { <expr>, <expr> ... <expr> }
         private Et GenerateWhile(Ast.WhileNode node)
         {
@@ -307,10 +312,11 @@ namespace IronJS.Compiler
             return loop;
         }
 
-        /// -14 >>> 2
+        // -14 >>> 2
+        // 11.7.3
         private Et GenerateUnsignedRightShift(Ast.UnsignedRightShiftNode node)
         {
-            //TODO: to much boxing/conversion going on, fix
+            //TODO: to much boxing/conversion going on
             return EtUtils.Box(
                 Et.Convert(
                     Et.Call(
@@ -340,21 +346,27 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.9.4
+        // 11.9.5
         // foo === bar, foo !== bar
         private Et GenerateStrictCompare(Ast.StrictCompareNode node)
         {
+            // for both
             Et expr = Et.Call(
                 typeof(BuiltIns).GetMethod("StrictEquality"),
                 Generate(node.Left),
                 Generate(node.Right)
             );
 
+            // specific to 11.9.5
             if(node.Op == ExpressionType.NotEqual)
                 expr = Et.Not(Et.Convert(expr, typeof(bool)));
 
             return expr;
         }
 
+        // 11.12
+        // 12.4
         // if (test) { TrueBranch } else { ElseBranch }
         private Et GenerateIf(Ast.IfNode node)
         {
@@ -369,6 +381,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.4.2
         // void foo
         private Et GenerateVoid(Ast.VoidNode node)
         {
@@ -379,6 +392,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // 8.3
         // true, false
         private Et GenerateBoolean(Ast.BooleanNode node)
         {
@@ -388,16 +402,17 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.4.3
         // typeof foo
         private Et GenerateTypeOf(Ast.TypeOfNode node)
         {
-            // 11.4.3
             return Et.Call(
                 typeof(BuiltIns).GetMethod("TypeOf"),
                 Generate(node.Target)
             );
         }
 
+        // 11.3
         // foo++, foo--
         private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)
         {
@@ -425,8 +440,8 @@ namespace IronJS.Compiler
                             tmp, 
                             Et.Constant(
                                 node.Op == ExpressionType.PostIncrementAssign
-                                         ? 1.0 
-                                         : -1.0,
+                                         ? 1.0    // 11.3.1
+                                         : -1.0,  // 11.3.2
                                 typeof(double)
                             )
                         )
@@ -438,7 +453,8 @@ namespace IronJS.Compiler
 
             throw new NotImplementedException();
         }
-
+        
+        // 11.11
         // foo || bar, foo && bar
         private Et GenerateLogical(Ast.LogicalNode node)
         {
@@ -463,6 +479,10 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.4.6
+        // 11.4.7
+        // 11.4.8
+        // 11.4.9
         // !foo, -foo, etc.
         private Et GenerateUnaryOp(Ast.UnaryOpNode node)
         {
@@ -473,12 +493,14 @@ namespace IronJS.Compiler
             );
         }
 
+        // 8.2
         // null
         private Et GenerateNull(Ast.NullNode node)
         {
             return Et.Default(typeof(object));
         }
 
+        // 11.2.1
         // foo.bar
         private Et GenerateMemberAccess(Ast.MemberAccessNode node)
         {
@@ -489,6 +511,8 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.2.2
+        // 13.2.2
         // foo = {}
         // foo = new X
         // foo = new X()
@@ -518,6 +542,9 @@ namespace IronJS.Compiler
                 )
             );
 
+            // this handles properties defined
+            // in the shorthand json-style object
+            // expression: { foo: 1, bar: 2 }
             foreach(var propNode in node.Properties)
             {
                 exprs.Add(
@@ -540,30 +567,35 @@ namespace IronJS.Compiler
             );
         }
 
+        // 12.8
         private Et GenerateReturn(Ast.ReturnNode node)
         {
             // return <expr>
             return Et.Return(ReturnLabel, Generate(node.Value), typeof(object));
         }
 
+        // 8.4
         private Et GenerateString(Ast.StringNode node)
         {
             // 'foo'
             return Et.Constant(node.Value, typeof(object));
         }
 
+        // 8.5
         private Et GenerateNumber(Ast.NumberNode node)
         {
             // 1.0
             return Et.Constant(node.Value, typeof(object));
         }
 
+        // 7.6
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
             // foo
             return FrameUtils.Pull(FrameExpr, node.Name);
         }
 
+        // ???
         private Et GenerateBlock(Ast.BlockNode node)
         {
             // { <expr>, <expr>, ... <expr> }
@@ -575,6 +607,13 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.5
+        // 11.6
+        // 11.7
+        // 11.8
+        // 11.9 (not all, strict compare is implemented in GenerateStrictCompare)
+        // 11.10
+        //TODO: implement 'instanceof' and  'in' operators
         private Et GenerateBinaryOp(Ast.BinaryOpNode node)
         {
             // left @ right
@@ -586,6 +625,7 @@ namespace IronJS.Compiler
             );
         }
 
+        // 13.2.1
         private Et GenerateCall(Ast.CallNode node)
         {
             var args = node.Args.ToEtArray(x => Generate(x));
@@ -629,6 +669,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
+        // 13
         private Et GenerateLambda(Ast.LambdaNode node)
         {
             EnterFrame();
@@ -706,11 +747,13 @@ namespace IronJS.Compiler
             );
         }
 
+        // 11.13.1
         private Et GenerateAssign(Ast.AssignNode node)
         {
             return BuildAssign(node.Target, Generate(node.Value));
         }
 
+        // 11.13.1
         private Et BuildAssign(Ast.Node target, Et value)
         {
             if (target is Ast.IdentifierNode)

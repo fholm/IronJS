@@ -5,6 +5,7 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    // 12.6.3
     class ForStepNode : Node
     {
         public readonly Node Init;

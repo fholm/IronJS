@@ -39,7 +39,8 @@ namespace IronJS.Compiler.Ast
             Column = node.CharPositionInLine;
         }
          
-        [Obsolete("This constructor is obsolete and will replaced by (NodeType, ITree)")]
+        //[Obsolete("This constructor is obsolete and will replaced by (NodeType, ITree)")]
+        //TODO: this constructor should be removed so we can use the one that saves line numbers + column positions
         public Node(NodeType type)
         {
             Type = type;

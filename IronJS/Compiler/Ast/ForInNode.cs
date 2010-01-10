@@ -5,6 +5,7 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    // 12.6.4
     class ForInNode : Node
     {
         public readonly Node Target;

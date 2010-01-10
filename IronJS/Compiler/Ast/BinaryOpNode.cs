@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Text;
+using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
 
-    enum BinaryOp { Eq, Lt, Add, Sub, Mul, Div, Mod, Gt, GtEq, LtEq, NotEq, EqEq, NotEqEq, Inc, ShiftLeft, ShiftRight, ShiftRightZero, And, Or, Xor, LogicalOr, LogicalAnd }
-
     class BinaryOpNode : Node
     {
         public readonly Node Left;
         public readonly Node Right;
-        public readonly BinaryOp Op;
+        public readonly ExpressionType Op;
 
-        public BinaryOpNode(Node left, Node right, BinaryOp op)
+        public BinaryOpNode(Node left, Node right, ExpressionType op)
             : base(NodeType.BinaryOp)
         {
             Left = left;

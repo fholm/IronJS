@@ -14,9 +14,9 @@ namespace IronJS.Runtime.Binders
 
     class JsUnaryOpBinder : UnaryOperationBinder
     {
-        UnaryOp Op;
+        ExpressionType Op;
 
-        public JsUnaryOpBinder(UnaryOp op)
+        public JsUnaryOpBinder(ExpressionType op)
             : base(ExpressionType.Not)
         {
             Op = op;

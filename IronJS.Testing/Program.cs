@@ -27,9 +27,12 @@ namespace IronJS.Testing
                 VarType.Global
             );
 
+            Console.WriteLine(((double)1 == (double)1));
+
             var compiled = etGenerator.Build(astNodes);
 
             compiled(context.Globals);
+
         }
     }
 }

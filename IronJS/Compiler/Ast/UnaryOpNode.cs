@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
 
-    enum UnaryOp { PostInc, PostDec, Dec, Inc, Inv, Not, Negate, Positive }
-
     class UnaryOpNode : Node
     {
         public readonly Node Target;
-        public readonly UnaryOp Op;
+        public readonly ExpressionType Op;
 
-        public UnaryOpNode(Node target, UnaryOp op)
+        public UnaryOpNode(Node target, ExpressionType op)
             : base(NodeType.UnaryOp)
         {
             Target = target;

@@ -66,7 +66,7 @@ namespace IronJS.Runtime
             ctx.Globals.Push("Function", ctx.Function, VarType.Global);
             ctx.Globals.Push("undefined", Js.Undefined.Instance, VarType.Global);
             ctx.Globals.Push("Infinity", double.PositiveInfinity, VarType.Global);
-            ctx.Globals.Push("NaN", Js.Nan.Instance, VarType.Global);
+            ctx.Globals.Push("NaN", double.NaN, VarType.Global);
 
             // Conveniance globals
             ctx.Globals.Push("#ObjectPrototype", ctx.ObjectPrototype, VarType.Global);

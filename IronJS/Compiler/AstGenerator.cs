@@ -10,6 +10,7 @@ namespace IronJS.Compiler.Ast
 {
     using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
     using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
+    using System.Linq.Expressions;
 
     public class AstGenerator
     {
@@ -115,131 +116,138 @@ namespace IronJS.Compiler.Ast
                  */
                 // 1 + 2
                 case EcmaParser.ADD:
-                    return BuildBinaryOp(node, BinaryOp.Add);
+                    return BuildBinaryOp(node, ExpressionType.Add);
 
                 // 1 - 2
                 case EcmaParser.SUB:
-                    return BuildBinaryOp(node, BinaryOp.Sub);
+                    return BuildBinaryOp(node, ExpressionType.Subtract);
 
                 // 1 * 2
                 case EcmaParser.MUL:
-                    return BuildBinaryOp(node, BinaryOp.Mul);
+                    return BuildBinaryOp(node, ExpressionType.Multiply);
 
                 // 1 / 2
                 case EcmaParser.DIV:
-                    return BuildBinaryOp(node, BinaryOp.Div);
+                    return BuildBinaryOp(node, ExpressionType.Divide);
 
                 // 1 % 2
                 case EcmaParser.MOD:
-                    return BuildBinaryOp(node, BinaryOp.Mod);
+                    return BuildBinaryOp(node, ExpressionType.Modulo);
 
                 // foo += 1
                 case EcmaParser.ADDASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Add);
+                    return BuildBinaryOpAssign(node, ExpressionType.Add);
 
                 // foo -= 1
                 case EcmaParser.SUBASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Add);
+                    return BuildBinaryOpAssign(node, ExpressionType.Subtract);
 
                 // foo *= 1
                 case EcmaParser.MULASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Add);
+                    return BuildBinaryOpAssign(node, ExpressionType.Multiply);
 
                 // foo /= 1
                 case EcmaParser.DIVASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Add);
+                    return BuildBinaryOpAssign(node, ExpressionType.Divide);
 
                 // foo %= 1
                 case EcmaParser.MODASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Add);
+                    return BuildBinaryOpAssign(node, ExpressionType.Modulo);
 
                 // 1 == 2
                 case EcmaParser.EQ:
-                    return BuildBinaryOp(node, BinaryOp.Eq);
+                    return BuildBinaryOp(node, ExpressionType.Equal);
 
                 // 1 != 2
                 case EcmaParser.NEQ:
-                    return BuildBinaryOp(node, BinaryOp.NotEq);
+                    return BuildBinaryOp(node, ExpressionType.NotEqual);
 
+                /*
+                //TODO: add support for !== and ===
                 // 1 === 2
                 case EcmaParser.SAME:
-                    return BuildBinaryOp(node, BinaryOp.EqEq);
+                    return BuildBinaryOp(node, ExpressionType.EqEq);
 
                 // 1 !=== 2
                 case EcmaParser.NSAME:
-                    return BuildBinaryOp(node, BinaryOp.NotEqEq);
+                    return BuildBinaryOp(node, ExpressionType.NotEqEq);
+                */
 
                 // 1 < 2
                 case EcmaParser.LT:
-                    return BuildBinaryOp(node, BinaryOp.Lt);
+                    return BuildBinaryOp(node, ExpressionType.LessThan);
 
                 // 1 > 2
                 case EcmaParser.GT:
-                    return BuildBinaryOp(node, BinaryOp.Gt);
+                    return BuildBinaryOp(node, ExpressionType.GreaterThan);
 
                 // 1 >= 2
                 case EcmaParser.GTE:
-                    return BuildBinaryOp(node, BinaryOp.GtEq);
+                    return BuildBinaryOp(node, ExpressionType.GreaterThanOrEqual);
 
                 // 1 <= 2
                 case EcmaParser.LTE:
-                    return BuildBinaryOp(node, BinaryOp.LtEq);
+                    return BuildBinaryOp(node, ExpressionType.LessThanOrEqual);
 
                 // 1 >> 2
                 case EcmaParser.SHR:
-                    return BuildBinaryOp(node, BinaryOp.ShiftRight);
+                    return BuildBinaryOp(node, ExpressionType.RightShift);
 
                 // 1 << 2
                 case EcmaParser.SHL:
-                    return BuildBinaryOp(node, BinaryOp.ShiftLeft);
+                    return BuildBinaryOp(node, ExpressionType.LeftShift);
 
+                /* TODO: add support for >>>
                 // 1 >>> 2
                 case EcmaParser.SHU:
-                    return BuildBinaryOp(node, BinaryOp.ShiftRightZero);
+                    return BuildBinaryOp(node, ExpressionType.ShiftRightZero);
+                */
 
                 // foo >>= 1
                 case EcmaParser.SHRASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.ShiftRight);
+                    return BuildBinaryOpAssign(node, ExpressionType.RightShift);
 
                 // foo <<= 1
                 case EcmaParser.SHLASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.ShiftLeft);
+                    return BuildBinaryOpAssign(node, ExpressionType.LeftShift);
 
+                /* TODO: add support for >>>=
                 // foo >>>= 1
                 case EcmaParser.SHUASS:
-                    return BuildBinaryOp(node, BinaryOp.ShiftRightZero);
+                    return BuildBinaryOp(node, ExpressionType.ShiftRightZero);
+                */
 
                 // 1 & 2
                 case EcmaParser.AND:
-                    return BuildBinaryOp(node, BinaryOp.And);
+                    return BuildBinaryOp(node, ExpressionType.And);
 
                 // 1 | 2
                 case EcmaParser.OR:
-                    return BuildBinaryOp(node, BinaryOp.Or);
+                    return BuildBinaryOp(node, ExpressionType.Or);
 
                 // 1 ^ 2
                 case EcmaParser.XOR:
-                    return BuildBinaryOp(node, BinaryOp.Xor);
+                    return BuildBinaryOp(node, ExpressionType.ExclusiveOr);
 
                 // foo &= 1
                 case EcmaParser.ANDASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.And);
+                    return BuildBinaryOpAssign(node, ExpressionType.And);
 
                 // foo |= 1
                 case EcmaParser.ORASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Or);
+                    return BuildBinaryOpAssign(node, ExpressionType.Or);
 
                 // foo ^= 1
                 case EcmaParser.XORASS:
-                    return BuildBinaryOpAssign(node, BinaryOp.Xor);
+                    return BuildBinaryOpAssign(node, ExpressionType.ExclusiveOr);
 
                 // true && false
                 case EcmaParser.LAND:
-                    return BuildBinaryOp(node, BinaryOp.LogicalAnd);
+                    return BuildBinaryOp(node, ExpressionType.AndAlso);
 
                 // true || false
                 case EcmaParser.LOR:
-                    return BuildBinaryOp(node, BinaryOp.LogicalOr);
+                    return BuildBinaryOp(node, ExpressionType.OrElse);
 
 
                 /*
@@ -247,35 +255,37 @@ namespace IronJS.Compiler.Ast
                  */
                 // foo++
                 case EcmaParser.PINC:
-                    return BuildUnuaryOp(node, UnaryOp.PostInc);
+                    return BuildUnuaryOp(node, ExpressionType.PostIncrementAssign);
 
                 // foo--
                 case EcmaParser.PDEC:
-                    return BuildUnuaryOp(node, UnaryOp.PostDec);
+                    return BuildUnuaryOp(node, ExpressionType.PostDecrementAssign);
 
                 // ++foo
                 case EcmaParser.INC:
-                    return BuildUnuaryOp(node, UnaryOp.Inc);
+                    return BuildUnuaryOp(node, ExpressionType.PreIncrementAssign);
 
                 // --foo
                 case EcmaParser.DEC:
-                    return BuildUnuaryOp(node, UnaryOp.Dec);
+                    return BuildUnuaryOp(node, ExpressionType.PreDecrementAssign);
+
+                //TODO: make sure ~, ! and - have the right ExpressionType
 
                 // ~foo
                 case EcmaParser.INV:
-                    return BuildUnuaryOp(node, UnaryOp.Inv);
+                    return BuildUnuaryOp(node, ExpressionType.OnesComplement);
 
                 // !foo
                 case EcmaParser.NOT:
-                    return BuildUnuaryOp(node, UnaryOp.Not);
+                    return BuildUnuaryOp(node, ExpressionType.Not);
 
                 // -foo
                 case EcmaParser.NEG:
-                    return BuildUnuaryOp(node, UnaryOp.Negate);
+                    return BuildUnuaryOp(node, ExpressionType.Negate);
 
                 // +foo
                 case EcmaParser.POS:
-                    return BuildUnuaryOp(node, UnaryOp.Positive);
+                    return BuildUnuaryOp(node, ExpressionType.UnaryPlus);
 
                 //
                 default:
@@ -287,7 +297,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        private Node BuildUnuaryOp(ITree node, UnaryOp op)
+        private Node BuildUnuaryOp(ITree node, ExpressionType op)
         {
             return new UnaryOpNode(
                 Build(node.GetChildSafe(0)),
@@ -295,7 +305,7 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        private Node BuildBinaryOpAssign(ITree node, BinaryOp op)
+        private Node BuildBinaryOpAssign(ITree node, ExpressionType op)
         {
             return new AssignNode(
                 Build(node.GetChildSafe(0)),
@@ -307,7 +317,7 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        private Node BuildBinaryOp(ITree node, BinaryOp op)
+        private Node BuildBinaryOp(ITree node, ExpressionType op)
         {
             return new BinaryOpNode(
                 Build(node.GetChildSafe(0)),

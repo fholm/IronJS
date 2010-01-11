@@ -226,6 +226,12 @@ namespace IronJS.Compiler
                 case Ast.NodeType.With:
                     return GenerateWith((Ast.WithNode)node);
 
+                case Ast.NodeType.Try:
+                    return GenerateTry((Ast.TryNode)node);
+
+                case Ast.NodeType.Throw:
+                    return GenerateThrow((Ast.ThrowNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -241,6 +247,35 @@ namespace IronJS.Compiler
 
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
+            }
+        }
+
+        private Et GenerateThrow(Ast.ThrowNode node)
+        {
+            return Et.Throw(
+                Generate(node.Target)
+            );
+        }
+
+        private Et GenerateTry(Ast.TryNode node)
+        {
+            // try ... finally
+            if (node.Catch == null)
+            {
+                return Et.TryFinally(
+                    Generate(node.Body),
+                    Generate(node.Finally)
+                );
+            }
+            // try ... catch
+            else if (node.Finally == null)
+            {
+                return AstUtils.Empty();
+            }
+            // try ... catch ... finally
+            else
+            {
+                return AstUtils.Empty();
             }
         }
 

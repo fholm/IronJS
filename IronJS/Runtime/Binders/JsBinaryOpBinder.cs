@@ -24,29 +24,6 @@ namespace IronJS.Runtime.Binders
 
         }
 
-        public Et ArithmeticOperation(ParamEt leftTmp, ParamEt rightTmp, Meta target, Meta arg, Et Op)
-        {
-            return Et.Block(
-                new[] { leftTmp, rightTmp },
-                Et.Assign(
-                    leftTmp,
-                    EtUtils.Box(TypeConverter.ToNumber(target))
-                ),
-                Et.Assign(
-                    rightTmp,
-                    EtUtils.Box(TypeConverter.ToNumber(arg))
-                ),
-                Et.Condition(
-                    Et.OrElse(
-                        Et.TypeEqual(leftTmp, typeof(Js.Nan)),
-                        Et.TypeEqual(rightTmp, typeof(Js.Nan))
-                    ),
-                    Et.Constant(Js.Nan.Instance, typeof(object)),
-                    EtUtils.Box(Op)
-                )
-            );
-        }
-
         public override Meta FallbackBinaryOperation(Meta target, Meta arg, Meta error)
         {
             //TODO: insert defer

@@ -96,6 +96,18 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.WITH:
                     return BuildWith(node);
 
+                case EcmaParser.TRY:
+                    return BuildTry(node);
+
+                case EcmaParser.CATCH:
+                    return BuildCatch(node);
+
+                case EcmaParser.FINALLY:
+                    return BuildFinally(node);
+
+                case EcmaParser.THROW:
+                    return BuildThrow(node);
+
                 /*
                  * Loops
                  */
@@ -326,6 +338,59 @@ namespace IronJS.Compiler.Ast
                         node, 
                         Name(node)
                     );
+            }
+        }
+
+        private Node BuildThrow(ITree node)
+        {
+            return new ThrowNode(
+                Build(node.GetChildSafe(0))
+            );
+        }
+
+        private Node BuildFinally(ITree node)
+        {
+            return BuildBlock(node.GetChildSafe(0));
+        }
+
+        private Node BuildCatch(ITree node)
+        {
+            return new CatchNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1))
+            );
+        }
+
+        private Node BuildTry(ITree node)
+        {
+            if (node.ChildCount > 2)
+            {
+                return new TryNode(
+                    Build(node.GetChildSafe(0)),
+                    (CatchNode)Build(node.GetChildSafe(1)),
+                    Build(node.GetChildSafe(2))
+                );
+            }
+            else
+            {
+                var secondChild = node.GetChildSafe(1);
+
+                if (secondChild.Type == EcmaParser.FINALLY)
+                {
+                    return new TryNode(
+                        Build(node.GetChildSafe(0)),
+                        null,
+                        Build(node.GetChildSafe(1))
+                    );
+                }
+                else
+                {
+                    return new TryNode(
+                        Build(node.GetChildSafe(0)),
+                        (CatchNode)Build(node.GetChildSafe(1)),
+                        null
+                    );
+                }
             }
         }
 

@@ -63,6 +63,10 @@ namespace IronJS.Runtime.Binders
                 );
             }
 
+            // handles call proxies that
+            // are emitted from WithFrame objects
+            // for function calls that really
+            // are method calls
             if (target.Value is CallProxy)
             {
                 var proxy = (CallProxy)target.Value;

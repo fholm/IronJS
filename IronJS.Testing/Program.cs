@@ -25,6 +25,12 @@ namespace IronJS.Testing
                 VarType.Global
             );
 
+            context.Globals.Push(
+                "exc",
+                new Exception(),
+                VarType.Global
+            );
+
             var compiled = etGenerator.Build(astNodes);
 
             compiled(context.Globals);

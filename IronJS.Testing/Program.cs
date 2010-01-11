@@ -20,7 +20,7 @@ namespace IronJS.Testing
             Context context = Context.Setup();
 
             context.Globals.Push(
-                "print", 
+                "alert", 
                 typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
                 VarType.Global
             );

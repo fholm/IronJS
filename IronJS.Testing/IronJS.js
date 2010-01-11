@@ -1,8 +1,7 @@
 ﻿
 
-var foo = function (bar) {
-    print(bar);
-    this.test = "hello world";
-};
-
-var bar = new foo("y 'elo thar!");
+i = 0;
+do {
+    print(i);
+    ++i;
+} while (i < 0);

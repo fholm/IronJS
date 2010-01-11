@@ -292,29 +292,62 @@ namespace IronJS.Compiler
             );
         }
 
+        // 12.6.1
         // 12.6.2
         // while(test) { <expr>, <expr> ... <expr> }
+        // do { <expr>, <expr> ... <expr> } while(test);
         private Et GenerateWhile(Ast.WhileNode node)
         {
+            Et loop;
             EnterLoop();
 
+            var test = Et.Dynamic(
+                new JsConvertBinder(typeof(bool)),
+                typeof(bool),
+                Generate(node.Test)
+            );
 
-            var body = Generate(node.Body);
+            // while
+            if (node.Type == Ast.WhileType.While)
+            {
+                var body = Generate(node.Body);
 
-            var test =
-                Et.Dynamic(
-                    new JsConvertBinder(typeof(bool)),
-                    typeof(bool),
-                    Generate(node.Test)
+                loop = AstUtils.While(
+                    test,
+                    body,
+                    null,
+                    BreakLabel,
+                    ContinueLabel
+                );
+            }
+            // do ... while
+            else if (node.Type == Ast.WhileType.Do)
+            {
+                var bodyExprs = new List<Et>();
+
+                bodyExprs.Add(Generate(node.Body));
+
+                // test last, instead of first
+                bodyExprs.Add(
+                    Et.IfThenElse(
+                        test,
+                        Et.Continue(ContinueLabel),
+                        Et.Break(BreakLabel)
+                    )
                 );
 
-            var loop = AstUtils.While(
-                test, 
-                body, 
-                null, 
-                BreakLabel, 
-                ContinueLabel
-            );
+                loop = Et.Loop(
+                    Et.Block(
+                        bodyExprs
+                    ),
+                    BreakLabel,
+                    ContinueLabel
+                );
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
             
             ExitLoop();
 
@@ -554,9 +587,9 @@ namespace IronJS.Compiler
             // this handles properties defined
             // in the shorthand json-style object
             // expression: { foo: 1, bar: 2 }
-
-            if(node.Properties != null)
-                foreach(var propNode in node.Properties)
+            if (node.Properties != null)
+            {
+                foreach (var propNode in node.Properties)
                 {
                     exprs.Add(
                         Et.Call(
@@ -567,6 +600,7 @@ namespace IronJS.Compiler
                         )
                     );
                 }
+            }
 
             exprs.Add(
                 EtUtils.Box(tmp)

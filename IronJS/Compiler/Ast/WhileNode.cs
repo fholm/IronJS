@@ -5,16 +5,20 @@ namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
 
+    enum WhileType { Do, While }
+
     class WhileNode : Node
     {
         public readonly Node Test;
         public readonly Node Body;
+        public readonly WhileType Type;
 
-        public WhileNode(Node test, Node body)
+        public WhileNode(Node test, Node body, WhileType type)
             : base(NodeType.While)
         {
             Test = test;
             Body = body;
+            Type = type;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

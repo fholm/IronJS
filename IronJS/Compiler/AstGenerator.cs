@@ -105,6 +105,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.FOR:
                     return BuildFor(node);
 
+                case EcmaParser.DO:
+                    return BuildDoWhile(node);
+
                 case EcmaParser.BREAK:
                     return BuildBreak(node);
 
@@ -325,6 +328,18 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildDoWhile(ITree node)
+        {
+            var body = Build(node.GetChildSafe(0));
+            var test = Build(node.GetChildSafe(1));
+
+            return new WhileNode(
+                test,
+                body,
+                WhileType.Do
+            );
         }
 
         private Node BuildContinue(ITree node)
@@ -552,7 +567,8 @@ namespace IronJS.Compiler.Ast
 
             return new WhileNode(
                 testNode, 
-                bodyNode
+                bodyNode,
+                WhileType.While
             );
         }
 

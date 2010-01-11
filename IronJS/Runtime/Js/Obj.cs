@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js
             new Dictionary<object, Property>();
 
         // 8.6.2 'Scope'
-        public readonly IFrame Frame;
+        public readonly Frame Frame;
 
         // 8.6.2 'Call'
         public readonly Lambda Lambda;
@@ -36,7 +36,7 @@ namespace IronJS.Runtime.Js
             Class = ObjClass.Object;
         }
 
-        public Obj(IFrame frame, Lambda lambda)
+        public Obj(Frame frame, Lambda lambda)
         {
             Frame = frame;
             Lambda = lambda;

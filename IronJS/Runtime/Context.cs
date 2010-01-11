@@ -8,7 +8,7 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame Globals { get; protected set; }
+        public Frame Globals { get; protected set; }
         public Obj Object { get; protected set; }
         public Obj ObjectPrototype { get; protected set; }
         public Obj Function { get; protected set; }
@@ -22,13 +22,13 @@ namespace IronJS.Runtime
         {
             var ctx = new Context();
 
-            ctx.Globals = new IFrame();
+            ctx.Globals = new Frame();
 
             ctx.ObjectPrototype = new Obj();
             ctx.FunctionPrototype = new Obj(
                 ctx.Globals,
                 new Lambda(
-                    new Func<IFrame, object>(FunctionPrototypeLambda),
+                    new Func<Frame, object>(FunctionPrototypeLambda),
                     new string[] { }.ToList()
                 )
             );
@@ -36,7 +36,7 @@ namespace IronJS.Runtime
             ctx.Object = new Obj(
                 ctx.Globals, 
                 new Lambda(
-                    new Func<IFrame, object>(ObjectConstructorLambda),
+                    new Func<Frame, object>(ObjectConstructorLambda),
                     new[] { "value" }.ToList()
                 )
             );
@@ -44,7 +44,7 @@ namespace IronJS.Runtime
             ctx.Function = new Obj(
                 ctx.Globals,
                 new Lambda(
-                    new Func<IFrame, object>(FunctionConstructorLambda),
+                    new Func<Frame, object>(FunctionConstructorLambda),
                     new string[] { }.ToList()
                 )
             );
@@ -75,17 +75,17 @@ namespace IronJS.Runtime
             return ctx;
         }
 
-        static public object FunctionPrototypeLambda(IFrame frame)
+        static public object FunctionPrototypeLambda(Frame frame)
         {
             return Js.Undefined.Instance;
         }
 
-        static public object FunctionConstructorLambda(IFrame frame)
+        static public object FunctionConstructorLambda(Frame frame)
         {
             return null;
         }
 
-        static public object ObjectConstructorLambda(IFrame frame)
+        static public object ObjectConstructorLambda(Frame frame)
         {
             var value = frame.Arg("value");
 

@@ -298,6 +298,7 @@ namespace IronJS.Compiler
         {
             EnterLoop();
 
+
             var body = Generate(node.Body);
 
             var test =
@@ -307,12 +308,11 @@ namespace IronJS.Compiler
                     Generate(node.Test)
                 );
 
-            var loop = AstUtils.Loop(
-                test,
-                null,
-                body,
-                null,
-                BreakLabel,
+            var loop = AstUtils.While(
+                test, 
+                body, 
+                null, 
+                BreakLabel, 
                 ContinueLabel
             );
             
@@ -554,17 +554,19 @@ namespace IronJS.Compiler
             // this handles properties defined
             // in the shorthand json-style object
             // expression: { foo: 1, bar: 2 }
-            foreach(var propNode in node.Properties)
-            {
-                exprs.Add(
-                    Et.Call(
-                        tmp,
-                        typeof(Obj).GetMethod("Put"),
-                        Et.Constant(propNode.Name, typeof(object)),
-                        EtUtils.Box(Generate(propNode.Value))
-                    )
-                );
-            }
+
+            if(node.Properties != null)
+                foreach(var propNode in node.Properties)
+                {
+                    exprs.Add(
+                        Et.Call(
+                            tmp,
+                            typeof(Obj).GetMethod("Put"),
+                            Et.Constant(propNode.Name, typeof(object)),
+                            EtUtils.Box(Generate(propNode.Value))
+                        )
+                    );
+                }
 
             exprs.Add(
                 EtUtils.Box(tmp)

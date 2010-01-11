@@ -324,6 +324,9 @@ namespace IronJS.Runtime.Js
                 )
             );
 
+            // push arguments on call new callframe
+            PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
+
             // hidden 'this' parameter
             exprs.Add(
                 FrameUtils.Push(

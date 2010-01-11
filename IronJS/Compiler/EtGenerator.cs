@@ -220,6 +220,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Break:
                     return GenerateBreak((Ast.BreakNode)node);
 
+                case Ast.NodeType.Continue:
+                    return GenerateContinue((Ast.ContinueNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -236,6 +239,12 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        // continue
+        private Et GenerateContinue(Ast.ContinueNode node)
+        {
+            return Et.Continue(ContinueLabel);
         }
 
         // 12.8

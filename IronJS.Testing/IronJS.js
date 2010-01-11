@@ -173,6 +173,14 @@ for (i = 0; i < 10; ++i) {
 }
 
 
+for (i = 0; i < 10; ++i) {
+    if (i == 5) {
+        print("skipping 5");
+        continue;
+    }
+    print(i);
+}
+
 /* WORKS, but loops forever
 i = 0;
 for (;;) {

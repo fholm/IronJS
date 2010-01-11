@@ -55,9 +55,11 @@
     <Compile Include="Compiler\Ast\AutoPropertyNode.cs" />
     <Compile Include="Compiler\Ast\BlockNode.cs" />
     <Compile Include="Compiler\AstGenerator.cs" />
+    <Compile Include="Compiler\Ast\BreakNode.cs" />
     <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\ClrNewNode.cs" />
     <Compile Include="Compiler\Ast\BinaryOpNode.cs" />
+    <Compile Include="Compiler\Ast\ContinueNode.cs" />
     <Compile Include="Compiler\Ast\IdentifierNode.cs" />
     <Compile Include="Compiler\Ast\IfNode.cs" />
     <Compile Include="Compiler\Ast\LambdaNode.cs" />
@@ -70,7 +72,6 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
-    <Compile Include="Compiler\BreakNode.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />

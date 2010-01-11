@@ -108,6 +108,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.BREAK:
                     return BuildBreak(node);
 
+                case EcmaParser.CONTINUE:
+                    return BuildContinue(node);
+
                 /*
                  * Literals
                  */
@@ -322,6 +325,16 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildContinue(ITree node)
+        {
+            if (node.ChildCount == 0)
+            {
+                return new ContinueNode();
+            }
+
+            throw new NotImplementedException();
         }
 
         // 12.8

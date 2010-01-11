@@ -13,17 +13,10 @@ namespace IronJS.Compiler.Ast
         MemberAccess, Call, If, Eq, Block,
         String, ClrNew, Lambda, While, BinaryOp,
         Object, New, AutoProperty, Return,
-        UnaryOp,
-        Logical,
-        PostfixOperator,
-        TypeOf,
-        Boolean,
-        Void,
-        StrictCompare,
-        UnsignedRightShift,
-        ForStep,
-        ForIn,
-        Break
+        UnaryOp, Logical, PostfixOperator,
+        TypeOf, Boolean, Void, StrictCompare,
+        UnsignedRightShift, ForStep, ForIn,
+        Break, Continue
     }
 
     abstract public class Node

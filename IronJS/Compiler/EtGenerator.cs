@@ -267,15 +267,42 @@ namespace IronJS.Compiler
                     Generate(node.Finally)
                 );
             }
-            // try ... catch
-            else if (node.Finally == null)
-            {
-                return AstUtils.Empty();
-            }
-            // try ... catch ... finally
             else
             {
-                return AstUtils.Empty();
+                var catchParam = Et.Parameter(typeof(object), "#catch");
+
+                var catchBody = Et.Block(
+                    BuildAssign(
+                        node.Catch.Target, 
+                        catchParam
+                    ),
+                    Generate(node.Catch.Body)
+                );
+
+                var catchBlock = Et.Catch(
+                    catchParam, 
+                    catchBody
+                );
+
+                var tryBody = EtUtils.Box(Generate(node.Body));
+
+                // try ... catch 
+                if (node.Finally == null)
+                {
+                    return Et.TryCatch(
+                        tryBody,
+                        catchBlock
+                    );
+                }
+                // try ... catch ... finally
+                else
+                {
+                    return Et.TryCatchFinally(
+                        tryBody,
+                        Generate(node.Finally),
+                        catchBlock
+                    );
+                }
             }
         }
 

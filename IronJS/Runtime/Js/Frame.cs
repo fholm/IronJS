@@ -84,6 +84,11 @@ namespace IronJS.Runtime.Js
             return new Frame(this);
         }
 
+        public Frame Exit()
+        {
+            return _parent;
+        }
+
         #region Static
 
         #endregion

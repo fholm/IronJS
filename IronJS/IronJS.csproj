@@ -83,6 +83,7 @@
     <Compile Include="Compiler\Ast\UnsignedRightShiftNode.cs" />
     <Compile Include="Compiler\Ast\ForStepNode.cs" />
     <Compile Include="Compiler\Ast\ForInNode.cs" />
+    <Compile Include="Compiler\WithNode.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

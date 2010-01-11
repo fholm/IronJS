@@ -15,7 +15,7 @@ namespace IronJS.Runtime.Utils
         {
             return Et.Call(
                 frame,
-                typeof(Frame).GetMethod("Push"),
+                typeof(IFrame).GetMethod("Push"),
                 Et.Constant(name),
                 value,
                 Et.Constant(type)
@@ -26,7 +26,7 @@ namespace IronJS.Runtime.Utils
         {
             return Et.Call(
                 frame,
-                typeof(Frame).GetMethod("Pull"),
+                typeof(IFrame).GetMethod("Pull"),
                 Et.Constant(name)
             );
         }
@@ -48,7 +48,7 @@ namespace IronJS.Runtime.Utils
                 target,
                 Et.Call(
                     parent,
-                    typeof(Frame).GetMethod("Enter", Type.EmptyTypes)
+                    typeof(IFrame).GetMethod("Enter", Type.EmptyTypes)
                 )
             );
         }

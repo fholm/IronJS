@@ -58,7 +58,7 @@ namespace IronJS.Compiler.Ast
 
             switch (node.Type)
             {
-                case EcmaParser.THIS:
+                case EcmaParser.THIS: // 'this' is just an identifier
                 case EcmaParser.Identifier:
                     return BuildIdentifier(node);
 
@@ -72,7 +72,7 @@ namespace IronJS.Compiler.Ast
                     return BuildMemberAccess(node);
 
                 case EcmaParser.IF:
-                case EcmaParser.QUE:
+                case EcmaParser.QUE: // <expr> ? <expr> : <expr>
                     return BuildIf(node);
 
                 case EcmaParser.BLOCK:
@@ -92,6 +92,9 @@ namespace IronJS.Compiler.Ast
 
                 case EcmaParser.EXPR:
                     return Build(node.GetChildSafe(0));
+
+                case EcmaParser.WITH:
+                    return BuildWith(node);
 
                 /*
                  * Loops
@@ -314,7 +317,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.VOID:
                     return BuildVoidOp(node);
 
-                //
+                /*
+                 * Error handling
+                 */
                 default:
                     throw new Compiler.CompilerError(
                         "Unrecognized token '{0}'", 
@@ -322,6 +327,14 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildWith(ITree node)
+        {
+            return new WithNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1))
+            );
         }
 
         private Node BuildDoWhile(ITree node)

@@ -10,20 +10,20 @@ namespace IronJS.Runtime.Js
 
     public enum VarType { Global, Local }
 
-    public class Frame
+    public class IFrame
     {
-        readonly Frame _parent;
+        readonly IFrame _parent;
 
         readonly Dictionary<object, object> _values =
              new Dictionary<object, object>();
 
-        public Frame()
+        public IFrame()
             : this(null)
         {
 
         }
 
-        public Frame(Frame parent)
+        public IFrame(IFrame parent)
         {
             _parent = parent;
         }
@@ -79,12 +79,12 @@ namespace IronJS.Runtime.Js
             return Js.Undefined.Instance;
         }
 
-        public Frame Enter()
+        public IFrame Enter()
         {
-            return new Frame(this);
+            return new IFrame(this);
         }
 
-        public Frame Exit()
+        public IFrame Exit()
         {
             return _parent;
         }

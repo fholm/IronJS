@@ -51,7 +51,7 @@ namespace IronJS.Compiler
             get { return ContinueLabels.Peek(); }
         }
 
-        public Action<Frame> Build(List<Ast.Node> astNodes)
+        public Action<IFrame> Build(List<Ast.Node> astNodes)
         {
             GlobalExprs = new List<Et>();
             ReturnLabels = new Stack<LabelTarget>();
@@ -96,7 +96,7 @@ namespace IronJS.Compiler
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<Frame, object>), 
+                    typeof(Func<IFrame, object>), 
                     typeof(List<string>)
                 }
             );
@@ -117,7 +117,7 @@ namespace IronJS.Compiler
                 globalExprs
             );
 
-            return Et.Lambda<Action<Frame>>(
+            return Et.Lambda<Action<IFrame>>(
                 Et.Block(
                     new[] { TableExpr },
                     allExprs
@@ -141,7 +141,7 @@ namespace IronJS.Compiler
         private void EnterFrame()
         {
             ReturnLabels.Push(Et.Label(typeof(object), "#return"));
-            FrameExprStack.Push(Et.Parameter(typeof(Frame), "#frame"));
+            FrameExprStack.Push(Et.Parameter(typeof(IFrame), "#frame"));
         }
 
         private void ExitFrame()
@@ -730,7 +730,7 @@ namespace IronJS.Compiler
                 )
             );
 
-            var lambdaEt = Et.Lambda<Func<Frame, object>>(
+            var lambdaEt = Et.Lambda<Func<IFrame, object>>(
                 Et.Block(bodyExprs),
                 FrameExpr
             );
@@ -764,7 +764,7 @@ namespace IronJS.Compiler
                     AstUtils.SimpleNewHelper( 
                         typeof(Obj).GetConstructor(
                             new[] { 
-                                typeof(Frame), 
+                                typeof(IFrame), 
                                 typeof(Lambda)
                             }
                         ),

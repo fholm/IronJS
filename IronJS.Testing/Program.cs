@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Text;
-using System.Linq.Expressions;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
 using IronJS.Runtime;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Testing
 {

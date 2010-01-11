@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text;
 using System.Linq.Expressions;
+using System.Text;
 
 namespace IronJS.Compiler.Ast
 {

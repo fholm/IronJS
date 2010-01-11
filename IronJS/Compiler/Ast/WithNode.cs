@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class WithNode : Node
     {
         private Node Target;
@@ -17,7 +16,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
+        public override Et Walk(EtGenerator etgen)
         {
             throw new NotImplementedException();
         }

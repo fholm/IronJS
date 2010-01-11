@@ -13,8 +13,6 @@ namespace IronJS.Compiler.Ast
     using System.Linq.Expressions;
 
     //TODO: implement delete operator
-    //TODO: implement >>> and >>>= operator
-    //TODO: implement === and !== operator
 
     public class AstGenerator
     {
@@ -98,7 +96,6 @@ namespace IronJS.Compiler.Ast
                 /*
                  * Loops
                  */
-
                 case EcmaParser.WHILE:
                     return BuildWhile(node);
 
@@ -273,7 +270,6 @@ namespace IronJS.Compiler.Ast
                 /*
                  * Increment/Decrement operators
                  */
-
                 // foo++
                 case EcmaParser.PINC:
                     return BuildIncDecNode(node, ExpressionType.PostIncrementAssign);
@@ -293,9 +289,7 @@ namespace IronJS.Compiler.Ast
                 /*
                  * Unary operators
                  */
-
                 //TODO: make sure ~, ! and - have the right ExpressionType
-
                 // ~foo
                 case EcmaParser.INV:
                     return BuildUnuaryOp(node, ExpressionType.OnesComplement);

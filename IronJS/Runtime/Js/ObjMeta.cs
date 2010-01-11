@@ -20,10 +20,53 @@ namespace IronJS.Runtime.Js
         static MethodInfo LambdaInvoke = 
             typeof(Func<IFrame, object>).GetMethod("Invoke");
 
+        //TODO: check all Get/Set operations it's ok to just type-restrict on the target
+
         public ObjMeta(Et parameter, Obj closure)
             : base(parameter, Restrict.Empty, closure)
         {
 
+        }
+
+        public override Meta BindSetIndex(SetIndexBinder binder, Meta[] indexes, Meta value)
+        {
+            //TODO: insert defer
+
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<Obj>(this.Expression),
+                    typeof(Obj).GetMethod("Put"),
+                    indexes[0].Expression,
+                    EtUtils.Box(value.Expression)
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression,
+                    this.LimitType
+                )
+            );
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="binder"></param>
+        /// <param name="indexes"></param>
+        /// <returns></returns>
+        public override Meta BindGetIndex(GetIndexBinder binder, Meta[] indexes)
+        {
+            //TODO: insert defer
+
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<Obj>(this.Expression),
+                    typeof(Obj).GetMethod("Get"),
+                    indexes[0].Expression
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression,
+                    this.LimitType
+                )
+            );
         }
 
         /// <summary>

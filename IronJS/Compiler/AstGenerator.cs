@@ -68,8 +68,6 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.CALL:
                     return BuildCall(node);
 
-                case EcmaParser.BYFIELD:
-                    return BuildMemberAccess(node);
 
                 case EcmaParser.IF:
                 case EcmaParser.QUE: // <expr> ? <expr> : <expr>
@@ -107,6 +105,16 @@ namespace IronJS.Compiler.Ast
 
                 case EcmaParser.THROW:
                     return BuildThrow(node);
+
+                /*
+                 * Property access
+                 */
+
+                case EcmaParser.BYFIELD:
+                    return BuildMemberAccess(node);
+
+                case EcmaParser.BYINDEX:
+                    return BuildIndexAccess(node);
 
                 /*
                  * Loops
@@ -339,6 +347,14 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildIndexAccess(ITree node)
+        {
+            return new IndexAccessNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1))
+            );
         }
 
         private Node BuildThrow(ITree node)

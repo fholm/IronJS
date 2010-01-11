@@ -232,6 +232,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Throw:
                     return GenerateThrow((Ast.ThrowNode)node);
 
+                case Ast.NodeType.IndexAccess:
+                    return GenerateIndexAccess((Ast.IndexAccessNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -248,6 +251,16 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateIndexAccess(Ast.IndexAccessNode node)
+        {
+            return Et.Dynamic(
+                new JsGetIndexBinder(new CallInfo(0)),
+                typeof(object),
+                Generate(node.Target),
+                Generate(node.Index)
+            );
         }
 
         private Et GenerateThrow(Ast.ThrowNode node)
@@ -912,6 +925,18 @@ namespace IronJS.Compiler
                     new JsSetMemberBinder(maNode.Name),
                     typeof(object),
                     Generate(maNode.Target),
+                    value
+                );
+            }
+            else if (target is Ast.IndexAccessNode)
+            {
+                var ixNode = (Ast.IndexAccessNode)target;
+
+                return Et.Dynamic(
+                    new JsSetIndexBinder(new CallInfo(1)),
+                    typeof(object),
+                    Generate(ixNode.Target),
+                    Generate(ixNode.Index),
                     value
                 );
             }

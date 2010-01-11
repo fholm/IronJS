@@ -18,7 +18,8 @@ namespace IronJS.Compiler.Ast
         UnsignedRightShift, ForStep, ForIn,
         Break, Continue, With, Try,
         Catch,
-        Throw
+        Throw,
+        IndexAccess
     }
 
     abstract public class Node

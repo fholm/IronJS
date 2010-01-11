@@ -7,6 +7,7 @@ print(foo["bar"]);
 print(foo["bar"]["x"]);
 print(foo.bar["x"]);
 
+
 foo["bar"]["x"] = "new x";
 print(foo["bar"]["x"]);
 

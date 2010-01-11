@@ -51,7 +51,7 @@ namespace IronJS.Compiler
             get { return ContinueLabels.Peek(); }
         }
 
-        public Action<Frame> Build(List<Ast.Node> astNodes)
+        public Action<IFrame> Build(List<Ast.Node> astNodes)
         {
             GlobalExprs = new List<Et>();
             ReturnLabels = new Stack<LabelTarget>();
@@ -96,7 +96,7 @@ namespace IronJS.Compiler
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<Frame, object>), 
+                    typeof(Func<IFrame, object>), 
                     typeof(List<string>)
                 }
             );
@@ -117,7 +117,7 @@ namespace IronJS.Compiler
                 globalExprs
             );
 
-            return Et.Lambda<Action<Frame>>(
+            return Et.Lambda<Action<IFrame>>(
                 Et.Block(
                     new[] { TableExpr },
                     allExprs
@@ -141,7 +141,7 @@ namespace IronJS.Compiler
         private void EnterFrame()
         {
             ReturnLabels.Push(Et.Label(typeof(object), "#return"));
-            FrameExprStack.Push(Et.Parameter(typeof(Frame), "#frame"));
+            FrameExprStack.Push(Et.Parameter(typeof(IFrame), "#frame"));
         }
 
         private void ExitFrame()
@@ -223,6 +223,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Continue:
                     return GenerateContinue((Ast.ContinueNode)node);
 
+                case Ast.NodeType.With:
+                    return GenerateWith((Ast.WithNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -239,6 +242,29 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateWith(Ast.WithNode node)
+        {
+            return Et.Block(
+                Et.Assign(FrameExpr, 
+                    AstUtils.SimpleNewHelper(
+                        typeof(WithFrame).GetConstructor(
+                            new[] { 
+                                typeof(Obj), 
+                                typeof(IFrame)
+                            }
+                        ),
+                        Generate(node.Target),
+                        FrameExpr
+                    )
+                ),
+                Generate(node.Body),
+                FrameUtils.ExitFrame(
+                    FrameExpr, 
+                    FrameExpr
+                )
+            );
         }
 
         // continue
@@ -308,7 +334,7 @@ namespace IronJS.Compiler
             );
 
             // while
-            if (node.Type == Ast.WhileType.While)
+            if (node.Loop == Ast.WhileType.While)
             {
                 var body = Generate(node.Body);
 
@@ -321,7 +347,7 @@ namespace IronJS.Compiler
                 );
             }
             // do ... while
-            else if (node.Type == Ast.WhileType.Do)
+            else if (node.Loop == Ast.WhileType.Do)
             {
                 var bodyExprs = new List<Et>();
 
@@ -634,10 +660,10 @@ namespace IronJS.Compiler
         }
 
         // 7.6
-        private Et GenerateIdentifier(Ast.IdentifierNode node)
+        private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
         {
             // foo
-            return FrameUtils.Pull(FrameExpr, node.Name, Runtime.Js.GetType.Value);
+            return FrameUtils.Pull(FrameExpr, node.Name, type);
         }
 
         // ???
@@ -678,7 +704,10 @@ namespace IronJS.Compiler
             // foo();
             if (node.Target is Ast.IdentifierNode)
             {
-                var target = Generate(node.Target);
+                var target = GenerateIdentifier(
+                    (Ast.IdentifierNode)node.Target, 
+                    Runtime.Js.GetType.Call
+                );
 
                 return Et.Dynamic(
                     new JsInvokeBinder(
@@ -730,7 +759,7 @@ namespace IronJS.Compiler
                 )
             );
 
-            var lambdaEt = Et.Lambda<Func<Frame, object>>(
+            var lambdaEt = Et.Lambda<Func<IFrame, object>>(
                 Et.Block(bodyExprs),
                 FrameExpr
             );
@@ -764,7 +793,7 @@ namespace IronJS.Compiler
                     AstUtils.SimpleNewHelper( 
                         typeof(Obj).GetConstructor(
                             new[] { 
-                                typeof(Frame), 
+                                typeof(IFrame), 
                                 typeof(Lambda)
                             }
                         ),

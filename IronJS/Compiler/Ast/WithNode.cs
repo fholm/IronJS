@@ -6,8 +6,8 @@ namespace IronJS.Compiler.Ast
 
     class WithNode : Node
     {
-        private Node Target;
-        private Node Body;
+        public readonly Node Target;
+        public readonly Node Body;
 
         public WithNode(Node target, Node body)
             : base(NodeType.With)

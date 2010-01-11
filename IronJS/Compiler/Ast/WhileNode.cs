@@ -11,21 +11,21 @@ namespace IronJS.Compiler.Ast
     {
         public readonly Node Test;
         public readonly Node Body;
-        public readonly WhileType Type;
+        public readonly WhileType Loop;
 
         public WhileNode(Node test, Node body, WhileType type)
             : base(NodeType.While)
         {
             Test = test;
             Body = body;
-            Type = type;
+            Loop = type;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + Loop);
 
             Test.Print(writer, indent + 1);
             Body.Print(writer, indent + 1);

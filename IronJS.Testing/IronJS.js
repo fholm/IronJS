@@ -1,9 +1,6 @@
 ﻿
-
-
-/*
 function f() {
-    alert(this.x);
+    print(this.x);
 }
 
 foo = { f: f, x: "foo.x", y: "foo.y" }
@@ -11,21 +8,21 @@ bar = { f: f, x: "bar.x" }
 
 with (foo) {
 
-    alert(bar);
-    alert(foo);
-    alert(x);
+    print(bar);
+    print(foo);
+    print(x);
 
     with (bar) {
 
         aaa = function () {
-            alert("aaa: " + x);
+            print("aaa: " + x);
         };
 
         var bbb = function () {
-            alert("bbb: " + foo.x);
+            print("bbb: " + foo.x);
         };
 
-        alert(y);
+        print(y);
 
         f();
 
@@ -39,8 +36,7 @@ with (foo) {
 
 }
 
-alert(foo.x);
-alert(bar.x);
+print(foo.x);
+print(bar.x);
 aaa();
 bbb();
-*/

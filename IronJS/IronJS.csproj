@@ -101,6 +101,7 @@
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
     <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Js\IFrame.cs" />
     <Compile Include="Runtime\Js\Nan.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
@@ -122,6 +123,7 @@
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\WithFrame.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs" />
     <Compile Include="Runtime\Utils\FrameUtils.cs" />

@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js
             new Dictionary<object, Property>();
 
         // 8.6.2 'Scope'
-        public readonly Frame Frame;
+        public readonly IFrame Frame;
 
         // 8.6.2 'Call'
         public readonly Lambda Lambda;
@@ -36,7 +36,7 @@ namespace IronJS.Runtime.Js
             Class = ObjClass.Object;
         }
 
-        public Obj(Frame frame, Lambda lambda)
+        public Obj(IFrame frame, Lambda lambda)
         {
             Frame = frame;
             Lambda = lambda;
@@ -129,6 +129,25 @@ namespace IronJS.Runtime.Js
         public bool Delete(object key)
         {
             return Properties.Remove(key);
+        }
+
+
+        public bool SetIfExists(object key, object value)
+        {
+            Obj obj = this;
+
+            while (obj != null)
+            {
+                if (Properties.ContainsKey(key))
+                {
+                    Properties[key].Value = value;
+                    return true;
+                }
+
+                obj = obj.Prototype;
+            }
+
+            return false;
         }
 
         public object HasOwnProperty(object key)

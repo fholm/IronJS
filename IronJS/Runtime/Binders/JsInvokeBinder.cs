@@ -8,6 +8,8 @@ namespace IronJS.Runtime.Binders
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using IronJS.Runtime.Js;
+    using Microsoft.Scripting.Utils;
 
     enum InvokeFlag { Constructor, Method, Function }
 
@@ -57,6 +59,35 @@ namespace IronJS.Runtime.Binders
                         target, 
                         args, 
                         RestrictFlag.Instance
+                    )
+                );
+            }
+
+            if (target.Value is CallProxy)
+            {
+                var proxy = (CallProxy)target.Value;
+
+                return new Meta(
+                    Et.Dynamic(
+                        new JsInvokeMemberBinder( // <- this is reason 4 with() {} is slow, 
+                            proxy.Method,         // so don't frekin use it
+                            new CallInfo(args.Length)
+                        ),
+                        typeof(object),
+                        ArrayUtils.Insert(
+                            Et.Field(
+                                Et.Convert(
+                                    target.Expression, 
+                                    typeof(CallProxy)
+                                ), 
+                                "That"
+                            ),
+                            DynamicUtils.GetExpressions(args)
+                        )
+                    ),
+                    Restrict.GetInstanceRestriction( // <- this is reason 5 with() {} is slow, 
+                        target.Expression,           // so don't frekin use it
+                        target.Value
                     )
                 );
             }

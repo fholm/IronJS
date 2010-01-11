@@ -18,7 +18,7 @@ namespace IronJS.Runtime.Js
     class ObjMeta : Meta
     {
         static MethodInfo LambdaInvoke = 
-            typeof(Func<Frame, object>).GetMethod("Invoke");
+            typeof(Func<IFrame, object>).GetMethod("Invoke");
 
         public ObjMeta(Et parameter, Obj closure)
             : base(parameter, Restrict.Empty, closure)
@@ -170,7 +170,7 @@ namespace IronJS.Runtime.Js
 
                 // this is our new call frame
                 var callFrameExpr = Et.Parameter(
-                    typeof(Frame), 
+                    typeof(IFrame), 
                     "#callframe"
                 );
 

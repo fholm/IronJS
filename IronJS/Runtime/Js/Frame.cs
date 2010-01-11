@@ -9,6 +9,7 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
 
     public enum VarType { Global, Local }
+    public enum GetType { Value, Call }
 
     public class Frame
     {
@@ -66,7 +67,7 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
-        public object Pull(object key)
+        public object Pull(object key, GetType type)
         {
             object value; 
 
@@ -74,7 +75,7 @@ namespace IronJS.Runtime.Js
                 return value;
 
             if (_parent != null)
-                return _parent.Pull(key);
+                return _parent.Pull(key, type);
 
             return Js.Undefined.Instance;
         }

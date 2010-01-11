@@ -22,21 +22,23 @@ namespace IronJS.Runtime.Utils
             );
         }
 
-        internal static Et Pull(Et frame, string name)
+        internal static Et Pull(Et frame, string name, GetType type)
         {
             return Et.Call(
                 frame,
                 typeof(Frame).GetMethod("Pull"),
-                Et.Constant(name)
+                Et.Constant(name),
+                Et.Constant(type)
             );
         }
 
-        internal static Et Pull<T>(Et frame, string name)
+        internal static Et Pull<T>(Et frame, string name, GetType type)
         {
             return Et.Convert(
                 FrameUtils.Pull(
                     frame,
-                    name
+                    name,
+                    type
                 ),
                 typeof(T)
             );

@@ -1,4 +1,7 @@
 ﻿
+
+
+/*
 function f() {
     alert(this.x);
 }
@@ -40,3 +43,4 @@ alert(foo.x);
 alert(bar.x);
 aaa();
 bbb();
+*/

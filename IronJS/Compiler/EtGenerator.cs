@@ -637,7 +637,7 @@ namespace IronJS.Compiler
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
             // foo
-            return FrameUtils.Pull(FrameExpr, node.Name);
+            return FrameUtils.Pull(FrameExpr, node.Name, Runtime.Js.GetType.Value);
         }
 
         // ???
@@ -784,7 +784,8 @@ namespace IronJS.Compiler
                     ),
                     FrameUtils.Pull<Obj>(
                         GlobalFrameExpr,
-                        "#FunctionPrototype"
+                        "#FunctionPrototype",
+                        Runtime.Js.GetType.Value
                     )
                 ),
                 // 3

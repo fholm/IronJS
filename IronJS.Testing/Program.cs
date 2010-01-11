@@ -14,7 +14,7 @@ namespace IronJS.Testing
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
-            var astNodes = astBuilder.Build("IronJS.js", Encoding.UTF8);
+            var astNodes = astBuilder.Build("Tests/while.js", Encoding.UTF8);
 
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());

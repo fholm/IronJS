@@ -358,14 +358,14 @@ namespace IronJS.Compiler.Ast
         private Node BuildLabelled(ITree node)
         {
             var label = node.GetChildSafe(0);
-            var target = node.GetChildSafe(1);
+            var target = Build(node.GetChildSafe(1));
 
-            if (target.Type == EcmaParser.FOR)
-            {
-                return BuildFor(target, label.Text);
-            }
 
-            throw new NotImplementedException();
+            if (!(target is ILabelableNode))
+                throw new CompilerError("Can only label nodes that implement ILabelableNode");
+
+           (target as ILabelableNode).SetLabel(label.Text);
+           return target;
         }
 
         private Node BuildIndexAccess(ITree node)
@@ -470,7 +470,7 @@ namespace IronJS.Compiler.Ast
             return new BreakNode(node.GetChildSafe(0).Text);
         }
 
-        private Node BuildFor(ITree node, string label = null)
+        private Node BuildFor(ITree node)
         {
             var body = Build(node.GetChildSafe(1));
             var type = node.GetChildSafe(0);
@@ -498,8 +498,7 @@ namespace IronJS.Compiler.Ast
                     initNode,
                     testNode,
                     incrNode,
-                    body,
-                    label
+                    body
                 );
             }
             // 12.6.4

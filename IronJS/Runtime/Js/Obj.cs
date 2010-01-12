@@ -9,7 +9,7 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
-    public enum ObjClass { Object, Function }
+    public enum ObjClass { Object, Function, Array, Boolean, Number }
 
     public class Obj : IDynamicMetaObjectProvider
     {
@@ -26,7 +26,7 @@ namespace IronJS.Runtime.Js
         public Obj Prototype;
 
         // 8.6.2
-        public readonly ObjClass Class;
+        public ObjClass Class;
 
         // 8.6.2
         public object Value;
@@ -57,7 +57,7 @@ namespace IronJS.Runtime.Js
             return newObject;
         }
 
-        ///
+        //
         public object DefaultValue(ToPrimitiveHint hint)
         {
             return Value;
@@ -76,6 +76,7 @@ namespace IronJS.Runtime.Js
 
             return Js.Undefined.Instance;
         }
+
         // 8.6.2
         public object Put(object key, object value)
         {

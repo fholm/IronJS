@@ -344,10 +344,8 @@ namespace IronJS.Compiler
         // for(init, test, incr) { <expr>, <expr> ... <expr> }
         private Et GenerateForStep(Ast.ForStepNode node)
         {
-            FunctionScope.EnterLabelScope(node.Label, true);
-            
             var body = Generate(node.Body);
-            var init = Generate(node.Init);
+            var init = Generate(node.Setup);
             var incr = Generate(node.Incr);
             var test =
                 Et.Dynamic(
@@ -365,8 +363,6 @@ namespace IronJS.Compiler
                 FunctionScope.LabelScope.Continue()
             );
 
-            FunctionScope.ExitLabelScope();
-
             return Et.Block(
                 init,
                 loop
@@ -380,8 +376,6 @@ namespace IronJS.Compiler
         private Et GenerateWhile(Ast.WhileNode node)
         {
             Et loop;
-
-            FunctionScope.EnterLabelScope(null, true);
 
             var test = Et.Dynamic(
                 new JsConvertBinder(typeof(bool)),
@@ -430,8 +424,6 @@ namespace IronJS.Compiler
             {
                 throw new NotImplementedException();
             }
-
-            FunctionScope.ExitLabelScope();
 
             return loop;
         }

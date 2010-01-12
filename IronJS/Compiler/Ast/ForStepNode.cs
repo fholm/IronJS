@@ -6,26 +6,17 @@ using System.Text;
 namespace IronJS.Compiler.Ast
 {
     // 12.6.3
-    class ForStepNode : Node
+    class ForStepNode : LoopNode
     {
-        public readonly Node Init;
+        public readonly Node Setup;
         public readonly Node Test;
         public readonly Node Incr;
         public readonly Node Body;
-        public readonly string Label;
 
-        public bool IsLabelled { get { return Label != null; } }
-
-        public ForStepNode(Node init, Node test, Node incr, Node body, string label)
-            : this(init, test, incr, body)
-        {
-            Label = label;
-        }
-
-        public ForStepNode(Node init, Node test, Node incr, Node body)
+        public ForStepNode(Node setup, Node test, Node incr, Node body)
             : base(NodeType.ForStep)
         {
-            Init = init;
+            Setup = setup;
             Test = test;
             Incr = incr;
             Body = body;

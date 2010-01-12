@@ -1,0 +1,12 @@
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\IronJS.Tests.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\IronJS.Tests.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\obj\Debug\IronJS.Tests.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\obj\Debug\IronJS.Tests.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\IronJS.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\Antlr3.Runtime.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\Microsoft.Dynamic.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\Microsoft.Scripting.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\IronJS.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\Microsoft.Dynamic.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS-git\IronJS.Tests\bin\Debug\Microsoft.Scripting.pdb

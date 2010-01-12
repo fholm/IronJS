@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime;
@@ -35,6 +36,8 @@ namespace IronJS.Compiler.Ast
             var root = (ITree)program.Tree;
 
             var nodes = new List<Node>();
+
+            root.Print();
 
             if (root.IsNil)
             {
@@ -746,10 +749,51 @@ namespace IronJS.Compiler.Ast
             {
                 var argsTree = node.GetChildSafe(1);
 
-                return new CallNode(
-                    Build(callTree), 
-                    argsTree.Map(x => { return Build(x); })
-                );
+                // we need to rewrite the tree 
+                // if we have a new node nested
+                // inside byfield/byindex nodes
+
+                var firstChild = callTree;
+                var foundNewNode = false;
+
+                while (firstChild != null)
+                {
+                    if (firstChild.Type == EcmaParser.NEW)
+                    {
+                        var child = firstChild.GetChildSafe(0);
+
+                        var idNode = new CommonTree(
+                            new CommonToken(
+                                child.Type, 
+                                child.Text
+                            )
+                        );
+
+                        firstChild.Parent.ReplaceChildren(0, 0, idNode);
+                        foundNewNode = true;
+                        break;
+                    }
+
+                    firstChild = firstChild.GetChild(0);
+                }
+
+                if (foundNewNode)
+                {
+                    // if we found a new-node and 
+                    // rewrote the tree
+                    return new NewNode(
+                        Build(callTree),
+                        argsTree.Map(x => Build(x))
+                    );
+                }
+                else
+                {
+                    // if we fail, it's just a normal function call
+                    return new CallNode(
+                        Build(callTree),
+                        argsTree.Map(x =>Build(x))
+                    );
+                }
             }
         }
 

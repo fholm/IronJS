@@ -3,3 +3,4 @@ IronJS.Testing/obj/**/*
 IronJS/bin/**/*
 IronJS/obj/**/*
 *.suo
+TestResults/**/*

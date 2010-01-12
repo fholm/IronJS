@@ -48,7 +48,10 @@ namespace IronJS.Compiler
                 scope = scope.Parent;
             }
 
-            throw new CompilerError("Not inside a loop");
+            if(name == null)
+                throw new CompilerError("Not inside a loop");
+
+            throw new CompilerError("No label named '" + name + "' found");
         }
 
         internal LabelTarget Continue(string name = null)
@@ -69,12 +72,15 @@ namespace IronJS.Compiler
                 scope = scope.Parent;
             }
 
-            throw new CompilerError("Not inside a loop");
+            if(name == null)
+                throw new CompilerError("Not inside a loop");
+
+            throw new CompilerError("No loop labelled '" + name + "' found (continue only works with loops)");
         }
 
-        internal LabelScope Enter(string name, bool isDefault)
+        internal LabelScope Enter(string name, bool isLoop)
         {
-            return new LabelScope(this, name, isDefault);
+            return new LabelScope(this, name, isLoop);
         }
     }
 }

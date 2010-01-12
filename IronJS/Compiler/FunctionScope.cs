@@ -29,7 +29,7 @@ namespace IronJS.Compiler
                 if (_labelScope != null)
                     return _labelScope;
 
-                throw new CompilerError("Not inside a label scope");
+                throw new CompilerError("Not inside a labelled statement or a loop");
             }
         }
 
@@ -39,14 +39,16 @@ namespace IronJS.Compiler
             FrameExpr = Et.Parameter(typeof(Frame), "#frame");
         }
 
-        public void EnterLabelScope()
-        {
-            EnterLabelScope(null, true);
-        }
-
         public void EnterLabelScope(string name, bool isLoop)
         {
-            _labelScope = _labelScope.Enter(name, isLoop);
+            if (_labelScope == null)
+            {
+                _labelScope = new LabelScope(null, name, isLoop);
+            }
+            else
+            {
+                _labelScope = _labelScope.Enter(name, isLoop);
+            }
         }
 
         public void ExitLabelScope()

@@ -1,6 +1,9 @@
-IronJS.Testing/bin/**/*
-IronJS.Testing/obj/**/*
+IronJS.Tests/bin/**/*
+IronJS.Tests/obj/**/*
 IronJS/bin/**/*
 IronJS/obj/**/*
+IronJS.Console/bin/**/*
+IronJS.Console/obj/**/*
 *.suo
 TestResults/**/*
+TestResults

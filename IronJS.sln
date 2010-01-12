@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS", "IronJS\IronJS.csproj", "{1D95D363-4B2A-49F1-9614-7CA00129AAA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Testing", "IronJS.Testing\IronJS.Testing.csproj", "{FC885AA2-AB5A-404A-9059-98D00A8E6C0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Console", "IronJS.Console\IronJS.Console.csproj", "{FC885AA2-AB5A-404A-9059-98D00A8E6C0C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Tests", "IronJS.Tests\IronJS.Tests.csproj", "{928773FB-D035-48A2-8D31-F3232628B920}"
 EndProject

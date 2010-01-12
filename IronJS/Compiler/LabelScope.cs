@@ -17,11 +17,12 @@ namespace IronJS.Compiler
 
     class LabelScope
     {
+        readonly LabelTarget _break;
+        readonly LabelTarget _continue;
+
         internal readonly LabelScope Parent;
         internal readonly string Name;
         internal readonly bool IsLoop;
-        readonly LabelTarget _break;
-        readonly LabelTarget _continue;
 
         internal LabelScope(LabelScope parent, string name = null, bool isLoop = true)
         {
@@ -30,7 +31,9 @@ namespace IronJS.Compiler
             Parent = parent;
 
             _break = Et.Label(typeof(void), "#break");
-            _continue = Et.Label(typeof(void), "#continue");
+
+            if(IsLoop)
+                _continue = Et.Label(typeof(void), "#continue");
         }
 
         internal LabelTarget Break(string name = null)

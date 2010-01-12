@@ -39,7 +39,7 @@ namespace IronJS.Compiler
             FunctionScopes = new Stack<FunctionScope>();
 
             // Enter gobal frame
-            EnterFrame();
+            EnterFunctionScope();
 
             // Store the frame expr for global frame
             GlobalFrameExpr = FunctionScope.FrameExpr;
@@ -105,17 +105,30 @@ namespace IronJS.Compiler
             ).Compile();
         }
 
-        private void EnterFrame()
+        private void EnterFunctionScope()
         {
             FunctionScopes.Push(new FunctionScope());
         }
 
-        private void ExitFrame()
+        private void ExitFunctionScope()
         {
             FunctionScopes.Pop();
         }
 
         private Et Generate(Ast.Node node)
+        {
+            if (node is Ast.ILabelableNode)
+                (node as Ast.ILabelableNode).Init(FunctionScope);
+
+            var et = GenerateEt(node);
+
+            if (node is Ast.ILabelableNode)
+                FunctionScope.ExitLabelScope();
+
+            return et;
+        }
+
+        private Et GenerateEt(Ast.Node node)
         {
             if (node == null)
                 return AstUtils.Empty();
@@ -789,7 +802,7 @@ namespace IronJS.Compiler
         // 13
         private Et GenerateLambda(Ast.LambdaNode node)
         {
-            EnterFrame();
+            EnterFunctionScope();
 
             var bodyNode = (Ast.BlockNode)node.Body;
             var argsList = node.Args.Select(x => x.Name).ToList();
@@ -814,7 +827,7 @@ namespace IronJS.Compiler
                 )
             );
 
-            ExitFrame();
+            ExitFunctionScope();
 
             // temp storage for the new object
             var tmpObj = Et.Variable(

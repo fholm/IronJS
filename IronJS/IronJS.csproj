@@ -62,6 +62,7 @@
     <Compile Include="Compiler\Ast\ContinueNode.cs" />
     <Compile Include="Compiler\Ast\IdentifierNode.cs" />
     <Compile Include="Compiler\Ast\IfNode.cs" />
+    <Compile Include="Compiler\Ast\ILabelableNode.cs" />
     <Compile Include="Compiler\Ast\LambdaNode.cs" />
     <Compile Include="Compiler\Ast\MemberAccessNode.cs" />
     <Compile Include="Compiler\Ast\NewNode.cs" />

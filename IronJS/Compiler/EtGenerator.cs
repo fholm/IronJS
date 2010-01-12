@@ -19,14 +19,14 @@ namespace IronJS.Compiler
     {
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
-        internal Stack<LabelTarget> ReturnLabels;
+        internal List<Tuple<Et, List<string>>> LambdaExprs;
+
         internal Stack<LabelTarget> BreakTargets;
         internal Stack<LabelTarget> ContinueTargets;
         internal Stack<Dictionary<string, LabelTarget>> BreakLabels;
         internal Stack<Dictionary<string, LabelTarget>> ContinueLabels;
         internal Stack<ParameterExpression> FrameExprStack;
-        internal List<Tuple<Et, List<string>>> LambdaExprs;
-        internal List<Et> GlobalExprs;
+        internal Stack<LabelTarget> ReturnLabels;
 
         internal ParameterExpression FrameExpr
         {
@@ -65,7 +65,6 @@ namespace IronJS.Compiler
 
         public Action<IFrame> Build(List<Ast.Node> astNodes)
         {
-            GlobalExprs = new List<Et>();
             ReturnLabels = new Stack<LabelTarget>();
             LambdaExprs = new List<Tuple<Et, List<string>>>();
             FrameExprStack = new Stack<ParameterExpression>();
@@ -337,6 +336,7 @@ namespace IronJS.Compiler
             }
         }
 
+        // with(...) { ... }
         private Et GenerateWith(Ast.WithNode node)
         {
             return Et.Block(

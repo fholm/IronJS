@@ -88,6 +88,8 @@
     <Compile Include="Compiler\Ast\TryNode.cs" />
     <Compile Include="Compiler\Ast\ThrowNode.cs" />
     <Compile Include="Compiler\Ast\IndexAccessNode.cs" />
+    <Compile Include="Compiler\FunctionScope.cs" />
+    <Compile Include="Compiler\LoopScope.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />

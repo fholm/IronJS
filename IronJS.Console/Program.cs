@@ -26,6 +26,12 @@ namespace IronJS.Testing
             );
 
             context.Globals.Push(
+                "println",
+                typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine"),
+                VarType.Global
+            );
+
+            context.Globals.Push(
                 "exc",
                 new Exception(),
                 VarType.Global

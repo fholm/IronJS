@@ -6,6 +6,11 @@ namespace IronJS.Runtime
     {
         public static object Print(object o)
         {
+            Console.Write(o);
+            return o;
+        }
+        public static object PrintLine(object o)
+        {
             Console.WriteLine(o);
             return o;
         }

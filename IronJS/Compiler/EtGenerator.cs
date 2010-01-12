@@ -118,12 +118,12 @@ namespace IronJS.Compiler
         private Et Generate(Ast.Node node)
         {
             if (node is Ast.ILabelableNode)
-                (node as Ast.ILabelableNode).Init(FunctionScope);
+                (node as Ast.ILabelableNode).Enter(FunctionScope);
 
             var et = GenerateEt(node);
 
             if (node is Ast.ILabelableNode)
-                FunctionScope.ExitLabelScope();
+                (node as Ast.ILabelableNode).Exit(FunctionScope);
 
             return et;
         }

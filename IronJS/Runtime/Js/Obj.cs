@@ -58,7 +58,7 @@ namespace IronJS.Runtime.Js
         }
 
         //
-        public object DefaultValue(ToPrimitiveHint hint)
+        public object DefaultValue(ValueHint hint)
         {
             return Value;
         }

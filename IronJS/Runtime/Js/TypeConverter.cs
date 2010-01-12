@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js
 {
@@ -10,9 +11,8 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using IronJS.Runtime.Utils;
 
-    public enum ToPrimitiveHint { Number, String, NoHint }
+    public enum ValueHint { None, Number, String }
 
     public static class TypeConverter
     {
@@ -88,7 +88,7 @@ namespace IronJS.Runtime.Js
                 return Et.Call(
                     Et.Convert(obj.Expression, typeof(Js.Obj)),
                     typeof(Js.Obj).GetMethod("DefaultValue"),
-                    Et.Constant(ToPrimitiveHint.String)
+                    Et.Constant(ValueHint.String)
                 );
 
             // last step, just ToString
@@ -140,7 +140,7 @@ namespace IronJS.Runtime.Js
                 return Et.Call(
                     Et.Convert(obj.Expression, typeof(Js.Obj)),
                     typeof(Js.Obj).GetMethod("DefaultValue"),
-                    Et.Constant(ToPrimitiveHint.Number)
+                    Et.Constant(ValueHint.Number)
                 );
             }
 

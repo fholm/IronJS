@@ -7,7 +7,9 @@ namespace IronJS.Compiler.Ast
 {
     interface ILabelableNode
     {
+        bool IsLabeled { get; }
         void SetLabel(string label);
-        void Init(FunctionScope functionScope);
+        void Enter(FunctionScope functionScope);
+        void Exit(FunctionScope functionScope);
     }
 }

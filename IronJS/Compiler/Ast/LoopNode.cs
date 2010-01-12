@@ -17,12 +17,22 @@ namespace IronJS.Compiler.Ast
 
         #region ILabelableNode Members
 
+        public bool IsLabeled
+        {
+            get { return true; }
+        }
+
         public void SetLabel(string label)
         {
             Label = label;
         }
 
-        public void Init(FunctionScope functionScope)
+        public void Exit(FunctionScope functionScope)
+        {
+            functionScope.ExitLabelScope();
+        }
+
+        public void Enter(FunctionScope functionScope)
         {
             functionScope.EnterLabelScope(Label, true);
         }

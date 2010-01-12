@@ -137,6 +137,9 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.CONTINUE:
                     return BuildContinue(node);
 
+                case EcmaParser.LABELLED:
+                    return BuildLabelled(node);
+
                 /*
                  * Literals
                  */
@@ -352,6 +355,19 @@ namespace IronJS.Compiler.Ast
             }
         }
 
+        private Node BuildLabelled(ITree node)
+        {
+            var label = node.GetChildSafe(0);
+            var target = node.GetChildSafe(1);
+
+            if (target.Type == EcmaParser.FOR)
+            {
+                return BuildFor(target, label.Text);
+            }
+
+            throw new NotImplementedException();
+        }
+
         private Node BuildIndexAccess(ITree node)
         {
             return new IndexAccessNode(
@@ -440,7 +456,7 @@ namespace IronJS.Compiler.Ast
                 return new ContinueNode();
             }
 
-            throw new NotImplementedException();
+            return new ContinueNode(node.GetChildSafe(0).Text);
         }
 
         // 12.8
@@ -451,10 +467,10 @@ namespace IronJS.Compiler.Ast
                 return new BreakNode(null);
             }
 
-            throw new NotImplementedException();
+            return new BreakNode(node.GetChildSafe(0).Text);
         }
 
-        private Node BuildFor(ITree node)
+        private Node BuildFor(ITree node, string label = null)
         {
             var body = Build(node.GetChildSafe(1));
             var type = node.GetChildSafe(0);
@@ -482,7 +498,8 @@ namespace IronJS.Compiler.Ast
                     initNode,
                     testNode,
                     incrNode,
-                    body
+                    body,
+                    label
                 );
             }
             // 12.6.4

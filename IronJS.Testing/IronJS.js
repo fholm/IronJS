@@ -1,33 +1,18 @@
 ﻿
+_outer:
+for (i = 0; i < 10; ++i) {
 
-function foo_bar_baz(as) {
-    this.as = as;
-    this.built = "from baz";
-};
+    if (i == 5)
+        break _outer;
 
-function foo_bar(as) {
-    this.built = "from bar";
-    this.as = as;
-    return { baz: foo_bar_baz };
-};
+    print("iter: " + i);
+    
+    _inner:
+    for (j = 0; j < 10; ++j) {
+    
+        if (j == 5)
+            continue _outer;
 
-foo = {}
-foo.bar = foo_bar;
-foo.bar.baz = foo_bar_baz;
-
-var obj = new (foo.bar().baz)("hello world");
-print(obj.built);
-print(obj.as);
-
-var obj2 = new foo.bar.baz("lol");
-print(obj2.built);
-print(obj2.as);
-
-
-/*
-
-var foo = new foo.bar.baz("hello world");
-
-var bar = new (foo.bar().baz)("hello world");
-
-*/
+        print(j);
+    }
+}

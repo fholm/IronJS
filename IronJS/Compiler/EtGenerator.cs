@@ -20,8 +20,10 @@ namespace IronJS.Compiler
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
         internal Stack<LabelTarget> ReturnLabels;
-        internal Stack<LabelTarget> BreakLabels;
-        internal Stack<LabelTarget> ContinueLabels;
+        internal Stack<LabelTarget> BreakTargets;
+        internal Stack<LabelTarget> ContinueTargets;
+        internal Stack<Dictionary<string, LabelTarget>> BreakLabels;
+        internal Stack<Dictionary<string, LabelTarget>> ContinueLabels;
         internal Stack<ParameterExpression> FrameExprStack;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
         internal List<Et> GlobalExprs;
@@ -41,12 +43,22 @@ namespace IronJS.Compiler
             get { return ReturnLabels.Peek(); }   
         }
 
-        internal LabelTarget BreakLabel
+        internal LabelTarget BreakTarget
+        {
+            get { return BreakTargets.Peek(); }
+        }
+
+        internal LabelTarget ContinueTarget
+        {
+            get { return ContinueTargets.Peek(); }
+        }
+
+        internal Dictionary<string, LabelTarget> BreakScope
         {
             get { return BreakLabels.Peek(); }
         }
 
-        internal LabelTarget ContinueLabel
+        internal Dictionary<string, LabelTarget> ContinueScope
         {
             get { return ContinueLabels.Peek(); }
         }
@@ -57,8 +69,10 @@ namespace IronJS.Compiler
             ReturnLabels = new Stack<LabelTarget>();
             LambdaExprs = new List<Tuple<Et, List<string>>>();
             FrameExprStack = new Stack<ParameterExpression>();
-            BreakLabels = new Stack<LabelTarget>();
-            ContinueLabels = new Stack<LabelTarget>();
+            BreakTargets = new Stack<LabelTarget>();
+            ContinueTargets = new Stack<LabelTarget>();
+            BreakLabels = new Stack<Dictionary<string, LabelTarget>>();
+            ContinueLabels = new Stack<Dictionary<string, LabelTarget>>();
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
 
             EnterFrame();
@@ -128,24 +142,28 @@ namespace IronJS.Compiler
 
         private void EnterLoop()
         {
-            BreakLabels.Push(Et.Label(typeof(void), "#break"));
-            ContinueLabels.Push(Et.Label(typeof(void), "#continue"));
+            BreakTargets.Push(Et.Label(typeof(void), "#break"));
+            ContinueTargets.Push(Et.Label(typeof(void), "#continue"));
         }
 
         private void ExitLoop()
         {
-            ContinueLabels.Pop();
-            BreakLabels.Pop();
+            ContinueTargets.Pop();
+            BreakTargets.Pop();
         }
 
         private void EnterFrame()
         {
             ReturnLabels.Push(Et.Label(typeof(object), "#return"));
             FrameExprStack.Push(Et.Parameter(typeof(IFrame), "#frame"));
+            BreakLabels.Push(new Dictionary<string, LabelTarget>());
+            ContinueLabels.Push(new Dictionary<string, LabelTarget>());
         }
 
         private void ExitFrame()
         {
+            ContinueLabels.Pop();
+            BreakLabels.Pop();
             FrameExprStack.Pop();
             ReturnLabels.Pop();
         }
@@ -345,7 +363,13 @@ namespace IronJS.Compiler
         // continue
         private Et GenerateContinue(Ast.ContinueNode node)
         {
-            return Et.Continue(ContinueLabel);
+            if (node.Label == null)
+                return Et.Continue(BreakTarget);
+
+            if (ContinueScope.ContainsKey(node.Label))
+                return Et.Continue(ContinueScope[node.Label]);
+
+            throw new NotImplementedException();
         }
 
         // 12.8
@@ -353,9 +377,10 @@ namespace IronJS.Compiler
         private Et GenerateBreak(Ast.BreakNode node)
         {
             if (node.Label == null)
-            {
-                return Et.Break(BreakLabel);
-            }
+                return Et.Break(BreakTarget);
+
+            if (BreakScope.ContainsKey(node.Label))
+                return Et.Break(BreakScope[node.Label]);
 
             throw new NotImplementedException();
         }
@@ -365,6 +390,12 @@ namespace IronJS.Compiler
         private Et GenerateForStep(Ast.ForStepNode node)
         {
             EnterLoop();
+
+            if (node.IsLabelled)
+            {
+                BreakScope[node.Label] = BreakTarget;
+                ContinueScope[node.Label] = ContinueTarget;
+            }
             
             var body = Generate(node.Body);
             var init = Generate(node.Init);
@@ -381,9 +412,15 @@ namespace IronJS.Compiler
                 incr,
                 body,
                 null,
-                BreakLabel,
-                ContinueLabel
+                BreakTarget,
+                ContinueTarget
             );
+
+            if (node.IsLabelled)
+            {
+                BreakScope.Remove(node.Label);
+                ContinueScope.Remove(node.Label);
+            }
 
             ExitLoop();
 
@@ -417,8 +454,8 @@ namespace IronJS.Compiler
                     test,
                     body,
                     null,
-                    BreakLabel,
-                    ContinueLabel
+                    BreakTarget,
+                    ContinueTarget
                 );
             }
             // do ... while
@@ -432,8 +469,8 @@ namespace IronJS.Compiler
                 bodyExprs.Add(
                     Et.IfThenElse(
                         test,
-                        Et.Continue(ContinueLabel),
-                        Et.Break(BreakLabel)
+                        Et.Continue(ContinueTarget),
+                        Et.Break(BreakTarget)
                     )
                 );
 
@@ -441,8 +478,8 @@ namespace IronJS.Compiler
                     Et.Block(
                         bodyExprs
                     ),
-                    BreakLabel,
-                    ContinueLabel
+                    BreakTarget,
+                    ContinueTarget
                 );
             }
             else

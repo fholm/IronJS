@@ -36,7 +36,7 @@ namespace IronJS.Compiler
         public FunctionScope()
         {
             ReturnLabel = Et.Label(typeof(object), "#return");
-            FrameExpr = Et.Parameter(typeof(Frame), "#frame");
+            FrameExpr = Et.Parameter(typeof(IFrame), "#frame");
         }
 
         public void EnterLabelScope(string name, bool isLoop)

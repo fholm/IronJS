@@ -20,63 +20,29 @@ namespace IronJS.Compiler
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
-
-        internal Stack<LabelTarget> BreakTargets;
-        internal Stack<LabelTarget> ContinueTargets;
-        internal Stack<Dictionary<string, LabelTarget>> BreakLabels;
-        internal Stack<Dictionary<string, LabelTarget>> ContinueLabels;
-        internal Stack<ParameterExpression> FrameExprStack;
-        internal Stack<LabelTarget> ReturnLabels;
-
-        internal ParameterExpression FrameExpr
-        {
-            get { return FrameExprStack.Peek(); }
-        }
+        internal Stack<FunctionScope> FunctionScopes;
 
         internal int LambdaId
         {
             get { return LambdaExprs.Count - 1; }
         }
 
-        internal LabelTarget ReturnLabel
+        internal FunctionScope FunctionScope
         {
-            get { return ReturnLabels.Peek(); }   
-        }
-
-        internal LabelTarget BreakTarget
-        {
-            get { return BreakTargets.Peek(); }
-        }
-
-        internal LabelTarget ContinueTarget
-        {
-            get { return ContinueTargets.Peek(); }
-        }
-
-        internal Dictionary<string, LabelTarget> BreakScope
-        {
-            get { return BreakLabels.Peek(); }
-        }
-
-        internal Dictionary<string, LabelTarget> ContinueScope
-        {
-            get { return ContinueLabels.Peek(); }
+            get { return FunctionScopes.Peek(); }
         }
 
         public Action<IFrame> Build(List<Ast.Node> astNodes)
         {
-            ReturnLabels = new Stack<LabelTarget>();
-            LambdaExprs = new List<Tuple<Et, List<string>>>();
-            FrameExprStack = new Stack<ParameterExpression>();
-            BreakTargets = new Stack<LabelTarget>();
-            ContinueTargets = new Stack<LabelTarget>();
-            BreakLabels = new Stack<Dictionary<string, LabelTarget>>();
-            ContinueLabels = new Stack<Dictionary<string, LabelTarget>>();
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
+            LambdaExprs = new List<Tuple<Et, List<string>>>();
+            FunctionScopes = new Stack<FunctionScope>();
 
+            // Enter gobal frame
             EnterFrame();
 
-            GlobalFrameExpr = FrameExpr;
+            // Store the frame expr for global frame
+            GlobalFrameExpr = FunctionScope.FrameExpr;
 
             var globalExprs = new List<Et>();
 
@@ -99,7 +65,7 @@ namespace IronJS.Compiler
             //TODO: remove after debugging
             buildLambdaExprs.Add(
                 FrameUtils.Push(
-                    FrameExpr, 
+                    FunctionScope.FrameExpr, 
                     "functbl", 
                     TableExpr, 
                     VarType.Local
@@ -135,36 +101,18 @@ namespace IronJS.Compiler
                     new[] { TableExpr },
                     allExprs
                 ),
-                FrameExpr
+                FunctionScope.FrameExpr
             ).Compile();
-        }
-
-        private void EnterLoop()
-        {
-            BreakTargets.Push(Et.Label(typeof(void), "#break"));
-            ContinueTargets.Push(Et.Label(typeof(void), "#continue"));
-        }
-
-        private void ExitLoop()
-        {
-            ContinueTargets.Pop();
-            BreakTargets.Pop();
         }
 
         private void EnterFrame()
         {
-            ReturnLabels.Push(Et.Label(typeof(object), "#return"));
-            FrameExprStack.Push(Et.Parameter(typeof(IFrame), "#frame"));
-            BreakLabels.Push(new Dictionary<string, LabelTarget>());
-            ContinueLabels.Push(new Dictionary<string, LabelTarget>());
+            FunctionScopes.Push(new FunctionScope());
         }
 
         private void ExitFrame()
         {
-            ContinueLabels.Pop();
-            BreakLabels.Pop();
-            FrameExprStack.Pop();
-            ReturnLabels.Pop();
+            FunctionScopes.Pop();
         }
 
         private Et Generate(Ast.Node node)
@@ -340,7 +288,7 @@ namespace IronJS.Compiler
         private Et GenerateWith(Ast.WithNode node)
         {
             return Et.Block(
-                Et.Assign(FrameExpr, 
+                Et.Assign(FunctionScope.FrameExpr, 
                     AstUtils.SimpleNewHelper(
                         typeof(WithFrame).GetConstructor(
                             new[] { 
@@ -349,13 +297,13 @@ namespace IronJS.Compiler
                             }
                         ),
                         Generate(node.Target),
-                        FrameExpr
+                        FunctionScope.FrameExpr
                     )
                 ),
                 Generate(node.Body),
                 FrameUtils.ExitFrame(
-                    FrameExpr, 
-                    FrameExpr
+                    FunctionScope.FrameExpr,
+                    FunctionScope.FrameExpr
                 )
             );
         }
@@ -364,12 +312,9 @@ namespace IronJS.Compiler
         private Et GenerateContinue(Ast.ContinueNode node)
         {
             if (node.Label == null)
-                return Et.Continue(BreakTarget);
+                return Et.Continue(FunctionScope.LabelScope.Continue());
 
-            if (ContinueScope.ContainsKey(node.Label))
-                return Et.Continue(ContinueScope[node.Label]);
-
-            throw new NotImplementedException();
+            return Et.Continue(FunctionScope.LabelScope.Continue(node.Label));
         }
 
         // 12.8
@@ -377,25 +322,16 @@ namespace IronJS.Compiler
         private Et GenerateBreak(Ast.BreakNode node)
         {
             if (node.Label == null)
-                return Et.Break(BreakTarget);
+                return Et.Break(FunctionScope.LabelScope.Break());
 
-            if (BreakScope.ContainsKey(node.Label))
-                return Et.Break(BreakScope[node.Label]);
-
-            throw new NotImplementedException();
+           return Et.Break(FunctionScope.LabelScope.Break(node.Label));
         }
 
         // 12.6.3
         // for(init, test, incr) { <expr>, <expr> ... <expr> }
         private Et GenerateForStep(Ast.ForStepNode node)
         {
-            EnterLoop();
-
-            if (node.IsLabelled)
-            {
-                BreakScope[node.Label] = BreakTarget;
-                ContinueScope[node.Label] = ContinueTarget;
-            }
+            FunctionScope.EnterLabelScope(node.Label, true);
             
             var body = Generate(node.Body);
             var init = Generate(node.Init);
@@ -412,17 +348,11 @@ namespace IronJS.Compiler
                 incr,
                 body,
                 null,
-                BreakTarget,
-                ContinueTarget
+                FunctionScope.LabelScope.Break(),
+                FunctionScope.LabelScope.Continue()
             );
 
-            if (node.IsLabelled)
-            {
-                BreakScope.Remove(node.Label);
-                ContinueScope.Remove(node.Label);
-            }
-
-            ExitLoop();
+            FunctionScope.ExitLabelScope();
 
             return Et.Block(
                 init,
@@ -437,7 +367,8 @@ namespace IronJS.Compiler
         private Et GenerateWhile(Ast.WhileNode node)
         {
             Et loop;
-            EnterLoop();
+
+            FunctionScope.EnterLabelScope(null, true);
 
             var test = Et.Dynamic(
                 new JsConvertBinder(typeof(bool)),
@@ -454,8 +385,8 @@ namespace IronJS.Compiler
                     test,
                     body,
                     null,
-                    BreakTarget,
-                    ContinueTarget
+                    FunctionScope.LabelScope.Break(),
+                    FunctionScope.LabelScope.Continue()
                 );
             }
             // do ... while
@@ -469,8 +400,8 @@ namespace IronJS.Compiler
                 bodyExprs.Add(
                     Et.IfThenElse(
                         test,
-                        Et.Continue(ContinueTarget),
-                        Et.Break(BreakTarget)
+                        Et.Continue(FunctionScope.LabelScope.Continue()),
+                        Et.Break(FunctionScope.LabelScope.Break())
                     )
                 );
 
@@ -478,16 +409,16 @@ namespace IronJS.Compiler
                     Et.Block(
                         bodyExprs
                     ),
-                    BreakTarget,
-                    ContinueTarget
+                    FunctionScope.LabelScope.Break(),
+                    FunctionScope.LabelScope.Continue()
                 );
             }
             else
             {
                 throw new NotImplementedException();
             }
-            
-            ExitLoop();
+
+            FunctionScope.ExitLabelScope();
 
             return loop;
         }
@@ -754,7 +685,7 @@ namespace IronJS.Compiler
         private Et GenerateReturn(Ast.ReturnNode node)
         {
             // return <expr>
-            return Et.Return(ReturnLabel, Generate(node.Value), typeof(object));
+            return Et.Return(FunctionScope.ReturnLabel, Generate(node.Value), typeof(object));
         }
 
         // 8.4
@@ -775,7 +706,7 @@ namespace IronJS.Compiler
         private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
         {
             // foo
-            return FrameUtils.Pull(FrameExpr, node.Name, type);
+            return FrameUtils.Pull(FunctionScope.FrameExpr, node.Name, type);
         }
 
         // ???
@@ -866,14 +797,14 @@ namespace IronJS.Compiler
 
             bodyExprs.Add(
                 Et.Label(
-                    ReturnLabel, 
+                    FunctionScope.ReturnLabel, 
                     Undefined.Expr // 12.9
                 )
             );
 
             var lambdaEt = Et.Lambda<Func<IFrame, object>>(
                 Et.Block(bodyExprs),
-                FrameExpr
+                FunctionScope.FrameExpr
             );
 
             LambdaExprs.Add(
@@ -909,7 +840,7 @@ namespace IronJS.Compiler
                                 typeof(Lambda)
                             }
                         ),
-                        FrameExpr,
+                        FunctionScope.FrameExpr,
                         Et.Call(
                             TableExpr,
                             typeof(Table).GetMethod("Pull"),
@@ -948,7 +879,7 @@ namespace IronJS.Compiler
                 var idNode = (Ast.IdentifierNode)target;
 
                 return FrameUtils.Push(
-                    FrameExpr,
+                    FunctionScope.FrameExpr,
                     idNode.Name,
                     value,
                     idNode.IsLocal ? VarType.Local : VarType.Global

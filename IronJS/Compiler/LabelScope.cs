@@ -23,14 +23,14 @@ namespace IronJS.Compiler
         readonly LabelTarget _break;
         readonly LabelTarget _continue;
 
-        internal LabelScope(LabelScope parent, string name = null, bool isDefault = true)
+        internal LabelScope(LabelScope parent, string name = null, bool isLoop = true)
         {
             Name = name;
-            IsLoop = IsLoop;
+            IsLoop = isLoop;
             Parent = parent;
 
-            _break = Et.Label(typeof(object), "#break");
-            _continue = Et.Label(typeof(object), "#continue");
+            _break = Et.Label(typeof(void), "#break");
+            _continue = Et.Label(typeof(void), "#continue");
         }
 
         internal LabelTarget Break(string name = null)

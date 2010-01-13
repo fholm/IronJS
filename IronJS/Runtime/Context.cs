@@ -8,8 +8,7 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame SuperGlobals;
-
+        public IFrame SuperGlobals { get; protected set; }
         public Obj Object { get; protected set; }
         public Obj ObjectPrototype { get; protected set; }
         public Obj Function { get; protected set; }
@@ -34,6 +33,7 @@ namespace IronJS.Runtime
             var ctx = new Context();
 
             ctx.SuperGlobals = new Frame();
+
             ctx.ObjectPrototype = new Obj();
             ctx.FunctionPrototype = new Obj(
                 ctx.SuperGlobals,

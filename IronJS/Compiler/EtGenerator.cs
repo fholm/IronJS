@@ -17,6 +17,7 @@ namespace IronJS.Compiler
 
     public class EtGenerator
     {
+        internal Context Context;
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
         internal List<Tuple<Et, List<string>>> LambdaExprs;
@@ -32,8 +33,9 @@ namespace IronJS.Compiler
             get { return FunctionScopes.Peek(); }
         }
 
-        public Action<IFrame> Build(List<Ast.Node> astNodes)
+        public CodeUnit Build(List<Ast.Node> astNodes, Context context)
         {
+            Context = context;
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
             LambdaExprs = new List<Tuple<Et, List<string>>>();
             FunctionScopes = new Stack<FunctionScope>();
@@ -96,13 +98,15 @@ namespace IronJS.Compiler
                 globalExprs
             );
 
-            return Et.Lambda<Action<IFrame>>(
+            var compiledDelegate = Et.Lambda<Action<IFrame>>(
                 Et.Block(
                     new[] { TableExpr },
                     allExprs
                 ),
                 FunctionScope.FrameExpr
             ).Compile();
+
+            return new CodeUnit(compiledDelegate, Context);
         }
 
         private void EnterFunctionScope()

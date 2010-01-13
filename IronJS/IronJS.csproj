@@ -75,6 +75,7 @@
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
     <Compile Include="Compiler\Ast\CatchNode.cs" />
+    <Compile Include="Compiler\CodeUnit.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />

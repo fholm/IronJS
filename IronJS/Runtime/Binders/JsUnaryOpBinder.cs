@@ -16,10 +16,12 @@ namespace IronJS.Runtime.Binders
 
     class JsUnaryOpBinder : UnaryOperationBinder
     {
-        public JsUnaryOpBinder(ExpressionType op)
+        Context _context;
+
+        public JsUnaryOpBinder(ExpressionType op, Context context)
             : base(op)
         {
-
+            _context = context;
         }
 
         public override Meta FallbackUnaryOperation(Meta target, Meta errorSuggestion)

@@ -15,13 +15,16 @@ namespace IronJS.Runtime.Binders
 
     class JsInvokeBinder : InvokeBinder
     {
+        Context _context;
+
         public readonly InvokeFlag CallType;
         public bool IsConstructor { get { return CallType == InvokeFlag.Constructor; } }
 
-        public JsInvokeBinder(CallInfo callinfo, InvokeFlag callType)
+        public JsInvokeBinder(CallInfo callinfo, InvokeFlag callType, Context context)
             : base(callinfo)
         {
             CallType = callType;
+            _context = context;
         }
 
         public override Meta FallbackInvoke(Meta target, Meta[] args, Meta error)
@@ -73,7 +76,7 @@ namespace IronJS.Runtime.Binders
 
                 return new Meta(
                     Et.Dynamic(
-                        new JsInvokeMemberBinder( // <- this is reason 4 with() {} is slow, 
+                        _context.CreateInvokeMemberBinder( // <- this is reason 4 with() {} is slow, 
                             proxy.Method,         // so don't frekin use it
                             new CallInfo(args.Length)
                         ),

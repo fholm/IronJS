@@ -9,10 +9,12 @@ namespace IronJS.Runtime.Binders
 
     class JsGetMemberBinder : GetMemberBinder
     {
-        public JsGetMemberBinder(object name)
+        Context _context;
+
+        public JsGetMemberBinder(object name, Context context)
             : base(name.ToString(), false)
         {
-
+            _context = context;
         }
 
         public override Meta FallbackGetMember(Meta target, Meta error)

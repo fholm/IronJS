@@ -4,6 +4,7 @@ using IronJS.Runtime.Js;
 
 namespace IronJS.Compiler
 {
+    //TODO: this class needs a new name
     sealed public class CodeUnit
     {
         readonly Action<IFrame> Delegate;

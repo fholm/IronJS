@@ -17,13 +17,15 @@ namespace IronJS.Runtime.Js
 
     class ObjMeta : Meta
     {
+        Context _context;
+
         static MethodInfo LambdaInvoke = 
             typeof(Func<IFrame, object>).GetMethod("Invoke");
 
         //TODO: check all Get/Set operations it's ok to just type-restrict on the target
 
-        public ObjMeta(Et parameter, Obj closure)
-            : base(parameter, Restrict.Empty, closure)
+        public ObjMeta(Et parameter, Obj jsObj)
+            : base(parameter, Restrict.Empty, jsObj)
         {
 
         }
@@ -132,7 +134,7 @@ namespace IronJS.Runtime.Js
 
             return new Meta(
                 Et.Dynamic(
-                    new JsInvokeBinder(
+                    _context.CreateInvokeBinder(
                         new CallInfo(args.Length + 2),
                         InvokeFlag.Method
                     ),

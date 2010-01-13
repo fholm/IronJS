@@ -9,16 +9,18 @@ namespace IronJS.Runtime.Binders
 
     class JsSetMemberBinder : SetMemberBinder
     {
+        Context _context;
         internal readonly Js.PropertyAttrs Attrs;
 
-        public JsSetMemberBinder(object name, Js.PropertyAttrs attrs)
+        public JsSetMemberBinder(object name, Js.PropertyAttrs attrs, Context context)
             : base(name.ToString(), false)
         {
             Attrs = attrs;
+            _context = context;
         }
 
-        public JsSetMemberBinder(object name)
-            : this(name, 0)
+        public JsSetMemberBinder(object name, Context context)
+            : this(name, 0, context)
         {
 
         }

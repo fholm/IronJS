@@ -18,10 +18,12 @@ namespace IronJS.Runtime.Binders
 
     class JsConvertBinder : ConvertBinder
     {
-        public JsConvertBinder(Type type)
+        Context _context;
+
+        public JsConvertBinder(Type type, Context context)
             : base(type, false)
         {
-
+            _context = context;
         }
 
         public override Meta FallbackConvert(Meta target, Meta errorSuggestion)

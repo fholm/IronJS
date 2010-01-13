@@ -112,7 +112,9 @@
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
     <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Js\FuncObj.cs" />
     <Compile Include="Runtime\Js\IFrame.cs" />
+    <Compile Include="Runtime\Js\IFunction.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\Nan.cs" />
     <Compile Include="Runtime\Js\Obj.cs">

@@ -18,10 +18,12 @@ namespace IronJS.Runtime.Binders
 
     class JsGetIndexBinder : GetIndexBinder
     {
-        public JsGetIndexBinder(CallInfo callInfo)
+        Context _context;
+
+        public JsGetIndexBinder(CallInfo callInfo, Context context)
             : base(callInfo)
         {
-
+            _context = context;
         }
 
         public override Meta FallbackGetIndex(Meta target, Meta[] indexes, Meta error)

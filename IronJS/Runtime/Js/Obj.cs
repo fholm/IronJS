@@ -9,9 +9,7 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
-    public enum ObjClass { Object, Function, Array, Boolean, Number }
-
-    public class Obj : IDynamicMetaObjectProvider
+    public class Obj : IDynamicMetaObjectProvider, IObj
     {
         internal readonly Dictionary<object, Property> Properties =
             new Dictionary<object, Property>();
@@ -21,15 +19,6 @@ namespace IronJS.Runtime.Js
 
         // 8.6.2 'Call'
         public readonly Lambda Lambda;
-
-        // 8.6.2
-        public Obj Prototype;
-
-        // 8.6.2
-        public ObjClass Class;
-
-        // 8.6.2
-        public object Value;
 
         public Obj()
         {
@@ -44,7 +33,7 @@ namespace IronJS.Runtime.Js
         }
 
         // 8.6.2
-        public Obj Construct()
+        public IObj Construct()
         {
             var newObject = new Obj();
 
@@ -80,12 +69,12 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         public object Put(object key, object value)
         {
-            Obj obj = this;
+            IObj obj = this;
 
             while (obj != null)
             {
-                if (Properties.ContainsKey(key))
-                    return Properties[key].Value = value;
+                if (obj.HasOwnProperty(key))
+                    return obj.SetOwnProperty(key);
 
                 obj = obj.Prototype;
             }
@@ -103,35 +92,24 @@ namespace IronJS.Runtime.Js
                 if (Properties.ContainsKey(key))
                     return Properties[key].Value = value;
 
-                obj = obj.Prototype;
+                obj = (Obj) obj.Prototype;
             }
 
             Properties[key] = new Property(value, attrs);
             return value;
         }
 
-        // 8.6.2.
+        // 8.6.2
         public bool CanPut(object key)
         {
-            Obj obj = this;
+            if (Properties.ContainsKey(key))
+                return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
 
-            while (obj != null)
-            {
-                if (Properties.ContainsKey(key))
-                    return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
-
-                obj = obj.Prototype;
-            }
+            if (Prototype != null)
+                return Prototype.CanPut(key);
 
             return true;
         }
-        
-        // 8.6.2
-        public bool Delete(object key)
-        {
-            return Properties.Remove(key);
-        }
-
 
         public bool SetIfExists(object key, object value)
         {
@@ -145,13 +123,13 @@ namespace IronJS.Runtime.Js
                     return true;
                 }
 
-                obj = obj.Prototype;
+                obj = (Obj) obj.Prototype;
             }
 
             return false;
         }
 
-        public object HasOwnProperty(object key)
+        public bool HasOwnProperty(object key)
         {
             return Properties.ContainsKey(key);
         }
@@ -186,14 +164,57 @@ namespace IronJS.Runtime.Js
 
         #endregion
 
-        private Obj GetObjectPrototype()
+        private IObj GetObjectPrototype()
         {
-            var obj = this;
+            IObj obj = this;
 
             while (obj.Prototype != null)
                 obj = obj.Prototype;
 
             return obj;
         }
+
+        #region IObj Members
+
+        public bool HasProperty(object name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object SetOwnProperty(object name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Delete(object name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Context Context
+        {
+            get;
+            set;
+        }
+
+        public ObjClass Class
+        {
+            get;
+            set;
+        }
+
+        public IObj Prototype
+        {
+            get;
+            set;
+        }
+
+        public object Value
+        {
+            get;
+            set;
+        }
+
+        #endregion
     }
 }

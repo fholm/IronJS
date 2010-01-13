@@ -18,10 +18,12 @@ namespace IronJS.Runtime.Binders
 
     class JsBinaryOpBinder : BinaryOperationBinder
     {
-        public JsBinaryOpBinder(ExpressionType op)
+        Context _context;
+
+        public JsBinaryOpBinder(ExpressionType op, Context context)
             : base(op)
         {
-
+            _context = context;
         }
 
         public override Meta FallbackBinaryOperation(Meta target, Meta arg, Meta error)

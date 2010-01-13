@@ -238,7 +238,7 @@ namespace IronJS.Compiler
         private Et GenerateIndexAccess(Ast.IndexAccessNode node)
         {
             return Et.Dynamic(
-                new JsGetIndexBinder(new CallInfo(0)),
+                Context.CreateGetIndexBinder(new CallInfo(1)),
                 typeof(object),
                 Generate(node.Target),
                 Generate(node.Index)
@@ -353,7 +353,7 @@ namespace IronJS.Compiler
             var incr = Generate(node.Incr);
             var test =
                 Et.Dynamic(
-                    new JsConvertBinder(typeof(bool)),
+                    Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
                     Generate(node.Test)
                 );
@@ -382,7 +382,7 @@ namespace IronJS.Compiler
             Et loop;
 
             var test = Et.Dynamic(
-                new JsConvertBinder(typeof(bool)),
+                Context.CreateConvertBinder(typeof(bool)),
                 typeof(bool),
                 Generate(node.Test)
             );
@@ -444,7 +444,7 @@ namespace IronJS.Compiler
 
                         Et.Convert(
                             Et.Dynamic(
-                                new JsConvertBinder(typeof(double)),
+                                Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
                                 Generate(node.Left)
                             ),
@@ -453,7 +453,7 @@ namespace IronJS.Compiler
 
                         Et.Convert(
                             Et.Dynamic(
-                                new JsConvertBinder(typeof(double)),
+                                Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
                                 Generate(node.Right)
                             ),
@@ -492,7 +492,7 @@ namespace IronJS.Compiler
         {
             return Et.Condition(
                 Et.Dynamic(
-                    new JsConvertBinder(typeof(bool)),
+                    Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
                     Generate(node.Test)
                 ),
@@ -546,7 +546,7 @@ namespace IronJS.Compiler
                 Et.Assign(
                     tmp, 
                     Et.Dynamic(
-                        new JsConvertBinder(typeof(double)),
+                        Context.CreateConvertBinder(typeof(double)),
                         typeof(double),
                         target
                     )
@@ -585,7 +585,7 @@ namespace IronJS.Compiler
                 Et.Assign(tmp, Generate(node.Left)),
                 Et.Condition(
                     Et.Dynamic(
-                        new JsConvertBinder(typeof(bool)),
+                        Context.CreateConvertBinder(typeof(bool)),
                         typeof(bool),
                         tmp
                     ),
@@ -607,7 +607,7 @@ namespace IronJS.Compiler
         private Et GenerateUnaryOp(Ast.UnaryOpNode node)
         {
             return Et.Dynamic(
-                new JsUnaryOpBinder(node.Op),
+                Context.CreateUnaryOpBinder(node.Op),
                 typeof(object),
                 Generate(node.Target)
             );
@@ -625,7 +625,7 @@ namespace IronJS.Compiler
         private Et GenerateMemberAccess(Ast.MemberAccessNode node)
         {
             return Et.Dynamic(
-                new JsGetMemberBinder(node.Name),
+                Context.CreateGetMemberBinder(node.Name),
                 typeof(object),
                 Generate(node.Target)
             );
@@ -638,6 +638,8 @@ namespace IronJS.Compiler
         // foo = new X()
         private Et GenerateNew(Ast.NewNode node)
         {
+            //TODO: 'new <expr>' should be handled by CreateInstanceBinder
+
             var target = Generate(node.Target);
             var args = node.Args.ToEtArray(x => Generate(x));
             var tmp = Et.Variable(typeof(Obj), "#tmp");
@@ -648,7 +650,7 @@ namespace IronJS.Compiler
                     tmp,
                     EtUtils.Cast<Obj>(
                         Et.Dynamic(
-                            new JsInvokeBinder(
+                            Context.CreateInvokeBinder(
                                 new CallInfo(args.Length),
                                 InvokeFlag.Constructor
                             ),
@@ -741,7 +743,7 @@ namespace IronJS.Compiler
         {
             // left @ right
             return Et.Dynamic(
-                new JsBinaryOpBinder(node.Op),
+                Context.CreateBinaryOpBinder(node.Op),
                 typeof(object),
                 Generate(node.Left),
                 Generate(node.Right)
@@ -762,7 +764,7 @@ namespace IronJS.Compiler
                 );
 
                 return Et.Dynamic(
-                    new JsInvokeBinder(
+                    Context.CreateInvokeBinder(
                         new CallInfo(args.Length),
                         InvokeFlag.Function
                     ),
@@ -780,7 +782,7 @@ namespace IronJS.Compiler
                 var target = (Ast.MemberAccessNode)node.Target;
 
                 return Et.Dynamic(
-                    new JsInvokeMemberBinder(
+                    Context.CreateInvokeMemberBinder(
                         target.Name,
                         new CallInfo(args.Length + 1)
                     ),
@@ -899,7 +901,7 @@ namespace IronJS.Compiler
                 var maNode = (Ast.MemberAccessNode)target;
 
                 return Et.Dynamic(
-                    new JsSetMemberBinder(maNode.Name),
+                    Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
                     Generate(maNode.Target),
                     value
@@ -910,7 +912,7 @@ namespace IronJS.Compiler
                 var ixNode = (Ast.IndexAccessNode)target;
 
                 return Et.Dynamic(
-                    new JsSetIndexBinder(new CallInfo(1)),
+                    Context.CreateSetIndexBinder(new CallInfo(1)),
                     typeof(object),
                     Generate(ixNode.Target),
                     Generate(ixNode.Index),

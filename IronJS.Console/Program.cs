@@ -19,28 +19,26 @@ namespace IronJS.Testing
 
             Context context = Context.Setup();
 
-            context.Globals.Push(
+            context.SuperGlobals.Push(
                 "print", 
                 typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
                 VarType.Global
             );
 
-            context.Globals.Push(
+            context.SuperGlobals.Push(
                 "println",
                 typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine"),
                 VarType.Global
             );
 
-            context.Globals.Push(
+            context.SuperGlobals.Push(
                 "exc",
                 new Exception(),
                 VarType.Global
             );
 
-
             var compiled = etGenerator.Build(astNodes);
-
-            compiled(context.Globals);
+            var globals = context.Run(compiled);
         }
     }
 }

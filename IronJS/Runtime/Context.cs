@@ -8,7 +8,8 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame Globals { get; protected set; }
+        public IFrame SuperGlobals;
+
         public Obj Object { get; protected set; }
         public Obj ObjectPrototype { get; protected set; }
         public Obj Function { get; protected set; }
@@ -19,15 +20,23 @@ namespace IronJS.Runtime
 
         }
 
+        public IFrame Run(Action<IFrame> delegat)
+        {
+            var globals = new Frame(SuperGlobals, true);
+
+            delegat(globals);
+
+            return globals;
+        }
+
         static public Context Setup()
         {
             var ctx = new Context();
 
-            ctx.Globals = new Frame();
-
+            ctx.SuperGlobals = new Frame();
             ctx.ObjectPrototype = new Obj();
             ctx.FunctionPrototype = new Obj(
-                ctx.Globals,
+                ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionPrototypeLambda),
                     new string[] { }.ToList()
@@ -35,7 +44,7 @@ namespace IronJS.Runtime
             );
 
             ctx.Object = new Obj(
-                ctx.Globals, 
+                ctx.SuperGlobals, 
                 new Lambda(
                     new Func<IFrame, object>(ObjectConstructorLambda),
                     new[] { "value" }.ToList()
@@ -43,7 +52,7 @@ namespace IronJS.Runtime
             );
 
             ctx.Function = new Obj(
-                ctx.Globals,
+                ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionConstructorLambda),
                     new string[] { }.ToList()
@@ -63,15 +72,11 @@ namespace IronJS.Runtime
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.Function);
 
             // Push on global frame
-            ctx.Globals.Push("Object", ctx.Object, VarType.Global);
-            ctx.Globals.Push("Function", ctx.Function, VarType.Global);
-            ctx.Globals.Push("undefined", Js.Undefined.Instance, VarType.Global);
-            ctx.Globals.Push("Infinity", double.PositiveInfinity, VarType.Global);
-            ctx.Globals.Push("NaN", double.NaN, VarType.Global);
-
-            // Conveniance globals
-            ctx.Globals.Push("#ObjectPrototype", ctx.ObjectPrototype, VarType.Global);
-            ctx.Globals.Push("#FunctionPrototype", ctx.FunctionPrototype, VarType.Global);
+            ctx.SuperGlobals.Push("Object", ctx.Object, VarType.Global);
+            ctx.SuperGlobals.Push("Function", ctx.Function, VarType.Global);
+            ctx.SuperGlobals.Push("undefined", Js.Undefined.Instance, VarType.Global);
+            ctx.SuperGlobals.Push("Infinity", double.PositiveInfinity, VarType.Global);
+            ctx.SuperGlobals.Push("NaN", double.NaN, VarType.Global);
 
             return ctx;
         }

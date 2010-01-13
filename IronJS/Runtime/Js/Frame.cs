@@ -13,6 +13,7 @@ namespace IronJS.Runtime.Js
 
     public class Frame : IFrame
     {
+        readonly bool _isGlobal;
         readonly IFrame _parent;
 
         readonly Dictionary<object, object> _values =
@@ -23,6 +24,13 @@ namespace IronJS.Runtime.Js
         {
 
         }
+
+        public Frame(IFrame parent, bool isGlobal)
+            : this(parent)
+        {
+            _isGlobal = true;
+        }
+
 
         public Frame(IFrame parent)
         {
@@ -55,7 +63,7 @@ namespace IronJS.Runtime.Js
                 }
                 else
                 {
-                    if (_parent == null)
+                    if (_isGlobal || _parent == null)
                     {
                         _values[key] = value;
                     }

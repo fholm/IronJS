@@ -14,7 +14,7 @@ namespace IronJS.Runtime
         public Obj Function { get; protected set; }
         public Obj FunctionPrototype { get; protected set; }
 
-        public Context()
+        protected Context()
         {
 
         }

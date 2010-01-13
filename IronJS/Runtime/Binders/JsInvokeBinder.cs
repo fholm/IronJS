@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Dynamic;
 using System.Reflection;
+using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Binders
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
-    using IronJS.Runtime.Js;
-    using Microsoft.Scripting.Utils;
 
     enum InvokeFlag { Constructor, Method, Function }
 

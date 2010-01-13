@@ -117,7 +117,7 @@ namespace IronJS.Runtime.Js
 
             if (obj.LimitType == typeof(string))
             {
-                //TODO: fix so that . instead of , valid in "3,14" as "3.14" fails atm
+                //TODO: fix so that . instead of , is valid as "3.14" fails atm
                 var tmp = Et.Parameter(typeof(double), "#tmp");
                 var method = typeof(double).GetMethod("TryParse", new[] { typeof(string), typeof(double).MakeByRefType() });
 
@@ -147,8 +147,16 @@ namespace IronJS.Runtime.Js
             return Et.Constant(1.0, typeof(double));
         }
 
-        public static object ToObject(object o)
+        public static Et ToObject(Meta obj)
         {
+            /*
+            if (obj.LimitType == typeof(double))
+            {
+                var jsObj = new Js.Obj();
+                jsObj.Class = ObjClass.Number;
+
+            }
+
             //TODO: throw TypeError on null/undefined
             if (o is double || o is bool || o is string)
             {
@@ -159,6 +167,9 @@ namespace IronJS.Runtime.Js
             }
 
             return o;
+            */
+
+            return null;
         }
     }
 }

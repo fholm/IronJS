@@ -17,11 +17,7 @@ namespace IronJS.Runtime.Js
 
         #region IValueObj Members
 
-        public object Value
-        {
-            get;
-            protected set;
-        }
+        public object Value { get; protected set; }
 
         #endregion
 

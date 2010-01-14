@@ -13,10 +13,11 @@ namespace IronJS.Runtime
     {
         public IFrame SuperGlobals { get; protected set; }
 
-        public Function Object { get; protected set; }
-        public Obj ObjectPrototype { get; protected set; }
-        public Function Function { get; protected set; }
-        public Function FunctionPrototype { get; protected set; }
+        public IFunction Object { get; protected set; }
+        public IObj ObjectPrototype { get; protected set; }
+
+        public IFunction Function { get; protected set; }
+        public IFunction FunctionPrototype { get; protected set; }
 
         protected Context()
         {
@@ -158,15 +159,15 @@ namespace IronJS.Runtime
             );
 
             // Object
-            ctx.Object.Prototype = ctx.FunctionPrototype;
+            (ctx.Object as Function).Prototype = ctx.FunctionPrototype;
             ctx.Object.SetOwnProperty("prototype", ctx.ObjectPrototype);
 
             // Function
-            ctx.Function.Prototype = ctx.FunctionPrototype;
+            (ctx.Function as Function).Prototype = ctx.FunctionPrototype;
             ctx.Function.SetOwnProperty("prototype", ctx.FunctionPrototype);
 
             // Function.prototype
-            ctx.FunctionPrototype.Prototype = ctx.ObjectPrototype;
+            (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.Function);
 
             // Push on global frame

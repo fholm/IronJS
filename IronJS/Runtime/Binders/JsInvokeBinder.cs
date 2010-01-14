@@ -27,7 +27,7 @@ namespace IronJS.Runtime.Binders
         public override Meta FallbackInvoke(Meta target, Meta[] args, Meta error)
         {
             // handles invocation of Undefined
-            if (Object.ReferenceEquals(target.Value, Js.Undefined.Instance))
+            if (object.ReferenceEquals(target.Value, Js.Undefined.Instance))
             {
                 return EtUtils.CreateThrow(
                     target, 
@@ -67,14 +67,14 @@ namespace IronJS.Runtime.Binders
             // are emitted from WithFrame objects
             // for function calls that really
             // are method calls
-            if (target.Value is CallProxy)
+            if (target.Value is PropertyProxy)
             {
-                var proxy = (CallProxy)target.Value;
+                var proxy = (PropertyProxy)target.Value;
 
                 return new Meta(
                     Et.Dynamic(
-                        _context.CreateInvokeMemberBinder( // <- this is reason 4 with() {} is slow, 
-                            proxy.Method,         // so don't frekin use it
+                        _context.CreateInvokeMemberBinder(
+                            proxy.Name,
                             new CallInfo(args.Length)
                         ),
                         typeof(object),
@@ -82,15 +82,15 @@ namespace IronJS.Runtime.Binders
                             Et.Field(
                                 Et.Convert(
                                     target.Expression, 
-                                    typeof(CallProxy)
+                                    typeof(PropertyProxy)
                                 ), 
                                 "That"
                             ),
                             DynamicUtils.GetExpressions(args)
                         )
                     ),
-                    Restrict.GetInstanceRestriction( // <- this is reason 5 with() {} is slow, 
-                        target.Expression,           // so don't frekin use it
+                    Restrict.GetInstanceRestriction(
+                        target.Expression,
                         target.Value
                     )
                 );

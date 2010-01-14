@@ -9,7 +9,7 @@ namespace IronJS.Runtime.Js
     using Meta = System.Dynamic.DynamicMetaObject;
 
     public enum VarType { Global, Local }
-    public enum GetType { Value, Call }
+    public enum GetType { Value, Name }
 
     public class Frame : IFrame
     {

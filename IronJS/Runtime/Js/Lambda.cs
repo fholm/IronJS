@@ -12,9 +12,9 @@ namespace IronJS.Runtime.Js
         internal readonly Func<IFrame, object> Delegate;
         internal readonly List<string> Params;
 
-        public Lambda(Func<IFrame, object> delegat, List<string> parms)
+        public Lambda(Func<IFrame, object> func, List<string> parms)
         {
-            Delegate = delegat;
+            Delegate = func;
             Params = parms;
         }
     }

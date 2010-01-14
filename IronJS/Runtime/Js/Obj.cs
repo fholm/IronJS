@@ -123,22 +123,6 @@ namespace IronJS.Runtime.Js
             return Properties.ContainsKey(key);
         }
 
-        public object GetOwnProperty(object key)
-        {
-            Property property;
-
-            if (Properties.TryGetValue(key, out property))
-                return property.Value;
-
-            return Js.Undefined.Instance;
-        }
-
-        public object SetOwnProperty(object key, object value)
-        {
-            Properties[key] = new Property(value);
-            return value;
-        }
-
         public override string ToString()
         {
             return "[object " + Class + "]";
@@ -155,6 +139,26 @@ namespace IronJS.Runtime.Js
 
         #region IObj Members
 
+        public Context Context { get; set; }
+        public ObjClass Class { get; set; }
+        public IObj Prototype { get; set; }
+
+        public object GetOwnProperty(object key)
+        {
+            Property property;
+
+            if (Properties.TryGetValue(key, out property))
+                return property.Value;
+
+            return Js.Undefined.Instance;
+        }
+
+        public object SetOwnProperty(object key, object value)
+        {
+            Properties[key] = new Property(value);
+            return value;
+        }
+
         public bool HasProperty(object name)
         {
             throw new NotImplementedException();
@@ -163,24 +167,6 @@ namespace IronJS.Runtime.Js
         public bool Delete(object name)
         {
             throw new NotImplementedException();
-        }
-
-        public Context Context
-        {
-            get;
-            set;
-        }
-
-        public ObjClass Class
-        {
-            get;
-            set;
-        }
-
-        public IObj Prototype
-        {
-            get;
-            set;
         }
 
         #endregion

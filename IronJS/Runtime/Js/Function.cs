@@ -19,17 +19,8 @@ namespace IronJS.Runtime
 
         #region IFunction Members
 
-        public IFrame Frame
-        {
-            get;
-            set;
-        }
-
-        public Lambda Lambda
-        {
-            get;
-            set;
-        }
+        public IFrame Frame { get; protected set; }
+        public Lambda Lambda { get; protected set; }
 
         public IObj Construct()
         {

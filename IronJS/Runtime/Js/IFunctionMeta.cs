@@ -73,7 +73,7 @@ namespace IronJS.Runtime.Js
                 // we're going to call
                 var callTargetExpr = Et.Field(
                     EtUtils.Cast<Lambda>(
-                        Et.Field(
+                        Et.Property(
                             selfExpr,
                             "Lambda"
                         )
@@ -100,7 +100,7 @@ namespace IronJS.Runtime.Js
                 exprs.Add(
                     FrameUtils.EnterFrame(
                         callFrameExpr,
-                        Et.Field(
+                        Et.Property(
                             selfExpr,
                             "Frame"
                         )
@@ -185,7 +185,7 @@ namespace IronJS.Runtime.Js
                     // additional restriction to
                     // to enforce this exact lambda
                         Restrict.GetInstanceRestriction(
-                            Et.Field(
+                            Et.Property(
                                 selfExpr,
                                 "Lambda"
                             ),

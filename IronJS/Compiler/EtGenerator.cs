@@ -12,6 +12,7 @@ using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler
 {
+    using LambdaExprList = List<Tuple<Expression<Func<IFrame, object>>, List<string>>>;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
 
@@ -20,7 +21,7 @@ namespace IronJS.Compiler
         internal Context Context;
         internal ParameterExpression TableExpr;
         internal ParameterExpression GlobalFrameExpr;
-        internal List<Tuple<Et, List<string>>> LambdaExprs;
+        internal LambdaExprList LambdaExprs;
         internal Stack<FunctionScope> FunctionScopes;
 
         internal int LambdaId
@@ -37,7 +38,7 @@ namespace IronJS.Compiler
         {
             Context = context;
             TableExpr = Et.Parameter(typeof(Table), "#functbl");
-            LambdaExprs = new List<Tuple<Et, List<string>>>();
+            LambdaExprs = new LambdaExprList();
             FunctionScopes = new Stack<FunctionScope>();
 
             // Enter gobal frame
@@ -763,7 +764,7 @@ namespace IronJS.Compiler
             {
                 var target = GenerateIdentifier(
                     (Ast.IdentifierNode)node.Target, 
-                    Runtime.Js.GetType.Call
+                    Runtime.Js.GetType.Name
                 );
 
                 return Et.Dynamic(
@@ -816,25 +817,17 @@ namespace IronJS.Compiler
                 )
             );
 
-            var lambdaEt = Et.Lambda<Func<IFrame, object>>(
-                Et.Block(bodyExprs),
-                FunctionScope.FrameExpr
-            );
-
             LambdaExprs.Add(
                 Tuple.Create(
-                    (Et) lambdaEt, 
+                    Et.Lambda<Func<IFrame, object>>(
+                        Et.Block(bodyExprs),
+                        FunctionScope.FrameExpr
+                    ), 
                     argsList
                 )
             );
 
             ExitFunctionScope();
-
-            // temp storage for the new object
-            var tmpObj = Et.Variable(
-                typeof(Obj), 
-                "#tmpobj"
-            );
 
             /*
              * 1) Create a new object with the current frame and current lambda as params
@@ -842,40 +835,15 @@ namespace IronJS.Compiler
              * 3) return it
              */
 
-            return Et.Block(
-                new[] { tmpObj },
-                // 1
-                Et.Assign(
-                    tmpObj,
-                    AstUtils.SimpleNewHelper( 
-                        typeof(Obj).GetConstructor(
-                            new[] { 
-                                typeof(IFrame), 
-                                typeof(Lambda)
-                            }
-                        ),
-                        FunctionScope.FrameExpr,
-                        Et.Call(
-                            TableExpr,
-                            typeof(Table).GetMethod("Pull"),
-                            Et.Constant(LambdaId)
-                        )
-                    )
-                ),
-                // 2
-                Et.Assign(
-                    Et.MakeMemberAccess(
-                        tmpObj,
-                        typeof(Obj).GetField("Prototype")
-                    ),
-                    FrameUtils.Pull<Obj>(
-                        GlobalFrameExpr,
-                        "#FunctionPrototype",
-                        Runtime.Js.GetType.Value
-                    )
-                ),
-                // 3
-                tmpObj
+            return Et.Call(
+                Et.Constant(Context),
+                typeof(Context).GetMethod("CreateFunction"),
+                FunctionScope.FrameExpr,
+                Et.Call(
+                    TableExpr,
+                    typeof(Table).GetMethod("Pull"),
+                    Et.Constant(LambdaId)
+                )
             );
         }
 

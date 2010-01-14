@@ -33,9 +33,9 @@ namespace IronJS.Runtime.Js
 
             return new Meta(
                 Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Put"),
-                    indexes[0].Expression,
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Put"),
+                    EtUtils.Box(indexes[0].Expression),
                     EtUtils.Box(value.Expression)
                 ),
                 Restrict.GetTypeRestriction(
@@ -57,9 +57,9 @@ namespace IronJS.Runtime.Js
 
             return new Meta(
                 Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Get"),
-                    indexes[0].Expression
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Get"),
+                    EtUtils.Box(indexes[0].Expression)
                 ),
                 Restrict.GetTypeRestriction(
                     this.Expression,
@@ -79,8 +79,8 @@ namespace IronJS.Runtime.Js
 
             return new Meta(
                 Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Get"),
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Get"),
                     Et.Constant(binder.Name)
                 ),
                 Restrict.GetTypeRestriction(
@@ -102,15 +102,10 @@ namespace IronJS.Runtime.Js
 
             return new Meta(
                 Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("PutWithAttrs"),
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Put"),
                     Et.Constant(binder.Name),
-                    EtUtils.Box(value.Expression),
-                    Et.Constant(
-                        (binder is JsSetMemberBinder)
-                        ? ((JsSetMemberBinder)binder).Attrs
-                        : 0
-                    )
+                    EtUtils.Box(value.Expression)
                 ),
                 Restrict.GetTypeRestriction(
                     this.Expression, 
@@ -128,7 +123,8 @@ namespace IronJS.Runtime.Js
         public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
         {
             //TODO: insert defer
-
+            throw new NotImplementedException();
+            /*
             return new Meta(
                 Et.Dynamic(
                     _context.CreateInvokeBinder(
@@ -139,8 +135,8 @@ namespace IronJS.Runtime.Js
                     ArrayUtils.Insert(
                         // the Js.Obj we're calling
                         Et.Call(
-                            EtUtils.Cast<Obj>(this.Expression),
-                            typeof(Obj).GetMethod("Get"),
+                            EtUtils.Cast<IObj>(this.Expression),
+                            typeof(IObj).GetMethod("Get"),
                             Et.Constant(binder.Name)
                         ),
                         this.Expression, // 'this'-argument
@@ -153,6 +149,7 @@ namespace IronJS.Runtime.Js
                     RestrictFlag.Type
                 )
             );
+            */
         }
 
      

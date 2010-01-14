@@ -15,12 +15,9 @@ namespace IronJS.Runtime.Binders
     {
         Context _context;
 
-        public readonly InvokeFlag CallType;
-
-        public JsInvokeBinder(CallInfo callinfo, InvokeFlag callType, Context context)
+        public JsInvokeBinder(CallInfo callinfo, Context context)
             : base(callinfo)
         {
-            CallType = callType;
             _context = context;
         }
 

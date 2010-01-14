@@ -94,6 +94,7 @@
     <Compile Include="Compiler\FunctionScope.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Extensions\IListExt.cs" />
+    <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />
     <Compile Include="Runtime\Binders\JsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

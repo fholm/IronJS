@@ -44,7 +44,7 @@ namespace IronJS.Runtime.Utils
             );
         }
 
-        internal static Et EnterFrame(Et target, Et parent)
+        internal static Et Enter(Et target, Et parent)
         {
             return Et.Assign(
                 target,
@@ -55,7 +55,7 @@ namespace IronJS.Runtime.Utils
             );
         }
 
-        internal static Et ExitFrame(Et target, Et parent)
+        internal static Et Exit(Et target, Et parent)
         {
             return Et.Assign(
                 target,

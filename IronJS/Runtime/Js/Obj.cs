@@ -20,22 +20,6 @@ namespace IronJS.Runtime.Js
         }
 
         // 8.6.2
-        /*
-        public IObj Construct()
-        {
-            var newObject = new Obj();
-
-            object prototype = GetOwnProperty("prototype");
-
-            newObject.Prototype = (prototype is Obj)
-                                ? (Obj) prototype
-                                : GetObjectPrototype();
-
-            return newObject;
-        }
-        */
-
-        // 8.6.2
         public object DefaultValue(ValueHint hint)
         {
             return null;
@@ -52,7 +36,7 @@ namespace IronJS.Runtime.Js
             if (Prototype != null)
                 return Prototype.Get(key);
 
-            return prop;
+            return Js.Undefined.Instance;
         }
 
         // 8.6.2
@@ -72,22 +56,6 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
-        public object PutWithAttrs(object key, object value, Js.PropertyAttrs attrs)
-        {
-            Obj obj = this;
-
-            while (obj != null)
-            {
-                if (Properties.ContainsKey(key))
-                    return Properties[key].Value = value;
-
-                obj = (Obj) obj.Prototype;
-            }
-
-            Properties[key] = new Property(value, attrs);
-            return value;
-        }
-
         // 8.6.2
         public bool CanPut(object key)
         {
@@ -100,27 +68,9 @@ namespace IronJS.Runtime.Js
             return true;
         }
 
-        public bool SetIfExists(object key, object value)
-        {
-            Obj obj = this;
-
-            while (obj != null)
-            {
-                if (Properties.ContainsKey(key))
-                {
-                    Properties[key].Value = value;
-                    return true;
-                }
-
-                obj = (Obj) obj.Prototype;
-            }
-
-            return false;
-        }
-
         public bool HasOwnProperty(object key)
         {
-            return Properties.ContainsKey(key);
+            return Properties.ContainsKey(key.ToString());
         }
 
         public override string ToString()
@@ -161,7 +111,13 @@ namespace IronJS.Runtime.Js
 
         public bool HasProperty(object name)
         {
-            throw new NotImplementedException();
+            if (HasOwnProperty(name))
+                return true;
+
+            if (Prototype != null)
+                return Prototype.HasProperty(name);
+
+            return false;
         }
 
         public bool Delete(object name)

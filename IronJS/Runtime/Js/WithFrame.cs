@@ -10,10 +10,10 @@ namespace IronJS.Runtime.Js
 
     class WithFrame : IFrame
     {
-        Obj _obj;
+        IObj _obj;
         IFrame _parent;
 
-        public WithFrame(Obj obj, IFrame parent)
+        public WithFrame(IObj obj, IFrame parent)
         {
             _obj = obj;
             _parent = parent;
@@ -46,8 +46,8 @@ namespace IronJS.Runtime.Js
 
         public object Push(object key, object value, VarType type)
         {
-            if (_obj.SetIfExists(key, value)) 
-                return value;
+            if (_obj.HasProperty(key))
+                return _obj.Put(key, value);
 
             return _parent.Push(key, value, type);
         }
@@ -57,10 +57,10 @@ namespace IronJS.Runtime.Js
 
     class PropertyProxy
     {
-        public readonly Obj That;
+        public readonly IObj That;
         public readonly object Name;
 
-        public PropertyProxy(Obj that, object name)
+        public PropertyProxy(IObj that, object name)
         {
             That = that;
             Name = name;

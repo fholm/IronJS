@@ -319,7 +319,7 @@ namespace IronJS.Compiler
                     )
                 ),
                 Generate(node.Body),
-                FrameUtils.ExitFrame(
+                FrameUtils.Exit(
                     FunctionScope.FrameExpr,
                     FunctionScope.FrameExpr
                 )
@@ -637,23 +637,19 @@ namespace IronJS.Compiler
         // foo = new X()
         private Et GenerateNew(Ast.NewNode node)
         {
-            throw new NotImplementedException();
-            /*
-            //TODO: 'new <expr>' should be handled by CreateInstanceBinder
-
             var target = Generate(node.Target);
             var args = node.Args.ToEtArray(x => Generate(x));
-            var tmp = Et.Variable(typeof(Obj), "#tmp");
+            var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 
+            
             exprs.Add(
                 Et.Assign(
                     tmp,
-                    EtUtils.Cast<Obj>(
+                    EtUtils.Cast<IObj>(
                         Et.Dynamic(
-                            Context.CreateInvokeBinder(
-                                new CallInfo(args.Length),
-                                InvokeFlag.Constructor
+                            Context.CreateInstanceBinder(
+                                new CallInfo(args.Length)
                             ),
                             typeof(object),
                             ArrayUtils.Insert(
@@ -664,7 +660,7 @@ namespace IronJS.Compiler
                     )
                 )
             );
-
+            
             // this handles properties defined
             // in the shorthand json-style object
             // expression: { foo: 1, bar: 2 }
@@ -675,7 +671,7 @@ namespace IronJS.Compiler
                     exprs.Add(
                         Et.Call(
                             tmp,
-                            typeof(Obj).GetMethod("Put"),
+                            typeof(IObj).GetMethod("Put"),
                             Et.Constant(propNode.Name, typeof(object)),
                             EtUtils.Box(Generate(propNode.Value))
                         )
@@ -691,7 +687,6 @@ namespace IronJS.Compiler
                 new[] { tmp },
                 exprs
             );
-            */
         }
 
         // 12.8
@@ -767,8 +762,7 @@ namespace IronJS.Compiler
 
                 return Et.Dynamic(
                     Context.CreateInvokeBinder(
-                        new CallInfo(args.Length),
-                        InvokeFlag.Function
+                        new CallInfo(args.Length)
                     ),
                     typeof(object),
                     ArrayUtils.Insert(

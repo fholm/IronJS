@@ -26,6 +26,41 @@ namespace IronJS.Runtime.Js
 
         }
 
+        public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
+        {
+            var jsBinder = (JsCreateInstanceBinder)binder;
+            var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
+            var selfObj = (IFunction)this.Value;
+            var tmp = Et.Variable(typeof(IObj), "#tmp");
+
+            var callFrame = Et.Variable(typeof(IFrame), "#callframe");
+            var closureFrame = IFunctionUtils.FrameExpr(selfExpr);
+
+            return new Meta(
+                Et.Block(
+                    new[] { tmp, callFrame },
+                    Et.Assign(
+                        tmp,
+                        Et.Call(
+                            selfObj.ContextExpr(),
+                            Context.Methods.CreateObjectCtor,
+                            selfExpr
+                        )
+                    ),
+                    FrameUtils.Enter(
+                        callFrame, 1
+                        closureFrame
+                    ),
+                    tmp
+                ),
+                RestrictUtils.BuildCallRestrictions(
+                    this,
+                    args,
+                    RestrictFlag.Type
+                )
+            );
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -41,33 +76,6 @@ namespace IronJS.Runtime.Js
                 var jsBinder = (JsInvokeBinder)binder;
                 var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
                 var selfObj = (IFunction)this.Value;
-
-                if (selfObj.Class == ObjClass.Object)
-                {
-                    // this expression handles
-                    // the case where the object
-                    // isn't a function
-                    return EtUtils.CreateThrow(
-                        this,
-                        args,
-                        Restrict.GetTypeRestriction(
-                            this.Expression,
-                            typeof(Obj)
-                        ).Merge(
-                            Restrict.GetExpressionRestriction(
-                                Et.Equal(
-                                    Et.Field(
-                                        selfExpr,
-                                        "Class"
-                                    ),
-                                    Et.Constant(ObjClass.Object)
-                                )
-                            )
-                        ),
-                        typeof(RuntimeError),
-                        "Object is not a function"
-                    );
-                }
 
                 // this is the target delegate 
                 // we're going to call
@@ -98,7 +106,7 @@ namespace IronJS.Runtime.Js
                 // this creates a new call frame
                 // with the current one as parent
                 exprs.Add(
-                    FrameUtils.EnterFrame(
+                    FrameUtils.Enter(
                         callFrameExpr,
                         Et.Property(
                             selfExpr,
@@ -136,41 +144,16 @@ namespace IronJS.Runtime.Js
                     )
                 );
 
-                Et exprTree;
-
-                switch (jsBinder.CallType)
-                {
-                    case InvokeFlag.Function:
-                        exprTree = SetupCallFrame(
-                            exprs,
-                            callTargetExpr,
-                            callFrameExpr,
-                            argumentsExpr,
-                            selfObj.Lambda,
-                            args,
-                            Et.Default(typeof(object))
-                        );
-                        break;
-
-                    case InvokeFlag.Method:
-                        // uses same call frame as
-                        // normal function calls
-                        // except 'this' is replaced
-                        // by first arguments expression
-                        exprTree = SetupCallFrame(
-                            exprs,
-                            callTargetExpr,
-                            callFrameExpr,
-                            argumentsExpr,
-                            selfObj.Lambda,
-                            ArrayUtils.RemoveFirst(args),
-                            args[0].Expression
-                        );
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
+                var exprTree = 
+                    SetupCallFrame(
+                        exprs,
+                        callTargetExpr,
+                        callFrameExpr,
+                        argumentsExpr,
+                        selfObj.Lambda,
+                        args,
+                        Et.Default(typeof(object))
+                    );
 
                 return new Meta(
                     // exprs
@@ -196,11 +179,6 @@ namespace IronJS.Runtime.Js
             }
 
             return binder.FallbackInvoke(this, args);
-        }
-
-        public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
-        {
-            return base.BindCreateInstance(binder, args);
         }
 
         /// <summary>

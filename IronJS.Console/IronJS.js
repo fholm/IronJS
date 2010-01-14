@@ -1,4 +1,4 @@
-﻿
+﻿/*
 _outer:
 for (i = 0; i < 10; ++i) {
 
@@ -16,9 +16,14 @@ for (i = 0; i < 10; ++i) {
         print(j);
     }
 }
+*/
 
 foo = function (bar) {
-    print(bar);
+    this.bar = bar;
 }
 
-foo("---");
+foo.prototype.hello = "world";
+
+var test = new foo("test");
+
+print(test.hello);

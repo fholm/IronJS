@@ -6,6 +6,7 @@ using IronJS.Runtime.Js;
 using IronJS.Runtime.Binders;
 using System.Linq.Expressions;
 using System.Dynamic;
+using System.Reflection;
 
 namespace IronJS.Runtime
 {
@@ -61,7 +62,7 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IObj CreateFunction(IFrame frame, Lambda lambda)
+        public IFunction CreateFunction(IFrame frame, Lambda lambda)
         {
             var obj = new Function(frame, lambda);
 
@@ -113,14 +114,19 @@ namespace IronJS.Runtime
             return new JsSetMemberBinder(name, this);
         }
 
-        internal JsInvokeBinder CreateInvokeBinder(CallInfo callInfo, InvokeFlag flag)
+        internal JsInvokeBinder CreateInvokeBinder(CallInfo callInfo)
         {
-            return new JsInvokeBinder(callInfo, flag, this);
+            return new JsInvokeBinder(callInfo, this);
         }
 
         internal JsInvokeMemberBinder CreateInvokeMemberBinder(object name, CallInfo callInfo)
         {
             return new JsInvokeMemberBinder(name, callInfo, this);
+        }
+
+        internal JsCreateInstanceBinder CreateInstanceBinder(CallInfo callInfo)
+        {
+            return new JsCreateInstanceBinder(callInfo, this);
         }
 
         #endregion
@@ -134,6 +140,7 @@ namespace IronJS.Runtime
             ctx.SuperGlobals = new Frame();
 
             ctx.ObjectPrototype = ctx.CreateObject();
+
             ctx.FunctionPrototype = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
@@ -200,6 +207,17 @@ namespace IronJS.Runtime
             }
 
             return null;
+        }
+
+        #endregion
+
+        #region MethodInfo
+
+        static public class Methods
+        {
+            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction");
+            static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
+            static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[]{ typeof(IObj) });
         }
 
         #endregion

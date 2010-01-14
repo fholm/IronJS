@@ -1,11 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Dynamic;
+using System.Linq;
+using System.Linq.Expressions;
+using IronJS.Extensions;
+using IronJS.Runtime;
+using IronJS.Runtime.Binders;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = System.Linq.Expressions.Expression;
+
     //TODO: need support for 'Host' object class
     public enum ObjClass { Object, Function, Boolean, Number, String }
 
@@ -45,6 +54,11 @@ namespace IronJS.Runtime.Js
         public static bool IsFunction(this IObj obj)
         {
             return (obj is IFunction);
+        }
+
+        public static Et ContextExpr(this IObj obj)
+        {
+            return Et.Constant(obj.Context, typeof(Context));
         }
     }
 }

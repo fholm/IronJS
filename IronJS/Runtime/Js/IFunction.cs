@@ -1,10 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
+using IronJS.Extensions;
+using IronJS.Runtime;
+using IronJS.Runtime.Binders;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = System.Linq.Expressions.Expression;
+
     public enum InvokeFlag { Method, Function }
 
     public interface IFunction : IObj
@@ -15,5 +25,32 @@ namespace IronJS.Runtime.Js
 
         // 8.6.2
         IObj Construct();   // [[Construct]]
+    }
+
+    public static class IFunctionUtils
+    {
+        public static Et FrameExpr(Et obj)
+        {
+            return Et.Property(
+                obj,
+                "Frame"
+            );
+        }
+
+        public static Et LambdaExpr(Et obj)
+        {
+            return Et.Property(
+                obj,
+                "Lambda"
+            );
+        }
+
+        public static Et LambdaDelegateExpr(Et obj)
+        {
+            return Et.Field(
+                LambdaExpr(obj),
+                "Delegate"
+            );
+        }
     }
 }

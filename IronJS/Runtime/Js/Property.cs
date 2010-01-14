@@ -10,13 +10,12 @@ namespace IronJS.Runtime.Js
         DontDelete = 4
     }
 
-    sealed class Property
+    public class Property
     {
-        object _value;
+        protected object _value;
+        protected PropertyAttrs _attrs;
 
-        internal PropertyAttrs Attributes;
-
-        internal object Value
+        public object Value
         {
             get
             {
@@ -35,24 +34,24 @@ namespace IronJS.Runtime.Js
             }
         }
 
-        internal Property(object value)
+        public Property(object value)
             : this(value, 0)
         {
 
         }
 
-        internal Property(object value, PropertyAttrs attrs)
+        public Property(object value, PropertyAttrs attrs)
         {
             _value = value; // optimization, we can skip going through 'Value'-property here
-            Attributes = attrs;
+            _attrs = attrs;
         }
 
-        internal bool HasAttr(PropertyAttrs attr)
+        public bool HasAttr(PropertyAttrs attr)
         {
-            return Attributes.HasFlag(attr);
+            return _attrs.HasFlag(attr);
         }
 
-        internal bool NotHasAttr(PropertyAttrs attr)
+        public bool NotHasAttr(PropertyAttrs attr)
         {
             return !HasAttr(attr);
         }

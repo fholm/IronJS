@@ -9,27 +9,14 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
-    public class Obj : IDynamicMetaObjectProvider, IObj
+    public class Obj : IObj
     {
         internal readonly Dictionary<object, Property> Properties =
             new Dictionary<object, Property>();
 
-        // 8.6.2 'Scope'
-        public readonly IFrame Frame;
-
-        // 8.6.2 'Call'
-        public readonly Lambda Lambda;
-
         public Obj()
         {
-            Class = ObjClass.Object;
-        }
 
-        public Obj(IFrame frame, Lambda lambda)
-        {
-            Frame = frame;
-            Lambda = lambda;
-            Class = ObjClass.Function;
         }
 
         // 8.6.2
@@ -65,7 +52,7 @@ namespace IronJS.Runtime.Js
             if (Prototype != null)
                 return Prototype.Get(key);
 
-            return Js.Undefined.Instance;
+            return prop;
         }
 
         // 8.6.2
@@ -165,16 +152,6 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
-
-        private IObj GetObjectPrototype()
-        {
-            IObj obj = this;
-
-            while (obj.Prototype != null)
-                obj = obj.Prototype;
-
-            return obj;
-        }
 
         #region IObj Members
 

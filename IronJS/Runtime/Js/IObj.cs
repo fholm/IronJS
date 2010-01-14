@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Dynamic;
 
 namespace IronJS.Runtime.Js
 {
-    //TODO: need support for 'Host' here in object class
+    //TODO: need support for 'Host' object class
     public enum ObjClass { Object, Function, Boolean, Number, String }
 
-    public interface IObj
+    //
+    public enum ValueHint { None, Number, String }
+
+    public interface IObj : IDynamicMetaObjectProvider
     {
         // 8.6.2
         ObjClass Class { get; } // [[Class]]
@@ -29,5 +33,18 @@ namespace IronJS.Runtime.Js
         bool HasOwnProperty(object name);
         object SetOwnProperty(object name);
         object GetOwnProperty(object name);
+    }
+
+    public static class IObjMethods
+    {
+        public static bool HasValue(this IObj obj)
+        {
+            return (obj is IValueObj);
+        }
+
+        public static bool IsFunction(this IObj obj)
+        {
+            return (obj is IFunction);
+        }
     }
 }

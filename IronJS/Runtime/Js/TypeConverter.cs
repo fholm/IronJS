@@ -12,8 +12,6 @@ namespace IronJS.Runtime.Js
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    public enum ValueHint { None, Number, String }
-
     public static class TypeConverter
     {
         public static Et ToBoolean(Meta obj)

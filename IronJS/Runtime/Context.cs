@@ -32,13 +32,25 @@ namespace IronJS.Runtime
             return globals;
         }
 
-        public IObj CreateObject()
+        public IObj CreateObject(IObj ctor)
         {
             var obj = new Obj();
 
             obj.Context = this;
             obj.Class = ObjClass.Object;
-            obj.Prototype = ObjectPrototype;
+
+            if (ctor == null)
+            {
+                obj.Prototype = ObjectPrototype;
+            }
+            else
+            {
+                var ptype = ctor.GetOwnProperty("prototype");
+
+                obj.Prototype = (ptype is IObj)
+                                ? ptype as IObj
+                                : ObjectPrototype;
+            }
 
             return obj;
         }
@@ -54,7 +66,7 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        #region binders
+        #region Binders
 
         internal JsBinaryOpBinder CreateBinaryOpBinder(ExpressionType op)
         {
@@ -102,6 +114,8 @@ namespace IronJS.Runtime
         }
 
         #endregion
+
+        #region Static
 
         static public Context Setup()
         {
@@ -168,7 +182,7 @@ namespace IronJS.Runtime
 
         static public object ObjectConstructorLambda(IFrame frame)
         {
-            var value = frame.Arg("value");
+            var value = (frame as Frame).Arg("value");
 
             if (value != null || value == Js.Undefined.Instance)
             {
@@ -177,5 +191,8 @@ namespace IronJS.Runtime
 
             return null;
         }
+
+        #endregion
+
     }
 }

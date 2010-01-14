@@ -21,11 +21,6 @@ namespace IronJS.Runtime.Js
 
         #region IFrame Members
 
-        public object Arg(object key)
-        {
-            throw new NotImplementedException("WithFrame objects can't be closure frames");
-        }
-
         public IFrame Enter()
         {
             return new Frame(this);

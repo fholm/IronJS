@@ -33,6 +33,7 @@ namespace IronJS.Runtime.Js
         }
 
         // 8.6.2
+        /*
         public IObj Construct()
         {
             var newObject = new Obj();
@@ -45,11 +46,12 @@ namespace IronJS.Runtime.Js
 
             return newObject;
         }
+        */
 
-        //
+        // 8.6.2
         public object DefaultValue(ValueHint hint)
         {
-            return Value;
+            return null;
         }
 
         // 8.6.2
@@ -204,12 +206,6 @@ namespace IronJS.Runtime.Js
         }
 
         public IObj Prototype
-        {
-            get;
-            set;
-        }
-
-        public object Value
         {
             get;
             set;

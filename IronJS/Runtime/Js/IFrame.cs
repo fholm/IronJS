@@ -3,7 +3,6 @@ namespace IronJS.Runtime.Js
 {
     public interface IFrame
     {
-        object Arg(object key);
         IFrame Enter();
         IFrame Exit();
         object Pull(object key, GetType type);

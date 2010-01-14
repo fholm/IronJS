@@ -37,8 +37,6 @@ namespace IronJS.Runtime.Js
             _parent = parent;
         }
 
-        #region IFrame Members
-
         public object Arg(object key)
         {
             object value;
@@ -48,6 +46,8 @@ namespace IronJS.Runtime.Js
 
             return null;
         }
+
+        #region IFrame Members
 
         public object Push(object key, object value, VarType type)
         {

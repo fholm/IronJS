@@ -10,5 +10,8 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         IFrame Frame { get; }   // [[Scope]]
         Lambda Lambda { get; }  // [[Call]]
+
+        // 8.6.2
+        IObj Construct();   // [[Construct]]
     }
 }

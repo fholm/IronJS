@@ -45,7 +45,7 @@ namespace IronJS.Runtime
 
         public IObj CreateFunction(IFrame frame, Lambda lambda)
         {
-            var obj = new FuncObj(frame, lambda);
+            var obj = new Function(frame, lambda);
 
             obj.Context = this;
             obj.Class = ObjClass.Function;

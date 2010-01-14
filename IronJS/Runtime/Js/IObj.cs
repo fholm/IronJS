@@ -13,7 +13,6 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         ObjClass Class { get; } // [[Class]]
         IObj Prototype { get; } // [[Prototype]]
-        object Value { get; }   // [[Value]]
 
         // implementation specific
         Context Context { get; }
@@ -24,8 +23,7 @@ namespace IronJS.Runtime.Js
         bool CanPut(object name);               // [[CanPut]]
         bool HasProperty(object name);          // [[HasProperty]]
         bool Delete(object name);               // [[Delete]]
-        object DefaultValue(ValueHint hint);    // [[DefaultValue]] 
-        IObj Construct();                       // [[Construct]]
+        object DefaultValue(ValueHint hint);    // [[DefaultValue]]
 
         // implementation specific
         bool HasOwnProperty(object name);

@@ -133,8 +133,8 @@ namespace IronJS.Runtime
 
             ctx.SuperGlobals = new Frame();
 
-            ctx.ObjectPrototype = new Obj();
-            ctx.FunctionPrototype = new Function(
+            ctx.ObjectPrototype = ctx.CreateObject();
+            ctx.FunctionPrototype = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionPrototypeLambda),
@@ -142,7 +142,7 @@ namespace IronJS.Runtime
                 )
             );
 
-            ctx.Object = new Function(
+            ctx.Object = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(ObjectConstructorLambda),
@@ -150,7 +150,7 @@ namespace IronJS.Runtime
                 )
             );
 
-            ctx.Function = new Function(
+            ctx.Function = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionConstructorLambda),

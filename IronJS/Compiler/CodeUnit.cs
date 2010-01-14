@@ -16,9 +16,9 @@ namespace IronJS.Compiler
             Context = context;
         }
 
-        public void Run()
+        public IFrame Run()
         {
-            Context.Run(Delegate);
+            return Context.Run(Delegate);
         }
     }
 }

@@ -571,8 +571,6 @@ namespace IronJS.Compiler
 
                 tmp // return the old value
             );
-
-            throw new NotImplementedException();
         }
         
         // 11.11

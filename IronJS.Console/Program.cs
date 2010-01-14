@@ -38,8 +38,7 @@ namespace IronJS.Testing
             );
 
             var compiled = etGenerator.Build(astNodes, context);
-
-            compiled.Run();
+            var globals = compiled.Run();
         }
     }
 }

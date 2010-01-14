@@ -5,6 +5,8 @@ using System.Text;
 
 namespace IronJS.Runtime.Js
 {
+    public enum InvokeFlag { Method, Function }
+
     public interface IFunction : IObj
     {
         // 8.6.2

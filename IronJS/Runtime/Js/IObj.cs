@@ -31,7 +31,7 @@ namespace IronJS.Runtime.Js
 
         // implementation specific
         bool HasOwnProperty(object name);
-        object SetOwnProperty(object name);
+        object SetOwnProperty(object name, object value);
         object GetOwnProperty(object name);
     }
 

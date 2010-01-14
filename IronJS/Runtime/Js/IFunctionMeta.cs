@@ -15,147 +15,15 @@ namespace IronJS.Runtime.Js
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    class ObjMeta : Meta
+    class IFunctionMeta : IObjMeta
     {
-        Context _context;
-
-        static MethodInfo LambdaInvoke = 
+        static MethodInfo LambdaInvoke =
             typeof(Func<IFrame, object>).GetMethod("Invoke");
 
-        //TODO: check all Get/Set operations it's ok to just type-restrict on the target
-
-        public ObjMeta(Et parameter, Obj jsObj)
-            : base(parameter, Restrict.Empty, jsObj)
+        public IFunctionMeta(Et parameter, IFunction function)
+            : base(parameter, function)
         {
 
-        }
-
-        public override Meta BindSetIndex(SetIndexBinder binder, Meta[] indexes, Meta value)
-        {
-            //TODO: insert defer
-
-            return new Meta(
-                Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Put"),
-                    indexes[0].Expression,
-                    EtUtils.Box(value.Expression)
-                ),
-                Restrict.GetTypeRestriction(
-                    this.Expression,
-                    this.LimitType
-                )
-            );
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="indexes"></param>
-        /// <returns></returns>
-        public override Meta BindGetIndex(GetIndexBinder binder, Meta[] indexes)
-        {
-            //TODO: insert defer
-
-            return new Meta(
-                Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Get"),
-                    indexes[0].Expression
-                ),
-                Restrict.GetTypeRestriction(
-                    this.Expression,
-                    this.LimitType
-                )
-            );
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <returns></returns>
-        public override Meta BindGetMember(GetMemberBinder binder)
-        {
-            //TODO: insert defer
-
-            return new Meta(
-                Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("Get"),
-                    Et.Constant(binder.Name)
-                ),
-                Restrict.GetTypeRestriction(
-                    this.Expression,
-                    this.LimitType
-                )
-            );
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override Meta BindSetMember(SetMemberBinder binder, Meta value)
-        {
-            //TODO: insert defer
-
-            return new Meta(
-                Et.Call(
-                    EtUtils.Cast<Obj>(this.Expression),
-                    typeof(Obj).GetMethod("PutWithAttrs"),
-                    Et.Constant(binder.Name),
-                    EtUtils.Box(value.Expression),
-                    Et.Constant(
-                        (binder is JsSetMemberBinder)
-                        ? ((JsSetMemberBinder)binder).Attrs
-                        : 0
-                    )
-                ),
-                Restrict.GetTypeRestriction(
-                    this.Expression, 
-                    this.LimitType
-                )
-            );
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
-        {
-            //TODO: insert defer
-
-            return new Meta(
-                Et.Dynamic(
-                    _context.CreateInvokeBinder(
-                        new CallInfo(args.Length + 2),
-                        InvokeFlag.Method
-                    ),
-                    typeof(object),
-                    ArrayUtils.Insert(
-                        // the Js.Obj we're calling
-                        Et.Call(
-                            EtUtils.Cast<Obj>(this.Expression),
-                            typeof(Obj).GetMethod("Get"),
-                            Et.Constant(binder.Name)
-                        ),
-                        this.Expression, // 'this'-argument
-                        DynamicUtils.GetExpressions(args) // other arguments
-                    )
-                ),
-                RestrictUtils.BuildCallRestrictions(
-                    this,
-                    args,
-                    RestrictFlag.Type
-                )
-            );
         }
 
         /// <summary>
@@ -171,8 +39,8 @@ namespace IronJS.Runtime.Js
             if (binder is JsInvokeBinder)
             {
                 var jsBinder = (JsInvokeBinder)binder;
-                var selfExpr = EtUtils.Cast<Obj>(this.Expression);
-                var selfObj = (Obj)this.Value;
+                var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
+                var selfObj = (IFunction)this.Value;
 
                 if (selfObj.Class == ObjClass.Object)
                 {
@@ -183,7 +51,7 @@ namespace IronJS.Runtime.Js
                         this,
                         args,
                         Restrict.GetTypeRestriction(
-                            this.Expression, 
+                            this.Expression,
                             typeof(Obj)
                         ).Merge(
                             Restrict.GetExpressionRestriction(
@@ -206,16 +74,16 @@ namespace IronJS.Runtime.Js
                 var callTargetExpr = Et.Field(
                     EtUtils.Cast<Lambda>(
                         Et.Field(
-                            selfExpr, 
+                            selfExpr,
                             "Lambda"
                         )
-                    ), 
+                    ),
                     "Delegate"
                 );
 
                 // this is our new call frame
                 var callFrameExpr = Et.Parameter(
-                    typeof(IFrame), 
+                    typeof(IFrame),
                     "#callframe"
                 );
 
@@ -233,7 +101,7 @@ namespace IronJS.Runtime.Js
                     FrameUtils.EnterFrame(
                         callFrameExpr,
                         Et.Field(
-                            selfExpr, 
+                            selfExpr,
                             "Frame"
                         )
                     )
@@ -274,11 +142,11 @@ namespace IronJS.Runtime.Js
                 {
                     case InvokeFlag.Function:
                         exprTree = SetupCallFrame(
-                            exprs, 
-                            callTargetExpr, 
-                            callFrameExpr, 
-                            argumentsExpr, 
-                            selfObj.Lambda, 
+                            exprs,
+                            callTargetExpr,
+                            callFrameExpr,
+                            argumentsExpr,
+                            selfObj.Lambda,
                             args,
                             Et.Default(typeof(object))
                         );
@@ -300,17 +168,6 @@ namespace IronJS.Runtime.Js
                         );
                         break;
 
-                    case InvokeFlag.Constructor:
-                        exprTree = SetupConstructorCallFrame(
-                            exprs,
-                            callTargetExpr,
-                            callFrameExpr,
-                            argumentsExpr,
-                            selfObj.Lambda,
-                            args
-                        );
-                        break;
-
                     default:
                         throw new NotImplementedException();
                 }
@@ -325,8 +182,8 @@ namespace IronJS.Runtime.Js
                         args,
                         RestrictFlag.Type
                     ).Merge(
-                        // additional restriction to
-                        // to enforce this exact lambda
+                    // additional restriction to
+                    // to enforce this exact lambda
                         Restrict.GetInstanceRestriction(
                             Et.Field(
                                 selfExpr,
@@ -341,68 +198,9 @@ namespace IronJS.Runtime.Js
             return binder.FallbackInvoke(this, args);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="exprs"></param>
-        /// <param name="callTargetExpr"></param>
-        /// <param name="callFrameExpr"></param>
-        /// <param name="argumentsExpr"></param>
-        /// <param name="lambda"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private Et SetupConstructorCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
+        public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
-            var thisParm = Et.Parameter(
-                typeof(object), 
-                "#this"
-            );
-
-            // create new object
-            exprs.Add(
-                Et.Assign(
-                    thisParm,
-                    Et.Call(
-                        EtUtils.Cast<Obj>(this.Expression),
-                        typeof(Obj).GetMethod("Construct")
-                    )
-                )
-            );
-
-            // push arguments on call new callframe
-            PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
-
-            // hidden 'this' parameter
-            exprs.Add(
-                FrameUtils.Push(
-                    callFrameExpr,
-                    "this",
-                    thisParm,
-                    VarType.Local
-                )
-            );
-
-            // finally, emit the call
-            exprs.Add(
-                EtUtils.Box(
-                    Et.Call(
-                        callTargetExpr,
-                        LambdaInvoke,
-                        callFrameExpr
-                    )
-                )
-            );
-
-            // we want to return
-            // the new object created
-            // instead of the result
-            // of the function call
-            exprs.Add(thisParm);
-
-            return Et.Block(
-                new[] { callFrameExpr, argumentsExpr, thisParm },
-                exprs
-            );
+            return base.BindCreateInstance(binder, args);
         }
 
         /// <summary>

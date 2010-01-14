@@ -638,6 +638,8 @@ namespace IronJS.Compiler
         // foo = new X()
         private Et GenerateNew(Ast.NewNode node)
         {
+            throw new NotImplementedException();
+            /*
             //TODO: 'new <expr>' should be handled by CreateInstanceBinder
 
             var target = Generate(node.Target);
@@ -690,6 +692,7 @@ namespace IronJS.Compiler
                 new[] { tmp },
                 exprs
             );
+            */
         }
 
         // 12.8

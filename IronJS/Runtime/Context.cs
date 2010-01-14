@@ -13,10 +13,10 @@ namespace IronJS.Runtime
     {
         public IFrame SuperGlobals { get; protected set; }
 
-        public Obj Object { get; protected set; }
+        public Function Object { get; protected set; }
         public Obj ObjectPrototype { get; protected set; }
-        public Obj Function { get; protected set; }
-        public Obj FunctionPrototype { get; protected set; }
+        public Function Function { get; protected set; }
+        public Function FunctionPrototype { get; protected set; }
 
         protected Context()
         {
@@ -30,6 +30,11 @@ namespace IronJS.Runtime
             delegat(globals);
 
             return globals;
+        }
+
+        public IObj CreateObject()
+        {
+            return CreateObject(null);
         }
 
         public IObj CreateObject(IObj ctor)
@@ -59,9 +64,13 @@ namespace IronJS.Runtime
         {
             var obj = new Function(frame, lambda);
 
+            var protoObj = CreateObject();
+            protoObj.SetOwnProperty("constructor", obj);
+
             obj.Context = this;
             obj.Class = ObjClass.Function;
             obj.Prototype = FunctionPrototype;
+            obj.SetOwnProperty("prototype", protoObj);
 
             return obj;
         }
@@ -124,7 +133,7 @@ namespace IronJS.Runtime
             ctx.SuperGlobals = new Frame();
 
             ctx.ObjectPrototype = new Obj();
-            ctx.FunctionPrototype = new Obj(
+            ctx.FunctionPrototype = new Function(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionPrototypeLambda),
@@ -132,7 +141,7 @@ namespace IronJS.Runtime
                 )
             );
 
-            ctx.Object = new Obj(
+            ctx.Object = new Function(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(ObjectConstructorLambda),
@@ -140,7 +149,7 @@ namespace IronJS.Runtime
                 )
             );
 
-            ctx.Function = new Obj(
+            ctx.Function = new Function(
                 ctx.SuperGlobals,
                 new Lambda(
                     new Func<IFrame, object>(FunctionConstructorLambda),

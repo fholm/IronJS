@@ -117,11 +117,12 @@
     <Compile Include="Runtime\Js\IFunction.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
+    <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\Nan.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\ObjMeta.cs">
+    <Compile Include="Runtime\Js\IObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Frame.cs">
@@ -138,6 +139,7 @@
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\Js\WithFrame.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs" />

@@ -63,7 +63,7 @@ namespace IronJS.Runtime.Js
             while (obj != null)
             {
                 if (obj.HasOwnProperty(key))
-                    return obj.SetOwnProperty(key);
+                    return obj.SetOwnProperty(key, value);
 
                 obj = obj.Prototype;
             }
@@ -148,7 +148,7 @@ namespace IronJS.Runtime.Js
 
         Meta IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
         {
-            return new ObjMeta(parameter, this);
+            return new IObjMeta(parameter, this);
         }
 
         #endregion
@@ -156,11 +156,6 @@ namespace IronJS.Runtime.Js
         #region IObj Members
 
         public bool HasProperty(object name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object SetOwnProperty(object name)
         {
             throw new NotImplementedException();
         }

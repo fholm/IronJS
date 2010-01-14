@@ -11,14 +11,11 @@ namespace IronJS.Runtime.Binders
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
 
-    enum InvokeFlag { Constructor, Method, Function }
-
     class JsInvokeBinder : InvokeBinder
     {
         Context _context;
 
         public readonly InvokeFlag CallType;
-        public bool IsConstructor { get { return CallType == InvokeFlag.Constructor; } }
 
         public JsInvokeBinder(CallInfo callinfo, InvokeFlag callType, Context context)
             : base(callinfo)

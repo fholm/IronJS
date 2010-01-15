@@ -119,7 +119,6 @@
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
     <Compile Include="Runtime\Js\IFunctionMeta.cs" />
-    <Compile Include="Runtime\Js\Nan.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>

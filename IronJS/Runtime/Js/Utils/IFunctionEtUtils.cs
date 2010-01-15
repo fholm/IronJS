@@ -35,7 +35,7 @@ namespace IronJS.Runtime.Js.Utils
 
         public static Et Delegate(Et obj)
         {
-            return Et.Field(
+            return Et.Property(
                 Lambda(obj),
                 "Delegate"
             );

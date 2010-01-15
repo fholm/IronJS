@@ -34,11 +34,31 @@ namespace IronJS.Runtime.Js
             var tmp = Et.Variable(typeof(IObj), "#tmp");
 
             var callFrame = Et.Variable(typeof(IFrame), "#callframe");
-            var closureFrame = IFunctionUtils.FrameExpr(selfExpr);
+            var closureFrame = IFunctionUtils.Frame(selfExpr);
+            var argsObj = Et.Variable(typeof(IObj), "#arguments");
+            var exprs = new List<Et>();
+
+            exprs.Add(
+                FrameUtils.Push(
+                    callFrame,
+                    "this",
+                    tmp,
+                    VarType.Local
+                )
+            );
+
+            PushArgsOnFrame(
+                exprs,
+                callFrame, 
+                argsObj, 
+                selfObj.Lambda, 
+                args
+            );
 
             return new Meta(
                 Et.Block(
-                    new[] { tmp, callFrame },
+                    new[] { tmp, callFrame, argsObj },
+                    // create our new object
                     Et.Assign(
                         tmp,
                         Et.Call(
@@ -47,9 +67,27 @@ namespace IronJS.Runtime.Js
                             selfExpr
                         )
                     ),
+                    // create a new empty call frame
                     FrameUtils.Enter(
-                        callFrame, 1
+                        callFrame,
                         closureFrame
+                    ),
+                    // create our new 'arguments' object
+                    Et.Assign(
+                        argsObj,
+                        Et.Call(
+                            selfObj.ContextExpr(),
+                            Context.Methods.CreateObject
+                        )
+                    ),
+                    // block that setups our frame + arguments objects
+                    Et.Block(
+                        exprs
+                    ),
+                    // the actual constructor call
+                    IFunctionUtils.Call(
+                        this.Expression,
+                        callFrame
                     ),
                     tmp
                 ),
@@ -57,6 +95,11 @@ namespace IronJS.Runtime.Js
                     this,
                     args,
                     RestrictFlag.Type
+                ).Merge(
+                    Restrict.GetInstanceRestriction(
+                        IFunctionUtils.Lambda(selfExpr),
+                        selfObj.Lambda
+                    )
                 )
             );
         }
@@ -238,6 +281,15 @@ namespace IronJS.Runtime.Js
                     argumentsExpr,
                     "length",
                     EtUtils.Box(Et.Constant(args.Length))
+                )
+            );
+
+            exprs.Add(
+                FrameUtils.Push(
+                    callFrameExpr,
+                    "arguments",
+                    argumentsExpr,
+                    VarType.Local
                 )
             );
 

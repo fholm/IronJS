@@ -29,27 +29,36 @@ namespace IronJS.Runtime.Js
 
     public static class IFunctionUtils
     {
-        public static Et FrameExpr(Et obj)
+        public static Et Frame(Et obj)
         {
             return Et.Property(
-                obj,
+                EtUtils.Cast<IFunction>(obj),
                 "Frame"
             );
         }
 
-        public static Et LambdaExpr(Et obj)
+        public static Et Lambda(Et obj)
         {
             return Et.Property(
-                obj,
+                EtUtils.Cast<IFunction>(obj),
                 "Lambda"
             );
         }
 
-        public static Et LambdaDelegateExpr(Et obj)
+        public static Et Delegate(Et obj)
         {
             return Et.Field(
-                LambdaExpr(obj),
+                Lambda(obj),
                 "Delegate"
+            );
+        }
+
+        public static Et Call(Et obj, Et frame)
+        {
+            return Et.Call(
+                Delegate(obj),
+                typeof(Func<IFrame, object>).GetMethod("Invoke"),
+                frame
             );
         }
     }

@@ -20,6 +20,7 @@ for (i = 0; i < 10; ++i) {
 
 foo = function (bar) {
     this.bar = bar;
+    print(arguments);
 }
 
 foo.prototype.hello = "world";
@@ -27,3 +28,4 @@ foo.prototype.hello = "world";
 var test = new foo("test");
 
 print(test.hello);
+print(test.bar);

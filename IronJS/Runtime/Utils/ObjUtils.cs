@@ -15,7 +15,7 @@ namespace IronJS.Runtime.Utils
         {
             return Et.Call(
                 target,
-                typeof(Obj).GetMethod("SetOwnProperty"),
+                typeof(IObj).GetMethod("SetOwnProperty"),
                 EtUtils.Box(Et.Constant(name)),
                 value
             );
@@ -24,7 +24,7 @@ namespace IronJS.Runtime.Utils
         static internal Et CreateNew()
         {
             return AstUtils.SimpleNewHelper(
-                typeof(Obj).GetConstructor(Type.EmptyTypes)
+                typeof(IObj).GetConstructor(Type.EmptyTypes)
             );
         }
     }

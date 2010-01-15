@@ -29,3 +29,9 @@ var test = new foo("test");
 
 print(test.hello);
 print(test.bar);
+
+hello = function (name) {
+    print("Hello " + name + "!");
+};
+
+hello("Fredrik");

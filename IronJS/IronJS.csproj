@@ -139,14 +139,25 @@
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\Utils\IFunctionEtUtils.cs" />
     <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\Js\WithFrame.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
-    <Compile Include="Runtime\Utils\EtUtils.cs" />
-    <Compile Include="Runtime\Utils\FrameUtils.cs" />
-    <Compile Include="Runtime\Utils\JsUtils.cs" />
-    <Compile Include="Runtime\Utils\ObjUtils.cs" />
-    <Compile Include="Runtime\Utils\RestrictUtils.cs" />
+    <Compile Include="Runtime\Utils\EtUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Utils\FrameUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Utils\JsUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Utils\ObjUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Utils\RestrictUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tuple.cs" />
   </ItemGroup>
   <ItemGroup>

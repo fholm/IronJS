@@ -32,12 +32,11 @@ namespace IronJS.Runtime.Js
 
             // tmp variables
             var callFrame = Et.Variable(typeof(IFrame), "#callframe");
-            var argsObj = Et.Variable(typeof(IObj), "#arguments");
             var tmp = Et.Variable(typeof(IObj), "#tmp");
 
             return new Meta(
                 Et.Block(
-                    new[] { tmp, callFrame, argsObj },
+                    new[] { tmp, callFrame },
 
                     // create our new object
                     Et.Assign(
@@ -49,26 +48,10 @@ namespace IronJS.Runtime.Js
                         )
                     ),
 
-                    // create a new empty call frame
-                    IFrameEtUtils.Enter(
+                    IFunctionEtUtils.SetupCallBlock(
                         callFrame,
-                        IFunctionEtUtils.Frame(selfExpr)
-                    ),
-
-                    // create our new 'arguments' object
-                    Et.Assign(
-                        argsObj,
-                        Et.Call(
-                            selfObj.ContextExpr(),
-                            Context.Methods.CreateObject
-                        )
-                    ),
-
-                    // block that setups our call frame + arguments objects
-                    IFunctionEtUtils.BuildFrameBlock(
-                        callFrame,
-                        argsObj,
-                        selfObj.Lambda.Params,
+                        selfExpr,
+                        selfObj,
                         args
                     ),
 
@@ -107,32 +90,15 @@ namespace IronJS.Runtime.Js
             // tmp variables
             var that = EtUtils.Cast<IObj>(args[0].Expression);
             var callFrame = Et.Variable(typeof(IFrame), "#callframe");
-            var argsObj = Et.Variable(typeof(IObj), "#arguments");
 
             return new Meta(
                 Et.Block(
-                    new[] { callFrame, argsObj },
+                    new[] { callFrame },
 
-                    // create a new empty call frame
-                    IFrameEtUtils.Enter(
+                    IFunctionEtUtils.SetupCallBlock(
                         callFrame,
-                        IFunctionEtUtils.Frame(selfExpr)
-                    ),
-
-                    // create our new 'arguments' object
-                    Et.Assign(
-                        argsObj,
-                        Et.Call(
-                            selfObj.ContextExpr(),
-                            Context.Methods.CreateObject
-                        )
-                    ),
-                    
-                    // block that setups our call frame + arguments objects
-                    IFunctionEtUtils.BuildFrameBlock(
-                        callFrame,
-                        argsObj,
-                        selfObj.Lambda.Params,
+                        selfExpr,
+                        selfObj,
                         ArrayUtils.RemoveFirst(args)
                     ),
 

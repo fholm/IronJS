@@ -1,5 +1,4 @@
-﻿/*
-_outer:
+﻿_outer:
 for (i = 0; i < 10; ++i) {
 
     if (i == 5)
@@ -16,11 +15,28 @@ for (i = 0; i < 10; ++i) {
         print(j);
     }
 }
-*/
+
+prettyPrint = function (str) {
+    println("~*~ " + str + " ~*~");
+};
+
+address = function (street, zipcode, city) {
+    this.street = street;
+    this.zipcode = zipcode;
+    this.city = city;
+    this.print = function () {
+        println("");
+        prettyPrint(street);
+        println(zipcode + " " + city);
+    };
+};
 
 user = function (name, age) {
     this.name = name;
     this.age = age + 1;
+    this.address = new address("Backa Ringgata 26", 51163, "Skene");
+
+    test = this;
 
     this.print = function () {
         println("Name: " + this.name);
@@ -33,4 +49,7 @@ anders = new user("Anders", 22);
 
 with (fredrik) {
     print();
+    anders.print();
+    address.print();
+    prettyPrint(" hello world ");
 }

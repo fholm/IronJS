@@ -26,9 +26,4 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         IObj Construct();   // [[Construct]]
     }
-
-    public static class IFunctionUtils
-    {
-
-    }
 }

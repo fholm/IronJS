@@ -145,8 +145,12 @@ namespace IronJS.Runtime.Js
             return Et.Constant(1.0, typeof(double));
         }
 
-        public static Et ToObject(Meta obj)
+        public static Et ToObject(Meta obj, Context context)
         {
+            if (obj.LimitType == typeof(double))
+            {
+
+            }
             /*
             if (obj.LimitType == typeof(double))
             {

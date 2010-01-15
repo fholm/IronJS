@@ -77,6 +77,39 @@ namespace IronJS.Runtime
             return obj;
         }
 
+        public IValueObj CreateString(string value)
+        {
+            var obj = new ValueObj(value);
+
+            obj.Context = this;
+            obj.Class = ObjClass.String;
+            obj.Prototype = null; //TODO: String.prototype
+
+            return obj;
+        }
+
+        public IValueObj CreateNumber(double value)
+        {
+            var obj = new ValueObj(value);
+
+            obj.Context = this;
+            obj.Class = ObjClass.Number;
+            obj.Prototype = null; //TODO: Number.prototype
+
+            return obj;
+        }
+
+        public IValueObj CreateBoolean(bool value)
+        {
+            var obj = new ValueObj(value);
+
+            obj.Context = this;
+            obj.Class = ObjClass.Boolean;
+            obj.Prototype = null; //TODO: Boolean.prototype
+
+            return obj;
+        }
+
         #region Binders
 
         internal JsBinaryOpBinder CreateBinaryOpBinder(ExpressionType op)
@@ -215,9 +248,12 @@ namespace IronJS.Runtime
 
         static public class Methods
         {
-            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction");
+            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IFrame), typeof(Lambda) });
             static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
-            static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[]{ typeof(IObj) });
+            static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[] { typeof(IObj) });
+            static public MethodInfo CreateString = typeof(Context).GetMethod("CreateString", new[] { typeof(string) });
+            static public MethodInfo CreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(double) });
+            static public MethodInfo CreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(bool) });
         }
 
         #endregion

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 using IronJS.Runtime.Js;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js.Utils
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
+    using ParamEt = System.Linq.Expressions.ParameterExpression;
 
     public static class IFrameEtUtils
     {

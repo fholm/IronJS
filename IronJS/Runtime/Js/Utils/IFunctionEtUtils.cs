@@ -66,12 +66,44 @@ namespace IronJS.Runtime.Js.Utils
                 );
         }
 
-        static internal Et BuildFrameBlock(Parm callFrame, Parm argsObj, List<string> paramNames, Meta[] args)
+        internal static Et SetupCallBlock(Parm callFrame, Et selfExpr, IFunction selfObj, Meta[] args)
         {
-            return BuildFrameBlock(callFrame, argsObj, paramNames, DynamicUtils.GetExpressions(args));
+            var argsObj = Et.Variable(typeof(IObj), "#arguments");
+
+            return Et.Block(
+                new[] { argsObj },
+
+                // create a new empty call frame
+                IFrameEtUtils.Enter(
+                    callFrame,
+                    IFunctionEtUtils.Frame(selfExpr)
+                ),
+
+                // create our new 'arguments' object
+                Et.Assign(
+                    argsObj,
+                    Et.Call(
+                        selfObj.ContextExpr(),
+                        Context.Methods.CreateObject
+                    )
+                ),
+
+                // block that setups our call frame + arguments objects
+                IFunctionEtUtils.BuildCallFrame(
+                    callFrame,
+                    argsObj,
+                    selfObj.Lambda.Params,
+                    args
+                )
+            );
         }
 
-        static internal Et BuildFrameBlock(Parm callFrame, Parm argsObj, List<string> paramNames, Et[] args)
+        static internal Et BuildCallFrame(Parm callFrame, Parm argsObj, List<string> paramNames, Meta[] args)
+        {
+            return BuildCallFrame(callFrame, argsObj, paramNames, DynamicUtils.GetExpressions(args));
+        }
+
+        static internal Et BuildCallFrame(Parm callFrame, Parm argsObj, List<string> paramNames, Et[] args)
         {
             var exprs = new List<Et>();
 

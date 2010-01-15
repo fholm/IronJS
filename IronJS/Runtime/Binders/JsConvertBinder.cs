@@ -36,10 +36,8 @@ namespace IronJS.Runtime.Binders
                     target.LimitType
                 );
 
-            if (Type == typeof(Js.Obj))
-            {
-
-            }
+            if (Type == typeof(Js.IObj))
+                throw new NotImplementedException();
 
             if (Type == typeof(bool))
                 return new Meta(

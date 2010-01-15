@@ -35,3 +35,7 @@ hello = function (name) {
 };
 
 hello("Fredrik");
+
+minus14 = { val: -14 }
+
+print(minus14 >>> 2);

@@ -4,12 +4,12 @@ using System.Dynamic;
 using System.Reflection;
 using IronJS.Runtime.Js;
 
-namespace IronJS.Runtime.Utils
+namespace IronJS.Runtime.Js.Utils
 {
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
 
-    public static class FrameUtils
+    public static class IFrameEtUtils
     {
         internal static Et Push(Et frame, string name, Et value, VarType type)
         {
@@ -35,7 +35,7 @@ namespace IronJS.Runtime.Utils
         internal static Et Pull<T>(Et frame, string name, GetType type)
         {
             return Et.Convert(
-                FrameUtils.Pull(
+                IFrameEtUtils.Pull(
                     frame,
                     name,
                     type

@@ -50,7 +50,7 @@ namespace IronJS.Runtime.Js
                     ),
 
                     // create a new empty call frame
-                    FrameUtils.Enter(
+                    IFrameEtUtils.Enter(
                         callFrame,
                         IFunctionEtUtils.Frame(selfExpr)
                     ),
@@ -73,7 +73,7 @@ namespace IronJS.Runtime.Js
                     ),
 
                     // push 'this' variable on call frame
-                    FrameUtils.Push(
+                    IFrameEtUtils.Push(
                         callFrame,
                         "this",
                         tmp,
@@ -120,7 +120,7 @@ namespace IronJS.Runtime.Js
                     new[] { callFrame, argsObj },
 
                     // create a new empty call frame
-                    FrameUtils.Enter(
+                    IFrameEtUtils.Enter(
                         callFrame,
                         IFunctionEtUtils.Frame(selfExpr)
                     ),
@@ -143,7 +143,7 @@ namespace IronJS.Runtime.Js
                     ),
 
                     // push 'this' variable on call frame
-                    FrameUtils.Push(
+                    IFrameEtUtils.Push(
                         callFrame,
                         "this",
                         Et.Default(typeof(object)),
@@ -156,6 +156,7 @@ namespace IronJS.Runtime.Js
                         callFrame
                     )
                 ),
+
                 IFunctionEtUtils.BuildLambdaCallRestriction(this, args)
             );
         }

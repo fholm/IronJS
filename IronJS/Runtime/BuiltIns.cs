@@ -1,4 +1,5 @@
 ﻿using System;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Runtime
 {
@@ -73,9 +74,9 @@ namespace IronJS.Runtime
             if (value is string)
                 return "string";
 
-            if (value is Js.Obj)
+            if (value is Js.IObj)
             {
-                if (((Js.Obj)value).Class == Js.ObjClass.Function)
+                if ((value as IObj).IsFunction())
                     return "function";
 
                 return "object";

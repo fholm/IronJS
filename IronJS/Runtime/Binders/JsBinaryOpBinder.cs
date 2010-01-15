@@ -244,7 +244,7 @@ namespace IronJS.Runtime.Binders
                     );
                 }
                 // step 20
-                else if (arg.LimitType == typeof(Js.Obj))
+                else if (arg.LimitType == typeof(Js.IObj))
                 {
                     if (target.LimitType == typeof(double))
                     {
@@ -266,7 +266,7 @@ namespace IronJS.Runtime.Binders
                     }
                 }
                 // step 21
-                else if (target.LimitType == typeof(Js.Obj))
+                else if (target.LimitType == typeof(Js.IObj))
                 {
                     if (arg.LimitType == typeof(double))
                     {

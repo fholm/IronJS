@@ -22,7 +22,10 @@ namespace IronJS.Runtime.Js
         // 8.6.2
         public object DefaultValue(ValueHint hint)
         {
-            return null;
+            if (hint == ValueHint.Number)
+                return 1.0;
+
+            return "";
         }
 
         // 8.6.2

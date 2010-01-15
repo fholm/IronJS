@@ -75,7 +75,7 @@ namespace IronJS.Runtime.Js.Utils
             var exprs = new List<Et>();
 
             exprs.Add(
-                ObjUtils.SetOwnProperty(
+                IObjEtUtils.SetOwnProperty(
                     argsObj,
                     "length",
                     EtUtils.Box(Et.Constant(args.Length))
@@ -83,7 +83,7 @@ namespace IronJS.Runtime.Js.Utils
             );
 
             exprs.Add(
-                FrameUtils.Push(
+                IFrameEtUtils.Push(
                     callFrame,
                     "arguments",
                     argsObj,
@@ -98,7 +98,7 @@ namespace IronJS.Runtime.Js.Utils
                 if (i < paramNames.Count)
                 {
                     exprs.Add(
-                        FrameUtils.Push(
+                        IFrameEtUtils.Push(
                             callFrame,
                             paramNames[i],
                             EtUtils.Box(args[i]),
@@ -109,7 +109,7 @@ namespace IronJS.Runtime.Js.Utils
 
                 // push args on 'arguments'-object
                 exprs.Add(
-                    ObjUtils.SetOwnProperty(
+                    IObjEtUtils.SetOwnProperty(
                         argsObj,
                         i,
                         EtUtils.Box(args[i])

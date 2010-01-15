@@ -146,13 +146,10 @@
     <Compile Include="Runtime\Utils\EtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Utils\FrameUtils.cs">
+    <Compile Include="Runtime\Js\Utils\IFrameEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Utils\JsUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Utils\ObjUtils.cs">
+    <Compile Include="Runtime\Js\Utils\IObjEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Utils\RestrictUtils.cs">

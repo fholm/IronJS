@@ -15,6 +15,7 @@ namespace IronJS.Compiler
     using LambdaExprList = List<Tuple<Expression<Func<IFrame, object>>, List<string>>>;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
+    using IronJS.Runtime.Js.Utils;
 
     public class EtGenerator
     {
@@ -67,7 +68,7 @@ namespace IronJS.Compiler
 
             //TODO: remove after debugging
             buildLambdaExprs.Add(
-                FrameUtils.Push(
+                IFrameEtUtils.Push(
                     FunctionScope.FrameExpr, 
                     "functbl", 
                     TableExpr, 
@@ -310,7 +311,7 @@ namespace IronJS.Compiler
                     AstUtils.SimpleNewHelper(
                         typeof(WithFrame).GetConstructor(
                             new[] { 
-                                typeof(Obj), 
+                                typeof(IObj), 
                                 typeof(IFrame)
                             }
                         ),
@@ -319,7 +320,7 @@ namespace IronJS.Compiler
                     )
                 ),
                 Generate(node.Body),
-                FrameUtils.Exit(
+                IFrameEtUtils.Exit(
                     FunctionScope.FrameExpr,
                     FunctionScope.FrameExpr
                 )
@@ -714,7 +715,7 @@ namespace IronJS.Compiler
         private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
         {
             // foo
-            return FrameUtils.Pull(FunctionScope.FrameExpr, node.Name, type);
+            return IFrameEtUtils.Pull(FunctionScope.FrameExpr, node.Name, type);
         }
 
         // ???
@@ -852,7 +853,7 @@ namespace IronJS.Compiler
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                return FrameUtils.Push(
+                return IFrameEtUtils.Push(
                     FunctionScope.FrameExpr,
                     idNode.Name,
                     value,

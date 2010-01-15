@@ -82,11 +82,13 @@ namespace IronJS.Runtime.Js
                     typeof(string)
                 );
 
-            if (obj.LimitType == typeof(Js.Obj))
-                return Et.Call(
-                    Et.Convert(obj.Expression, typeof(Js.Obj)),
-                    typeof(Js.Obj).GetMethod("DefaultValue"),
-                    Et.Constant(ValueHint.String)
+            if (typeof(IObj).IsAssignableFrom(obj.LimitType))
+                return EtUtils.Cast<string>(
+                    Et.Call(
+                        Et.Convert(obj.Expression, typeof(Js.IObj)),
+                        typeof(Js.IObj).GetMethod("DefaultValue"),
+                        Et.Constant(ValueHint.String)
+                    )
                 );
 
             // last step, just ToString
@@ -133,12 +135,14 @@ namespace IronJS.Runtime.Js
                 );
             }
 
-            if(obj.LimitType == typeof(Js.Obj))
+            if(typeof(IObj).IsAssignableFrom(obj.LimitType))
             {
-                return Et.Call(
-                    Et.Convert(obj.Expression, typeof(Js.Obj)),
-                    typeof(Js.Obj).GetMethod("DefaultValue"),
-                    Et.Constant(ValueHint.Number)
+                return EtUtils.Cast<double>(
+                    Et.Call(
+                        Et.Convert(obj.Expression, typeof(Js.IObj)),
+                        typeof(Js.IObj).GetMethod("DefaultValue"),
+                        Et.Constant(ValueHint.Number)
+                    )
                 );
             }
 
@@ -166,8 +170,7 @@ namespace IronJS.Runtime.Js
 
             return o;
             */
-
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

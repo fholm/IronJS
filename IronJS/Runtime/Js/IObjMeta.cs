@@ -123,25 +123,10 @@ namespace IronJS.Runtime.Js
         public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
         {
             //TODO: insert defer
-            throw new NotImplementedException();
-            /*
+
             return new Meta(
-                Et.Dynamic(
-                    _context.CreateInvokeBinder(
-                        new CallInfo(args.Length + 2),
-                        InvokeFlag.Method
-                    ),
-                    typeof(object),
-                    ArrayUtils.Insert(
-                        // the Js.Obj we're calling
-                        Et.Call(
-                            EtUtils.Cast<IObj>(this.Expression),
-                            typeof(IObj).GetMethod("Get"),
-                            Et.Constant(binder.Name)
-                        ),
-                        this.Expression, // 'this'-argument
-                        DynamicUtils.GetExpressions(args) // other arguments
-                    )
+                Et.Block(
+                    
                 ),
                 RestrictUtils.BuildCallRestrictions(
                     this,
@@ -149,74 +134,7 @@ namespace IronJS.Runtime.Js
                     RestrictFlag.Type
                 )
             );
-            */
         }
 
-     
-        /*
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="exprs"></param>
-        /// <param name="callTargetExpr"></param>
-        /// <param name="callFrameExpr"></param>
-        /// <param name="argumentsExpr"></param>
-        /// <param name="lambda"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private Et SetupConstructorCallFrame(List<Et> exprs, Et callTargetExpr, Parm callFrameExpr, Parm argumentsExpr, Lambda lambda, Meta[] args)
-        {
-            var thisParm = Et.Parameter(
-                typeof(object), 
-                "#this"
-            );
-
-            // create new object
-            exprs.Add(
-                Et.Assign(
-                    thisParm,
-                    Et.Call(
-                        EtUtils.Cast<Obj>(this.Expression),
-                        typeof(Obj).GetMethod("Construct")
-                    )
-                )
-            );
-
-            // push arguments on call new callframe
-            PushArgsOnFrame(exprs, callFrameExpr, argumentsExpr, lambda, args);
-
-            // hidden 'this' parameter
-            exprs.Add(
-                FrameUtils.Push(
-                    callFrameExpr,
-                    "this",
-                    thisParm,
-                    VarType.Local
-                )
-            );
-
-            // finally, emit the call
-            exprs.Add(
-                EtUtils.Box(
-                    Et.Call(
-                        callTargetExpr,
-                        LambdaInvoke,
-                        callFrameExpr
-                    )
-                )
-            );
-
-            // we want to return
-            // the new object created
-            // instead of the result
-            // of the function call
-            exprs.Add(thisParm);
-
-            return Et.Block(
-                new[] { callFrameExpr, argumentsExpr, thisParm },
-                exprs
-            );
-        }
-        */
     }
 }

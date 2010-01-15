@@ -111,6 +111,7 @@ namespace IronJS.Runtime.Js
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
 
+
             // tmp variables
             var callFrame = Et.Variable(typeof(IFrame), "#callframe");
             var argsObj = Et.Variable(typeof(IObj), "#arguments");

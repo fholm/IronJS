@@ -25,7 +25,7 @@ namespace IronJS.Runtime
 
         }
 
-        public IFrame Run(Action<IFrame> delegat)
+        internal IFrame Run(Action<IFrame> delegat)
         {
             var globals = new Frame(SuperGlobals, true);
 
@@ -211,7 +211,7 @@ namespace IronJS.Runtime
 
         #endregion
 
-        #region MethodInfo
+        #region Methods
 
         static public class Methods
         {

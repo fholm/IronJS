@@ -53,7 +53,6 @@ namespace IronJS.Runtime.Js
                 return Et.Convert(obj.Expression, typeof(string));
 
             if (obj.LimitType == typeof(double))
-            {
                 return Et.Condition(
                     Et.Call(
                         typeof(double).GetMethod("IsInfinity"),
@@ -66,7 +65,6 @@ namespace IronJS.Runtime.Js
                     ),
                     typeof(string)
                 );
-            }
 
             if(obj.LimitType == typeof(Js.Undefined))
                 return Et.Constant("undefined", typeof(string));
@@ -136,7 +134,6 @@ namespace IronJS.Runtime.Js
             }
 
             if(typeof(IObj).IsAssignableFrom(obj.LimitType))
-            {
                 return EtUtils.Cast<double>(
                     Et.Call(
                         Et.Convert(obj.Expression, typeof(Js.IObj)),
@@ -144,7 +141,6 @@ namespace IronJS.Runtime.Js
                         Et.Constant(ValueHint.Number)
                     )
                 );
-            }
 
             return Et.Constant(1.0, typeof(double));
         }

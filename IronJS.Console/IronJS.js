@@ -18,6 +18,7 @@ for (i = 0; i < 10; ++i) {
 }
 */
 
+
 foo = function (bar) {
     this.bar = bar;
     print(arguments);
@@ -38,4 +39,4 @@ hello("Fredrik");
 
 minus14 = { val: -14 }
 
-print(minus14 >>> 2);
+print(minus14.val >>> 2);

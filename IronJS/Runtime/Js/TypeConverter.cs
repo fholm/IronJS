@@ -147,30 +147,31 @@ namespace IronJS.Runtime.Js
 
         public static Et ToObject(Meta obj, Context context)
         {
+            if (obj.LimitType == typeof(Js.Undefined) || (obj.HasValue && obj.Value == null))
+                throw new NotImplementedException("Need do handle null/undefined in ToObject");
+
             if (obj.LimitType == typeof(double))
-            {
+                return Et.Call(
+                    Et.Constant(context, typeof(Context)),
+                    Context.Methods.CreateNumber,
+                    Et.Convert(obj.Expression, typeof(double))
+                );
 
-            }
-            /*
-            if (obj.LimitType == typeof(double))
-            {
-                var jsObj = new Js.Obj();
-                jsObj.Class = ObjClass.Number;
+            if (obj.LimitType == typeof(string))
+                return Et.Call(
+                    Et.Constant(context, typeof(Context)),
+                    Context.Methods.CreateString,
+                    Et.Convert(obj.Expression, typeof(string))
+                );
 
-            }
+            if (obj.LimitType == typeof(bool))
+                return Et.Call(
+                    Et.Constant(context, typeof(Context)),
+                    Context.Methods.CreateBoolean,
+                    Et.Convert(obj.Expression, typeof(bool))
+                );
 
-            //TODO: throw TypeError on null/undefined
-            if (o is double || o is bool || o is string)
-            {
-                //TODO: give correct object prototype
-                var obj = new Js.Obj();
-                obj.Value = o;
-                return obj;
-            }
-
-            return o;
-            */
-            throw new NotImplementedException();
+            return obj.Expression;
         }
     }
 }

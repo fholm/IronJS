@@ -37,7 +37,10 @@ namespace IronJS.Runtime.Binders
                 );
 
             if (Type == typeof(Js.IObj))
-                throw new NotImplementedException();
+                return new Meta(
+                    TypeConverter.ToObject(target, _context),
+                    restrictions
+                );
 
             if (Type == typeof(bool))
                 return new Meta(

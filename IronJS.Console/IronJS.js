@@ -53,3 +53,5 @@ with (fredrik) {
     address.print();
     prettyPrint(" hello world ");
 }
+
+print("1".toString);

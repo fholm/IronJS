@@ -627,7 +627,11 @@ namespace IronJS.Compiler
             return Et.Dynamic(
                 Context.CreateGetMemberBinder(node.Name),
                 typeof(object),
-                Generate(node.Target)
+                Et.Dynamic(
+                    Context.CreateConvertBinder(typeof(IObj)),
+                    typeof(object),
+                    Generate(node.Target)
+                )
             );
         }
 

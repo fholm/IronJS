@@ -22,7 +22,33 @@ namespace IronJS.Runtime
 
         protected Context()
         {
+            SuperGlobals = new Frame();
 
+            ObjectPrototype = CreateObject();
+
+            FunctionPrototype = CreateFunction(
+                SuperGlobals,
+                new Lambda(
+                    new Func<IObj, IFrame, object>(FunctionPrototypeLambda),
+                    new string[] { }.ToList()
+                )
+            );
+
+            Object = CreateFunction(
+                SuperGlobals,
+                new Lambda(
+                    new Func<IObj, IFrame, object>(ObjectConstructorLambda),
+                    new[] { "value" }.ToList()
+                )
+            );
+
+            Function = CreateFunction(
+                SuperGlobals,
+                new Lambda(
+                    new Func<IObj, IFrame, object>(FunctionConstructorLambda),
+                    new string[] { }.ToList()
+                )
+            );
         }
 
         internal IFrame Run(Action<IFrame> delegat)
@@ -169,34 +195,6 @@ namespace IronJS.Runtime
         static public Context Setup()
         {
             var ctx = new Context();
-
-            ctx.SuperGlobals = new Frame();
-
-            ctx.ObjectPrototype = ctx.CreateObject();
-
-            ctx.FunctionPrototype = ctx.CreateFunction(
-                ctx.SuperGlobals,
-                new Lambda(
-                    new Func<IObj, IFrame, object>(FunctionPrototypeLambda),
-                    new string[] { }.ToList()
-                )
-            );
-
-            ctx.Object = ctx.CreateFunction(
-                ctx.SuperGlobals,
-                new Lambda(
-                    new Func<IObj, IFrame, object>(ObjectConstructorLambda),
-                    new[] { "value" }.ToList()
-                )
-            );
-
-            ctx.Function = ctx.CreateFunction(
-                ctx.SuperGlobals,
-                new Lambda(
-                    new Func<IObj, IFrame, object>(FunctionConstructorLambda),
-                    new string[] { }.ToList()
-                )
-            );
 
             // Object
             (ctx.Object as Function).Prototype = ctx.FunctionPrototype;

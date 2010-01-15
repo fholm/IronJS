@@ -20,9 +20,9 @@ namespace IronJS.Compiler
         readonly LabelTarget _break;
         readonly LabelTarget _continue;
 
-        internal readonly LabelScope Parent;
-        internal readonly string Name;
-        internal readonly bool IsLoop;
+        internal LabelScope Parent { get; private set; }
+        internal string Name { get; private set; }
+        internal bool IsLoop { get; private set; }
 
         internal LabelScope(LabelScope parent, string name = null, bool isLoop = true)
         {

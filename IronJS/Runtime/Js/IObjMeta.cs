@@ -24,7 +24,7 @@ namespace IronJS.Runtime.Js
         public IObjMeta(Et parameter, IObj jsObj)
             : base(parameter, Restrict.Empty, jsObj)
         {
-
+            _context = jsObj.Context;
         }
 
         public override Meta BindSetIndex(SetIndexBinder binder, Meta[] indexes, Meta value)
@@ -124,9 +124,29 @@ namespace IronJS.Runtime.Js
         {
             //TODO: insert defer
 
+            var selfExpr = EtUtils.Cast<IObj>(this.Expression);
+            var tmp = Et.Parameter(typeof(object), "#tmp");
+
             return new Meta(
                 Et.Block(
-                    
+                    new[] { tmp },
+                    Et.Assign(
+                        tmp,
+                        Et.Call(
+                            selfExpr,
+                            typeof(IObj).GetMethod("Get"),
+                            Et.Constant(binder.Name)
+                        )
+                    ),
+                    Et.Dynamic(
+                        _context.CreateInvokeBinder(new CallInfo(args.Length)),
+                        typeof(object),
+                        ArrayUtils.Insert(
+                            tmp,
+                            selfExpr, 
+                            DynamicUtils.GetExpressions(args)
+                        )
+                    )
                 ),
                 RestrictUtils.BuildCallRestrictions(
                     this,

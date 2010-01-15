@@ -9,10 +9,10 @@ namespace IronJS.Runtime.Js
 
     public class Lambda
     {
-        public readonly Func<IFrame, object> Delegate;
+        public readonly Func<IObj, IFrame, object> Delegate;
         public readonly List<string> Params;
 
-        public Lambda(Func<IFrame, object> func, List<string> parms)
+        public Lambda(Func<IObj, IFrame, object> func, List<string> parms)
         {
             Delegate = func;
             Params = parms;

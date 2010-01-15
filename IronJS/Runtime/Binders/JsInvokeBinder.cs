@@ -47,7 +47,7 @@ namespace IronJS.Runtime.Binders
                     Et.Call(
                         methodInfo, 
                         EtUtils.ConvertToParamTypes(
-                            args,
+                            ArrayUtils.RemoveFirst(args),
                             methodInfo.GetParameters()
                         )
                     ),
@@ -62,7 +62,7 @@ namespace IronJS.Runtime.Binders
 
             // handles call proxies that
             // are emitted from WithFrame objects
-            // for function calls that really
+            // for 'function'-calls that really
             // are method calls
             if (target.Value is PropertyProxy)
             {

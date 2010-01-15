@@ -144,7 +144,7 @@ namespace IronJS.Runtime
             ctx.FunctionPrototype = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
-                    new Func<IFrame, object>(FunctionPrototypeLambda),
+                    new Func<IObj, IFrame, object>(FunctionPrototypeLambda),
                     new string[] { }.ToList()
                 )
             );
@@ -152,7 +152,7 @@ namespace IronJS.Runtime
             ctx.Object = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
-                    new Func<IFrame, object>(ObjectConstructorLambda),
+                    new Func<IObj, IFrame, object>(ObjectConstructorLambda),
                     new[] { "value" }.ToList()
                 )
             );
@@ -160,7 +160,7 @@ namespace IronJS.Runtime
             ctx.Function = ctx.CreateFunction(
                 ctx.SuperGlobals,
                 new Lambda(
-                    new Func<IFrame, object>(FunctionConstructorLambda),
+                    new Func<IObj, IFrame, object>(FunctionConstructorLambda),
                     new string[] { }.ToList()
                 )
             );
@@ -187,17 +187,17 @@ namespace IronJS.Runtime
             return ctx;
         }
 
-        static public object FunctionPrototypeLambda(IFrame frame)
+        static public object FunctionPrototypeLambda(IObj that, IFrame frame)
         {
             return Js.Undefined.Instance;
         }
 
-        static public object FunctionConstructorLambda(IFrame frame)
+        static public object FunctionConstructorLambda(IObj that, IFrame frame)
         {
             return null;
         }
 
-        static public object ObjectConstructorLambda(IFrame frame)
+        static public object ObjectConstructorLambda(IObj that, IFrame frame)
         {
             var value = (frame as Frame).Arg("value");
 

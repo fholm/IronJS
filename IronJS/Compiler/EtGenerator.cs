@@ -12,7 +12,7 @@ using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler
 {
-    using LambdaExprList = List<Tuple<Expression<Func<IFrame, object>>, List<string>>>;
+    using LambdaExprList = List<Tuple<Expression<Func<IObj, IFrame, object>>, List<string>>>;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
     using IronJS.Runtime.Js.Utils;
@@ -79,7 +79,7 @@ namespace IronJS.Compiler
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<IFrame, object>), 
+                    typeof(Func<IObj, IFrame, object>), 
                     typeof(List<string>)
                 }
             );
@@ -714,7 +714,10 @@ namespace IronJS.Compiler
         // 7.6
         private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
         {
-            // foo
+            // handle 'this' specially
+            if(node.Name == "this")
+                return FunctionScope.ThisExpr;
+            
             return IFrameEtUtils.Pull(FunctionScope.FrameExpr, node.Name, type);
         }
 
@@ -768,6 +771,7 @@ namespace IronJS.Compiler
                     typeof(object),
                     ArrayUtils.Insert(
                         target,
+                        Et.Default(typeof(IObj)),
                         args
                     )
                 );
@@ -777,6 +781,7 @@ namespace IronJS.Compiler
             else if(node.Target is Ast.MemberAccessNode)
             {
                 var target = (Ast.MemberAccessNode)node.Target;
+                var targetExpr = Generate(target.Target);
 
                 return Et.Dynamic(
                     Context.CreateInvokeMemberBinder(
@@ -785,7 +790,8 @@ namespace IronJS.Compiler
                     ),
                     typeof(object),
                     ArrayUtils.Insert(
-                        Generate(target.Target),
+                        targetExpr,
+                        targetExpr,
                         args
                     )
                 );
@@ -812,8 +818,9 @@ namespace IronJS.Compiler
 
             LambdaExprs.Add(
                 Tuple.Create(
-                    Et.Lambda<Func<IFrame, object>>(
+                    Et.Lambda<Func<IObj, IFrame, object>>(
                         Et.Block(bodyExprs),
+                        FunctionScope.ThisExpr,
                         FunctionScope.FrameExpr
                     ), 
                     argsList

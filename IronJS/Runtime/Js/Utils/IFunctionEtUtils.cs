@@ -41,11 +41,12 @@ namespace IronJS.Runtime.Js.Utils
             );
         }
 
-        public static Et Call(Et obj, Et frame)
+        public static Et Call(Et obj, Et that, Et frame)
         {
             return Et.Call(
                 Delegate(obj),
-                typeof(Func<IFrame, object>).GetMethod("Invoke"),
+                typeof(Func<IObj, IFrame, object>).GetMethod("Invoke"),
+                that,
                 frame
             );
         }

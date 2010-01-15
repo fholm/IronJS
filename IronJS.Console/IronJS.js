@@ -18,25 +18,19 @@ for (i = 0; i < 10; ++i) {
 }
 */
 
+user = function (name, age) {
+    this.name = name;
+    this.age = age + 1;
 
-foo = function (bar) {
-    this.bar = bar;
-    print(arguments);
-}
-
-foo.prototype.hello = "world";
-
-var test = new foo("test");
-
-print(test.hello);
-print(test.bar);
-
-hello = function (name) {
-    print("Hello " + name + "!");
+    this.print = function () {
+        println("Name: " + this.name);
+        println("Age: " + age + ", real: " + this.age);
+    };
 };
 
-hello("Fredrik");
+fredrik = new user("Fredrik", 24);
+anders = new user("Anders", 22);
 
-minus14 = { val: -14 }
-
-print(minus14.val >>> 2);
+with (fredrik) {
+    print();
+}

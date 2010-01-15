@@ -72,17 +72,10 @@ namespace IronJS.Runtime.Js
                         args
                     ),
 
-                    // push 'this' variable on call frame
-                    IFrameEtUtils.Push(
-                        callFrame,
-                        "this",
-                        tmp,
-                        VarType.Local
-                    ),
-
                     // the actual constructor call
                     IFunctionEtUtils.Call(
                         this.Expression,
+                        tmp,
                         callFrame
                     ),
 
@@ -111,8 +104,8 @@ namespace IronJS.Runtime.Js
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
 
-
             // tmp variables
+            var that = EtUtils.Cast<IObj>(args[0].Expression);
             var callFrame = Et.Variable(typeof(IFrame), "#callframe");
             var argsObj = Et.Variable(typeof(IObj), "#arguments");
 
@@ -140,20 +133,13 @@ namespace IronJS.Runtime.Js
                         callFrame,
                         argsObj,
                         selfObj.Lambda.Params,
-                        args
-                    ),
-
-                    // push 'this' variable on call frame
-                    IFrameEtUtils.Push(
-                        callFrame,
-                        "this",
-                        Et.Default(typeof(object)),
-                        VarType.Local
+                        ArrayUtils.RemoveFirst(args)
                     ),
 
                     // the actual constructor call
                     IFunctionEtUtils.Call(
                         this.Expression,
+                        that,
                         callFrame
                     )
                 ),

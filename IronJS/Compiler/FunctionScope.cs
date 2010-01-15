@@ -21,6 +21,7 @@ namespace IronJS.Compiler
 
         internal readonly LabelTarget ReturnLabel;
         internal readonly ParameterExpression FrameExpr;
+        internal readonly ParameterExpression ThisExpr;
 
         internal LabelScope LabelScope
         {
@@ -37,6 +38,7 @@ namespace IronJS.Compiler
         {
             ReturnLabel = Et.Label(typeof(object), "#return");
             FrameExpr = Et.Parameter(typeof(IFrame), "#frame");
+            ThisExpr = Et.Parameter(typeof(IObj), "#this");
         }
 
         public void EnterLabelScope(string name, bool isLoop)

@@ -143,7 +143,6 @@ namespace IronJS.Runtime.Js
                         typeof(object),
                         ArrayUtils.Insert(
                             tmp,
-                            selfExpr, 
                             DynamicUtils.GetExpressions(args)
                         )
                     )

@@ -68,6 +68,15 @@ namespace IronJS.Runtime.Binders
             {
                 var proxy = (PropertyProxy)target.Value;
 
+                var thatExpr = 
+                    Et.Field(
+                        Et.Convert(
+                            target.Expression,
+                            typeof(PropertyProxy)
+                        ),
+                        "That"
+                    );
+
                 return new Meta(
                     Et.Dynamic(
                         _context.CreateInvokeMemberBinder(
@@ -76,16 +85,14 @@ namespace IronJS.Runtime.Binders
                         ),
                         typeof(object),
                         ArrayUtils.Insert(
-                            Et.Field(
-                                Et.Convert(
-                                    target.Expression, 
-                                    typeof(PropertyProxy)
-                                ), 
-                                "That"
-                            ),
-                            DynamicUtils.GetExpressions(args)
+                            thatExpr,
+                            thatExpr,
+                            DynamicUtils.GetExpressions(
+                                ArrayUtils.RemoveFirst(args)
+                            )
                         )
                     ),
+                    //TODO: more elaborate restriction
                     Restrict.GetInstanceRestriction(
                         target.Expression,
                         target.Value

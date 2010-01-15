@@ -38,8 +38,7 @@ user = function (name, age) {
 
     test = this;
 
-    this.print = function (testline) {
-        println("line: " + testline);
+    this.print = function () {
         println("Name: " + this.name);
         println("Age: " + age + ", real: " + this.age);
     };
@@ -49,10 +48,10 @@ fredrik = new user("Fredrik", 24);
 anders = new user("Anders", 22);
 
 with (fredrik) {
-    print("1");
-    anders.print("2");
-    address.print("3");
+    print();
+    anders.print();
+    address.print();
     prettyPrint(" hello world ");
 }
 
-print("foo".lol); // <- undefined
+print("1".toString);

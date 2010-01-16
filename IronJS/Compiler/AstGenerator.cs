@@ -12,6 +12,7 @@ namespace IronJS.Compiler.Ast
     using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
     using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
     using System.Linq.Expressions;
+    using System.Globalization;
 
     //TODO: implement delete operator
 
@@ -829,7 +830,7 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildNumber(ITree node)
         {
-            return new NumberNode(Double.Parse(node.Text));
+            return new NumberNode(Double.Parse(node.Text, CultureInfo.InvariantCulture));
         }
 
         private Node BuildIdentifier(ITree node)

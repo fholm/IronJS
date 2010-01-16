@@ -1,10 +1,14 @@
 ﻿
+print(true.toString());
+print((3.14).toString());
+
 bar = {};
 bar.x = 2;
 
 prettyPrint = function (str) {
     println("~*~ " + str + " ~*~");
 };
+
 
 address = function (street, zipcode, city) {
     this.street = street;

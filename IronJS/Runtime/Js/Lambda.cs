@@ -12,6 +12,12 @@ namespace IronJS.Runtime.Js
         public Func<IObj, IFrame, object> Delegate { get; protected set; }
         public List<string> Params { get; protected set; }
 
+        public Lambda(Func<IObj, IFrame, object> func)
+            : this(func, new List<string>())
+        {
+
+        }
+
         public Lambda(Func<IObj, IFrame, object> func, List<string> parms)
         {
             Delegate = func;

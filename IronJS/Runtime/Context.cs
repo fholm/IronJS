@@ -7,6 +7,7 @@ using IronJS.Runtime.Binders;
 using System.Linq.Expressions;
 using System.Dynamic;
 using System.Reflection;
+using System.Globalization;
 
 namespace IronJS.Runtime
 {
@@ -20,11 +21,15 @@ namespace IronJS.Runtime
         public IFunction Function { get; protected set; }
         public IFunction FunctionPrototype { get; protected set; }
 
+        public IObj BooleanPrototype { get; protected set; }
+        public IObj NumberPrototype { get; protected set; }
+
         protected Context()
         {
             SuperGlobals = new Frame();
 
             ObjectPrototype = CreateObject();
+            NumberPrototype = CreateObject();
 
             FunctionPrototype = CreateFunction(
                 SuperGlobals,
@@ -49,6 +54,8 @@ namespace IronJS.Runtime
                     new string[] { }.ToList()
                 )
             );
+
+            BooleanPrototype = CreateObject();
         }
 
         internal IFrame Run(Action<IFrame> delegat)
@@ -120,7 +127,7 @@ namespace IronJS.Runtime
 
             obj.Context = this;
             obj.Class = ObjClass.Number;
-            obj.Prototype = null; //TODO: Number.prototype
+            obj.Prototype = NumberPrototype;
 
             return obj;
         }
@@ -131,7 +138,7 @@ namespace IronJS.Runtime
 
             obj.Context = this;
             obj.Class = ObjClass.Boolean;
-            obj.Prototype = null; //TODO: Boolean.prototype
+            obj.Prototype = BooleanPrototype;
 
             return obj;
         }
@@ -217,6 +224,34 @@ namespace IronJS.Runtime
             // Function.prototype
             (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.Function);
+
+            // Boolean.prototype
+            ctx.BooleanPrototype.Put("toString",
+                ctx.CreateFunction(
+                    ctx.SuperGlobals,
+                    new Lambda((that, frame) => {
+                        if (that.HasValue())
+                            return (that as IValueObj).Value.ToString().ToLower();
+
+                        throw new NotImplementedException();
+                    }
+                    )
+                )
+            );
+
+            // Number.prototype
+            ctx.NumberPrototype.Put("toString",
+                ctx.CreateFunction(
+                    ctx.SuperGlobals,
+                    new Lambda((that, frame) => {
+                        if (that.HasValue())
+                            return Convert.ToString((double)(that as IValueObj).Value, CultureInfo.InvariantCulture);
+
+                        throw new NotImplementedException();
+                    }
+                    )
+                )
+            );
 
             // Push on global frame
             ctx.SuperGlobals.Push("Object", ctx.Object, VarType.Global);

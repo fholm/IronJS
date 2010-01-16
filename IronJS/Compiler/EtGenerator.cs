@@ -983,23 +983,42 @@ namespace IronJS.Compiler
             else if(node.Target is Ast.MemberAccessNode)
             {
                 var target = (Ast.MemberAccessNode)node.Target;
-                var targetExpr = Generate(target.Target);
+                var tmp = Et.Variable(typeof(object), "#tmp");
+                var targetExpr = GenerateConvertToObject(
+                        Generate(target.Target)
+                    );
 
-                return Et.Dynamic(
-                    _context.CreateInvokeMemberBinder(
-                        target.Name,
-                        new CallInfo(args.Length + 1)
+                return Et.Block(
+                    new[] { tmp },
+                    Et.Assign(
+                        tmp,
+                        targetExpr
                     ),
-                    typeof(object),
-                    ArrayUtils.Insert(
-                        targetExpr,
-                        targetExpr,
-                        args
+                    Et.Dynamic(
+                        _context.CreateInvokeMemberBinder(
+                            target.Name,
+                            new CallInfo(args.Length + 1)
+                        ),
+                        typeof(object),
+                        ArrayUtils.Insert(
+                            tmp,
+                            tmp,
+                            args
+                        )
                     )
                 );
             }
 
             throw new NotImplementedException();
+        }
+
+        private Et GenerateConvertToObject(Et target)
+        {
+            return Et.Dynamic(
+                _context.CreateConvertBinder(typeof(IObj)),
+                typeof(object),
+                target
+            );
         }
 
         // 13

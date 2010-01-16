@@ -10,6 +10,7 @@ namespace IronJS.Runtime.Binders
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class JsInvokeBinder : InvokeBinder
     {
@@ -56,6 +57,26 @@ namespace IronJS.Runtime.Binders
                         target, 
                         args, 
                         RestrictFlag.Instance
+                    )
+                );
+            }
+
+            if (target.Value is Delegate)
+            {
+                var invoke = target.LimitType.GetMethod("Invoke");
+
+                return new Meta(
+                    AstUtils.SimpleCallHelper(
+                        Et.Convert(target.Expression, target.LimitType),
+                        invoke,
+                        DynamicUtils.GetExpressions(
+                            ArrayUtils.RemoveFirst(args)
+                        )
+                    ),
+                    RestrictUtils.BuildCallRestrictions(
+                        target,
+                        ArrayUtils.RemoveFirst(args),
+                        RestrictFlag.Type
                     )
                 );
             }

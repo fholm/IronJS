@@ -117,6 +117,7 @@
     <Compile Include="Runtime\BuiltIns.cs" />
     <Compile Include="Runtime\Builtins\MathObject.cs" />
     <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Js\ArrayObj.cs" />
     <Compile Include="Runtime\Js\Function.cs" />
     <Compile Include="Runtime\Js\IFrame.cs" />
     <Compile Include="Runtime\Js\IFunction.cs" />

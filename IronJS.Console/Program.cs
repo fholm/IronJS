@@ -37,6 +37,12 @@ namespace IronJS.Testing
                 VarType.Global
             );
 
+            context.SuperGlobals.Push(
+                "test",
+                context.CreateArray(),
+                VarType.Global
+            );
+
             var compiled = etGenerator.Build(astNodes, context);
             var globals = compiled.Run();
         }

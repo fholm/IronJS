@@ -4,15 +4,14 @@ using System.Text;
 
 namespace IronJS.Runtime.Js
 {
-    public class ArrayObj : IObj
+    public class ArrayObj : Obj
     {
-        protected object[] Array;
-        protected readonly Dictionary<object, Property> Properties =
-                       new Dictionary<object, Property>();
+        protected object[] Vector;
 
         public ArrayObj()
         {
-            Array = new object[8];
+            Vector = new object[0];
+            Properties["length"] = new Property(0.0D);
         }
 
         int AsArrayIndex(object name)
@@ -29,10 +28,11 @@ namespace IronJS.Runtime.Js
             if (name is string)
             {
                 int intval;
+                var strval = (string)name;
 
-                if(Int32.TryParse((string)name, out intval))
+                if (Int32.TryParse(strval, out intval))
                 {
-                    if (intval.ToString() == name)
+                    if (intval.ToString() == strval)
                         return intval;
                 }
             }
@@ -42,31 +42,59 @@ namespace IronJS.Runtime.Js
 
         object PutArray(int index, object value)
         {
-            throw new NotImplementedException();
+            if (index >= Vector.Length)
+            {
+                var newLength = Vector.Length > 0 ? Vector.Length * 2 : 2;
+                var newVector = new object[newLength < index ? index + 1 : newLength];
+                Array.Copy(Vector, newVector, Vector.Length);
+                Vector = newVector;
+                Properties["length"].Value = (double)index + 1;
+            }
+
+            return Vector[index] = value;
         }
 
         object PutProperty(object name, object value)
         {
-            throw new NotImplementedException();
+            if (name is string && (string)name == "length")
+            {
+                //TODO: should check length for being a proper number here
+                var intval = (int)(double)value;
+
+                // shrink
+                if (intval < Vector.Length)
+                {
+                    var newVector = new object[intval];
+                    Array.Copy(Vector, newVector, intval);
+                    Vector = newVector;
+                    Properties["length"].Value = (double)intval;
+                }
+
+                return value;
+            }
+
+            return base.Get(name);
         }
 
         object GetArray(int index)
         {
-            throw new NotImplementedException();
+            if (index < Vector.Length)
+            {
+                if (Vector[index] != null)
+                    return Vector[index];
+            }
+
+            return Js.Undefined.Instance;
         }
 
         object GetProperty(object name)
         {
-            throw new NotImplementedException();
+            return base.Get(name);
         }
 
         #region IObj Members
 
-        public ObjClass Class { get; protected set; }
-        public IObj Prototype { get; protected set; }
-        public Context Context { get; protected set; }
-
-        public object Get(object name)
+        public override object Get(object name)
         {
             var index = AsArrayIndex(name);
 
@@ -78,7 +106,7 @@ namespace IronJS.Runtime.Js
             return GetArray(index);
         }
 
-        public object Put(object name, object value)
+        public override object Put(object name, object value)
         {
             var index = AsArrayIndex(name);
 
@@ -90,44 +118,86 @@ namespace IronJS.Runtime.Js
             return PutArray(index, value);
         }
 
-        public bool CanPut(object name)
+        public override bool CanPut(object name)
         {
-            throw new NotImplementedException();
+            //TODO: this should properly use attributes
+            return true;
         }
 
-        public bool HasProperty(object name)
+        public override bool HasProperty(object name)
         {
-            throw new NotImplementedException();
+            var index = AsArrayIndex(name);
+
+            // not array index
+            if (index == -1)
+                return base.HasProperty(name);
+
+            // array index
+            return index < Vector.Length;
         }
 
-        public bool Delete(object name)
+        public override bool Delete(object name)
         {
-            throw new NotImplementedException();
+            var index = AsArrayIndex(name);
+
+            // not array index
+            if (index == -1)
+                return base.Delete(name);
+
+            // array index
+            if (index < Vector.Length)
+            {
+                Vector[index] = null;
+                return true;
+            }
+
+            return false;
         }
 
-        public object DefaultValue(ValueHint hint)
+        public override bool HasOwnProperty(object name)
         {
-            throw new NotImplementedException();
+            var index = AsArrayIndex(name);
+
+            // not array index
+            if (index == -1)
+                return base.HasOwnProperty(name);
+
+            // array index
+            return index < Vector.Length;
         }
 
-        public bool HasOwnProperty(object name)
+        public override object SetOwnProperty(object name, object value)
         {
-            throw new NotImplementedException();
+            var index = AsArrayIndex(name);
+
+            // not array index
+            if (index == -1)
+                return base.SetOwnProperty(name, value);
+
+            // array index
+            return PutArray(index, value);
         }
 
-        public object SetOwnProperty(object name, object value)
+        public override object GetOwnProperty(object name)
         {
-            throw new NotImplementedException();
+            var index = AsArrayIndex(name);
+
+            // not array index
+            if (index == -1)
+                return base.GetOwnProperty(name);
+
+            // array index
+            return GetArray(index);
         }
 
-        public object GetOwnProperty(object name)
+        public override List<object> GetAllPropertyNames()
         {
-            throw new NotImplementedException();
-        }
+            var baseProps = base.GetAllPropertyNames();
 
-        public List<object> GetAllPropertyNames()
-        {
-            throw new NotImplementedException();
+            for (int i = 0; i < Vector.Length; ++i)
+                baseProps.Add((object)(double)i);
+
+            return baseProps;
         }
 
         #endregion

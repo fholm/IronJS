@@ -98,6 +98,17 @@ namespace IronJS.Runtime
             return obj;
         }
 
+        public IObj CreateArray()
+        {
+            var obj = new ArrayObj();
+
+            obj.Context = this;
+            obj.Class = ObjClass.Array;
+            obj.Prototype = ObjectPrototype;
+
+            return obj;
+        }
+
         public IFunction CreateFunction(IFrame frame, Lambda lambda)
         {
             var obj = new Function(frame, lambda);

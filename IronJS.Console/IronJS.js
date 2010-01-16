@@ -7,11 +7,20 @@ bar = {};
 bar.x = 2;
 */
 
+/*
 print(Math.abs("-3.14"));
 print(Math.abs());
 print(Math.max(1, 10, 20, 5));
 print(Math.min(5, 6, 3, 10));
 print(Math.PI.toString());
+*/
+
+test[0] = "foo";
+test[10] = "bar";
+
+println(test.length);
+
+println(test[8]);
 
 /*
 try {

@@ -286,9 +286,6 @@ namespace IronJS.Compiler
             var innerContinue = Et.Label("#tmp-forin-inner-continue");
             var outerBreak = Et.Label("#tmp-forin-outer-break");
 
-            var outerLoop = 
-;
-
             return Et.Block(
                 new[] { obj, keys, set, current },
                 // IObj obj = <node.Source>

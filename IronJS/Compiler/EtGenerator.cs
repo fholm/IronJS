@@ -219,6 +219,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.IndexAccess:
                     return GenerateIndexAccess((Ast.IndexAccessNode)node);
 
+                case Ast.NodeType.Delete:
+                    return GenerateDelete((Ast.DeleteNode)node);
+
                 #region Constants
 
                 case Ast.NodeType.Number:
@@ -235,6 +238,36 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateDelete(Ast.DeleteNode node)
+        {
+            if (node.Target is Ast.MemberAccessNode)
+            {
+                var maNode = (Ast.MemberAccessNode)node.Target;
+
+                return EtUtils.Box(Et.Dynamic(
+                    _context.CreateDeleteMemberBinder(maNode.Name),
+                    typeof(void),
+                    Generate(maNode.Target)
+                ));
+            }
+
+            if (node.Target is Ast.IndexAccessNode)
+            {
+                var iaNode = (Ast.IndexAccessNode)node.Target;
+
+                return EtUtils.Box(Et.Dynamic(
+                    _context.CreateDeleteIndexBinder(
+                        new CallInfo(1)
+                    ),
+                    typeof(void),
+                    Generate(iaNode.Target),
+                    Generate(iaNode.Index)
+                ));
+            }
+
+            throw new NotImplementedException();
         }
 
         private Et GenerateForIn(Ast.ForInNode node)
@@ -371,7 +404,7 @@ namespace IronJS.Compiler
                                             current
                                         ),
                                         // <node.Target> = current;
-                                        BuildAssign(
+                                        GenerateAssign(
                                             node.Target,
                                             current
                                         ),
@@ -434,7 +467,7 @@ namespace IronJS.Compiler
                 var catchParam = Et.Parameter(typeof(object), "#catch");
 
                 var catchBody = Et.Block(
-                    BuildAssign(
+                    GenerateAssign(
                         node.Catch.Target, 
                         catchParam
                     ),
@@ -720,7 +753,7 @@ namespace IronJS.Compiler
                 ),
 
                 // calc new value
-                BuildAssign(
+                GenerateAssign(
                     node.Target,
                     EtUtils.Box(
                         Et.Add(
@@ -1019,11 +1052,11 @@ namespace IronJS.Compiler
         // 11.13.1
         private Et GenerateAssign(Ast.AssignNode node)
         {
-            return BuildAssign(node.Target, Generate(node.Value));
+            return GenerateAssign(node.Target, Generate(node.Value));
         }
 
         // 11.13.1
-        private Et BuildAssign(Ast.Node target, Et value)
+        private Et GenerateAssign(Ast.Node target, Et value)
         {
             if (target is Ast.IdentifierNode)
             {

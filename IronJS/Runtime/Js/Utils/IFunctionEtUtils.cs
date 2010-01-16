@@ -144,7 +144,7 @@ namespace IronJS.Runtime.Js.Utils
                 exprs.Add(
                     IObjEtUtils.SetOwnProperty(
                         argsObj,
-                        i,
+                        i.ToString(),
                         EtUtils.Box(args[i])
                     )
                 );

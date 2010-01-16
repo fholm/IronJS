@@ -163,6 +163,11 @@ namespace IronJS.Runtime
             return new JsSetIndexBinder(callInfo, this);
         }
 
+        internal JsDeleteIndexBinder CreateDeleteIndexBinder(CallInfo callInfo)
+        {
+            return new JsDeleteIndexBinder(callInfo, this);
+        }
+
         internal JsGetMemberBinder CreateGetMemberBinder(object name)
         {
             return new JsGetMemberBinder(name, this);
@@ -171,6 +176,11 @@ namespace IronJS.Runtime
         internal JsSetMemberBinder CreateSetMemberBinder(object name)
         {
             return new JsSetMemberBinder(name, this);
+        }
+
+        internal JsDeleteMemberBinder CreateDeleteMemberBinder(object name)
+        {
+            return new JsDeleteMemberBinder(name, this);
         }
 
         internal JsInvokeBinder CreateInvokeBinder(CallInfo callInfo)

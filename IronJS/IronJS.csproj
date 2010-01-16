@@ -77,6 +77,7 @@
     <Compile Include="Compiler\Ast\CatchNode.cs" />
     <Compile Include="Compiler\CodeUnit.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
+    <Compile Include="Compiler\Ast\DeleteNode.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
@@ -95,6 +96,8 @@
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />
+    <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs" />
+    <Compile Include="Runtime\Binders\JsDeleteMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
     <Compile Include="Runtime\Binders\JsConvertBinder.cs" />

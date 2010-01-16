@@ -45,12 +45,6 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="indexes"></param>
-        /// <returns></returns>
         public override Meta BindGetIndex(GetIndexBinder binder, Meta[] indexes)
         {
             //TODO: insert defer
@@ -68,11 +62,23 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <returns></returns>
+        public override Meta BindDeleteIndex(DeleteIndexBinder binder, Meta[] indexes)
+        {
+            //TODO: insert defer
+
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Delete"),
+                    EtUtils.Box(indexes[0].Expression)
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression,
+                    this.LimitType
+                )
+            );
+        }
+
         public override Meta BindGetMember(GetMemberBinder binder)
         {
             //TODO: insert defer
@@ -90,12 +96,6 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public override Meta BindSetMember(SetMemberBinder binder, Meta value)
         {
             //TODO: insert defer
@@ -114,12 +114,21 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
+        public override Meta BindDeleteMember(DeleteMemberBinder binder)
+        {
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<IObj>(this.Expression),
+                    typeof(IObj).GetMethod("Delete"),
+                    Et.Constant(binder.Name)
+                ),
+                Restrict.GetTypeRestriction(
+                    this.Expression,
+                    this.LimitType
+                )
+            );
+        }
+
         public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
         {
             //TODO: insert defer

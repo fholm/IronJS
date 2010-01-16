@@ -52,7 +52,7 @@ namespace IronJS.Runtime.Js
         {
             Property prop;
 
-            if (Properties.TryGetValue(key.ToString(), out prop))
+            if (Properties.TryGetValue(key, out prop))
                 return prop.Value;
 
             if (Prototype != null)
@@ -90,7 +90,7 @@ namespace IronJS.Runtime.Js
 
         public virtual bool HasOwnProperty(object key)
         {
-            return Properties.ContainsKey(key.ToString());
+            return Properties.ContainsKey(key);
         }
 
         public virtual object GetOwnProperty(object key)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using IronJS.Runtime.Utils;
 
-namespace IronJS.Runtime.Js
+namespace IronJS.Runtime.Js.Utils
 {
     using Et = System.Linq.Expressions.Expression;
     using Parm = System.Linq.Expressions.ParameterExpression;
@@ -12,7 +12,7 @@ namespace IronJS.Runtime.Js
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    public static class TypeConverter
+    public static class EtTypeConverter
     {
         public static Et ToBoolean(Meta obj)
         {

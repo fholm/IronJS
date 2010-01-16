@@ -15,6 +15,7 @@ namespace IronJS.Runtime.Binders
     using ParamEt = System.Linq.Expressions.ParameterExpression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using IronJS.Runtime.Js.Utils;
 
     class JsBinaryOpBinder : BinaryOperationBinder
     {
@@ -48,8 +49,8 @@ namespace IronJS.Runtime.Binders
                     {
                         expr = Et.Call(
                             typeof(string).GetMethod("Concat", new[] { typeof(string), typeof(string) }),
-                            TypeConverter.ToString(target),
-                            TypeConverter.ToString(arg)
+                            EtTypeConverter.ToString(target),
+                            EtTypeConverter.ToString(arg)
                         );
                     }
                     // step 1 - 6 and 8 - 11
@@ -57,8 +58,8 @@ namespace IronJS.Runtime.Binders
                     {
                         //TODO: verify handling of NaN and Infinity
                         expr = Et.Add(
-                            TypeConverter.ToNumber(target),
-                            TypeConverter.ToNumber(arg)
+                            EtTypeConverter.ToNumber(target),
+                            EtTypeConverter.ToNumber(arg)
                         );
                     }
                     break;
@@ -70,8 +71,8 @@ namespace IronJS.Runtime.Binders
                     //TODO: verify handling of NaN and Infinity
                     expr = Et.MakeBinary(
                         Operation,
-                        TypeConverter.ToNumber(target),
-                        TypeConverter.ToNumber(arg)
+                        EtTypeConverter.ToNumber(target),
+                        EtTypeConverter.ToNumber(arg)
                     );
                     break;
 
@@ -94,8 +95,8 @@ namespace IronJS.Runtime.Binders
                             // step 1 - 2 are implicit in ToNumber
                             //TODO: verify handling of NaN and Infinity
                             //TODO: might need a double.NaN > Js.Undefined.Instance cast
-                            TypeConverter.ToNumber(target),
-                            TypeConverter.ToNumber(arg)
+                            EtTypeConverter.ToNumber(target),
+                            EtTypeConverter.ToNumber(arg)
                         );
                     }
                     break;
@@ -239,8 +240,8 @@ namespace IronJS.Runtime.Binders
                 )
                 {
                     return Et.Equal(
-                        TypeConverter.ToNumber(target),
-                        TypeConverter.ToNumber(arg)
+                        EtTypeConverter.ToNumber(target),
+                        EtTypeConverter.ToNumber(arg)
                     );
                 }
                 // step 20
@@ -250,14 +251,14 @@ namespace IronJS.Runtime.Binders
                     {
                         return Et.Equal(
                             targetAsLimit,
-                            TypeConverter.ToNumber(arg)
+                            EtTypeConverter.ToNumber(arg)
                         );
                     }
                     else if (target.LimitType == typeof(string))
                     {
                         return Et.Equal(
                             targetAsLimit,
-                            TypeConverter.ToString(arg)
+                            EtTypeConverter.ToString(arg)
                         );
                     }
                     else
@@ -271,14 +272,14 @@ namespace IronJS.Runtime.Binders
                     if (arg.LimitType == typeof(double))
                     {
                         return Et.Equal(
-                            TypeConverter.ToNumber(target),
+                            EtTypeConverter.ToNumber(target),
                             argAsLimit
                         );
                     }
                     else if (arg.LimitType == typeof(string))
                     {
                         return Et.Equal(
-                            TypeConverter.ToString(target),
+                            EtTypeConverter.ToString(target),
                             argAsLimit
                         );
                     }

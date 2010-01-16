@@ -24,6 +24,8 @@ namespace IronJS.Runtime
         public IObj BooleanPrototype { get; protected set; }
         public IObj NumberPrototype { get; protected set; }
 
+        public IObj Math { get; protected set; }
+
         protected Context()
         {
             SuperGlobals = new Frame();
@@ -54,8 +56,9 @@ namespace IronJS.Runtime
                     new string[] { }.ToList()
                 )
             );
-
             BooleanPrototype = CreateObject();
+
+            Math = Builtins.MathObject.Create(this);
         }
 
         internal IFrame Run(Action<IFrame> delegat)
@@ -259,6 +262,7 @@ namespace IronJS.Runtime
             ctx.SuperGlobals.Push("undefined", Js.Undefined.Instance, VarType.Global);
             ctx.SuperGlobals.Push("Infinity", double.PositiveInfinity, VarType.Global);
             ctx.SuperGlobals.Push("NaN", double.NaN, VarType.Global);
+            ctx.SuperGlobals.Push("Math", ctx.Math, VarType.Global);
 
             return ctx;
         }
@@ -275,13 +279,6 @@ namespace IronJS.Runtime
 
         static public object ObjectConstructorLambda(IObj that, IFrame frame)
         {
-            var value = (frame as Frame).Arg("value");
-
-            if (value != null || value == Js.Undefined.Instance)
-            {
-                throw new NotImplementedException("ToObject() not implemented");
-            }
-
             return null;
         }
 

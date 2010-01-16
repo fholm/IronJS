@@ -63,16 +63,6 @@ namespace IronJS.Compiler
                 )
             );
 
-            //TODO: remove after debugging
-            buildLambdaExprs.Add(
-                IFrameEtUtils.Push(
-                    _functionScope.FrameExpr, 
-                    "functbl", 
-                    _tableExpr, 
-                    VarType.Local
-                )
-            );
-
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
@@ -448,7 +438,10 @@ namespace IronJS.Compiler
         private Et GenerateThrow(Ast.ThrowNode node)
         {
             return Et.Throw(
-                Generate(node.Target)
+                AstUtils.SimpleNewHelper(
+                    typeof(RuntimeError).GetConstructor(new[] { typeof(IObj) }),
+                    Generate(node.Target)
+                )
             );
         }
 
@@ -469,9 +462,14 @@ namespace IronJS.Compiler
                 var catchBody = Et.Block(
                     GenerateAssign(
                         node.Catch.Target, 
-                        catchParam
+                        Et.Property(
+                            Et.Convert(catchParam, typeof(RuntimeError)),
+                            "Obj"
+                        )
                     ),
-                    Generate(node.Catch.Body)
+                    Et.Block(
+                        Generate(node.Catch.Body)
+                    )
                 );
 
                 var catchBlock = Et.Catch(

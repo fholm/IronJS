@@ -1,14 +1,28 @@
 ﻿
+/*
 print(true.toString());
 print((3.14).toString());
 
 bar = {};
 bar.x = 2;
+*/
+
+print(Math.abs("-3.14"));
+print(Math.abs());
+print(Math.max(1, 10, 20, 5));
+print(Math.min(5, 6, 3, 10));
+print(Math.PI.toString());
+
+/*
+try {
+    throw bar;
+} catch (x) {
+    print(x.x);
+}
 
 prettyPrint = function (str) {
     println("~*~ " + str + " ~*~");
 };
-
 
 address = function (street, zipcode, city) {
     this.street = street;
@@ -48,8 +62,6 @@ with (fredrik) {
 
 println("foo".lol); // <- undefined
 
-
-
 foo = { "a": 1, "b": 2, "c": 3 };
 
 delete foo.a;
@@ -58,3 +70,4 @@ delete foo["c"];
 for (bar.key in foo) {
     println(bar.key + ": " + foo[bar.key]);
 };
+*/

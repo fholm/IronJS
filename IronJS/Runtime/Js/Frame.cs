@@ -44,7 +44,7 @@ namespace IronJS.Runtime.Js
             if (_values.TryGetValue(key, out value))
                 return value;
 
-            return null;
+            return Js.Undefined.Instance;
         }
 
         #region IFrame Members

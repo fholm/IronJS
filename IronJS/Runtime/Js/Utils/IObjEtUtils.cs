@@ -12,12 +12,12 @@ namespace IronJS.Runtime.Js.Utils
 
     static class IObjEtUtils
     {
-        static internal Et SetOwnProperty(Et target, string name, Et value)
+        static internal Et SetOwnProperty(Et target, object name, Et value)
         {
             return Et.Call(
                 target,
                 typeof(IObj).GetMethod("SetOwnProperty"),
-                Et.Constant(name),
+                Et.Constant(name, typeof(object)),
                 value
             );
         }

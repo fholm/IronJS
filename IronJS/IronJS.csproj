@@ -115,6 +115,7 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Builtins\MathObject.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\Function.cs" />
     <Compile Include="Runtime\Js\IFrame.cs" />
@@ -138,7 +139,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Table.cs" />
-    <Compile Include="Runtime\Js\TypeConverter.cs" />
+    <Compile Include="Runtime\Js\Utils\EtTypeConverter.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -158,6 +159,7 @@
     <Compile Include="Runtime\Utils\RestrictUtils.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Utils\TypeConverter.cs" />
     <Compile Include="Tuple.cs" />
   </ItemGroup>
   <ItemGroup>

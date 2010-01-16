@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
 
@@ -11,6 +12,12 @@ namespace IronJS.Runtime.Js
     {
         public Func<IObj, IFrame, object> Delegate { get; protected set; }
         public List<string> Params { get; protected set; }
+
+        public Lambda(Func<IObj, IFrame, object> func, string[] parms)
+            : this(func, parms.ToList())
+        {
+
+        }
 
         public Lambda(Func<IObj, IFrame, object> func)
             : this(func, new List<string>())

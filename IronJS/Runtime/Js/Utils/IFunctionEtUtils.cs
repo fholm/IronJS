@@ -124,6 +124,14 @@ namespace IronJS.Runtime.Js.Utils
                 )
             );
 
+            exprs.Add(
+                IObjEtUtils.SetOwnProperty(
+                    argsObj,
+                    "length",
+                    Et.Constant((double)args.Length, typeof(object))
+                )
+            );
+
             for (int i = 0; i < args.Length; ++i)
             {
                 // only args with param names
@@ -144,7 +152,7 @@ namespace IronJS.Runtime.Js.Utils
                 exprs.Add(
                     IObjEtUtils.SetOwnProperty(
                         argsObj,
-                        i.ToString(),
+                        i,
                         EtUtils.Box(args[i])
                     )
                 );

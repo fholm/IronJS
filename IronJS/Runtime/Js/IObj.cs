@@ -42,6 +42,7 @@ namespace IronJS.Runtime.Js
         bool HasOwnProperty(object name);
         object SetOwnProperty(object name, object value);
         object GetOwnProperty(object name);
+        List<object> GetAllPropertyNames();
     }
 
     public static class IObjMethods

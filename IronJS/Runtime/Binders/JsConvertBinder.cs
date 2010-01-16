@@ -38,7 +38,9 @@ namespace IronJS.Runtime.Binders
 
             if (Type == typeof(Js.IObj))
                 return new Meta(
-                    TypeConverter.ToObject(target, _context),
+                    EtUtils.Cast<IObj>(
+                        TypeConverter.ToObject(target, _context)
+                    ),
                     restrictions
                 );
 

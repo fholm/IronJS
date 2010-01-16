@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Runtime.Utils;
@@ -39,7 +40,7 @@ namespace IronJS.Runtime.Js
         public ObjClass Class { get; set; }
         public IObj Prototype { get; set; }
 
-        public object DefaultValue(ValueHint hint)
+        public virtual object DefaultValue(ValueHint hint)
         {
             if (hint == ValueHint.Number)
                 return 1.0;
@@ -47,7 +48,7 @@ namespace IronJS.Runtime.Js
             return "";
         }
 
-        public object Get(object key)
+        public virtual object Get(object key)
         {
             Property prop;
 
@@ -60,7 +61,7 @@ namespace IronJS.Runtime.Js
             return Js.Undefined.Instance;
         }
 
-        public object Put(object key, object value)
+        public virtual object Put(object key, object value)
         {
             IObj obj = this;
 
@@ -76,7 +77,7 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
-        public bool CanPut(object key)
+        public virtual bool CanPut(object key)
         {
             if (Properties.ContainsKey(key))
                 return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
@@ -87,12 +88,12 @@ namespace IronJS.Runtime.Js
             return true;
         }
 
-        public bool HasOwnProperty(object key)
+        public virtual bool HasOwnProperty(object key)
         {
             return Properties.ContainsKey(key.ToString());
         }
 
-        public object GetOwnProperty(object key)
+        public virtual object GetOwnProperty(object key)
         {
             Property property;
 
@@ -102,13 +103,13 @@ namespace IronJS.Runtime.Js
             return Js.Undefined.Instance;
         }
 
-        public object SetOwnProperty(object key, object value)
+        public virtual object SetOwnProperty(object key, object value)
         {
             Properties[key] = new Property(value);
             return value;
         }
 
-        public bool HasProperty(object name)
+        public virtual bool HasProperty(object name)
         {
             if (HasOwnProperty(name))
                 return true;
@@ -119,9 +120,17 @@ namespace IronJS.Runtime.Js
             return false;
         }
 
-        public bool Delete(object name)
+        public virtual bool Delete(object name)
         {
-            throw new NotImplementedException();
+            if (HasOwnProperty(name))
+                return Properties.Remove(name);
+
+            throw new NotImplementedException("Deleting properties in Prototype not supported");
+        }
+
+        public virtual List<object> GetAllPropertyNames()
+        {
+            return Properties.Keys.ToList();
         }
 
         #endregion

@@ -198,6 +198,9 @@ namespace IronJS.Compiler
                 case Ast.NodeType.ForStep:
                     return GenerateForStep((Ast.ForStepNode)node);
 
+                case Ast.NodeType.ForIn:
+                    return GenerateForIn((Ast.ForInNode)node);
+
                 case Ast.NodeType.Break:
                     return GenerateBreak((Ast.BreakNode)node);
 
@@ -232,6 +235,174 @@ namespace IronJS.Compiler
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
+        }
+
+        private Et GenerateForIn(Ast.ForInNode node)
+        {
+            /*
+            IObj obj = <node.Source>
+            IEnumerator<object> keys = null;
+            var set = new HashSet<object>();
+            object current = null;
+
+            while (true)
+            {
+                if (obj == null)
+                    break;
+
+                keys = obj.GetAllPropertyNames().GetEnumerator();
+
+                while (true)
+                {
+                    if (!keys.MoveNext())
+                        break;
+
+                    current = keys.Current;
+
+                    if (set.Contains(current))
+                        continue;
+
+                    if (obj.HasOwnProperty(current))
+                    {
+                        set.Add(current);
+                        <node.Target> = current;
+                        <node.Body>
+                    }
+                }
+
+                keys.Dispose();
+                obj = obj.Prototype;
+            }
+            */
+
+            // tmp variables
+            var obj = Et.Variable(typeof(IObj), "#tmp-forin-obj");
+            var keys = Et.Variable(typeof(List<object>.Enumerator), "#tmp-forin-keys"); // IEnumerator<object> keys = null;
+            var set = Et.Variable(typeof(HashSet<object>), "#tmp-forin-set");
+            var current = Et.Variable(typeof(object), "#tmp-forin-current"); // object current = null;
+
+            // labels
+            var innerBreak = Et.Label("#tmp-forin-inner-break");
+            var innerContinue = Et.Label("#tmp-forin-inner-continue");
+            var outerBreak = Et.Label("#tmp-forin-outer-break");
+
+            var outerLoop = 
+;
+
+            return Et.Block(
+                new[] { obj, keys, set, current },
+                // IObj obj = <node.Source>
+                Et.Assign(
+                    obj,
+                    Et.Dynamic(
+                        _context.CreateConvertBinder(typeof(IObj)),
+                        typeof(IObj),
+                        Generate(node.Source)
+                    )
+                ),
+                // var set = new HashSet<object>();
+                Et.Assign(
+                    set,
+                    AstUtils.SimpleNewHelper(
+                        typeof(HashSet<object>).GetConstructor(Type.EmptyTypes)
+                    )
+                ),
+                // while(true) {
+                Et.Loop(
+                    Et.Block(
+                        // if(obj == null) 
+                        Et.IfThen( 
+                            Et.Equal(obj, Et.Default(typeof(IObj))),
+                            // break;
+                            Et.Break(outerBreak)
+                        ),
+                        // keys = obj.GetAllPropertyNames().GetEnumerator();
+                        Et.Assign(
+                            keys, 
+                            Et.Call(
+                                Et.Call(
+                                    obj,
+                                    typeof(IObj).GetMethod("GetAllPropertyNames")
+                                ),
+                                typeof(List<object>).GetMethod("GetEnumerator")
+                            )
+                        ),
+                        // while(true) {
+                        Et.Loop(
+                            Et.Block(
+                                // if (!keys.MoveNext())
+                                Et.IfThen(
+                                    Et.Not(
+                                        Et.Call(
+                                            keys,
+                                            typeof(List<object>.Enumerator).GetMethod("MoveNext")
+                                        )
+                                    ),
+                                    // break;
+                                    Et.Break(innerBreak)
+                                ),
+                                // current = keys.Current;
+                                Et.Assign(
+                                    current,
+                                    Et.Property(
+                                        keys,
+                                        "Current"
+                                    )
+                                ),
+                                // if (set.Contains(current))
+                                Et.IfThen(
+                                    Et.Call(
+                                        set,
+                                        typeof(HashSet<object>).GetMethod("Contains"),
+                                        current
+                                    ),
+                                    //  continue;
+                                    Et.Continue(innerContinue)
+                                ),
+                                // if (obj.HasOwnProperty(current)) {
+                                Et.IfThen(
+                                    Et.Call(
+                                        obj,
+                                        typeof(IObj).GetMethod("HasOwnProperty"),
+                                        current
+                                    ),
+                                    Et.Block(
+                                        // set.Add(current);
+                                        Et.Call(
+                                            set,
+                                            typeof(HashSet<object>).GetMethod("Add"),
+                                            current
+                                        ),
+                                        // <node.Target> = current;
+                                        BuildAssign(
+                                            node.Target,
+                                            current
+                                        ),
+                                        // <node.Body>
+                                        Generate(node.Body)
+                                    )
+                                )
+                            ),
+                            innerBreak,
+                            innerContinue
+                        ),
+                        // keys.Dispose();
+                        Et.Call(
+                            keys,
+                            typeof(List<object>.Enumerator).GetMethod("Dispose")
+                        ),
+                        // obj = obj.Prototype;
+                        Et.Assign(
+                            obj,
+                            Et.Property(
+                                obj,
+                                "Prototype"
+                            )
+                        )
+                    ),
+                    outerBreak
+                )
+            );
         }
 
         private Et GenerateIndexAccess(Ast.IndexAccessNode node)

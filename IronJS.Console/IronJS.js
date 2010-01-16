@@ -45,6 +45,7 @@ user = function (name, age) {
     };
 };
 
+user.prototype.lol = "tjo";
 fredrik = new user("Fredrik", 24);
 anders = new user("Anders", 22);
 
@@ -55,4 +56,11 @@ with (fredrik) {
     prettyPrint(" hello world ");
 }
 
-print("foo".lol); // <- undefined
+println("foo".lol); // <- undefined
+
+
+for (k in fredrik) {
+
+    println(k + ": " + fredrik[k]);
+
+};

@@ -2,6 +2,7 @@
 using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
+using System.Collections.Generic;
 
 namespace IronJS.Testing
 {
@@ -9,6 +10,7 @@ namespace IronJS.Testing
     {
         static void Main(string[] args)
         {
+            var context = Context.Setup();
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
@@ -16,8 +18,6 @@ namespace IronJS.Testing
 
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
-
-            Context context = Context.Setup();
 
             context.SuperGlobals.Push(
                 "print", 

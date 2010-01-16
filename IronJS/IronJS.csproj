@@ -115,6 +115,7 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Builtins\ArrayObject.cs" />
     <Compile Include="Runtime\Builtins\MathObject.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />

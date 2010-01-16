@@ -9,6 +9,16 @@ namespace IronJS.Runtime.Utils
 {
     static class TypeConverter
     {
+        static internal int ToInt32(object obj)
+        {
+            var dbl = ToNumber(obj);
+
+            if (double.IsNaN(dbl) || double.IsInfinity(dbl))
+                return 0;
+
+            return Convert.ToInt32(dbl);
+        }
+
         static internal double ToNumber(object obj)
         {
             if (obj == null)

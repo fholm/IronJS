@@ -843,7 +843,6 @@ namespace IronJS.Compiler
             var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 
-            
             exprs.Add(
                 Et.Assign(
                     tmp,

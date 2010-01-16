@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js
 {
@@ -44,12 +45,18 @@ namespace IronJS.Runtime.Js
         {
             if (index >= Vector.Length)
             {
-                var newLength = Vector.Length > 0 ? Vector.Length * 2 : 2;
-                var newVector = new object[newLength < index ? index + 1 : newLength];
+                int newSize = Vector.Length == 0 ? 1 : Vector.Length;
+
+                while (index >= newSize)
+                    newSize *= 2;
+
+                var newVector = new object[newSize];
                 Array.Copy(Vector, newVector, Vector.Length);
                 Vector = newVector;
-                Properties["length"].Value = (double)index + 1;
             }
+
+            if (index > (int)(double)(Properties["length"].Value))
+                Properties["length"].Value = (double)(index + 1);
 
             return Vector[index] = value;
         }
@@ -58,8 +65,7 @@ namespace IronJS.Runtime.Js
         {
             if (name is string && (string)name == "length")
             {
-                //TODO: should check length for being a proper number here
-                var intval = (int)(double)value;
+                var intval = (int)TypeConverter.ToNumber(value);
 
                 // shrink
                 if (intval < Vector.Length)
@@ -116,12 +122,6 @@ namespace IronJS.Runtime.Js
 
             // array index
             return PutArray(index, value);
-        }
-
-        public override bool CanPut(object name)
-        {
-            //TODO: this should properly use attributes
-            return true;
         }
 
         public override bool HasProperty(object name)

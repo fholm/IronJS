@@ -13,18 +13,21 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame SuperGlobals { get; protected set; }
+        public IFrame SuperGlobals { get; set; }
 
-        public IFunction Object { get; protected set; }
-        public IObj ObjectPrototype { get; protected set; }
+        public IFunction Object { get; set; }
+        public IObj ObjectPrototype { get; set; }
 
-        public IFunction Function { get; protected set; }
-        public IFunction FunctionPrototype { get; protected set; }
+        public IFunction Function { get; set; }
+        public IFunction FunctionPrototype { get; set; }
 
-        public IObj BooleanPrototype { get; protected set; }
-        public IObj NumberPrototype { get; protected set; }
+        public IObj BooleanPrototype { get; set; }
+        public IObj NumberPrototype { get; set; }
 
         public IObj Math { get; protected set; }
+
+        public IObj ArrayPrototype { get; protected set; }
+        public IFunction ArrayConstructor { get; protected set; }
 
         protected Context()
         {
@@ -59,6 +62,10 @@ namespace IronJS.Runtime
             BooleanPrototype = CreateObject();
 
             Math = Builtins.MathObject.Create(this);
+
+            // Array.prototype and Array
+            ArrayPrototype = Builtins.ArrayObject.CreatePrototype(this);
+            ArrayConstructor = Builtins.ArrayObject.CreateConstructor(this);
         }
 
         internal IFrame Run(Action<IFrame> delegat)
@@ -104,7 +111,7 @@ namespace IronJS.Runtime
 
             obj.Context = this;
             obj.Class = ObjClass.Array;
-            obj.Prototype = ObjectPrototype;
+            obj.Prototype = ArrayPrototype;
 
             return obj;
         }

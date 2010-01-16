@@ -15,12 +15,10 @@ print(Math.min(5, 6, 3, 10));
 print(Math.PI.toString());
 */
 
-test[0] = "foo";
-test[10] = "bar";
+for(var i = 0; i < 10; ++i)
+    test[i] = "#" + i.toString();
 
-println(test.length);
-
-println(test[8]);
+print(test.length);
 
 /*
 try {

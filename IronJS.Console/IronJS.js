@@ -15,11 +15,8 @@ print(Math.min(5, 6, 3, 10));
 print(Math.PI.toString());
 */
 
-try {
-    throw ({ lol: "foo" });
-} catch (ex) {
-    print(ex);
-}
+for(var k = 0; k < 1000; ++k)
+{
 
 for(var i = 0; i < 10; ++i)
     test[i] = "#" + i.toString();
@@ -79,3 +76,4 @@ delete foo["c"];
 for (key in foo) {
     println(key + ": " + foo[key]);
 };
+}

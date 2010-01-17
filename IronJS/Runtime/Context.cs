@@ -76,6 +76,7 @@ namespace IronJS.Runtime
             globals.Put("Infinity", double.PositiveInfinity);
             globals.Put("NaN", double.NaN);
             globals.Put("Math", Math);
+            globals.Put("globals", globals);
 
             setup(globals);
             target(globals);

@@ -476,8 +476,7 @@ namespace IronJS.Compiler
 
                 var catchBlock = Et.Catch(
                     catchParam, 
-                    catchBody,
-                    Et.TypeEqual(catchParam, typeof(RuntimeError))
+                    catchBody
                 );
 
                 var tryBody = EtUtils.Box(Generate(node.Body));

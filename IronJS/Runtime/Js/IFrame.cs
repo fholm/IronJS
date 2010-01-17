@@ -2,7 +2,6 @@
 
 namespace IronJS.Runtime.Js
 {
-    //TODO: Might need to add Arg() here for conveniance
     public interface IFrame
     {
         IFrame Enter();

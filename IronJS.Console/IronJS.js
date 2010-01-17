@@ -15,6 +15,12 @@ print(Math.min(5, 6, 3, 10));
 print(Math.PI.toString());
 */
 
+try {
+    throw ({ lol: "foo" });
+} catch (ex) {
+    print(ex);
+}
+
 for(var i = 0; i < 10; ++i)
     test[i] = "#" + i.toString();
 

@@ -30,7 +30,7 @@ namespace IronJS.Runtime.Builtins
             // Math.abs
             math.SetOwnProperty("abs",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -48,7 +48,7 @@ namespace IronJS.Runtime.Builtins
             // Math.acos
             math.SetOwnProperty("acos",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -66,7 +66,7 @@ namespace IronJS.Runtime.Builtins
             // Math.asin
             math.SetOwnProperty("asin",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -84,7 +84,7 @@ namespace IronJS.Runtime.Builtins
             // Math.atan
             math.SetOwnProperty("atan",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -102,7 +102,7 @@ namespace IronJS.Runtime.Builtins
             // Math.atan2
             math.SetOwnProperty("atan2",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -119,7 +119,7 @@ namespace IronJS.Runtime.Builtins
             // Math.ceil
             math.SetOwnProperty("ceil",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -135,7 +135,7 @@ namespace IronJS.Runtime.Builtins
             // Math.cos
             math.SetOwnProperty("cos",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -151,7 +151,7 @@ namespace IronJS.Runtime.Builtins
             // Math.exp
             math.SetOwnProperty("exp",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -167,7 +167,7 @@ namespace IronJS.Runtime.Builtins
             // Math.floor
             math.SetOwnProperty("floor",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -183,7 +183,7 @@ namespace IronJS.Runtime.Builtins
             // Math.log
             math.SetOwnProperty("log",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -199,7 +199,7 @@ namespace IronJS.Runtime.Builtins
             // Math.max
             math.SetOwnProperty("max",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -226,7 +226,7 @@ namespace IronJS.Runtime.Builtins
             // Math.min
             math.SetOwnProperty("min",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -253,7 +253,7 @@ namespace IronJS.Runtime.Builtins
             // Math.pow
             math.SetOwnProperty("pow",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -270,7 +270,7 @@ namespace IronJS.Runtime.Builtins
             // Math.random
             math.SetOwnProperty("random",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -288,7 +288,7 @@ namespace IronJS.Runtime.Builtins
             // Math.round
             math.SetOwnProperty("round",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -304,7 +304,7 @@ namespace IronJS.Runtime.Builtins
             // Math.round
             math.SetOwnProperty("sin",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -320,7 +320,7 @@ namespace IronJS.Runtime.Builtins
             // Math.round
             math.SetOwnProperty("sqrt",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {
@@ -336,7 +336,7 @@ namespace IronJS.Runtime.Builtins
             // Math.round
             math.SetOwnProperty("tan",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {

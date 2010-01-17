@@ -16,9 +16,9 @@ namespace IronJS.Compiler
             _context = context;
         }
 
-        public IFrame Run()
+        public IFrame Run(Action<IFrame> setup)
         {
-            return _context.Run(_delegate);
+            return _context.Run(_delegate, setup);
         }
     }
 }

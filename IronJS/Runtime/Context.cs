@@ -14,7 +14,7 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame SuperGlobals { get; protected set; }
+        internal IFrame BuiltinsFrame { get; private set; }
 
         public IObj ObjectPrototype { get; protected set; }
         public IFunction ObjectConstructor { get; protected set; }
@@ -38,7 +38,7 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            SuperGlobals = new Frame();
+            BuiltinsFrame = new Frame();
 
             // Object.prototype and Object
             ObjectPrototype = ObjectObject.CreatePrototype(this);
@@ -63,11 +63,23 @@ namespace IronJS.Runtime
 
         }
 
-        internal IFrame Run(Action<IFrame> delegat)
+        internal IFrame Run(Action<IFrame> target, Action<IFrame> setup)
         {
-            var globals = new Frame(SuperGlobals, true);
+            var globals = new Frame();
 
-            delegat(globals);
+            // Push on global frame
+            globals.Push("Object", ObjectConstructor, VarType.Global);
+            globals.Push("Function", FunctionConstructor, VarType.Global);
+            globals.Push("Array", ArrayConstructor, VarType.Global);
+            globals.Push("Number", NumberConstructor, VarType.Global);
+            globals.Push("Boolean", BooleanConstructor, VarType.Global);
+            globals.Push("undefined", Js.Undefined.Instance, VarType.Global);
+            globals.Push("Infinity", double.PositiveInfinity, VarType.Global);
+            globals.Push("NaN", double.NaN, VarType.Global);
+            globals.Push("Math", Math, VarType.Global);
+
+            setup(globals);
+            target(globals);
 
             return globals;
         }
@@ -95,8 +107,8 @@ namespace IronJS.Runtime
                 var ptype = ctor.GetOwnProperty("prototype");
 
                 obj.Prototype = (ptype is IObj)
-                                ? ptype as IObj
-                                : ObjectPrototype;
+                               ? ptype as IObj
+                               : ObjectPrototype;
             }
 
             return obj;
@@ -244,17 +256,6 @@ namespace IronJS.Runtime
             // Function.prototype
             (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.FunctionConstructor);
-
-            // Push on global frame
-            ctx.SuperGlobals.Push("Object", ctx.ObjectConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Function", ctx.FunctionConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Array", ctx.ArrayConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Number", ctx.NumberConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Boolean", ctx.BooleanConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("undefined", Js.Undefined.Instance, VarType.Global);
-            ctx.SuperGlobals.Push("Infinity", double.PositiveInfinity, VarType.Global);
-            ctx.SuperGlobals.Push("NaN", double.NaN, VarType.Global);
-            ctx.SuperGlobals.Push("Math", ctx.Math, VarType.Global);
 
             return ctx;
         }

@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Builtins
         internal static IFunction CreateConstructor(Context context)
         {
             var obj = context.CreateFunction(
-                context.SuperGlobals,
+                context.BuiltinsFrame,
                 new Lambda(
                     (that, frame) =>
                     {
@@ -33,7 +33,7 @@ namespace IronJS.Runtime.Builtins
             obj.SetOwnProperty(
                 "pop",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda(
                         (that, frame) =>
                         {

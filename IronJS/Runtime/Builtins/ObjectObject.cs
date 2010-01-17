@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Builtins
         static internal IFunction CreateConstructor(Context context)
         {
             var obj = context.CreateFunction(
-                context.SuperGlobals,
+                context.BuiltinsFrame,
                 new Lambda(
                     new Func<IObj, IFrame, object>((that, frame) => null),
                     new[] { "value" }.ToList()

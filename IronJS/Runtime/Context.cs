@@ -60,7 +60,6 @@ namespace IronJS.Runtime
 
             // Math
             // Math = MathObject.Create(this);
-
         }
 
         internal IObj Run(Action<IObj> target, Action<IObj> setup)

@@ -117,7 +117,11 @@
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
     <Compile Include="Runtime\Builtins\ArrayObject.cs" />
+    <Compile Include="Runtime\Builtins\BooleanObject.cs" />
+    <Compile Include="Runtime\Builtins\FunctionObject.cs" />
     <Compile Include="Runtime\Builtins\MathObject.cs" />
+    <Compile Include="Runtime\Builtins\NumberObject.cs" />
+    <Compile Include="Runtime\Builtins\ObjectObject.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />
     <Compile Include="Runtime\Js\Function.cs" />

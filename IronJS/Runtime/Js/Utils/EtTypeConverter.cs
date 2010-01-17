@@ -11,6 +11,7 @@ namespace IronJS.Runtime.Js.Utils
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using System.Globalization;
 
     public static class EtTypeConverter
     {
@@ -115,9 +116,17 @@ namespace IronJS.Runtime.Js.Utils
 
             if (obj.LimitType == typeof(string))
             {
-                //TODO: fix so that . instead of , is valid as "3.14" fails atm
                 var tmp = Et.Parameter(typeof(double), "#tmp");
-                var method = typeof(double).GetMethod("TryParse", new[] { typeof(string), typeof(double).MakeByRefType() });
+
+                var method = typeof(double).GetMethod(
+                        "TryParse", 
+                        new[] { 
+                            typeof(string), 
+                            typeof(NumberStyles),
+                            typeof(IFormatProvider),
+                            typeof(double).MakeByRefType()
+                        }
+                    );
 
                 return Et.Block(
                     new[] { tmp },
@@ -125,6 +134,8 @@ namespace IronJS.Runtime.Js.Utils
                         Et.Call(
                             method,
                             Et.Convert(obj.Expression, typeof(string)),
+                            Et.Constant(NumberStyles.Any, typeof(NumberStyles)),
+                            Et.Constant(CultureInfo.InvariantCulture, typeof(IFormatProvider)),
                             tmp
                         ),
                         tmp,

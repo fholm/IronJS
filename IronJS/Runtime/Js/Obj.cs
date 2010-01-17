@@ -45,15 +45,15 @@ namespace IronJS.Runtime.Js
             if (hint == ValueHint.Number)
                 return 1.0;
 
-            return "";
+            return "[object " + Class + "]";
         }
 
         public virtual object Get(object key)
         {
-            Property prop;
+            Property result;
 
-            if (Properties.TryGetValue(key, out prop))
-                return prop.Value;
+            if (Properties.TryGetValue(key, out result))
+                return result.Value;
 
             if (Prototype != null)
                 return Prototype.Get(key);

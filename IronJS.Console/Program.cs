@@ -21,28 +21,24 @@ namespace IronJS.Testing
 
             var compiled = etGenerator.Build(astNodes, context);
             var result = compiled.Run(globals => {
-                globals.Push(
+                globals.Put(
                     "print",
-                    typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"),
-                    VarType.Global
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("Print")
                 );
 
-                globals.Push(
+                globals.Put(
                     "println",
-                    typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine"),
-                    VarType.Global
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine")
                 );
 
-                globals.Push(
+                globals.Put(
                     "exc",
-                    new Exception(),
-                    VarType.Global
+                    new Exception()
                 );
 
-                globals.Push(
+                globals.Put(
                     "test",
-                    context.CreateArray(),
-                    VarType.Global
+                    context.CreateArray()
                 );
             });
         }

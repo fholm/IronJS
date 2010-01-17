@@ -19,10 +19,9 @@ namespace IronJS.Tests
             var compiled = etGenerator.Build(astNodes, context);
 
             var result = compiled.Run(globals => {
-                globals.Push(
+                globals.Put(
                     "emit",
-                    new Func<object, StringBuilder>(emitter.Append),
-                    Runtime.Js.VarType.Local
+                    new Func<object, StringBuilder>(emitter.Append)
                 );
             });
 
@@ -41,10 +40,9 @@ namespace IronJS.Tests
             var compiled = etGenerator.Build(astNodes, context);
 
             var result = compiled.Run(globals => {
-                globals.Push(
+                globals.Put(
                     "emit",
-                    new Func<object, StringBuilder>(emitter.Append),
-                    Runtime.Js.VarType.Local
+                    new Func<object, StringBuilder>(emitter.Append)
                 );
             });
 

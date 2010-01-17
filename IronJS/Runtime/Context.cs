@@ -14,7 +14,7 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        internal IFrame BuiltinsFrame { get; private set; }
+        internal IObj BuiltinsFrame { get; private set; }
 
         public IObj ObjectPrototype { get; protected set; }
         public IFunction ObjectConstructor { get; protected set; }
@@ -38,7 +38,7 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            BuiltinsFrame = new Frame();
+            BuiltinsFrame = new Frame(this);
 
             // Object.prototype and Object
             ObjectPrototype = ObjectObject.CreatePrototype(this);
@@ -59,24 +59,24 @@ namespace IronJS.Runtime
             NumberPrototype = NumberObject.CreatePrototype(this);
 
             // Math
-            Math = MathObject.Create(this);
+            // Math = MathObject.Create(this);
 
         }
 
-        internal IFrame Run(Action<IFrame> target, Action<IFrame> setup)
+        internal IObj Run(Action<IObj> target, Action<IObj> setup)
         {
-            var globals = new Frame();
+            var globals = new Frame(this);
 
             // Push on global frame
-            globals.Push("Object", ObjectConstructor, VarType.Global);
-            globals.Push("Function", FunctionConstructor, VarType.Global);
-            globals.Push("Array", ArrayConstructor, VarType.Global);
-            globals.Push("Number", NumberConstructor, VarType.Global);
-            globals.Push("Boolean", BooleanConstructor, VarType.Global);
-            globals.Push("undefined", Js.Undefined.Instance, VarType.Global);
-            globals.Push("Infinity", double.PositiveInfinity, VarType.Global);
-            globals.Push("NaN", double.NaN, VarType.Global);
-            globals.Push("Math", Math, VarType.Global);
+            globals.Put("Object", ObjectConstructor);
+            globals.Put("Function", FunctionConstructor);
+            globals.Put("Array", ArrayConstructor);
+            globals.Put("Number", NumberConstructor);
+            globals.Put("Boolean", BooleanConstructor);
+            globals.Put("undefined", Js.Undefined.Instance);
+            globals.Put("Infinity", double.PositiveInfinity);
+            globals.Put("NaN", double.NaN);
+            globals.Put("Math", Math);
 
             setup(globals);
             target(globals);
@@ -125,7 +125,7 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IFunction CreateFunction(IFrame frame, Lambda lambda)
+        public IFunction CreateFunction(IObj frame, Lambda lambda)
         {
             var obj = new Function(frame, lambda);
 
@@ -266,7 +266,7 @@ namespace IronJS.Runtime
 
         static public class Methods
         {
-            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IFrame), typeof(Lambda) });
+            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IObj), typeof(Lambda) });
             static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[] { typeof(IObj) });
             static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
             static public MethodInfo CreateArray = typeof(Context).GetMethod("CreateArray", Type.EmptyTypes);

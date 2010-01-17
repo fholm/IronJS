@@ -10,39 +10,26 @@ namespace IronJS.Runtime.Js.Utils
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using ParamEt = System.Linq.Expressions.ParameterExpression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    public static class IFrameEtUtils
+    public static class FrameEtUtils
     {
-        internal static Et Push(Et frame, string name, Et value, VarType type)
+        internal static Et Push(Et frame, object name, Et value)
         {
             return Et.Call(
                 frame,
-                typeof(IFrame).GetMethod("Push"),
+                typeof(IObj).GetMethod("Put"),
                 Et.Constant(name),
-                value,
-                Et.Constant(type)
+                value
             );
         }
 
-        internal static Et Pull(Et frame, string name, GetType type)
+        internal static Et Pull(Et frame, object name)
         {
             return Et.Call(
                 frame,
-                typeof(IFrame).GetMethod("Pull"),
-                Et.Constant(name),
-                Et.Constant(type)
-            );
-        }
-
-        internal static Et Pull<T>(Et frame, string name, GetType type)
-        {
-            return Et.Convert(
-                IFrameEtUtils.Pull(
-                    frame,
-                    name,
-                    type
-                ),
-                typeof(T)
+                typeof(IObj).GetMethod("Get"),
+                Et.Constant(name)
             );
         }
 
@@ -50,9 +37,13 @@ namespace IronJS.Runtime.Js.Utils
         {
             return Et.Assign(
                 target,
-                Et.Call(
+                AstUtils.SimpleNewHelper(
+                    typeof(Frame).GetConstructor(new[] { typeof(IObj), typeof(Context) }),
                     parent,
-                    typeof(IFrame).GetMethod("Enter", Type.EmptyTypes)
+                    Et.Property(
+                        parent,
+                        "Context"
+                    )
                 )
             );
         }
@@ -61,9 +52,9 @@ namespace IronJS.Runtime.Js.Utils
         {
             return Et.Assign(
                 target,
-                Et.Call(
+                Et.Property(
                     parent,
-                    typeof(IFrame).GetMethod("Exit", Type.EmptyTypes)
+                    "Prototype"
                 )
             );
         }

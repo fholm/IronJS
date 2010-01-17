@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Builtins
             var obj = context.CreateFunction(
                 context.BuiltinsFrame,
                 new Lambda(
-                    new Func<IObj, IFrame, object>((that, frame) => null),
+                    new Func<IObj, IObj, object>((that, frame) => null),
                     new[] { "value" }.ToList()
                 )
             );

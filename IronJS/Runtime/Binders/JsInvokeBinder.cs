@@ -81,46 +81,6 @@ namespace IronJS.Runtime.Binders
                 );
             }
 
-            // handles call proxies that
-            // are emitted from WithFrame objects
-            // for 'function'-calls that really
-            // are method calls
-            if (target.Value is PropertyProxy)
-            {
-                var proxy = (PropertyProxy)target.Value;
-
-                var thatExpr = 
-                    Et.Field(
-                        Et.Convert(
-                            target.Expression,
-                            typeof(PropertyProxy)
-                        ),
-                        "That"
-                    );
-
-                return new Meta(
-                    Et.Dynamic(
-                        _context.CreateInvokeMemberBinder(
-                            proxy.Name,
-                            new CallInfo(args.Length)
-                        ),
-                        typeof(object),
-                        ArrayUtils.Insert(
-                            thatExpr,
-                            thatExpr,
-                            DynamicUtils.GetExpressions(
-                                ArrayUtils.RemoveFirst(args)
-                            )
-                        )
-                    ),
-                    //TODO: more elaborate restriction
-                    Restrict.GetInstanceRestriction(
-                        target.Expression,
-                        target.Value
-                    )
-                );
-            }
-
             throw new NotImplementedException();
         }
     }

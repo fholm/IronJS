@@ -53,12 +53,15 @@ user.prototype.lol = "tjo";
 fredrik = new user("Fredrik", 24);
 anders = new user("Anders", 22);
 
+fredrik.print();
+
+/*
 with (fredrik) {
     print("1");
     anders.print("2");
     address.print("3");
     prettyPrint(" hello world ");
-}
+}*/
 
 println("foo".lol); // <- undefined
 

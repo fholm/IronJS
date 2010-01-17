@@ -14,7 +14,7 @@ namespace IronJS.Compiler
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
-    using LambdaExprList = List<Tuple<Expression<Func<IObj, IFrame, object>>, List<string>>>;
+    using LambdaExprList = List<Tuple<Expression<Func<IObj, IObj, object>>, List<string>>>;
 
     public class EtGenerator
     {
@@ -66,7 +66,7 @@ namespace IronJS.Compiler
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<IObj, IFrame, object>), 
+                    typeof(Func<IObj, IObj, object>), 
                     typeof(List<string>)
                 }
             );
@@ -87,7 +87,7 @@ namespace IronJS.Compiler
                 globalExprs
             );
 
-            var compiledDelegate = Et.Lambda<Action<IFrame>>(
+            var compiledDelegate = Et.Lambda<Action<IObj>>(
                 Et.Block(
                     new[] { _tableExpr },
                     allExprs
@@ -197,8 +197,10 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Continue:
                     return GenerateContinue((Ast.ContinueNode)node);
 
+                /*
                 case Ast.NodeType.With:
                     return GenerateWith((Ast.WithNode)node);
+                */
 
                 case Ast.NodeType.Try:
                     return GenerateTry((Ast.TryNode)node);
@@ -499,6 +501,7 @@ namespace IronJS.Compiler
             }
         }
 
+        /*
         // with(...) { ... }
         private Et GenerateWith(Ast.WithNode node)
         {
@@ -508,7 +511,7 @@ namespace IronJS.Compiler
                         typeof(WithFrame).GetConstructor(
                             new[] { 
                                 typeof(IObj), 
-                                typeof(IFrame)
+                                typeof(IObj)
                             }
                         ),
                         Generate(node.Target),
@@ -516,12 +519,13 @@ namespace IronJS.Compiler
                     )
                 ),
                 Generate(node.Body),
-                IFrameEtUtils.Exit(
+                FrameEtUtils.Exit(
                     _functionScope.FrameExpr,
                     _functionScope.FrameExpr
                 )
             );
         }
+        */
 
         // continue
         private Et GenerateContinue(Ast.ContinueNode node)
@@ -911,13 +915,13 @@ namespace IronJS.Compiler
         }
 
         // 7.6
-        private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
+        private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
             // handle 'this' specially
             if(node.Name == "this")
                 return _functionScope.ThisExpr;
             
-            return IFrameEtUtils.Pull(_functionScope.FrameExpr, node.Name, type);
+            return FrameEtUtils.Pull(_functionScope.FrameExpr, node.Name);
         }
 
         // ???
@@ -959,8 +963,7 @@ namespace IronJS.Compiler
             if (node.Target is Ast.IdentifierNode)
             {
                 var target = GenerateIdentifier(
-                    (Ast.IdentifierNode)node.Target, 
-                    Runtime.Js.GetType.Name
+                    (Ast.IdentifierNode)node.Target
                 );
 
                 return Et.Dynamic(
@@ -1036,7 +1039,7 @@ namespace IronJS.Compiler
 
             _lambdaExprs.Add(
                 Tuple.Create(
-                    Et.Lambda<Func<IObj, IFrame, object>>(
+                    Et.Lambda<Func<IObj, IObj, object>>(
                         Et.Block(bodyExprs),
                         _functionScope.ThisExpr,
                         _functionScope.FrameExpr
@@ -1078,11 +1081,10 @@ namespace IronJS.Compiler
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                return IFrameEtUtils.Push(
+                return FrameEtUtils.Push(
                     _functionScope.FrameExpr,
                     idNode.Name,
-                    value,
-                    idNode.IsLocal ? VarType.Local : VarType.Global
+                    value
                 );
             }
             else if (target is Ast.MemberAccessNode)

@@ -7,16 +7,16 @@ namespace IronJS.Compiler
     //TODO: this class needs a new name
     sealed public class CodeUnit
     {
-        readonly Action<IFrame> _delegate;
+        readonly Action<IObj> _delegate;
         readonly Context _context;
 
-        internal CodeUnit(Action<IFrame> delegat, Context context)
+        internal CodeUnit(Action<IObj> delegat, Context context)
         {
             _delegate = delegat;
             _context = context;
         }
 
-        public IFrame Run(Action<IFrame> setup)
+        public IObj Run(Action<IObj> setup)
         {
             return _context.Run(_delegate, setup);
         }

@@ -2,10 +2,10 @@
 
 namespace IronJS.Runtime.Js
 {
-    public interface IFrame
+    public interface IObj
     {
-        IFrame Enter();
-        IFrame Exit();
+        IObj Enter();
+        IObj Exit();
         object Pull(object key, GetType type);
         object Push(object key, object value, VarType type);
     }

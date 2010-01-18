@@ -10,22 +10,22 @@ namespace IronJS.Runtime.Js
 
     public class Lambda
     {
-        public Func<IObj, IObj, object> Delegate { get; protected set; }
+        public Func<IScope, IObj, object> Delegate { get; protected set; }
         public List<string> Params { get; protected set; }
 
-        public Lambda(Func<IObj, IObj, object> func, string[] parms)
+        public Lambda(Func<IScope, IObj, object> func, string[] parms)
             : this(func, parms.ToList())
         {
 
         }
 
-        public Lambda(Func<IObj, IObj, object> func)
+        public Lambda(Func<IScope, IObj, object> func)
             : this(func, new List<string>())
         {
 
         }
 
-        public Lambda(Func<IObj, IObj, object> func, List<string> parms)
+        public Lambda(Func<IScope, IObj, object> func, List<string> parms)
         {
             Delegate = func;
             Params = parms;

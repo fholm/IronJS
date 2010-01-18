@@ -126,6 +126,7 @@
     <Compile Include="Runtime\Js\Function.cs" />
     <Compile Include="Runtime\Js\IFunction.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
+    <Compile Include="Runtime\Js\IScope.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
     <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
@@ -140,6 +141,7 @@
     <Compile Include="Runtime\Js\Property.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\Scope.cs" />
     <Compile Include="Runtime\Js\Table.cs" />
     <Compile Include="Runtime\Js\Utils\EtTypeConverter.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">

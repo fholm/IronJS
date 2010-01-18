@@ -45,7 +45,7 @@ namespace IronJS.Runtime.Js.Utils
         {
             return Et.Call(
                 Delegate(obj),
-                typeof(Func<IObj, IObj, object>).GetMethod("Invoke"),
+                typeof(Func<IScope, IObj, object>).GetMethod("Invoke"),
                 that,
                 frame
             );

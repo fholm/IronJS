@@ -134,9 +134,6 @@
     <Compile Include="Runtime\Js\IObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\Frame.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Runtime\Js\Lambda.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -152,9 +149,6 @@
     <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Utils\IFrameEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Utils\IObjEtUtils.cs">

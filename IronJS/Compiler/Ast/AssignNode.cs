@@ -31,7 +31,10 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return etgen.GenerateAssign(
+                Target,
+                Value.Walk(etgen)
+            );
         }
     }
 }

@@ -20,27 +20,9 @@ namespace IronJS.Testing
                 Console.WriteLine(node.Print());
 
             var compiled = etGenerator.Build(astNodes, context);
-            var result = compiled.Run(globals => {
-                globals.Put(
-                    "print",
-                    typeof(IronJS.Runtime.BuiltIns).GetMethod("Print")
-                );
 
-                globals.Put(
-                    "println",
-                    typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine")
-                );
-
-                globals.Put(
-                    "exc",
-                    new Exception()
-                );
-
-                globals.Put(
-                    "test",
-                    context.CreateArray()
-                );
-            });
+            var globals = new Scope(context);
+            compiled(globals);
         }
     }
 }

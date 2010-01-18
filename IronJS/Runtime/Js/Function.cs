@@ -33,7 +33,8 @@ namespace IronJS.Runtime
 
         public Meta GetMetaObject(Et parameter)
         {
-            return new IFunctionMeta(parameter, this);
+            return null;
+            //return new IFunctionMeta(parameter, this);
         }
 
         #endregion

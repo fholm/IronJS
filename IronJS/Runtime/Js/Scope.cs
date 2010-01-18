@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Linq.Expressions;
 
 namespace IronJS.Runtime.Js
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = System.Linq.Expressions.Expression;
+    using EtParam = System.Linq.Expressions.ParameterExpression;
+
     public class Scope
     {
         IObj _obj;
@@ -63,6 +68,39 @@ namespace IronJS.Runtime.Js
                 _parent.Pull(name);
 
             return value;
+        }
+
+        #endregion
+
+        #region Expression Tree
+
+        internal static Et EtLocal(EtParam scope, string name, Et value)
+        {
+            return Et.Call(
+                scope,
+                typeof(Scope).GetMethod("Local"),
+                Et.Constant(name, typeof(object)),
+                value
+            );
+        }
+
+        internal static Et EtGlobal(EtParam scope, string name, Et value)
+        {
+            return Et.Call(
+                scope,
+                typeof(Scope).GetMethod("Global"),
+                Et.Constant(name, typeof(object)),
+                value
+            );
+        }
+
+        internal static Et EtPull(EtParam scope, string name)
+        {
+            return Et.Call(
+                scope,
+                typeof(Scope).GetMethod("Pull"),
+                Et.Constant(name, typeof(object))
+            );
         }
 
         #endregion

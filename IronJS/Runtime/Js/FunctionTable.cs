@@ -5,7 +5,10 @@ using System.Text;
 
 namespace IronJS.Runtime.Js
 {
-    class Table
+    using Et = System.Linq.Expressions.Expression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+
+    class FunctionTable
     {
         readonly List<Lambda> Functions =
              new List<Lambda>();
@@ -19,6 +22,13 @@ namespace IronJS.Runtime.Js
         public Lambda Pull(int i)
         {
             return Functions[i];
+        }
+
+        internal static Et EtNew()
+        {
+            return AstUtils.SimpleNewHelper(
+                typeof(FunctionTable).GetConstructor(Type.EmptyTypes)
+            );
         }
     }
 }

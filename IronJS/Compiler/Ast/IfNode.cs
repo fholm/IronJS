@@ -28,14 +28,24 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Type);
 
             TrueBranch.Print(writer, indent + 1);
-            ElseBranch.Print(writer, indent + 1);
+
+            if(ElseBranch != null)
+                ElseBranch.Print(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return Et.Condition(
+                Et.Dynamic(
+                    etgen.Context.CreateConvertBinder(typeof(bool)),
+                    typeof(bool),
+                    Test.Walk(etgen)
+                ),
+                TrueBranch.Walk(etgen),
+                etgen.WalkIfNotNull(ElseBranch)
+            );
         }
     }
 }

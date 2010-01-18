@@ -22,7 +22,11 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return Et.Dynamic(
+                etgen.Context.CreateUnaryOpBinder(Op),
+                typeof(object),
+                Target.Walk(etgen)
+            );
         }
     }
 }

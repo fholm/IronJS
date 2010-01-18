@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 using System.Dynamic;
 using System.Reflection;
 using System.Globalization;
-using IronJS.Runtime.Builtins;
+//using IronJS.Runtime.Builtins;
 
 namespace IronJS.Runtime
 {
@@ -38,8 +38,9 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            BuiltinsFrame = new Frame(this);
+            //BuiltinsFrame = new Frame(this);
 
+            /*
             // Object.prototype and Object
             ObjectPrototype = ObjectObject.CreatePrototype(this);
             ObjectConstructor = ObjectObject.CreateConstructor(this);
@@ -57,13 +58,15 @@ namespace IronJS.Runtime
 
             // Number.prototype
             NumberPrototype = NumberObject.CreatePrototype(this);
-
+            */
             // Math
             // Math = MathObject.Create(this);
         }
 
         internal IObj Run(Action<IObj> target, Action<IObj> setup)
         {
+            return null;
+            /*
             var globals = new Frame(this);
 
             // Push on global frame
@@ -82,6 +85,7 @@ namespace IronJS.Runtime
             target(globals);
 
             return globals;
+            */
         }
 
         #region Object creators
@@ -245,6 +249,7 @@ namespace IronJS.Runtime
         {
             var ctx = new Context();
 
+            /*
             // Object
             (ctx.ObjectConstructor as Function).Prototype = ctx.FunctionPrototype;
             ctx.ObjectConstructor.SetOwnProperty("prototype", ctx.ObjectPrototype);
@@ -256,6 +261,7 @@ namespace IronJS.Runtime
             // Function.prototype
             (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.FunctionConstructor);
+            */
 
             return ctx;
         }

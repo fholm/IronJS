@@ -9,6 +9,7 @@ namespace IronJS.Runtime.Js
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
     using EtParam = System.Linq.Expressions.ParameterExpression;
+    using IronJS.Runtime.Utils;
 
     public class Scope
     {

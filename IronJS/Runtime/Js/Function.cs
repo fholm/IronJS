@@ -11,15 +11,15 @@ namespace IronJS.Runtime
 
     public class Function : Obj, IFunction
     {
-        public Function(IObj frame, Lambda lambda)
+        public Function(Scope scope, Lambda lambda)
         {
-            Frame = frame;
+            Scope = scope;
             Lambda = lambda;
         }
 
         #region IFunction Members
 
-        public IObj Frame { get; protected set; }
+        public Scope Scope { get; protected set; }
         public Lambda Lambda { get; protected set; }
 
         public IObj Construct()

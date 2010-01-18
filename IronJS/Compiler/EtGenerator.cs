@@ -50,14 +50,6 @@ namespace IronJS.Compiler
             // Stores all global expressions
             var globalExprs = new List<Et>();
 
-            // Create instance of our functable
-            globalExprs.Add(
-                Et.Assign(
-                    FuncTableExpr,
-                    FunctionTable.EtNew()
-                )
-            );
-
             // Walk each global node
             foreach (var node in astNodes)
                 globalExprs.Add(node.Walk(this));
@@ -65,7 +57,28 @@ namespace IronJS.Compiler
             return Et.Lambda<Action<Scope>>(
                 Et.Block(
                     new[] { FuncTableExpr },
-                    globalExprs
+
+                    // Create instance of our functable
+                    Et.Assign(
+                        FuncTableExpr,
+                        FunctionTable.EtNew()
+                    ),
+
+                    // Push functions into functable
+                    Et.Block(
+                        LambdaTuples.Select(x => 
+                            FunctionTable.EtPush(
+                                FuncTableExpr,
+                                Lambda.EtNew(
+                                    x.V1,
+                                    Et.Constant(x.V2.ToArray())
+                                )
+                            )
+                        )
+                    ),
+
+                    // Execute global scope
+                    Et.Block(globalExprs)
                 ),
                 GlobalScopeExpr
             ).Compile();
@@ -1024,7 +1037,7 @@ namespace IronJS.Compiler
 
             ExitFunctionScope();
 
-            /*
+            /*  
              * 1) Create a new object with the current frame and current lambda as params
              * 2) Assign the #FunctionPrototype object to it's Prototype field
              * 3) return it

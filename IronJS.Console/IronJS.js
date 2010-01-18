@@ -18,3 +18,7 @@ if (!foo) {
 } else {
     bar = 2;
 }
+
+function foo(a, b) {
+    boo = 4;
+};

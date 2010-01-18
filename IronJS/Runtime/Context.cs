@@ -12,6 +12,10 @@ using System.Globalization;
 
 namespace IronJS.Runtime
 {
+    using Et = System.Linq.Expressions.Expression;
+    using EtParam = System.Linq.Expressions.ParameterExpression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+
     public class Context
     {
         internal IObj BuiltinsFrame { get; private set; }
@@ -129,9 +133,9 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IFunction CreateFunction(IObj frame, Lambda lambda)
+        public IFunction CreateFunction(Scope scope, Lambda lambda)
         {
-            var obj = new Function(frame, lambda);
+            var obj = new Function(scope, lambda);
 
             var protoObj = CreateObject();
             protoObj.SetOwnProperty("constructor", obj);
@@ -265,6 +269,20 @@ namespace IronJS.Runtime
 
             return ctx;
         }
+
+        #region Expression Tree
+
+        static internal Et EtCreateFunction(Context context, Et scope, Et lambda)
+        {
+            return Et.Call(
+                Et.Constant(context),
+                typeof(Context).GetMethod("CreateFunction"),
+                scope,
+                lambda
+            );
+        }
+
+        #endregion
 
         #endregion
 

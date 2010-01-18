@@ -20,7 +20,7 @@ namespace IronJS.Runtime.Js
     public interface IFunction : IObj
     {
         // 8.6.2
-        IObj Frame { get; }   // [[Scope]]
+        Scope Scope { get; }   // [[Scope]]
         Lambda Lambda { get; }  // [[Call]]
 
         // 8.6.2

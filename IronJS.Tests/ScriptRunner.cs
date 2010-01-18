@@ -12,19 +12,19 @@ namespace IronJS.Tests
             var emitter = new StringBuilder();
             var context = Runtime.Context.Setup();
 
-            context.SuperGlobals.Push(
-                "emit",
-                new Func<object, StringBuilder>(emitter.Append),
-                Runtime.Js.VarType.Local
-            );
-
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
             var astNodes = astBuilder.Build(source);
             var compiled = etGenerator.Build(astNodes, context);
 
-            var globals = compiled.Run();
+            var result = compiled.Run(globals => {
+                globals.Put(
+                    "emit",
+                    new Func<object, StringBuilder>(emitter.Append)
+                );
+            });
+
             return emitter.ToString();
         }
 
@@ -33,19 +33,19 @@ namespace IronJS.Tests
             var emitter = new StringBuilder();
             var context = Runtime.Context.Setup();
 
-            context.SuperGlobals.Push(
-                "emit",
-                new Func<object, StringBuilder>(emitter.Append),
-                Runtime.Js.VarType.Local
-            );
-
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
             var astNodes = astBuilder.Build(filename, Encoding.UTF8);
             var compiled = etGenerator.Build(astNodes, context);
 
-            var globals = compiled.Run();
+            var result = compiled.Run(globals => {
+                globals.Put(
+                    "emit",
+                    new Func<object, StringBuilder>(emitter.Append)
+                );
+            });
+
             return emitter.ToString();
         }
     }

@@ -19,32 +19,28 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            context.SuperGlobals.Push(
-                "print", 
-                typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
-                VarType.Global
-            );
-
-            context.SuperGlobals.Push(
-                "println", 
-                typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine"),
-                VarType.Global
-            );
-
-            context.SuperGlobals.Push(
-                "exc", 
-                new Exception(),
-                VarType.Global
-            );
-
-            context.SuperGlobals.Push(
-                "test",
-                context.CreateArray(),
-                VarType.Global
-            );
-
             var compiled = etGenerator.Build(astNodes, context);
-            var globals = compiled.Run();
+            var result = compiled.Run(globals => {
+                globals.Put(
+                    "print",
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("Print")
+                );
+
+                globals.Put(
+                    "println",
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine")
+                );
+
+                globals.Put(
+                    "exc",
+                    new Exception()
+                );
+
+                globals.Put(
+                    "test",
+                    context.CreateArray()
+                );
+            });
         }
     }
 }

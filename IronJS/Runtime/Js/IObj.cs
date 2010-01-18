@@ -16,7 +16,7 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
 
     //TODO: need support for 'Host' object class
-    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array }
+    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Frame, Scope }
 
     //
     public enum ValueHint { None, Number, String }
@@ -60,40 +60,6 @@ namespace IronJS.Runtime.Js
         public static Et ContextExpr(this IObj obj)
         {
             return Et.Constant(obj.Context, typeof(Context));
-        }
-
-        public static object CallMethod(this IObj obj, object propertyName, params object[] args)
-        {
-            var target = obj.Get(propertyName);
-
-            if (target is IFunction)
-            {
-                var targetFunc = (IFunction)target;
-                var callFrame = new Frame(targetFunc.Frame);
-                var argsObj = obj.Context.CreateObject();
-
-                for (int i = 0; i < args.Length; ++i)
-                {
-                    argsObj.SetOwnProperty(i, args[i]);
-
-                    if (i < targetFunc.Lambda.Params.Count)
-                        callFrame.Push(
-                            targetFunc.Lambda.Params[i], 
-                            args[i], 
-                            VarType.Local
-                        );
-                }
-
-                callFrame.Push(
-                    "arguments", 
-                    argsObj, 
-                    VarType.Local
-                );
-
-                return targetFunc.Lambda.Delegate(obj, callFrame);
-            }
-
-            throw new NotImplementedException();
         }
     }
 }

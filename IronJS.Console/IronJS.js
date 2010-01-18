@@ -15,6 +15,9 @@ print(Math.min(5, 6, 3, 10));
 print(Math.PI.toString());
 */
 
+for(var k = 0; k < 1000; ++k)
+{
+
 for(var i = 0; i < 10; ++i)
     test[i] = "#" + i.toString();
 
@@ -53,12 +56,15 @@ user.prototype.lol = "tjo";
 fredrik = new user("Fredrik", 24);
 anders = new user("Anders", 22);
 
+fredrik.print();
+
+/*
 with (fredrik) {
     print("1");
     anders.print("2");
     address.print("3");
     prettyPrint(" hello world ");
-}
+}*/
 
 println("foo".lol); // <- undefined
 
@@ -67,6 +73,7 @@ foo = { "a": 1, "b": 2, "c": 3 };
 delete foo.a;
 delete foo["c"];
 
-for (bar.key in foo) {
-    println(bar.key + ": " + foo[bar.key]);
+for (key in foo) {
+    println(key + ": " + foo[key]);
 };
+

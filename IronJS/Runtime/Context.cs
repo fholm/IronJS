@@ -14,7 +14,7 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        public IFrame SuperGlobals { get; protected set; }
+        internal IObj BuiltinsFrame { get; private set; }
 
         public IObj ObjectPrototype { get; protected set; }
         public IFunction ObjectConstructor { get; protected set; }
@@ -38,7 +38,7 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            SuperGlobals = new Frame();
+            BuiltinsFrame = new Frame(this);
 
             // Object.prototype and Object
             ObjectPrototype = ObjectObject.CreatePrototype(this);
@@ -59,15 +59,27 @@ namespace IronJS.Runtime
             NumberPrototype = NumberObject.CreatePrototype(this);
 
             // Math
-            Math = MathObject.Create(this);
-
+            // Math = MathObject.Create(this);
         }
 
-        internal IFrame Run(Action<IFrame> delegat)
+        internal IObj Run(Action<IObj> target, Action<IObj> setup)
         {
-            var globals = new Frame(SuperGlobals, true);
+            var globals = new Frame(this);
 
-            delegat(globals);
+            // Push on global frame
+            globals.Put("Object", ObjectConstructor);
+            globals.Put("Function", FunctionConstructor);
+            globals.Put("Array", ArrayConstructor);
+            globals.Put("Number", NumberConstructor);
+            globals.Put("Boolean", BooleanConstructor);
+            globals.Put("undefined", Js.Undefined.Instance);
+            globals.Put("Infinity", double.PositiveInfinity);
+            globals.Put("NaN", double.NaN);
+            globals.Put("Math", Math);
+            globals.Put("globals", globals);
+
+            setup(globals);
+            target(globals);
 
             return globals;
         }
@@ -95,8 +107,8 @@ namespace IronJS.Runtime
                 var ptype = ctor.GetOwnProperty("prototype");
 
                 obj.Prototype = (ptype is IObj)
-                                ? ptype as IObj
-                                : ObjectPrototype;
+                               ? ptype as IObj
+                               : ObjectPrototype;
             }
 
             return obj;
@@ -113,7 +125,7 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IFunction CreateFunction(IFrame frame, Lambda lambda)
+        public IFunction CreateFunction(IObj frame, Lambda lambda)
         {
             var obj = new Function(frame, lambda);
 
@@ -245,17 +257,6 @@ namespace IronJS.Runtime
             (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.FunctionConstructor);
 
-            // Push on global frame
-            ctx.SuperGlobals.Push("Object", ctx.ObjectConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Function", ctx.FunctionConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Array", ctx.ArrayConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Number", ctx.NumberConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("Boolean", ctx.BooleanConstructor, VarType.Global);
-            ctx.SuperGlobals.Push("undefined", Js.Undefined.Instance, VarType.Global);
-            ctx.SuperGlobals.Push("Infinity", double.PositiveInfinity, VarType.Global);
-            ctx.SuperGlobals.Push("NaN", double.NaN, VarType.Global);
-            ctx.SuperGlobals.Push("Math", ctx.Math, VarType.Global);
-
             return ctx;
         }
 
@@ -265,7 +266,7 @@ namespace IronJS.Runtime
 
         static public class Methods
         {
-            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IFrame), typeof(Lambda) });
+            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IObj), typeof(Lambda) });
             static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[] { typeof(IObj) });
             static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
             static public MethodInfo CreateArray = typeof(Context).GetMethod("CreateArray", Type.EmptyTypes);

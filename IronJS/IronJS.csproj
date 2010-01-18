@@ -119,13 +119,11 @@
     <Compile Include="Runtime\Builtins\ArrayObject.cs" />
     <Compile Include="Runtime\Builtins\BooleanObject.cs" />
     <Compile Include="Runtime\Builtins\FunctionObject.cs" />
-    <Compile Include="Runtime\Builtins\MathObject.cs" />
     <Compile Include="Runtime\Builtins\NumberObject.cs" />
     <Compile Include="Runtime\Builtins\ObjectObject.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />
     <Compile Include="Runtime\Js\Function.cs" />
-    <Compile Include="Runtime\Js\IFrame.cs" />
     <Compile Include="Runtime\Js\IFunction.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
@@ -136,15 +134,13 @@
     <Compile Include="Runtime\Js\IObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\Frame.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Runtime\Js\Lambda.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Property.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\Scope.cs" />
     <Compile Include="Runtime\Js\Table.cs" />
     <Compile Include="Runtime\Js\Utils\EtTypeConverter.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">
@@ -152,12 +148,8 @@
     </Compile>
     <Compile Include="Runtime\Js\Utils\IFunctionEtUtils.cs" />
     <Compile Include="Runtime\Js\ValueObj.cs" />
-    <Compile Include="Runtime\Js\WithFrame.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Utils\IFrameEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Utils\IObjEtUtils.cs">

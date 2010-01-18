@@ -46,9 +46,6 @@ namespace IronJS.Runtime.Utils
         /// <returns></returns>
         internal static Et2 Cast<T>(Et2 expr)
         {
-            if (expr.Type.IsValueType)
-                return expr;
-
             if (expr.Type == typeof(void))
                 return Et2.Block(expr, Et2.Default(typeof(T)));
 

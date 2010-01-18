@@ -14,7 +14,7 @@ namespace IronJS.Runtime.Builtins
 
             obj.Put("toString",
                 context.CreateFunction(
-                    context.SuperGlobals,
+                    context.BuiltinsFrame,
                     new Lambda((that, frame) =>
                     {
                         if (that.HasValue())

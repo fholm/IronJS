@@ -45,7 +45,7 @@ namespace IronJS.Runtime.Js.Utils
         {
             return Et.Call(
                 Delegate(obj),
-                typeof(Func<IObj, IFrame, object>).GetMethod("Invoke"),
+                typeof(Func<Scope, IObj, object>).GetMethod("Invoke"),
                 that,
                 frame
             );
@@ -74,7 +74,7 @@ namespace IronJS.Runtime.Js.Utils
                 new[] { argsObj },
 
                 // create a new empty call frame
-                IFrameEtUtils.Enter(
+                FrameEtUtils.Enter(
                     callFrame,
                     IFunctionEtUtils.Frame(selfExpr)
                 ),
@@ -116,11 +116,10 @@ namespace IronJS.Runtime.Js.Utils
             );
 
             exprs.Add(
-                IFrameEtUtils.Push(
+                IObjEtUtils.SetOwnProperty(
                     callFrame,
                     "arguments",
-                    argsObj,
-                    VarType.Local
+                    argsObj
                 )
             );
 
@@ -139,11 +138,10 @@ namespace IronJS.Runtime.Js.Utils
                 if (i < paramNames.Count)
                 {
                     exprs.Add(
-                        IFrameEtUtils.Push(
+                        IObjEtUtils.SetOwnProperty(
                             callFrame,
                             paramNames[i],
-                            EtUtils.Box(args[i]),
-                            VarType.Local
+                            EtUtils.Box(args[i])
                         )
                     );
                 }

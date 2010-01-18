@@ -26,9 +26,6 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            if (Name == "this")
-                return etgen.FunctionScope.ThisExpr;
-
             return Scope.EtPull(
                 etgen.FunctionScope.ScopeExpr,
                 Name

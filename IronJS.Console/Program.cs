@@ -14,7 +14,7 @@ namespace IronJS.Testing
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
-            var astNodes = astBuilder.Build("IronJS.js", Encoding.UTF8);
+            var astNodes = astBuilder.Build("Testing.js", Encoding.UTF8);
 
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
@@ -22,6 +22,12 @@ namespace IronJS.Testing
             var compiled = etGenerator.Build(astNodes, context);
 
             var globals = new Scope(context);
+
+            globals.Global(
+                "println",
+                typeof(BuiltIns).GetMethod("PrintLine")
+            );
+
             compiled(globals);
         }
     }

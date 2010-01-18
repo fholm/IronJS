@@ -56,8 +56,8 @@
     <Compile Include="Compiler\Ast\BlockNode.cs" />
     <Compile Include="Compiler\AstGenerator.cs" />
     <Compile Include="Compiler\Ast\BreakNode.cs" />
-    <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\BinaryOpNode.cs" />
+    <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\ContinueNode.cs" />
     <Compile Include="Compiler\Ast\IdentifierNode.cs" />
     <Compile Include="Compiler\Ast\IfNode.cs" />
@@ -74,7 +74,6 @@
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
     <Compile Include="Compiler\Ast\CatchNode.cs" />
-    <Compile Include="Compiler\CodeUnit.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
@@ -122,6 +121,7 @@
     <Compile Include="Runtime\Js\IFunction.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
@@ -145,9 +145,6 @@
     <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Utils\IObjEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Utils\RestrictUtils.cs">

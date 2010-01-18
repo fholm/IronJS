@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
 
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;

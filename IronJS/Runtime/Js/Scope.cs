@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Linq.Expressions;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
     using EtParam = System.Linq.Expressions.ParameterExpression;
-    using IronJS.Runtime.Utils;
 
     public class Scope
     {
         IObj _obj;
         Scope _parent;
         Context _context;
+        bool _privateObj = false;
+
+        public IObj Value { get { return _obj; } }
 
         public Scope(Context context, Scope parent, IObj values)
         {
@@ -32,22 +35,15 @@ namespace IronJS.Runtime.Js
 
         public Scope(Context context)
         {
+            _privateObj = true;
             _context = context;
             _obj = context.CreateObject();
-            (_obj as Obj).Class = ObjClass.Scope;
             (_obj as Obj).Prototype = null;
-        }
-
-        #region IScope Members
-
-        public Scope Exit()
-        {
-            return _parent;
         }
 
         public object Local(object name, object value)
         {
-            if (_obj.Class == ObjClass.Scope || _obj.HasProperty(name))
+            if (_privateObj || _obj.HasProperty(name))
                 return _obj.Put(name, value);
 
             return _parent.Local(name, value);
@@ -66,14 +62,20 @@ namespace IronJS.Runtime.Js
             var value = _obj.Get(name);
 
             if (value is Undefined && _parent != null)
-                _parent.Pull(name);
+                return _parent.Pull(name);
 
             return value;
         }
 
-        #endregion
-
         #region Expression Tree
+
+        internal static Et EtValue(EtParam scope)
+        {
+            return Et.Property(
+                scope,
+                "Value"
+            );
+        }
 
         internal static Et EtLocal(EtParam scope, string name, Et value)
         {
@@ -101,6 +103,15 @@ namespace IronJS.Runtime.Js
                 scope,
                 typeof(Scope).GetMethod("Pull"),
                 Et.Constant(name, typeof(object))
+            );
+        }
+
+        internal static Et EtNew(Et context, Et parent)
+        {
+            return AstUtils.SimpleNewHelper(
+                typeof(Scope).GetConstructor(new[]{ typeof(Context), typeof(Scope) }),
+                context,
+                parent
             );
         }
 

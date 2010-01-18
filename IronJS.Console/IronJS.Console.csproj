@@ -69,7 +69,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="IronJS.js">
+    <Content Include="Testing.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

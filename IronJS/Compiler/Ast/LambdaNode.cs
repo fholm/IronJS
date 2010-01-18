@@ -54,8 +54,7 @@ namespace IronJS.Compiler.Ast
                                 Undefined.Expr // 12.9
                             )
                         ),
-                        etgen.FunctionScope.ScopeExpr,
-                        etgen.FunctionScope.ThisExpr
+                        etgen.FunctionScope.ScopeExpr
                     ),
                     // parameter names
                     Args.Select(x => x.Name).ToList()

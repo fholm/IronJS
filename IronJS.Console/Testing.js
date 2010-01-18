@@ -1,4 +1,6 @@
 ﻿
+println("--BGN--");
+
 1;
 3.14;
 "foo";
@@ -20,5 +22,12 @@ if (!foo) {
 }
 
 function foo(a, b) {
-    boo = 4;
+    return function () {
+        boo = a + b;
+        println(this);
+    };
 };
+
+foo(1, 2)();
+
+println("--END--");

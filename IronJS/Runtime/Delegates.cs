@@ -2,5 +2,5 @@
 
 namespace IronJS.Runtime
 {
-    public delegate object LambdaType(Scope scope, IObj that);
+    public delegate object LambdaType(Scope scope);
 }

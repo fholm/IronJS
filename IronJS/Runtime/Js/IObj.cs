@@ -61,5 +61,16 @@ namespace IronJS.Runtime.Js
         {
             return Et.Constant(obj.Context, typeof(Context));
         }
+
+        static internal Et EtSetOwnProperty(Et target, object name, Et value)
+        {
+            return Et.Call(
+                target,
+                typeof(IObj).GetMethod("SetOwnProperty"),
+                Et.Constant(name, typeof(object)),
+                value
+            );
+        }
+
     }
 }

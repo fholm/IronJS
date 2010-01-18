@@ -11,7 +11,7 @@ namespace IronJS.Testing
         static void Main(string[] args)
         {
             var context = Context.Setup();
-            var astBuilder = new Compiler.Ast.AstGenerator();
+            var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
             var astNodes = astBuilder.Build("Testing.js", Encoding.UTF8);

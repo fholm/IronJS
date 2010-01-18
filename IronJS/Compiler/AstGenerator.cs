@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq.Expressions;
 using System.Text;
 using Antlr.Runtime;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Ast;
 using IronJS.Extensions;
-using IronJS.Compiler;
 
-namespace IronJS.Compiler.Ast
+using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
+using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
+
+namespace IronJS.Compiler
 {
-    using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
-    using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
-    using System.Linq.Expressions;
-    using System.Globalization;
-
-    //TODO: implement delete operator
-
     public class AstGenerator
     {
         public List<Node> Build(string fileName, Encoding encoding)
@@ -42,8 +39,7 @@ namespace IronJS.Compiler.Ast
 
             if (root.IsNil)
             {
-                root.EachChild(node => 
-                {
+                root.EachChild(node => {
                     nodes.Add(Build(node));
                 });
             }

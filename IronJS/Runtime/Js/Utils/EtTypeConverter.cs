@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js.Utils
 {
     using Et = System.Linq.Expressions.Expression;
-    using Parm = System.Linq.Expressions.ParameterExpression;
     using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using System.Globalization;
 
     public static class EtTypeConverter
     {

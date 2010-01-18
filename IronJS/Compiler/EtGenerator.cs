@@ -66,7 +66,7 @@ namespace IronJS.Compiler
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<IScope, IObj, object>), 
+                    typeof(Func<Scope, IObj, object>), 
                     typeof(List<string>)
                 }
             );
@@ -1039,7 +1039,7 @@ namespace IronJS.Compiler
 
             _lambdaExprs.Add(
                 Tuple.Create(
-                    Et.Lambda<Func<IScope, IObj, object>>(
+                    Et.Lambda<Func<Scope, IObj, object>>(
                         Et.Block(bodyExprs),
                         _functionScope.ThisExpr,
                         _functionScope.FrameExpr

@@ -16,7 +16,7 @@ namespace IronJS.Runtime.Js
     using Et = System.Linq.Expressions.Expression;
 
     //TODO: need support for 'Host' object class
-    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Frame }
+    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Frame, Scope }
 
     //
     public enum ValueHint { None, Number, String }

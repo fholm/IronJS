@@ -126,7 +126,6 @@
     <Compile Include="Runtime\Js\Function.cs" />
     <Compile Include="Runtime\Js\IFunction.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
-    <Compile Include="Runtime\Js\IScope.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
     <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\Obj.cs">

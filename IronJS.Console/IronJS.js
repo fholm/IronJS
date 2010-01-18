@@ -20,13 +20,6 @@ for(var i = 0; i < 10; ++i)
 
 print(test.length);
 
-/*
-try {
-    throw bar;
-} catch (x) {
-    print(x.x);
-}
-
 prettyPrint = function (str) {
     println("~*~ " + str + " ~*~");
 };
@@ -77,4 +70,3 @@ delete foo["c"];
 for (bar.key in foo) {
     println(bar.key + ": " + foo[bar.key]);
 };
-*/

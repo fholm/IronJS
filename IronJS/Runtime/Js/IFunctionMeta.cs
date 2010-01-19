@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Utils;
-using IronJS.Runtime.Js.Utils;
 using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js
@@ -27,6 +26,8 @@ namespace IronJS.Runtime.Js
         public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
             //TODO: insert defer
+            return null;
+            /*
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
 
@@ -72,6 +73,7 @@ namespace IronJS.Runtime.Js
                 // 3) instance of this.Value.Lambda
                 IFunctionEtUtils.BuildLambdaCallRestriction(this, args)
             );
+            */
         }
 
         /// <summary>
@@ -83,35 +85,153 @@ namespace IronJS.Runtime.Js
         public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
         {
             //TODO: insert defer
-
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
 
             // tmp variables
-            var that = EtUtils.Cast<IObj>(args[0].Expression);
-            var callFrame = Et.Variable(typeof(IObj), "#callframe");
+            var callScope = Et.Variable(typeof(Scope), "#callscope");
 
             return new Meta(
                 Et.Block(
-                    new[] { callFrame },
+                    new[] { callScope },
 
-                    IFunctionEtUtils.SetupCallBlock(
-                        callFrame,
+                    EtCreateCallBlock(
+                        callScope,
                         selfExpr,
                         selfObj,
-                        ArrayUtils.RemoveFirst(args)
+                        args
                     ),
 
-                    // the actual constructor call
-                    IFunctionEtUtils.Call(
-                        this.Expression,
-                        that,
-                        callFrame
+                    Function.EtCall(
+                        selfExpr,
+                        callScope
                     )
                 ),
 
-                IFunctionEtUtils.BuildLambdaCallRestriction(this, args)
+                EtLambdaCallRestriction(this, args)
             );
         }
+
+        #region Expression Tree
+
+        static internal Restrict EtLambdaCallRestriction(Meta target, Meta[] args)
+        {
+            return
+                RestrictUtils.BuildCallRestrictions(
+                    target,
+                    args,
+                    RestrictFlag.Type
+                ).Merge(
+                    Restrict.GetInstanceRestriction(
+                        Function.EtLambda(target.Expression),
+                        (target.Value as IFunction).Lambda
+                    )
+                );
+        }
+
+        internal static Et EtCreateCallBlock(Parm callScope, Et selfExpr, IFunction selfObj, Meta[] args)
+        {
+            var argsObj = Et.Variable(typeof(IObj), "#arguments");
+
+            return Et.Block(
+                new[] { argsObj },
+
+                // create call scope
+                Et.Assign(
+                    callScope,
+                    Scope.EtNew(
+                        selfObj.ContextExpr(),
+                        Function.EtScope(selfExpr)
+                    )
+                ),
+
+                // create our 'arguments' object
+                Et.Assign(
+                    argsObj,
+                    Et.Call(
+                        selfObj.ContextExpr(),
+                        Context.Methods.CreateObject
+                    )
+                ),
+
+                // block that setups our call scope + arguments objects
+                EtCreateCallFrame(
+                    callScope,
+                    argsObj,
+                    selfObj.Lambda.Params,
+                    args
+                )
+            );
+        }
+
+        static internal Et EtCreateCallFrame(Parm callScope, Parm argsObj, string[] paramNames, Meta[] args)
+        {
+            return EtCreateCallFrame(callScope, argsObj, paramNames, DynamicUtils.GetExpressions(args));
+        }
+
+        static internal Et EtCreateCallFrame(Parm callScope, Parm argsObj, string[] paramNames, Et[] args)
+        {
+            var exprs = new List<Et>();
+            var that = args[0];
+
+            // remove 'this' parameter 
+            args = ArrayUtils.RemoveFirst(args);
+
+            // Set length property
+            exprs.Add(
+                IObjMethods.EtSetOwnProperty(
+                    argsObj,
+                    "length",
+                    Et.Constant((double)args.Length, typeof(object))
+                )
+            );
+
+            // push arguments on scope
+            exprs.Add(
+                Scope.EtLocal(
+                    callScope,
+                    "arguments",
+                    argsObj
+                )
+            );
+
+            for (int i = 0; i < args.Length; ++i)
+            {
+                // only args with param names
+                // should be pushed on the scope
+                if (i < paramNames.Length)
+                {
+                    exprs.Add(
+                        Scope.EtLocal(
+                            callScope,
+                            paramNames[i],
+                            args[i]
+                        )
+                    );
+                }
+
+                // push arg on 'arguments'-object
+                exprs.Add(
+                    IObjMethods.EtSetOwnProperty(
+                        argsObj,
+                        i,
+                        EtUtils.Box(args[i])
+                    )
+                );
+            }
+
+            // last, add 'this' variable
+            exprs.Add(
+                Scope.EtLocal(
+                    callScope,
+                    "this",
+                    that
+                )
+            );
+
+            return Et.Block(exprs);
+        }
+
+        #endregion 
     }
 }

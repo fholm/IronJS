@@ -13,7 +13,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new System.NotImplementedException();
+            return Et.Default(typeof(object));
         }
     }
 }

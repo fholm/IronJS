@@ -19,8 +19,9 @@ namespace IronJS.Compiler
     {
         LabelScope _labelScope;
 
+        internal FunctionScope Parent { get; private set; }
         internal LabelTarget ReturnLabel { get; private set; }
-        internal ParameterExpression FrameExpr { get; private set; }
+        internal ParameterExpression ScopeExpr { get; private set; }
         internal ParameterExpression ThisExpr { get; private set; }
 
         internal LabelScope LabelScope
@@ -33,11 +34,17 @@ namespace IronJS.Compiler
                 throw new CompilerError("Not inside a labelled statement or a loop");
             }
         }
-
         internal FunctionScope()
+            : this(null)
         {
+
+        }
+
+        internal FunctionScope(FunctionScope parent)
+        {
+            Parent = parent;
             ReturnLabel = Et.Label(typeof(object), "#return");
-            FrameExpr = Et.Parameter(typeof(IObj), "#frame");
+            ScopeExpr = Et.Parameter(typeof(Scope), "#scope");
             ThisExpr = Et.Parameter(typeof(IObj), "#this");
         }
 
@@ -45,7 +52,7 @@ namespace IronJS.Compiler
         {
             if (_labelScope == null)
             {
-                _labelScope = new LabelScope(null, name, isLoop);
+                _labelScope = new LabelScope(name, isLoop);
             }
             else
             {
@@ -55,7 +62,18 @@ namespace IronJS.Compiler
 
         internal void ExitLabelScope()
         {
-            _labelScope = _labelScope.Parent;
+            _labelScope = _labelScope.Exit();
         }
+
+        internal FunctionScope Enter()
+        {
+            return new FunctionScope(this);
+        }
+
+        internal FunctionScope Exit()
+        {
+            return Parent;
+        }
+
     }
 }

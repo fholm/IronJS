@@ -26,7 +26,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "1",
                 ScriptRunner.Run(
-                    "emit((1).toString())"
+                    "emit(1)"
                 )
             );
         }
@@ -37,7 +37,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "3.14",
                 ScriptRunner.Run(
-                    "emit((3.14).toString())"
+                    "emit(3.14)"
                 )
             );
         }
@@ -48,7 +48,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "true",
                 ScriptRunner.Run(
-                    "emit(true.toString())"
+                    "emit(true)"
                 )
             );
         }
@@ -59,7 +59,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "false",
                 ScriptRunner.Run(
-                    "emit(false.toString())"
+                    "emit(false)"
                 )
             );
         }

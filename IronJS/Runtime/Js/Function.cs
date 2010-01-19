@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime
 {
@@ -11,15 +12,15 @@ namespace IronJS.Runtime
 
     public class Function : Obj, IFunction
     {
-        public Function(IObj frame, Lambda lambda)
+        public Function(Scope scope, Lambda lambda)
         {
-            Frame = frame;
+            Scope = scope;
             Lambda = lambda;
         }
 
         #region IFunction Members
 
-        public IObj Frame { get; protected set; }
+        public Scope Scope { get; protected set; }
         public Lambda Lambda { get; protected set; }
 
         public IObj Construct()
@@ -28,6 +29,43 @@ namespace IronJS.Runtime
         }
 
         #endregion
+
+        #region Expression Tree
+
+        public static Et EtScope(Et obj)
+        {
+            return Et.Property(
+                EtUtils.Cast<IFunction>(obj),
+                "Scope"
+            );
+        }
+
+        public static Et EtLambda(Et obj)
+        {
+            return Et.Property(
+                EtUtils.Cast<IFunction>(obj),
+                "Lambda"
+            );
+        }
+
+        public static Et EtDelegate(Et obj)
+        {
+            return Et.Property(
+                EtLambda(obj),
+                "Delegate"
+            );
+        }
+
+        public static Et EtCall(Et obj, Et scope)
+        {
+            return Et.Call(
+                EtDelegate(obj),
+                typeof(LambdaType).GetMethod("Invoke"),
+                scope
+            );
+        }
+
+        #endregion 
 
         #region IDynamicMetaObjectProvider Members
 

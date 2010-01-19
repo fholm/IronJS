@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace IronJS.Compiler.Ast
 {
@@ -43,7 +44,12 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            if (Nodes.Count == 0)
+                return Et.Default(typeof(object));
+
+            return Et.Block(
+                Nodes.Select(x => x.Walk(etgen))
+            );
         }
     }
 }

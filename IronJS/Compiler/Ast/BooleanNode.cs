@@ -5,6 +5,8 @@ using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = System.Linq.Expressions.Expression;
+
     class BooleanNode : Node
     {
         public readonly bool Value;
@@ -15,9 +17,9 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
+        public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return Et.Constant(Value, typeof(object));
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Text;
 namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
+    using IronJS.Runtime.Js;
 
     class IdentifierNode : Node
     {
@@ -25,7 +26,10 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return Scope.EtPull(
+                etgen.FunctionScope.ScopeExpr,
+                Name
+            );
         }
     }
 }

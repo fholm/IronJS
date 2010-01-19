@@ -24,6 +24,12 @@ namespace IronJS.Compiler
         internal string Name { get; private set; }
         internal bool IsLoop { get; private set; }
 
+        internal LabelScope(string name = null, bool isLoop = true)
+            :this(null, name, isLoop)
+        {
+
+        }
+
         internal LabelScope(LabelScope parent, string name = null, bool isLoop = true)
         {
             Name = name;
@@ -84,6 +90,11 @@ namespace IronJS.Compiler
         internal LabelScope Enter(string name, bool isLoop)
         {
             return new LabelScope(this, name, isLoop);
+        }
+
+        internal LabelScope Exit()
+        {
+            return Parent;
         }
     }
 }

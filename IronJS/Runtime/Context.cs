@@ -8,10 +8,14 @@ using System.Linq.Expressions;
 using System.Dynamic;
 using System.Reflection;
 using System.Globalization;
-using IronJS.Runtime.Builtins;
+//using IronJS.Runtime.Builtins;
 
 namespace IronJS.Runtime
 {
+    using Et = System.Linq.Expressions.Expression;
+    using EtParam = System.Linq.Expressions.ParameterExpression;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+
     public class Context
     {
         internal IObj BuiltinsFrame { get; private set; }
@@ -38,8 +42,9 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            BuiltinsFrame = new Frame(this);
+            //BuiltinsFrame = new Frame(this);
 
+            /*
             // Object.prototype and Object
             ObjectPrototype = ObjectObject.CreatePrototype(this);
             ObjectConstructor = ObjectObject.CreateConstructor(this);
@@ -57,13 +62,15 @@ namespace IronJS.Runtime
 
             // Number.prototype
             NumberPrototype = NumberObject.CreatePrototype(this);
-
+            */
             // Math
             // Math = MathObject.Create(this);
         }
 
         internal IObj Run(Action<IObj> target, Action<IObj> setup)
         {
+            return null;
+            /*
             var globals = new Frame(this);
 
             // Push on global frame
@@ -82,6 +89,7 @@ namespace IronJS.Runtime
             target(globals);
 
             return globals;
+            */
         }
 
         #region Object creators
@@ -125,9 +133,9 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IFunction CreateFunction(IObj frame, Lambda lambda)
+        public IFunction CreateFunction(Scope scope, Lambda lambda)
         {
-            var obj = new Function(frame, lambda);
+            var obj = new Function(scope, lambda);
 
             var protoObj = CreateObject();
             protoObj.SetOwnProperty("constructor", obj);
@@ -245,6 +253,7 @@ namespace IronJS.Runtime
         {
             var ctx = new Context();
 
+            /*
             // Object
             (ctx.ObjectConstructor as Function).Prototype = ctx.FunctionPrototype;
             ctx.ObjectConstructor.SetOwnProperty("prototype", ctx.ObjectPrototype);
@@ -256,9 +265,24 @@ namespace IronJS.Runtime
             // Function.prototype
             (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
             ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.FunctionConstructor);
+            */
 
             return ctx;
         }
+
+        #region Expression Tree
+
+        static internal Et EtCreateFunction(Context context, Et scope, Et lambda)
+        {
+            return Et.Call(
+                Et.Constant(context),
+                typeof(Context).GetMethod("CreateFunction"),
+                scope,
+                lambda
+            );
+        }
+
+        #endregion
 
         #endregion
 

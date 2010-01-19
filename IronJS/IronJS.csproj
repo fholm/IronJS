@@ -56,9 +56,8 @@
     <Compile Include="Compiler\Ast\BlockNode.cs" />
     <Compile Include="Compiler\AstGenerator.cs" />
     <Compile Include="Compiler\Ast\BreakNode.cs" />
-    <Compile Include="Compiler\Ast\CallNode.cs" />
-    <Compile Include="Compiler\Ast\ClrNewNode.cs" />
     <Compile Include="Compiler\Ast\BinaryOpNode.cs" />
+    <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\ContinueNode.cs" />
     <Compile Include="Compiler\Ast\IdentifierNode.cs" />
     <Compile Include="Compiler\Ast\IfNode.cs" />
@@ -75,7 +74,6 @@
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
     <Compile Include="Compiler\Ast\CatchNode.cs" />
-    <Compile Include="Compiler\CodeUnit.cs" />
     <Compile Include="Compiler\CompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
     <Compile Include="Compiler\EtGenerator.cs" />
@@ -116,18 +114,16 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
-    <Compile Include="Runtime\Builtins\ArrayObject.cs" />
-    <Compile Include="Runtime\Builtins\BooleanObject.cs" />
-    <Compile Include="Runtime\Builtins\FunctionObject.cs" />
-    <Compile Include="Runtime\Builtins\NumberObject.cs" />
-    <Compile Include="Runtime\Builtins\ObjectObject.cs" />
+    <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />
     <Compile Include="Runtime\Js\Function.cs" />
-    <Compile Include="Runtime\Js\IFunction.cs" />
+    <Compile Include="Runtime\Js\IFunction.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\IObj.cs" />
     <Compile Include="Runtime\Js\IValueObj.cs" />
-    <Compile Include="Runtime\Js\IFunctionMeta.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -141,18 +137,13 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Scope.cs" />
-    <Compile Include="Runtime\Js\Table.cs" />
-    <Compile Include="Runtime\Js\Utils\EtTypeConverter.cs" />
+    <Compile Include="Runtime\Js\FunctionTable.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\Utils\IFunctionEtUtils.cs" />
     <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Utils\IObjEtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Utils\RestrictUtils.cs">

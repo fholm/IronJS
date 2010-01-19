@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Tests
 {
@@ -12,18 +14,24 @@ namespace IronJS.Tests
             var emitter = new StringBuilder();
             var context = Runtime.Context.Setup();
 
-            var astBuilder = new Compiler.Ast.AstGenerator();
+            var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
+
+            var scope = Scope.CreateGlobal(context);
+
+            Func<object, object> emit = (obj) => {
+                return emitter.Append(JsTypeConverter.ToString(obj));
+            };
+
+            scope.Global(
+                "emit",
+                emit
+            );
 
             var astNodes = astBuilder.Build(source);
             var compiled = etGenerator.Build(astNodes, context);
 
-            var result = compiled.Run(globals => {
-                globals.Put(
-                    "emit",
-                    new Func<object, StringBuilder>(emitter.Append)
-                );
-            });
+            compiled(scope);
 
             return emitter.ToString();
         }
@@ -33,18 +41,24 @@ namespace IronJS.Tests
             var emitter = new StringBuilder();
             var context = Runtime.Context.Setup();
 
-            var astBuilder = new Compiler.Ast.AstGenerator();
+            var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
+
+            var scope = Scope.CreateGlobal(context);
+            
+            Func<object, object> emit = (obj) => {
+                return emitter.Append(JsTypeConverter.ToString(obj));
+            };
+
+            scope.Global(
+                "emit",
+                emit
+            );
 
             var astNodes = astBuilder.Build(filename, Encoding.UTF8);
             var compiled = etGenerator.Build(astNodes, context);
 
-            var result = compiled.Run(globals => {
-                globals.Put(
-                    "emit",
-                    new Func<object, StringBuilder>(emitter.Append)
-                );
-            });
+            compiled(scope);
 
             return emitter.ToString();
         }

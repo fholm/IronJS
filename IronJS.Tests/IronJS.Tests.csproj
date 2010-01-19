@@ -40,10 +40,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MathObjectTests.cs" />
+    <Compile Include="BinaryOpTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRunner.cs" />
     <Compile Include="SimpleTests.cs" />
+    <Compile Include="TypeConversionTests.cs" />
+    <Compile Include="UnaryOpTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronJS\IronJS.csproj">

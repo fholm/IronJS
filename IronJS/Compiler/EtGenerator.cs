@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using IronJS.Extensions;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
-using IronJS.Runtime.Js.Utils;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 
@@ -14,109 +13,97 @@ namespace IronJS.Compiler
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
-    using LambdaExprList = List<Tuple<Expression<Func<IObj, IObj, object>>, List<string>>>;
+    using LambdaTuple = Tuple<Expression<LambdaType>, List<string>>;
 
     public class EtGenerator
     {
-        Context _context;
-        ParameterExpression _tableExpr;
-        ParameterExpression _globalFrameExpr;
-        LambdaExprList _lambdaExprs;
-        Stack<FunctionScope> _functionScopes;
+        internal Context Context { get; private set; }
+        internal FunctionScope FunctionScope { get; private set; }
+        internal List<LambdaTuple> LambdaTuples { get; private set; }
+        internal ParameterExpression FuncTableExpr { get; private set; }
+        internal ParameterExpression GlobalScopeExpr { get; private set; }
 
-        int _lambdaId
+        internal int LambdaId { get { return LambdaTuples.Count - 1; } }
+
+        public Action<Scope> Build(List<Ast.Node> astNodes, Context context)
         {
-            get { return _lambdaExprs.Count - 1; }
-        }
+            // Context we're compiling this code for
+            Context = context;
 
-        FunctionScope _functionScope
-        {
-            get { return _functionScopes.Peek(); }
-        }
+            // Holds the uncompiled tuples of Expression<LambdaType> and List<string> of parameter
+            LambdaTuples = new List<LambdaTuple>();
 
-        public CodeUnit Build(List<Ast.Node> astNodes, Context context)
-        {
-            _context = context;
-            _tableExpr = Et.Parameter(typeof(Table), "#functbl");
-            _lambdaExprs = new LambdaExprList();
-            _functionScopes = new Stack<FunctionScope>();
+            // Function table
+            FuncTableExpr = 
+                Et.Parameter(
+                    typeof(FunctionTable), 
+                    "#functbl"
+                );
 
-            // Enter gobal frame
-            EnterFunctionScope();
+            // Global function scope
+            FunctionScope = new FunctionScope();
 
             // Store the frame expr for global frame
-            _globalFrameExpr = _functionScope.FrameExpr;
+            GlobalScopeExpr = FunctionScope.ScopeExpr;
 
+            // Stores all global expressions
             var globalExprs = new List<Et>();
 
+            // Walk each global node
             foreach (var node in astNodes)
-                globalExprs.Add(Generate(node));
+                globalExprs.Add(node.Walk(this));
 
-            var buildLambdaExprs = new List<Et>();
-
-            buildLambdaExprs.Add(
-                Et.Assign(
-                    _tableExpr,
-                    AstUtils.SimpleNewHelper(
-                        typeof(Table).GetConstructor(Type.EmptyTypes)
-                    )
-                )
-            );
-
-            var tablePushMi = typeof(Table).GetMethod("Push");
-            var functionCtor = typeof(Lambda).GetConstructor(
-                new[] { 
-                    typeof(Func<Scope, IObj, object>), 
-                    typeof(List<string>)
-                }
-            );
-
-            foreach (var lambda in _lambdaExprs)
-            {
-                buildLambdaExprs.Add(
-                    Et.Call(
-                        _tableExpr,
-                        tablePushMi,
-                        AstUtils.SimpleNewHelper(functionCtor, lambda.V1, Et.Constant(lambda.V2))
-                    )
-                );
-            }
-
-            var allExprs = CollectionUtils.Concat(
-                buildLambdaExprs, 
-                globalExprs
-            );
-
-            var compiledDelegate = Et.Lambda<Action<IObj>>(
+            return Et.Lambda<Action<Scope>>(
                 Et.Block(
-                    new[] { _tableExpr },
-                    allExprs
+                    new[] { FuncTableExpr },
+
+                    // Create instance of our functable
+                    Et.Assign(
+                        FuncTableExpr,
+                        FunctionTable.EtNew()
+                    ),
+
+                    // Push functions into functable
+                    LambdaTuples.Count > 0 
+                      ? (Et) Et.Block(
+                            LambdaTuples.Select(x => 
+                                FunctionTable.EtPush(
+                                    FuncTableExpr,
+                                    Lambda.EtNew(
+                                        x.V1,
+                                        Et.Constant(x.V2.ToArray())
+                                    )
+                                )
+                            )
+                        )
+                      : (Et) AstUtils.Empty(), // hack
+
+                    // Execute global scope
+                    Et.Block(globalExprs)
                 ),
-                _functionScope.FrameExpr
+                GlobalScopeExpr
             ).Compile();
-
-            return new CodeUnit(compiledDelegate, _context);
         }
 
-        private void EnterFunctionScope()
+        internal void EnterFunctionScope()
         {
-            _functionScopes.Push(new FunctionScope());
+            FunctionScope = FunctionScope.Enter();
         }
 
-        private void ExitFunctionScope()
+        internal void ExitFunctionScope()
         {
-            _functionScopes.Pop();
+            FunctionScope = FunctionScope.Parent;
         }
 
         private Et Generate(Ast.Node node)
         {
             if (node is Ast.ILabelableNode)
-                (node as Ast.ILabelableNode).Enter(_functionScope);
+                (node as Ast.ILabelableNode).Enter(FunctionScope);
 
             var et = GenerateEt(node);
 
             if (node is Ast.ILabelableNode)
-                (node as Ast.ILabelableNode).Exit(_functionScope);
+                (node as Ast.ILabelableNode).Exit(FunctionScope);
 
             return et;
         }
@@ -239,7 +226,7 @@ namespace IronJS.Compiler
                 var maNode = (Ast.MemberAccessNode)node.Target;
 
                 return EtUtils.Box(Et.Dynamic(
-                    _context.CreateDeleteMemberBinder(maNode.Name),
+                    Context.CreateDeleteMemberBinder(maNode.Name),
                     typeof(void),
                     Generate(maNode.Target)
                 ));
@@ -250,7 +237,7 @@ namespace IronJS.Compiler
                 var iaNode = (Ast.IndexAccessNode)node.Target;
 
                 return EtUtils.Box(Et.Dynamic(
-                    _context.CreateDeleteIndexBinder(
+                    Context.CreateDeleteIndexBinder(
                         new CallInfo(1)
                     ),
                     typeof(void),
@@ -317,7 +304,7 @@ namespace IronJS.Compiler
                 Et.Assign(
                     obj,
                     Et.Dynamic(
-                        _context.CreateConvertBinder(typeof(IObj)),
+                        Context.CreateConvertBinder(typeof(IObj)),
                         typeof(IObj),
                         Generate(node.Source)
                     )
@@ -430,7 +417,7 @@ namespace IronJS.Compiler
         private Et GenerateIndexAccess(Ast.IndexAccessNode node)
         {
             return Et.Dynamic(
-                _context.CreateGetIndexBinder(new CallInfo(1)),
+                Context.CreateGetIndexBinder(new CallInfo(1)),
                 typeof(object),
                 Generate(node.Target),
                 Generate(node.Index)
@@ -531,9 +518,9 @@ namespace IronJS.Compiler
         private Et GenerateContinue(Ast.ContinueNode node)
         {
             if (node.Label == null)
-                return Et.Continue(_functionScope.LabelScope.Continue());
+                return Et.Continue(FunctionScope.LabelScope.Continue());
 
-            return Et.Continue(_functionScope.LabelScope.Continue(node.Label));
+            return Et.Continue(FunctionScope.LabelScope.Continue(node.Label));
         }
 
         // 12.8
@@ -541,9 +528,9 @@ namespace IronJS.Compiler
         private Et GenerateBreak(Ast.BreakNode node)
         {
             if (node.Label == null)
-                return Et.Break(_functionScope.LabelScope.Break());
+                return Et.Break(FunctionScope.LabelScope.Break());
 
-           return Et.Break(_functionScope.LabelScope.Break(node.Label));
+           return Et.Break(FunctionScope.LabelScope.Break(node.Label));
         }
 
         // 12.6.3
@@ -555,7 +542,7 @@ namespace IronJS.Compiler
             var incr = Generate(node.Incr);
             var test =
                 Et.Dynamic(
-                    _context.CreateConvertBinder(typeof(bool)),
+                    Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
                     Generate(node.Test)
                 );
@@ -565,8 +552,8 @@ namespace IronJS.Compiler
                 incr,
                 body,
                 null,
-                _functionScope.LabelScope.Break(),
-                _functionScope.LabelScope.Continue()
+                FunctionScope.LabelScope.Break(),
+                FunctionScope.LabelScope.Continue()
             );
 
             return Et.Block(
@@ -584,7 +571,7 @@ namespace IronJS.Compiler
             Et loop;
 
             var test = Et.Dynamic(
-                _context.CreateConvertBinder(typeof(bool)),
+                Context.CreateConvertBinder(typeof(bool)),
                 typeof(bool),
                 Generate(node.Test)
             );
@@ -598,8 +585,8 @@ namespace IronJS.Compiler
                     test,
                     body,
                     null,
-                    _functionScope.LabelScope.Break(),
-                    _functionScope.LabelScope.Continue()
+                    FunctionScope.LabelScope.Break(),
+                    FunctionScope.LabelScope.Continue()
                 );
             }
             // do ... while
@@ -613,8 +600,8 @@ namespace IronJS.Compiler
                 bodyExprs.Add(
                     Et.IfThenElse(
                         test,
-                        Et.Continue(_functionScope.LabelScope.Continue()),
-                        Et.Break(_functionScope.LabelScope.Break())
+                        Et.Continue(FunctionScope.LabelScope.Continue()),
+                        Et.Break(FunctionScope.LabelScope.Break())
                     )
                 );
 
@@ -622,8 +609,8 @@ namespace IronJS.Compiler
                     Et.Block(
                         bodyExprs
                     ),
-                    _functionScope.LabelScope.Break(),
-                    _functionScope.LabelScope.Continue()
+                    FunctionScope.LabelScope.Break(),
+                    FunctionScope.LabelScope.Continue()
                 );
             }
             else
@@ -646,7 +633,7 @@ namespace IronJS.Compiler
 
                         Et.Convert(
                             Et.Dynamic(
-                                _context.CreateConvertBinder(typeof(double)),
+                                Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
                                 Generate(node.Left)
                             ),
@@ -655,7 +642,7 @@ namespace IronJS.Compiler
 
                         Et.Convert(
                             Et.Dynamic(
-                                _context.CreateConvertBinder(typeof(double)),
+                                Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
                                 Generate(node.Right)
                             ),
@@ -694,7 +681,7 @@ namespace IronJS.Compiler
         {
             return Et.Condition(
                 Et.Dynamic(
-                    _context.CreateConvertBinder(typeof(bool)),
+                    Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
                     Generate(node.Test)
                 ),
@@ -748,7 +735,7 @@ namespace IronJS.Compiler
                 Et.Assign(
                     tmp, 
                     Et.Dynamic(
-                        _context.CreateConvertBinder(typeof(double)),
+                        Context.CreateConvertBinder(typeof(double)),
                         typeof(double),
                         target
                     )
@@ -785,7 +772,7 @@ namespace IronJS.Compiler
                 Et.Assign(tmp, Generate(node.Left)),
                 Et.Condition(
                     Et.Dynamic(
-                        _context.CreateConvertBinder(typeof(bool)),
+                        Context.CreateConvertBinder(typeof(bool)),
                         typeof(bool),
                         tmp
                     ),
@@ -807,7 +794,7 @@ namespace IronJS.Compiler
         private Et GenerateUnaryOp(Ast.UnaryOpNode node)
         {
             return Et.Dynamic(
-                _context.CreateUnaryOpBinder(node.Op),
+                Context.CreateUnaryOpBinder(node.Op),
                 typeof(object),
                 Generate(node.Target)
             );
@@ -825,10 +812,10 @@ namespace IronJS.Compiler
         private Et GenerateMemberAccess(Ast.MemberAccessNode node)
         {
             return Et.Dynamic(
-                _context.CreateGetMemberBinder(node.Name),
+                Context.CreateGetMemberBinder(node.Name),
                 typeof(object),
                 Et.Dynamic(
-                    _context.CreateConvertBinder(typeof(IObj)),
+                    Context.CreateConvertBinder(typeof(IObj)),
                     typeof(object),
                     Generate(node.Target)
                 )
@@ -852,7 +839,7 @@ namespace IronJS.Compiler
                     tmp,
                     EtUtils.Cast<IObj>(
                         Et.Dynamic(
-                            _context.CreateInstanceBinder(
+                            Context.CreateInstanceBinder(
                                 new CallInfo(args.Length)
                             ),
                             typeof(object),
@@ -897,7 +884,7 @@ namespace IronJS.Compiler
         private Et GenerateReturn(Ast.ReturnNode node)
         {
             // return <expr>
-            return Et.Return(_functionScope.ReturnLabel, Generate(node.Value), typeof(object));
+            return Et.Return(FunctionScope.ReturnLabel, Generate(node.Value), typeof(object));
         }
 
         // 8.4
@@ -917,11 +904,12 @@ namespace IronJS.Compiler
         // 7.6
         private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
+            return null;
             // handle 'this' specially
             if(node.Name == "this")
-                return _functionScope.ThisExpr;
+                return FunctionScope.ThisExpr;
             
-            return FrameEtUtils.Pull(_functionScope.FrameExpr, node.Name);
+            //return FrameEtUtils.Pull(FunctionScope.ScopeExpr, node.Name);
         }
 
         // ???
@@ -947,7 +935,7 @@ namespace IronJS.Compiler
         {
             // left @ right
             return Et.Dynamic(
-                _context.CreateBinaryOpBinder(node.Op),
+                Context.CreateBinaryOpBinder(node.Op),
                 typeof(object),
                 Generate(node.Left),
                 Generate(node.Right)
@@ -967,7 +955,7 @@ namespace IronJS.Compiler
                 );
 
                 return Et.Dynamic(
-                    _context.CreateInvokeBinder(
+                    Context.CreateInvokeBinder(
                         new CallInfo(args.Length)
                     ),
                     typeof(object),
@@ -995,7 +983,7 @@ namespace IronJS.Compiler
                         targetExpr
                     ),
                     Et.Dynamic(
-                        _context.CreateInvokeMemberBinder(
+                        Context.CreateInvokeMemberBinder(
                             target.Name,
                             new CallInfo(args.Length + 1)
                         ),
@@ -1015,7 +1003,7 @@ namespace IronJS.Compiler
         private Et GenerateConvertToObject(Et target)
         {
             return Et.Dynamic(
-                _context.CreateConvertBinder(typeof(IObj)),
+                Context.CreateConvertBinder(typeof(IObj)),
                 typeof(object),
                 target
             );
@@ -1032,17 +1020,17 @@ namespace IronJS.Compiler
 
             bodyExprs.Add(
                 Et.Label(
-                    _functionScope.ReturnLabel, 
+                    FunctionScope.ReturnLabel, 
                     Undefined.Expr // 12.9
                 )
             );
 
-            _lambdaExprs.Add(
+            LambdaTuples.Add(
                 Tuple.Create(
-                    Et.Lambda<Func<Scope, IObj, object>>(
+                    Et.Lambda<LambdaType>(
                         Et.Block(bodyExprs),
-                        _functionScope.ThisExpr,
-                        _functionScope.FrameExpr
+                        FunctionScope.ThisExpr,
+                        FunctionScope.ScopeExpr
                     ), 
                     argsList
                 )
@@ -1050,20 +1038,20 @@ namespace IronJS.Compiler
 
             ExitFunctionScope();
 
-            /*
+            /*  
              * 1) Create a new object with the current frame and current lambda as params
              * 2) Assign the #FunctionPrototype object to it's Prototype field
              * 3) return it
              */
 
             return Et.Call(
-                Et.Constant(_context),
+                Et.Constant(Context),
                 typeof(Context).GetMethod("CreateFunction"),
-                _functionScope.FrameExpr,
+                FunctionScope.ScopeExpr,
                 Et.Call(
-                    _tableExpr,
-                    typeof(Table).GetMethod("Pull"),
-                    Et.Constant(_lambdaId)
+                    FuncTableExpr,
+                    typeof(FunctionTable).GetMethod("Pull"),
+                    Et.Constant(LambdaId)
                 )
             );
         }
@@ -1075,24 +1063,35 @@ namespace IronJS.Compiler
         }
 
         // 11.13.1
-        private Et GenerateAssign(Ast.Node target, Et value)
+        internal Et GenerateAssign(Ast.Node target, Et value)
         {
             if (target is Ast.IdentifierNode)
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                return FrameEtUtils.Push(
-                    _functionScope.FrameExpr,
-                    idNode.Name,
-                    value
-                );
+                if (idNode.IsLocal)
+                {
+                    return Scope.EtLocal(
+                        FunctionScope.ScopeExpr,
+                        idNode.Name,
+                        value
+                    );
+                }
+                else
+                {
+                    return Scope.EtGlobal(
+                        FunctionScope.ScopeExpr,
+                        idNode.Name,
+                        value
+                    );
+                }
             }
             else if (target is Ast.MemberAccessNode)
             {
                 var maNode = (Ast.MemberAccessNode)target;
 
                 return Et.Dynamic(
-                    _context.CreateSetMemberBinder(maNode.Name),
+                    Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
                     Generate(maNode.Target),
                     value
@@ -1103,7 +1102,7 @@ namespace IronJS.Compiler
                 var ixNode = (Ast.IndexAccessNode)target;
 
                 return Et.Dynamic(
-                    _context.CreateSetIndexBinder(new CallInfo(1)),
+                    Context.CreateSetIndexBinder(new CallInfo(1)),
                     typeof(object),
                     Generate(ixNode.Target),
                     Generate(ixNode.Index),
@@ -1112,6 +1111,14 @@ namespace IronJS.Compiler
             }
 
             throw new NotImplementedException();
+        }
+
+        internal Et WalkIfNotNull(Ast.Node node)
+        {
+            if (node != null)
+                return node.Walk(this);
+
+            return Et.Default(typeof(object));
         }
     }
 }

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace IronJS.Compiler.Ast
 {
     using Et = System.Linq.Expressions.Expression;
+    using IronJS.Runtime.Js;
+    using IronJS.Runtime;
 
     class LambdaNode : Node
     {
@@ -29,9 +32,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(argsIndentStr + "(Args");
 
             foreach (var node in Args)
-            {
                 node.Print(writer, indent + 2);
-            }
 
             writer.AppendLine(argsIndentStr + ")");
             Body.Print(writer, indent + 1);
@@ -40,7 +41,36 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            etgen.EnterFunctionScope();
+
+            etgen.LambdaTuples.Add(
+                Tuple.Create(
+                    Et.Lambda<LambdaType>(
+                        Et.Block(
+                            // lambda body
+                            Body.Walk(etgen),
+                            Et.Label(
+                                etgen.FunctionScope.ReturnLabel,
+                                Undefined.Expr // 12.9
+                            )
+                        ),
+                        etgen.FunctionScope.ScopeExpr
+                    ),
+                    // parameter names
+                    Args.Select(x => x.Name).ToList()
+                )
+            );
+
+            etgen.ExitFunctionScope();
+
+            return Context.EtCreateFunction(
+                etgen.Context,
+                etgen.FunctionScope.ScopeExpr,
+                FunctionTable.EtPull(
+                    etgen.FuncTableExpr,
+                    etgen.LambdaId
+                )
+            );
         }
     }
 }

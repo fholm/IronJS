@@ -8,6 +8,9 @@
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>
           <TestDirectory resolutionType="Automatic" />
+          <RuntimeResolution>
+            <Directory path="%USERPROFILE%\Projects\IronJS\IronJS.Tests" includeSubDirectories="true" />
+          </RuntimeResolution>
         </AssemblyResolution>
       </UnitTestRunConfig>
       <WebTestRunConfiguration testTypeId="4e7599fa-5ecb-43e9-a887-cd63cf72d207">

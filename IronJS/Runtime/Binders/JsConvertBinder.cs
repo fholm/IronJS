@@ -15,6 +15,7 @@ namespace IronJS.Runtime.Binders
     using ParamEt = System.Linq.Expressions.ParameterExpression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using IronJS.Runtime.Js.Utils;
 
     class JsConvertBinder : ConvertBinder
     {
@@ -38,25 +39,27 @@ namespace IronJS.Runtime.Binders
 
             if (Type == typeof(Js.IObj))
                 return new Meta(
-                    TypeConverter.ToObject(target, _context),
+                    EtUtils.Cast<IObj>(
+                        EtTypeConverter.ToObject(target, _context)
+                    ),
                     restrictions
                 );
 
             if (Type == typeof(bool))
                 return new Meta(
-                    TypeConverter.ToBoolean(target),
+                    EtTypeConverter.ToBoolean(target),
                     restrictions
                 );
 
             if (Type == typeof(double))
                 return new Meta(
-                    TypeConverter.ToNumber(target),
+                    EtTypeConverter.ToNumber(target),
                     restrictions
                 );
 
             if (Type == typeof(string))
                 return new Meta(
-                    TypeConverter.ToString(target),
+                    EtTypeConverter.ToString(target),
                     restrictions
                 );
 

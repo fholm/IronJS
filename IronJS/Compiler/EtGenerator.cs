@@ -14,7 +14,7 @@ namespace IronJS.Compiler
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = System.Linq.Expressions.Expression;
-    using LambdaExprList = List<Tuple<Expression<Func<IObj, IFrame, object>>, List<string>>>;
+    using LambdaExprList = List<Tuple<Expression<Func<IObj, IObj, object>>, List<string>>>;
 
     public class EtGenerator
     {
@@ -63,20 +63,10 @@ namespace IronJS.Compiler
                 )
             );
 
-            //TODO: remove after debugging
-            buildLambdaExprs.Add(
-                IFrameEtUtils.Push(
-                    _functionScope.FrameExpr, 
-                    "functbl", 
-                    _tableExpr, 
-                    VarType.Local
-                )
-            );
-
             var tablePushMi = typeof(Table).GetMethod("Push");
             var functionCtor = typeof(Lambda).GetConstructor(
                 new[] { 
-                    typeof(Func<IObj, IFrame, object>), 
+                    typeof(Func<Scope, IObj, object>), 
                     typeof(List<string>)
                 }
             );
@@ -97,7 +87,7 @@ namespace IronJS.Compiler
                 globalExprs
             );
 
-            var compiledDelegate = Et.Lambda<Action<IFrame>>(
+            var compiledDelegate = Et.Lambda<Action<IObj>>(
                 Et.Block(
                     new[] { _tableExpr },
                     allExprs
@@ -198,14 +188,19 @@ namespace IronJS.Compiler
                 case Ast.NodeType.ForStep:
                     return GenerateForStep((Ast.ForStepNode)node);
 
+                case Ast.NodeType.ForIn:
+                    return GenerateForIn((Ast.ForInNode)node);
+
                 case Ast.NodeType.Break:
                     return GenerateBreak((Ast.BreakNode)node);
 
                 case Ast.NodeType.Continue:
                     return GenerateContinue((Ast.ContinueNode)node);
 
+                /*
                 case Ast.NodeType.With:
                     return GenerateWith((Ast.WithNode)node);
+                */
 
                 case Ast.NodeType.Try:
                     return GenerateTry((Ast.TryNode)node);
@@ -215,6 +210,9 @@ namespace IronJS.Compiler
 
                 case Ast.NodeType.IndexAccess:
                     return GenerateIndexAccess((Ast.IndexAccessNode)node);
+
+                case Ast.NodeType.Delete:
+                    return GenerateDelete((Ast.DeleteNode)node);
 
                 #region Constants
 
@@ -234,6 +232,201 @@ namespace IronJS.Compiler
             }
         }
 
+        private Et GenerateDelete(Ast.DeleteNode node)
+        {
+            if (node.Target is Ast.MemberAccessNode)
+            {
+                var maNode = (Ast.MemberAccessNode)node.Target;
+
+                return EtUtils.Box(Et.Dynamic(
+                    _context.CreateDeleteMemberBinder(maNode.Name),
+                    typeof(void),
+                    Generate(maNode.Target)
+                ));
+            }
+
+            if (node.Target is Ast.IndexAccessNode)
+            {
+                var iaNode = (Ast.IndexAccessNode)node.Target;
+
+                return EtUtils.Box(Et.Dynamic(
+                    _context.CreateDeleteIndexBinder(
+                        new CallInfo(1)
+                    ),
+                    typeof(void),
+                    Generate(iaNode.Target),
+                    Generate(iaNode.Index)
+                ));
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private Et GenerateForIn(Ast.ForInNode node)
+        {
+            /*
+            IObj obj = <node.Source>
+            IEnumerator<object> keys = null;
+            var set = new HashSet<object>();
+            object current = null;
+
+            while (true)
+            {
+                if (obj == null)
+                    break;
+
+                keys = obj.GetAllPropertyNames().GetEnumerator();
+
+                while (true)
+                {
+                    if (!keys.MoveNext())
+                        break;
+
+                    current = keys.Current;
+
+                    if (set.Contains(current))
+                        continue;
+
+                    if (obj.HasOwnProperty(current))
+                    {
+                        set.Add(current);
+                        <node.Target> = current;
+                        <node.Body>
+                    }
+                }
+
+                keys.Dispose();
+                obj = obj.Prototype;
+            }
+            */
+
+            // tmp variables
+            var obj = Et.Variable(typeof(IObj), "#tmp-forin-obj");
+            var keys = Et.Variable(typeof(List<object>.Enumerator), "#tmp-forin-keys"); // IEnumerator<object> keys = null;
+            var set = Et.Variable(typeof(HashSet<object>), "#tmp-forin-set");
+            var current = Et.Variable(typeof(object), "#tmp-forin-current"); // object current = null;
+
+            // labels
+            var innerBreak = Et.Label("#tmp-forin-inner-break");
+            var innerContinue = Et.Label("#tmp-forin-inner-continue");
+            var outerBreak = Et.Label("#tmp-forin-outer-break");
+
+            return Et.Block(
+                new[] { obj, keys, set, current },
+                // IObj obj = <node.Source>
+                Et.Assign(
+                    obj,
+                    Et.Dynamic(
+                        _context.CreateConvertBinder(typeof(IObj)),
+                        typeof(IObj),
+                        Generate(node.Source)
+                    )
+                ),
+                // var set = new HashSet<object>();
+                Et.Assign(
+                    set,
+                    AstUtils.SimpleNewHelper(
+                        typeof(HashSet<object>).GetConstructor(Type.EmptyTypes)
+                    )
+                ),
+                // while(true) {
+                Et.Loop(
+                    Et.Block(
+                        // if(obj == null) 
+                        Et.IfThen( 
+                            Et.Equal(obj, Et.Default(typeof(IObj))),
+                            // break;
+                            Et.Break(outerBreak)
+                        ),
+                        // keys = obj.GetAllPropertyNames().GetEnumerator();
+                        Et.Assign(
+                            keys, 
+                            Et.Call(
+                                Et.Call(
+                                    obj,
+                                    typeof(IObj).GetMethod("GetAllPropertyNames")
+                                ),
+                                typeof(List<object>).GetMethod("GetEnumerator")
+                            )
+                        ),
+                        // while(true) {
+                        Et.Loop(
+                            Et.Block(
+                                // if (!keys.MoveNext())
+                                Et.IfThen(
+                                    Et.Not(
+                                        Et.Call(
+                                            keys,
+                                            typeof(List<object>.Enumerator).GetMethod("MoveNext")
+                                        )
+                                    ),
+                                    // break;
+                                    Et.Break(innerBreak)
+                                ),
+                                // current = keys.Current;
+                                Et.Assign(
+                                    current,
+                                    Et.Property(
+                                        keys,
+                                        "Current"
+                                    )
+                                ),
+                                // if (set.Contains(current))
+                                Et.IfThen(
+                                    Et.Call(
+                                        set,
+                                        typeof(HashSet<object>).GetMethod("Contains"),
+                                        current
+                                    ),
+                                    //  continue;
+                                    Et.Continue(innerContinue)
+                                ),
+                                // if (obj.HasOwnProperty(current)) {
+                                Et.IfThen(
+                                    Et.Call(
+                                        obj,
+                                        typeof(IObj).GetMethod("HasOwnProperty"),
+                                        current
+                                    ),
+                                    Et.Block(
+                                        // set.Add(current);
+                                        Et.Call(
+                                            set,
+                                            typeof(HashSet<object>).GetMethod("Add"),
+                                            current
+                                        ),
+                                        // <node.Target> = current;
+                                        GenerateAssign(
+                                            node.Target,
+                                            current
+                                        ),
+                                        // <node.Body>
+                                        Generate(node.Body)
+                                    )
+                                )
+                            ),
+                            innerBreak,
+                            innerContinue
+                        ),
+                        // keys.Dispose();
+                        Et.Call(
+                            keys,
+                            typeof(List<object>.Enumerator).GetMethod("Dispose")
+                        ),
+                        // obj = obj.Prototype;
+                        Et.Assign(
+                            obj,
+                            Et.Property(
+                                obj,
+                                "Prototype"
+                            )
+                        )
+                    ),
+                    outerBreak
+                )
+            );
+        }
+
         private Et GenerateIndexAccess(Ast.IndexAccessNode node)
         {
             return Et.Dynamic(
@@ -247,7 +440,10 @@ namespace IronJS.Compiler
         private Et GenerateThrow(Ast.ThrowNode node)
         {
             return Et.Throw(
-                Generate(node.Target)
+                AstUtils.SimpleNewHelper(
+                    typeof(RuntimeError).GetConstructor(new[] { typeof(IObj) }),
+                    Generate(node.Target)
+                )
             );
         }
 
@@ -266,11 +462,16 @@ namespace IronJS.Compiler
                 var catchParam = Et.Parameter(typeof(object), "#catch");
 
                 var catchBody = Et.Block(
-                    BuildAssign(
+                    GenerateAssign(
                         node.Catch.Target, 
-                        catchParam
+                        Et.Property(
+                            Et.Convert(catchParam, typeof(RuntimeError)),
+                            "Obj"
+                        )
                     ),
-                    Generate(node.Catch.Body)
+                    Et.Block(
+                        Generate(node.Catch.Body)
+                    )
                 );
 
                 var catchBlock = Et.Catch(
@@ -300,6 +501,7 @@ namespace IronJS.Compiler
             }
         }
 
+        /*
         // with(...) { ... }
         private Et GenerateWith(Ast.WithNode node)
         {
@@ -309,7 +511,7 @@ namespace IronJS.Compiler
                         typeof(WithFrame).GetConstructor(
                             new[] { 
                                 typeof(IObj), 
-                                typeof(IFrame)
+                                typeof(IObj)
                             }
                         ),
                         Generate(node.Target),
@@ -317,12 +519,13 @@ namespace IronJS.Compiler
                     )
                 ),
                 Generate(node.Body),
-                IFrameEtUtils.Exit(
+                FrameEtUtils.Exit(
                     _functionScope.FrameExpr,
                     _functionScope.FrameExpr
                 )
             );
         }
+        */
 
         // continue
         private Et GenerateContinue(Ast.ContinueNode node)
@@ -552,7 +755,7 @@ namespace IronJS.Compiler
                 ),
 
                 // calc new value
-                BuildAssign(
+                GenerateAssign(
                     node.Target,
                     EtUtils.Box(
                         Et.Add(
@@ -644,7 +847,6 @@ namespace IronJS.Compiler
             var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 
-            
             exprs.Add(
                 Et.Assign(
                     tmp,
@@ -713,13 +915,13 @@ namespace IronJS.Compiler
         }
 
         // 7.6
-        private Et GenerateIdentifier(Ast.IdentifierNode node, Runtime.Js.GetType type = Runtime.Js.GetType.Value)
+        private Et GenerateIdentifier(Ast.IdentifierNode node)
         {
             // handle 'this' specially
             if(node.Name == "this")
                 return _functionScope.ThisExpr;
             
-            return IFrameEtUtils.Pull(_functionScope.FrameExpr, node.Name, type);
+            return FrameEtUtils.Pull(_functionScope.FrameExpr, node.Name);
         }
 
         // ???
@@ -761,8 +963,7 @@ namespace IronJS.Compiler
             if (node.Target is Ast.IdentifierNode)
             {
                 var target = GenerateIdentifier(
-                    (Ast.IdentifierNode)node.Target, 
-                    Runtime.Js.GetType.Name
+                    (Ast.IdentifierNode)node.Target
                 );
 
                 return Et.Dynamic(
@@ -782,23 +983,42 @@ namespace IronJS.Compiler
             else if(node.Target is Ast.MemberAccessNode)
             {
                 var target = (Ast.MemberAccessNode)node.Target;
-                var targetExpr = Generate(target.Target);
+                var tmp = Et.Variable(typeof(object), "#tmp");
+                var targetExpr = GenerateConvertToObject(
+                        Generate(target.Target)
+                    );
 
-                return Et.Dynamic(
-                    _context.CreateInvokeMemberBinder(
-                        target.Name,
-                        new CallInfo(args.Length + 1)
+                return Et.Block(
+                    new[] { tmp },
+                    Et.Assign(
+                        tmp,
+                        targetExpr
                     ),
-                    typeof(object),
-                    ArrayUtils.Insert(
-                        targetExpr,
-                        targetExpr,
-                        args
+                    Et.Dynamic(
+                        _context.CreateInvokeMemberBinder(
+                            target.Name,
+                            new CallInfo(args.Length + 1)
+                        ),
+                        typeof(object),
+                        ArrayUtils.Insert(
+                            tmp,
+                            tmp,
+                            args
+                        )
                     )
                 );
             }
 
             throw new NotImplementedException();
+        }
+
+        private Et GenerateConvertToObject(Et target)
+        {
+            return Et.Dynamic(
+                _context.CreateConvertBinder(typeof(IObj)),
+                typeof(object),
+                target
+            );
         }
 
         // 13
@@ -819,7 +1039,7 @@ namespace IronJS.Compiler
 
             _lambdaExprs.Add(
                 Tuple.Create(
-                    Et.Lambda<Func<IObj, IFrame, object>>(
+                    Et.Lambda<Func<Scope, IObj, object>>(
                         Et.Block(bodyExprs),
                         _functionScope.ThisExpr,
                         _functionScope.FrameExpr
@@ -851,21 +1071,20 @@ namespace IronJS.Compiler
         // 11.13.1
         private Et GenerateAssign(Ast.AssignNode node)
         {
-            return BuildAssign(node.Target, Generate(node.Value));
+            return GenerateAssign(node.Target, Generate(node.Value));
         }
 
         // 11.13.1
-        private Et BuildAssign(Ast.Node target, Et value)
+        private Et GenerateAssign(Ast.Node target, Et value)
         {
             if (target is Ast.IdentifierNode)
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                return IFrameEtUtils.Push(
+                return FrameEtUtils.Push(
                     _functionScope.FrameExpr,
                     idNode.Name,
-                    value,
-                    idNode.IsLocal ? VarType.Local : VarType.Global
+                    value
                 );
             }
             else if (target is Ast.MemberAccessNode)

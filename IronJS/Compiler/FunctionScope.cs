@@ -37,7 +37,7 @@ namespace IronJS.Compiler
         internal FunctionScope()
         {
             ReturnLabel = Et.Label(typeof(object), "#return");
-            FrameExpr = Et.Parameter(typeof(IFrame), "#frame");
+            FrameExpr = Et.Parameter(typeof(IObj), "#frame");
             ThisExpr = Et.Parameter(typeof(IObj), "#this");
         }
 

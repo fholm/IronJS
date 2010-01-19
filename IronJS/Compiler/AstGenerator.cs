@@ -12,6 +12,7 @@ namespace IronJS.Compiler.Ast
     using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
     using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
     using System.Linq.Expressions;
+    using System.Globalization;
 
     //TODO: implement delete operator
 
@@ -343,6 +344,10 @@ namespace IronJS.Compiler.Ast
                 case EcmaParser.VOID:
                     return BuildVoidOp(node);
 
+                // delete foo
+                case EcmaParser.DELETE:
+                    return BuildDelete(node);
+
                 /*
                  * Error handling
                  */
@@ -353,6 +358,11 @@ namespace IronJS.Compiler.Ast
                         Name(node)
                     );
             }
+        }
+
+        private Node BuildDelete(ITree node)
+        {
+            return new DeleteNode(Build(node.GetChildSafe(0)));
         }
 
         private Node BuildLabelled(ITree node)
@@ -655,7 +665,7 @@ namespace IronJS.Compiler.Ast
         {
             var namedProps = node.Map(
                     x => new AutoPropertyNode(
-                        x.GetChildSafe(0).Text, 
+                        x.GetChildSafe(0).Text.Substring(1, x.GetChildSafe(0).Text.Length-2),
                         Build(x.GetChildSafe(1))
                     )   
                 );
@@ -820,7 +830,7 @@ namespace IronJS.Compiler.Ast
 
         private Node BuildNumber(ITree node)
         {
-            return new NumberNode(Double.Parse(node.Text));
+            return new NumberNode(Double.Parse(node.Text, CultureInfo.InvariantCulture));
         }
 
         private Node BuildIdentifier(ITree node)

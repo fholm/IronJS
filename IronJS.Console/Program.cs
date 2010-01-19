@@ -11,6 +11,7 @@ namespace IronJS.Testing
         //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {
+            var context = Context.Setup();
             var astBuilder = new Compiler.Ast.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
 
@@ -19,28 +20,28 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            Context context = Context.Setup();
-
-            context.SuperGlobals.Push(
-                "print", 
-                typeof(IronJS.Runtime.BuiltIns).GetMethod("Print"), 
-                VarType.Global
-            );
-
-            context.SuperGlobals.Push(
-                "println", 
-                typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine"),
-                VarType.Global
-            );
-
-            context.SuperGlobals.Push(
-                "exc", 
-                new Exception(),
-                VarType.Global
-            );
-
             var compiled = etGenerator.Build(astNodes, context);
-            var globals = compiled.Run();
+            var result = compiled.Run(globals => {
+                globals.Put(
+                    "print",
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("Print")
+                );
+
+                globals.Put(
+                    "println",
+                    typeof(IronJS.Runtime.BuiltIns).GetMethod("PrintLine")
+                );
+
+                globals.Put(
+                    "exc",
+                    new Exception()
+                );
+
+                globals.Put(
+                    "test",
+                    context.CreateArray()
+                );
+            });
         }
     }
 }

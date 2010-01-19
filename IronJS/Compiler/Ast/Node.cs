@@ -19,7 +19,8 @@ namespace IronJS.Compiler.Ast
         Break, Continue, With, Try,
         Catch,
         Throw,
-        IndexAccess
+        IndexAccess,
+        Delete
     }
 
     abstract public class Node

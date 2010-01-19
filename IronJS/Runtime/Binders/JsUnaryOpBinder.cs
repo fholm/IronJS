@@ -13,6 +13,7 @@ namespace IronJS.Runtime.Binders
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using IronJS.Runtime.Js.Utils;
 
     class JsUnaryOpBinder : UnaryOperationBinder
     {
@@ -35,25 +36,25 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.OnesComplement:
                     expr = Et.OnesComplement(
                         EtUtils.CastForBitOp(
-                            TypeConverter.ToNumber(target)
+                            EtTypeConverter.ToNumber(target)
                         )
                     );
                     break;
 
                 case ExpressionType.Not:
                     expr = Et.Not(
-                        TypeConverter.ToBoolean(target)
+                        EtTypeConverter.ToBoolean(target)
                     );
                     break;
 
                 case ExpressionType.Negate:
                     expr = Et.Negate(
-                        TypeConverter.ToNumber(target)
+                        EtTypeConverter.ToNumber(target)
                     );
                     break;
 
                 case ExpressionType.UnaryPlus:
-                    expr = TypeConverter.ToNumber(target);
+                    expr = EtTypeConverter.ToNumber(target);
                     break;
             }
 

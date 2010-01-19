@@ -31,7 +31,7 @@ namespace IronJS.Runtime.Js
             var selfObj = (IFunction)this.Value;
 
             // tmp variables
-            var callFrame = Et.Variable(typeof(IFrame), "#callframe");
+            var callFrame = Et.Variable(typeof(IObj), "#callframe");
             var tmp = Et.Variable(typeof(IObj), "#tmp");
 
             return new Meta(
@@ -89,7 +89,7 @@ namespace IronJS.Runtime.Js
 
             // tmp variables
             var that = EtUtils.Cast<IObj>(args[0].Expression);
-            var callFrame = Et.Variable(typeof(IFrame), "#callframe");
+            var callFrame = Et.Variable(typeof(IObj), "#callframe");
 
             return new Meta(
                 Et.Block(

@@ -10,6 +10,7 @@ namespace IronJS.Runtime.Binders
     using Et = System.Linq.Expressions.Expression;
     using Meta = System.Dynamic.DynamicMetaObject;
     using Restrict = System.Dynamic.BindingRestrictions;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     class JsInvokeBinder : InvokeBinder
     {
@@ -60,42 +61,22 @@ namespace IronJS.Runtime.Binders
                 );
             }
 
-            // handles call proxies that
-            // are emitted from WithFrame objects
-            // for 'function'-calls that really
-            // are method calls
-            if (target.Value is PropertyProxy)
+            if (target.Value is Delegate)
             {
-                var proxy = (PropertyProxy)target.Value;
-
-                var thatExpr = 
-                    Et.Field(
-                        Et.Convert(
-                            target.Expression,
-                            typeof(PropertyProxy)
-                        ),
-                        "That"
-                    );
+                var invoke = target.LimitType.GetMethod("Invoke");
 
                 return new Meta(
-                    Et.Dynamic(
-                        _context.CreateInvokeMemberBinder(
-                            proxy.Name,
-                            new CallInfo(args.Length)
-                        ),
-                        typeof(object),
-                        ArrayUtils.Insert(
-                            thatExpr,
-                            thatExpr,
-                            DynamicUtils.GetExpressions(
-                                ArrayUtils.RemoveFirst(args)
-                            )
+                    AstUtils.SimpleCallHelper(
+                        Et.Convert(target.Expression, target.LimitType),
+                        invoke,
+                        DynamicUtils.GetExpressions(
+                            ArrayUtils.RemoveFirst(args)
                         )
                     ),
-                    //TODO: more elaborate restriction
-                    Restrict.GetInstanceRestriction(
-                        target.Expression,
-                        target.Value
+                    RestrictUtils.BuildCallRestrictions(
+                        target,
+                        ArrayUtils.RemoveFirst(args),
+                        RestrictFlag.Type
                     )
                 );
             }

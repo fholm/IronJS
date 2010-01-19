@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js.Utils
             return Et.Call(
                 target,
                 typeof(IObj).GetMethod("SetOwnProperty"),
-                EtUtils.Box(Et.Constant(name)),
+                Et.Constant(name, typeof(object)),
                 value
             );
         }

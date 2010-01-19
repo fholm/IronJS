@@ -118,9 +118,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Call:
                     return GenerateCall((Ast.CallNode)node);
 
-                case Ast.NodeType.Return:
-                    return GenerateReturn((Ast.ReturnNode)node);
-
                 case Ast.NodeType.New:
                     return GenerateNew((Ast.NewNode)node);
 
@@ -147,12 +144,6 @@ namespace IronJS.Compiler
 
                 case Ast.NodeType.ForIn:
                     return GenerateForIn((Ast.ForInNode)node);
-
-                case Ast.NodeType.Break:
-                    return GenerateBreak((Ast.BreakNode)node);
-
-                case Ast.NodeType.Continue:
-                    return GenerateContinue((Ast.ContinueNode)node);
 
                 /*
                 case Ast.NodeType.With:
@@ -471,25 +462,6 @@ namespace IronJS.Compiler
         }
         */
 
-        // continue
-        private Et GenerateContinue(Ast.ContinueNode node)
-        {
-            if (node.Label == null)
-                return Et.Continue(FunctionScope.LabelScope.Continue());
-
-            return Et.Continue(FunctionScope.LabelScope.Continue(node.Label));
-        }
-
-        // 12.8
-        // break, break <label>
-        private Et GenerateBreak(Ast.BreakNode node)
-        {
-            if (node.Label == null)
-                return Et.Break(FunctionScope.LabelScope.Break());
-
-           return Et.Break(FunctionScope.LabelScope.Break(node.Label));
-        }
-
         // 12.6.3
         // for(init, test, incr) { <expr>, <expr> ... <expr> }
         private Et GenerateForStep(Ast.ForStepNode node)
@@ -767,13 +739,6 @@ namespace IronJS.Compiler
                 new[] { tmp },
                 exprs
             );
-        }
-
-        // 12.8
-        private Et GenerateReturn(Ast.ReturnNode node)
-        {
-            // return <expr>
-            return Et.Return(FunctionScope.ReturnLabel, Generate(node.Value), typeof(object));
         }
 
         // 13.2.1

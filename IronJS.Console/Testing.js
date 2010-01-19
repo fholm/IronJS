@@ -1,1 +1,1 @@
-﻿println(!null);
+﻿println(null + '1');

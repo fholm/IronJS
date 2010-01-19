@@ -33,12 +33,8 @@ namespace IronJS.Runtime.Binders
             //TODO: optimize common double + double case for all operations
             //TODO: handle infinity + zero stuff correct
 
-            var leftTmp = Et.Parameter(typeof(object), "leftTmp");
-            var rightTmp = Et.Parameter(typeof(object), "rightTmp");
-
-            var typeRestriction = true;
-
             Et expr = null;
+            var typeRestriction = true;
 
             switch (Operation)
             {
@@ -136,9 +132,8 @@ namespace IronJS.Runtime.Binders
             if (typeRestriction)
             {
                 restrictions =
-                    Restrict.GetTypeRestriction(
-                        target.Expression,
-                        target.LimitType
+                    RestrictUtils.GetTypeRestriction(
+                        target
                     ).Merge(
                         Restrict.GetTypeRestriction(
                             arg.Expression,

@@ -115,26 +115,8 @@ namespace IronJS.Compiler
 
             switch (node.Type)
             {
-                case Ast.NodeType.Assign:
-                    return GenerateAssign((Ast.AssignNode)node);
-
-                case Ast.NodeType.Lambda:
-                    return GenerateLambda((Ast.LambdaNode)node);
-
-                case Ast.NodeType.Block:
-                    return GenerateBlock((Ast.BlockNode)node);
-
                 case Ast.NodeType.Call:
                     return GenerateCall((Ast.CallNode)node);
-
-                case Ast.NodeType.Identifier:
-                    return GenerateIdentifier((Ast.IdentifierNode)node);
-
-                case Ast.NodeType.BinaryOp:
-                    return GenerateBinaryOp((Ast.BinaryOpNode)node);
-
-                case Ast.NodeType.UnaryOp:
-                    return GenerateUnaryOp((Ast.UnaryOpNode)node);
 
                 case Ast.NodeType.Return:
                     return GenerateReturn((Ast.ReturnNode)node);
@@ -150,18 +132,6 @@ namespace IronJS.Compiler
 
                 case Ast.NodeType.PostfixOperator:
                     return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
-
-                case Ast.NodeType.TypeOf:
-                    return GenerateTypeOf((Ast.TypeOfNode)node);
-
-                case Ast.NodeType.Boolean:
-                    return GenerateBoolean((Ast.BooleanNode)node);
-
-                case Ast.NodeType.Void:
-                    return GenerateVoid((Ast.VoidNode)node);
-
-                case Ast.NodeType.If:
-                    return GenerateIf((Ast.IfNode)node);
 
                 case Ast.NodeType.StrictCompare:
                     return GenerateStrictCompare((Ast.StrictCompareNode)node);
@@ -200,19 +170,6 @@ namespace IronJS.Compiler
 
                 case Ast.NodeType.Delete:
                     return GenerateDelete((Ast.DeleteNode)node);
-
-                #region Constants
-
-                case Ast.NodeType.Number:
-                    return GenerateNumber((Ast.NumberNode)node);
-
-                case Ast.NodeType.String:
-                    return GenerateString((Ast.StringNode)node);
-
-                case Ast.NodeType.Null:
-                    return GenerateNull((Ast.NullNode)node);
-
-                #endregion
 
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
@@ -674,53 +631,6 @@ namespace IronJS.Compiler
             return expr;
         }
 
-        // 11.12
-        // 12.4
-        // if (test) { TrueBranch } else { ElseBranch }
-        private Et GenerateIf(Ast.IfNode node)
-        {
-            return Et.Condition(
-                Et.Dynamic(
-                    Context.CreateConvertBinder(typeof(bool)),
-                    typeof(bool),
-                    Generate(node.Test)
-                ),
-                Generate(node.TrueBranch),
-                Generate(node.ElseBranch)
-            );
-        }
-
-        // 11.4.2
-        // void foo
-        private Et GenerateVoid(Ast.VoidNode node)
-        {
-            // 11.4.2
-            return Et.Block(
-                Generate(node.Target),
-                Undefined.Expr
-            );
-        }
-
-        // 8.3
-        // true, false
-        private Et GenerateBoolean(Ast.BooleanNode node)
-        {
-            return Et.Constant(
-                node.Value, 
-                typeof(object)
-            );
-        }
-
-        // 11.4.3
-        // typeof foo
-        private Et GenerateTypeOf(Ast.TypeOfNode node)
-        {
-            return Et.Call(
-                typeof(BuiltIns).GetMethod("TypeOf"),
-                Generate(node.Target)
-            );
-        }
-
         // 11.3
         // foo++, foo--
         private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)
@@ -784,27 +694,6 @@ namespace IronJS.Compiler
                              : Generate(node.Right)  // ||
                 )
             );
-        }
-
-        // 11.4.6
-        // 11.4.7
-        // 11.4.8
-        // 11.4.9
-        // !foo, -foo, etc.
-        private Et GenerateUnaryOp(Ast.UnaryOpNode node)
-        {
-            return Et.Dynamic(
-                Context.CreateUnaryOpBinder(node.Op),
-                typeof(object),
-                Generate(node.Target)
-            );
-        }
-
-        // 8.2
-        // null
-        private Et GenerateNull(Ast.NullNode node)
-        {
-            return Et.Default(typeof(object));
         }
 
         // 11.2.1
@@ -887,88 +776,13 @@ namespace IronJS.Compiler
             return Et.Return(FunctionScope.ReturnLabel, Generate(node.Value), typeof(object));
         }
 
-        // 8.4
-        private Et GenerateString(Ast.StringNode node)
-        {
-            // 'foo'
-            return Et.Constant(node.Value, typeof(object));
-        }
-
-        // 8.5
-        private Et GenerateNumber(Ast.NumberNode node)
-        {
-            // 1.0
-            return Et.Constant(node.Value, typeof(object));
-        }
-
-        // 7.6
-        private Et GenerateIdentifier(Ast.IdentifierNode node)
-        {
-            return null;
-            // handle 'this' specially
-            if(node.Name == "this")
-                return FunctionScope.ThisExpr;
-            
-            //return FrameEtUtils.Pull(FunctionScope.ScopeExpr, node.Name);
-        }
-
-        // ???
-        private Et GenerateBlock(Ast.BlockNode node)
-        {
-            // { <expr>, <expr>, ... <expr> }
-            if (node.Nodes.Count == 0)
-                return Et.Default(typeof(object));
-
-            return Et.Block(
-                node.Nodes.Select(x => Generate(x))
-            );
-        }
-
-        // 11.5
-        // 11.6
-        // 11.7
-        // 11.8
-        // 11.9 (not all, strict compare is implemented in GenerateStrictCompare)
-        // 11.10
-        //TODO: implement 'instanceof' and  'in' operators
-        private Et GenerateBinaryOp(Ast.BinaryOpNode node)
-        {
-            // left @ right
-            return Et.Dynamic(
-                Context.CreateBinaryOpBinder(node.Op),
-                typeof(object),
-                Generate(node.Left),
-                Generate(node.Right)
-            );
-        }
-
         // 13.2.1
         private Et GenerateCall(Ast.CallNode node)
         {
             var args = node.Args.ToEtArray(x => Generate(x));
 
-            // foo();
-            if (node.Target is Ast.IdentifierNode)
-            {
-                var target = GenerateIdentifier(
-                    (Ast.IdentifierNode)node.Target
-                );
-
-                return Et.Dynamic(
-                    Context.CreateInvokeBinder(
-                        new CallInfo(args.Length)
-                    ),
-                    typeof(object),
-                    ArrayUtils.Insert(
-                        target,
-                        Et.Default(typeof(IObj)),
-                        args
-                    )
-                );
-            }
-
             // foo.bar();
-            else if(node.Target is Ast.MemberAccessNode)
+            if(node.Target is Ast.MemberAccessNode)
             {
                 var target = (Ast.MemberAccessNode)node.Target;
                 var tmp = Et.Variable(typeof(object), "#tmp");
@@ -1007,59 +821,6 @@ namespace IronJS.Compiler
                 typeof(object),
                 target
             );
-        }
-
-        // 13
-        private Et GenerateLambda(Ast.LambdaNode node)
-        {
-            EnterFunctionScope();
-
-            var bodyNode = (Ast.BlockNode)node.Body;
-            var argsList = node.Args.Select(x => x.Name).ToList();
-            var bodyExprs = bodyNode.Nodes.Select(x => Generate(x)).ToList();
-
-            bodyExprs.Add(
-                Et.Label(
-                    FunctionScope.ReturnLabel, 
-                    Undefined.Expr // 12.9
-                )
-            );
-
-            LambdaTuples.Add(
-                Tuple.Create(
-                    Et.Lambda<LambdaType>(
-                        Et.Block(bodyExprs),
-                        FunctionScope.ThisExpr,
-                        FunctionScope.ScopeExpr
-                    ), 
-                    argsList
-                )
-            );
-
-            ExitFunctionScope();
-
-            /*  
-             * 1) Create a new object with the current frame and current lambda as params
-             * 2) Assign the #FunctionPrototype object to it's Prototype field
-             * 3) return it
-             */
-
-            return Et.Call(
-                Et.Constant(Context),
-                typeof(Context).GetMethod("CreateFunction"),
-                FunctionScope.ScopeExpr,
-                Et.Call(
-                    FuncTableExpr,
-                    typeof(FunctionTable).GetMethod("Pull"),
-                    Et.Constant(LambdaId)
-                )
-            );
-        }
-
-        // 11.13.1
-        private Et GenerateAssign(Ast.AssignNode node)
-        {
-            return GenerateAssign(node.Target, Generate(node.Value));
         }
 
         // 11.13.1

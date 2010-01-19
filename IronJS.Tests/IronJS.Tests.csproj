@@ -46,6 +46,7 @@
     <Compile Include="SimpleTests.cs" />
     <Compile Include="TypeConversionAddTests.cs" />
     <Compile Include="TypeConversionTests.cs" />
+    <Compile Include="TypeOfTests.cs" />
     <Compile Include="UnaryOpTests.cs" />
   </ItemGroup>
   <ItemGroup>

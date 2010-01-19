@@ -7,94 +7,97 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IronJS.Tests
 {
     [TestClass]
-    public class UnaryOpTests
+    public class TypeOfTests
     {
         [TestMethod]
-        public void TestOperatorNot()
+        public void TestTypeOfString()
         {
             Assert.AreEqual(
-                "true",
+                "string",
                 ScriptRunner.Run(
-                    "emit(!false)"
+                    "emit(typeof 'foo')"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorOnesComplement()
+        public void TestTypeOfNumber()
         {
             Assert.AreEqual(
-                "-2",
+                "number",
                 ScriptRunner.Run(
-                    "emit(~1)"
+                    "emit(typeof 1)"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorOnesComplementFractions()
+        public void TestTypeOfNumberFraction()
         {
             Assert.AreEqual(
-                "-2",
+                "number",
                 ScriptRunner.Run(
-                    "emit(~1.25)"
+                    "emit(typeof 1.25)"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorNegate()
+        public void TestTypeOfTrue()
         {
             Assert.AreEqual(
-                "-3",
+                "boolean",
                 ScriptRunner.Run(
-                    "emit(-+3)"
+                    "emit(typeof true)"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorNegateFractions()
+        public void TestTypeOfFalse()
         {
             Assert.AreEqual(
-                "-3.25",
+                "boolean",
                 ScriptRunner.Run(
-                    "emit(-+3.25)"
+                    "emit(typeof false)"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorUnaryPlus()
+        public void TestTypeOfNull()
         {
             Assert.AreEqual(
-                "3",
+                "object",
                 ScriptRunner.Run(
-                    "emit(+'3')"
+                    "emit(typeof null)"
                 )
             );
         }
 
         [TestMethod]
-        public void TestOperatorUnaryPlusFractions()
-        {
-            Assert.AreEqual(
-                "3.25",
-                ScriptRunner.Run(
-                    "emit(+'3.25')"
-                )
-            );
-        }
-
-        [TestMethod]
-        public void TestOperatorVoid()
+        public void TestTypeOfUndefined()
         {
             Assert.AreEqual(
                 "undefined",
                 ScriptRunner.Run(
-                    "emit(void '3.25')"
+                    "emit(typeof foo)" // foo == undefined variable == undefined
                 )
             );
         }
+
+        [TestMethod]
+        public void TestTypeOfFunction()
+        {
+            Assert.AreEqual(
+                "function",
+                ScriptRunner.Run(
+                    "emit(typeof function(){})"
+                )
+            );
+        }
+
+        //TODO: UNIT TEST test typeof on object input
+        //TODO: UNIT TEST test typeof on clr input
     }
 }

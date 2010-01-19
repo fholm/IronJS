@@ -8,13 +8,12 @@ using IronJS.Compiler.Ast;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using Restrict = System.Dynamic.BindingRestrictions;
+
 namespace IronJS.Runtime.Binders
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-    using IronJS.Runtime.Js.Utils;
-
     class JsUnaryOpBinder : UnaryOperationBinder
     {
         Context _context;
@@ -36,34 +35,39 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.OnesComplement:
                     expr = Et.OnesComplement(
                         EtUtils.CastForBitOp(
-                            EtTypeConverter.ToNumber(target)
+                            JsTypeConverter.EtToNumber(target)
                         )
                     );
                     break;
 
                 case ExpressionType.Not:
                     expr = Et.Not(
-                        EtTypeConverter.ToBoolean(target)
+                        JsTypeConverter.EtToBoolean(target)
                     );
                     break;
 
                 case ExpressionType.Negate:
                     expr = Et.Negate(
-                        EtTypeConverter.ToNumber(target)
+                        JsTypeConverter.EtToNumber(target)
                     );
                     break;
 
                 case ExpressionType.UnaryPlus:
-                    expr = EtTypeConverter.ToNumber(target);
+                    expr = JsTypeConverter.EtToNumber(target);
                     break;
             }
 
             return new Meta(
                 EtUtils.Box(expr),
-                Restrict.GetTypeRestriction(
-                    target.Expression,
-                    target.LimitType
-                )
+                (target.HasValue && target.Value == null) 
+                  ? Restrict.GetInstanceRestriction(
+                        target.Expression,
+                        null
+                    )
+                  : Restrict.GetTypeRestriction(
+                        target.Expression,
+                        target.LimitType
+                    )
             );
         }
     }

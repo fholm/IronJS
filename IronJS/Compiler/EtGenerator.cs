@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using IronJS.Extensions;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
-using IronJS.Runtime.Js.Utils;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 
@@ -65,17 +64,19 @@ namespace IronJS.Compiler
                     ),
 
                     // Push functions into functable
-                    Et.Block(
-                        LambdaTuples.Select(x => 
-                            FunctionTable.EtPush(
-                                FuncTableExpr,
-                                Lambda.EtNew(
-                                    x.V1,
-                                    Et.Constant(x.V2.ToArray())
+                    LambdaTuples.Count > 0 
+                      ? (Et) Et.Block(
+                            LambdaTuples.Select(x => 
+                                FunctionTable.EtPush(
+                                    FuncTableExpr,
+                                    Lambda.EtNew(
+                                        x.V1,
+                                        Et.Constant(x.V2.ToArray())
+                                    )
                                 )
                             )
                         )
-                    ),
+                      : (Et) AstUtils.Empty(), // hack
 
                     // Execute global scope
                     Et.Block(globalExprs)

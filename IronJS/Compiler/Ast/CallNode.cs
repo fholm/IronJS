@@ -38,9 +38,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(argsIndentStr + "(Args");
 
             foreach (var node in Args)
-            {
                 node.Print(writer, indent + 2);
-            }
 
             writer.AppendLine(argsIndentStr + ")");
             writer.AppendLine(indentStr + ")");

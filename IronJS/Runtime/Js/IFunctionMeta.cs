@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Utils;
-using IronJS.Runtime.Js.Utils;
 using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Js

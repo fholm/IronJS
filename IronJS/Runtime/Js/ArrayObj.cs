@@ -65,7 +65,7 @@ namespace IronJS.Runtime.Js
         {
             if (name is string && (string)name == "length")
             {
-                var intval = (int)TypeConverter.ToNumber(value);
+                var intval = (int)JsTypeConverter.ToNumber(value);
 
                 // shrink
                 if (intval < Vector.Length)

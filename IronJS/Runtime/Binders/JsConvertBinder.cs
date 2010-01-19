@@ -9,14 +9,13 @@ using IronJS.Compiler.Ast;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 
+using Et = System.Linq.Expressions.Expression;
+using ParamEt = System.Linq.Expressions.ParameterExpression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using Restrict = System.Dynamic.BindingRestrictions;
+
 namespace IronJS.Runtime.Binders
 {
-    using Et = System.Linq.Expressions.Expression;
-    using ParamEt = System.Linq.Expressions.ParameterExpression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-    using IronJS.Runtime.Js.Utils;
-
     class JsConvertBinder : ConvertBinder
     {
         Context _context;
@@ -40,26 +39,26 @@ namespace IronJS.Runtime.Binders
             if (Type == typeof(Js.IObj))
                 return new Meta(
                     EtUtils.Cast<IObj>(
-                        EtTypeConverter.ToObject(target, _context)
+                        JsTypeConverter.EtToObject(target, _context)
                     ),
                     restrictions
                 );
 
             if (Type == typeof(bool))
                 return new Meta(
-                    EtTypeConverter.ToBoolean(target),
+                    JsTypeConverter.EtToBoolean(target),
                     restrictions
                 );
 
             if (Type == typeof(double))
                 return new Meta(
-                    EtTypeConverter.ToNumber(target),
+                    JsTypeConverter.EtToNumber(target),
                     restrictions
                 );
 
             if (Type == typeof(string))
                 return new Meta(
-                    EtTypeConverter.ToString(target),
+                    JsTypeConverter.EtToString(target),
                     restrictions
                 );
 

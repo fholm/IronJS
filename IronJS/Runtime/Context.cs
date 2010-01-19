@@ -15,13 +15,13 @@ namespace IronJS.Runtime
     using Et = System.Linq.Expressions.Expression;
     using EtParam = System.Linq.Expressions.ParameterExpression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using IronJS.Runtime.Builtins;
 
     public class Context
     {
-        internal IObj BuiltinsFrame { get; private set; }
+        internal Scope BuiltinsGlobals { get; private set; }
 
-        public IObj ObjectPrototype { get; protected set; }
-        public IFunction ObjectConstructor { get; protected set; }
+        public ObjectCtor ObjectConstructor { get; protected set; }
 
         public IFunction FunctionPrototype { get; protected set; }
         public IFunction FunctionConstructor { get; protected set; }
@@ -42,13 +42,10 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            //BuiltinsFrame = new Frame(this);
+            BuiltinsGlobals = Scope.CreateGlobal(this);
+            ObjectConstructor = ObjectCtor.Create(this);
 
             /*
-            // Object.prototype and Object
-            ObjectPrototype = ObjectObject.CreatePrototype(this);
-            ObjectConstructor = ObjectObject.CreateConstructor(this);
-
             // Function.prototype and Function
             FunctionPrototype = FunctionObject.CreatePrototype(this);
             FunctionConstructor = FunctionObject.CreateConstructor(this);
@@ -67,14 +64,11 @@ namespace IronJS.Runtime
             // Math = MathObject.Create(this);
         }
 
-        internal IObj Run(Action<IObj> target, Action<IObj> setup)
+        public void Setup(Scope globals)
         {
-            return null;
-            /*
-            var globals = new Frame(this);
+            globals.Global("Object", ObjectConstructor);
 
-            // Push on global frame
-            globals.Put("Object", ObjectConstructor);
+            /*
             globals.Put("Function", FunctionConstructor);
             globals.Put("Array", ArrayConstructor);
             globals.Put("Number", NumberConstructor);
@@ -94,30 +88,12 @@ namespace IronJS.Runtime
 
         #region Object creators
 
-        public IObj CreateObject()
-        {
-            return CreateObject(null);
-        }
-
-        public IObj CreateObject(IObj ctor)
+        public Obj CreateObject()
         {
             var obj = new Obj();
 
             obj.Context = this;
             obj.Class = ObjClass.Object;
-
-            if (ctor == null)
-            {
-                obj.Prototype = ObjectPrototype;
-            }
-            else
-            {
-                var ptype = ctor.GetOwnProperty("prototype");
-
-                obj.Prototype = (ptype is IObj)
-                               ? ptype as IObj
-                               : ObjectPrototype;
-            }
 
             return obj;
         }

@@ -1,1 +1,2 @@
-﻿println(null + '1');
+﻿
+foo = { };

@@ -23,9 +23,9 @@ namespace IronJS.Runtime
         public Scope Scope { get; protected set; }
         public Lambda Lambda { get; protected set; }
 
-        public IObj Construct()
+        public virtual IObj Construct()
         {
-            return Context.CreateObject(this);
+            throw new NotImplementedException();
         }
 
         #endregion

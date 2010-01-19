@@ -118,12 +118,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Call:
                     return GenerateCall((Ast.CallNode)node);
 
-                case Ast.NodeType.New:
-                    return GenerateNew((Ast.NewNode)node);
-
-                case Ast.NodeType.MemberAccess:
-                    return GenerateMemberAccess((Ast.MemberAccessNode)node);
-
                 case Ast.NodeType.Logical:
                     return GenerateLogical((Ast.LogicalNode)node);
 
@@ -665,79 +659,6 @@ namespace IronJS.Compiler
                              ? tmp                   // &&
                              : Generate(node.Right)  // ||
                 )
-            );
-        }
-
-        // 11.2.1
-        // foo.bar
-        private Et GenerateMemberAccess(Ast.MemberAccessNode node)
-        {
-            return Et.Dynamic(
-                Context.CreateGetMemberBinder(node.Name),
-                typeof(object),
-                Et.Dynamic(
-                    Context.CreateConvertBinder(typeof(IObj)),
-                    typeof(object),
-                    Generate(node.Target)
-                )
-            );
-        }
-
-        // 11.2.2
-        // 13.2.2
-        // foo = {}
-        // foo = new X
-        // foo = new X()
-        private Et GenerateNew(Ast.NewNode node)
-        {
-            var target = Generate(node.Target);
-            var args = node.Args.ToEtArray(x => Generate(x));
-            var tmp = Et.Variable(typeof(IObj), "#tmp");
-            var exprs = new List<Et>();
-
-            exprs.Add(
-                Et.Assign(
-                    tmp,
-                    EtUtils.Cast<IObj>(
-                        Et.Dynamic(
-                            Context.CreateInstanceBinder(
-                                new CallInfo(args.Length)
-                            ),
-                            typeof(object),
-                            ArrayUtils.Insert(
-                                target,
-                                args
-                            )
-                        )
-                    )
-                )
-            );
-            
-            // this handles properties defined
-            // in the shorthand json-style object
-            // expression: { foo: 1, bar: 2 }
-            if (node.Properties != null)
-            {
-                foreach (var propNode in node.Properties)
-                {
-                    exprs.Add(
-                        Et.Call(
-                            tmp,
-                            typeof(IObj).GetMethod("Put"),
-                            Et.Constant(propNode.Name, typeof(object)),
-                            EtUtils.Box(Generate(propNode.Value))
-                        )
-                    );
-                }
-            }
-
-            exprs.Add(
-                EtUtils.Box(tmp)
-            );
-
-            return Et.Block(
-                new[] { tmp },
-                exprs
             );
         }
 

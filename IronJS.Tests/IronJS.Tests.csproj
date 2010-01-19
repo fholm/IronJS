@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryOpTests.cs" />
+    <Compile Include="FunctionTests.cs" />
+    <Compile Include="IfStatementTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRunner.cs" />
     <Compile Include="SimpleTests.cs" />

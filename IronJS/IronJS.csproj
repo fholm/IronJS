@@ -114,6 +114,7 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Builtins\ObjectCtor.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />

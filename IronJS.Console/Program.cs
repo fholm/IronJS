@@ -22,7 +22,9 @@ namespace IronJS.Testing
 
             var compiled = etGenerator.Build(astNodes, context);
 
-            var globals = new Scope(context);
+            var globals = Scope.CreateGlobal(context);
+
+            context.Setup(globals);
 
             globals.Global(
                 "println",

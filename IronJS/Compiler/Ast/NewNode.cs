@@ -1,9 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
+
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Restrict = System.Dynamic.BindingRestrictions;
+using EtParam = System.Linq.Expressions.ParameterExpression;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class NewNode : Node
     {
         public readonly Node Target;
@@ -33,7 +45,50 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new System.NotImplementedException();
+            var target = Target.Walk(etgen);
+            var args = Args.Select(x => x.Walk(etgen)).ToArray();
+            var tmp = Et.Variable(typeof(IObj), "#tmp");
+            var exprs = new List<Et>();
+
+            /*
+            // this handles properties defined
+            // in the shorthand json-style object
+            // expression: { foo: 1, bar: 2 }
+            if (node.Properties != null)
+            {
+                foreach (var propNode in node.Properties)
+                {
+                    exprs.Add(
+                        Et.Call(
+                            tmp,
+                            typeof(IObj).GetMethod("Put"),
+                            Et.Constant(propNode.Name, typeof(object)),
+                            EtUtils.Box(Generate(propNode.Value))
+                        )
+                    );
+                }
+            }
+            */
+
+            return Et.Block(
+                new[] { tmp },
+                Et.Assign(
+                    tmp,
+                    EtUtils.Cast<IObj>(
+                        Et.Dynamic(
+                            etgen.Context.CreateInstanceBinder(
+                                new CallInfo(args.Length)
+                            ),
+                            typeof(object),
+                            ArrayUtils.Insert(
+                                target,
+                                args
+                            )
+                        )
+                    )
+                ),
+                EtUtils.Box(tmp)
+            );
         }
     }
 }

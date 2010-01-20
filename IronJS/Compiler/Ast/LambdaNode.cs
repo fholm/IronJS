@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using IronJS.Runtime.Js;
+using IronJS.Runtime;
+
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-    using IronJS.Runtime.Js;
-    using IronJS.Runtime;
-
     class LambdaNode : Node
     {
         public readonly List<IdentifierNode> Args;

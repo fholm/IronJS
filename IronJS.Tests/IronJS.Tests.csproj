@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="AbstractEqualityTests.cs" />
     <Compile Include="BinaryOpTests.cs" />
+    <Compile Include="ConstructorTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfStatementTest.cs" />
     <Compile Include="ObjectTests.cs" />

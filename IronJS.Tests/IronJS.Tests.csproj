@@ -44,9 +44,10 @@
     <Compile Include="BinaryOpTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfStatementTest.cs" />
+    <Compile Include="ObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRunner.cs" />
-    <Compile Include="SimpleTests.cs" />
+    <Compile Include="ConstantsTests.cs" />
     <Compile Include="StrictEqualityTests.cs" />
     <Compile Include="TypeConversionAddTests.cs" />
     <Compile Include="TypeConversionTests.cs" />

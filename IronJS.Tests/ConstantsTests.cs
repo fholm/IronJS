@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IronJS.Tests
 {
     [TestClass]
-    public class SimpleTests
+    public class ConstantsTests
     {
         [TestMethod]
         public void TestStringConstant()

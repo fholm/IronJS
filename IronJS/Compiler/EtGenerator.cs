@@ -718,7 +718,7 @@ namespace IronJS.Compiler
                 return Et.Dynamic(
                     Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
-                    Generate(maNode.Target),
+                    maNode.Target.Walk(this),
                     value
                 );
             }

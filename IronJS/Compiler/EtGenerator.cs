@@ -118,9 +118,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Call:
                     return GenerateCall((Ast.CallNode)node);
 
-                case Ast.NodeType.Logical:
-                    return GenerateLogical((Ast.LogicalNode)node);
-
                 case Ast.NodeType.PostfixOperator:
                     return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
 
@@ -612,31 +609,6 @@ namespace IronJS.Compiler
                 ),
 
                 tmp // return the old value
-            );
-        }
-        
-        // 11.11
-        // foo || bar, foo && bar
-        private Et GenerateLogical(Ast.LogicalNode node)
-        {
-            var tmp = Et.Parameter(typeof(object), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(tmp, Generate(node.Left)),
-                Et.Condition(
-                    Et.Dynamic(
-                        Context.CreateConvertBinder(typeof(bool)),
-                        typeof(bool),
-                        tmp
-                    ),
-                    node.Op == ExpressionType.AndAlso 
-                             ? Generate(node.Right)  // &&
-                             : tmp,                  // ||
-                    node.Op == ExpressionType.AndAlso 
-                             ? tmp                   // &&
-                             : Generate(node.Right)  // ||
-                )
             );
         }
 

@@ -47,43 +47,6 @@ namespace IronJS.Runtime
 
         #endregion
 
-        #region Expression Tree
-
-        public static Et EtScope(Et obj)
-        {
-            return Et.Property(
-                EtUtils.Cast<IFunction>(obj),
-                "Scope"
-            );
-        }
-
-        public static Et EtLambda(Et obj)
-        {
-            return Et.Property(
-                EtUtils.Cast<IFunction>(obj),
-                "Lambda"
-            );
-        }
-
-        public static Et EtDelegate(Et obj)
-        {
-            return Et.Property(
-                EtLambda(obj),
-                "Delegate"
-            );
-        }
-
-        public static Et EtCall(Et obj, Et scope)
-        {
-            return Et.Call(
-                EtDelegate(obj),
-                typeof(LambdaType).GetMethod("Invoke"),
-                scope
-            );
-        }
-
-        #endregion 
-
         #region IDynamicMetaObjectProvider Members
 
         public Meta GetMetaObject(Et parameter)

@@ -1,8 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
-using System.Text;
 using System.Linq.Expressions;
+using System.Text;
+using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
+
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Restrict = System.Dynamic.BindingRestrictions;
+using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -22,7 +31,32 @@ namespace IronJS.Compiler.Ast
 
         public override Expression Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            var tmp = Et.Parameter(typeof(object), "#tmp");
+
+            return Et.Block(
+                new[] { tmp },
+
+                Et.Assign(
+                    tmp, 
+                    Left.Walk(etgen)
+                ),
+
+                Et.Condition(
+                    Et.Dynamic(
+                        etgen.Context.CreateConvertBinder(typeof(bool)),
+                        typeof(bool),
+                        tmp
+                    ),
+
+                    Op == ExpressionType.AndAlso
+                           ? Right.Walk(etgen) // &&
+                           : tmp,              // ||
+
+                    Op == ExpressionType.AndAlso
+                           ? tmp               // &&
+                           : Right.Walk(etgen) // ||
+                )
+            );
         }
     }
 }

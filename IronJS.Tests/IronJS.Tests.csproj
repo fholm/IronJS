@@ -45,6 +45,7 @@
     <Compile Include="ConstructorTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfStatementTest.cs" />
+    <Compile Include="LogicalAndOrTests.cs" />
     <Compile Include="ObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRunner.cs" />

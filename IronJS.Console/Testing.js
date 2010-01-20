@@ -1,10 +1,5 @@
 ﻿
-var foo = function (a) {
-    this.bar = a;
-};
-
-foo_inst = new foo("hello world");
-
-println(foo_inst.bar);
-
-Object();
+println(1 || 2);
+println(0 || 1);
+println(1 && 2);
+println(0 && 1);

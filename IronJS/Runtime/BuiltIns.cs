@@ -26,6 +26,11 @@ namespace IronJS.Runtime
         {
             // 11.9.6
 
+            // step 3
+            if (left == null && right == null) return true;
+            if (left == null) return false;
+            if (right == null) return false;
+
             // step 1
             if (left.GetType() != right.GetType())
                 return false;
@@ -33,11 +38,6 @@ namespace IronJS.Runtime
             // step 2
             if (left is Js.Undefined)
                 return true;
-
-            // step 3
-            if (left == null && right == null) return true;
-            if (left == null) return false;
-            if (right == null) return false;
 
             // step 5-10
             if (left is double)

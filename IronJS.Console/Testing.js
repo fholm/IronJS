@@ -1,4 +1,2 @@
 ﻿
-var func = function (a, b) { };
-
-println(func.length);
+println(1 !== '1');

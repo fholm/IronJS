@@ -118,9 +118,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.Call:
                     return GenerateCall((Ast.CallNode)node);
 
-                case Ast.NodeType.PostfixOperator:
-                    return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
-
                 case Ast.NodeType.While:
                     return GenerateWhile((Ast.WhileNode)node);
 
@@ -535,46 +532,6 @@ namespace IronJS.Compiler
             return loop;
         }
 
-        // 11.3
-        // foo++, foo--
-        private Et GeneratePostFixOp(Ast.PostfixOperatorNode node)
-        {
-            var target = Generate(node.Target);
-            var tmp = Et.Parameter(typeof(double), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-
-                // the value we will return
-                Et.Assign(
-                    tmp, 
-                    Et.Dynamic(
-                        Context.CreateConvertBinder(typeof(double)),
-                        typeof(double),
-                        target
-                    )
-                ),
-
-                // calc new value
-                GenerateAssign(
-                    node.Target,
-                    EtUtils.Box(
-                        Et.Add(
-                            tmp, 
-                            Et.Constant(
-                                node.Op == ExpressionType.PostIncrementAssign
-                                         ? 1.0    // 11.3.1
-                                         : -1.0,  // 11.3.2
-                                typeof(double)
-                            )
-                        )
-                    )
-                ),
-
-                tmp // return the old value
-            );
-        }
-
         // 13.2.1
         private Et GenerateCall(Ast.CallNode node)
         {
@@ -659,15 +616,13 @@ namespace IronJS.Compiler
             }
             else if (target is Ast.IndexAccessNode)
             {
-                throw new NotImplementedException();
-
                 var ixNode = (Ast.IndexAccessNode)target;
 
                 return Et.Dynamic(
                     Context.CreateSetIndexBinder(new CallInfo(1)),
                     typeof(object),
-                    Generate(ixNode.Target),
-                    Generate(ixNode.Index),
+                    ixNode.Target.Walk(this),
+                    ixNode.Index.Walk(this),
                     value
                 );
             }

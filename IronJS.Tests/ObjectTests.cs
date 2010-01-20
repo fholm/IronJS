@@ -21,6 +21,61 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestObjectAssignValueToProperty()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = {}; foo.bar = 'hello world'; emit(foo.bar)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectAssignValueToIndex()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = {}; foo['bar'] = 'hello world'; emit(foo['bar'])"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectAssignValueToIndexAndReadAsProperty()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = {}; foo['bar'] = 'hello world'; emit(foo.bar)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectAssignValueToPropertyAndReadAsIndex()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = {}; foo.bar = 'hello world'; emit(foo['bar'])"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectAssignObjectToIndexAndAssignAndReadFromAssignedObjectUsingIndex()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = {}; foo.bar = {}; foo['bar']['boo'] = 'hello world'; emit(foo['bar']['boo']); "
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestObjectCreateNewShorthand()
         {
             Assert.AreEqual(

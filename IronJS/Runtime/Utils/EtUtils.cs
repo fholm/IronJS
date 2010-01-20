@@ -98,7 +98,7 @@ namespace IronJS.Runtime.Utils
             var constructor = excType.GetConstructor(argTypes);
 
             if (constructor == null)
-                throw new Runtime.RuntimeError("Exception '{0}' doesn't have a matching constructor", excType.Name);
+                throw new InternalRuntimeError("Exception doesn't have a matching constructor");
 
             return new Meta(
                 Et.Throw(

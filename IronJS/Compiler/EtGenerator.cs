@@ -115,9 +115,6 @@ namespace IronJS.Compiler
 
             switch (node.Type)
             {
-                case Ast.NodeType.Call:
-                    return GenerateCall((Ast.CallNode)node);
-
                 case Ast.NodeType.While:
                     return GenerateWhile((Ast.WhileNode)node);
 
@@ -131,15 +128,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.With:
                     return GenerateWith((Ast.WithNode)node);
                 */
-
-                case Ast.NodeType.Try:
-                    return GenerateTry((Ast.TryNode)node);
-
-                case Ast.NodeType.Throw:
-                    return GenerateThrow((Ast.ThrowNode)node);
-
-                case Ast.NodeType.IndexAccess:
-                    return GenerateIndexAccess((Ast.IndexAccessNode)node);
 
                 case Ast.NodeType.Delete:
                     return GenerateDelete((Ast.DeleteNode)node);
@@ -344,80 +332,6 @@ namespace IronJS.Compiler
             );
         }
 
-        private Et GenerateIndexAccess(Ast.IndexAccessNode node)
-        {
-            return Et.Dynamic(
-                Context.CreateGetIndexBinder(new CallInfo(1)),
-                typeof(object),
-                Generate(node.Target),
-                Generate(node.Index)
-            );
-        }
-
-        private Et GenerateThrow(Ast.ThrowNode node)
-        {
-            return Et.Throw(
-                AstUtils.SimpleNewHelper(
-                    typeof(RuntimeError).GetConstructor(new[] { typeof(IObj) }),
-                    Generate(node.Target)
-                )
-            );
-        }
-
-        private Et GenerateTry(Ast.TryNode node)
-        {
-            // try ... finally
-            if (node.Catch == null)
-            {
-                return Et.TryFinally(
-                    Generate(node.Body),
-                    Generate(node.Finally)
-                );
-            }
-            else
-            {
-                var catchParam = Et.Parameter(typeof(object), "#catch");
-
-                var catchBody = Et.Block(
-                    GenerateAssign(
-                        node.Catch.Target, 
-                        Et.Property(
-                            Et.Convert(catchParam, typeof(RuntimeError)),
-                            "Obj"
-                        )
-                    ),
-                    Et.Block(
-                        Generate(node.Catch.Body)
-                    )
-                );
-
-                var catchBlock = Et.Catch(
-                    catchParam, 
-                    catchBody
-                );
-
-                var tryBody = EtUtils.Box(Generate(node.Body));
-
-                // try ... catch 
-                if (node.Finally == null)
-                {
-                    return Et.TryCatch(
-                        tryBody,
-                        catchBlock
-                    );
-                }
-                // try ... catch ... finally
-                else
-                {
-                    return Et.TryCatchFinally(
-                        tryBody,
-                        Generate(node.Finally),
-                        catchBlock
-                    );
-                }
-            }
-        }
-
         /*
         // with(...) { ... }
         private Et GenerateWith(Ast.WithNode node)
@@ -530,44 +444,6 @@ namespace IronJS.Compiler
             }
 
             return loop;
-        }
-
-        // 13.2.1
-        private Et GenerateCall(Ast.CallNode node)
-        {
-            var args = node.Args.ToEtArray(x => Generate(x));
-
-            // foo.bar();
-            if(node.Target is Ast.MemberAccessNode)
-            {
-                var target = (Ast.MemberAccessNode)node.Target;
-                var tmp = Et.Variable(typeof(object), "#tmp");
-                var targetExpr = GenerateConvertToObject(
-                        Generate(target.Target)
-                    );
-
-                return Et.Block(
-                    new[] { tmp },
-                    Et.Assign(
-                        tmp,
-                        targetExpr
-                    ),
-                    Et.Dynamic(
-                        Context.CreateInvokeMemberBinder(
-                            target.Name,
-                            new CallInfo(args.Length + 1)
-                        ),
-                        typeof(object),
-                        ArrayUtils.Insert(
-                            tmp,
-                            tmp,
-                            args
-                        )
-                    )
-                );
-            }
-
-            throw new NotImplementedException();
         }
 
         internal Et GenerateConvertToObject(Et target)

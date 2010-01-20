@@ -1,3 +1,6 @@
 ﻿
-
-println(-14 >>> 2);
+try{
+    throw {};
+}catch(ex){
+    println(ex);
+}

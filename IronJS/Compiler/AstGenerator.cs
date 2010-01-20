@@ -349,9 +349,7 @@ namespace IronJS.Compiler
                  */
                 default:
                     throw new Compiler.CompilerError(
-                        "Unrecognized token '{0}'", 
-                        node, 
-                        Name(node)
+                        String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
         }

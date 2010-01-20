@@ -6,19 +6,19 @@ using System.Linq.Expressions;
 using System.Text;
 using Microsoft.Scripting.Utils;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Restrict = System.Dynamic.BindingRestrictions;
 using EtParam = System.Linq.Expressions.ParameterExpression;
-using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Builtins
 {
     public class ObjectCtor : Obj, IFunction
     {
-        public IObj Object_prototype { get; protected set; }
+        public IObj Object_prototype { get; private set; }
 
         protected ObjectCtor(Context context)
         {

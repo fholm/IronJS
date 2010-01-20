@@ -19,49 +19,18 @@ namespace IronJS.Runtime
 
     public class Context
     {
-        internal Scope BuiltinsGlobals { get; private set; }
-
         public ObjectCtor ObjectConstructor { get; protected set; }
-
-        public IFunction FunctionPrototype { get; protected set; }
         public IFunction FunctionConstructor { get; protected set; }
-
-        public IObj BooleanPrototype { get; protected set; }
         public IFunction BooleanConstructor { get; protected set; }
-
-        public IObj NumberPrototype { get; set; }
         public IFunction NumberConstructor { get; protected set; }
-
-        public IObj StringPrototype { get; set; }
         public IFunction StringConstructor { get; protected set; }
-
-        public IObj ArrayPrototype { get; protected set; }
         public IFunction ArrayConstructor { get; protected set; }
 
         public IObj Math { get; protected set; }
 
         protected Context()
         {
-            BuiltinsGlobals = Scope.CreateGlobal(this);
             ObjectConstructor = ObjectCtor.Create(this);
-
-            /*
-            // Function.prototype and Function
-            FunctionPrototype = FunctionObject.CreatePrototype(this);
-            FunctionConstructor = FunctionObject.CreateConstructor(this);
-
-            // Array.prototype and Array
-            ArrayPrototype = ArrayObject.CreatePrototype(this);
-            ArrayConstructor = ArrayObject.CreateConstructor(this);
-
-            // Boolean.prototype
-            BooleanPrototype = BooleanObject.CreatePrototype(this);
-
-            // Number.prototype
-            NumberPrototype = NumberObject.CreatePrototype(this);
-            */
-            // Math
-            // Math = MathObject.Create(this);
         }
 
         public void Setup(Scope globals)
@@ -70,22 +39,14 @@ namespace IronJS.Runtime
             globals.Global("undefined", Js.Undefined.Instance);
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);
+            globals.Global("globals", globals.Value);
 
             /*
             globals.Put("Function", FunctionConstructor);
             globals.Put("Array", ArrayConstructor);
             globals.Put("Number", NumberConstructor);
             globals.Put("Boolean", BooleanConstructor);
-            globals.Put("undefined", Js.Undefined.Instance);
-            globals.Put("Infinity", double.PositiveInfinity);
-            globals.Put("NaN", double.NaN);
             globals.Put("Math", Math);
-            globals.Put("globals", globals);
-
-            setup(globals);
-            target(globals);
-
-            return globals;
             */
         }
 
@@ -101,18 +62,7 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public IObj CreateArray()
-        {
-            var obj = new ArrayObj();
-
-            obj.Context = this;
-            obj.Class = ObjClass.Array;
-            obj.Prototype = ArrayPrototype;
-
-            return obj;
-        }
-
-        public IFunction CreateFunction(Scope scope, Lambda lambda)
+        public Function CreateFunction(Scope scope, Lambda lambda)
         {
             var obj = new Function(scope, lambda);
 
@@ -121,41 +71,8 @@ namespace IronJS.Runtime
 
             obj.Context = this;
             obj.Class = ObjClass.Function;
-            obj.Prototype = FunctionPrototype;
+            //obj.Prototype = FunctionPrototype;
             obj.SetOwnProperty("prototype", protoObj);
-
-            return obj;
-        }
-
-        public IValueObj CreateString(string value)
-        {
-            var obj = new ValueObj(value);
-
-            obj.Context = this;
-            obj.Class = ObjClass.String;
-            obj.Prototype = null; //TODO: String.prototype
-
-            return obj;
-        }
-
-        public IValueObj CreateNumber(double value)
-        {
-            var obj = new ValueObj(value);
-
-            obj.Context = this;
-            obj.Class = ObjClass.Number;
-            obj.Prototype = NumberPrototype;
-
-            return obj;
-        }
-
-        public IValueObj CreateBoolean(bool value)
-        {
-            var obj = new ValueObj(value);
-
-            obj.Context = this;
-            obj.Class = ObjClass.Boolean;
-            obj.Prototype = BooleanPrototype;
 
             return obj;
         }

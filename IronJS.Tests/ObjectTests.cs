@@ -54,5 +54,16 @@ namespace IronJS.Tests
                 )
             );
         }
+
+        [TestMethod]
+        public void TestObjectCallingObjectCreatesNewObject()
+        {
+            Assert.AreEqual(
+                "[object Object]",
+                ScriptRunner.Run(
+                    "emit(Object());"
+                )
+            );
+        }
     }
 }

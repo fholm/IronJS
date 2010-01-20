@@ -7,3 +7,4 @@ IronJS.Console/obj/**/*
 *.suo
 TestResults/**/*
 TestResults
+*.dia~

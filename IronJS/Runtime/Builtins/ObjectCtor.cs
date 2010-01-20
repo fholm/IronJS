@@ -20,6 +20,11 @@ namespace IronJS.Runtime.Builtins
             Put("prototype", Object_prototype);
         }
 
+        public IObj Construct()
+        {
+            return Construct(null);
+        }
+
         public override IObj Construct(object[] args)
         {
             var obj = Context.CreateObject();

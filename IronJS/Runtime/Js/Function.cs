@@ -12,6 +12,9 @@ namespace IronJS.Runtime
 
     public class Function : Obj, IFunction
     {
+        public Scope Scope { get; protected set; }
+        public Lambda Lambda { get; protected set; }
+
         public Function(Scope scope, Lambda lambda)
         {
             Scope = scope;
@@ -21,12 +24,24 @@ namespace IronJS.Runtime
 
         #region IFunction Members
 
-        public Scope Scope { get; protected set; }
-        public Lambda Lambda { get; protected set; }
-
         public object Call(IObj that, object[] args)
         {
-            return null;
+            var callScope = Scope.Enter();
+            var argsObject = Context.ObjectConstructor.Construct();
+
+            callScope.Local("this", that);
+            callScope.Local("arguments", argsObject);
+            argsObject.SetOwnProperty("length", args.Length);
+
+            for (var i = 0; i < args.Length; ++i)
+            {
+                if (i < Lambda.Params.Length)
+                    callScope.Local(Lambda.Params[i], args[i]);
+
+                argsObject.SetOwnProperty((double)i, args[i]);
+            }
+
+            return Lambda.Delegate.Invoke(callScope);
         }
 
         public virtual IObj Construct(object[] args)

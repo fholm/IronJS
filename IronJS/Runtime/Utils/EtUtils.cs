@@ -158,7 +158,7 @@ namespace IronJS.Runtime.Utils
         }
 
 
-        internal static Et CreateBlockIfNotEmpt(IEnumerable<Et> exprs)
+        internal static Et CreateBlockIfNotEmpty(IEnumerable<Et> exprs)
         {
             if (exprs.Count() > 0)
                 return Et.Block(exprs);

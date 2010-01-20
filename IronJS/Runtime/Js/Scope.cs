@@ -67,6 +67,11 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
+        public Scope Enter()
+        {
+            return new Scope(_context, this);
+        }
+
         #region Expression Tree
 
         internal static Et EtValue(EtParam scope)

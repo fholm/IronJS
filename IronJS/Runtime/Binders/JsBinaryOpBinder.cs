@@ -113,7 +113,7 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.ExclusiveOr:
                 case ExpressionType.RightShift:
                 case ExpressionType.LeftShift:
-                    //TODO: convert to number/check so we're not casting a Js.Obj, string, etc. to double > int
+                    //TODO: convert to number/check so we're not casting a Js.IObj, string, etc. to double > int
                     expr = Et.Convert(
                         Et.MakeBinary(
                             Operation,
@@ -162,7 +162,7 @@ namespace IronJS.Runtime.Binders
         }
 
         /// <summary>
-        /// This function implements the horrible JavaScript equality comparison
+        /// This function implements the horrible JavaScript abstract equality comparison
         /// </summary>
         /// <param name="target"></param>
         /// <param name="arg"></param>

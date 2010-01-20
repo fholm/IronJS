@@ -26,16 +26,11 @@ namespace IronJS.Runtime.Js
         public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
             //TODO: insert defer
-            var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
-            var selfObj = (IFunction)this.Value;
-
-            // tmp variables
-            var callFrame = Et.Variable(typeof(Scope), "#callframe");
-            var tmp = Et.Variable(typeof(IObj), "#tmp");
-
             return new Meta(
                 Et.Call(
-                    selfExpr,
+                    EtUtils.Cast<IFunction>(
+                        this.Expression
+                    ),
                     IFunctionMethods.MiConstruct,
                     AstUtils.NewArrayHelper(
                         typeof(object),
@@ -48,47 +43,6 @@ namespace IronJS.Runtime.Js
                     RestrictFlag.Type
                 )
             );
-
-            /*
-            return new Meta(
-                Et.Block(
-                    new[] { tmp, callFrame },
-
-                    // create our new object
-                    Et.Assign(
-                        tmp,
-                        Et.Call(
-                            selfObj.ContextExpr(),
-                            Context.Methods.CreateObjectCtor,
-                            selfExpr
-                        )
-                    ),
-
-                    IFunctionEtUtils.SetupCallBlock(
-                        callFrame,
-                        selfExpr,
-                        selfObj,
-                        args
-                    ),
-
-                    // the actual constructor call
-                    IFunctionEtUtils.Call(
-                        this.Expression,
-                        tmp,
-                        callFrame
-                    ),
-
-                    // return the built object
-                    tmp
-                ),
-
-                // builds a call restriction that restricts on:
-                // 1) type of this.Expression
-                // 2) expression type of all meta objects in 'args'
-                // 3) instance of this.Value.Lambda
-                IFunctionEtUtils.BuildLambdaCallRestriction(this, args)
-            );
-            */
         }
 
         /// <summary>
@@ -99,6 +53,30 @@ namespace IronJS.Runtime.Js
         /// <returns></returns>
         public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
         {
+            return new Meta(
+                Et.Call(
+                    EtUtils.Cast<IFunction>(
+                        this.Expression
+                    ),
+                    IFunctionMethods.MiCall,
+                    EtUtils.Cast<IObj>(
+                        args[0].Expression
+                    ),
+                    AstUtils.NewArrayHelper(
+                        typeof(object),
+                        DynamicUtils.GetExpressions(
+                            ArrayUtils.RemoveFirst(args)
+                        )
+                    )
+                ),
+                RestrictUtils.BuildCallRestrictions(
+                    this,
+                    args,
+                    RestrictFlag.Type
+                )
+            );
+
+            /*
             //TODO: insert defer
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
@@ -125,10 +103,12 @@ namespace IronJS.Runtime.Js
 
                 EtLambdaCallRestriction(this, args)
             );
+            */
         }
 
         #region Expression Tree
 
+        /*
         static internal Restrict EtLambdaCallRestriction(Meta target, Meta[] args)
         {
             return
@@ -246,7 +226,9 @@ namespace IronJS.Runtime.Js
 
             return Et.Block(exprs);
         }
+        */
 
-        #endregion 
+        #endregion
+
     }
 }

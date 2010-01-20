@@ -172,5 +172,29 @@ namespace IronJS.Tests
                 )
             );
         }
+
+        [TestMethod]
+        public void TestFunctionHasAccessToArgumentsObject()
+        {
+            Assert.AreEqual(
+                "[object Object]",
+                ScriptRunner.Run(
+                    "foo = function(){ emit(arguments) };" +
+                    "foo();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionHasAccessToArgumentsObjectAndItHasALength()
+        {
+            Assert.AreEqual(
+                "3",
+                ScriptRunner.Run(
+                    "foo = function(){ emit(arguments.length) };" +
+                    "foo(1,2,3);"
+                )
+            );
+        }
     }
 }

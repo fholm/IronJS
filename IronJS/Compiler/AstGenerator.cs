@@ -661,7 +661,7 @@ namespace IronJS.Compiler
         {
             var namedProps = node.Map(
                     x => new AutoPropertyNode(
-                        x.GetChildSafe(0).Text.Trim('\'', '"'),
+                        x.GetChildSafe(0).Text.Trim('\'', '"'), // TODO: this probably trims '"bar' to just bar when it should be "bar
                         Build(x.GetChildSafe(1))
                     )   
                 );

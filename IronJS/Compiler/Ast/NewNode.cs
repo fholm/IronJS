@@ -85,7 +85,7 @@ namespace IronJS.Compiler.Ast
                         )
                     )
                 ),
-                EtUtils.CreateBlockIfNotEmpt(exprs),
+                EtUtils.CreateBlockIfNotEmpty(exprs),
                 EtUtils.Box(tmp)
             );
         }

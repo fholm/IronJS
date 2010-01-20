@@ -34,6 +34,17 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestConstructorPrototypeIsObject()
+        {
+            Assert.AreEqual(
+                "object",
+                ScriptRunner.Run(
+                    "foo = function(){}; emit(typeof foo.prototype);"
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestConstructorThisParameterIsNotGlobal()
         {
             Assert.AreEqual(

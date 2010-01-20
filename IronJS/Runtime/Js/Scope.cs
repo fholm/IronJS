@@ -129,12 +129,12 @@ namespace IronJS.Runtime.Js
             return new Scope(context);
         }
 
-        public static Scope CreateCallScope(Scope closure, IObj that, object[] args)
+        public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args)
         {
-            return CreateCallScope(closure, that, args, new string[] { }); // TODO: not necessary to create a new array here each time
+            return CreateCallScope(closure, callee, that, args, new string[] { }); // TODO: not necessary to create a new array here each time
         }
 
-        public static Scope CreateCallScope(Scope closure, IObj that, object[] args, string[] parms)
+        public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
         {
             var callScope = closure.Enter();
             var argsObject = closure._context.ObjectConstructor.Construct();
@@ -142,6 +142,7 @@ namespace IronJS.Runtime.Js
             callScope.Local("this", that);
             callScope.Local("arguments", argsObject);
             argsObject.SetOwnProperty("length", args.Length);
+            argsObject.SetOwnProperty("callee", callee);
 
             for (var i = 0; i < args.Length; ++i)
             {

@@ -26,14 +26,14 @@ namespace IronJS.Runtime
 
         public object Call(IObj that, object[] args)
         {
-            var callScope = Scope.CreateCallScope(Scope, that, args, Lambda.Params);
+            var callScope = Scope.CreateCallScope(Scope, this, that, args, Lambda.Params);
             return Lambda.Delegate.Invoke(callScope);
         }
 
         public virtual IObj Construct(object[] args)
         {
             var newObject = Context.ObjectConstructor.Construct();
-            var callScope = Scope.CreateCallScope(Scope, newObject, args, Lambda.Params);
+            var callScope = Scope.CreateCallScope(Scope, this, newObject, args, Lambda.Params);
 
             var prototype = GetOwnProperty("prototype");
 

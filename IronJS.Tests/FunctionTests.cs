@@ -54,17 +54,6 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
-        public void TestFunctionPrototypeIsObject()
-        {
-            Assert.AreEqual(
-                "object",
-                ScriptRunner.Run(
-                    "foo = function(){}; emit(typeof foo.prototype);"
-                )
-            );
-        }
-
-        [TestMethod]
         public void TestFunctionPrototypeConstructorIsFunction()
         {
             Assert.AreEqual(
@@ -89,18 +78,6 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
-        public void TestFunctionReturn()
-        {
-            Assert.AreEqual(
-                "123",
-                ScriptRunner.Run(
-                    "foo = function(){ return 123; };" +
-                    "emit(foo());"
-                )
-            );
-        }
-
-        [TestMethod]
         public void TestFunctionDefineLocalVariable()
         {
             Assert.AreEqual(
@@ -109,6 +86,18 @@ namespace IronJS.Tests
                     "foo = function(){ var bar = 123; };" +
                     "foo();" +
                     "emit(bar);"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionReturn()
+        {
+            Assert.AreEqual(
+                "123",
+                ScriptRunner.Run(
+                    "foo = function(){ return 123; };" +
+                    "emit(foo());"
                 )
             );
         }
@@ -205,6 +194,29 @@ namespace IronJS.Tests
                 ScriptRunner.Run(
                     "foo = function(){ emit(arguments.length) };" +
                     "foo(1,2,3);"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionArgumentsObjectsCalleePropertyIsTheSameAsFunction()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "foo = function(){ emit(arguments.callee == foo) };" +
+                    "foo();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionLambdaFunctionsHaveAccessToCallee()
+        {
+            Assert.AreEqual(
+                "function",
+                ScriptRunner.Run(
+                    "(function(){ emit(typeof arguments.callee); })();"
                 )
             );
         }

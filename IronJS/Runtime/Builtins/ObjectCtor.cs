@@ -16,14 +16,11 @@ namespace IronJS.Runtime.Builtins
         {
             Context = context;
 
-            //TODO: this might not be a good idea sicne the 'prototype' property
-            // might become replaced during runtime. Need to check Spec if it's
-            // marked as ReadOnly.
             Object_prototype = CreatePrototype(context);
             Put("prototype", Object_prototype);
         }
 
-        public override IObj Construct()
+        public override IObj Construct(object[] args)
         {
             var obj = Context.CreateObject();
 

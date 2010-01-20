@@ -67,6 +67,9 @@ namespace IronJS.Runtime
         public void Setup(Scope globals)
         {
             globals.Global("Object", ObjectConstructor);
+            globals.Global("undefined", Js.Undefined.Instance);
+            globals.Global("Infinity", double.PositiveInfinity);
+            globals.Global("NaN", double.NaN);
 
             /*
             globals.Put("Function", FunctionConstructor);

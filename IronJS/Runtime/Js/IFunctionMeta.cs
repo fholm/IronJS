@@ -26,15 +26,30 @@ namespace IronJS.Runtime.Js
         public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
             //TODO: insert defer
-            return null;
-            /*
             var selfExpr = EtUtils.Cast<IFunction>(this.Expression);
             var selfObj = (IFunction)this.Value;
 
             // tmp variables
-            var callFrame = Et.Variable(typeof(IObj), "#callframe");
+            var callFrame = Et.Variable(typeof(Scope), "#callframe");
             var tmp = Et.Variable(typeof(IObj), "#tmp");
 
+            return new Meta(
+                Et.Call(
+                    selfExpr,
+                    IFunctionMethods.MiConstruct,
+                    AstUtils.NewArrayHelper(
+                        typeof(object),
+                        DynamicUtils.GetExpressions(args)
+                    )
+                ),
+                RestrictUtils.BuildCallRestrictions(
+                    this,
+                    args,
+                    RestrictFlag.Type
+                )
+            );
+
+            /*
             return new Meta(
                 Et.Block(
                     new[] { tmp, callFrame },

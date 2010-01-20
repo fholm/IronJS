@@ -23,7 +23,12 @@ namespace IronJS.Runtime
         public Scope Scope { get; protected set; }
         public Lambda Lambda { get; protected set; }
 
-        public virtual IObj Construct()
+        public object Call(IObj that, object[] args)
+        {
+            return null;
+        }
+
+        public virtual IObj Construct(object[] args)
         {
             throw new NotImplementedException();
         }

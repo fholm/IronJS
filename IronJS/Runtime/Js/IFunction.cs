@@ -9,6 +9,7 @@ using IronJS.Runtime.Binders;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
+using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
@@ -21,9 +22,15 @@ namespace IronJS.Runtime.Js
     {
         // 8.6.2
         Scope Scope { get; }   // [[Scope]]
-        Lambda Lambda { get; }  // [[Call]]
+        Lambda Lambda { get; }
 
         // 8.6.2
-        IObj Construct();   // [[Construct]]
+        object Call(IObj that, object[] args);  // {{Call]]
+        IObj Construct(object[] args);          // [[Construct]]
+    }
+
+    static public class IFunctionMethods
+    {
+        static public readonly MethodInfo MiConstruct = typeof(IFunction).GetMethod("Construct");
     }
 }

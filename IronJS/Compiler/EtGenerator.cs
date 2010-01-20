@@ -121,9 +121,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.PostfixOperator:
                     return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
 
-                case Ast.NodeType.UnsignedRightShift:
-                    return GenerateUnsignedRightShift((Ast.UnsignedRightShiftNode)node);
-
                 case Ast.NodeType.While:
                     return GenerateWhile((Ast.WhileNode)node);
 
@@ -536,40 +533,6 @@ namespace IronJS.Compiler
             }
 
             return loop;
-        }
-
-        // -14 >>> 2
-        // 11.7.3
-        private Et GenerateUnsignedRightShift(Ast.UnsignedRightShiftNode node)
-        {
-            //TODO: to much boxing/conversion going on
-            return EtUtils.Box(
-                Et.Convert(
-                    Et.Call(
-                        typeof(BuiltIns).GetMethod("UnsignedRightShift"),
-
-                        Et.Convert(
-                            Et.Dynamic(
-                                Context.CreateConvertBinder(typeof(double)),
-                                typeof(double),
-                                Generate(node.Left)
-                            ),
-                            typeof(int)
-                        ),
-
-                        Et.Convert(
-                            Et.Dynamic(
-                                Context.CreateConvertBinder(typeof(double)),
-                                typeof(double),
-                                Generate(node.Right)
-                            ),
-                            typeof(int)
-                        )
-
-                    ),
-                    typeof(double)
-                )
-            );
         }
 
         // 11.3

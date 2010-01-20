@@ -87,6 +87,50 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestOperatorPreIncrement()
+        {
+            Assert.AreEqual(
+                "2",
+                ScriptRunner.Run(
+                    "foo = 1; emit(++foo)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorPreIncrementFractions()
+        {
+            Assert.AreEqual(
+                "2.25",
+                ScriptRunner.Run(
+                    "foo = 1.25; emit(++foo)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorPreDecrement()
+        {
+            Assert.AreEqual(
+                "1",
+                ScriptRunner.Run(
+                    "foo = 2; emit(--foo)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorPreDecrementFractions()
+        {
+            Assert.AreEqual(
+                "1.25",
+                ScriptRunner.Run(
+                    "foo = 2.25; emit(--foo)"
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestOperatorVoid()
         {
             Assert.AreEqual(

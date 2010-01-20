@@ -129,6 +129,31 @@ namespace IronJS.Runtime.Js
             return new Scope(context);
         }
 
+        public static Scope CreateCallScope(Scope closure, IObj that, object[] args)
+        {
+            return CreateCallScope(closure, that, args, new string[] { }); // TODO: not necessary to create a new array here each time
+        }
+
+        public static Scope CreateCallScope(Scope closure, IObj that, object[] args, string[] parms)
+        {
+            var callScope = closure.Enter();
+            var argsObject = closure._context.ObjectConstructor.Construct();
+
+            callScope.Local("this", that);
+            callScope.Local("arguments", argsObject);
+            argsObject.SetOwnProperty("length", args.Length);
+
+            for (var i = 0; i < args.Length; ++i)
+            {
+                if (i < parms.Length)
+                    callScope.Local(parms[i], args[i]);
+
+                argsObject.SetOwnProperty((double)i, args[i]);
+            }
+
+            return callScope;
+        }
+
         #endregion
     }
 }

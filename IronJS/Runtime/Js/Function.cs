@@ -26,27 +26,16 @@ namespace IronJS.Runtime
 
         public object Call(IObj that, object[] args)
         {
-            var callScope = Scope.Enter();
-            var argsObject = Context.ObjectConstructor.Construct();
-
-            callScope.Local("this", that);
-            callScope.Local("arguments", argsObject);
-            argsObject.SetOwnProperty("length", args.Length);
-
-            for (var i = 0; i < args.Length; ++i)
-            {
-                if (i < Lambda.Params.Length)
-                    callScope.Local(Lambda.Params[i], args[i]);
-
-                argsObject.SetOwnProperty((double)i, args[i]);
-            }
-
+            var callScope = Scope.CreateCallScope(Scope, that, args, Lambda.Params);
             return Lambda.Delegate.Invoke(callScope);
         }
 
         public virtual IObj Construct(object[] args)
         {
-            throw new NotImplementedException();
+            var newObject = Context.ObjectConstructor.Construct();
+            var callScope = Scope.CreateCallScope(Scope, newObject, args, Lambda.Params);
+            Lambda.Delegate.Invoke(callScope);
+            return newObject;
         }
 
         #endregion

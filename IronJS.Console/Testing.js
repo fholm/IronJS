@@ -4,3 +4,5 @@ var foo = function (a) {
 };
 
 foo_inst = new foo("hello world");
+
+println(foo_inst.bar);

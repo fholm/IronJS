@@ -155,13 +155,13 @@ namespace IronJS.Runtime.Utils
                 throw new NotImplementedException("C# throwing of JS exceptions not implemented");
 
             if (obj is string)
-                context.CreateString((string)obj);
+                throw new NotImplementedException();
 
             if (obj is double)
-                context.CreateNumber((double)obj);
+                throw new NotImplementedException();
 
             if (obj is bool)
-                context.CreateBoolean((bool)obj);
+                throw new NotImplementedException();
 
             if (obj is IObj)
                 return ((IObj)obj);

@@ -249,7 +249,102 @@ namespace IronJS.Tests
             );
         }
 
+        // 11.9.3, 16 and 17
+        [TestMethod]
+        public void TestCompareEqualStringToNumber()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "emit(1 == '1')"
+                )
+            );
+        }
 
+        // 11.9.3, 16 and 17
+        [TestMethod]
+        public void TestCompareEqualStringToNumberFractions()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "emit(1.25 == '1.25')"
+                )
+            );
+        }
 
+        // 11.9.3, 16 and 17
+        [TestMethod]
+        public void TestCompareNotEqualStringToNumber()
+        {
+            Assert.AreEqual(
+                "false",
+                ScriptRunner.Run(
+                    "emit(1 == '2')"
+                )
+            );
+        }
+
+        // 11.9.3, 16 and 17
+        [TestMethod]
+        public void TestCompareNotEqualStringToNumberFractions()
+        {
+            Assert.AreEqual(
+                "false",
+                ScriptRunner.Run(
+                    "emit(1.25 == '2.25')"
+                )
+            );
+        }
+
+        // 11.9.3, 18 and 19
+        [TestMethod]
+        public void TestCompareTrueToNumber()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "emit(1 == true)"
+                )
+            );
+        }
+
+        // 11.9.3, 18 and 19
+        [TestMethod]
+        public void TestCompareFalseToNumber()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "emit(0 == false)"
+                )
+            );
+        }
+
+        // 11.9.3, 18 and 19
+        [TestMethod]
+        public void TestCompareFalseToNumberFraction()
+        {
+            Assert.AreEqual(
+                "false",
+                ScriptRunner.Run(
+                    "emit(0.5 == false)"
+                )   
+            );
+        }
+
+        // 11.9.3, 18 and 19
+        [TestMethod]
+        public void TestCompareTrueToNumberFraction()
+        {
+            Assert.AreEqual(
+                "false",
+                ScriptRunner.Run(
+                    "emit(1.5 == true)"
+                )
+            );
+        }
+
+        //TODO: UNIT TEST for abstract equality comparison step 20 and 21
     }
 }

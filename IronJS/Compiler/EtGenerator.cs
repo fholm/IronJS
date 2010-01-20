@@ -124,9 +124,6 @@ namespace IronJS.Compiler
                 case Ast.NodeType.PostfixOperator:
                     return GeneratePostFixOp((Ast.PostfixOperatorNode)node);
 
-                case Ast.NodeType.StrictCompare:
-                    return GenerateStrictCompare((Ast.StrictCompareNode)node);
-
                 case Ast.NodeType.UnsignedRightShift:
                     return GenerateUnsignedRightShift((Ast.UnsignedRightShiftNode)node);
 
@@ -576,25 +573,6 @@ namespace IronJS.Compiler
                     typeof(double)
                 )
             );
-        }
-
-        // 11.9.4
-        // 11.9.5
-        // foo === bar, foo !== bar
-        private Et GenerateStrictCompare(Ast.StrictCompareNode node)
-        {
-            // for both
-            Et expr = Et.Call(
-                typeof(BuiltIns).GetMethod("StrictEquality"),
-                Generate(node.Left),
-                Generate(node.Right)
-            );
-
-            // specific to 11.9.5
-            if(node.Op == ExpressionType.NotEqual)
-                expr = Et.Not(Et.Convert(expr, typeof(bool)));
-
-            return expr;
         }
 
         // 11.3

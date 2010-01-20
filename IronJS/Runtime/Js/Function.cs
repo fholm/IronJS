@@ -16,6 +16,7 @@ namespace IronJS.Runtime
         {
             Scope = scope;
             Lambda = lambda;
+            SetOwnProperty("length", (double) lambda.Params.Length);
         }
 
         #region IFunction Members

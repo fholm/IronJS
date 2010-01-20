@@ -49,5 +49,27 @@ namespace IronJS.Tests
                 )
             );
         }
+
+        [TestMethod]
+        public void TestOperatorConditionalWhenTrue()
+        {
+            Assert.AreEqual(
+                "is-true",
+                ScriptRunner.Run(
+                    "emit(true ? 'is-true' : 'is-false');"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorConditionalWhenFalse()
+        {
+            Assert.AreEqual(
+                "is-false",
+                ScriptRunner.Run(
+                    "emit(false ? 'is-true' : 'is-false');"
+                )
+            );
+        }
     }
 }

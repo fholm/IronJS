@@ -659,6 +659,8 @@ namespace IronJS.Compiler
             }
             else if (target is Ast.IndexAccessNode)
             {
+                throw new NotImplementedException();
+
                 var ixNode = (Ast.IndexAccessNode)target;
 
                 return Et.Dynamic(

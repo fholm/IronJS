@@ -79,7 +79,7 @@
     <Compile Include="Compiler\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
-    <Compile Include="Compiler\Ast\PrefixOperatorNode.cs" />
+    <Compile Include="Compiler\Ast\PostfixOperatorNode.cs" />
     <Compile Include="Compiler\Ast\TypeOfNode.cs" />
     <Compile Include="Compiler\Ast\VoidNode.cs" />
     <Compile Include="Compiler\Ast\StrictCompareNode.cs" />

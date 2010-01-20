@@ -71,7 +71,7 @@ namespace IronJS.Runtime.Utils
             return restrictions;
         }
 
-        internal static Restrict2 GetTypeRestriction(Meta2 target)
+        internal static Restrict2 GetNullHandledTypeRestriction(Meta2 target)
         {
             if (target.HasValue && target.Value == null)
                 return Restrict2.GetInstanceRestriction(

@@ -113,7 +113,7 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.ExclusiveOr:
                 case ExpressionType.RightShift:
                 case ExpressionType.LeftShift:
-                    //TODO: convert to number/check so we're not casting aa Js.Obj, string, etc. to double > int
+                    //TODO: convert to number/check so we're not casting a Js.Obj, string, etc. to double > int
                     expr = Et.Convert(
                         Et.MakeBinary(
                             Operation,
@@ -132,7 +132,7 @@ namespace IronJS.Runtime.Binders
             if (typeRestriction)
             {
                 restrictions =
-                    RestrictUtils.GetTypeRestriction(
+                    RestrictUtils.GetNullHandledTypeRestriction(
                         target
                     ).Merge(
                         Restrict.GetTypeRestriction(

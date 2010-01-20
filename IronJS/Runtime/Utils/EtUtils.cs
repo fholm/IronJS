@@ -1,12 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
+
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using EtParam = System.Linq.Expressions.ParameterExpression;
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using Restrict = System.Dynamic.BindingRestrictions;
 using System.Reflection;
 
 namespace IronJS.Runtime.Utils
 {
-    using Et2 = System.Linq.Expressions.Expression;
-    using Meta2 = System.Dynamic.DynamicMetaObject;
-    using Restrict2 = System.Dynamic.BindingRestrictions;
-
     static class EtUtils
     {
         /// <summary>
@@ -14,23 +23,23 @@ namespace IronJS.Runtime.Utils
         /// </summary>
         /// <param name="expr"></param>
         /// <returns></returns>
-        internal static Et2 Box(Et2 expr)
+        internal static Et Box(Et expr)
         {
             if (!expr.Type.IsValueType)
                 return expr;
 
             if (expr.Type == typeof(void))
-                return Et2.Block(expr, Et2.Default(typeof(object)));
+                return Et.Block(expr, Et.Default(typeof(object)));
 
-            return Et2.Convert(expr, typeof(object));
+            return Et.Convert(expr, typeof(object));
         }
 
-        internal static Et2 CastForBitOp(Et2 expr)
+        internal static Et CastForBitOp(Et expr)
         {
             // we need to go object > double > int
             // instead of object > int (which fill fail)
-            return Et2.Convert(
-                Et2.Convert(
+            return Et.Convert(
+                Et.Convert(
                     expr,
                     typeof(double)
                 ),
@@ -44,12 +53,12 @@ namespace IronJS.Runtime.Utils
         /// <typeparam name="T"></typeparam>
         /// <param name="expr"></param>
         /// <returns></returns>
-        internal static Et2 Cast<T>(Et2 expr)
+        internal static Et Cast<T>(Et expr)
         {
             if (expr.Type == typeof(void))
-                return Et2.Block(expr, Et2.Default(typeof(T)));
+                return Et.Block(expr, Et.Default(typeof(T)));
 
-            return Et2.Convert(expr, typeof(T));
+            return Et.Convert(expr, typeof(T));
         }
 
         /// <summary>
@@ -61,23 +70,23 @@ namespace IronJS.Runtime.Utils
         /// <param name="excType"></param>
         /// <param name="excArgs"></param>
         /// <returns></returns>
-        internal static Meta2 CreateThrow(Meta2 target, Meta2[] args, Restrict2 tests, Type excType, params object[] excArgs)
+        internal static Meta CreateThrow(Meta target, Meta[] args, Restrict tests, Type excType, params object[] excArgs)
         {
-            Et2[] argExprs = null;
+            Et[] argExprs = null;
             Type[] argTypes = Type.EmptyTypes;
 
             if (excArgs != null)
             {
                 var i = excArgs.Length;
 
-                argExprs = new Et2[i];
+                argExprs = new Et[i];
                 argTypes = new Type[i];
 
                 i = 0;
 
                 foreach (object o in excArgs)
                 {
-                    Et2 expr = Et2.Constant(o);
+                    Et expr = Et.Constant(o);
 
                     argExprs[i] = expr;
                     argTypes[i] = expr.Type;
@@ -91,13 +100,13 @@ namespace IronJS.Runtime.Utils
             if (constructor == null)
                 throw new Runtime.RuntimeError("Exception '{0}' doesn't have a matching constructor", excType.Name);
 
-            return new Meta2(
-                Et2.Throw(
-                    Et2.New(constructor, argExprs),
+            return new Meta(
+                Et.Throw(
+                    Et.New(constructor, argExprs),
                     typeof(object)
                 ),
                 target.Restrictions.Merge(
-                    Restrict2.Combine(args).Merge(
+                    Restrict.Combine(args).Merge(
                         tests
                     )
                 )
@@ -110,14 +119,14 @@ namespace IronJS.Runtime.Utils
         /// <typeparam name="T"></typeparam>
         /// <param name="args"></param>
         /// <returns></returns>
-        internal static Et2[] ConvertAll<T>(Meta2[] args)
+        internal static Et[] ConvertAll<T>(Meta[] args)
         {
-            Et2[] callArgs = new Et2[args.Length];
+            Et[] callArgs = new Et[args.Length];
 
             for (int i = 0; i < args.Length; i++)
             {
                 callArgs[i] =
-                    Et2.Convert(
+                    Et.Convert(
                         args[i].Expression,
                         typeof(T)
                     );
@@ -132,14 +141,14 @@ namespace IronJS.Runtime.Utils
         /// <param name="args"></param>
         /// <param name="paramInfo"></param>
         /// <returns></returns>
-        internal static Et2[] ConvertToParamTypes(Meta2[] args, ParameterInfo[] paramInfo)
+        internal static Et[] ConvertToParamTypes(Meta[] args, ParameterInfo[] paramInfo)
         {
-            Et2[] callArgs = new Et2[args.Length];
+            Et[] callArgs = new Et[args.Length];
 
             for (int i = 0; i < args.Length; i++)
             {
                 callArgs[i] =
-                    Et2.Convert(
+                    Et.Convert(
                         args[i].Expression,
                         paramInfo[i].ParameterType
                     );
@@ -148,5 +157,13 @@ namespace IronJS.Runtime.Utils
             return callArgs;
         }
 
+
+        internal static Et CreateBlockIfNotEmpt(IEnumerable<Et> exprs)
+        {
+            if (exprs.Count() > 0)
+                return Et.Block(exprs);
+
+            return AstUtils.Empty();
+        }
     }
 }

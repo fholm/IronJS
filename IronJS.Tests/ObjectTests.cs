@@ -32,14 +32,25 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
-        public void TestObjectAssignProperty()
+        public void TestObjectCreateNewShorthandWithInlineProperties()
         {
             Assert.AreEqual(
                 "hello world",
                 ScriptRunner.Run(
-                    "foo = {};"
-                    + "foo.bar = 'hello world';"
-                    + "emit(foo.bar);"
+                    "foo = { bar: 'hello', baz: 'world' };"
+                    + "emit(foo.bar + ' ' + foo.baz);"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectCreateNewShorthandWithInlinePropertiesNamesAsStrings()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = { 'bar': 'hello', \"baz\": 'world' };"
+                    + "emit(foo.bar + ' ' + foo.baz);"
                 )
             );
         }

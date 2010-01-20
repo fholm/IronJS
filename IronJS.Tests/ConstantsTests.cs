@@ -21,6 +21,17 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestStringConstantWithSingleQuotes()
+        {
+            Assert.AreEqual(
+                "foo",
+                ScriptRunner.Run(
+                    "emit('foo')"
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestNumberConstant()
         {
             Assert.AreEqual(

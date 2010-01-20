@@ -50,25 +50,23 @@ namespace IronJS.Compiler.Ast
             var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 
-            /*
             // this handles properties defined
             // in the shorthand json-style object
             // expression: { foo: 1, bar: 2 }
-            if (node.Properties != null)
+            if (HasProperties)
             {
-                foreach (var propNode in node.Properties)
+                foreach (var prop in Properties)
                 {
                     exprs.Add(
                         Et.Call(
                             tmp,
                             typeof(IObj).GetMethod("Put"),
-                            Et.Constant(propNode.Name, typeof(object)),
-                            EtUtils.Box(Generate(propNode.Value))
+                            Et.Constant(prop.Name, typeof(object)),
+                            EtUtils.Box(prop.Value.Walk(etgen))
                         )
                     );
                 }
             }
-            */
 
             return Et.Block(
                 new[] { tmp },
@@ -87,6 +85,7 @@ namespace IronJS.Compiler.Ast
                         )
                     )
                 ),
+                EtUtils.CreateBlockIfNotEmpt(exprs),
                 EtUtils.Box(tmp)
             );
         }

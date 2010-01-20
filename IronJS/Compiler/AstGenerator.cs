@@ -661,7 +661,7 @@ namespace IronJS.Compiler
         {
             var namedProps = node.Map(
                     x => new AutoPropertyNode(
-                        x.GetChildSafe(0).Text.Substring(1, x.GetChildSafe(0).Text.Length-2),
+                        x.GetChildSafe(0).Text.Trim('\'', '"'),
                         Build(x.GetChildSafe(1))
                     )   
                 );

@@ -650,7 +650,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
-        private Et GenerateConvertToObject(Et target)
+        internal Et GenerateConvertToObject(Et target)
         {
             return Et.Dynamic(
                 Context.CreateConvertBinder(typeof(IObj)),

@@ -341,6 +341,41 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestOperatorUnsignedRightShift()
+        {
+            Assert.AreEqual(
+                "1073741820",
+                ScriptRunner.Run(
+                    "emit(-14 >>> 2)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorUnsignedRightShiftFractions()
+        {
+            Assert.AreEqual(
+                "1073741820",
+                ScriptRunner.Run(
+                    "emit(-14.25 >>> 2)"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestOperatorUnsignedRightShiftAssign()
+        {
+            Assert.AreEqual(
+                "1073741820",
+                ScriptRunner.Run(
+                    "foo = -14;"
+                    + "foo >>>= 2;"
+                    + "emit(foo)"
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestOperatorOr()
         {
             Assert.AreEqual(

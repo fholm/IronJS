@@ -65,5 +65,36 @@ namespace IronJS.Tests
                 )
             );
         }
+
+        [TestMethod]
+        public void TestObjectFunctionAssignedToObjectHasAccessToObjectAsThisParameterWhenCalled()
+        {
+            Assert.AreEqual(
+                "hello world",
+                ScriptRunner.Run(
+                    "foo = { bar: function () { emit(this.boo); } };"
+                    + "foo.boo = 'hello world';"
+                    + "foo.bar();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestObjectFunctionAssignedToTwoDifferentObjectsStillHaveAccessToCorrectObjectWhenInvokedAsMethod()
+        {
+            Assert.AreEqual(
+                "foo1foo2",
+                ScriptRunner.Run(
+                    "foo1 = { }; foo2 = { }; "
+                    + "bar = function () { emit(this.boo); }; "
+                    + "foo1.bar = bar;"
+                    + "foo2.bar = bar;"
+                    + "foo1.boo = 'foo1';"
+                    + "foo2.boo = 'foo2';"
+                    + "foo1.bar();"
+                    + "foo2.bar();"
+                )
+            );
+        }
     }
 }

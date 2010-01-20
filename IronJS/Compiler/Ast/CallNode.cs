@@ -50,7 +50,31 @@ namespace IronJS.Compiler.Ast
 
             if (Target is MemberAccessNode)
             {
-                throw new NotImplementedException();
+                var target = (Ast.MemberAccessNode)Target;
+                var tmp = Et.Variable(typeof(object), "#tmp");
+                var targetExpr = etgen.GenerateConvertToObject(
+                        target.Target.Walk(etgen)
+                    );
+
+                return Et.Block(
+                    new[] { tmp },
+                    Et.Assign(
+                        tmp,
+                        targetExpr
+                    ),
+                    Et.Dynamic(
+                        etgen.Context.CreateInvokeMemberBinder(
+                            target.Name,
+                            new CallInfo(args.Length + 1)
+                        ),
+                        typeof(object),
+                        ArrayUtils.Insert(
+                            tmp,
+                            tmp,
+                            args
+                        )
+                    )
+                );
             }
 
             return Et.Dynamic(

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -36,14 +37,17 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
+            var trueBranch = TrueBranch.Walk(etgen);
+            var elseBranch = etgen.WalkIfNotNull(ElseBranch);
+
             return Et.Condition(
                 Et.Dynamic(
                     etgen.Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
                     Test.Walk(etgen)
                 ),
-                TrueBranch.Walk(etgen),
-                etgen.WalkIfNotNull(ElseBranch)
+                EtUtils.Box(trueBranch),
+                EtUtils.Box(elseBranch)
             );
         }
     }

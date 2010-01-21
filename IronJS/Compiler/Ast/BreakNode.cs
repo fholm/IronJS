@@ -16,9 +16,9 @@ namespace IronJS.Compiler.Ast
         public override Et Walk(EtGenerator etgen)
         {
             if (Label == null)
-                return Et.Continue(etgen.FunctionScope.LabelScope.Break());
+                return Et.Break(etgen.FunctionScope.LabelScope.Break());
 
-            return Et.Continue(etgen.FunctionScope.LabelScope.Break(Label));
+            return Et.Break(etgen.FunctionScope.LabelScope.Break(Label));
         }
     }
 }

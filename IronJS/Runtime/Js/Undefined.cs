@@ -1,9 +1,8 @@
 ﻿using System.Linq.Expressions;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime.Js
 {
-    using Et = System.Linq.Expressions.Expression;
-
     public sealed class Undefined
     {
         static Undefined _instance;

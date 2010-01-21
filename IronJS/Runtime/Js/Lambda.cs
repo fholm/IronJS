@@ -1,16 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime.Js
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using EtParam = System.Linq.Expressions.ParameterExpression;
-
     public class Lambda
     {
         public LambdaType Delegate { get; protected set; }

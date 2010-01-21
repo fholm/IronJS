@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Linq.Expressions;
-using IronJS.Runtime.Utils;
+﻿using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Et = System.Linq.Expressions.Expression;
+using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Runtime.Js
 {
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = System.Linq.Expressions.Expression;
-    using EtParam = System.Linq.Expressions.ParameterExpression;
 
     public class Scope
     {

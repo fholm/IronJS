@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-
     public class ValueObj : Obj, IValueObj
     {
         public ValueObj(object value)

@@ -115,6 +115,9 @@ namespace IronJS.Compiler
                 case EcmaParser.BYINDEX:
                     return BuildIndexAccess(node);
 
+                case EcmaLexer.IN:
+                    return BuildIn(node);
+
                 /*
                  * Loops
                  */
@@ -351,6 +354,14 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildIn(ITree node)
+        {
+            return new InNode(
+                Build(node.GetChildSafe(1)), 
+                Build(node.GetChildSafe(0))
+            );
         }
 
         private Node BuildDelete(ITree node)

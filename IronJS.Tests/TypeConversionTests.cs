@@ -92,7 +92,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "false",
                 ScriptRunner.Run(
-                    "emit(!!foo)"
+                    "emit(!!undefined)"
                 )
             );
         }
@@ -125,7 +125,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "NaN",
                 ScriptRunner.Run(
-                    "emit(+foo)"
+                    "emit(+undefined)"
                 )
             );
         }
@@ -254,10 +254,11 @@ namespace IronJS.Tests
         [TestMethod]
         public void TestNaNToString()
         {
+            //TODO: Test named wrong?
             Assert.AreEqual(
                 "NaN",
                 ScriptRunner.Run(
-                    "emit(1 + foo)"
+                    "emit(1 + undefined)"
                 )
             );
         }
@@ -290,7 +291,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "undefined",
                 ScriptRunner.Run(
-                    "emit(foo)"
+                    "emit(undefined)"
                 )
             );
         }

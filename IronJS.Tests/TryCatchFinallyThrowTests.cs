@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IronJS.Runtime;
 
 namespace IronJS.Tests
 {
@@ -12,18 +13,15 @@ namespace IronJS.Tests
         [TestMethod]
         public void TestThrow()
         {
-            var exceptionCaught = false;
-
             try
             {
                 ScriptRunner.Run("throw {};");
+                Assert.Fail("Should throw JsRuntimeError");
             }
-            catch (IronJS.Runtime.JsRuntimeError)
+            catch (JsRuntimeError)
             {
-                exceptionCaught = true;
-            }
 
-            Assert.AreEqual(true, exceptionCaught);
+            }
         }
 
         [TestMethod]
@@ -41,21 +39,19 @@ namespace IronJS.Tests
         [TestMethod]
         public void TestTryFinally()
         {
-            var exceptionCaught = false;
-            string result = "";
             var emitter = new StringBuilder();
 
             try
             {
                 ScriptRunner.Run("try { throw {}; } finally { emit('foo') }", ref emitter);
+                Assert.Fail("Should throw JsRuntimeError");
             }
-            catch (IronJS.Runtime.JsRuntimeError)
+            catch (JsRuntimeError)
             {
-                exceptionCaught = true;
+
             }
 
             Assert.AreEqual("foo", emitter.ToString());
-            Assert.AreEqual(true, exceptionCaught);
         }
 
         [TestMethod]

@@ -114,7 +114,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "NaN",
                 ScriptRunner.Run(
-                    "emit(foo + 1)" // foo == undefined == ToNumber(undefined) == NaN
+                    "emit(undefined + 1)"
                 )
             );
         }
@@ -125,7 +125,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "NaN",
                 ScriptRunner.Run(
-                    "emit(1 + 2 + 3 + foo)" // foo == undefined == ToNumber(undefined) == NaN
+                    "emit(1 + 2 + 3 + undefined)"
                 )
             );
         }

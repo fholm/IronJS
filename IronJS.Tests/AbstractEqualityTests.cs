@@ -16,7 +16,7 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "true",
                 ScriptRunner.Run(
-                    "emit(foo == undefined)" // foo == undefiend variable = undefined
+                    "emit(undefined == undefined)" 
                 )
             );
         }

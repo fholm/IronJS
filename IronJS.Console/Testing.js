@@ -1,12 +1,4 @@
 ﻿
-try{
-    throw {};
-}catch(ex){
-    println(ex);
-}
+foo = { bar: 1 };
 
-try {
-    asd();
-} catch (ex) {
-    println(ex);
-}
+println("bar" in foo);

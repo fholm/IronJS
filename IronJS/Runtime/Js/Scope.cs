@@ -41,6 +41,17 @@ namespace IronJS.Runtime.Js
             (_obj as Obj).Prototype = null;
         }
 
+        public object Delete(object name)
+        {
+            if(_obj.Delete(name))
+                return true;
+
+            if (_parent != null)
+                return _parent.Delete(name);
+
+            return false;
+        }
+
         public object Local(object name, object value)
         {
             if (_privateObj || _obj.HasProperty(name))
@@ -61,8 +72,14 @@ namespace IronJS.Runtime.Js
         {
             var value = _obj.Get(name);
 
-            if (value is Undefined && _parent != null)
-                return _parent.Pull(name);
+            if (value is Undefined)
+            {
+                if(_parent != null)
+                    return _parent.Pull(name);
+
+                if(name is string && (string)name != "undefined")
+                    throw new InternalRuntimeError("Variable '" + name + "' is not defined");
+            }
 
             return value;
         }
@@ -73,6 +90,15 @@ namespace IronJS.Runtime.Js
         }
 
         #region Expression Tree
+
+        internal static Et EtDelete(EtParam scope, string name)
+        {
+            return Et.Call(
+                scope,
+                typeof(Scope).GetMethod("Delete"),
+                Et.Constant(name)
+            );
+        }
 
         internal static Et EtValue(EtParam scope)
         {

@@ -2,6 +2,7 @@
 using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Utils;
 using System.Dynamic;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -21,23 +22,37 @@ namespace IronJS.Compiler.Ast
             {
                 var maNode = (MemberAccessNode)Target;
 
-                return EtUtils.Box(Et.Dynamic(
-                    etgen.Context.CreateDeleteMemberBinder(maNode.Name),
-                    typeof(void),
-                    Target.Walk(etgen)
-                ));
+                return EtUtils.Box(
+                    Et.Dynamic(
+                        etgen.Context.CreateDeleteMemberBinder(maNode.Name),
+                        typeof(void),
+                        maNode.Target.Walk(etgen)
+                    )
+                );
             }
 
             if (Target is IndexAccessNode)
             {
                 var iaNode = (IndexAccessNode)Target;
 
-                return EtUtils.Box(Et.Dynamic(
-                    etgen.Context.CreateDeleteIndexBinder(new CallInfo(1)),
-                    typeof(void),
-                    iaNode.Target.Walk(etgen),
-                    iaNode.Index.Walk(etgen)
-                ));
+                return EtUtils.Box(
+                    Et.Dynamic(
+                        etgen.Context.CreateDeleteIndexBinder(new CallInfo(1)),
+                        typeof(void),
+                        iaNode.Target.Walk(etgen),
+                        iaNode.Index.Walk(etgen)
+                    )
+                );
+            }
+
+            if (Target is IdentifierNode)
+            {
+                var idNode = (IdentifierNode)Target;
+
+                return Scope.EtDelete(
+                    etgen.FunctionScope.ScopeExpr,
+                    idNode.Name
+                );
             }
 
             throw new NotImplementedException();

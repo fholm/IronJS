@@ -127,7 +127,7 @@ namespace IronJS.Runtime.Js
             if (HasOwnProperty(name))
                 return Properties.Remove(name);
 
-            throw new NotImplementedException("Deleting properties in Prototype not supported");
+            return false;
         }
 
         public virtual List<object> GetAllPropertyNames()

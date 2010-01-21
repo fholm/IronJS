@@ -46,11 +46,6 @@ namespace IronJS.Runtime.Js
             return (obj is IFunction);
         }
 
-        public static Et ContextExpr(this IObj obj)
-        {
-            return Et.Constant(obj.Context, typeof(Context));
-        }
-
         static internal Et EtSetOwnProperty(Et target, object name, Et value)
         {
             return Et.Call(
@@ -58,6 +53,15 @@ namespace IronJS.Runtime.Js
                 typeof(IObj).GetMethod("SetOwnProperty"),
                 Et.Constant(name, typeof(object)),
                 value
+            );
+        }
+
+        static internal Et EtHasProperty(Et target, Et name)
+        {
+            return Et.Call(
+                target,
+                typeof(IObj).GetMethod("HasProperty"),
+                name
             );
         }
     }

@@ -5,11 +5,6 @@ namespace IronJS.Runtime
 {
     public static class BuiltIns
     {
-        public static object Print(object o)
-        {
-            Console.Write(o);
-            return o;
-        }
         public static object PrintLine(object o)
         {
             Console.WriteLine(o);

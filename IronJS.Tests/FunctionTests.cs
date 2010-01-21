@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IronJS.Runtime;
 
 namespace IronJS.Tests
 {
@@ -80,14 +81,20 @@ namespace IronJS.Tests
         [TestMethod]
         public void TestFunctionDefineLocalVariable()
         {
-            Assert.AreEqual(
-                "undefined",
+            try
+            {
                 ScriptRunner.Run(
                     "foo = function(){ var bar = 123; };" +
                     "foo();" +
                     "emit(bar);"
-                )
-            );
+                );
+
+                Assert.Fail("Should throw InternalRuntimeError");
+            }
+            catch (InternalRuntimeError)
+            {
+
+            }
         }
 
         [TestMethod]

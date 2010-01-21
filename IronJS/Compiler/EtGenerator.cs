@@ -114,40 +114,9 @@ namespace IronJS.Compiler
                     return GenerateWith((Ast.WithNode)node);
                 */
 
-                case Ast.NodeType.Delete:
-                    return GenerateDelete((Ast.DeleteNode)node);
-
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
             }
-        }
-
-        private Et GenerateDelete(Ast.DeleteNode node)
-        {
-            if (node.Target is Ast.MemberAccessNode)
-            {
-                var maNode = (Ast.MemberAccessNode)node.Target;
-
-                return EtUtils.Box(Et.Dynamic(
-                    Context.CreateDeleteMemberBinder(maNode.Name),
-                    typeof(void),
-                    Generate(maNode.Target)
-                ));
-            }
-
-            if (node.Target is Ast.IndexAccessNode)
-            {
-                var iaNode = (Ast.IndexAccessNode)node.Target;
-
-                return EtUtils.Box(Et.Dynamic(
-                    Context.CreateDeleteIndexBinder(new CallInfo(1)),
-                    typeof(void),
-                    Generate(iaNode.Target),
-                    Generate(iaNode.Index)
-                ));
-            }
-
-            throw new NotImplementedException();
         }
 
         private Et GenerateForIn(Ast.ForInNode node)

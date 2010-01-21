@@ -76,6 +76,17 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestObjectNumericalIndexShouldBeSameAsStringIndex()
+        {
+            Assert.AreEqual(
+                "barbar",
+                ScriptRunner.Run(
+                    "foo = {}; foo[0] = 'bar'; emit(foo[0]); emit(foo['0']); "
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestObjectCreateNewShorthand()
         {
             Assert.AreEqual(

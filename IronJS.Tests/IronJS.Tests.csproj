@@ -43,6 +43,7 @@
     <Compile Include="AbstractEqualityTests.cs" />
     <Compile Include="BinaryOpTests.cs" />
     <Compile Include="ConstructorTests.cs" />
+    <Compile Include="DeleteInTests.cs" />
     <Compile Include="ForStepTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfStatementTest.cs" />

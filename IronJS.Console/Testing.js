@@ -4,3 +4,9 @@ try{
 }catch(ex){
     println(ex);
 }
+
+try {
+    asd();
+} catch (ex) {
+    println(ex);
+}

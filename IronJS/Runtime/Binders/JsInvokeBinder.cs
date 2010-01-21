@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Dynamic;
 using System.Reflection;
-using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
+using Restrict = System.Dynamic.BindingRestrictions;
 
 namespace IronJS.Runtime.Binders
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-
     class JsInvokeBinder : InvokeBinder
     {
         Context _context;
@@ -27,15 +25,14 @@ namespace IronJS.Runtime.Binders
             // handles invocation of Undefined
             if (object.ReferenceEquals(target.Value, Js.Undefined.Instance))
             {
-                return EtUtils.CreateThrow(
-                    target, 
-                    args, 
+                return new Meta(
+                    InternalRuntimeError.EtNew(
+                        "Can't call undefined"
+                    ),
                     Restrict.GetInstanceRestriction(
-                        target.Expression, 
+                        target.Expression,
                         target.Value
-                    ), 
-                    typeof(Runtime.RuntimeError), 
-                    "Can't call undefined"
+                    )
                 );
             }
             
@@ -52,7 +49,6 @@ namespace IronJS.Runtime.Binders
                             methodInfo.GetParameters()
                         )
                     ),
-
                     RestrictUtils.BuildCallRestrictions(
                         target, 
                         args, 

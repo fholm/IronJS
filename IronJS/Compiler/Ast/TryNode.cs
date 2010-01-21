@@ -30,13 +30,13 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                var catchParam = Et.Parameter(typeof(object), "#catch");
+                var catchParam = Et.Parameter(typeof(JsRuntimeError), "#catch");
 
                 var catchBody = Et.Block(
                     etgen.GenerateAssign(
                         Catch.Target,
                         Et.Property(
-                            Et.Convert(catchParam, typeof(JsRuntimeError)),
+                            catchParam,
                             "JsObj"
                         )
                     ),
@@ -47,8 +47,7 @@ namespace IronJS.Compiler.Ast
 
                 var catchBlock = Et.Catch(
                     catchParam,
-                    catchBody//,
-                    //Et.TypeIs(catchParam, typeof(JsRuntimeError))
+                    catchBody
                 );
 
                 var tryBody = EtUtils.Box(Body.Walk(etgen));

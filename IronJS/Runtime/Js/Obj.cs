@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
-using IronJS.Runtime.Utils;
+using System.Linq;
+using System.Reflection;
+using Et = System.Linq.Expressions.Expression;
+using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
 {
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
 
     public class Obj : IObj
     {
+        static public readonly ConstructorInfo Ctor =
+            typeof(Obj).GetConstructor(Type.EmptyTypes);
+
         protected readonly Dictionary<object, Property> Properties = 
                        new Dictionary<object, Property>();
 

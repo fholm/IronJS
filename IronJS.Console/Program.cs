@@ -2,7 +2,6 @@
 using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
-using System.Collections.Generic;
 
 namespace IronJS.Testing
 {

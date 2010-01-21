@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     enum WhileType { Do, While }
 
     class WhileNode : Node

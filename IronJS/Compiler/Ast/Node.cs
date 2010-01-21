@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     public enum NodeType
     {
         Assign, Identifier, Number, Null,
@@ -16,11 +14,8 @@ namespace IronJS.Compiler.Ast
         UnaryOp, Logical, PostfixOperator,
         TypeOf, Boolean, Void, StrictCompare,
         UnsignedRightShift, ForStep, ForIn,
-        Break, Continue, With, Try,
-        Catch,
-        Throw,
-        IndexAccess,
-        Delete
+        Break, Continue, With, Try, Catch,
+        Throw, IndexAccess, Delete
     }
 
     abstract public class Node

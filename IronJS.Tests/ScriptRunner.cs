@@ -28,7 +28,7 @@ namespace IronJS.Tests
                 emit
             );
 
-            context.Setup(scope);
+            context.SetupGlobals(scope);
 
             var astNodes = astBuilder.Build(source);
             var compiled = etGenerator.Build(astNodes, context);
@@ -57,7 +57,7 @@ namespace IronJS.Tests
                 emit
             );
 
-            context.Setup(scope);
+            context.SetupGlobals(scope);
 
             var astNodes = astBuilder.Build(filename, Encoding.UTF8);
             var compiled = etGenerator.Build(astNodes, context);

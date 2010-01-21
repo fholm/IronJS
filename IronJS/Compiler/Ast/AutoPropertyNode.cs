@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class AutoPropertyNode : Node
     {
         public readonly string Name;
@@ -21,6 +17,8 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
+            // This Walk()-method is never called
+            // so no need to implement it
             throw new NotImplementedException();
         }
     }

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq;
+using System.Text;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class BlockNode : Node
     {
         public readonly List<Node> Nodes;
@@ -23,16 +22,14 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-
             writer.Append(indentStr + "(" + Type + "");
 
             if (!IsEmpty)
             {
                 writer.AppendLine();
+
                 foreach (var node in Nodes)
-                {
                     node.Print(writer, indent + 1);
-                }
 
                 writer.AppendLine(indentStr + ")");
             }

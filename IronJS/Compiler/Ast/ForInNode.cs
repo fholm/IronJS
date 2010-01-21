@@ -1,9 +1,8 @@
 ﻿using System;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     // 12.6.4
     class ForInNode : Node
     {

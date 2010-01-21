@@ -97,6 +97,17 @@ namespace IronJS.Tests
             );
         }
 
+        [TestMethod]
+        public void TestTypeOfObject()
+        {
+            Assert.AreEqual(
+                "object",
+                ScriptRunner.Run(
+                    "emit(typeof {})"
+                )
+            );
+        }
+
         //TODO: UNIT TEST test typeof on object input
         //TODO: UNIT TEST test typeof on clr input
     }

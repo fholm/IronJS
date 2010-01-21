@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class StringNode : Node
     {
         public readonly string Value;

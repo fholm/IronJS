@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Binders;
-using System.Linq.Expressions;
 using System.Dynamic;
+using System.Linq.Expressions;
 using System.Reflection;
-using System.Globalization;
+using IronJS.Runtime.Binders;
 using IronJS.Runtime.Builtins;
+using IronJS.Runtime.Js;
+
+// Aliases
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime
 {
-    using Et = System.Linq.Expressions.Expression;
-    using EtParam = System.Linq.Expressions.ParameterExpression;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
 
     public class Context
     {
@@ -24,15 +20,14 @@ namespace IronJS.Runtime
         public IFunction NumberConstructor { get; protected set; }
         public IFunction StringConstructor { get; protected set; }
         public IFunction ArrayConstructor { get; protected set; }
-
-        public IObj Math { get; protected set; }
+        public IObj MathObject { get; protected set; }
 
         protected Context()
         {
             ObjectConstructor = ObjectCtor.Create(this);
         }
 
-        public void Setup(Scope globals)
+        public void SetupGlobals(Scope globals)
         {
             globals.Global("Object", ObjectConstructor);
             globals.Global("undefined", Js.Undefined.Instance);
@@ -45,7 +40,7 @@ namespace IronJS.Runtime
             globals.Put("Array", ArrayConstructor);
             globals.Put("Number", NumberConstructor);
             globals.Put("Boolean", BooleanConstructor);
-            globals.Put("Math", Math);
+            globals.Put("Math", MathObject);
             */
         }
 
@@ -195,6 +190,5 @@ namespace IronJS.Runtime
         }
 
         #endregion
-
     }
 }

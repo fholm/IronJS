@@ -1,27 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using Microsoft.Scripting.Utils;
-using IronJS.Runtime.Js;
-
-using Et = System.Linq.Expressions.Expression;
-using Meta = System.Dynamic.DynamicMetaObject;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Restrict = System.Dynamic.BindingRestrictions;
-using EtParam = System.Linq.Expressions.ParameterExpression;
+﻿using System.Linq.Expressions;
 using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
     class PostfixOperatorNode : Node
     {
-        public readonly Ast.Node Target;
+        public readonly Node Target;
         public readonly ExpressionType Op;
 
-        public PostfixOperatorNode(Ast.Node node, ExpressionType op)
+        public PostfixOperatorNode(Node node, ExpressionType op)
             : base(NodeType.PostfixOperator)
         {
             Target = node;

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class BinaryOpNode : Node
     {
         public readonly Node Left;

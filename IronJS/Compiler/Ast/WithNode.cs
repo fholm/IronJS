@@ -1,9 +1,8 @@
 ﻿using System;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-
     class WithNode : Node
     {
         public readonly Node Target;

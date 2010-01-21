@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Text;
+using IronJS.Runtime.Js;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = System.Linq.Expressions.Expression;
-    using IronJS.Runtime.Js;
 
     class IdentifierNode : Node
     {

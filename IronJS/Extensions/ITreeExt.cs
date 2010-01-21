@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Antlr.Runtime.Tree;
 
 namespace IronJS.Extensions

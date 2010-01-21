@@ -7,7 +7,6 @@ using Antlr.Runtime;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Ast;
 using IronJS.Extensions;
-
 using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
 using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
 

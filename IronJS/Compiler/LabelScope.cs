@@ -1,20 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Linq.Expressions;
-using IronJS.Extensions;
-using IronJS.Runtime;
-using IronJS.Runtime.Binders;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
-using Microsoft.Scripting.Utils;
+﻿using System.Linq.Expressions;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler
 {
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = System.Linq.Expressions.Expression;
-
     class LabelScope
     {
         readonly LabelTarget _break;

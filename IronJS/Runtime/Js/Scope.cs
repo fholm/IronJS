@@ -4,7 +4,6 @@ using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Runtime.Js
 {
-
     public class Scope
     {
         IObj _obj;

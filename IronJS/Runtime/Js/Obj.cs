@@ -8,7 +8,6 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
 {
-
     public class Obj : IObj
     {
         static public readonly ConstructorInfo Ctor =

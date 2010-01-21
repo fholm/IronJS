@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Dynamic;
+using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Binders
 {
-    using Et = System.Linq.Expressions.Expression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-
     class JsGetMemberBinder : GetMemberBinder
     {
         Context _context;

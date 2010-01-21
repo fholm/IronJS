@@ -1,21 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Dynamic;
-using System.Linq.Expressions;
-using IronJS.Runtime;
-using IronJS.Compiler.Ast;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
+using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Binders
 {
-    using Et = System.Linq.Expressions.Expression;
-    using ParamEt = System.Linq.Expressions.ParameterExpression;
-    using Meta = System.Dynamic.DynamicMetaObject;
-    using Restrict = System.Dynamic.BindingRestrictions;
-
     class JsDeleteMemberBinder : DeleteMemberBinder
     {
         Context _context;

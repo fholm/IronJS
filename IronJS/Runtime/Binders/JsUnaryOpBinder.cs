@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Dynamic;
+﻿using System.Dynamic;
 using System.Linq.Expressions;
-using IronJS.Compiler.Ast;
-using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 using Restrict = System.Dynamic.BindingRestrictions;

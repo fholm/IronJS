@@ -63,6 +63,7 @@ namespace IronJS.Runtime.Js
 
         public object Pull(object name)
         {
+            //TODO: implement obj.TryGet(name, out value) maybe, so we don't have to check for is Undefined.
             var value = _obj.Get(name);
 
             if (value is Undefined)

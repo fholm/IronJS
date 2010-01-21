@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
+using System.Reflection;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime.Js
 {
     //TODO: need support for 'Host' object class
-    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Frame, Scope }
+    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array }
 
     //
     public enum ValueHint { None, Number, String }
@@ -36,6 +37,24 @@ namespace IronJS.Runtime.Js
 
     public static class IObjMethods
     {
+        static public readonly PropertyInfo PiClass = typeof(IObj).GetProperty("Class");
+        static public readonly PropertyInfo PiPrototype = typeof(IObj).GetProperty("Prototype");
+        static public readonly PropertyInfo PiContext = typeof(IObj).GetProperty("Context");
+
+        static public readonly MethodInfo MiGet = typeof(IObj).GetMethod("Get");
+        static public readonly MethodInfo MiPut = typeof(IObj).GetMethod("Put");
+        static public readonly MethodInfo MiCanPut = typeof(IObj).GetMethod("CanPut");
+        static public readonly MethodInfo MiHasProperty = typeof(IObj).GetMethod("HasProperty");
+        static public readonly MethodInfo MiDelete = typeof(IObj).GetMethod("Delete");
+        static public readonly MethodInfo MiDefaultValue = typeof(IObj).GetMethod("DefaultValue");
+        static public readonly MethodInfo MiHasOwnProperty = typeof(IObj).GetMethod("HasOwnProperty");
+        static public readonly MethodInfo MiSetOwnProperty = typeof(IObj).GetMethod("HasSetProperty");
+        static public readonly MethodInfo MiGetOwnProperty = typeof(IObj).GetMethod("HasGetProperty");
+        static public readonly MethodInfo MiGetAllPropertyNames = typeof(IObj).GetMethod("GetAllPropertyNames");
+    }
+
+    public static class IObjUtils
+    {
         public static bool HasValue(this IObj obj)
         {
             return (obj is IValueObj);
@@ -50,7 +69,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 target,
-                typeof(IObj).GetMethod("SetOwnProperty"),
+                IObjMethods.MiSetOwnProperty,
                 Et.Constant(name, typeof(object)),
                 value
             );
@@ -60,7 +79,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 target,
-                typeof(IObj).GetMethod("HasProperty"),
+                IObjMethods.MiHasProperty,
                 name
             );
         }

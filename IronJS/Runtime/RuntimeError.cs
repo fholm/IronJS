@@ -37,7 +37,7 @@ namespace IronJS.Runtime
                     tmp,
                     Et.New(Obj.Ctor)
                 ),
-                IObjMethods.EtSetOwnProperty(
+                IObjUtils.EtSetOwnProperty(
                     tmp,
                     "message",
                     Et.Constant(message)

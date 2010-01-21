@@ -26,7 +26,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Put"),
+                    IObjMethods.MiPut,
                     EtUtils.Box(indexes[0].Expression),
                     EtUtils.Box(value.Expression)
                 ),
@@ -44,7 +44,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Get"),
+                    IObjMethods.MiGet,
                     EtUtils.Box(indexes[0].Expression)
                 ),
                 Restrict.GetTypeRestriction(
@@ -61,7 +61,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Delete"),
+                    IObjMethods.MiDelete,
                     EtUtils.Box(indexes[0].Expression)
                 ),
                 Restrict.GetTypeRestriction(
@@ -78,7 +78,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Get"),
+                    IObjMethods.MiGet,
                     Et.Constant(binder.Name)
                 ),
                 Restrict.GetTypeRestriction(
@@ -95,7 +95,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Put"),
+                    IObjMethods.MiPut,
                     Et.Constant(binder.Name),
                     EtUtils.Box(value.Expression)
                 ),
@@ -111,7 +111,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    typeof(IObj).GetMethod("Delete"),
+                    IObjMethods.MiDelete,
                     Et.Constant(binder.Name)
                 ),
                 Restrict.GetTypeRestriction(
@@ -135,7 +135,7 @@ namespace IronJS.Runtime.Js
                         tmp,
                         Et.Call(
                             selfExpr,
-                            typeof(IObj).GetMethod("Get"),
+                            IObjMethods.MiGet,
                             Et.Constant(binder.Name)
                         )
                     ),

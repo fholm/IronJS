@@ -2,8 +2,6 @@
 
 namespace IronJS.Runtime.Js
 {
-    public enum InvokeFlag { Method, Function }
-
     public interface IFunction : IObj
     {
         // 8.6.2
@@ -16,5 +14,6 @@ namespace IronJS.Runtime.Js
     {
         static public readonly MethodInfo MiCall = typeof(IFunction).GetMethod("Call");
         static public readonly MethodInfo MiConstruct = typeof(IFunction).GetMethod("Construct");
+        static public readonly MethodInfo MiHasInstance = typeof(IFunction).GetMethod("HasInstance");
     }
 }

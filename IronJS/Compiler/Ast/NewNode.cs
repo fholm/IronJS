@@ -52,7 +52,7 @@ namespace IronJS.Compiler.Ast
                     exprs.Add(
                         Et.Call(
                             tmp,
-                            typeof(IObj).GetMethod("Put"),
+                            IObjMethods.MiPut,
                             Et.Constant(prop.Name, typeof(object)),
                             EtUtils.Box(prop.Value.Walk(etgen))
                         )

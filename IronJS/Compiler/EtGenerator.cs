@@ -95,11 +95,6 @@ namespace IronJS.Compiler
 
         private Et Generate(Ast.Node node)
         {
-            return GenerateEt(node);
-        }
-
-        private Et GenerateEt(Ast.Node node)
-        {
             if (node == null)
                 return AstUtils.Empty();
 
@@ -201,7 +196,7 @@ namespace IronJS.Compiler
                             Et.Call(
                                 Et.Call(
                                     obj,
-                                    typeof(IObj).GetMethod("GetAllPropertyNames")
+                                    IObjMethods.MiGetAllPropertyNames
                                 ),
                                 typeof(List<object>).GetMethod("GetEnumerator")
                             )
@@ -242,7 +237,7 @@ namespace IronJS.Compiler
                                 Et.IfThen(
                                     Et.Call(
                                         obj,
-                                        typeof(IObj).GetMethod("HasOwnProperty"),
+                                        IObjMethods.MiHasOwnProperty,
                                         current
                                     ),
                                     Et.Block(
@@ -310,6 +305,14 @@ namespace IronJS.Compiler
         }
         */
 
+        internal Et WalkIfNotNull(Ast.Node node)
+        {
+            if (node != null)
+                return node.Walk(this);
+
+            return Et.Default(typeof(object));
+        }
+
         internal Et GenerateConvertToObject(Et target)
         {
             return Et.Dynamic(
@@ -367,15 +370,7 @@ namespace IronJS.Compiler
                 );
             }
 
-            throw new NotImplementedException();
-        }
-
-        internal Et WalkIfNotNull(Ast.Node node)
-        {
-            if (node != null)
-                return node.Walk(this);
-
-            return Et.Default(typeof(object));
+            throw new CompilerError("Can't assign to node of type '" + target.Type + "'");
         }
     }
 }

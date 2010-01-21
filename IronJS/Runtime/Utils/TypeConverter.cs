@@ -240,7 +240,7 @@ namespace IronJS.Runtime.Utils
                 return EtUtils.Cast<string>(
                     Et.Call(
                         Et.Convert(obj.Expression, typeof(Js.IObj)),
-                        typeof(Js.IObj).GetMethod("DefaultValue"),
+                        IObjMethods.MiDefaultValue,
                         Et.Constant(ValueHint.String)
                     )
                 );
@@ -306,7 +306,7 @@ namespace IronJS.Runtime.Utils
                 return EtUtils.Cast<double>(
                     Et.Call(
                         Et.Convert(obj.Expression, typeof(Js.IObj)),
-                        typeof(Js.IObj).GetMethod("DefaultValue"),
+                        IObjMethods.MiDefaultValue,
                         Et.Constant(ValueHint.Number)
                     )
                 );

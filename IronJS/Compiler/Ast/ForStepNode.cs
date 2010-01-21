@@ -1,4 +1,5 @@
 ﻿using System;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -19,7 +20,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
+        public override Et LoopWalk(EtGenerator etgen)
         {
             throw new NotImplementedException();
         }

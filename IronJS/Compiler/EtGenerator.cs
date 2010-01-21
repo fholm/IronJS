@@ -95,15 +95,7 @@ namespace IronJS.Compiler
 
         private Et Generate(Ast.Node node)
         {
-            if (node is Ast.ILabelableNode)
-                (node as Ast.ILabelableNode).Enter(FunctionScope);
-
-            var et = GenerateEt(node);
-
-            if (node is Ast.ILabelableNode)
-                (node as Ast.ILabelableNode).Exit(FunctionScope);
-
-            return et;
+            return GenerateEt(node);
         }
 
         private Et GenerateEt(Ast.Node node)
@@ -413,7 +405,7 @@ namespace IronJS.Compiler
                 );
             }
             // do ... while
-            else if (node.Loop == Ast.WhileType.Do)
+            else if (node.Loop == Ast.WhileType.DoWhile)
             {
                 var bodyExprs = new List<Et>();
 

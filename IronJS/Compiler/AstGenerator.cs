@@ -363,7 +363,6 @@ namespace IronJS.Compiler
             var label = node.GetChildSafe(0);
             var target = Build(node.GetChildSafe(1));
 
-
             if (!(target is ILabelableNode))
                 throw new CompilerError("Can only label nodes that implement ILabelableNode");
 
@@ -448,7 +447,7 @@ namespace IronJS.Compiler
             return new WhileNode(
                 test,
                 body,
-                WhileType.Do
+                WhileType.DoWhile
             );
         }
 

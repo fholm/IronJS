@@ -38,6 +38,37 @@ namespace IronJS.Tests
             return emitter.ToString();
         }
 
+        static public string Run(string source, ref StringBuilder emitter)
+        {
+            var context = Runtime.Context.Setup();
+            var emitter2 = emitter;
+
+            var astBuilder = new Compiler.AstGenerator();
+            var etGenerator = new Compiler.EtGenerator();
+
+            var scope = Scope.CreateGlobal(context);
+
+            Func<object, object> emit = (obj) =>
+            {
+                emitter2.Append(JsTypeConverter.ToString(obj));
+                return null;
+            };
+
+            scope.Global(
+                "emit",
+                emit
+            );
+
+            context.SetupGlobals(scope);
+
+            var astNodes = astBuilder.Build(source);
+            var compiled = etGenerator.Build(astNodes, context);
+
+            compiled(scope);
+
+            return emitter.ToString();
+        }
+
         static public string RunFile(string filename)
         {
             var emitter = new StringBuilder();

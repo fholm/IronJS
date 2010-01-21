@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -17,26 +14,21 @@ namespace IronJS.Compiler.Ast
 
         #region ILabelableNode Members
 
-        public bool IsLabeled
-        {
-            get { return true; }
-        }
-
         public void SetLabel(string label)
         {
             Label = label;
         }
-
-        public void Exit(FunctionScope functionScope)
-        {
-            functionScope.ExitLabelScope();
-        }
-
-        public void Enter(FunctionScope functionScope)
-        {
-            functionScope.EnterLabelScope(Label, true);
-        }
-
+        
         #endregion
+
+        public override Et Walk(EtGenerator etgen)
+        {
+            etgen.FunctionScope.EnterLabelScope(Label, true);
+            var et = LoopWalk(etgen);
+            etgen.FunctionScope.ExitLabelScope();
+            return et;
+        }
+
+        abstract public Et LoopWalk(EtGenerator etgen);
     }
 }

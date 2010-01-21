@@ -12,6 +12,14 @@ namespace IronJS.Compiler.Ast
 
         }
 
+        public override Et Walk(EtGenerator etgen)
+        {
+            etgen.FunctionScope.EnterLabelScope(Label, true);
+            var et = LoopWalk(etgen);
+            etgen.FunctionScope.ExitLabelScope();
+            return et;
+        }
+
         #region ILabelableNode Members
 
         public void SetLabel(string label)
@@ -20,14 +28,6 @@ namespace IronJS.Compiler.Ast
         }
         
         #endregion
-
-        public override Et Walk(EtGenerator etgen)
-        {
-            etgen.FunctionScope.EnterLabelScope(Label, true);
-            var et = LoopWalk(etgen);
-            etgen.FunctionScope.ExitLabelScope();
-            return et;
-        }
 
         abstract public Et LoopWalk(EtGenerator etgen);
     }

@@ -57,41 +57,58 @@ namespace IronJS.Compiler
 
             switch (node.Type)
             {
-                case EcmaParser.THIS: // 'this' is just an identifier
-                case EcmaParser.Identifier:
-                    return BuildIdentifier(node);
 
                 case EcmaParser.PAREXPR:
                     return Build(node.GetChildSafe(0));
 
-                case EcmaParser.CALL:
-                    return BuildCall(node);
-
-
-                case EcmaParser.IF:
-                case EcmaParser.QUE: // <expr> ? <expr> : <expr>
-                    return BuildIf(node);
-
                 case EcmaParser.BLOCK:
                     return BuildBlock(node);
-
-                case EcmaParser.NEW:
-                    return BuildNew(node);
-
-                case EcmaParser.FUNCTION:
-                    return BuildFunction(node);
-
-                case EcmaParser.OBJECT:
-                    return BuildObject(node);
-
-                case EcmaParser.RETURN:
-                    return BuildReturn(node);
 
                 case EcmaParser.EXPR:
                     return Build(node.GetChildSafe(0));
 
                 case EcmaParser.WITH:
                     return BuildWith(node);
+
+                /*
+                 * Objects
+                 */
+                case EcmaParser.OBJECT:
+                    return BuildObject(node);
+
+                case EcmaParser.NEW:
+                    return BuildNew(node);
+
+                /*
+                 * Functions
+                 */
+
+                case EcmaParser.FUNCTION:
+                    return BuildFunction(node);
+
+                case EcmaParser.RETURN:
+                    return BuildReturn(node);
+
+                case EcmaParser.CALL:
+                    return BuildCall(node);
+
+                /*
+                 * If statement
+                 */
+
+                case EcmaParser.IF:
+                case EcmaParser.QUE: // <expr> ? <expr> : <expr>
+                    return BuildIf(node);
+                /*
+                 * Variables
+                 */
+                case EcmaParser.THIS: // 'this' is just an identifier
+                case EcmaParser.Identifier:
+                    return BuildIdentifier(node);
+
+                /*
+                 * Exceptions
+                 */
 
                 case EcmaParser.TRY:
                     return BuildTry(node);
@@ -106,7 +123,7 @@ namespace IronJS.Compiler
                     return BuildThrow(node);
 
                 /*
-                 * Property access
+                 * Property
                  */
 
                 case EcmaParser.BYFIELD:

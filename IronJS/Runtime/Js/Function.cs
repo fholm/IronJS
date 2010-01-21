@@ -45,6 +45,11 @@ namespace IronJS.Runtime
             return newObject;
         }
 
+        public bool HasInstance(object obj)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region IDynamicMetaObjectProvider Members

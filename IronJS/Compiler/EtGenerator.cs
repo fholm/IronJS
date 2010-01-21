@@ -105,11 +105,6 @@ namespace IronJS.Compiler
 
             switch (node.Type)
             {
-                case Ast.NodeType.While:
-                    return GenerateWhile((Ast.WhileNode)node);
-
-                case Ast.NodeType.ForStep:
-                    return GenerateForStep((Ast.ForStepNode)node);
 
                 case Ast.NodeType.ForIn:
                     return GenerateForIn((Ast.ForInNode)node);
@@ -145,9 +140,7 @@ namespace IronJS.Compiler
                 var iaNode = (Ast.IndexAccessNode)node.Target;
 
                 return EtUtils.Box(Et.Dynamic(
-                    Context.CreateDeleteIndexBinder(
-                        new CallInfo(1)
-                    ),
+                    Context.CreateDeleteIndexBinder(new CallInfo(1)),
                     typeof(void),
                     Generate(iaNode.Target),
                     Generate(iaNode.Index)
@@ -347,94 +340,6 @@ namespace IronJS.Compiler
             );
         }
         */
-
-        // 12.6.3
-        // for(init, test, incr) { <expr>, <expr> ... <expr> }
-        private Et GenerateForStep(Ast.ForStepNode node)
-        {
-            var body = Generate(node.Body);
-            var init = Generate(node.Setup);
-            var incr = Generate(node.Incr);
-            var test =
-                Et.Dynamic(
-                    Context.CreateConvertBinder(typeof(bool)),
-                    typeof(bool),
-                    Generate(node.Test)
-                );
-
-            var loop = AstUtils.Loop(
-                test,
-                incr,
-                body,
-                null,
-                FunctionScope.LabelScope.Break(),
-                FunctionScope.LabelScope.Continue()
-            );
-
-            return Et.Block(
-                init,
-                loop
-            );
-        }
-
-        // 12.6.1
-        // 12.6.2
-        // while(test) { <expr>, <expr> ... <expr> }
-        // do { <expr>, <expr> ... <expr> } while(test);
-        private Et GenerateWhile(Ast.WhileNode node)
-        {
-            Et loop;
-
-            var test = Et.Dynamic(
-                Context.CreateConvertBinder(typeof(bool)),
-                typeof(bool),
-                Generate(node.Test)
-            );
-
-            // while
-            if (node.Loop == Ast.WhileType.While)
-            {
-                var body = Generate(node.Body);
-
-                loop = AstUtils.While(
-                    test,
-                    body,
-                    null,
-                    FunctionScope.LabelScope.Break(),
-                    FunctionScope.LabelScope.Continue()
-                );
-            }
-            // do ... while
-            else if (node.Loop == Ast.WhileType.DoWhile)
-            {
-                var bodyExprs = new List<Et>();
-
-                bodyExprs.Add(Generate(node.Body));
-
-                // test last, instead of first
-                bodyExprs.Add(
-                    Et.IfThenElse(
-                        test,
-                        Et.Continue(FunctionScope.LabelScope.Continue()),
-                        Et.Break(FunctionScope.LabelScope.Break())
-                    )
-                );
-
-                loop = Et.Loop(
-                    Et.Block(
-                        bodyExprs
-                    ),
-                    FunctionScope.LabelScope.Break(),
-                    FunctionScope.LabelScope.Continue()
-                );
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-
-            return loop;
-        }
 
         internal Et GenerateConvertToObject(Et target)
         {

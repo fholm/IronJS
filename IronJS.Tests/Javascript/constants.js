@@ -1,1 +1,0 @@
-﻿emit("foo");emit(1);emit(3.14);emit(true);emit(false);emit(null);

@@ -7,136 +7,136 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IronJS.Tests
 {
     [TestClass]
-    public class WhileTests
+    public class ForStepTests
     {
         [TestMethod]
-        public void TestWhile()
+        public void TestForStep()
         {
             Assert.AreEqual(
                 "01234",
                 ScriptRunner.Run(
-                    "i = 0; while(i < 5) { emit(i); ++i; } "
+                    "for(var i = 0; i < 5; ++i) { emit(i); }"
                 )
             );
         }
 
         [TestMethod]
-        public void TestWhileBreak()
+        public void TestForStepWithoutVar()
+        {
+            Assert.AreEqual(
+                "012345",
+                ScriptRunner.Run(
+                    "for(i = 0; i < 5; ++i) { emit(i); } emit(i);"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestForStepWithNoSetup()
         {
             Assert.AreEqual(
                 "01234",
                 ScriptRunner.Run(
-                    "i = 0; while(true) { if(i >= 5) break; emit(i); ++i; } "
+                    "i = 0; for( ; i < 5; ++i) { emit(i); }"
                 )
             );
         }
 
         [TestMethod]
-        public void TestWhileContinue()
+        public void TestForStepWithNoSetupOrIncrement()
         {
             Assert.AreEqual(
-                "1245",
+                "01234",
                 ScriptRunner.Run(
-                    "i = 0; while(i < 5) { ++i; if(i == 3) continue; emit(i); } "
+                    "i = 0; for( ; i < 5 ; ) { emit(i); ++i; }"
                 )
             );
         }
 
         [TestMethod]
-        public void TestWhileBreakLabelled()
-        {
-            Assert.AreEqual(
-                "foo",
-                ScriptRunner.Run(
-                    " outer: while(true) { while(true) { emit('foo'); break outer; } emit('bar'); } "
-                )
-            );
-        }
-
-        [TestMethod]
-        public void TestWhileContinueLabelled()
-        {
-            Assert.AreEqual(
-                "foofoofoofoofoo",
-                ScriptRunner.Run(
-                    "i = 0; outer: while(i < 5) { while(true) { emit('foo'); ++i; continue outer; } emit('bar'); } "
-                )
-            );
-        }
-
-        [TestMethod]
-        public void TestWhileWorksWithOtherTrueishValues()
+        public void TestForStepOtherTrueishValueIsOk()
         {
             Assert.AreEqual(
                 "foo",
                 ScriptRunner.Run(
-                    "while(1) { emit('foo'); break; }"
+                    "for( ; 1 ; ) { emit('foo'); break; }"
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhile()
+        public void TestForStepOtherFalseishValueIsOk()
+        {
+            Assert.AreEqual(
+                "bar",
+                ScriptRunner.Run(
+                    "for( ; 0 ; ) { emit('foo'); break; } emit('bar'); "
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestForStepWithNoSetupOrIncrementOrTestAndBreak()
         {
             Assert.AreEqual(
                 "0",
                 ScriptRunner.Run(
-                    "i = 0; do { emit(i); } while(i < 0); "
+                    "i = 0; for( ; ; ) { emit(i); break; }"
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhileBreak()
+        public void TestForStepLabelledBreak()
         {
             Assert.AreEqual(
                 "0",
                 ScriptRunner.Run(
-                    "i = 0; do { emit(i); break; ++i; } while(i < 2); "
+                    "outer: for(i = 0; i < 5; ++i) { for(j = 0; j < 2; ++i) { emit(j); break outer; } } "
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhileLabelledBreak()
+        public void TestForStepNestedBreakNoLabels()
         {
             Assert.AreEqual(
-                "foo",
+                "012012",
                 ScriptRunner.Run(
-                    "outer: do { do { emit('foo'); break outer; } while(true); } while(true); "
+                    "for(i = 0; i < 2; ++i) { for(j = 0; j < 5; ++j) { if(j == 3) break; emit(j);  } } "
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhileContinue()
+        public void TestForStepContinue()
         {
             Assert.AreEqual(
-                "23",
+                "0124",
                 ScriptRunner.Run(
-                    "i = 0; do { ++i; if(i == 1) continue; emit(i); } while(i < 3); "
+                    "for(i = 0; i < 5; ++i) { if(i == 3) continue; emit(i); } "
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhileLabelledContinue()
+        public void TestForStepNestedContinueNoLabels()
         {
             Assert.AreEqual(
-                "foofoofoofoofoo",
+                "0124",
                 ScriptRunner.Run(
-                    "i = 0; outer: do { ++i; if(i == 6) break; do { emit('foo'); continue outer; } while(true); } while(true); "
+                    "for(i = 0; i < 5; ++i) { for(j = 0; j < 5; ++j) { if(j == 3) continue; emit(j);  } break; } "
                 )
             );
         }
 
         [TestMethod]
-        public void TestDoWhileWorksWithOtherTrueishValues()
+        public void TestForStepLabelledContinue()
         {
             Assert.AreEqual(
-                "foo",
+                "00000",
                 ScriptRunner.Run(
-                    " do { emit('foo'); } while(0); "
+                    "outer: for(i = 0; i < 5; ++i) { for(j = 0; j < 2; ++i) { emit(j); continue outer; } } "
                 )
             );
         }

@@ -1,5 +1,4 @@
-﻿/*
-boo = function () { println("boo.this == globals: " + (this == globals)); }
+﻿boo = function () { println("boo.this == globals: " + (this == globals)); }
 
 foo = {
     bar: {
@@ -8,7 +7,7 @@ foo = {
     foo_func: function () { println("foo.foo_func.this == this: " + (this == foo)); }
 };
 
-with (foo) { (function () { println(this == globals); })(); }
+with (foo) { (function () { println("" + (this == globals)); })(); }
 
 with (foo) {
     boo();
@@ -21,8 +20,3 @@ with (foo) {
 
     foo_func();
 }
-*/
-
-foo = 1;
-delete foo; 
-emit(foo);

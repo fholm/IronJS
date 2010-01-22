@@ -72,11 +72,17 @@ namespace IronJS.Runtime.Js
                     return invoke.Invoke(dg, args);
                 }
 
-                throw new InternalRuntimeError("Can't call non function: '" + name + "'");
+                throw InternalRuntimeError.New(
+                        InternalRuntimeError.NOT_CALLABLE, 
+                        name
+                    );
             }
 
             if (_parent == null)
-                throw new InternalRuntimeError("Variable '" + name + "' is not defined");
+                throw InternalRuntimeError.New(
+                    InternalRuntimeError.NOT_DEFINED,
+                    name
+                );
 
             return _parent.Call(name, args);
         }
@@ -119,7 +125,10 @@ namespace IronJS.Runtime.Js
                     return _parent.Pull(name);
 
                 if(name is string && (string)name != "undefined")
-                    throw new InternalRuntimeError("Variable '" + name + "' is not defined");
+                    throw InternalRuntimeError.New(
+                        InternalRuntimeError.NOT_DEFINED,
+                        name
+                    );
             }
 
             return value;

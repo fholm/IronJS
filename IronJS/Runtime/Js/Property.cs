@@ -29,7 +29,9 @@ namespace IronJS.Runtime.Js
                 }
                 else
                 {
-                    throw new InternalRuntimeError("Property is read-only");
+                    throw InternalRuntimeError.New(
+                        InternalRuntimeError.PROPERTY_READONLY
+                    );
                 }
             }
         }

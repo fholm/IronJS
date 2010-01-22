@@ -53,23 +53,30 @@ namespace IronJS.Runtime
         }
     }
 
-    public class InternalRuntimeError : RuntimeError
+    sealed public class InternalRuntimeError : RuntimeError
     {
-        static public readonly ConstructorInfo Ctor =
-            typeof(InternalRuntimeError).GetConstructor(new[] { typeof(string) });
+        public const string NOT_DEFINED = "Variable '{0}' is not defined";
+        public const string NOT_CALLABLE = "Variable '{0}' is not callable";
+        public const string PROPERTY_READONLY = "Property is read-only";
 
-        public InternalRuntimeError(string msg)
+        private InternalRuntimeError(string msg)
             : base(msg)
         {
 
         }
 
-        static public Et EtNew(string message)
+        static public InternalRuntimeError New(string message, params object[] values)
+        {
+            return new InternalRuntimeError(String.Format(message, values));
+        }
+
+        static public Et EtNew(string message, params object[] values)
         {
             return Et.Throw(
-                Et.New(
-                    Ctor,
-                    Et.Constant(message, typeof(string))
+                Et.Call(
+                    typeof(InternalRuntimeError).GetMethod("New"),
+                    Et.Constant(message),
+                    Et.Constant(values)
                 ),
                 typeof(InternalRuntimeError)
             );

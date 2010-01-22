@@ -20,8 +20,7 @@ namespace IronJS.Compiler.Ast
         {
             return Et.Block(
                 Et.Assign(etgen.FunctionScope.ScopeExpr,
-                    Scope.EtNew(
-                        Et.Constant(etgen.Context, typeof(Context)),
+                    Scope.EtNewPrivate(
                         etgen.FunctionScope.ScopeExpr,
                         Target.Walk(etgen)
                     )

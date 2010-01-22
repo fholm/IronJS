@@ -23,6 +23,7 @@ namespace IronJS.Compiler
                 throw new CompilerError("Not inside a labelled statement or a loop");
             }
         }
+
         internal FunctionScope()
             : this(null)
         {

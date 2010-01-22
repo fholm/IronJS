@@ -6,6 +6,7 @@ using System.Text;
 using IronJS.Runtime.Js;
 using Microsoft.Scripting.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -40,7 +41,9 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            var args = Args.Select(x => x.Walk(etgen)).ToArray();
+            var args = Args.Select(
+                x => EtUtils.Cast<object>(x.Walk(etgen))
+            ).ToArray();
 
             if (Target is MemberAccessNode)
             {
@@ -67,6 +70,19 @@ namespace IronJS.Compiler.Ast
                             tmp,
                             args
                         )
+                    )
+                );
+            }
+
+            if (Target is IdentifierNode)
+            {
+                return Et.Call(
+                    etgen.FunctionScope.ScopeExpr,
+                    typeof(Scope).GetMethod("Call"),
+                    Et.Constant((Target as IdentifierNode).Name),
+                    Et.NewArrayInit(
+                        typeof(object),
+                        args
                     )
                 );
             }

@@ -53,9 +53,9 @@ namespace IronJS.Tests
             {
                 ScriptRunner.Run("var foo = 1; delete foo; emit(foo);");
             }
-            catch (InternalRuntimeError)
+            catch (InternalRuntimeError ex)
             {
-                Assert.Fail("Should not throw InternalRuntimeError");
+                Assert.Fail("Should not throw InternalRuntimeError (" + ex.Message + ")");
             }
         }
 

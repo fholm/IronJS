@@ -1,34 +1,35 @@
-﻿using AstUtils = Microsoft.Scripting.Ast.Utils;
+﻿using System;
+using System.Dynamic;
+using System.Reflection;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using EtParam = System.Linq.Expressions.ParameterExpression;
-using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
     public class Scope
     {
-        static public readonly ConstructorInfo Ctor2Args
-            = typeof(Scope).GetConstructor(new[] { typeof(Context), typeof(Scope) });
+        static public readonly ConstructorInfo Ctor1Args
+            = typeof(Scope).GetConstructor(new[] { typeof(Scope) });
 
-        static public readonly ConstructorInfo Ctor3Args
-            = typeof(Scope).GetConstructor(new[] { typeof(Context), typeof(Scope), typeof(IObj) });
+        static public readonly ConstructorInfo Cto2Args
+            = typeof(Scope).GetConstructor(new[] { typeof(Scope), typeof(IObj) });
 
         static public readonly PropertyInfo PiParent
             = typeof(Scope).GetProperty("Parent");
 
         IObj _obj;
         Scope _parent;
-        Context _context;
         bool _privateObj = false;
 
-        public Scope Parent { get { return _parent; } }
         public IObj Value { get { return _obj; } }
+        public Scope Parent { get { return _parent; } }
+        public Scope Globals { get { return _parent == null ? this : _parent.Globals; } }
 
-        public Scope(Context context, Scope parent, IObj values)
+        public Scope(Scope parent, IObj obj)
         {
+            _obj = obj;
             _parent = parent;
-            _obj = values;
-            _context = context;
         }
 
         public Scope(Context context, Scope parent)
@@ -40,9 +41,44 @@ namespace IronJS.Runtime.Js
         public Scope(Context context)
         {
             _privateObj = true;
-            _context = context;
             _obj = context.CreateObject();
             (_obj as Obj).Prototype = null;
+        }
+
+        public object Call(object name, object[] args)
+        {
+            if (_obj.HasProperty(name))
+            {
+                var obj = _obj.Get(name);
+
+                if (obj is IFunction)
+                {
+                    if (_privateObj)
+                        return (obj as IFunction).Call(Globals.Value, args);
+
+                    return (obj as IFunction).Call(Value, args);
+                }
+
+                if (obj is MethodInfo)
+                {
+                    var mi = obj as MethodInfo;
+                    return mi.Invoke(null, args);
+                }
+
+                if (obj is Delegate)
+                {
+                    var dg = obj as Delegate;
+                    var invoke = dg.GetType().GetMethod("Invoke");
+                    return invoke.Invoke(dg, args);
+                }
+
+                throw new InternalRuntimeError("Can't call non function: '" + name + "'");
+            }
+
+            if (_parent == null)
+                throw new InternalRuntimeError("Variable '" + name + "' is not defined");
+
+            return _parent.Call(name, args);
         }
 
         public object Delete(object name)
@@ -91,7 +127,7 @@ namespace IronJS.Runtime.Js
 
         public Scope Enter()
         {
-            return new Scope(_context, this);
+            return new Scope(_obj.Context, this);
         }
 
         #region Expression Tree
@@ -145,17 +181,16 @@ namespace IronJS.Runtime.Js
         internal static Et EtNew(Et context, Et parent)
         {
             return AstUtils.SimpleNewHelper(
-                Ctor2Args,
+                Ctor1Args,
                 context,
                 parent
             );
         }
 
-        internal static Et EtNew(Et context, Et parent, Et obj)
+        internal static Et EtNewPrivate(Et parent, Et obj)
         {
             return AstUtils.SimpleNewHelper(
-                Ctor3Args,
-                context,
+                Cto2Args,
                 parent,
                 obj
             );
@@ -186,7 +221,7 @@ namespace IronJS.Runtime.Js
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
         {
             var callScope = closure.Enter();
-            var argsObject = closure._context.ObjectConstructor.Construct();
+            var argsObject = closure._obj.Context.ObjectConstructor.Construct();
 
             callScope.Local("this", that);
             callScope.Local("arguments", argsObject);

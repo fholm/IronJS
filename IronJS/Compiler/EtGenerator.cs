@@ -42,10 +42,18 @@ namespace IronJS.Compiler
             FunctionScope = new FunctionScope();
 
             // Store the frame expr for global frame
-            GlobalScopeExpr = FunctionScope.ScopeExpr;
+            GlobalScopeExpr = Et.Parameter(typeof(Scope), "#globals");
 
             // Stores all global expressions
             var globalExprs = new List<Et>();
+
+            // Store our "true" globals expression
+            globalExprs.Add(
+                Et.Assign(
+                    GlobalScopeExpr,
+                    FunctionScope.ScopeExpr
+                )
+            );
 
             // Walk each global node
             foreach (var node in astNodes)
@@ -53,7 +61,7 @@ namespace IronJS.Compiler
 
             return Et.Lambda<Action<Scope>>(
                 Et.Block(
-                    new[] { FuncTableExpr },
+                    new[] { FuncTableExpr, GlobalScopeExpr },
 
                     // Create instance of our functable
                     Et.Assign(
@@ -79,7 +87,7 @@ namespace IronJS.Compiler
                     // Execute global scope
                     Et.Block(globalExprs)
                 ),
-                GlobalScopeExpr
+                FunctionScope.ScopeExpr
             ).Compile();
         }
 

@@ -142,6 +142,7 @@
     </Compile>
     <Compile Include="Runtime\Js\Scope.cs" />
     <Compile Include="Runtime\Js\FunctionTable.cs" />
+    <Compile Include="Runtime\Js\ScopeMeta.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>

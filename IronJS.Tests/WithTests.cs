@@ -79,12 +79,24 @@ namespace IronJS.Tests
         public void TestWithFunctionsCallsNestedInsideMultipleWithStatemntsGetCorectObjectAsThisParameter()
         {
             Assert.AreEqual(
-                "truetruetrue",
+                "truetruetruetrue",
                 ScriptRunner.Run(
                     "foo = { bar: { "
                     + "bar_func: function() { emit(this == foo.bar); } }, "
                     + "foo_func: function() { emit(this == foo); } }; "
-                    + "with(foo) { foo_func(); with(bar) { bar_func(); } foo_func(); }"
+                    + "with(foo) { foo_func(); with(bar) { bar_func(); foo_func(); } foo_func(); }"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestWithNormalFunctionsCallsInsideWithStmtStillHaveGlobalsAsThisParameter()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "foo = { }; "
+                    + "with(foo) { (function(){ emit(this == globals); })(); }"
                 )
             );
         }

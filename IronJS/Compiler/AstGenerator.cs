@@ -58,17 +58,24 @@ namespace IronJS.Compiler
             switch (node.Type)
             {
 
-                case EcmaParser.PAREXPR:
-                    return Build(node.GetChildSafe(0));
+                case EcmaParser.WITH:
+                    return BuildWith(node);
 
                 case EcmaParser.BLOCK:
                     return BuildBlock(node);
 
+                /*
+                 * Expresion statements
+                 */
+
+                case EcmaParser.PAREXPR:
+                    return Build(node.GetChildSafe(0));
+
                 case EcmaParser.EXPR:
                     return Build(node.GetChildSafe(0));
 
-                case EcmaParser.WITH:
-                    return BuildWith(node);
+                case EcmaParser.CEXPR:
+                    return BuildCommaExpression(node);
 
                 /*
                  * Objects
@@ -371,6 +378,13 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildCommaExpression(ITree node)
+        {
+            return new BlockNode(
+                node.Map(x => Build(x))
+            );
         }
 
         private Node BuildIn(ITree node)

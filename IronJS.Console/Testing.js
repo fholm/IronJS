@@ -1,8 +1,8 @@
 ﻿foo = { 
     bar: { 
-        bar_func: function() { emit(this == foo.bar); } 
+        bar_func: function() { println(this == foo.bar); } 
     }, 
-    foo_func: function() { emit(this == foo); } 
+    foo_func: function() { println(this == foo); } 
 };
 
 with (foo) {

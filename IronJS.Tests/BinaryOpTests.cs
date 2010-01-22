@@ -514,5 +514,32 @@ namespace IronJS.Tests
                 )
             );
         }
+
+        [TestMethod]
+        public void TestOperatorInstanceOf()
+        {
+            Assert.AreEqual(
+                "truefalsefalsetrue",
+                ScriptRunner.Run(
+                    @"
+                    var fooCtor = function () {
+
+                    };
+
+                    var barCtor = function () {
+
+                    };
+
+                    foo = new fooCtor();
+                    bar = new barCtor();
+
+                    emit(foo instanceof fooCtor);
+                    emit(foo instanceof barCtor);
+                    emit(bar instanceof fooCtor);
+                    emit(bar instanceof barCtor);
+                    "
+                )
+            );
+        }
     }
 }

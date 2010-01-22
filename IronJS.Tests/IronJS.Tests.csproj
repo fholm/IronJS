@@ -48,13 +48,14 @@
     <Compile Include="ForInTests.cs" />
     <Compile Include="ForStepTests.cs" />
     <Compile Include="FunctionTests.cs" />
-    <Compile Include="IfStatementTest.cs" />
+    <Compile Include="IfTest.cs" />
     <Compile Include="LogicalAndOrTests.cs" />
     <Compile Include="ObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRunner.cs" />
     <Compile Include="ConstantsTests.cs" />
     <Compile Include="StrictEqualityTests.cs" />
+    <Compile Include="SwitchTests.cs" />
     <Compile Include="TryCatchFinallyThrowTests.cs" />
     <Compile Include="TypeConversionAddTests.cs" />
     <Compile Include="TypeConversionTests.cs" />

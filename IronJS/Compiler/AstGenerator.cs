@@ -86,6 +86,9 @@ namespace IronJS.Compiler
                 case EcmaParser.NEW:
                     return BuildNew(node);
 
+                case EcmaParser.INSTANCEOF:
+                    return BuildInstanceOf(node);
+
                 /*
                  * Functions
                  */
@@ -383,6 +386,14 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildInstanceOf(ITree node)
+        {
+            return new InstanceOfNode(
+                Build(node.GetChildSafe(0)),
+                Build(node.GetChildSafe(1))
+            );
         }
 
         private Node BuildSwitch(ITree node)

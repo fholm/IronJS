@@ -11,6 +11,14 @@ namespace IronJS.Runtime
             return o;
         }
 
+        public static bool InstanceOf(object obj, object func)
+        {
+            if (!(func is IFunction))
+                throw new ShouldThrowTypeError();
+
+            return (func as IFunction).HasInstance(obj);
+        }
+
         public static object UnsignedRightShift(int left, int right)
         {
             // 11.7.3

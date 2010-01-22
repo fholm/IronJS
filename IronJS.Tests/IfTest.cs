@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IronJS.Tests
 {
     [TestClass]
-    public class IfStatementTest
+    public class IfTest
     {
         [TestMethod]
         public void TestIf()

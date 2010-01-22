@@ -14,6 +14,15 @@ namespace IronJS.Runtime
         }
     }
 
+    public class ShouldThrowTypeError : RuntimeError
+    {
+        public ShouldThrowTypeError()
+            : base("")
+        {
+
+        }
+    }
+
     public class JsRuntimeError : RuntimeError
     {
         static public readonly ConstructorInfo Ctor = 

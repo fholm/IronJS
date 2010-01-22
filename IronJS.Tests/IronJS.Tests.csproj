@@ -45,6 +45,7 @@
     <Compile Include="ConstructorTests.cs" />
     <Compile Include="DeleteInTests.cs" />
     <Compile Include="ExpressionTests.cs" />
+    <Compile Include="ForInTests.cs" />
     <Compile Include="ForStepTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfStatementTest.cs" />

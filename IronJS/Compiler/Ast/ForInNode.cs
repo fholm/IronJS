@@ -67,8 +67,8 @@ namespace IronJS.Compiler.Ast
 
             // labels
             var innerBreak = Et.Label("#tmp-forin-inner-break");
-            var innerContinue = Et.Label("#tmp-forin-inner-continue");
-            var outerBreak = Et.Label("#tmp-forin-outer-break");
+            var innerContinue = etgen.FunctionScope.LabelScope.Continue();
+            var outerBreak = etgen.FunctionScope.LabelScope.Break();
 
             return Et.Block(
                 new[] { obj, keys, set, current },

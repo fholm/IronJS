@@ -60,6 +60,7 @@
     <Compile Include="TypeConversionTests.cs" />
     <Compile Include="TypeOfTests.cs" />
     <Compile Include="UnaryOpTests.cs" />
+    <Compile Include="VariableTests.cs" />
     <Compile Include="WhileTests.cs" />
     <Compile Include="WithTests.cs" />
   </ItemGroup>

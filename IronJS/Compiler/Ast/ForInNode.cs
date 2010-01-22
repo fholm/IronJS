@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace IronJS.Compiler.Ast
 {
     // 12.6.4
-    class ForInNode : Node
+    class ForInNode : LoopNode
     {
         public readonly Node Target;
         public readonly Node Source;
@@ -21,7 +21,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et LoopWalk(EtGenerator etgen)
         {
             /*
             IObj obj = <node.Source>

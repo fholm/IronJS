@@ -1,16 +1,27 @@
 ﻿using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using EtParam = System.Linq.Expressions.ParameterExpression;
+using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
     public class Scope
     {
+        static public readonly ConstructorInfo Ctor2Args
+            = typeof(Scope).GetConstructor(new[] { typeof(Context), typeof(Scope) });
+
+        static public readonly ConstructorInfo Ctor3Args
+            = typeof(Scope).GetConstructor(new[] { typeof(Context), typeof(Scope), typeof(IObj) });
+
+        static public readonly PropertyInfo PiParent
+            = typeof(Scope).GetProperty("Parent");
+
         IObj _obj;
         Scope _parent;
         Context _context;
         bool _privateObj = false;
 
+        public Scope Parent { get { return _parent; } }
         public IObj Value { get { return _obj; } }
 
         public Scope(Context context, Scope parent, IObj values)
@@ -134,9 +145,27 @@ namespace IronJS.Runtime.Js
         internal static Et EtNew(Et context, Et parent)
         {
             return AstUtils.SimpleNewHelper(
-                typeof(Scope).GetConstructor(new[]{ typeof(Context), typeof(Scope) }),
+                Ctor2Args,
                 context,
                 parent
+            );
+        }
+
+        internal static Et EtNew(Et context, Et parent, Et obj)
+        {
+            return AstUtils.SimpleNewHelper(
+                Ctor3Args,
+                context,
+                parent,
+                obj
+            );
+        }
+
+        internal static Et EtExit(Et scope)
+        {
+            return Et.Property(
+                scope,
+                PiParent
             );
         }
 

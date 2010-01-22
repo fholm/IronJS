@@ -100,14 +100,8 @@ namespace IronJS.Compiler
 
             switch (node.Type)
             {
-
                 case Ast.NodeType.ForIn:
                     return GenerateForIn((Ast.ForInNode)node);
-
-                /*
-                case Ast.NodeType.With:
-                    return GenerateWith((Ast.WithNode)node);
-                */
 
                 default:
                     throw new Compiler.CompilerError("Unsupported AST node '" + node.Type + "'");
@@ -278,32 +272,6 @@ namespace IronJS.Compiler
                 )
             );
         }
-
-        /*
-        // with(...) { ... }
-        private Et GenerateWith(Ast.WithNode node)
-        {
-            return Et.Block(
-                Et.Assign(_functionScope.FrameExpr, 
-                    AstUtils.SimpleNewHelper(
-                        typeof(WithFrame).GetConstructor(
-                            new[] { 
-                                typeof(IObj), 
-                                typeof(IObj)
-                            }
-                        ),
-                        Generate(node.Target),
-                        _functionScope.FrameExpr
-                    )
-                ),
-                Generate(node.Body),
-                FrameEtUtils.Exit(
-                    _functionScope.FrameExpr,
-                    _functionScope.FrameExpr
-                )
-            );
-        }
-        */
 
         internal Et WalkIfNotNull(Ast.Node node)
         {

@@ -1,4 +1,10 @@
 ﻿
 foo = { bar: 1 };
 
-println("bar" in foo);
+with (foo) {
+    bar = 2;
+    baz = 3;
+}
+
+println(foo.bar);
+println(foo.baz);

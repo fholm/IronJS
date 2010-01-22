@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IronJS.Runtime;
+using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -17,7 +18,22 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            throw new NotImplementedException();
+            return Et.Block(
+                Et.Assign(etgen.FunctionScope.ScopeExpr,
+                    Scope.EtNew(
+                        Et.Constant(etgen.Context, typeof(Context)),
+                        etgen.FunctionScope.ScopeExpr,
+                        Target.Walk(etgen)
+                    )
+                ),
+                Body.Walk(etgen),
+                Et.Assign(
+                    etgen.FunctionScope.ScopeExpr,
+                    Scope.EtExit(
+                        etgen.FunctionScope.ScopeExpr
+                    )
+                )
+            );
         }
     }
 }

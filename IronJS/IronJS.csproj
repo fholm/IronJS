@@ -95,6 +95,7 @@
     <Compile Include="Compiler\FunctionScope.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
+    <Compile Include="Compiler\SwitchNode.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />

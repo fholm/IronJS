@@ -38,8 +38,8 @@ namespace IronJS.Runtime.Js
 
         bool IsInternal { get { return JsObject.Class == ObjClass.Internal; } }
 
-        public IObj JsObject { get; protected set; }
-        public Scope ParentScope { get; protected set; }
+        public IObj JsObject { get; private set; }
+        public Scope ParentScope { get; private set; }
         public Scope Globals { get { return (ParentScope == null ? this : ParentScope.Globals); } }
 
         public Scope(Scope parentScope, IObj jsObject)

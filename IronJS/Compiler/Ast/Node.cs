@@ -15,7 +15,8 @@ namespace IronJS.Compiler.Ast
         TypeOf, Boolean, Void, StrictCompare,
         UnsignedRightShift, ForStep, ForIn,
         Break, Continue, With, Try, Catch,
-        Throw, IndexAccess, Delete, In
+        Throw, IndexAccess, Delete, In,
+        Switch
     }
 
     abstract public class Node

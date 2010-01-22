@@ -17,7 +17,7 @@ namespace IronJS.Runtime
             return (double)(((uint)left) >> right);
         }
 
-        public static object StrictEquality(object left, object right)
+        public static bool StrictEquality(object left, object right)
         {
             // 11.9.6
 

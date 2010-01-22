@@ -106,6 +106,11 @@ namespace IronJS.Compiler
                 case EcmaParser.IF:
                 case EcmaParser.QUE: // <expr> ? <expr> : <expr>
                     return BuildIf(node);
+
+
+                case EcmaParser.SWITCH:
+                    return BuildSwitch(node);
+
                 /*
                  * Variables
                  */
@@ -378,6 +383,46 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildSwitch(ITree node)
+        {
+            var def = (Node)(new NullNode());
+            var cases = new List<Tuple<Node, Node>>();
+
+            for (int i = 1; i < node.ChildCount; ++i)
+            {
+                var child = node.GetChildSafe(i);
+
+                if (child.Type == EcmaParser.DEFAULT)
+                {
+                    def = Build(child.GetChildSafe(0));
+                }
+                else
+                {
+                    var caseBlock = new List<Node>();
+
+                    for(int j = 1; j < child.ChildCount; ++j)
+                        caseBlock.Add(
+                            Build(child.GetChildSafe(j))
+                        );
+
+                    cases.Add(
+                        Tuple.Create(
+                            Build(child.GetChildSafe(0)),
+                            (Node) new BlockNode(caseBlock)
+                        )
+                    );
+                }
+            }
+
+            return new SwitchNode(
+                Build(node.GetChildSafe(0)),
+                def,
+                cases
+            );
+
+            throw new NotImplementedException();
         }
 
         private Node BuildCommaExpression(ITree node)

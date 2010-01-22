@@ -1,9 +1,5 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using IronJS.Runtime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using IronJS.Runtime;
 
 namespace IronJS.Tests
 {
@@ -248,6 +244,17 @@ namespace IronJS.Tests
                 "function",
                 ScriptRunner.Run(
                     "(function(){ emit(typeof arguments.callee); })();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionArgumentsObjectsContainsArguments()
+        {
+            Assert.AreEqual(
+                "truetrue",
+                ScriptRunner.Run(
+                    "(function(a, b){ emit(a == arguments[0]); emit(b == arguments[1]); })(2, 'foo');"
                 )
             );
         }

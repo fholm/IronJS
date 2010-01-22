@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IronJS.Tests
 {
@@ -108,7 +104,6 @@ namespace IronJS.Tests
             );
         }
 
-        //TODO: UNIT TEST test typeof on object input
         //TODO: UNIT TEST test typeof on clr input
     }
 }

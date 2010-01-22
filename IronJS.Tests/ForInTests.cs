@@ -85,10 +85,10 @@ namespace IronJS.Tests
         public void TestForInLabelledContinue()
         {
             Assert.AreEqual(
-                "acd",
+                "cd",
                 ScriptRunner.Run(
                     "foo = { bar: { a: 1, b: 2 }, boo: { c: 3, d: 4 } }; "
-                    + "outer: for(k1 in foo) { inner: for(k2 in foo[k1]) { if(k2 == 'b') continue outer; emit(k2); } }"
+                    + "outer: for(k1 in foo) { inner: for(k2 in foo[k1]) { if(k2 == 'a') continue outer; emit(k2); } }"
                 )
             );
         }

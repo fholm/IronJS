@@ -42,7 +42,20 @@ namespace IronJS.Runtime
 
         public bool HasInstance(object obj)
         {
-            throw new NotImplementedException();
+            if (!(obj is IObj))
+                return false;
+
+            var prototype = Get("prototype");
+
+            if (!(prototype is IObj))
+                throw InternalRuntimeError.New("prototype property is not a object");
+
+            var jsObj = (IObj)obj;
+
+            if (jsObj.Prototype == null)
+                return false;
+
+            return jsObj.Prototype == prototype;
         }
 
         #endregion

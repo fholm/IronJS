@@ -78,7 +78,8 @@ namespace IronJS.Compiler
                             LambdaTuples.Select(x => 
                                 FunctionTable.EtPush(
                                     FuncTableExpr,
-                                    Lambda.EtNew(
+                                    AstUtils.SimpleNewHelper(
+                                        Lambda.Ctor1Arg,
                                         x.V1,
                                         Et.Constant(x.V2.ToArray())
                                     )

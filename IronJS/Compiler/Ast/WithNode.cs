@@ -1,6 +1,7 @@
 ﻿using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -24,7 +25,8 @@ namespace IronJS.Compiler.Ast
 
             return Et.Block(
                 Et.Assign(etgen.FunctionScope.ScopeExpr,
-                    Scope.EtNewWith(
+                    AstUtils.SimpleNewHelper(
+                        Scope.Ctor2Args,
                         etgen.FunctionScope.ScopeExpr,
                         Target.Walk(etgen)
                     )

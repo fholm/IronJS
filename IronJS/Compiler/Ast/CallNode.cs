@@ -120,8 +120,9 @@ namespace IronJS.Compiler.Ast
                 typeof(object),
                 ArrayUtils.Insert(
                     Target.Walk(etgen),
-                    Scope.EtJsObject(
-                        etgen.GlobalScopeExpr
+                    Et.Property(
+                        etgen.GlobalScopeExpr,
+                        Scope.PiJsObject
                     ),
                     args
                 )

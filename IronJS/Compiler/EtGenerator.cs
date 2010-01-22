@@ -320,17 +320,19 @@ namespace IronJS.Compiler
 
                 if (idNode.IsLocal)
                 {
-                    return Scope.EtLocal(
+                    return Et.Call(
                         FunctionScope.ScopeExpr,
-                        idNode.Name,
+                        Scope.MiLocal,
+                        Et.Constant(idNode.Name, typeof(object)),
                         value
                     );
                 }
                 else
                 {
-                    return Scope.EtGlobal(
+                    return Et.Call(
                         FunctionScope.ScopeExpr,
-                        idNode.Name,
+                        Scope.MiGlobal,
+                        Et.Constant(idNode.Name, typeof(object)),
                         value
                     );
                 }

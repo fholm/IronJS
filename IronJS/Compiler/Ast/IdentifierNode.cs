@@ -26,9 +26,10 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            return Scope.EtPull(
+            return Et.Call(
                 etgen.FunctionScope.ScopeExpr,
-                Name
+                Scope.MiPull,
+                Et.Constant(Name, typeof(object))
             );
         }
     }

@@ -49,9 +49,10 @@ namespace IronJS.Compiler.Ast
             {
                 var idNode = (IdentifierNode)Target;
 
-                return Scope.EtDelete(
+                return Et.Call(
                     etgen.FunctionScope.ScopeExpr,
-                    idNode.Name
+                    Scope.MiDelete,
+                    Et.Constant(idNode.Name, typeof(object))
                 );
             }
 

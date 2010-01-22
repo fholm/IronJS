@@ -7,7 +7,7 @@ using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Runtime.Js
 {
-    public class Scope
+    sealed public class Scope
     {
         static public readonly ConstructorInfo Ctor1Args
             = typeof(Scope).GetConstructor(new[] { typeof(Scope) });
@@ -40,7 +40,7 @@ namespace IronJS.Runtime.Js
 
         public IObj JsObject { get; protected set; }
         public Scope ParentScope { get; protected set; }
-        public Scope Globals { get { return ParentScope == null ? this : ParentScope.Globals; } }
+        public Scope Globals { get { return (ParentScope == null ? this : ParentScope.Globals); } }
 
         public Scope(Scope parentScope, IObj jsObject)
         {
@@ -49,69 +49,12 @@ namespace IronJS.Runtime.Js
         }
 
         public Scope(Context context, Scope parentScope)
-            : this(context)
         {
             ParentScope = parentScope;
-        }
 
-        public Scope(Context context)
-        {
             JsObject = context.CreateObject();
             JsObject.Prototype = null;
             JsObject.Class = ObjClass.Internal;
-        }
-
-        /// <summary>
-        /// This function in combination with the special with-statement handling code
-        /// in CallNode.Walk() handles function calls that are inside with-statements
-        /// </summary>
-        /// <param name="name">Function name to call</param>
-        /// <param name="args">Arguments to function</param>
-        /// <returns>Function result</returns>
-        public object Call(object name, object[] args)
-        {
-            object obj;
-
-            if(JsObject.TryGet(name, out obj))
-            {
-                if (obj is IFunction)
-                {
-                    if (IsInternal)
-                        return (obj as IFunction).Call(Globals.JsObject, args);
-
-                    return (obj as IFunction).Call(JsObject, args);
-                }
-
-                if (obj is MethodInfo)
-                    return (obj as MethodInfo).Invoke(null, args);
-
-                if (obj is Delegate)
-                    return (obj as Delegate).DynamicInvoke(args);
-
-                throw InternalRuntimeError.New(
-                    InternalRuntimeError.NOT_CALLABLE, 
-                    name
-                );
-            }
-
-            if (ParentScope == null)
-                throw InternalRuntimeError.New(
-                    InternalRuntimeError.NOT_DEFINED,
-                    name
-                );
-
-            return ParentScope.Call(name, args);
-        }
-
-        public object Delete(object name)
-        {
-            if(JsObject.Delete(name))
-                return true;
-
-            if (ParentScope != null)
-                return ParentScope.Delete(name);
-
-            return false;
         }
 
         public object Local(object name, object value)
@@ -148,84 +91,69 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
-        #region Expression Tree
-
-        internal static Et EtDelete(EtParam scope, string name)
+        public object Delete(object name)
         {
-            return Et.Call(
-                scope,
-                Scope.MiDelete,
-                Et.Constant(name)
-            );
+            if (JsObject.Delete(name))
+                return true;
+
+            if (ParentScope != null)
+                return ParentScope.Delete(name);
+
+            return false;
         }
 
-        internal static Et EtJsObject(EtParam scope)
+        /// <summary>
+        /// This function in combination with the special with-statement handling code
+        /// in CallNode.Walk() handles function calls that are inside with-statements
+        /// </summary>
+        /// <param name="name">Function name to call</param>
+        /// <param name="args">Arguments to function</param>
+        /// <returns>Function result</returns>
+        public object Call(object name, object[] args)
         {
-            return Et.Property(
-                scope,
-                PiJsObject
-            );
-        }
+            object obj;
 
-        internal static Et EtLocal(EtParam scope, string name, Et value)
-        {
-            return Et.Call(
-                scope,
-                Scope.MiLocal,
-                Et.Constant(name, typeof(object)),
-                value
-            );
-        }
+            if (JsObject.TryGet(name, out obj))
+            {
+                if (obj is IFunction)
+                {
+                    if (IsInternal)
+                        return (obj as IFunction).Call(Globals.JsObject, args);
 
-        internal static Et EtGlobal(EtParam scope, string name, Et value)
-        {
-            return Et.Call(
-                scope,
-                Scope.MiGlobal,
-                Et.Constant(name, typeof(object)),
-                value
-            );
-        }
+                    return (obj as IFunction).Call(JsObject, args);
+                }
 
-        internal static Et EtPull(EtParam scope, string name)
-        {
-            return Et.Call(
-                scope,
-                Scope.MiPull,
-                Et.Constant(name, typeof(object))
-            );
-        }
+                if (obj is MethodInfo)
+                    return (obj as MethodInfo).Invoke(null, args);
 
-        internal static Et EtNew(Et context, Et parentScope)
-        {
-            return AstUtils.SimpleNewHelper(
-                Ctor1Args,
-                context,
-                parentScope
-            );
-        }
+                if (obj is Delegate)
+                    return (obj as Delegate).DynamicInvoke(args);
 
-        internal static Et EtNewWith(Et parentScope, Et jsObject)
-        {
-            return AstUtils.SimpleNewHelper(
-                Ctor2Args,
-                parentScope,
-                jsObject
-            );
-        }
+                throw InternalRuntimeError.New(
+                    InternalRuntimeError.NOT_CALLABLE,
+                    name
+                );
+            }
 
-        #endregion
+            if (ParentScope == null)
+                throw InternalRuntimeError.New(
+                    InternalRuntimeError.NOT_DEFINED,
+                    name
+                );
+
+            return ParentScope.Call(name, args);
+        }
 
         #region Static
 
         public static Scope CreateGlobal(Context context)
         {
-            return new Scope(context);
+            return new Scope(context, null);
         }
 
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args)
         {
-            return CreateCallScope(closure, callee, that, args, new string[] { }); // TODO: not necessary to create a new array here each time
+            return CreateCallScope(closure, callee, that, args, null); // TODO: not necessary to create a new array here each time
         }
 
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
@@ -240,7 +168,7 @@ namespace IronJS.Runtime.Js
 
             for (var i = 0; i < args.Length; ++i)
             {
-                if (i < parms.Length)
+                if (parms != null && i < parms.Length)
                     callScope.Local(parms[i], args[i]);
 
                 argsObject.SetOwnProperty((double)i, args[i]);

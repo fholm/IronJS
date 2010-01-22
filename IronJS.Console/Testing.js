@@ -1,10 +1,16 @@
-﻿
-foo = { bar: 1 };
+﻿foo = { 
+    bar: { 
+        bar_func: function() { emit(this == foo.bar); } 
+    }, 
+    foo_func: function() { emit(this == foo); } 
+};
 
 with (foo) {
-    bar = 2;
-    baz = 3;
+    foo_func();
+    
+    with (bar) {
+        bar_func();
+    }
+    
+    foo_func();
 }
-
-println(foo.bar);
-println(foo.baz);

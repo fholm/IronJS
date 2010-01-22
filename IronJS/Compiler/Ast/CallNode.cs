@@ -78,7 +78,9 @@ namespace IronJS.Compiler.Ast
                 typeof(object),
                 ArrayUtils.Insert(
                     Target.Walk(etgen),
-                    Scope.EtValue(etgen.GlobalScopeExpr),
+                    Scope.EtValue(
+                        etgen.GlobalScopeExpr
+                    ),
                     args
                 )
             );

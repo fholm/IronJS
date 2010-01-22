@@ -170,12 +170,36 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
-        public void TestFunctionHasGlobalObjectAsThis()
+        public void TestFunctionGlobalHasGlobalObjectAsThis()
         {
             Assert.AreEqual(
                 "true",
                 ScriptRunner.Run(
                     "foo = function(){ emit(this == globals) };" +
+                    "foo();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionLocalHasGlobalObjectAsThis()
+        {
+            Assert.AreEqual(
+                "true",
+                ScriptRunner.Run(
+                    "foo = function(){ (function() { emit(this == globals) })(); };" +
+                    "foo();"
+                )
+            );
+        }
+
+        [TestMethod]
+        public void TestFunctionLocalHasObjectAsThis()
+        {
+            Assert.AreEqual(
+                "[object Object]",
+                ScriptRunner.Run(
+                    "foo = function(){ (function() { emit(this) })(); };" +
                     "foo();"
                 )
             );

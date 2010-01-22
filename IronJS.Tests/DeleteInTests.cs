@@ -60,6 +60,17 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestDeleteWorksWithPropertyNamesWhenInsideWith()
+        {
+            Assert.AreEqual(
+                "1undefined",
+                ScriptRunner.Run(
+                    "foo = { bar: 1 }; emit(foo.bar); with(foo) { delete bar; } emit(foo.bar); "
+                )
+            );
+        }
+
+        [TestMethod]
         public void TestInDeleteMakesInReturnFalse()
         {
             Assert.AreEqual(

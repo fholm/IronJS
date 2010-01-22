@@ -10,11 +10,11 @@ namespace IronJS.Runtime.Js
 {
     public class Obj : IObj
     {
-        static public readonly ConstructorInfo Ctor =
-            typeof(Obj).GetConstructor(Type.EmptyTypes);
+        static public readonly ConstructorInfo Ctor 
+            = typeof(Obj).GetConstructor(Type.EmptyTypes);
 
-        protected readonly Dictionary<object, Property> Properties = 
-                       new Dictionary<object, Property>();
+        protected readonly Dictionary<object, Property> Properties 
+            = new Dictionary<object, Property>();
 
         public Obj()
         {
@@ -60,6 +60,23 @@ namespace IronJS.Runtime.Js
                 return Prototype.Get(key);
 
             return Js.Undefined.Instance;
+        }
+
+        public bool TryGet(object name, out object value)
+        {
+            Property result;
+
+            if (Properties.TryGetValue(name, out result))
+            {
+                value = result.Value;
+                return true;
+            }
+
+            if (Prototype != null)
+                return Prototype.TryGet(name, out value);
+
+            value = null;
+            return false;
         }
 
         public virtual object Put(object key, object value)

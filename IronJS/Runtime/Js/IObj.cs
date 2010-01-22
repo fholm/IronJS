@@ -29,6 +29,7 @@ namespace IronJS.Runtime.Js
         object DefaultValue(ValueHint hint);    // [[DefaultValue]]
 
         // implementation specific
+        bool TryGet(object name, out object value);
         bool HasOwnProperty(object name);
         object SetOwnProperty(object name, object value);
         object GetOwnProperty(object name);

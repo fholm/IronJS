@@ -24,7 +24,7 @@ namespace IronJS.Compiler.Ast
 
             return Et.Block(
                 Et.Assign(etgen.FunctionScope.ScopeExpr,
-                    Scope.EtNewPrivate(
+                    Scope.EtNewWith(
                         etgen.FunctionScope.ScopeExpr,
                         Target.Walk(etgen)
                     )
@@ -32,8 +32,9 @@ namespace IronJS.Compiler.Ast
                 body,
                 Et.Assign(
                     etgen.FunctionScope.ScopeExpr,
-                    Scope.EtExit(
-                        etgen.FunctionScope.ScopeExpr
+                    Et.Property(
+                        etgen.FunctionScope.ScopeExpr,
+                        Scope.PiParentScope
                     )
                 )
             );

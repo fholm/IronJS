@@ -21,6 +21,21 @@ namespace IronJS.Runtime.Js
         static public readonly PropertyInfo PiJsObject
             = typeof(Scope).GetProperty("JsObject");
 
+        static public readonly MethodInfo MiCall
+            = typeof(Scope).GetMethod("Call");
+
+        static public readonly MethodInfo MiDelete
+            = typeof(Scope).GetMethod("Delete");
+
+        static public readonly MethodInfo MiLocal
+            = typeof(Scope).GetMethod("Local");
+
+        static public readonly MethodInfo MiGlobal
+            = typeof(Scope).GetMethod("Global");
+
+        static public readonly MethodInfo MiPull
+            = typeof(Scope).GetMethod("Pull");
+
         bool IsInternal { get { return JsObject.Class == ObjClass.Internal; } }
 
         public IObj JsObject { get; protected set; }
@@ -55,10 +70,10 @@ namespace IronJS.Runtime.Js
         /// <returns>Function result</returns>
         public object Call(object name, object[] args)
         {
-            if (JsObject.HasProperty(name))
-            {
-                var obj = JsObject.Get(name);
+            object obj;
 
+            if(JsObject.TryGet(name, out obj))
+            {
                 if (obj is IFunction)
                 {
                     if (IsInternal)
@@ -117,27 +132,20 @@ namespace IronJS.Runtime.Js
 
         public object Pull(object name)
         {
-            //TODO: implement obj.TryGet(name, out value) maybe, so we don't have to check for is Undefined.
-            var value = JsObject.Get(name);
+            object value;
 
-            if (value is Undefined)
+            if(!JsObject.TryGet(name, out value))
             {
                 if(ParentScope != null)
                     return ParentScope.Pull(name);
 
-                if(name is string && (string)name != "undefined")
-                    throw InternalRuntimeError.New(
-                        InternalRuntimeError.NOT_DEFINED,
-                        name
-                    );
+                throw InternalRuntimeError.New(
+                    InternalRuntimeError.NOT_DEFINED,
+                    name
+                );
             }
 
             return value;
-        }
-
-        public Scope Enter()
-        {
-            return new Scope(JsObject.Context, this);
         }
 
         #region Expression Tree
@@ -146,7 +154,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 scope,
-                typeof(Scope).GetMethod("Delete"),
+                Scope.MiDelete,
                 Et.Constant(name)
             );
         }
@@ -163,7 +171,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 scope,
-                typeof(Scope).GetMethod("Local"),
+                Scope.MiLocal,
                 Et.Constant(name, typeof(object)),
                 value
             );
@@ -173,7 +181,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 scope,
-                typeof(Scope).GetMethod("Global"),
+                Scope.MiGlobal,
                 Et.Constant(name, typeof(object)),
                 value
             );
@@ -183,34 +191,26 @@ namespace IronJS.Runtime.Js
         {
             return Et.Call(
                 scope,
-                typeof(Scope).GetMethod("Pull"),
+                Scope.MiPull,
                 Et.Constant(name, typeof(object))
             );
         }
 
-        internal static Et EtNew(Et context, Et parent)
+        internal static Et EtNew(Et context, Et parentScope)
         {
             return AstUtils.SimpleNewHelper(
                 Ctor1Args,
                 context,
-                parent
+                parentScope
             );
         }
 
-        internal static Et EtNewPrivate(Et parent, Et obj)
+        internal static Et EtNewWith(Et parentScope, Et jsObject)
         {
             return AstUtils.SimpleNewHelper(
                 Ctor2Args,
-                parent,
-                obj
-            );
-        }
-
-        internal static Et EtExit(Et scope)
-        {
-            return Et.Property(
-                scope,
-                PiParentScope
+                parentScope,
+                jsObject
             );
         }
 
@@ -230,7 +230,7 @@ namespace IronJS.Runtime.Js
 
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
         {
-            var callScope = closure.Enter();
+            var callScope = new Scope(closure.JsObject.Context, closure);
             var argsObject = closure.JsObject.Context.ObjectConstructor.Construct();
 
             callScope.Local("this", that);

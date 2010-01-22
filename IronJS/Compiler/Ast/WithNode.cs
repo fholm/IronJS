@@ -18,6 +18,10 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
+            etgen.EnterWith();
+            var body = Body.Walk(etgen);
+            etgen.ExitWith();
+
             return Et.Block(
                 Et.Assign(etgen.FunctionScope.ScopeExpr,
                     Scope.EtNewPrivate(
@@ -25,7 +29,7 @@ namespace IronJS.Compiler.Ast
                         Target.Walk(etgen)
                     )
                 ),
-                Body.Walk(etgen),
+                body,
                 Et.Assign(
                     etgen.FunctionScope.ScopeExpr,
                     Scope.EtExit(

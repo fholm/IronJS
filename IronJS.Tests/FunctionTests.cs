@@ -161,9 +161,9 @@ namespace IronJS.Tests
         public void TestFunctionHasObjectAsThis()
         {
             Assert.AreEqual(
-                "[object Object]",
+                "object",
                 ScriptRunner.Run(
-                    "foo = function(){ emit(this) };" +
+                    "foo = function(){ emit(typeof this) };" +
                     "foo();"
                 )
             );
@@ -197,9 +197,9 @@ namespace IronJS.Tests
         public void TestFunctionLocalHasObjectAsThis()
         {
             Assert.AreEqual(
-                "[object Object]",
+                "object",
                 ScriptRunner.Run(
-                    "foo = function(){ (function() { emit(this) })(); };" +
+                    "foo = function(){ (function() { emit(typeof this) })(); };" +
                     "foo();"
                 )
             );

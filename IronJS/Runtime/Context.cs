@@ -33,7 +33,7 @@ namespace IronJS.Runtime
             globals.Global("undefined", Js.Undefined.Instance);
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);
-            globals.Global("globals", globals.Value);
+            globals.Global("globals", globals.JsObject);
 
             /*
             globals.Put("Function", FunctionConstructor);

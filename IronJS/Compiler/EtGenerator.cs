@@ -15,12 +15,15 @@ namespace IronJS.Compiler
 
     public class EtGenerator
     {
+        int _withCount;
+
         internal Context Context { get; private set; }
         internal FunctionScope FunctionScope { get; private set; }
         internal List<LambdaTuple> LambdaTuples { get; private set; }
         internal ParameterExpression FuncTableExpr { get; private set; }
         internal ParameterExpression GlobalScopeExpr { get; private set; }
 
+        internal bool IsInsideWith { get { return _withCount > 0; } }
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
 
         public Action<Scope> Build(List<Ast.Node> astNodes, Context context)
@@ -89,6 +92,16 @@ namespace IronJS.Compiler
                 ),
                 FunctionScope.ScopeExpr
             ).Compile();
+        }
+
+        internal void EnterWith()
+        {
+            ++_withCount;
+        }
+
+        internal void ExitWith()
+        {
+            --_withCount;
         }
 
         internal void EnterFunctionScope()

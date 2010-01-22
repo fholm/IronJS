@@ -6,7 +6,7 @@ using Et = System.Linq.Expressions.Expression;
 namespace IronJS.Runtime.Js
 {
     //TODO: need support for 'Host' object class
-    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array }
+    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Internal }
 
     //
     public enum ValueHint { None, Number, String }
@@ -14,11 +14,11 @@ namespace IronJS.Runtime.Js
     public interface IObj : IDynamicMetaObjectProvider
     {
         // 8.6.2
-        ObjClass Class { get; } // [[Class]]
-        IObj Prototype { get; } // [[Prototype]]
+        ObjClass Class { get; set; }  // [[Class]]
+        IObj Prototype { get; set;  } // [[Prototype]]
 
         // implementation specific
-        Context Context { get; }
+        Context Context { get; set; }
 
         // 8.6.2
         object Get(object name);                // [[Get]]

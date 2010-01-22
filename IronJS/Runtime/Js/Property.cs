@@ -55,7 +55,7 @@ namespace IronJS.Runtime.Js
 
         public bool NotHasAttr(PropertyAttrs attr)
         {
-            return !HasAttr(attr);
+            return !_attrs.HasFlag(attr);
         }
     }
 }

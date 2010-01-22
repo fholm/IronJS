@@ -12,117 +12,118 @@ namespace IronJS.Runtime.Js
         static public readonly ConstructorInfo Ctor1Args
             = typeof(Scope).GetConstructor(new[] { typeof(Scope) });
 
-        static public readonly ConstructorInfo Cto2Args
+        static public readonly ConstructorInfo Ctor2Args
             = typeof(Scope).GetConstructor(new[] { typeof(Scope), typeof(IObj) });
 
-        static public readonly PropertyInfo PiParent
-            = typeof(Scope).GetProperty("Parent");
+        static public readonly PropertyInfo PiParentScope
+            = typeof(Scope).GetProperty("ParentScope");
 
-        IObj _obj;
-        Scope _parent;
-        bool _privateObj = false;
+        static public readonly PropertyInfo PiJsObject
+            = typeof(Scope).GetProperty("JsObject");
 
-        public IObj Value { get { return _obj; } }
-        public Scope Parent { get { return _parent; } }
-        public Scope Globals { get { return _parent == null ? this : _parent.Globals; } }
+        bool IsInternal { get { return JsObject.Class == ObjClass.Internal; } }
 
-        public Scope(Scope parent, IObj obj)
+        public IObj JsObject { get; protected set; }
+        public Scope ParentScope { get; protected set; }
+        public Scope Globals { get { return ParentScope == null ? this : ParentScope.Globals; } }
+
+        public Scope(Scope parentScope, IObj jsObject)
         {
-            _obj = obj;
-            _parent = parent;
+            JsObject = jsObject;
+            ParentScope = parentScope;
         }
 
-        public Scope(Context context, Scope parent)
+        public Scope(Context context, Scope parentScope)
             : this(context)
         {
-            _parent = parent;
+            ParentScope = parentScope;
         }
 
         public Scope(Context context)
         {
-            _privateObj = true;
-            _obj = context.CreateObject();
-            (_obj as Obj).Prototype = null;
+            JsObject = context.CreateObject();
+            JsObject.Prototype = null;
+            JsObject.Class = ObjClass.Internal;
         }
 
+        /// <summary>
+        /// This function in combination with the special with-statement handling code
+        /// in CallNode.Walk() handles function calls that are inside with-statements
+        /// </summary>
+        /// <param name="name">Function name to call</param>
+        /// <param name="args">Arguments to function</param>
+        /// <returns>Function result</returns>
         public object Call(object name, object[] args)
         {
-            if (_obj.HasProperty(name))
+            if (JsObject.HasProperty(name))
             {
-                var obj = _obj.Get(name);
+                var obj = JsObject.Get(name);
 
                 if (obj is IFunction)
                 {
-                    if (_privateObj)
-                        return (obj as IFunction).Call(Globals.Value, args);
+                    if (IsInternal)
+                        return (obj as IFunction).Call(Globals.JsObject, args);
 
-                    return (obj as IFunction).Call(Value, args);
+                    return (obj as IFunction).Call(JsObject, args);
                 }
 
                 if (obj is MethodInfo)
-                {
-                    var mi = obj as MethodInfo;
-                    return mi.Invoke(null, args);
-                }
+                    return (obj as MethodInfo).Invoke(null, args);
 
                 if (obj is Delegate)
-                {
-                    var dg = obj as Delegate;
-                    var invoke = dg.GetType().GetMethod("Invoke");
-                    return invoke.Invoke(dg, args);
-                }
+                    return (obj as Delegate).DynamicInvoke(args);
 
                 throw InternalRuntimeError.New(
-                        InternalRuntimeError.NOT_CALLABLE, 
-                        name
-                    );
+                    InternalRuntimeError.NOT_CALLABLE, 
+                    name
+                );
             }
 
-            if (_parent == null)
+            if (ParentScope == null)
                 throw InternalRuntimeError.New(
                     InternalRuntimeError.NOT_DEFINED,
                     name
                 );
 
-            return _parent.Call(name, args);
+            return ParentScope.Call(name, args);
         }
 
         public object Delete(object name)
         {
-            if(_obj.Delete(name))
+            if(JsObject.Delete(name))
                 return true;
 
-            if (_parent != null)
-                return _parent.Delete(name);
+            if (ParentScope != null)
+                return ParentScope.Delete(name);
 
             return false;
         }
 
         public object Local(object name, object value)
         {
-            if (_privateObj || _obj.HasProperty(name))
-                return _obj.Put(name, value);
+            if (IsInternal || JsObject.HasProperty(name))
+                return JsObject.Put(name, value);
 
-            return _parent.Local(name, value);
+            return ParentScope.Local(name, value);
         }
 
         public object Global(object name, object value)
         {
-            if (_parent == null || _obj.HasProperty(name))
-                return _obj.Put(name, value);
+            if (ParentScope == null || JsObject.HasProperty(name))
+                return JsObject.Put(name, value);
 
-            return _parent.Global(name, value);
+            return ParentScope.Global(name, value);
         }
 
         public object Pull(object name)
         {
             //TODO: implement obj.TryGet(name, out value) maybe, so we don't have to check for is Undefined.
-            var value = _obj.Get(name);
+            var value = JsObject.Get(name);
 
             if (value is Undefined)
             {
-                if(_parent != null)
-                    return _parent.Pull(name);
+                if(ParentScope != null)
+                    return ParentScope.Pull(name);
 
                 if(name is string && (string)name != "undefined")
                     throw InternalRuntimeError.New(
@@ -136,7 +137,7 @@ namespace IronJS.Runtime.Js
 
         public Scope Enter()
         {
-            return new Scope(_obj.Context, this);
+            return new Scope(JsObject.Context, this);
         }
 
         #region Expression Tree
@@ -150,11 +151,11 @@ namespace IronJS.Runtime.Js
             );
         }
 
-        internal static Et EtValue(EtParam scope)
+        internal static Et EtJsObject(EtParam scope)
         {
             return Et.Property(
                 scope,
-                "Value"
+                PiJsObject
             );
         }
 
@@ -199,7 +200,7 @@ namespace IronJS.Runtime.Js
         internal static Et EtNewPrivate(Et parent, Et obj)
         {
             return AstUtils.SimpleNewHelper(
-                Cto2Args,
+                Ctor2Args,
                 parent,
                 obj
             );
@@ -209,7 +210,7 @@ namespace IronJS.Runtime.Js
         {
             return Et.Property(
                 scope,
-                PiParent
+                PiParentScope
             );
         }
 
@@ -230,7 +231,7 @@ namespace IronJS.Runtime.Js
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
         {
             var callScope = closure.Enter();
-            var argsObject = closure._obj.Context.ObjectConstructor.Construct();
+            var argsObject = closure.JsObject.Context.ObjectConstructor.Construct();
 
             callScope.Local("this", that);
             callScope.Local("arguments", argsObject);

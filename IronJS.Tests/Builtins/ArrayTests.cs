@@ -70,6 +70,30 @@ namespace IronJS.Tests.Builtins
         }
 
         [TestMethod]
+        public void TestArray_prototype_toString()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = ['a', 'b', 'c', 1, 2, 3];
+
+                assertEqual('a,b,c,1,2,3', foo.toString(), 'foo.toString() should equal a,b,c,1,2,3');
+                "
+            );
+        }
+
+        [TestMethod]
+        public void TestArray_prototype_toLocaleString()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = ['a', 'b', 'c', 1, 2, 3];
+
+                assertEqual('a,b,c,1,2,3', foo.toLocaleString(), 'foo.toLocaleString() should equal a,b,c,1,2,3');
+                "
+            );
+        }
+
+        [TestMethod]
         public void TestArray_prototype_pop()
         {
             ScriptRunner.Run(

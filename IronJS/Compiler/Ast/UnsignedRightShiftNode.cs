@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Ast
             return EtUtils.Box(
                 Et.Convert(
                     Et.Call(
-                        typeof(BuiltIns).GetMethod("UnsignedRightShift"),
+                        typeof(Operators).GetMethod("UnsignedRightShift"),
 
                         Et.Convert(
                             Et.Dynamic(

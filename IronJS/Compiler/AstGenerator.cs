@@ -393,12 +393,10 @@ namespace IronJS.Compiler
 
         private Node BuildArray(ITree node)
         {
-            throw new NotImplementedException();
-
             var i = 0;
             var arrayElements = node.Map(
-                    x => new AutoPropertyNode(i++, Build(x.GetChildSafe(0)))
-                );
+                    x => new AutoPropertyNode((double) i++, Build(x.GetChildSafe(0)))
+                ); 
 
             return new NewNode(
                 new IdentifierNode("Array"),

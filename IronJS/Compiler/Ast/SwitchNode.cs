@@ -48,7 +48,7 @@ namespace IronJS.Compiler.Ast
                                 ExpressionType.OrElse,
                                 hasMatched,
                                 Et.Call(
-                                    typeof(BuiltIns).GetMethod("StrictEquality"),
+                                    typeof(Operators).GetMethod("StrictEquality"),
                                     tmp,
                                     x.V1.Walk(etgen)
                                 )

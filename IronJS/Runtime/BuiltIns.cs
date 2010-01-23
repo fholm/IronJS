@@ -3,7 +3,7 @@ using IronJS.Runtime.Js;
 
 namespace IronJS.Runtime
 {
-    public static class BuiltIns
+    public static class Operators
     {
         public static object PrintLine(object o)
         {

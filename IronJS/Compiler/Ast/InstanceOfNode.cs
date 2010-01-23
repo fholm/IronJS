@@ -18,7 +18,7 @@ namespace IronJS.Compiler.Ast
         public override Et Walk(EtGenerator etgen)
         {
             return Et.Call(
-                typeof(BuiltIns).GetMethod("InstanceOf"),
+                typeof(Operators).GetMethod("InstanceOf"),
                 Target.Walk(etgen),
                 Function.Walk(etgen)
             );

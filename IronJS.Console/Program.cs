@@ -26,7 +26,7 @@ namespace IronJS.Testing
 
             globals.Global(
                 "println",
-                typeof(BuiltIns).GetMethod("PrintLine")
+                typeof(Operators).GetMethod("PrintLine")
             );
 
             compiled(globals);

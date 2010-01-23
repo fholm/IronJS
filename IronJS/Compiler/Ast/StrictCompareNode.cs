@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Ast
         {
             // for both
             Et expr = Et.Call(
-                typeof(BuiltIns).GetMethod("StrictEquality"),
+                typeof(Operators).GetMethod("StrictEquality"),
                 Left.Walk(etgen),
                 Right.Walk(etgen)
             );

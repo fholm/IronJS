@@ -16,7 +16,7 @@ namespace IronJS.Compiler.Ast
         public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
         {
             return Et.Call(
-                typeof(BuiltIns).GetMethod("TypeOf"),
+                typeof(Operators).GetMethod("TypeOf"),
                 Target.Walk(etgen)
             );
         }

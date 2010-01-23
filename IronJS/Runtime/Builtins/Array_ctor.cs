@@ -29,6 +29,17 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct(object[] args)
         {
+            if (args.Length == 0)
+            {
+                var arrayObj = new ArrayObj();
+
+                arrayObj.Class = ObjClass.Array;
+                arrayObj.Prototype = Array_prototype;
+                arrayObj.Context = Context;
+
+                return arrayObj;
+            }
+
             throw new NotImplementedException();
         }
 

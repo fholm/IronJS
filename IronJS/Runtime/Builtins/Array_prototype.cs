@@ -11,6 +11,8 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Array;
 
+            SetOwnProperty("toString", new Array_prototype_toString(Context));
+            SetOwnProperty("toLocaleString", new Array_prototype_toLocaleString(Context));
             SetOwnProperty("concat", new Array_prototype_concat(Context));
             SetOwnProperty("join", new Array_prototype_join(Context));
             SetOwnProperty("pop", new Array_prototype_pop(Context));

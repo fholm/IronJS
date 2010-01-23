@@ -8,15 +8,15 @@ namespace IronJS.Runtime.Js
 {
     public class ArrayObj : Obj
     {
+        public ArrayObj()
+        {
+            Properties["length"] = new Property(0.0D);
+        }
+
         int Length
         {
             get { return (int)(double)GetOwnProperty("length"); }
             set { Properties["length"].Value = (double)value; }
-        }
-
-        public ArrayObj()
-        {
-            Properties["length"] = new Property(0.0D);
         }
 
         object UpdateLength(object value)

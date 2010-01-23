@@ -42,11 +42,13 @@ namespace IronJS.Runtime.Binders
                 var methodInfo = (MethodInfo)target.Value;
 
                 return new Meta(
-                    Et.Call(
-                        methodInfo, 
-                        EtUtils.ConvertToParamTypes(
-                            ArrayUtils.RemoveFirst(args),
-                            methodInfo.GetParameters()
+                    EtUtils.Box(
+                        Et.Call(
+                            methodInfo, 
+                            EtUtils.ConvertToParamTypes(
+                                ArrayUtils.RemoveFirst(args),
+                                methodInfo.GetParameters()
+                            )
                         )
                     ),
                     RestrictUtils.BuildCallRestrictions(
@@ -62,11 +64,13 @@ namespace IronJS.Runtime.Binders
                 var invoke = target.LimitType.GetMethod("Invoke");
 
                 return new Meta(
-                    AstUtils.SimpleCallHelper(
-                        Et.Convert(target.Expression, target.LimitType),
-                        invoke,
-                        DynamicUtils.GetExpressions(
-                            ArrayUtils.RemoveFirst(args)
+                    EtUtils.Box(
+                        AstUtils.SimpleCallHelper(
+                            Et.Convert(target.Expression, target.LimitType),
+                            invoke,
+                            DynamicUtils.GetExpressions(
+                                ArrayUtils.RemoveFirst(args)
+                            )
                         )
                     ),
                     RestrictUtils.BuildCallRestrictions(

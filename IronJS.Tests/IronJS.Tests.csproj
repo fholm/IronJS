@@ -55,6 +55,7 @@
     <Compile Include="ScriptRunner.cs" />
     <Compile Include="ConstantsTests.cs" />
     <Compile Include="StrictEqualityTests.cs" />
+    <Compile Include="StringRelationalTests.cs" />
     <Compile Include="SwitchTests.cs" />
     <Compile Include="TryCatchFinallyThrowTests.cs" />
     <Compile Include="TypeConversionAddTests.cs" />

@@ -72,8 +72,45 @@ namespace IronJS.Runtime.Binders
                     // step 3 and 16 - 17
                     if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
                     {
-                        //TODO: implement string comparison
-                        throw new NotImplementedException("String comparison not implemented");
+                        expr = Et.Call(
+                            typeof(string).GetMethod("Compare", new[] { typeof(string), typeof(string) }),
+                            EtUtils.Cast<string>(target.Expression),
+                            EtUtils.Cast<string>(arg.Expression)
+                        );
+
+                        switch(Operation)
+                        {
+                            case ExpressionType.LessThan:
+                                expr = Et.Equal(
+                                    expr,
+                                    Et.Constant(-1)
+                                );
+                                break;
+
+                            case ExpressionType.GreaterThan:
+                                expr = Et.Equal(
+                                    expr,
+                                    Et.Constant(1)
+                                );
+                                break;
+                            
+                            case ExpressionType.LessThanOrEqual:
+                                expr = Et.LessThanOrEqual(
+                                    expr,
+                                    Et.Constant(0)
+                                );
+                                break;
+                            
+                            case ExpressionType.GreaterThanOrEqual:
+                                expr = Et.LessThanOrEqual(
+                                    expr,
+                                    Et.Constant(0)
+                                );
+                                break;
+
+                            default:
+                                throw new NotImplementedException("This should never happend");
+                        }
                     }
                     // step 4 - 15 and 18 - 21
                     else

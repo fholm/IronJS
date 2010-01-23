@@ -25,10 +25,15 @@ namespace IronJS.Tests
             };
             scope.Global("emit", emit);
 
-            Action<object, object> assert = (a, b) => {
-                Assert.AreEqual(a, b);
+            Action<object> assert = (obj) => {
+                Assert.AreEqual((object)true, obj);
             };
             scope.Global("assert", assert);
+
+            Action<object, object> assertEqual = (a, b) => {
+                Assert.AreEqual(a, b);
+            };
+            scope.Global("assertEqual", assertEqual);
 
             context.SetupGlobals(scope);
 

@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Js
         public ArrayObj()
         {
             Vector = new object[0];
-            Properties["length"] = new Property(0.0D);
+            SetOwnProperty("length", 0.0D);
         }
 
         int AsArrayIndex(object name)

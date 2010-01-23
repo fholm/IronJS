@@ -3,12 +3,12 @@ using IronJS.Runtime.Js;
 
 namespace IronJS.Runtime.Builtins
 {
-    class Object_prototype_propertyIsEnumerable : NativeFunction
+    class Function_prototype_toString: NativeFunction
     {
-        public Object_prototype_propertyIsEnumerable(Context context)
-            : base(context)
+        public Function_prototype_toString(Context context, IFunction function_prototype)
+            : base(context, function_prototype)
         {
-            SetOwnProperty("length", 1);
+            SetOwnProperty("length", 0);
         }
 
         public override object Call(IObj that, object[] args)

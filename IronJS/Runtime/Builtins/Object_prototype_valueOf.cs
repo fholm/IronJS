@@ -7,7 +7,7 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_valueOf(Context context)
             : base(context)
         {
-
+            SetOwnProperty("length", 0);
         }
 
         public override object Call(IObj that, object[] args)

@@ -89,6 +89,9 @@ namespace IronJS.Compiler
                 case EcmaParser.INSTANCEOF:
                     return BuildInstanceOf(node);
 
+                case EcmaParser.ARRAY:
+                    return BuildArray(node);
+
                 /*
                  * Functions
                  */
@@ -386,6 +389,22 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildArray(ITree node)
+        {
+            throw new NotImplementedException();
+
+            var i = 0;
+            var arrayElements = node.Map(
+                    x => new AutoPropertyNode(i++, Build(x.GetChildSafe(0)))
+                );
+
+            return new NewNode(
+                new IdentifierNode("Array"),
+                new List<Node>(),
+                arrayElements
+            );
         }
 
         private Node BuildInstanceOf(ITree node)

@@ -119,8 +119,13 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Builtins\Array_ctor.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype.cs" />
+    <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />
+    <Compile Include="Runtime\Builtins\Function_prototype_call.cs" />
+    <Compile Include="Runtime\Builtins\Function_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\NativeFunction.cs" />
     <Compile Include="Runtime\Builtins\Object_ctor.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs" />

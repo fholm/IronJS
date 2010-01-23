@@ -16,16 +16,18 @@ namespace IronJS.Runtime
     {
         public Object_ctor ObjectConstructor { get; protected set; }
         public Function_ctor FunctionConstructor { get; protected set; }
+        public Array_ctor ArrayConstructor { get; protected set; }
+
         public IFunction BooleanConstructor { get; protected set; }
         public IFunction NumberConstructor { get; protected set; }
         public IFunction StringConstructor { get; protected set; }
-        public IFunction ArrayConstructor { get; protected set; }
         public IObj MathObject { get; protected set; }
 
         protected Context()
         {
             FunctionConstructor = Function_ctor.Create(this);
             ObjectConstructor = Object_ctor.Create(this);
+            ArrayConstructor = Array_ctor.Create(this);
 
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
 
@@ -36,6 +38,8 @@ namespace IronJS.Runtime
         public void SetupGlobals(Scope globals)
         {
             globals.Global("Object", ObjectConstructor);
+            globals.Global("Function", FunctionConstructor);
+            globals.Global("Array", ArrayConstructor);
             globals.Global("undefined", Js.Undefined.Instance);
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);

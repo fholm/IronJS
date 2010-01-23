@@ -195,6 +195,21 @@ namespace IronJS.Tests.Builtins
             );
         }
 
+        [TestMethod]
+        public void TestArray_prototype_slice()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+                assertEqual('2,3', foo.slice(2, 4).toString(), 'foo.slice() should equal 2,3');
+                assertEqual('5,6,7,8', foo.slice(-5, 9).toString(), 'foo.slice() should equal 5,6,7,8');
+                assertEqual('5,6,7', foo.slice(-5, -2).toString(), 'foo.slice() should equal 5,6,7');
+                assertEqual('2,3,4,5,6,7', foo.slice(2, -2).toString(), 'foo.slice() should equal 2,3,4,5,6,7');
+                "
+            );
+        }
+
 
 
     }

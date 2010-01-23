@@ -128,6 +128,7 @@
     <Compile Include="Runtime\Builtins\Array_prototype_push.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_shift.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_slice.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />

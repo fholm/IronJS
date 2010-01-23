@@ -1,24 +1,8 @@
 ﻿
 
-foo = ['a', 'b', 'c', 'd'];
-foo[10] = 'e';
+foo = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-assertEqual('a', foo.shift());
-assertEqual(10, foo.length);
-
-assertEqual('b', foo.shift());
-assertEqual(9, foo.length);
-
-assertEqual('c', foo.shift());
-assertEqual(8, foo.length);
-
-assertEqual('d', foo.shift());
-assertEqual(7, foo.length);
-
-assertEqual(undefined, foo.shift());
-assertEqual(6, foo.length);
-
-assertEqual(undefined, foo.shift());
-assertEqual(5, foo.length);
-
-assertEqual('e', foo[4]);
+println(foo.slice(2, 4));
+println(foo.slice(-5, 9));
+println(foo.slice(-5, -2));
+println(foo.slice(2, -2));

@@ -37,9 +37,7 @@ namespace IronJS.Runtime.Builtins
             else
             {
                 var func = args[0] as IFunction;
-                vals.Sort((a, b) => {
-                    return (int)(double)func.Call(that, new[] { a, b });
-                });
+                vals.Sort((a, b) => (int)(double)func.Call(that, new[] { a, b }) );
             }
 
             for (var d = 0.0D; d < len; ++d)

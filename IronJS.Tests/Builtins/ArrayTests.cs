@@ -223,7 +223,7 @@ namespace IronJS.Tests.Builtins
                 foo.sort();
                 assertEqual('1,1,2,2,4,5,7,7,23,52,232', foo.toString(), 'foo.toString() should equal 1,1,2,2,4,5,7,7,23,52,232');
 
-                bar = ['aa', 'bbb', 'ddddd', 'cccc', 'fffffff', 'eeeee'];
+                bar = ['aa', 'bbb', 'ddddd', 'cccc', 'fffffff', 'eeeeee'];
                 bar.sort(function (a, b) { return a.length - b.length; });
                 assertEqual('aa,bbb,cccc,ddddd,eeeeee,fffffff', bar.toString(), 'bar.toString() should equal aa,bbb,cccc,ddddd,eeeeee,fffffff');
                 "

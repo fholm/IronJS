@@ -155,6 +155,7 @@
     <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_concat.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_localeCompare.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />

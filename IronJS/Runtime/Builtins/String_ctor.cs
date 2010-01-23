@@ -39,11 +39,13 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct(object[] args)
         {
-            var obj = new ValueObj(args.Length > 0 ? JsTypeConverter.ToString(args[0]) : "");
+            var str = args != null && args.Length > 0 ? JsTypeConverter.ToString(args[0]) : "";
+            var obj = new ValueObj(str);
 
             obj.Class = ObjClass.String;
             obj.Prototype = String_prototype;
             obj.Context = Context;
+            obj.SetOwnProperty("length", (double) str.Length);
 
             return obj;
         }

@@ -15,6 +15,8 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("join", new Array_prototype_join(Context));
             SetOwnProperty("pop", new Array_prototype_pop(Context));
             SetOwnProperty("push", new Array_prototype_push(Context));
+            SetOwnProperty("reverse", new Array_prototype_reverse(Context));
+            SetOwnProperty("shift", new Array_prototype_shift(Context));
         }
     }
 }

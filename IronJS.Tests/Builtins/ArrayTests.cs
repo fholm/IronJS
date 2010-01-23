@@ -113,5 +113,62 @@ namespace IronJS.Tests.Builtins
             );
         }
 
+        [TestMethod]
+        public void TestArray_prototype_reverse()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = ['a', 'b', 'c', 'd'];
+
+                original = foo.join('');
+                assertEqual('abcd', original, 'original should equal abcd');
+
+                foo.reverse();
+                reversed = foo.join('');
+                assertEqual('dcba', reversed, 'reversed should equal dcba');
+
+                foo.reverse();
+                rev_rev = foo.join('');
+                assertEqual(original, rev_rev, 'original should equal rev_rev');
+
+                foo[10] = 'e';
+                assertEqual('edcba', foo.reverse().join(''), 'foo.reverse().join('') should equal edcba');
+                assertEqual('abcde', foo.reverse().join(''), 'foo.reverse().join('') should equal abcde');
+
+                assertEqual(foo, foo.reverse(), 'foo.reverse() should return foo');
+                "
+            );
+        }
+
+        [TestMethod]
+        public void TestArray_prototype_shift()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = ['a', 'b', 'c', 'd'];
+                foo[10] = 'e';
+
+                assertEqual('a', foo.shift(), 'foo.shift() should equal a');
+                assertEqual(10, foo.length, 'foo.lenght should equal 10');
+
+                assertEqual('b', foo.shift(), 'foo.shift() should equal b');
+                assertEqual(9, foo.length, 'foo.lenght should equal 9');
+
+                assertEqual('c', foo.shift(), 'foo.shift() should equal c');
+                assertEqual(8, foo.length, 'foo.lenght should equal 8');
+
+                assertEqual('d', foo.shift(), 'foo.shift() should equal d');
+                assertEqual(7, foo.length, 'foo.lenght should equal 7');
+
+                assertEqual(undefined, foo.shift(), 'foo.shift() should equal undefined');
+                assertEqual(6, foo.length, 'foo.lenght should equal 6');
+
+                assertEqual(undefined, foo.shift(), 'foo.shift() should equal undefined');
+                assertEqual(5, foo.length, 'foo.lenght should equal 5');
+
+                assertEqual('e', foo[4], 'foo[4] should equal e');
+                "
+            );
+        }
     }
 }

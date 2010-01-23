@@ -126,6 +126,8 @@
     <Compile Include="Runtime\Builtins\Array_prototype_join.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_pop.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_push.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_shift.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />

@@ -71,7 +71,7 @@ namespace IronJS.Runtime.Js
             if (index == -1)
                 return base.Get(name);
 
-            return base.Get(index);
+            return base.Get((double)index);
         }
 
         public override object Put(object name, object value)
@@ -89,7 +89,7 @@ namespace IronJS.Runtime.Js
             if (index >= Length)
                 Length = index + 1;
 
-            return base.Put(index, value);
+            return base.Put((double)index, value);
         }
 
         public override bool HasProperty(object name)
@@ -99,7 +99,7 @@ namespace IronJS.Runtime.Js
             if (index == -1)
                 return base.HasProperty(name);
 
-            return base.HasProperty(index);
+            return base.HasProperty((double)index);
         }
 
         public override bool Delete(object name)
@@ -109,7 +109,7 @@ namespace IronJS.Runtime.Js
             if (index == -1)
                 return base.Delete(name);
 
-            return base.Delete(index);
+            return base.Delete((double)index);
         }
 
         public override bool HasOwnProperty(object name)
@@ -119,7 +119,7 @@ namespace IronJS.Runtime.Js
             if (index == -1)
                 return base.HasOwnProperty(name);
 
-            return base.HasOwnProperty(index);
+            return base.HasOwnProperty((double)index);
         }
 
         public override object SetOwnProperty(object name, object value)
@@ -137,7 +137,7 @@ namespace IronJS.Runtime.Js
             if (index >= Length)
                 Length = index + 1;
 
-            return base.SetOwnProperty(index, value);
+            return base.SetOwnProperty((double)index, value);
         }
 
         public override object GetOwnProperty(object name)
@@ -147,7 +147,12 @@ namespace IronJS.Runtime.Js
             if (index == -1)
                 return base.GetOwnProperty(name);
 
-            return base.GetOwnProperty(index);
+            return base.GetOwnProperty((double)index);
+        }
+
+        public override string ToString()
+        {
+            return (string) (Get("join") as IFunction).Call(this, new[] { (object)"," });
         }
 
         #endregion

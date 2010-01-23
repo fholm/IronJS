@@ -34,7 +34,7 @@ namespace IronJS.Compiler
 
             var nodes = new List<Node>();
 
-            root.Print();
+            //root.Print();
 
             if (root.IsNil)
             {
@@ -63,6 +63,10 @@ namespace IronJS.Compiler
 
                 case EcmaParser.BLOCK:
                     return BuildBlock(node);
+
+
+                case EcmaParser.RegularExpressionLiteral:
+                    return BuildRegex(node);
 
                 /*
                  * Expresion statements
@@ -389,6 +393,11 @@ namespace IronJS.Compiler
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
+        }
+
+        private Node BuildRegex(ITree node)
+        {
+            return new RegexNode(node.Text);
         }
 
         private Node BuildArray(ITree node)

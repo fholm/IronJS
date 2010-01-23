@@ -46,8 +46,8 @@ namespace IronJS.Compiler.Ast
                     typeof(bool),
                     Test.Walk(etgen)
                 ),
-                EtUtils.Box(trueBranch),
-                EtUtils.Box(elseBranch)
+                EtUtils.Cast<object>(trueBranch),
+                EtUtils.Cast<object>(elseBranch)
             );
         }
     }

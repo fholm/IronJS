@@ -1,4 +1,5 @@
-﻿using Et = System.Linq.Expressions.Expression;
+﻿using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -16,7 +17,7 @@ namespace IronJS.Compiler.Ast
         {
             return Et.Return(
                 etgen.FunctionScope.ReturnLabel, 
-                Value.Walk(etgen),
+                EtUtils.Cast<object>(Value.Walk(etgen)),
                 typeof(object)
             );
         }

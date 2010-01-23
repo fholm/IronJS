@@ -1,16 +1,17 @@
 ﻿using System.Linq.Expressions;
 using IronJS.Runtime;
+using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
     class StrictCompareNode : Node
     {
-        public readonly Ast.Node Left;
-        public readonly Ast.Node Right;
+        public readonly Node Left;
+        public readonly Node Right;
         public readonly ExpressionType Op;
 
-        public StrictCompareNode(Ast.Node left, Ast.Node right, ExpressionType op)
+        public StrictCompareNode(Node left, Node right, ExpressionType op)
             : base(NodeType.StrictCompare)
         {
             Left = left;
@@ -23,8 +24,8 @@ namespace IronJS.Compiler.Ast
             // for both
             Et expr = Et.Call(
                 typeof(Operators).GetMethod("StrictEquality"),
-                Left.Walk(etgen),
-                Right.Walk(etgen)
+                EtUtils.Cast<object>(Left.Walk(etgen)),
+                EtUtils.Cast<object>(Right.Walk(etgen))
             );
 
             // specific to 11.9.5

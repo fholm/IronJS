@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -25,8 +26,8 @@ namespace IronJS.Compiler.Ast
                 new[] { tmp },
 
                 Et.Assign(
-                    tmp, 
-                    Left.Walk(etgen)
+                    tmp,
+                    EtUtils.Cast<object>(Left.Walk(etgen))
                 ),
 
                 Et.Condition(
@@ -36,13 +37,17 @@ namespace IronJS.Compiler.Ast
                         tmp
                     ),
 
-                    Op == ExpressionType.AndAlso
-                           ? Right.Walk(etgen) // &&
-                           : tmp,              // ||
+                    EtUtils.Cast<object>(
+                        Op == ExpressionType.AndAlso
+                               ? Right.Walk(etgen) // &&
+                               : tmp               // ||
+                    ),
 
-                    Op == ExpressionType.AndAlso
-                           ? tmp               // &&
-                           : Right.Walk(etgen) // ||
+                    EtUtils.Cast<object>(
+                        Op == ExpressionType.AndAlso
+                               ? tmp               // &&
+                               : Right.Walk(etgen) // ||
+                    )
                 )
             );
         }

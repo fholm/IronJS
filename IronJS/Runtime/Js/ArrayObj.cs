@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Js
             Properties["length"] = new Property(0.0D);
         }
 
-        int Length
+        internal int Length
         {
             get { return (int)(double)GetOwnProperty("length"); }
             set { Properties["length"].Value = (double)value; }

@@ -43,8 +43,10 @@
     <Compile Include="AbstractEqualityTests.cs" />
     <Compile Include="ArrayObjTests.cs" />
     <Compile Include="BinaryOpTests.cs" />
+    <Compile Include="Builtins\ArrayTests.cs" />
     <Compile Include="Builtins\FunctionTests.cs" />
     <Compile Include="Builtins\ObjectTests.cs" />
+    <Compile Include="CompilerTests.cs" />
     <Compile Include="ConstructorTests.cs" />
     <Compile Include="DeleteInTests.cs" />
     <Compile Include="ExpressionTests.cs" />
@@ -76,6 +78,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Javascript\jquery-1.4.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Properties\Testing.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

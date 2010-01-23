@@ -10,6 +10,19 @@ namespace IronJS.Tests
 {
     static class ScriptRunner
     {
+        static public List<IronJS.Compiler.Ast.Node> BuildAst(string source)
+        {
+            var astBuilder = new Compiler.AstGenerator();
+            return astBuilder.Build(source);
+        }
+
+        static public Action<Scope> Compile(string source)
+        {
+            var astBuilder = new Compiler.AstGenerator();
+            var etGenerator = new Compiler.EtGenerator();
+            return etGenerator.Build(astBuilder.Build(source), Runtime.Context.Setup());
+        }
+
         static public string Run(string source)
         {
             var emitter = new StringBuilder();

@@ -145,7 +145,7 @@ namespace IronJS.Compiler
                         FunctionScope.ScopeExpr,
                         Scope.MiLocal,
                         Et.Constant(idNode.Name, typeof(object)),
-                        value
+                        EtUtils.Cast<object>(value)
                     );
                 }
                 else
@@ -154,7 +154,7 @@ namespace IronJS.Compiler
                         FunctionScope.ScopeExpr,
                         Scope.MiGlobal,
                         Et.Constant(idNode.Name, typeof(object)),
-                        value
+                        EtUtils.Cast<object>(value)
                     );
                 }
             }
@@ -166,7 +166,7 @@ namespace IronJS.Compiler
                     Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
                     maNode.Target.Walk(this),
-                    value
+                    EtUtils.Cast<object>(value)
                 );
             }
             else if (target is Ast.IndexAccessNode)
@@ -178,7 +178,7 @@ namespace IronJS.Compiler
                     typeof(object),
                     ixNode.Target.Walk(this),
                     ixNode.Index.Walk(this),
-                    value
+                    EtUtils.Cast<object>(value)
                 );
             }
 

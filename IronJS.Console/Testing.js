@@ -1,11 +1,8 @@
-﻿
+﻿foo = [1, 2, 3];
+bar = foo.concat(4, [5, 6, 7], 'foo', 9);
 
-var foo = Array('x', 'y', 'z');
-var bar = new Array('a', 'b', 'c');
-var boo = Array(2);
-
-println(boo.length);
-
-var baz = new Array("asdas3");
-
-println(baz.length);
+buffer = '';
+println(bar.length);
+for(i = 0; i < bar.length, ++i) {
+    buffer += bar[i];
+}

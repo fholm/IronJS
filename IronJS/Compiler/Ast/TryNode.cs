@@ -47,7 +47,7 @@ namespace IronJS.Compiler.Ast
 
                 var catchBlock = Et.Catch(
                     catchParam,
-                    catchBody
+                    EtUtils.Cast<object>(catchBody)
                 );
 
                 var tryBody = EtUtils.Box(Body.Walk(etgen));

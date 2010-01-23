@@ -36,6 +36,11 @@ namespace IronJS.Runtime.Builtins
             return Construct(args);
         }
 
+        public IObj Construct()
+        {
+            return Construct(null);
+        }
+
         public IObj Construct(object[] args)
         {
             var arrayObj = new ArrayObj();
@@ -44,13 +49,13 @@ namespace IronJS.Runtime.Builtins
             arrayObj.Prototype = Array_prototype;
             arrayObj.Context = Context;
 
-            if (args.Length != 1)
+            if (args != null && args.Length != 1)
             {
                 // 15.4.2.1
                 for (int i = 0; i < args.Length; ++i)
                     arrayObj.SetOwnProperty((double)i, args[i]);
             }
-            else
+            else if(args != null)
             {
                 // 15.4.2.2
                 var len = JsTypeConverter.ToNumber(args[0]);

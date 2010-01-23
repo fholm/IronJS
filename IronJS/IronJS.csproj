@@ -71,6 +71,7 @@
     <Compile Include="Compiler\Ast\Node.cs" />
     <Compile Include="Compiler\Ast\NullNode.cs" />
     <Compile Include="Compiler\Ast\NumberNode.cs" />
+    <Compile Include="Compiler\Ast\RegexNode.cs" />
     <Compile Include="Compiler\Ast\ReturnNode.cs" />
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
@@ -121,6 +122,10 @@
     <Compile Include="Runtime\BuiltIns.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_concat.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_join.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_pop.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_push.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />

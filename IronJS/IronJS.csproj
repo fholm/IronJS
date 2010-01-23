@@ -129,8 +129,11 @@
     <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_shift.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_slice.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_sort.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_splice.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />

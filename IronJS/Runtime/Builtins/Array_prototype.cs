@@ -20,6 +20,9 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("reverse", new Array_prototype_reverse(Context));
             SetOwnProperty("shift", new Array_prototype_shift(Context));
             SetOwnProperty("slice", new Array_prototype_slice(Context));
+            SetOwnProperty("sort", new Array_prototype_sort(Context));
+            SetOwnProperty("splice", new Array_prototype_splice(Context));
+            SetOwnProperty("unshift", new Array_prototype_unshift(Context));
         }
     }
 }

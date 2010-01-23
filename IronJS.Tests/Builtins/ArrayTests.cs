@@ -210,6 +210,26 @@ namespace IronJS.Tests.Builtins
             );
         }
 
+        [TestMethod]
+        public void TestArray_prototype_sort()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = [4, 5, 7, 7, 1, 23, 2, 1, 2, 52, 232];
+                foo.sort(function (a, b) { return a - b; });
+                assertEqual('1,1,2,2,4,5,7,7,23,52,232', foo.toString(), 'foo.toString() should equal 1,1,2,2,4,5,7,7,23,52,232');
+
+                foo = [4, 5, 7, 7, 1, 23, 2, 1, 2, 52, 232];
+                foo.sort();
+                assertEqual('1,1,2,2,4,5,7,7,23,52,232', foo.toString(), 'foo.toString() should equal 1,1,2,2,4,5,7,7,23,52,232');
+
+                bar = ['aa', 'bbb', 'ddddd', 'cccc', 'fffffff', 'eeeee'];
+                bar.sort(function (a, b) { return a.length - b.length; });
+                assertEqual('aa,bbb,cccc,ddddd,eeeeee,fffffff', bar.toString(), 'bar.toString() should equal aa,bbb,cccc,ddddd,eeeeee,fffffff');
+                "
+            );
+        }
+
 
 
     }

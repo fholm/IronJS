@@ -34,8 +34,6 @@ namespace IronJS.Compiler
 
             var nodes = new List<Node>();
 
-            //root.Print();
-
             if (root.IsNil)
             {
                 root.EachChild(node => {

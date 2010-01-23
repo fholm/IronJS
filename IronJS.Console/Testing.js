@@ -1,19 +1,11 @@
 ﻿
 
-var foo = [1, 2, 3, 4];
+var foo = Array('x', 'y', 'z');
+var bar = new Array('a', 'b', 'c');
+var boo = Array(2);
 
-println(2 in foo);
+println(boo.length);
 
-foo.length = 1;
+var baz = new Array("asdas3");
 
-println(2 in foo);
-
-foo[5] = 6;
-
-println(2 in foo);
-println(foo.length);
-println(foo[2]);
-
-for (i in foo) {
-    println(i);
-}
+println(baz.length);

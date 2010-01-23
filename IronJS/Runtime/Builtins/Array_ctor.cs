@@ -12,35 +12,60 @@ namespace IronJS.Runtime.Builtins
 
         protected Array_ctor(Context context)
         {
+            Class = ObjClass.Function;
             Context = context;
+            
+            // 15.4.3
+            Prototype = context.FunctionConstructor.Function_prototype;
 
             Array_prototype = new Array_prototype(context);
             Array_prototype.SetOwnProperty("constructor", this);
 
-            Put("prototype", Array_prototype);
+            // 15.4.3
+            SetOwnProperty("length", 1.0D);
+
+            // 15.4.3.1
+            SetOwnProperty("prototype", Array_prototype);
         }
 
         #region IFunction Members
 
         public object Call(IObj that, object[] args)
         {
-            throw new NotImplementedException();
+            // 15.4.1.1
+            return Construct(args);
         }
 
         public IObj Construct(object[] args)
         {
-            if (args.Length == 0)
+            var arrayObj = new ArrayObj();
+
+            arrayObj.Class = ObjClass.Array;
+            arrayObj.Prototype = Array_prototype;
+            arrayObj.Context = Context;
+
+            if (args.Length != 1)
             {
-                var arrayObj = new ArrayObj();
+                // 15.4.2.1
+                for (int i = 0; i < args.Length; ++i)
+                    arrayObj.SetOwnProperty((double)i, args[i]);
+            }
+            else
+            {
+                // 15.4.2.2
+                var len = JsTypeConverter.ToNumber(args[0]);
 
-                arrayObj.Class = ObjClass.Array;
-                arrayObj.Prototype = Array_prototype;
-                arrayObj.Context = Context;
-
-                return arrayObj;
+                if ((double)JsTypeConverter.ToInt32(len) == len)
+                {
+                    arrayObj.SetOwnProperty("length", len);
+                }
+                else
+                {
+                    throw new ShouldThrowTypeError();
+                }
             }
 
-            throw new NotImplementedException();
+            return arrayObj;
         }
 
         public bool HasInstance(object obj)

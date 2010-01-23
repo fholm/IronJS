@@ -69,7 +69,7 @@ namespace IronJS.Runtime.Binders
                 case ExpressionType.LessThanOrEqual: // 11.8.3
                 case ExpressionType.GreaterThanOrEqual: // 11.8.4
                     // 11.8.5 comparison algorithm
-                    // step 3 and 16 - 17
+                    // step 3 and 16 - 21
                     if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
                     {
                         expr = Et.Call(
@@ -112,7 +112,7 @@ namespace IronJS.Runtime.Binders
                                 throw new NotImplementedException("This should never happend");
                         }
                     }
-                    // step 4 - 15 and 18 - 21
+                    // step 4 - 15
                     else
                     {
                         expr = Et.MakeBinary(

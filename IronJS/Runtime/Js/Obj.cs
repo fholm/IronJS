@@ -43,10 +43,31 @@ namespace IronJS.Runtime.Js
 
         public virtual object DefaultValue(ValueHint hint)
         {
-            if (hint == ValueHint.Number)
-                return 1.0;
+            object toString;
+            object valueOf;
 
-            return "[object " + Class + "]";
+            if (hint == ValueHint.String)
+            {
+                toString = Get("toString");
+                if (toString is IFunction)
+                    return (toString as IFunction).Call(this, null);
+
+                valueOf = Get("valueOf");
+                if (valueOf is IFunction)
+                    return (valueOf as IFunction).Call(this, null);
+
+                throw new ShouldThrowTypeError();
+            }
+
+            valueOf = Get("valueOf");
+            if (valueOf is IFunction)
+                return (valueOf as IFunction).Call(this, null);
+
+            toString = Get("toString");
+            if (toString is IFunction)
+                return (toString as IFunction).Call(this, null);
+
+            throw new ShouldThrowTypeError();
         }
 
         public virtual object Get(object key)

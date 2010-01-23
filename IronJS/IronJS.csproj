@@ -94,7 +94,7 @@
     <Compile Include="Compiler\Ast\IndexAccessNode.cs" />
     <Compile Include="Compiler\FunctionScope.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
-    <Compile Include="Compiler\InstanceOfNode.cs" />
+    <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
@@ -119,7 +119,16 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\BuiltIns.cs" />
-    <Compile Include="Runtime\Builtins\ObjectCtor.cs" />
+    <Compile Include="Runtime\Builtins\Function_ctor.cs" />
+    <Compile Include="Runtime\Builtins\Function_prototype.cs" />
+    <Compile Include="Runtime\Builtins\NativeFunction.cs" />
+    <Compile Include="Runtime\Builtins\Object_ctor.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_propertyIsEnumerable.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_toLocaleString.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />

@@ -6,11 +6,11 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class ObjectCtor : Obj, IFunction
+    public class Object_ctor : Obj, IFunction
     {
         public IObj Object_prototype { get; private set; }
 
-        protected ObjectCtor(Context context)
+        protected Object_ctor(Context context)
         {
             Context = context;
             Object_prototype = CreatePrototype();
@@ -29,6 +29,14 @@ namespace IronJS.Runtime.Builtins
             obj.Class = ObjClass.Object;
             obj.Prototype = null;
             obj.Context = Context;
+            obj.SetOwnProperty("constructor", this);
+            obj.SetOwnProperty("toString", new Object_prototype_toString(Context));
+            obj.SetOwnProperty("valueOf", new Object_prototype_valueOf(Context));
+            obj.SetOwnProperty("hasOwnProperty", new Object_prototype_hasOwnProperty(Context));
+            obj.SetOwnProperty("isPrototypeOf", new Object_prototype_isPrototypeOf(Context));
+            obj.SetOwnProperty("propertyIsEnumerable", new Object_prototype_propertyIsEnumerable(Context));
+            obj.SetOwnProperty("toLocaleString", new Object_prototype_toLocaleString(Context));
+
 
             return obj;
         }
@@ -94,9 +102,9 @@ namespace IronJS.Runtime.Builtins
 
         #region Static
 
-        static public ObjectCtor Create(Context context)
+        static public Object_ctor Create(Context context)
         {
-            return new ObjectCtor(context);
+            return new Object_ctor(context);
         }
 
         #endregion 

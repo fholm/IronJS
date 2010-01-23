@@ -15,8 +15,14 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "abc",
                 ScriptRunner.Run(
-                    "foo = { a: 1, b: 2, c: 3}; "
-                    + "for(key in foo) { emit(key); }"
+                    @"
+                    foo = { a: 1, b: 2, c: 3}; 
+                    for(key in foo) { 
+                        if(foo.hasOwnProperty(key)) {
+                            emit(key);
+                        }
+                    }
+                    "
                 )
             );
         }
@@ -28,7 +34,7 @@ namespace IronJS.Tests
                 "123",
                 ScriptRunner.Run(
                     "foo = { a: 1, b: 2, c: 3}; "
-                    + "for(key in foo) { emit(foo[key]); }"
+                    + "for(key in foo) { if(foo.hasOwnProperty(key)) { emit(foo[key]); } }"
                 )
             );
         }
@@ -39,8 +45,22 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "abcd",
                 ScriptRunner.Run(
-                    "foo = { bar: { a: 1, b: 2 }, boo: { c: 3, d: 4 } }; "
-                    + "for(k1 in foo) { for(k2 in foo[k1]) { emit(k2); } }"
+                    @"
+                    foo = { 
+                        bar: { a: 1, b: 2 }, 
+                        boo: { c: 3, d: 4 }
+                    };
+
+                    for(k1 in foo) { 
+                        if(foo.hasOwnProperty(k1)) {
+                            for(k2 in foo[k1]) { 
+                                if(foo[k1].hasOwnProperty(k2)) {
+                                    emit(k2); 
+                                }
+                            }
+                        }
+                    }
+                    "
                 )
             );
         }
@@ -51,8 +71,16 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "a",
                 ScriptRunner.Run(
-                    "foo = { a: 1, b: 2, c: 3}; "
-                    + "for(key in foo) { emit(key); break; }"
+                    @"
+                    foo = { a: 1, b: 2, c: 3};
+
+                    for(key in foo) { 
+                        if(foo.hasOwnProperty(key)) {
+                            emit(key); 
+                            break; 
+                        }
+                    }
+                    "
                 )
             );
         }
@@ -63,8 +91,18 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "ac",
                 ScriptRunner.Run(
-                    "foo = { a: 1, b: 2, c: 3}; "
-                    + "for(key in foo) { if(key == 'b') continue; emit(key); }"
+                    @"
+                        foo = { a: 1, b: 2, c: 3};
+
+                        for(key in foo) { 
+                            if(foo.hasOwnProperty(key)) {
+                                if(key == 'b') 
+                                    continue; 
+
+                                emit(key);
+                            }
+                        }
+                    "
                 )
             );
         }
@@ -75,8 +113,22 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "a",
                 ScriptRunner.Run(
-                    "foo = { bar: { a: 1, b: 2 }, boo: { c: 3, d: 4 } }; "
-                    + "outer: for(k1 in foo) { inner: for(k2 in foo[k1]) { if(k2 == 'b') break outer; emit(k2); } }"
+                    @"
+                    foo = { 
+                        bar: { a: 1, b: 2 }, 
+                        boo: { c: 3, d: 4 }
+                    };
+
+                    outer: for(k1 in foo) { 
+                        inner: for(k2 in foo[k1]) { 
+                            if(foo[k1].hasOwnProperty(k2)) {
+                                if(k2 == 'b') 
+                                    break outer; 
+                                emit(k2); 
+                            }
+                        } 
+                    }
+                    "
                 )
             );
         }
@@ -87,8 +139,24 @@ namespace IronJS.Tests
             Assert.AreEqual(
                 "cd",
                 ScriptRunner.Run(
-                    "foo = { bar: { a: 1, b: 2 }, boo: { c: 3, d: 4 } }; "
-                    + "outer: for(k1 in foo) { inner: for(k2 in foo[k1]) { if(k2 == 'a') continue outer; emit(k2); } }"
+                    @"
+                    foo = { 
+                        bar: { a: 1, b: 2 }, 
+                        boo: { c: 3, d: 4 }
+                    };
+                    
+                    outer: for(k1 in foo) { 
+                        if(foo.hasOwnProperty(k1)) {
+                            inner: for(k2 in foo[k1]) { 
+                                if(foo[k1].hasOwnProperty(k2)) {
+                                    if(k2 == 'a') 
+                                        continue outer; 
+                                    emit(k2);
+                                }
+                            }
+                        }
+                    }
+                    "
                 )
             );
         }

@@ -14,8 +14,8 @@ namespace IronJS.Runtime
 
     public class Context
     {
-        public ObjectCtor ObjectConstructor { get; protected set; }
-        public IFunction FunctionConstructor { get; protected set; }
+        public Object_ctor ObjectConstructor { get; protected set; }
+        public Function_ctor FunctionConstructor { get; protected set; }
         public IFunction BooleanConstructor { get; protected set; }
         public IFunction NumberConstructor { get; protected set; }
         public IFunction StringConstructor { get; protected set; }
@@ -24,7 +24,13 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            ObjectConstructor = ObjectCtor.Create(this);
+            FunctionConstructor = Function_ctor.Create(this);
+            ObjectConstructor = Object_ctor.Create(this);
+
+            ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
+
+            FunctionConstructor.Prototype = FunctionConstructor.Function_prototype;
+            FunctionConstructor.Function_prototype.Prototype = ObjectConstructor.Object_prototype;
         }
 
         public void SetupGlobals(Scope globals)
@@ -60,12 +66,12 @@ namespace IronJS.Runtime
         {
             var obj = new Function(scope, lambda);
 
-            var protoObj = CreateObject();
+            var protoObj = ObjectConstructor.Construct();
             protoObj.SetOwnProperty("constructor", obj);
 
             obj.Context = this;
             obj.Class = ObjClass.Function;
-            //obj.Prototype = FunctionPrototype;
+            obj.Prototype = FunctionConstructor.Function_prototype;
             obj.SetOwnProperty("prototype", protoObj);
 
             return obj;

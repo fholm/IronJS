@@ -330,7 +330,7 @@ namespace IronJS.Runtime.Utils
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
                     Context.Methods.CreateString,
-                    Et.Convert(obj.Expression, typeof(string))
+                    Et.Convert(obj.Expression, typeof(object))
                 );
 
             if (obj.LimitType == typeof(bool))

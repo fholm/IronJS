@@ -134,6 +134,7 @@
     <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />
@@ -147,6 +148,15 @@
     <Compile Include="Runtime\Builtins\Object_prototype_toLocaleString.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs" />
+    <Compile Include="Runtime\Builtins\String_ctor.cs" />
+    <Compile Include="Runtime\Builtins\String_fromCharCode.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_charAt.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_concat.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />

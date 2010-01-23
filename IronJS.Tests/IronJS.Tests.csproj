@@ -46,6 +46,7 @@
     <Compile Include="Builtins\ArrayTests.cs" />
     <Compile Include="Builtins\FunctionTests.cs" />
     <Compile Include="Builtins\ObjectTests.cs" />
+    <Compile Include="Builtins\StringTests.cs" />
     <Compile Include="CompilerTests.cs" />
     <Compile Include="ConstructorTests.cs" />
     <Compile Include="DeleteInTests.cs" />

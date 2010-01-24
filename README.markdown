@@ -11,9 +11,8 @@ IronJS is released under the [GNU General Public License v3](http://www.gnu.org/
 What you need to use IronJS
 
 * An understanding that this is alpha quality software, it will crash on you.
-* .NET 4.0 Beta 2, it should compile on .NET 3.5 with some minor modifications.
+* Requires .NET 4.0 Beta 2, since a few C# 4.0 specific features are used (Covariance most notably)
 * The Dynamic Language Runtime from Microsoft.
-
 
 ## ECMAScript 3.0 Compliance
 

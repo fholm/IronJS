@@ -120,6 +120,7 @@
     <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
+    <Compile Include="Runtime\Js\IDescriptor.cs" />
     <Compile Include="Runtime\Js\Operators.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype.cs" />

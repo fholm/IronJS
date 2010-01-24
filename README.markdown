@@ -743,7 +743,7 @@ _This list is not complete at the moment_
 			<td>15.3.4.4</td>
 			<td><strong>Function.call</strong></td>
 			<td>Done</td>
-			<td><em>x.call(thisArg [ , arg1 [ , arg2, … ] ])</em></td>
+			<td><em>x.call(thisArg [ , arg1 [ , arg2, ... ] ])</em></td>
 		</tr>
 	</tbody>
 </table>

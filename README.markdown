@@ -8,7 +8,7 @@ IronJS is released under the [GNU General Public License v3](http://www.gnu.org/
 
 ## State
 
-The current state of the code is at best alpha quality. It should not be used in a production environment under any circumstance.
+The current state of the code is at best alpha quality. Use at your own risk.
 
 ## Features
 

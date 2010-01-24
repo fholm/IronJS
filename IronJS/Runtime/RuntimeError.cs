@@ -5,7 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime
 {
-    public abstract class RuntimeError : IronJS.Error
+    public abstract class RuntimeError : Error
     {
         public RuntimeError(string msg)
             : base(msg)

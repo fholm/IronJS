@@ -182,7 +182,10 @@ namespace IronJS.Compiler
                 );
             }
 
-            throw new CompilerError("Can't assign to node of type '" + target.Type + "'");
+            throw new EtCompilerError(
+                EtCompilerError.CANT_ASSIGN_TO_NODE_TYPE,
+                target.Type
+            );
         }
     }
 }

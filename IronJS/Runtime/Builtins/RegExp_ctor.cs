@@ -56,6 +56,9 @@ namespace IronJS.Runtime.Builtins
 
             var regExpObj = new RegExpObj();
 
+            regExpObj.Class = ObjClass.RegExp;
+            regExpObj.Prototype = RegExp_prototype;
+            regExpObj.Context = Context;
             regExpObj.Match = new Regex(strPattern, options);
             regExpObj.SetOwnProperty("ignoreCase", ignoreCase);
             regExpObj.SetOwnProperty("global", global);

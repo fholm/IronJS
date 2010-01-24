@@ -1,5 +1,6 @@
 ﻿using System;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime
 {
@@ -7,7 +8,7 @@ namespace IronJS.Runtime
     {
         public static object PrintLine(object o)
         {
-            Console.WriteLine(o);
+            Console.WriteLine(JsTypeConverter.ToString(o));
             return o;
         }
 

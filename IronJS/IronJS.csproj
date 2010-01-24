@@ -176,6 +176,7 @@
     <Compile Include="Runtime\Builtins\Number_prototype_valueOf.cs" />
     <Compile Include="Runtime\Builtins\RegExp_ctor.cs" />
     <Compile Include="Runtime\Builtins\RegExp_prototype.cs" />
+    <Compile Include="Runtime\Builtins\RegExp_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />

@@ -13,6 +13,8 @@ namespace IronJS.Runtime.Builtins
             Context = context;
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Object;
+
+            SetOwnProperty("toString", new RegExp_prototype_toString(Context));
         }
     }
 }

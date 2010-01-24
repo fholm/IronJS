@@ -4,7 +4,7 @@ IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language 
 
 ## License
 
-IronJS is realsed under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html)
+IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html)
 
 ## State
 

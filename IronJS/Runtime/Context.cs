@@ -5,15 +5,18 @@ using System.Reflection;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Builtins;
 using IronJS.Runtime.Js;
-
-// Aliases
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime
 {
-
     public class Context
     {
+        static readonly public MethodInfo MiCreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
+        static readonly public MethodInfo MiCreateString = typeof(Context).GetMethod("CreateString", new[] { typeof(object) });
+        static readonly public MethodInfo MiCreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(object) });
+        static readonly public MethodInfo MiCreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(object) });
+        static readonly public MethodInfo MiCreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(Scope), typeof(Lambda) });
+
         public Object_ctor ObjectConstructor { get; protected set; }
         public Function_ctor FunctionConstructor { get; protected set; }
         public Array_ctor ArrayConstructor { get; protected set; }
@@ -33,7 +36,6 @@ namespace IronJS.Runtime
             MathObject = Math_obj.Create(this);
 
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
-
             FunctionConstructor.Prototype = FunctionConstructor.Function_prototype;
             FunctionConstructor.Function_prototype.Prototype = ObjectConstructor.Object_prototype;
         }
@@ -56,19 +58,13 @@ namespace IronJS.Runtime
             globals.Global("parseFloat", new Global_obj_parseFloat(this));
             globals.Global("isNaN", new Global_obj_isNaN(this));
             globals.Global("isFinite", new Global_obj_isFinite(this));
+            globals.Global("encodeURI", new Global_obj_encodeURI(this));
+            globals.Global("encodeURIComponent", new Global_obj_encodeURIComponent(this));
+            globals.Global("decodeURI", new Global_obj_decodeURI(this));
+            globals.Global("decodeURIComponent", new Global_obj_decodeURIComponent(this));
         }
 
         #region Object creators
-
-        public Obj CreateObject()
-        {
-            var obj = new Obj();
-
-            obj.Context = this;
-            obj.Class = ObjClass.Object;
-
-            return obj;
-        }
 
         public IObj CreateNumber(object value)
         {
@@ -83,6 +79,16 @@ namespace IronJS.Runtime
         public IObj CreateBoolean(object value)
         {
             return BooleanConstructor.Construct(new[] { value });
+        }
+
+        public Obj CreateObject()
+        {
+            var obj = new Obj();
+
+            obj.Context = this;
+            obj.Class = ObjClass.Object;
+
+            return obj;
         }
 
         public Function CreateFunction(Scope scope, Lambda lambda)
@@ -168,54 +174,19 @@ namespace IronJS.Runtime
 
         #region Static
 
-        static public Context Setup()
+        static public Context Create()
         {
-            var ctx = new Context();
-
-            /*
-            // Object
-            (ctx.ObjectConstructor as Function).Prototype = ctx.FunctionPrototype;
-            ctx.ObjectConstructor.SetOwnProperty("prototype", ctx.ObjectPrototype);
-
-            // Function
-            (ctx.FunctionConstructor as Function).Prototype = ctx.FunctionPrototype;
-            ctx.FunctionConstructor.SetOwnProperty("prototype", ctx.FunctionPrototype);
-
-            // Function.prototype
-            (ctx.FunctionPrototype as Function).Prototype = ctx.ObjectPrototype;
-            ctx.FunctionPrototype.SetOwnProperty("constructor", ctx.FunctionConstructor);
-            */
-
-            return ctx;
+            return new Context();
         }
-
-        #region Expression Tree
 
         static internal Et EtCreateFunction(Context context, Et scope, Et lambda)
         {
             return Et.Call(
                 Et.Constant(context),
-                typeof(Context).GetMethod("CreateFunction"),
+                MiCreateFunction,
                 scope,
                 lambda
             );
-        }
-
-        #endregion
-
-        #endregion
-
-        #region Methods
-
-        static public class Methods
-        {
-            static public MethodInfo CreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(IObj), typeof(Lambda) });
-            static public MethodInfo CreateObjectCtor = typeof(Context).GetMethod("CreateObject", new[] { typeof(IObj) });
-            static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
-            static public MethodInfo CreateArray = typeof(Context).GetMethod("CreateArray", Type.EmptyTypes);
-            static public MethodInfo CreateString = typeof(Context).GetMethod("CreateString", new[] { typeof(object) });
-            static public MethodInfo CreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(object) });
-            static public MethodInfo CreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(object) });
         }
 
         #endregion

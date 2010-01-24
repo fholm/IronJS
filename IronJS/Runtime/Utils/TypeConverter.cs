@@ -322,21 +322,21 @@ namespace IronJS.Runtime.Utils
             if (obj.LimitType == typeof(double))
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
-                    Context.Methods.CreateNumber,
+                    Context.MiCreateNumber,
                     Et.Convert(obj.Expression, typeof(object))
                 );
 
             if (obj.LimitType == typeof(string))
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
-                    Context.Methods.CreateString,
+                    Context.MiCreateString,
                     Et.Convert(obj.Expression, typeof(object))
                 );
 
             if (obj.LimitType == typeof(bool))
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
-                    Context.Methods.CreateBoolean,
+                    Context.MiCreateBoolean,
                     Et.Convert(obj.Expression, typeof(object))
                 );
 

@@ -46,6 +46,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -138,6 +139,10 @@
     <Compile Include="Runtime\Builtins\Boolean_prototype.cs" />
     <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_decodeURI.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_decodeURIComponent.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_encodeURI.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_encodeURIComponent.cs" />
     <Compile Include="Runtime\Builtins\Global_obj_eval.cs" />
     <Compile Include="Runtime\Builtins\Global_obj_isFinite.cs" />
     <Compile Include="Runtime\Builtins\Global_obj_isNaN.cs" />

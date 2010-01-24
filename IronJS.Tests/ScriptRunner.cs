@@ -20,13 +20,13 @@ namespace IronJS.Tests
         {
             var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
-            return etGenerator.Build(astBuilder.Build(source), Runtime.Context.Setup());
+            return etGenerator.Build(astBuilder.Build(source), Runtime.Context.Create());
         }
 
         static public string Run(string source)
         {
             var emitter = new StringBuilder();
-            var context = Runtime.Context.Setup();
+            var context = Runtime.Context.Create();
 
             var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
@@ -60,7 +60,7 @@ namespace IronJS.Tests
 
         static public string Run(string source, ref StringBuilder emitter)
         {
-            var context = Runtime.Context.Setup();
+            var context = Runtime.Context.Create();
             var emitter2 = emitter;
 
             var astBuilder = new Compiler.AstGenerator();

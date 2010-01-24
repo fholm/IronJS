@@ -161,21 +161,147 @@ Section 11 of the ECMA 3.0 specification
 		</tr>
 		<tr>
 			<td>11.5.1</td>
-			<td><strong>* Operator</strong></td>
+			<td><strong>* operator</strong></td>
 			<td>Done</td>
 			<td><em>x*y</em></td>
 		</tr>
 		<tr>
 			<td>11.5.2</td>
-			<td><strong>/ Operator</strong></td>
+			<td><strong>/ operator</strong></td>
 			<td>Done</td>
 			<td><em>x/y</em></td>
 		</tr>
 		<tr>
 			<td>11.5.3</td>
-			<td><strong>% Operator</strong></td>
+			<td><strong>% operator</strong></td>
 			<td>Done</td>
 			<td><em>x%y</em></td>
+		</tr>
+		<tr>
+			<td>11.6.1</td>
+			<td><strong>+ operator</strong></td>
+			<td>Done</td>
+			<td><em>x+y</em></td>
+		</tr>
+		<tr>
+			<td>11.6.2</td>
+			<td><strong>- operator</strong></td>
+			<td>Done</td>
+			<td><em>x-y</em></td>
+		</tr>
+		<tr>
+			<td>11.7.1</td>
+			<td><strong>&lt;&lt; operator</strong></td>
+			<td>Done</td>
+			<td><em>x&lt;&lt;y</em></td>
+		</tr>
+		<tr>
+			<td>11.7.2</td>
+			<td><strong>&gt;&gt; operator</strong></td>
+			<td>Done</td>
+			<td><em>x&gt;&gt;y</em></td>
+		</tr>
+		<tr>
+			<td>11.7.3</td>
+			<td><strong>&gt;&gt;&gt; operator</strong></td>
+			<td>Done</td>
+			<td><em>x&gt;&gt;&gt;y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.1</td>
+			<td><strong>&lt; operator</strong></td>
+			<td>Done</td>
+			<td><em>x&lt;y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.2</td>
+			<td><strong>&gt; operator</strong></td>
+			<td>Done</td>
+			<td><em>x&gt;y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.3</td>
+			<td><strong>&lt;= operator</strong></td>
+			<td>Done</td>
+			<td><em>x&lt;=y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.4</td>
+			<td><strong>&gt;= operator</strong></td>
+			<td>Done</td>
+			<td><em>x&gt;=y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.6</td>
+			<td><strong>instanceof operator</strong></td>
+			<td>Done</td>
+			<td><em>x instanceof y</em></td>
+		</tr>
+		<tr>
+			<td>11.8.7</td>
+			<td><strong>in operator</strong></td>
+			<td>Done</td>
+			<td><em>'x' in y</em></td>
+		</tr>
+		<tr>
+			<td>11.9.1</td>
+			<td><strong>== operator</strong></td>
+			<td>Done</td>
+			<td><em>x == y</em></td>
+		</tr>
+		<tr>
+			<td>11.9.2</td>
+			<td><strong>!= operator</strong></td>
+			<td>Done</td>
+			<td><em>x != y</em></td>
+		</tr>
+		<tr>
+			<td>11.9.4</td>
+			<td><strong>=== operator</strong></td>
+			<td>Done</td>
+			<td><em>x === y</em></td>
+		</tr>
+		<tr>
+			<td>11.9.5</td>
+			<td><strong>!== operator</strong></td>
+			<td>Done</td>
+			<td><em>x !== y</em></td>
+		</tr>
+		<tr>
+			<td>11.10</td>
+			<td><strong>Binary bitwise operators</strong></td>
+			<td>Done</td>
+			<td><em>x&y x|y x^y</em></td>
+		</tr>
+		<tr>
+			<td>11.11</td>
+			<td><strong>Logical bitwise operators</strong></td>
+			<td>Done</td>
+			<td><em>x&&y x||y</em></td>
+		</tr>
+		<tr>
+			<td>11.12</td>
+			<td><strong>Conditional operator</strong></td>
+			<td>Done</td>
+			<td><em>x?y:z</em></td>
+		</tr>
+		<tr>
+			<td>11.13.1</td>
+			<td><strong>Simple assignment</strong></td>
+			<td>Done</td>
+			<td><em>x=y</em></td>
+		</tr>
+		<tr>
+			<td>11.13.2</td>
+			<td><strong>Compound assignment</strong></td>
+			<td>Done</td>
+			<td><em>x@=y</em></td>
+		</tr>
+		<tr>
+			<td>11.14</td>
+			<td><strong>Comma operator</strong></td>
+			<td>Done</td>
+			<td><em>x,y</em></td>
 		</tr>
 	</tbody>
 </table>

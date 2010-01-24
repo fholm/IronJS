@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using System.Text.RegularExpressions;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -71,6 +71,21 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct(object[] args)
         {
+            if (args.Length <= 0)
+                throw new ArgumentException();
+
+            if (args.Length == 1)
+                return Construct(
+                    JsTypeConverter.ToString(args[0]),
+                    ""
+                );
+
+            if (args.Length > 1)
+                return Construct(
+                    JsTypeConverter.ToString(args[0]),
+                    JsTypeConverter.ToString(args[1])
+                );
+
             throw new NotImplementedException();
         }
 

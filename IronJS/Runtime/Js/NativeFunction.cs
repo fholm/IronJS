@@ -6,7 +6,7 @@ using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 
-namespace IronJS.Runtime.Builtins
+namespace IronJS.Runtime.Js
 {
     abstract class NativeFunction : Obj, IFunction
     {

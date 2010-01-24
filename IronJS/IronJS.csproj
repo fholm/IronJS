@@ -120,7 +120,7 @@
     <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
-    <Compile Include="Runtime\BuiltIns.cs" />
+    <Compile Include="Runtime\Js\Operators.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_concat.cs" />
@@ -185,7 +185,7 @@
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_call.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\NativeFunction.cs" />
+    <Compile Include="Runtime\Js\NativeFunction.cs" />
     <Compile Include="Runtime\Builtins\Object_ctor.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs" />
@@ -216,7 +216,7 @@
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\ArrayObj.cs" />
-    <Compile Include="Runtime\Js\Function.cs" />
+    <Compile Include="Runtime\Js\UserFunction.cs" />
     <Compile Include="Runtime\Js\IFunction.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -256,7 +256,7 @@
     <Folder Include="Runtime\InterOp\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Compiler\Parser\license.txt" />
+    <Content Include="Compiler\Parser\ES3Parser-and-ES3Lexer-LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />

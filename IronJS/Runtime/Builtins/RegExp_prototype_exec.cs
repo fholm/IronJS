@@ -1,7 +1,7 @@
-﻿using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Builtins
 {

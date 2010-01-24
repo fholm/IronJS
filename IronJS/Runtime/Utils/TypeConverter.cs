@@ -149,6 +149,13 @@ namespace IronJS.Runtime.Utils
             return ToString(ToPrimitive(obj, ValueHint.String));
         }
 
+        static internal RegExpObj ToRegExp(object obj, Context context)
+        {
+            return obj is RegExpObj
+                    ? obj as RegExpObj
+                    : (RegExpObj)context.RegExpContructor.Construct(new[] { obj });
+        }
+
         static internal IObj ToObject(object obj, Context context)
         {
             if (obj == null || obj is Undefined)

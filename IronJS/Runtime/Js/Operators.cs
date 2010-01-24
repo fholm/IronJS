@@ -2,16 +2,10 @@
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 
-namespace IronJS.Runtime
+namespace IronJS.Runtime.Js
 {
     public static class Operators
     {
-        public static object PrintLine(object o)
-        {
-            Console.WriteLine(JsTypeConverter.ToString(o));
-            return o;
-        }
-
         public static bool InstanceOf(object obj, object func)
         {
             if (!(func is IFunction))

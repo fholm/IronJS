@@ -55,6 +55,7 @@
     <Compile Include="ForStepTests.cs" />
     <Compile Include="FunctionTests.cs" />
     <Compile Include="IfTest.cs" />
+    <Content Include="Javascript\jquery-1.4.js-LICENSE.txt" />
     <Compile Include="LogicalAndOrTests.cs" />
     <Compile Include="ObjectTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

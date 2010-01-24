@@ -99,9 +99,9 @@ namespace IronJS.Runtime
             return obj;
         }
 
-        public Function CreateFunction(Scope scope, Lambda lambda)
+        public UserFunction CreateFunction(Scope scope, Lambda lambda)
         {
-            var obj = new Function(scope, lambda);
+            var obj = new UserFunction(scope, lambda);
 
             var protoObj = ObjectConstructor.Construct();
             protoObj.SetOwnProperty("constructor", obj);

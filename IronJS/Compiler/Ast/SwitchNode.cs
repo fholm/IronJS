@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime;
 using System.Linq.Expressions;
+using IronJS.Runtime.Js;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {

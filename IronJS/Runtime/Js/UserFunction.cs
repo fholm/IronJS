@@ -5,12 +5,12 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime
 {
-    public class Function : Obj, IFunction
+    public class UserFunction : Obj, IFunction
     {
         public Scope Scope { get; protected set; }
         public Lambda Lambda { get; protected set; }
 
-        public Function(Scope scope, Lambda lambda)
+        public UserFunction(Scope scope, Lambda lambda)
         {
             Scope = scope;
             Lambda = lambda;

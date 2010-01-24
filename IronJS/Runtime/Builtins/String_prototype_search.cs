@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -16,7 +14,17 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            throw new NotImplementedException();
+            if (!HasArgs(args))
+                throw new ArgumentException();
+
+            var target = JsTypeConverter.ToString(that);
+            var regex = JsTypeConverter.ToRegExp(args[0], Context);
+            var match = regex.Match.Match(target);
+
+            if (match.Success)
+                return (double) match.Index;
+
+            return -1.0D;
         }
     }
 }

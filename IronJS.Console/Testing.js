@@ -49,3 +49,13 @@ var regex = /f(o)o/i;
 var match = regex.exec("abcfooabc");
 
 println(match);
+
+var match = "abcabcabc".match(/b(c)/);
+for (i = 0; i < match.length; ++i) {
+    println(match[i]);
+}
+
+var match = "abcabcabc".match(/b(c)/g);
+for (i = 0; i < match.length; ++i) {
+    println(match[i]);
+}

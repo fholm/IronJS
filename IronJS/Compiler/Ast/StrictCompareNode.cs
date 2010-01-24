@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using IronJS.Runtime;
+using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 

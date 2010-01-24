@@ -547,7 +547,7 @@ Section 12 of the ECMA 3.0 specification.
 
 Section 15 of the ECMA 3.0 specification
 
-#### The Global object
+#### 15.1 The Global object
 
 <table>
 
@@ -564,7 +564,7 @@ Section 15 of the ECMA 3.0 specification
 			<td>15.1.1.1</td>
 			<td><strong>NaN</strong></td>
 			<td>Done</td>
-			<td><em></em></td>
+			<td><em>Uses value from double.NaN</em></td>
 		</tr>
 		<tr>
 			<td>15.1.1.2</td>
@@ -607,6 +607,106 @@ Section 15 of the ECMA 3.0 specification
 			<td><strong>isFinite</strong></td>
 			<td>Done</td>
 			<td><em> isFinite(number)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.3.1</td>
+			<td><strong>decodeURI</strong></td>
+			<td>Done</td>
+			<td><em>decodeURI(encodedURI)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.3.2</td>
+			<td><strong>decodeURIComponent</strong></td>
+			<td>Done</td>
+			<td><em>decodeURIComponent(encodedURI)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.3.3</td>
+			<td><strong>encodeURI</strong></td>
+			<td>Done</td>
+			<td><em> encodeURI(uri)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.3.4</td>
+			<td><strong>encodeURIComponent</strong></td>
+			<td>Done</td>
+			<td><em> encodeURIComponent(uriComponent)</em></td>
+		</tr>
+	</tbody>
+</table>
+
+#### 15.1 The Object object
+
+<table>
+
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>15.2.1.1</td>
+			<td><strong>Object function</strong></td>
+			<td>Done</td>
+			<td><em>Object([value])</em></td>
+		</tr>
+		<tr>
+			<td>15.2.2.1</td>
+			<td><strong>Object constructor</strong></td>
+			<td>Done</td>
+			<td><em>new Object([value])</em></td>
+		</tr>
+		<tr>
+			<td>15.2.3.1</td>
+			<td><strong>Object.prototype</strong></td>
+			<td>Done</td>
+			<td><em>This is the Object prototype object</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.1</td>
+			<td><strong>Object.prototype.constructor</strong></td>
+			<td>Done</td>
+			<td><em>This is the Object constructor object</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.2</td>
+			<td><strong>Object.prototype.toString</strong></td>
+			<td>Done</td>
+			<td><em>toString()</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.3</td>
+			<td><strong>Object.prototype.toLocaleString</strong></td>
+			<td>Done</td>
+			<td><em>toLocaleString()</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.4</td>
+			<td><strong>Object.prototype.valueOf</strong></td>
+			<td>Done</td>
+			<td><em>valueOf()</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.5</td>
+			<td><strong>Object.prototype.hasOwnProperty</strong></td>
+			<td>Done</td>
+			<td><em>isOwnProperty(V)</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.6</td>
+			<td><strong>Object.prototype.isPrototypeOf</strong></td>
+			<td>Done</td>
+			<td><em>isPrototypeOf(V)</em></td>
+		</tr>
+		<tr>
+			<td>15.2.4.2</td>
+			<td><strong>Object.prototype.propertyIsEnumerable</strong></td>
+			<td>0%</td>
+			<td><em> propertyIsEnumerable(V), Related to issue <a href="http://github.com/fholm/IronJS/issues#issue/7">#7</a></em></td>
 		</tr>
 	</tbody>
 </table>

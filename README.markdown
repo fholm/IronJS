@@ -772,13 +772,13 @@ _This list is not complete at the moment_
 			<td>15.4.4</td>
 			<td><strong>Array prototype</strong></td>
 			<td>90%</td>
-			<td><em>Functions splice and unshift are not implemented</em></td>
+			<td><em>splice() and unshift() are not implemented</em></td>
 		</tr>
 		<tr>
 			<td>15.5</td>
 			<td><strong>String constructor</strong></td>
 			<td>95%</td>
-			<td><em>Function fromCharCode not implemented</em></td>
+			<td><em>fromCharCode() not implemented</em></td>
 		</tr>
 		<tr>
 			<td>15.5.4</td>

@@ -6,6 +6,15 @@ IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language 
 
 IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html).
 
+## Requirements
+
+What you need to use IronJS
+
+* An understanding that this is alpha quality software, it will crash on you.
+* .NET 4.0 Beta 2, it should compile on .NET 3.5 with some minor modifications.
+* The Dynamic Language Runtime from Microsoft.
+
+
 ## ECMAScript 3.0 Compliance
 
 ### Types

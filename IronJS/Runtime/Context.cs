@@ -20,8 +20,7 @@ namespace IronJS.Runtime
         public String_ctor StringConstructor { get; protected set; }
         public Boolean_ctor BooleanConstructor { get; protected set; }
         public Number_ctor NumberConstructor { get; protected set; }
-
-        public IObj MathObject { get; protected set; }
+        public Math_obj MathObject { get; protected set; }
 
         protected Context()
         {
@@ -31,6 +30,7 @@ namespace IronJS.Runtime
             StringConstructor = String_ctor.Create(this);
             BooleanConstructor = Boolean_ctor.Create(this);
             NumberConstructor = Number_ctor.Create(this);
+            MathObject = Math_obj.Create(this);
 
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
 
@@ -46,14 +46,11 @@ namespace IronJS.Runtime
             globals.Global("String", StringConstructor);
             globals.Global("Boolean", BooleanConstructor);
             globals.Global("Number", NumberConstructor);
+            globals.Global("Math", MathObject);
             globals.Global("undefined", Js.Undefined.Instance);
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);
             globals.Global("globals", globals.JsObject);
-
-            /*
-            globals.Put("Math", MathObject);
-            */
         }
 
         #region Object creators

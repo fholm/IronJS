@@ -30,7 +30,7 @@ namespace IronJS.Runtime.Builtins
             var limit = args.Length > 1 ? JsTypeConverter.ToInt32(args[1]) : int.MaxValue;
             string split = "";
 
-            if ((arg0 is IObj) && (arg0 as IObj).Class == ObjClass.Regex)
+            if ((arg0 is IObj) && (arg0 as IObj).Class == ObjClass.RegExp)
             {
                 throw new NotImplementedException();
             }

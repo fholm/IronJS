@@ -39,3 +39,6 @@ println((3.14).toPrecision(2));
 
 println(parseInt("3"));
 println(parseFloat("3.14"));
+
+/asdad/i
+/asdad/

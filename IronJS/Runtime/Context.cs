@@ -16,6 +16,7 @@ namespace IronJS.Runtime
         static readonly public MethodInfo MiCreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(object) });
         static readonly public MethodInfo MiCreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(object) });
         static readonly public MethodInfo MiCreateFunction = typeof(Context).GetMethod("CreateFunction", new[] { typeof(Scope), typeof(Lambda) });
+        static readonly public MethodInfo MiCreateRegExp = typeof(Context).GetMethod("CreateRegExp", new[] { typeof(object), typeof(object) });
 
         public Object_ctor ObjectConstructor { get; protected set; }
         public Function_ctor FunctionConstructor { get; protected set; }
@@ -23,6 +24,7 @@ namespace IronJS.Runtime
         public String_ctor StringConstructor { get; protected set; }
         public Boolean_ctor BooleanConstructor { get; protected set; }
         public Number_ctor NumberConstructor { get; protected set; }
+        public RegExp_ctor RegExpContructor { get; protected set; }
         public Math_obj MathObject { get; protected set; }
 
         protected Context()
@@ -33,6 +35,7 @@ namespace IronJS.Runtime
             StringConstructor = String_ctor.Create(this);
             BooleanConstructor = Boolean_ctor.Create(this);
             NumberConstructor = Number_ctor.Create(this);
+            RegExpContructor = RegExp_ctor.Create(this);
             MathObject = Math_obj.Create(this);
 
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
@@ -59,12 +62,17 @@ namespace IronJS.Runtime
             globals.Global("isNaN", new Global_obj_isNaN(this));
             globals.Global("isFinite", new Global_obj_isFinite(this));
             globals.Global("encodeURI", new Global_obj_encodeURI(this));
-            globals.Global("encodeURIComponent", new Global_obj_encodeURIComponent(this));
             globals.Global("decodeURI", new Global_obj_decodeURI(this));
+            globals.Global("encodeURIComponent", new Global_obj_encodeURIComponent(this));
             globals.Global("decodeURIComponent", new Global_obj_decodeURIComponent(this));
         }
 
         #region Object creators
+
+        public IObj CreateRegExp(object pattern, object flags)
+        {
+            return RegExpContructor.Construct(pattern, flags);
+        }
 
         public IObj CreateNumber(object value)
         {

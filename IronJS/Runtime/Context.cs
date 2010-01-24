@@ -18,9 +18,9 @@ namespace IronJS.Runtime
         public Function_ctor FunctionConstructor { get; protected set; }
         public Array_ctor ArrayConstructor { get; protected set; }
         public String_ctor StringConstructor { get; protected set; }
+        public Boolean_ctor BooleanConstructor { get; protected set; }
+        public Number_ctor NumberConstructor { get; protected set; }
 
-        public IFunction BooleanConstructor { get; protected set; }
-        public IFunction NumberConstructor { get; protected set; }
         public IObj MathObject { get; protected set; }
 
         protected Context()
@@ -29,6 +29,8 @@ namespace IronJS.Runtime
             ObjectConstructor = Object_ctor.Create(this);
             ArrayConstructor = Array_ctor.Create(this);
             StringConstructor = String_ctor.Create(this);
+            BooleanConstructor = Boolean_ctor.Create(this);
+            NumberConstructor = Number_ctor.Create(this);
 
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
 
@@ -42,16 +44,14 @@ namespace IronJS.Runtime
             globals.Global("Function", FunctionConstructor);
             globals.Global("Array", ArrayConstructor);
             globals.Global("String", StringConstructor);
+            globals.Global("Boolean", BooleanConstructor);
+            globals.Global("Number", NumberConstructor);
             globals.Global("undefined", Js.Undefined.Instance);
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);
             globals.Global("globals", globals.JsObject);
 
             /*
-            globals.Put("Function", FunctionConstructor);
-            globals.Put("Array", ArrayConstructor);
-            globals.Put("Number", NumberConstructor);
-            globals.Put("Boolean", BooleanConstructor);
             globals.Put("Math", MathObject);
             */
         }
@@ -68,9 +68,19 @@ namespace IronJS.Runtime
             return obj;
         }
 
+        public IObj CreateNumber(object value)
+        {
+            return NumberConstructor.Construct(new[] { value });
+        }
+
         public IObj CreateString(object value)
         {
             return StringConstructor.Construct(new[] { value });
+        }
+
+        public IObj CreateBoolean(object value)
+        {
+            return BooleanConstructor.Construct(new[] { value });
         }
 
         public Function CreateFunction(Scope scope, Lambda lambda)
@@ -202,8 +212,8 @@ namespace IronJS.Runtime
             static public MethodInfo CreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
             static public MethodInfo CreateArray = typeof(Context).GetMethod("CreateArray", Type.EmptyTypes);
             static public MethodInfo CreateString = typeof(Context).GetMethod("CreateString", new[] { typeof(object) });
-            static public MethodInfo CreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(double) });
-            static public MethodInfo CreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(bool) });
+            static public MethodInfo CreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(object) });
+            static public MethodInfo CreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(object) });
         }
 
         #endregion

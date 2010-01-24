@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Builtins
 {
-    class String_fromCharCode : NativeFunction
+    class String_prototype_toLocaleLowerCase : NativeFunction
     {
-        public String_fromCharCode(Context context)
+        public String_prototype_toLocaleLowerCase(Context context)
             : base(context)
         {
 
@@ -16,7 +17,7 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            throw new NotImplementedException();
+            return JsTypeConverter.ToString(that).ToLower();
         }
     }
 }

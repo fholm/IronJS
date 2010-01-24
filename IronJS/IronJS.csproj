@@ -134,6 +134,17 @@
     <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs" />
+    <Compile Include="Runtime\Builtins\Boolean_ctor.cs" />
+    <Compile Include="Runtime\Builtins\Boolean_prototype.cs" />
+    <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs" />
+    <Compile Include="Runtime\Builtins\Number_ctor.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype_toExponential.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype_toLocaleString.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype_toPrecision.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\Number_prototype_valueOf.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
     <Compile Include="Runtime\Builtins\Function_ctor.cs" />
@@ -149,14 +160,24 @@
     <Compile Include="Runtime\Builtins\Object_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs" />
     <Compile Include="Runtime\Builtins\String_ctor.cs" />
-    <Compile Include="Runtime\Builtins\String_fromCharCode.cs" />
+    <Compile Include="Runtime\Builtins\String_ctor_fromCharCode.cs" />
     <Compile Include="Runtime\Builtins\String_prototype.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_charAt.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_concat.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_localeCompare.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_match.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_replace.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_search.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_slice.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_split.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_substring.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_toLocaleLowerCase.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_toLocaleUpperCase.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_toLowerCase.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_toString.cs" />
+    <Compile Include="Runtime\Builtins\String_prototype_toUpperCase.cs" />
     <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
@@ -201,6 +222,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Compiler\Parser\license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

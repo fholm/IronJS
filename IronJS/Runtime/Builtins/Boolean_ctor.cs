@@ -6,30 +6,26 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class String_ctor : Obj, IFunction
+    public class Boolean_ctor : Obj, IFunction
     {
-        public IObj String_prototype { get; private set; }
+        public IObj Boolean_prototype { get; private set; }
 
-        protected String_ctor(Context context)
+        protected Boolean_ctor(Context context)
         {
             Context = context;
             Class = ObjClass.Function;
 
-            String_prototype = new String_prototype(Context);
-            String_prototype.SetOwnProperty("constructor", this);
+            Boolean_prototype = new Boolean_prototype(Context);
+            Boolean_prototype.SetOwnProperty("constructor", this);
 
-            SetOwnProperty("prototype", String_prototype);
-            SetOwnProperty("fromCharCode", new String_ctor_fromCharCode(Context));
+            SetOwnProperty("prototype", Boolean_prototype);
         }
 
         #region IFunction Members
 
         public object Call(IObj that, object[] args)
         {
-            if (args.Length > 0)
-                return JsTypeConverter.ToString(args[0]);
-
-            return "";
+            return args != null && args.Length > 0 ? JsTypeConverter.ToBoolean(args[0]) : false;
         }
 
         public IObj Construct()
@@ -39,13 +35,12 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct(object[] args)
         {
-            var str = args != null && args.Length > 0 ? JsTypeConverter.ToString(args[0]) : "";
-            var obj = new ValueObj(str);
+            var bol = args != null && args.Length > 0 ? JsTypeConverter.ToBoolean(args[0]) : false;
+            var obj = new ValueObj(bol);
 
-            obj.Class = ObjClass.String;
-            obj.Prototype = String_prototype;
+            obj.Class = ObjClass.Boolean;
+            obj.Prototype = Boolean_prototype;
             obj.Context = Context;
-            obj.SetOwnProperty("length", (double) str.Length);
 
             return obj;
         }
@@ -68,11 +63,11 @@ namespace IronJS.Runtime.Builtins
 
         #region Static
 
-        static public String_ctor Create(Context context)
+        static public Boolean_ctor Create(Context context)
         {
-            return new String_ctor(context);
+            return new Boolean_ctor(context);
         }
 
-        #endregion 
+        #endregion
     }
 }

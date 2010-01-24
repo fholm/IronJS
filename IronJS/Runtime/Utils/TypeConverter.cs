@@ -43,7 +43,7 @@ namespace IronJS.Runtime.Utils
                 return false;
 
             if (obj is bool)
-                return true;
+                return ((bool)obj) ? true : false;
 
             if (obj is double)
                 return Convert.ToBoolean((double)obj);
@@ -140,7 +140,7 @@ namespace IronJS.Runtime.Utils
                 if (double.IsInfinity(dbl))
                     return "Infinity";
 
-                return dbl.ToString(CultureInfo.InvariantCulture);
+                return dbl.ToString(CultureInfo.InvariantCulture).ToLower();
             }
 
             if (obj is string)
@@ -323,7 +323,7 @@ namespace IronJS.Runtime.Utils
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
                     Context.Methods.CreateNumber,
-                    Et.Convert(obj.Expression, typeof(double))
+                    Et.Convert(obj.Expression, typeof(object))
                 );
 
             if (obj.LimitType == typeof(string))
@@ -337,7 +337,7 @@ namespace IronJS.Runtime.Utils
                 return Et.Call(
                     Et.Constant(context, typeof(Context)),
                     Context.Methods.CreateBoolean,
-                    Et.Convert(obj.Expression, typeof(bool))
+                    Et.Convert(obj.Expression, typeof(object))
                 );
 
             return obj.Expression;

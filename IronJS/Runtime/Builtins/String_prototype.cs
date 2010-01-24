@@ -22,6 +22,16 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("concat", new String_prototype_concat(Context));
             SetOwnProperty("indexOf", new String_prototype_indexOf(Context));
             SetOwnProperty("lastIndexOf", new String_prototype_lastIndexOf(Context));
+            SetOwnProperty("match", new String_prototype_match(Context));
+            SetOwnProperty("replace", new String_prototype_replace(Context));
+            SetOwnProperty("search", new String_prototype_search(Context));
+            SetOwnProperty("slice", new String_prototype_slice(Context));
+            SetOwnProperty("split", new String_prototype_split(Context));
+            SetOwnProperty("substring", new String_prototype_substring(Context));
+            SetOwnProperty("toLowerCase", new String_prototype_toLowerCase(Context));
+            SetOwnProperty("toLocaleLowerCase", new String_prototype_toLocaleLowerCase(Context));
+            SetOwnProperty("toUpperCase", new String_prototype_toUpperCase(Context));
+            SetOwnProperty("toLocaleUpperCase", new String_prototype_toLocaleUpperCase(Context));
         }
     }
 }

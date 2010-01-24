@@ -6,7 +6,7 @@ using Et = System.Linq.Expressions.Expression;
 namespace IronJS.Runtime.Js
 {
     //TODO: need support for 'Host' object class
-    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Internal }
+    public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Internal, Regex }
 
     //
     public enum ValueHint { None, Number, String }

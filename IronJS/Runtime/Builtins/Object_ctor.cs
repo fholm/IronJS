@@ -37,7 +37,6 @@ namespace IronJS.Runtime.Builtins
             obj.SetOwnProperty("propertyIsEnumerable", new Object_prototype_propertyIsEnumerable(Context));
             obj.SetOwnProperty("toLocaleString", new Object_prototype_toLocaleString(Context));
 
-
             return obj;
         }
 

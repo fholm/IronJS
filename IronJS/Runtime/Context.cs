@@ -51,6 +51,11 @@ namespace IronJS.Runtime
             globals.Global("Infinity", double.PositiveInfinity);
             globals.Global("NaN", double.NaN);
             globals.Global("globals", globals.JsObject);
+            globals.Global("eval", new Global_obj_eval(this));
+            globals.Global("parseInt", new Global_obj_parseInt(this));
+            globals.Global("parseFloat", new Global_obj_parseFloat(this));
+            globals.Global("isNaN", new Global_obj_isNaN(this));
+            globals.Global("isFinite", new Global_obj_isFinite(this));
         }
 
         #region Object creators

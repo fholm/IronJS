@@ -138,6 +138,11 @@
     <Compile Include="Runtime\Builtins\Boolean_prototype.cs" />
     <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs" />
     <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_eval.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_isFinite.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_isNaN.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_parseFloat.cs" />
+    <Compile Include="Runtime\Builtins\Global_obj_parseInt.cs" />
     <Compile Include="Runtime\Builtins\Math_obj.cs" />
     <Compile Include="Runtime\Builtins\Math_obj_abs.cs" />
     <Compile Include="Runtime\Builtins\Math_obj_acos.cs" />

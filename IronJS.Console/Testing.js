@@ -35,3 +35,7 @@ println((1000000000000000128).toExponential(0));
 
 
 println((3.14).toPrecision(2));
+
+
+println(parseInt("3"));
+println(parseFloat("3.14"));

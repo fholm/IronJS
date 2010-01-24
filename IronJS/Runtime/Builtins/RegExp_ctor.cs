@@ -40,7 +40,7 @@ namespace IronJS.Runtime.Builtins
             var global = strFlags.IndexOf('g') > -1;
             var ignoreCase = strFlags.IndexOf('i') > -1;
 
-            if (strPattern.StartsWith("^"))
+            if (strPattern.IndexOf('^') == 0)
                 strPattern = @"\A" + strPattern.Substring(1);
 
             if (strPattern.IndexOf('$') != -1)

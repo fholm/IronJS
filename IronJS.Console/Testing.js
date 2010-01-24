@@ -44,3 +44,8 @@ println(/foo/i);
 println(/foo/ig);
 println(/foo/igm);
 println(/bar/);
+
+var regex = /f(o)o/i;
+var match = regex.exec("abcfooabc");
+
+println(match);

@@ -12,6 +12,173 @@ The current state of the code is at best alpha quality. It should not be used in
 
 ## Features
 
+### Expressions
+
+Section 11 of the ECMA 3.0 specification
+
+<table>
+
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>11.1.1</td>
+			<td><strong>this keyword</strong></td>
+			<td>Done</td>
+			<td><em>this</em></td>
+		</tr>
+		<tr>
+			<td>11.1.2</td>
+			<td><strong>Identifier reference</strong></td>
+			<td>Done</td>
+			<td><em>x</em></td>
+		</tr>
+		<tr>
+			<td>11.1.3</td>
+			<td><strong>Literal reference</strong></td>
+			<td>Done</td>
+			<td><em>'x'</em></td>
+		</tr>
+		<tr>
+			<td>11.1.4</td>
+			<td><strong>Array initialiser</strong></td>
+			<td>Done</td>
+			<td><em>[ ]</em></td>
+		</tr>
+		<tr>
+			<td>11.1.5</td>
+			<td><strong>Object initializer</strong></td>
+			<td>Done</td>
+			<td><em>{ }</em></td>
+		</tr>
+		<tr>
+			<td>11.1.6</td>
+			<td><strong>Grouping operator</strong></td>
+			<td>Done</td>
+			<td><em>( )</em></td>
+		</tr>
+		<tr>
+			<td>11.2.1</td>
+			<td><strong>Property accessors</strong></td>
+			<td>Done</td>
+			<td><em>x.y</em></td>
+		</tr>
+		<tr>
+			<td>11.2.2</td>
+			<td><strong>New operator</strong></td>
+			<td>Done</td>
+			<td><em>new x()</em></td>
+		</tr>
+		<tr>
+			<td>11.2.3</td>
+			<td><strong>Function calls</strong></td>
+			<td>Done</td>
+			<td><em>x()</em></td>
+		</tr>
+		<tr>
+			<td>11.2.4</td>
+			<td><strong>Arguments list</strong></td>
+			<td>Done</td>
+			<td><em>x(1, 2, 3)</em></td>
+		</tr>
+		<tr>
+			<td>11.2.5</td>
+			<td><strong>Function expression</strong></td>
+			<td>Done</td>
+			<td><em>function() { }</em></td>
+		</tr>
+		<tr>
+			<td>11.3.1</td>
+			<td><strong>Postfix increment operator</strong></td>
+			<td>Done</td>
+			<td><em>x++</em></td>
+		</tr>
+		<tr>
+			<td>11.3.2</td>
+			<td><strong>Postfix decrement operator</strong></td>
+			<td>Done</td>
+			<td><em>x--</em></td>
+		</tr>
+		<tr>
+			<td>11.4.1</td>
+			<td><strong>delete operator</strong></td>
+			<td>90%</td>
+			<td><em>delete x (returns null instead of true/false)</em></td>
+		</tr>
+		<tr>
+			<td>11.4.2</td>
+			<td><strong>void operator</strong></td>
+			<td>Done</td>
+			<td><em>void x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.3</td>
+			<td><strong>typeof operator</strong></td>
+			<td>Done</td>
+			<td><em>typeof x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.4</td>
+			<td><strong>Prefix increment operator</strong></td>
+			<td>Done</td>
+			<td><em>++x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.5</td>
+			<td><strong>Prefix decrement operator</strong></td>
+			<td>Done</td>
+			<td><em>--x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.6</td>
+			<td><strong>Unary + operator</strong></td>
+			<td>Done</td>
+			<td><em>+x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.7</td>
+			<td><strong>Unary - operator</strong></td>
+			<td>Done</td>
+			<td><em>-x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.8</td>
+			<td><strong>Bitwise NOT operator</strong></td>
+			<td>Done</td>
+			<td><em>~x</em></td>
+		</tr>
+		<tr>
+			<td>11.4.9</td>
+			<td><strong>Logical NOT operator</strong></td>
+			<td>Done</td>
+			<td><em>!x</em></td>
+		</tr>
+		<tr>
+			<td>11.5.1</td>
+			<td><strong>* Operator</strong></td>
+			<td>Done</td>
+			<td><em>x*y</em></td>
+		</tr>
+		<tr>
+			<td>11.5.2</td>
+			<td><strong>/ Operator</strong></td>
+			<td>Done</td>
+			<td><em>x/y</em></td>
+		</tr>
+		<tr>
+			<td>11.5.3</td>
+			<td><strong>% Operator</strong></td>
+			<td>Done</td>
+			<td><em>x%y</em></td>
+		</tr>
+	</tbody>
+</table>
 ### Statements
 
 Section 12 of the ECMA 3.0 specification

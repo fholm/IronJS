@@ -12,6 +12,133 @@ The current state of the code is at best alpha quality. Use at your own risk.
 
 ## Features
 
+
+### Types
+
+Section 8 of the ECMA Script 3.0 specification
+
+<table>
+
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>8.1</td>
+			<td><strong>Undefined</strong></td>
+			<td>Done</td>
+			<td><em>Singleton instance IronJS.Runtime.Js.Undefined.Instance</em></td>
+		</tr>
+		<tr>
+			<td>8.2</td>
+			<td><strong>Null</strong></td>
+			<td>Done</td>
+			<td><em>Uses built in null in .NET</em></td>
+		</tr>
+		<tr>
+			<td>8.3</td>
+			<td><strong>Boolean</strong></td>
+			<td>Done</td>
+			<td><em>Uses built in boolean in .NET</em></td>
+		</tr>
+		<tr>
+			<td>8.4</td>
+			<td><strong>String</strong></td>
+			<td>Done</td>
+			<td><em>Uses built in string in .NET</em></td>
+		</tr>
+		<tr>
+			<td>8.5</td>
+			<td><strong>Number</strong></td>
+			<td>Done</td>
+			<td><em>Uses built in double in .NET</em></td>
+		</tr>
+		<tr>
+			<td>8.6</td>
+			<td><strong>Object</strong></td>
+			<td>Done</td>
+			<td><em>Interface in IronJS.Runtime.Js.IObj, base impl. in IronJS.Runtime.Js.Obj</em></td>
+		</tr>
+	</tbody>
+</table>
+
+### Type Conversions
+
+Section 9 of the ECMA 3.0 specification
+
+<table>
+
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>9.1</td>
+			<td><strong>ToPrimitive</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>9.2</td>
+			<td><strong>ToBoolean</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>9.3</td>
+			<td><strong>ToNumber</strong></td>
+			<td>Done</td>
+			<td><em>Uses the Convert.ToDouble from the BCL for strings</em></td>
+		</tr>
+		<tr>
+			<td>9.4</td>
+			<td><strong>ToInteger</strong></td>
+			<td>Done</td>
+			<td><em>Uses the Convert.ToInt32 from the BCL for strings</em></td>
+		</tr>
+		<tr>
+			<td>9.5</td>
+			<td><strong>ToInt32</strong></td>
+			<td>Done</td>
+			<td><em>Uses the Convert.ToInt32 from the BCL for strings</em></td>
+		</tr>
+		<tr>
+			<td>9.6</td>
+			<td><strong>ToUInt32</strong></td>
+			<td>Done</td>
+			<td><em>Uses the Convert.ToUInt32 from the BCL for strings</em></td>
+		</tr>
+		<tr>
+			<td>9.7</td>
+			<td><strong>ToUint16</strong></td>
+			<td>Done</td>
+			<td><em>Uses the Convert.ToUint16 from the BCL for strings</em></td>
+		</tr>
+		<tr>
+			<td>9.8</td>
+			<td><strong>ToString</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>9.10</td>
+			<td><strong>ToObject</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+	</tbody>
+</table>
+
 ### Expressions
 
 Section 11 of the ECMA 3.0 specification.

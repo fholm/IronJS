@@ -542,3 +542,71 @@ Section 12 of the ECMA 3.0 specification.
 		</tr>
 	</tbody>
 </table>
+
+### Native ECMAScript Objects
+
+Section 15 of the ECMA 3.0 specification
+
+#### The Global object
+
+<table>
+
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>15.1.1.1</td>
+			<td><strong>NaN</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.1.1.2</td>
+			<td><strong>Infinity</strong></td>
+			<td>Done</td>
+			<td><em>Uses value from double.PositiveInfinity</em></td>
+		</tr>
+		<tr>
+			<td>15.1.1.3</td>
+			<td><strong>undefined</strong></td>
+			<td>Done</td>
+			<td><em>Has IronJS.Runtime.Js.Undefined.Instance as value</em></td>
+		</tr>
+		<tr>
+			<td>15.1.2.1</td>
+			<td><strong>eval</strong></td>
+			<td>0%</td>
+			<td><em>eval(x)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.2.2</td>
+			<td><strong>parseInt</strong></td>
+			<td>Done</td>
+			<td><em>parseInt(string, radix)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.2.3</td>
+			<td><strong>parseFloat</strong></td>
+			<td>Done</td>
+			<td><em>parseFloat(string)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.2.4</td>
+			<td><strong>isNaN</strong></td>
+			<td>Done</td>
+			<td><em>isNaN(number)</em></td>
+		</tr>
+		<tr>
+			<td>15.1.2.5</td>
+			<td><strong>isFinite</strong></td>
+			<td>Done</td>
+			<td><em> isFinite(number)</em></td>
+		</tr>
+	</tbody>
+</table>

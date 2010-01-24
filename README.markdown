@@ -1,10 +1,10 @@
 # IronJS
 
-IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/)
+IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications.
 
 ## License
 
-IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html)
+IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html).
 
 ## State
 
@@ -14,7 +14,7 @@ The current state of the code is at best alpha quality. Use at your own risk.
 
 ### Expressions
 
-Section 11 of the ECMA 3.0 specification
+Section 11 of the ECMA 3.0 specification.
 
 <table>
 
@@ -305,9 +305,10 @@ Section 11 of the ECMA 3.0 specification
 		</tr>
 	</tbody>
 </table>
+
 ### Statements
 
-Section 12 of the ECMA 3.0 specification
+Section 12 of the ECMA 3.0 specification.
 
 <table>
 

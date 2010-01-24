@@ -1,5 +1,5 @@
 IronJS is a ECMAScript 3.0 implementation on .NET
-Copyright (C) 2010  Fredrik Holmström
+Copyright (C) 2010  Fredrik Holmstrom
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

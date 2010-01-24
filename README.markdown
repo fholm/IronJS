@@ -1,17 +1,12 @@
 # IronJS
 
-IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications.
+IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
 
 ## License
 
 IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html).
 
-## State
-
-The current state of the code is at best alpha quality. Use at your own risk.
-
 ## Features
-
 
 ### Types
 
@@ -32,7 +27,7 @@ Section 8 of the ECMA Script 3.0 specification
 			<td>8.1</td>
 			<td><strong>Undefined</strong></td>
 			<td>Done</td>
-			<td><em>Singleton instance IronJS.Runtime.Js.Undefined.Instance</em></td>
+			<td><em>Singleton instance in property IronJS.Runtime.Js.Undefined.Instance</em></td>
 		</tr>
 		<tr>
 			<td>8.2</td>
@@ -72,7 +67,6 @@ Section 8 of the ECMA Script 3.0 specification
 Section 9 of the ECMA 3.0 specification
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	
@@ -144,7 +138,6 @@ Section 9 of the ECMA 3.0 specification
 Section 11 of the ECMA 3.0 specification.
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	
@@ -438,7 +431,6 @@ Section 11 of the ECMA 3.0 specification.
 Section 12 of the ECMA 3.0 specification.
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	
@@ -552,7 +544,6 @@ _This list is not complete at the moment_
 #### 15.1 The Global object
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	
@@ -637,10 +628,9 @@ _This list is not complete at the moment_
 	</tbody>
 </table>
 
-#### 15.1 The Object object
+#### 15.2 The Object objects
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	
@@ -667,12 +657,6 @@ _This list is not complete at the moment_
 			<td><strong>Object.prototype</strong></td>
 			<td>Done</td>
 			<td><em>This is the Object prototype object</em></td>
-		</tr>
-		<tr>
-			<td>15.2.4.1</td>
-			<td><strong>Object.prototype.constructor</strong></td>
-			<td>Done</td>
-			<td><em>This is the Object constructor object</em></td>
 		</tr>
 		<tr>
 			<td>15.2.4.2</td>
@@ -709,6 +693,158 @@ _This list is not complete at the moment_
 			<td><strong>Object.prototype.propertyIsEnumerable</strong></td>
 			<td>0%</td>
 			<td><em> propertyIsEnumerable(V), Related to issue <a href="http://github.com/fholm/IronJS/issues#issue/7">#7</a></em></td>
+		</tr>
+	</tbody>
+</table>
+
+#### 15.3 The Function objects
+
+<table>
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>15.3.1.1</td>
+			<td><strong>Function function</strong></td>
+			<td>0%</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.3.2.1</td>
+			<td><strong>Function constructor</strong></td>
+			<td>0%</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.3.3.1</td>
+			<td><strong>Function.prototype</strong></td>
+			<td>Done</td>
+			<td><em>The function prototype object</em></td>
+		</tr>
+		<tr>
+			<td>15.3.4.2</td>
+			<td><strong>Function.toString</strong></td>
+			<td>25%</td>
+			<td><em>Returns a string but not the correct one</em></td>
+		</tr>
+		<tr>
+			<td>15.3.4.3</td>
+			<td><strong>Function.apply</strong></td>
+			<td>0%</td>
+			<td><em>Waiting to be implemented</em></td>
+		</tr>
+		<tr>
+			<td>15.3.4.4</td>
+			<td><strong>Function.call</strong></td>
+			<td>Done</td>
+			<td><em>x.call(thisArg [ , arg1 [ , arg2, … ] ])</em></td>
+		</tr>
+	</tbody>
+</table>
+
+#### 15.x Overview of other Native objects
+
+
+
+<table>
+	<thead>
+		<tr>
+			<th>Section</th>	
+			<th>Name</th>
+			<th>Status</th>
+			<th>Note</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>15.4</td>
+			<td><strong>Array constructor</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.4.4</td>
+			<td><strong>Array prototype</strong></td>
+			<td>90%</td>
+			<td><em>Functions splice and unshift are not implemented</em></td>
+		</tr>
+		<tr>
+			<td>15.5</td>
+			<td><strong>String constructor</strong></td>
+			<td>95%</td>
+			<td><em>Function fromCharCode not implemented</em></td>
+		</tr>
+		<tr>
+			<td>15.5.4</td>
+			<td><strong>String prototype</strong></td>
+			<td>90%</td>
+			<td><em>replace() function not implemented</em></td>
+		</tr>
+		<tr>
+			<td>15.6</td>
+			<td><strong>Boolean constructor</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.6.4</td>
+			<td><strong>Boolean prototype</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.7</td>
+			<td><strong>Number constructor</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.7.4</td>
+			<td><strong>Number prototype</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.8</td>
+			<td><strong>Math object</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.9</td>
+			<td><strong>Date constructor</strong></td>
+			<td>0%</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.9.5</td>
+			<td><strong>Date prototype</strong></td>
+			<td>0%</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.10</td>
+			<td><strong>RegExp constructor</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.10.5</td>
+			<td><strong>RegExp prototype</strong></td>
+			<td>Done</td>
+			<td><em></em></td>
+		</tr>
+		<tr>
+			<td>15.11</td>
+			<td><strong>Error Objects</strong></td>
+			<td>0%</td>
+			<td><em></em></td>
 		</tr>
 	</tbody>
 </table>

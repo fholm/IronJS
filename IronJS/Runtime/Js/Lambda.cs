@@ -4,7 +4,7 @@ namespace IronJS.Runtime.Js
 {
     public class Lambda
     {
-        static public readonly ConstructorInfo Ctor1Arg =
+        static public readonly ConstructorInfo Ctor =
             typeof(Lambda).GetConstructor(new[] { typeof(LambdaType), typeof(string[]) });
 
         public LambdaType Delegate { get; protected set; }

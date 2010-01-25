@@ -85,14 +85,14 @@ namespace IronJS.Runtime.Js
             return false;
         }
 
-        public virtual object Put(object key, object value)
+        public virtual object Set(object key, object value)
         {
             IObj obj = this;
 
             while (obj != null)
             {
-                if (obj.HasOwnProperty(key))
-                    return obj.SetOwnProperty(key, value);
+                if (obj.HasOwn(key))
+                    return obj.SetOwn(key, value);
 
                 obj = obj.Prototype;
             }
@@ -101,23 +101,23 @@ namespace IronJS.Runtime.Js
             return value;
         }
 
-        public virtual bool CanPut(object key)
+        public virtual bool CanSet(object key)
         {
             if (Properties.ContainsKey(key))
                 return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
 
             if (Prototype != null)
-                return Prototype.CanPut(key);
+                return Prototype.CanSet(key);
 
             return true;
         }
 
-        public virtual bool HasOwnProperty(object key)
+        public virtual bool HasOwn(object key)
         {
             return Properties.ContainsKey(key);
         }
 
-        public virtual object GetOwnProperty(object key)
+        public virtual object GetOwn(object key)
         {
             Property property;
 
@@ -127,26 +127,26 @@ namespace IronJS.Runtime.Js
             return Js.Undefined.Instance;
         }
 
-        public virtual object SetOwnProperty(object key, object value)
+        public virtual object SetOwn(object key, object value)
         {
             Properties[key] = new Property(value);
             return value;
         }
 
-        public virtual bool HasProperty(object name)
+        public virtual bool Has(object name)
         {
-            if (HasOwnProperty(name))
+            if (HasOwn(name))
                 return true;
 
             if (Prototype != null)
-                return Prototype.HasProperty(name);
+                return Prototype.Has(name);
 
             return false;
         }
 
-        public virtual bool Delete(object name)
+        public virtual bool TryDelete(object name)
         {
-            if (HasOwnProperty(name))
+            if (HasOwn(name))
                 return Properties.Remove(name);
 
             return false;

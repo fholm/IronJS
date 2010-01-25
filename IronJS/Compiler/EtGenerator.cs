@@ -79,7 +79,7 @@ namespace IronJS.Compiler
                                 FunctionTable.EtPush(
                                     FuncTableExpr,
                                     AstUtils.SimpleNewHelper(
-                                        Lambda.Ctor1Arg,
+                                        Lambda.Ctor,
                                         x.First,
                                         Et.Constant(x.Second.ToArray())
                                     )

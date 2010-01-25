@@ -11,18 +11,18 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Array;
 
-            SetOwnProperty("toString", new Array_prototype_toString(Context));
-            SetOwnProperty("toLocaleString", new Array_prototype_toLocaleString(Context));
-            SetOwnProperty("concat", new Array_prototype_concat(Context));
-            SetOwnProperty("join", new Array_prototype_join(Context));
-            SetOwnProperty("pop", new Array_prototype_pop(Context));
-            SetOwnProperty("push", new Array_prototype_push(Context));
-            SetOwnProperty("reverse", new Array_prototype_reverse(Context));
-            SetOwnProperty("shift", new Array_prototype_shift(Context));
-            SetOwnProperty("slice", new Array_prototype_slice(Context));
-            SetOwnProperty("sort", new Array_prototype_sort(Context));
-            SetOwnProperty("splice", new Array_prototype_splice(Context));
-            SetOwnProperty("unshift", new Array_prototype_unshift(Context));
+            SetOwn("toString", new Array_prototype_toString(Context));
+            SetOwn("toLocaleString", new Array_prototype_toLocaleString(Context));
+            SetOwn("concat", new Array_prototype_concat(Context));
+            SetOwn("join", new Array_prototype_join(Context));
+            SetOwn("pop", new Array_prototype_pop(Context));
+            SetOwn("push", new Array_prototype_push(Context));
+            SetOwn("reverse", new Array_prototype_reverse(Context));
+            SetOwn("shift", new Array_prototype_shift(Context));
+            SetOwn("slice", new Array_prototype_slice(Context));
+            SetOwn("sort", new Array_prototype_sort(Context));
+            SetOwn("splice", new Array_prototype_splice(Context));
+            SetOwn("unshift", new Array_prototype_unshift(Context));
         }
     }
 }

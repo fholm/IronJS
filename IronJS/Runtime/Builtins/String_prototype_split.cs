@@ -9,7 +9,7 @@ namespace IronJS.Runtime.Builtins
         public String_prototype_split(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 2.0D);
+            SetOwn("length", 2.0D);
         }
 
         public override object Call(IObj that, object[] args)
@@ -19,7 +19,7 @@ namespace IronJS.Runtime.Builtins
 
             if (!HasArgs(args))
             {
-                results.Put(0.0D, str);
+                results.Set(0.0D, str);
                 return results;
             }
 
@@ -39,7 +39,7 @@ namespace IronJS.Runtime.Builtins
                 var k = 0.0D;
 
                 foreach (var part in parts)
-                    results.Put(k++, part);
+                    results.Set(k++, part);
             }
 
             return results;

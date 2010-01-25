@@ -8,7 +8,7 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_propertyIsEnumerable(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 1);
+            SetOwn("length", 1);
         }
 
         public override object Call(IObj that, object[] args)

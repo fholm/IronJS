@@ -9,7 +9,7 @@ namespace IronJS.Runtime.Builtins
         public String_prototype_slice(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 0.0D);
+            SetOwn("length", 0.0D);
         }
 
         public override object Call(IObj that, object[] args)

@@ -10,9 +10,9 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Object;
 
-            SetOwnProperty("exec", new RegExp_prototype_exec(Context));
-            SetOwnProperty("test", new RegExp_prototype_test(Context));
-            SetOwnProperty("toString", new RegExp_prototype_toString(Context));
+            SetOwn("exec", new RegExp_prototype_exec(Context));
+            SetOwn("test", new RegExp_prototype_test(Context));
+            SetOwn("toString", new RegExp_prototype_toString(Context));
         }
     }
 }

@@ -14,10 +14,10 @@ namespace IronJS.Runtime.Builtins
             : base(context)
         {
             String_prototype = new String_prototype(Context);
-            String_prototype.SetOwnProperty("constructor", this);
+            String_prototype.SetOwn("constructor", this);
 
-            SetOwnProperty("prototype", String_prototype);
-            SetOwnProperty("fromCharCode", new String_ctor_fromCharCode(Context));
+            SetOwn("prototype", String_prototype);
+            SetOwn("fromCharCode", new String_ctor_fromCharCode(Context));
         }
 
         public IObj Construct()
@@ -32,7 +32,7 @@ namespace IronJS.Runtime.Builtins
             obj.Class = ObjClass.String;
             obj.Prototype = String_prototype;
             obj.Context = Context;
-            obj.SetOwnProperty("length", (double)value.Length);
+            obj.SetOwn("length", (double)value.Length);
 
             return obj;
         }

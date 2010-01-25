@@ -11,12 +11,12 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Number;
 
-            SetOwnProperty("toString", new Number_prototype_toString(Context));
-            SetOwnProperty("toLocaleString", new Number_prototype_toLocaleString(Context));
-            SetOwnProperty("valueOf", new Number_prototype_valueOf(Context));
-            SetOwnProperty("toFixed", new Number_prototype_toFixed(Context));
-            SetOwnProperty("toExponential", new Number_prototype_toExponential(Context));
-            SetOwnProperty("toPrecision", new Number_prototype_toPrecision(Context));
+            SetOwn("toString", new Number_prototype_toString(Context));
+            SetOwn("toLocaleString", new Number_prototype_toLocaleString(Context));
+            SetOwn("valueOf", new Number_prototype_valueOf(Context));
+            SetOwn("toFixed", new Number_prototype_toFixed(Context));
+            SetOwn("toExponential", new Number_prototype_toExponential(Context));
+            SetOwn("toPrecision", new Number_prototype_toPrecision(Context));
         }
     }
 }

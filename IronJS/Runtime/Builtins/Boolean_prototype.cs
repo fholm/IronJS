@@ -11,8 +11,8 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Boolean;
 
-            SetOwnProperty("toString", new Boolean_prototype_toString(Context));
-            SetOwnProperty("valueOf", new Boolean_prototype_valueOf(Context));
+            SetOwn("toString", new Boolean_prototype_toString(Context));
+            SetOwn("valueOf", new Boolean_prototype_valueOf(Context));
         }
     }
 }

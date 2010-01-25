@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
-using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime.Js
 {
@@ -21,18 +20,21 @@ namespace IronJS.Runtime.Js
         Context Context { get; set; }
 
         // 8.6.2
-        object Get(object name);                // [[Get]]
-        object Put(object name, object value);  // [[Put]]
-        bool CanPut(object name);               // [[CanPut]]
-        bool HasProperty(object name);          // [[HasProperty]]
-        bool Delete(object name);               // [[Delete]]
-        object DefaultValue(ValueHint hint);    // [[DefaultValue]]
+        bool Has(object name);
+        bool HasOwn(object name);
 
-        // implementation specific
-        bool TryGet(object name, out object value);
-        bool HasOwnProperty(object name);
-        object SetOwnProperty(object name, object value);
-        object GetOwnProperty(object name);
+        IDescriptor<IObj> Get(object name);
+        IDescriptor<IObj> GetOwn(object name);
+
+        object Set(object name, IDescriptor<IObj> descriptor);
+        object SetOwn(object name, IDescriptor<IObj> descriptor);
+
+        bool TryGet(object name, out IDescriptor<IObj> descriptor);
+        bool TryGetOwn(object name, out IDescriptor<IObj> descriptor);
+
+        bool CanSet(object name); 
+        bool TryDelete(object name);
+        object DefaultValue(ValueHint hint);
         List<object> GetAllPropertyNames();
     }
 

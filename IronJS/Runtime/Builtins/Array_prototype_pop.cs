@@ -18,12 +18,12 @@ namespace IronJS.Runtime.Builtins
             if (len != 0)
             {
                 var result = that.Get((double)len - 1);
-                that.Delete(len);
-                that.Put("length", (double)len - 1);
+                that.TryDelete(len);
+                that.Set("length", (double)len - 1);
                 return result;
             }
 
-            that.Put("length", (double)len);
+            that.Set("length", (double)len);
             return Undefined.Instance;
         }
     }

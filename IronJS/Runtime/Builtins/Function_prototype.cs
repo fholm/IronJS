@@ -7,9 +7,9 @@ namespace IronJS.Runtime.Builtins
         public Function_prototype(Context context)
             : base(context, null)
         {
-            SetOwnProperty("toString", new Function_prototype_toString(context, this));
-            SetOwnProperty("apply", new Function_prototype_apply(context, this));
-            SetOwnProperty("call", new Function_prototype_call(context, this));
+            SetOwn("toString", new Function_prototype_toString(context, this));
+            SetOwn("apply", new Function_prototype_apply(context, this));
+            SetOwn("call", new Function_prototype_call(context, this));
         }
 
         public override object Call(Js.IObj that, object[] args)

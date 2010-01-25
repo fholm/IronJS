@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Builtins
         public Global_obj_encodeURI(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 1.0D);
+            SetOwn("length", 1.0D);
         }
 
         public override object Call(IObj that, object[] args)

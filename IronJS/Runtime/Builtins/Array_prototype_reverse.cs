@@ -44,32 +44,32 @@ namespace IronJS.Runtime.Builtins
                 {
                     if (!hasBegin)
                     {
-                        that.Delete(begin);
-                        that.Delete(end);
+                        that.TryDelete(begin);
+                        that.TryDelete(end);
                     }
                     else
                     {
-                        that.SetOwnProperty(end, beginValue);
-                        that.Delete(begin);
+                        that.SetOwn(end, beginValue);
+                        that.TryDelete(begin);
                     }
                 }
                 else if (!hasBegin)
                 {
                     if (!hasEnd)
                     {
-                        that.Delete(begin);
-                        that.Delete(end);
+                        that.TryDelete(begin);
+                        that.TryDelete(end);
                     }
                     else
                     {
-                        that.SetOwnProperty(begin, endValue);
-                        that.Delete(end);
+                        that.SetOwn(begin, endValue);
+                        that.TryDelete(end);
                     }
                 }
                 else
                 {
-                    that.SetOwnProperty(begin, endValue);
-                    that.SetOwnProperty(end, beginValue);
+                    that.SetOwn(begin, endValue);
+                    that.SetOwn(end, beginValue);
                 }
 
                 ++begin;

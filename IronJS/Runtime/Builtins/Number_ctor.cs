@@ -14,14 +14,14 @@ namespace IronJS.Runtime.Builtins
             : base(context)
         {
             Number_prototype = new Number_prototype(Context);
-            Number_prototype.SetOwnProperty("constructor", this);
+            Number_prototype.SetOwn("constructor", this);
 
-            SetOwnProperty("prototype", Number_prototype);
-            SetOwnProperty("MAX_VALUE", double.MaxValue);
-            SetOwnProperty("MIN_VALUE", double.MinValue);
-            SetOwnProperty("NaN", double.NaN);
-            SetOwnProperty("NEGATIVE_INFINITY", double.NegativeInfinity);
-            SetOwnProperty("POSITIVE_INFINITY", double.PositiveInfinity);
+            SetOwn("prototype", Number_prototype);
+            SetOwn("MAX_VALUE", double.MaxValue);
+            SetOwn("MIN_VALUE", double.MinValue);
+            SetOwn("NaN", double.NaN);
+            SetOwn("NEGATIVE_INFINITY", double.NegativeInfinity);
+            SetOwn("POSITIVE_INFINITY", double.PositiveInfinity);
         }
 
         public IObj Construct()

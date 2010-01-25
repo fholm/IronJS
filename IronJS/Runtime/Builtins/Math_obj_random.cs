@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Builtins
         public Math_obj_random(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 0.0D);
+            SetOwn("length", 0.0D);
         }
 
         public override object Call(IObj that, object[] args)

@@ -8,7 +8,7 @@ namespace IronJS.Runtime.Builtins
         public Function_prototype_apply(Context context, IFunction function_prototype)
             : base(context, function_prototype)
         {
-            SetOwnProperty("length", 2);
+            SetOwn("length", 2);
         }
 
         public override object Call(IObj that, object[] args)

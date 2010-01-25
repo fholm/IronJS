@@ -9,6 +9,7 @@ namespace IronJS.Testing
 {
     class Program
     {
+
         //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {

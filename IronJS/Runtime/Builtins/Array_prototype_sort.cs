@@ -41,11 +41,11 @@ namespace IronJS.Runtime.Builtins
             {
                 if ((int)d < vals.Count)
                 {
-                    that.SetOwnProperty(d, vals[(int)d]);
+                    that.SetOwn(d, vals[(int)d]);
                 }
                 else
                 {
-                    that.Delete(d);
+                    that.TryDelete(d);
                 }
             }
 

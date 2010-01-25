@@ -7,13 +7,13 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_hasOwnProperty(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 1);
+            SetOwn("length", 1);
         }
 
         public override object Call(IObj that, object[] args)
         {
             if (HasArgs(args))
-                return that.HasOwnProperty(args[0]);
+                return that.HasOwn(args[0]);
 
             return false;
         }

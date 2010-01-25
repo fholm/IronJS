@@ -15,7 +15,7 @@ namespace IronJS.Runtime.Js
 
         internal int Length
         {
-            get { return (int)(double)GetOwnProperty("length"); }
+            get { return (int)(double)GetOwn("length"); }
             set { Properties["length"].Value = (double)value; }
         }
 
@@ -29,7 +29,7 @@ namespace IronJS.Runtime.Js
             var length = Length - 1;
 
             for (; length >= intval; --length)
-                Delete((double)length);
+                TryDelete((double)length);
 
             Properties["length"].Value = (double)intval;
 
@@ -74,7 +74,7 @@ namespace IronJS.Runtime.Js
             return base.Get((double)index);
         }
 
-        public override object Put(object name, object value)
+        public override object Set(object name, object value)
         {
             var index = AsArrayIndex(name);
 
@@ -83,46 +83,46 @@ namespace IronJS.Runtime.Js
                 if (name is string && (string)name == "length")
                     return UpdateLength(value);
 
-                return base.Put(name, value);
+                return base.Set(name, value);
             }
 
             if (index >= Length)
                 Length = index + 1;
 
-            return base.Put((double)index, value);
+            return base.Set((double)index, value);
         }
 
-        public override bool HasProperty(object name)
+        public override bool Has(object name)
         {
             var index = AsArrayIndex(name);
 
             if (index == -1)
-                return base.HasProperty(name);
+                return base.Has(name);
 
-            return base.HasProperty((double)index);
+            return base.Has((double)index);
         }
 
-        public override bool Delete(object name)
+        public override bool TryDelete(object name)
         {
             var index = AsArrayIndex(name);
 
             if (index == -1)
-                return base.Delete(name);
+                return base.TryDelete(name);
 
-            return base.Delete((double)index);
+            return base.TryDelete((double)index);
         }
 
-        public override bool HasOwnProperty(object name)
+        public override bool HasOwn(object name)
         {
             var index = AsArrayIndex(name);
 
             if (index == -1)
-                return base.HasOwnProperty(name);
+                return base.HasOwn(name);
 
-            return base.HasOwnProperty((double)index);
+            return base.HasOwn((double)index);
         }
 
-        public override object SetOwnProperty(object name, object value)
+        public override object SetOwn(object name, object value)
         {
             var index = AsArrayIndex(name);
 
@@ -131,23 +131,23 @@ namespace IronJS.Runtime.Js
                 if (name is string && (string)name == "length")
                     return UpdateLength(value);
 
-                return base.SetOwnProperty(name, value);
+                return base.SetOwn(name, value);
             }
 
             if (index >= Length)
                 Length = index + 1;
 
-            return base.SetOwnProperty((double)index, value);
+            return base.SetOwn((double)index, value);
         }
 
-        public override object GetOwnProperty(object name)
+        public override object GetOwn(object name)
         {
             var index = AsArrayIndex(name);
 
             if (index == -1)
-                return base.GetOwnProperty(name);
+                return base.GetOwn(name);
 
-            return base.GetOwnProperty((double)index);
+            return base.GetOwn((double)index);
         }
 
         public override string ToString()

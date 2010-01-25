@@ -30,6 +30,10 @@ This list is not in any chronological or priority order
     * Error Objects
 	* Date Object
 	* Missing functionality from other objects
+* Proper syntax error reporting
+* Visual Studio debugger hooks
+    * Break points
+	* Step through code
 
 ## ECMAScript 3.0 Compliance
 

@@ -9,7 +9,7 @@ namespace IronJS.Runtime.Builtins
         public Math_obj_pow(Context context)
             : base(context)
         {
-            SetOwnProperty("length", 2.0D);
+            SetOwn("length", 2.0D);
         }
 
         public override object Call(IObj that, object[] args)

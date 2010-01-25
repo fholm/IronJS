@@ -30,7 +30,7 @@ namespace IronJS.Runtime.Builtins
             
             var d = 0.0D;
             foreach (Match match in matches)
-                results.SetOwnProperty(d++, match.Groups[0].Value);
+                results.SetOwn(d++, match.Groups[0].Value);
 
             return results;
         }

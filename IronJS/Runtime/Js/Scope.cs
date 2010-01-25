@@ -55,16 +55,16 @@ namespace IronJS.Runtime.Js
 
         public object Local(object name, object value)
         {
-            if (IsInternal || JsObject.HasProperty(name))
-                return JsObject.Put(name, value);
+            if (IsInternal || JsObject.Has(name))
+                return JsObject.Set(name, value);
 
             return ParentScope.Local(name, value);
         }
 
         public object Global(object name, object value)
         {
-            if (ParentScope == null || JsObject.HasProperty(name))
-                return JsObject.Put(name, value);
+            if (ParentScope == null || JsObject.Has(name))
+                return JsObject.Set(name, value);
 
             return ParentScope.Global(name, value);
         }
@@ -89,7 +89,7 @@ namespace IronJS.Runtime.Js
 
         public object Delete(object name)
         {
-            if (JsObject.Delete(name))
+            if (JsObject.TryDelete(name))
                 return true;
 
             if (ParentScope != null)
@@ -160,15 +160,15 @@ namespace IronJS.Runtime.Js
             callScope.Local("this", that);
             callScope.Local("arguments", argsObject);
 
-            argsObject.SetOwnProperty("length", args.Length);
-            argsObject.SetOwnProperty("callee", callee);
+            argsObject.SetOwn("length", args.Length);
+            argsObject.SetOwn("callee", callee);
 
             for (var i = 0; i < args.Length; ++i)
             {
                 if (parms != null && i < parms.Length)
                     callScope.Local(parms[i], args[i]);
 
-                argsObject.SetOwnProperty((double)i, args[i]);
+                argsObject.SetOwn((double)i, args[i]);
             }
 
             return callScope;

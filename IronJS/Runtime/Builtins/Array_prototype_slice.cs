@@ -37,7 +37,7 @@ namespace IronJS.Runtime.Builtins
             while(ks < ke)
             {
                 if (that.TryGet(ks, out val))
-                    newArray.SetOwnProperty(n, val);
+                    newArray.SetOwn(n, val);
 
                 ++ks;
                 ++n;

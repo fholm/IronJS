@@ -16,7 +16,7 @@ namespace IronJS.Runtime.Builtins
             var n = (double) JsTypeConverter.ToInt32(that.Get("length"));
 
             foreach (var arg in args)
-                that.Put(n++, arg);
+                that.Set(n++, arg);
 
             return n;
         }

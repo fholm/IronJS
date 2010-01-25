@@ -17,13 +17,13 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.FunctionConstructor.Function_prototype;
 
             Array_prototype = new Array_prototype(context);
-            Array_prototype.SetOwnProperty("constructor", this);
+            Array_prototype.SetOwn("constructor", this);
 
             // 15.4.3
-            SetOwnProperty("length", 1.0D);
+            SetOwn("length", 1.0D);
 
             // 15.4.3.1
-            SetOwnProperty("prototype", Array_prototype);
+            SetOwn("prototype", Array_prototype);
         }
 
         public IObj Construct()
@@ -51,7 +51,7 @@ namespace IronJS.Runtime.Builtins
             {
                 // 15.4.2.1
                 for (int i = 0; i < args.Length; ++i)
-                    arrayObj.SetOwnProperty((double)i, args[i]);
+                    arrayObj.SetOwn((double)i, args[i]);
             }
             else if(args != null)
             {
@@ -60,7 +60,7 @@ namespace IronJS.Runtime.Builtins
 
                 if ((double)JsTypeConverter.ToInt32(len) == len)
                 {
-                    arrayObj.SetOwnProperty("length", len);
+                    arrayObj.SetOwn("length", len);
                 }
                 else
                 {

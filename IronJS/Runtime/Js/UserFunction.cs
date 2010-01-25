@@ -14,7 +14,7 @@ namespace IronJS.Runtime.Js
         {
             Scope = scope;
             Lambda = lambda;
-            SetOwnProperty("length", (double) lambda.Params.Length);
+            SetOwn("length", (double) lambda.Params.Length);
         }
 
         #region IFunction Members
@@ -34,7 +34,7 @@ namespace IronJS.Runtime.Js
             var newObject = Context.ObjectConstructor.Construct();
             var callScope = Scope.CreateCallScope(Scope, this, newObject, args, Lambda.Params);
 
-            var prototype = GetOwnProperty("prototype");
+            var prototype = GetOwn("prototype");
 
             (newObject as Obj).Prototype = (prototype is IObj)
                                            ? (prototype as IObj)

@@ -27,13 +27,13 @@ namespace IronJS.Runtime.Builtins
                     var len = (double)arr.Length;
                     for (var i = 0.0D; i < len; ++i)
                     {
-                        if (arr.HasOwnProperty(i))
-                            arrayObj.SetOwnProperty(k++, arr.Get(i));
+                        if (arr.HasOwn(i))
+                            arrayObj.SetOwn(k++, arr.Get(i));
                     }
                 }
                 else
                 {
-                    arrayObj.SetOwnProperty(k++, JsTypeConverter.ToString(arg));
+                    arrayObj.SetOwn(k++, JsTypeConverter.ToString(arg));
                 }
             }
 

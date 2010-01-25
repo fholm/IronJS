@@ -120,12 +120,12 @@ namespace IronJS.Runtime
             var obj = new UserFunction(scope, lambda);
 
             var protoObj = ObjectConstructor.Construct();
-            protoObj.SetOwnProperty("constructor", obj);
+            protoObj.SetOwn("constructor", obj);
 
             obj.Context = this;
             obj.Class = ObjClass.Function;
             obj.Prototype = FunctionConstructor.Function_prototype;
-            obj.SetOwnProperty("prototype", protoObj);
+            obj.SetOwn("prototype", protoObj);
 
             return obj;
         }

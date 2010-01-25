@@ -16,12 +16,17 @@ What you need to use IronJS
 
 ## "Roadmap"
 
-1. Refactor properties to use the new Descriptor model based on the IDescriptor interface
-2. Implement canonical DLR binders (speed-up)
-3. Get basic .NET/CLR inter-op working
+This list is not in any chronological or priority order
+
+* Refactor properties to use the new Descriptor model based on the IDescriptor interface
+* Implement canonical DLR binders
+* Get basic .NET/CLR inter-op working
     * Property and Field access (static + instance)
     * Calling methods (static + instance)
     * Creating simple objects (no generics)
+* Implement the DLR LanguageContext and DLR Hosting API
+* Move the ET-generator over to CompileMethod()
+* Implement the remaining Native Objects
 
 ## ECMAScript 3.0 Compliance
 
@@ -30,7 +35,6 @@ What you need to use IronJS
 Section 8 of the ECMA Script 3.0 specification
 
 <table>
-
 	<thead>
 		<tr>
 			<th>Section</th>	

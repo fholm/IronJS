@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Dynamic;
 using System.Reflection;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
-using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Runtime.Js
 {

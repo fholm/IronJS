@@ -27,7 +27,21 @@ namespace IronJS.Runtime.Binders
             {
                 return new Meta(
                     InternalRuntimeError.EtNew(
-                        "Can't call undefined"
+                        "Can't invoke undefined"
+                    ),
+                    Restrict.GetInstanceRestriction(
+                        target.Expression,
+                        target.Value
+                    )
+                );
+            }
+
+            // handles invocation of null
+            if (target.HasValue && target.Value == null)
+            {
+                return new Meta(
+                    InternalRuntimeError.EtNew(
+                        "Can't invoke null"
                     ),
                     Restrict.GetInstanceRestriction(
                         target.Expression,

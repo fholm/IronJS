@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Et = System.Linq.Expressions.Expression;
+﻿using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using IronJS.Runtime.Js;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class InNode : Node
+    public class InNode : Node
     {
         private Node Target;
         private Node Property;

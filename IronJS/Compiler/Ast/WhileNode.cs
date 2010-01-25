@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
-using Et = System.Linq.Expressions.Expression;
+using System.Text;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    enum WhileType { DoWhile, While }
+    public enum WhileType { DoWhile, While }
 
-    class WhileNode : LoopNode
+    public class WhileNode : LoopNode
     {
         public readonly Node Test;
         public readonly Node Body;

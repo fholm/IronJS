@@ -4,7 +4,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class UnsignedRightShiftNode : Node
+    public class UnsignedRightShiftNode : Node
     {
         public readonly Node Left;
         public readonly Node Right;

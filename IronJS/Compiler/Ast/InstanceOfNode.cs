@@ -1,13 +1,12 @@
-﻿using IronJS.Runtime;
-using IronJS.Runtime.Js;
+﻿using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class InstanceOfNode : Node
+    public class InstanceOfNode : Node
     {
-        private Node Target;
-        private Node Function;
+        public readonly Node Target;
+        public readonly Node Function;
 
         public InstanceOfNode(Node target, Node function)
             : base(NodeType.InstanceOf)

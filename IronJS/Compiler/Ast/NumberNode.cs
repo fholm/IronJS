@@ -4,7 +4,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class NumberNode : Node
+    public class NumberNode : Node
     {
         public readonly double Value;
 

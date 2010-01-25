@@ -1,13 +1,12 @@
-﻿using System;
+﻿using IronJS.Runtime;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime;
 
 namespace IronJS.Compiler.Ast
 {
-    class RegexNode : Node
+    public class RegexNode : Node
     {
-        private string Regex;
-        private string Modifiers;
+        public readonly string Regex;
+        public readonly string Modifiers;
 
         public RegexNode(string regex)
             : base(NodeType.Regex)

@@ -3,7 +3,7 @@
 namespace IronJS.Compiler.Ast
 {
     // 12.8
-    class BreakNode : Node
+    public class BreakNode : Node
     {
         public readonly string Label;
 

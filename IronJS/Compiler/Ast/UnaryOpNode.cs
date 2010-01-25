@@ -3,7 +3,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class UnaryOpNode : Node
+    public class UnaryOpNode : Node
     {
         public readonly Node Target;
         public readonly ExpressionType Op;

@@ -6,12 +6,12 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class SwitchNode : Node, ILabelableNode
+    public class SwitchNode : Node, ILabelableNode
     {
-        private Node Target;
-        private Node Default;
-        private List<Tuple<Node, Node>> Cases;
-        private string Label;
+        public readonly Node Target;
+        public readonly Node Default;
+        public readonly List<Tuple<Node, Node>> Cases;
+        public string Label;
 
         public SwitchNode(Node taret, Node _default, List<Tuple<Node, Node>> cases)
             : base(NodeType.Switch)

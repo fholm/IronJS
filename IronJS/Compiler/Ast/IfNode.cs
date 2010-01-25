@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Text;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class IfNode : Node
+    public class IfNode : Node
     {
         public readonly Node Test;
         public readonly Node TrueBranch;

@@ -6,7 +6,7 @@ using IronJS.Runtime.Js;
 
 namespace IronJS.Compiler.Ast
 {
-    class DeleteNode : Node
+    public class DeleteNode : Node
     {
         public readonly Node Target;
 

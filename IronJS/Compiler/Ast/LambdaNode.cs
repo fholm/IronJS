@@ -8,7 +8,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class LambdaNode : Node
+    public class LambdaNode : Node
     {
         public readonly List<IdentifierNode> Args;
         public readonly Node Body;

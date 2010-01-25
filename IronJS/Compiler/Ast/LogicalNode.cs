@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class LogicalNode : Node
+    public class LogicalNode : Node
     {
         public readonly Node Left;
         public readonly Node Right;

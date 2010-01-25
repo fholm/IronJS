@@ -5,7 +5,7 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronJS.Compiler.Ast
 {
-    class WithNode : Node
+    public class WithNode : Node
     {
         public readonly Node Target;
         public readonly Node Body;

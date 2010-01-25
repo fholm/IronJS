@@ -6,7 +6,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class BlockNode : Node
+    public class BlockNode : Node
     {
         public readonly List<Node> Nodes;
         public readonly bool IsEmpty;

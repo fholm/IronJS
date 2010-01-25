@@ -5,7 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class BinaryOpNode : Node
+    public class BinaryOpNode : Node
     {
         public readonly Node Left;
         public readonly Node Right;

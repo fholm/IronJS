@@ -2,7 +2,7 @@
 
 namespace IronJS.Compiler.Ast
 {
-    class BooleanNode : Node
+    public class BooleanNode : Node
     {
         public readonly bool Value;
 

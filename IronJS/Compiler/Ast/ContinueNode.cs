@@ -2,7 +2,7 @@
 
 namespace IronJS.Compiler.Ast
 {
-    class ContinueNode : Node
+    public class ContinueNode : Node
     {
         public readonly string Label;
 

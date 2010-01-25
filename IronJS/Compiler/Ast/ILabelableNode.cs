@@ -1,7 +1,6 @@
-﻿
-namespace IronJS.Compiler.Ast
+﻿namespace IronJS.Compiler.Ast
 {
-    interface ILabelableNode
+    public interface ILabelableNode
     {
         void SetLabel(string label);
     }

@@ -5,7 +5,7 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 namespace IronJS.Compiler.Ast
 {
     // 12.6.3
-    class ForStepNode : LoopNode
+    public class ForStepNode : LoopNode
     {
         public readonly Node Setup;
         public readonly Node Test;

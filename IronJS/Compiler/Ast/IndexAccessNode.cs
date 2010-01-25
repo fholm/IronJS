@@ -3,7 +3,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class IndexAccessNode : Node
+    public class IndexAccessNode : Node
     {
         public readonly Node Target;
         public readonly Node Index;

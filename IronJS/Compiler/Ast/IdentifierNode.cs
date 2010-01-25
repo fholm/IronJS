@@ -5,8 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-
-    class IdentifierNode : Node
+    public class IdentifierNode : Node
     {
         public readonly string Name;
         public bool IsLocal;

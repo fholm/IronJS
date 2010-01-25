@@ -2,7 +2,7 @@
 
 namespace IronJS.Compiler.Ast
 {
-    abstract class LoopNode : Node, ILabelableNode
+    abstract public class LoopNode : Node, ILabelableNode
     {
         public string Label { get; protected set; }
 

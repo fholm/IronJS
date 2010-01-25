@@ -4,7 +4,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class PostfixOperatorNode : Node
+    public class PostfixOperatorNode : Node
     {
         public readonly Node Target;
         public readonly ExpressionType Op;

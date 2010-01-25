@@ -2,7 +2,7 @@
 
 namespace IronJS.Compiler.Ast
 {
-    class CatchNode : Node
+    public class CatchNode : Node
     {
         public readonly Node Target;
         public readonly Node Body;

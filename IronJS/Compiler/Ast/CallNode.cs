@@ -10,7 +10,7 @@ using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
-    class CallNode : Node
+    public class CallNode : Node
     {
         public readonly Node Target;
         public readonly List<Node> Args;

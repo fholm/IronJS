@@ -3,7 +3,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class TypeOfNode : Node
+    public class TypeOfNode : Node
     {
         public readonly Node Target;
 
@@ -13,7 +13,7 @@ namespace IronJS.Compiler.Ast
             Target = target;
         }
         
-        public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
+        public override Et Walk(EtGenerator etgen)
         {
             return Et.Call(
                 typeof(Operators).GetMethod("TypeOf"),

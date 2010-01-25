@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace IronJS.Compiler.Ast
 {
     // 12.6.4
-    class ForInNode : LoopNode
+    public class ForInNode : LoopNode
     {
         public readonly Node Target;
         public readonly Node Source;

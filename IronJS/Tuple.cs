@@ -23,10 +23,10 @@
         public readonly T1 First;
         public readonly T2 Second;
 
-        public Tuple(T1 v1, T2 v2)
+        public Tuple(T1 first, T2 second)
         {
-            First = v1;
-            Second = v2;
+            First = first;
+            Second = second;
         }
     }
 

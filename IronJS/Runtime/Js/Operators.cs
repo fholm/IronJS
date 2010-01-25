@@ -1,17 +1,18 @@
-﻿using System;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
-
-namespace IronJS.Runtime.Js
+﻿namespace IronJS.Runtime.Js
 {
+    /*
+     * This file contains non-standard operators that have no
+     * equivalent in the DLR
+     */
+
     public static class Operators
     {
         public static bool InstanceOf(object obj, object func)
         {
-            if (!(func is IFunction))
+            if (!(func is IConstructor))
                 throw new ShouldThrowTypeError();
 
-            return (func as IFunction).HasInstance(obj);
+            return (func as IConstructor).HasInstance(obj);
         }
 
         public static object UnsignedRightShift(int left, int right)

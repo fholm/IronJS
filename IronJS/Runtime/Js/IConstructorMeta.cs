@@ -7,36 +7,26 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
 {
-    class IFunctionMeta : IObjMeta
+    class IConstructorMeta : IFunctionMeta
     {
-        public IFunctionMeta(Et parameter, IFunction function)
-            : base(parameter, function)
+        public IConstructorMeta(Et parameter, IConstructor constructor)
+            : base(parameter, constructor)
         {
 
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
+        public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
+            //TODO: insert defer
             return new Meta(
                 Et.Call(
-                    EtUtils.Cast<IFunction>(
+                    EtUtils.Cast<IConstructor>(
                         this.Expression
                     ),
-                    IFunctionMethods.MiCall,
-                    EtUtils.Cast<IObj>(
-                        args[0].Expression
-                    ),
+                    IConstructorMethods.MiConstruct,
                     AstUtils.NewArrayHelper(
                         typeof(object),
-                        DynamicUtils.GetExpressions(
-                            ArrayUtils.RemoveFirst(args)
-                        )
+                        DynamicUtils.GetExpressions(args)
                     )
                 ),
                 RestrictUtils.BuildCallRestrictions(

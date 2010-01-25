@@ -8,7 +8,7 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
 {
-    abstract class NativeFunction : Obj, IFunction
+    abstract public class NativeFunction : Obj, IFunction
     {
         public NativeFunction(Context context)
             : this(context, context.FunctionConstructor.Function_prototype)
@@ -16,7 +16,7 @@ namespace IronJS.Runtime.Js
 
         }
 
-        public NativeFunction(Context context, IFunction prototype)
+        public NativeFunction(Context context, IObj prototype)
         {
             Context = context;
             Class = ObjClass.Function;
@@ -32,21 +32,11 @@ namespace IronJS.Runtime.Js
 
         abstract public object Call(IObj that, object[] args);
 
-        public IObj Construct(object[] args)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region IDynamicMetaObjectProvider Members
 
-        public Meta GetMetaObject(Et parameter)
+        virtual public Meta GetMetaObject(Et parameter)
         {
             return new IFunctionMeta(parameter, this);
         }

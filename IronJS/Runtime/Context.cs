@@ -31,7 +31,7 @@ namespace IronJS.Runtime
         {
             FunctionConstructor = Function_ctor.Create(this);
             ObjectConstructor = Object_ctor.Create(this);
-            ArrayConstructor = Array_ctor.Create(this);
+            ArrayConstructor = new Array_ctor(this);
             StringConstructor = String_ctor.Create(this);
             BooleanConstructor = Boolean_ctor.Create(this);
             NumberConstructor = Number_ctor.Create(this);

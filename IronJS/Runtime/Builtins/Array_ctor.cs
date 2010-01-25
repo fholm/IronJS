@@ -6,15 +6,13 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class Array_ctor : Obj, IFunction
+    public class Array_ctor : NativeConstructor
     {
         public IObj Array_prototype { get; private set; }
 
-        protected Array_ctor(Context context)
+        public Array_ctor(Context context)
+            : base(context)
         {
-            Class = ObjClass.Function;
-            Context = context;
-            
             // 15.4.3
             Prototype = context.FunctionConstructor.Function_prototype;
 
@@ -28,20 +26,20 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("prototype", Array_prototype);
         }
 
-        #region IFunction Members
-
-        public object Call(IObj that, object[] args)
-        {
-            // 15.4.1.1
-            return Construct(args);
-        }
-
         public IObj Construct()
         {
             return Construct(null);
         }
 
-        public IObj Construct(object[] args)
+        #region IFunction Members
+
+        override public object Call(IObj that, object[] args)
+        {
+            // 15.4.1.1
+            return Construct(args);
+        }
+
+        override public IObj Construct(object[] args)
         {
             var arrayObj = new ArrayObj();
 
@@ -73,29 +71,6 @@ namespace IronJS.Runtime.Builtins
             return arrayObj;
         }
 
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IFunctionMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public Array_ctor Create(Context context)
-        {
-            return new Array_ctor(context);
-        }
-
-        #endregion 
     }
 }

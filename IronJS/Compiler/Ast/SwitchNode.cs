@@ -48,11 +48,11 @@ namespace IronJS.Compiler.Ast
                                 Et.Call(
                                     typeof(Operators).GetMethod("StrictEquality"),
                                     tmp,
-                                    x.V1.Walk(etgen)
+                                    x.First.Walk(etgen)
                                 )
                             ),
                             Et.Block(
-                                x.V2.Walk(etgen),
+                                x.Second.Walk(etgen),
                                 Et.Assign(
                                     hasMatched,
                                     Et.Constant(true)

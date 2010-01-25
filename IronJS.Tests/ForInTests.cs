@@ -9,6 +9,7 @@ namespace IronJS.Tests
     [TestClass]
     public class ForInTests
     {
+        //TODO: UNIT TEST for deleting property of object that is the current target of a for in loop
         [TestMethod]
         public void TestForIn()
         {

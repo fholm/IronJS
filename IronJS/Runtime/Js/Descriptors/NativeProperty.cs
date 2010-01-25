@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace IronJS.Runtime.Js.Descriptors
+﻿namespace IronJS.Runtime.Js.Descriptors
 {
-    public class Property : IDescriptor<IObj>
+    public class NativeProperty : IDescriptor<IObj>
     {
         protected object Value;
 
-        public Property(IObj owner, bool isEnumerable = true, bool isDeletable = true, bool isReadOnly = false)
+        public NativeProperty(IObj owner, bool isReadOnly = false, bool isDeletable = true, bool isEnumerable = true)
         {
             Owner = owner;
+            Value = Undefined.Instance;
 
-            IsEnumerable = isEnumerable;
-            IsDeletable = isDeletable;
             IsReadOnly = isReadOnly;
+            IsDeletable = isDeletable;
+            IsEnumerable = isEnumerable;
         }
 
         #region IDescriptor<IObj> Members
@@ -32,6 +28,11 @@ namespace IronJS.Runtime.Js.Descriptors
 
         public object Set(object value)
         {
+            if (IsReadOnly)
+                throw InternalRuntimeError.New(
+                    InternalRuntimeError.PROPERTY_READONLY
+                );
+
             return Value = value;
         }
 

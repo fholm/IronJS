@@ -4,8 +4,8 @@ namespace IronJS.Runtime.Js.Descriptors
 {
     public class DoubleProperty : NativeProperty
     {
-        public DoubleProperty(IObj owner, bool isReadOnly = false, bool isDeletable = true, bool isEnumerable = true)
-            : base(owner, isReadOnly, isDeletable, isEnumerable)
+        public DoubleProperty(IObj owner, object value = null, bool isReadOnly = false, bool isDeletable = true, bool isEnumerable = true)
+            : base(owner, value, isReadOnly, isDeletable, isEnumerable)
         {
 
         }

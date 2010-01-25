@@ -4,10 +4,10 @@
     {
         protected object Value;
 
-        public UserProperty(IObj owner)
+        public UserProperty(IObj owner, object value = null)
         {
             Owner = owner;
-            Value = Undefined.Instance;
+            Value = value ?? Undefined.Instance;
         }
 
         #region IDescriptor<IObj> Members

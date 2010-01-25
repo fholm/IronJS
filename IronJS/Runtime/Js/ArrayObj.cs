@@ -156,14 +156,5 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IObjMeta(parameter, this);
-        }
-
-        #endregion
     }
 }

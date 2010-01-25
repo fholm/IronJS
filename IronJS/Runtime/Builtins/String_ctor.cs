@@ -22,7 +22,19 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct()
         {
-            return Construct(null);
+            return Construct("");
+        }
+
+        public IObj Construct(string value)
+        {
+            var obj = new ValueObj(value);
+
+            obj.Class = ObjClass.String;
+            obj.Prototype = String_prototype;
+            obj.Context = Context;
+            obj.SetOwnProperty("length", (double)value.Length);
+
+            return obj;
         }
 
         override public object Call(IObj that, object[] args)
@@ -35,15 +47,11 @@ namespace IronJS.Runtime.Builtins
 
         override public IObj Construct(object[] args)
         {
-            var str = args != null && args.Length > 0 ? JsTypeConverter.ToString(args[0]) : "";
-            var obj = new ValueObj(str);
-
-            obj.Class = ObjClass.String;
-            obj.Prototype = String_prototype;
-            obj.Context = Context;
-            obj.SetOwnProperty("length", (double) str.Length);
-
-            return obj;
+            return Construct(
+                HasArgs(args) 
+                ? JsTypeConverter.ToString(args[0]) 
+                : ""
+            );
         }
     }
 }

@@ -73,6 +73,7 @@ namespace IronJS.Runtime.Binders
                 );
             }
 
+            //TODO: this should be looked over and tested properly
             if (target.Value is Delegate)
             {
                 var invoke = target.LimitType.GetMethod("Invoke");

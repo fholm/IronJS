@@ -17,11 +17,16 @@ namespace IronJS.Runtime.Js
 
         }
 
+        public override Meta GetMetaObject(Et parameter)
+        {
+            return new IConstructorMeta(parameter, this);
+        }
+
         #region IConstructor Members
 
         abstract public IObj Construct(object[] args);
 
-        virtual public bool HasInstance(object obj)
+        public bool HasInstance(object obj)
         {
             if (!(obj is IObj))
                 return false;
@@ -40,10 +45,5 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
-
-        public override Meta GetMetaObject(Et parameter)
-        {
-            return new IConstructorMeta(parameter, this);
-        }
     }
 }

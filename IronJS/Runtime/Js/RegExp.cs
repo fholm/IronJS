@@ -4,7 +4,7 @@ namespace IronJS.Runtime.Js
 {
     class RegExpObj : Obj
     {
-        public Regex Match { get; set;}
+        public Regex Match { get; set; }
 
         public RegExpObj()
         {

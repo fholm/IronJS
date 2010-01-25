@@ -14,6 +14,15 @@ What you need to use IronJS
 * Requires .NET 4.0 Beta 2, since a few C# 4.0 specific features are used (Covariance most notably)
 * The Dynamic Language Runtime from Microsoft.
 
+## "Roadmap"
+
+1. Refactor properties to use the new Descriptor model based on the IDescriptor interface
+2. Implement canonical DLR binders (speed-up)
+3. Get basic .NET/CLR inter-op working
+    * Property and Field access (static + instance)
+    * Calling methods (static + instance)
+    * Creating simple objects (no generics)
+
 ## ECMAScript 3.0 Compliance
 
 ### Types

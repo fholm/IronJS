@@ -18,8 +18,8 @@ What you need to use IronJS
 
 This list is not in any chronological or priority order
 
-* Refactor properties to use the new Descriptor model based on the IDescriptor interface - *25%*
-* Implement canonical DLR binders - *DONE*
+* Refactor properties to use the new Descriptor model based on the IDescriptor interface - **25%**
+* Implement canonical DLR binders - **DONE**
 * Get basic .NET/CLR inter-op working
     * Property and Field access (static + instance)
     * Calling methods (static + instance)

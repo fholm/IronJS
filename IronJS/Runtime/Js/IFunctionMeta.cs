@@ -15,12 +15,6 @@ namespace IronJS.Runtime.Js
 
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
         public override Meta BindInvoke(InvokeBinder binder, Meta[] args)
         {
             return new Meta(

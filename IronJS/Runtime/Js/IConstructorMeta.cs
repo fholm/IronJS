@@ -17,7 +17,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindCreateInstance(CreateInstanceBinder binder, Meta[] args)
         {
-            //TODO: insert defer
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IConstructor>(

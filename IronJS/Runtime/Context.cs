@@ -6,6 +6,7 @@ using IronJS.Runtime.Binders;
 using IronJS.Runtime.Builtins;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
+using System.Collections.Generic;
 
 namespace IronJS.Runtime
 {
@@ -133,64 +134,127 @@ namespace IronJS.Runtime
 
         #region Binders
 
+        Dictionary<ExpressionType, JsBinaryOpBinder> _binaryOpBinders 
+            = new Dictionary<ExpressionType, JsBinaryOpBinder>();
         internal JsBinaryOpBinder CreateBinaryOpBinder(ExpressionType op)
         {
-            return new JsBinaryOpBinder(op, this);
+            if (_binaryOpBinders.ContainsKey(op))
+                return _binaryOpBinders[op];
+
+            return _binaryOpBinders[op] = new JsBinaryOpBinder(op, this);
         }
 
+        Dictionary<ExpressionType, JsUnaryOpBinder> _unaryOpBinders
+            = new Dictionary<ExpressionType, JsUnaryOpBinder>();
         internal JsUnaryOpBinder CreateUnaryOpBinder(ExpressionType op)
         {
-            return new JsUnaryOpBinder(op, this);
+            if (_unaryOpBinders.ContainsKey(op))
+                return _unaryOpBinders[op];
+
+            return _unaryOpBinders[op] = new JsUnaryOpBinder(op, this);
         }
 
+        Dictionary<Type, JsConvertBinder> _convertBinders
+            = new Dictionary<Type, JsConvertBinder>();
         internal JsConvertBinder CreateConvertBinder(Type type)
         {
-            return new JsConvertBinder(type, this);
+            if (_convertBinders.ContainsKey(type))
+                return _convertBinders[type];
+
+            return _convertBinders[type] = new JsConvertBinder(type, this);
         }
 
+        Dictionary<CallInfo, JsGetIndexBinder> _getIndexBinders
+            = new Dictionary<CallInfo, JsGetIndexBinder>();
         internal JsGetIndexBinder CreateGetIndexBinder(CallInfo callInfo)
         {
-            return new JsGetIndexBinder(callInfo, this);
+            if (_getIndexBinders.ContainsKey(callInfo))
+                return _getIndexBinders[callInfo];
+
+            return _getIndexBinders[callInfo] = new JsGetIndexBinder(callInfo, this);
         }
 
+        Dictionary<CallInfo, JsSetIndexBinder> _setIndexBinders
+            = new Dictionary<CallInfo, JsSetIndexBinder>();
         internal JsSetIndexBinder CreateSetIndexBinder(CallInfo callInfo)
         {
-            return new JsSetIndexBinder(callInfo, this);
+            if (_setIndexBinders.ContainsKey(callInfo))
+                return _setIndexBinders[callInfo];
+
+            return _setIndexBinders[callInfo] = new JsSetIndexBinder(callInfo, this);
         }
 
+        Dictionary<CallInfo, JsDeleteIndexBinder> _deleteIndexBinders
+            = new Dictionary<CallInfo, JsDeleteIndexBinder>();
         internal JsDeleteIndexBinder CreateDeleteIndexBinder(CallInfo callInfo)
         {
-            return new JsDeleteIndexBinder(callInfo, this);
+            if (_deleteIndexBinders.ContainsKey(callInfo))
+                return _deleteIndexBinders[callInfo];
+
+            return _deleteIndexBinders[callInfo] = new JsDeleteIndexBinder(callInfo, this);
         }
 
+        Dictionary<object, JsGetMemberBinder> _getMemberBinders
+            = new Dictionary<object, JsGetMemberBinder>();
         internal JsGetMemberBinder CreateGetMemberBinder(object name)
         {
-            return new JsGetMemberBinder(name, this);
+            if (_getMemberBinders.ContainsKey(name))
+                return _getMemberBinders[name];
+
+            return _getMemberBinders[name] = new JsGetMemberBinder(name, this);
         }
 
+        Dictionary<object, JsSetMemberBinder> _setMemberBinders
+            = new Dictionary<object, JsSetMemberBinder>();
         internal JsSetMemberBinder CreateSetMemberBinder(object name)
         {
-            return new JsSetMemberBinder(name, this);
+            if (_setMemberBinders.ContainsKey(name))
+                return _setMemberBinders[name];
+
+            return _setMemberBinders[name] = new JsSetMemberBinder(name, this);
         }
 
+        Dictionary<object, JsDeleteMemberBinder> _deleteMemberBinders
+            = new Dictionary<object, JsDeleteMemberBinder>();
         internal JsDeleteMemberBinder CreateDeleteMemberBinder(object name)
         {
-            return new JsDeleteMemberBinder(name, this);
+            if (_deleteMemberBinders.ContainsKey(name))
+                return _deleteMemberBinders[name];
+
+            return _deleteMemberBinders[name] = new JsDeleteMemberBinder(name, this);
         }
 
+        Dictionary<CallInfo, JsInvokeBinder> _invokeBinders
+            = new Dictionary<CallInfo, JsInvokeBinder>();
         internal JsInvokeBinder CreateInvokeBinder(CallInfo callInfo)
         {
-            return new JsInvokeBinder(callInfo, this);
+            if (_invokeBinders.ContainsKey(callInfo))
+                return _invokeBinders[callInfo];
+
+            return _invokeBinders[callInfo] = new JsInvokeBinder(callInfo, this);
         }
 
-        internal JsInvokeMemberBinder CreateInvokeMemberBinder(object name, CallInfo callInfo)
-        {
-            return new JsInvokeMemberBinder(name, callInfo, this);
-        }
-
+        Dictionary<CallInfo, JsCreateInstanceBinder> _createInstanceBinders
+            = new Dictionary<CallInfo, JsCreateInstanceBinder>();
         internal JsCreateInstanceBinder CreateInstanceBinder(CallInfo callInfo)
         {
-            return new JsCreateInstanceBinder(callInfo, this);
+            if (_createInstanceBinders.ContainsKey(callInfo))
+                return _createInstanceBinders[callInfo];
+
+            return _createInstanceBinders[callInfo] = new JsCreateInstanceBinder(callInfo, this);
+        }
+
+        Dictionary<int, JsInvokeMemberBinder> _invokeMemberBinder
+            = new Dictionary<int, JsInvokeMemberBinder>();
+        internal JsInvokeMemberBinder CreateInvokeMemberBinder(object name, CallInfo callInfo)
+        {
+            // Stolen from SymPL who stole it from the DLR
+            var key = 0x28000000 ^ name.GetHashCode() ^ callInfo.GetHashCode();
+
+            if (_invokeMemberBinder.ContainsKey(key))
+                return _invokeMemberBinder[key];
+
+            return _invokeMemberBinder[key] = new JsInvokeMemberBinder(name, callInfo, this);
         }
 
         #endregion

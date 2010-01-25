@@ -8,7 +8,6 @@ using Restrict = System.Dynamic.BindingRestrictions;
 
 namespace IronJS.Runtime.Binders
 {
-
     class JsBinaryOpBinder : BinaryOperationBinder
     {
         Context _context;

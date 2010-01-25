@@ -37,7 +37,7 @@ namespace IronJS.Runtime.Builtins
 
         override public object Call(IObj that, object[] args)
         {
-            return args != null && args.Length > 0 ? JsTypeConverter.ToBoolean(args[0]) : false;
+            return HasArgs(args) ? JsTypeConverter.ToBoolean(args[0]) : false;
         }
 
         override public IObj Construct(object[] args)

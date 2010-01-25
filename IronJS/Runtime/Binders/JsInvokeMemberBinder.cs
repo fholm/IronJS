@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Dynamic;
+using IronJS.Runtime.Utils;
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Binders
@@ -16,11 +17,19 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackInvoke(Meta target, Meta[] args, Meta error)
         {
+            Meta[] deferArgs;
+            if (BinderUtils.NeedsToDefer(target, args, out deferArgs))
+                return Defer(deferArgs);
+
             throw new NotImplementedException();
         }
 
         public override Meta FallbackInvokeMember(Meta target, Meta[] args, Meta error)
         {
+            Meta[] deferArgs;
+            if (BinderUtils.NeedsToDefer(target, args, out deferArgs))
+                return Defer(deferArgs);
+
             throw new NotImplementedException();
         }
     }

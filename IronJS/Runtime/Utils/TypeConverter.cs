@@ -149,7 +149,10 @@ namespace IronJS.Runtime.Utils
         static internal IObj ToObject(object obj, Context context)
         {
             if (obj == null || obj is Undefined)
-                throw new NotImplementedException("C# throwing of JS exceptions not implemented");
+                throw new ShouldThrowTypeError();
+
+            if (obj is IObj)
+                return (IObj)obj;
 
             if (obj is string)
                 return context.StringConstructor.Construct((string)obj);
@@ -159,9 +162,6 @@ namespace IronJS.Runtime.Utils
 
             if (obj is bool)
                 return context.BooleanConstructor.Construct((bool)obj);
-
-            if (obj is IObj)
-                return ((IObj)obj);
 
             throw new NotImplementedException("Can't convert host objects to JS objects");
         }
@@ -314,7 +314,7 @@ namespace IronJS.Runtime.Utils
         static public Et EtToObject(Meta obj, Context context)
         {
             if (obj.LimitType == typeof(Js.Undefined) || (obj.HasValue && obj.Value == null))
-                throw new NotImplementedException("Need do handle null/undefined in ToObject");
+                throw new ShouldThrowTypeError();
 
             if (obj.LimitType == typeof(double))
                 return Et.Call(

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Dynamic;
+using IronJS.Runtime.Utils;
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Binders
@@ -16,6 +17,10 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackDeleteIndex(Meta target, Meta[] indexes, Meta errorSuggestion)
         {
+            Meta[] deferArgs;
+            if (BinderUtils.NeedsToDefer(target, indexes, out deferArgs))
+                return Defer(deferArgs);
+
             throw new NotImplementedException();
         }
     }

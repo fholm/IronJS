@@ -250,6 +250,7 @@
     </Compile>
     <Compile Include="Runtime\Js\ValueObj.cs" />
     <Compile Include="Runtime\RuntimeError.cs" />
+    <Compile Include="Runtime\Utils\BinderUtils.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
       <SubType>Code</SubType>
     </Compile>

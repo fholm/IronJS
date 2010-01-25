@@ -12,7 +12,7 @@ namespace IronJS.Testing
         //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {
-            var context = Context.Create();
+            var context = new Context();
             var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();
             var astNodes = astBuilder.Build("Testing.js", Encoding.UTF8);

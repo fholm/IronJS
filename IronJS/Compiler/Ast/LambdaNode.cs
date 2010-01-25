@@ -62,8 +62,9 @@ namespace IronJS.Compiler.Ast
 
             etgen.ExitFunctionScope();
 
-            return Context.EtCreateFunction(
-                etgen.Context,
+            return Et.Call(
+                Et.Constant(etgen.Context),
+                Context.MiCreateFunction,
                 etgen.FunctionScope.ScopeExpr,
                 FunctionTable.EtPull(
                     etgen.FuncTableExpr,

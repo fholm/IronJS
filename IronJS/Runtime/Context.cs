@@ -27,7 +27,7 @@ namespace IronJS.Runtime
         public RegExp_ctor RegExpContructor { get; protected set; }
         public Math_obj MathObject { get; protected set; }
 
-        protected Context()
+        public Context()
         {
             /*
              * Because of all the circular dependencies
@@ -191,25 +191,6 @@ namespace IronJS.Runtime
         internal JsCreateInstanceBinder CreateInstanceBinder(CallInfo callInfo)
         {
             return new JsCreateInstanceBinder(callInfo, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public Context Create()
-        {
-            return new Context();
-        }
-
-        static internal Et EtCreateFunction(Context context, Et scope, Et lambda)
-        {
-            return Et.Call(
-                Et.Constant(context),
-                MiCreateFunction,
-                scope,
-                lambda
-            );
         }
 
         #endregion

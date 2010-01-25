@@ -31,7 +31,6 @@ namespace IronJS.Compiler
 
             var program = parser.program();
             var root = (ITree)program.Tree;
-
             var nodes = new List<Node>();
 
             if (root.IsNil)
@@ -963,12 +962,12 @@ namespace IronJS.Compiler
             );
         }
 
-        static public string Name(int type)
+        static internal string Name(int type)
         {
             return EcmaParser.tokenNames[type];
         }
 
-        static public string Name(ITree node)
+        static internal string Name(ITree node)
         {
             return Name(node.Type);
         }

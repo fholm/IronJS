@@ -29,6 +29,9 @@ namespace IronJS.Compiler
     public class EtCompilerError : CompilerError
     {
         internal const string CANT_ASSIGN_TO_NODE_TYPE = "Can't assign to node of type '{0}'";
+        internal const string NOT_INSIDE_LOOP = "Not inside a loop";
+        internal const string NO_CONTINUE_LABEL_NAMED = "No loop labelled '{0}' found (continue only works with loops)";
+        internal const string NO_LABEL_NAMED = "No label named '{0}' found";
 
         internal EtCompilerError(string msg, params object[] parms)
             : base(msg, parms)

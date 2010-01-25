@@ -29,7 +29,10 @@ This list is not in any chronological or priority order
 * Implement the remaining Native Objects
     * Error Objects
 	* Date Object
-	* Missing functionality from other objects
+	* Missing functionality from other native objects
+* Performance optimizations
+    * Precompiling + caching inline regular expressions
+	* String value wrapper class instead of String_ctor.Create()
 
 ## ECMAScript 3.0 Compliance
 

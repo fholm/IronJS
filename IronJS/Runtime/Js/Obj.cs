@@ -28,7 +28,7 @@ namespace IronJS.Runtime.Js
 
         #region IDynamicMetaObjectProvider Members
 
-        Meta IDynamicMetaObjectProvider.GetMetaObject(Et parameter)
+        public Meta GetMetaObject(Et parameter)
         {
             return new IObjMeta(parameter, this);
         }

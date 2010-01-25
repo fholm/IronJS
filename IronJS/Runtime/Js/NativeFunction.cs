@@ -37,5 +37,10 @@ namespace IronJS.Runtime.Js
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return "IronJS: NativeFunction";
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js
 
         public override string ToString()
         {
-            return "[object " + Class + "]";
+            return "IronJS: " + Class;
         }
 
         #region IObj Members

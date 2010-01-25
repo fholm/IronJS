@@ -57,5 +57,10 @@ namespace IronJS.Runtime.Js
         {
             return !_attrs.HasFlag(attr);
         }
+
+        public override string ToString()
+        {
+            return "IronJS: Property";
+        }
     }
 }

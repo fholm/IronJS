@@ -6,15 +6,13 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class String_ctor : Obj, IFunction
+    public class String_ctor : NativeConstructor
     {
         public IObj String_prototype { get; private set; }
 
-        protected String_ctor(Context context)
+        public String_ctor(Context context)
+            : base(context)
         {
-            Context = context;
-            Class = ObjClass.Function;
-
             String_prototype = new String_prototype(Context);
             String_prototype.SetOwnProperty("constructor", this);
 
@@ -22,9 +20,12 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("fromCharCode", new String_ctor_fromCharCode(Context));
         }
 
-        #region IFunction Members
+        public IObj Construct()
+        {
+            return Construct(null);
+        }
 
-        public object Call(IObj that, object[] args)
+        override public object Call(IObj that, object[] args)
         {
             if (args.Length > 0)
                 return JsTypeConverter.ToString(args[0]);
@@ -32,12 +33,7 @@ namespace IronJS.Runtime.Builtins
             return "";
         }
 
-        public IObj Construct()
-        {
-            return Construct(null);
-        }
-
-        public IObj Construct(object[] args)
+        override public IObj Construct(object[] args)
         {
             var str = args != null && args.Length > 0 ? JsTypeConverter.ToString(args[0]) : "";
             var obj = new ValueObj(str);
@@ -49,30 +45,5 @@ namespace IronJS.Runtime.Builtins
 
             return obj;
         }
-
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IFunctionMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public String_ctor Create(Context context)
-        {
-            return new String_ctor(context);
-        }
-
-        #endregion 
     }
 }

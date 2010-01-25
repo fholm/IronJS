@@ -7,28 +7,18 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class RegExp_ctor : Obj, IFunction
+    public class RegExp_ctor : NativeConstructor
     {
         public IObj RegExp_prototype { get; private set; }
 
-        protected RegExp_ctor(Context context)
+        public RegExp_ctor(Context context)
+            : base(context)
         {
-            Class = ObjClass.Function;
-            Context = context;
-            Prototype = context.FunctionConstructor.Function_prototype;
-
             RegExp_prototype = new RegExp_prototype(Context);
             RegExp_prototype.SetOwnProperty("constructor", this);
 
             SetOwnProperty("prototype", RegExp_prototype);
             SetOwnProperty("length", 2.0D);
-        }
-
-        #region IFunction Members
-
-        public object Call(IObj that, object[] args)
-        {
-            return Construct(args);
         }
 
         public IObj Construct(object pattern, object flags)
@@ -69,7 +59,12 @@ namespace IronJS.Runtime.Builtins
             return regExpObj;
         }
 
-        public IObj Construct(object[] args)
+        override public object Call(IObj that, object[] args)
+        {
+            return Construct(args);
+        }
+
+        override public IObj Construct(object[] args)
         {
             if (args.Length <= 0)
                 throw new ArgumentException();
@@ -88,30 +83,5 @@ namespace IronJS.Runtime.Builtins
 
             throw new NotImplementedException();
         }
-
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IFunctionMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public RegExp_ctor Create(Context context)
-        {
-            return new RegExp_ctor(context);
-        }
-
-        #endregion
     }
 }

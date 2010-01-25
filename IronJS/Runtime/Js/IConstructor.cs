@@ -10,7 +10,7 @@ namespace IronJS.Runtime.Js
 
     static public class IConstructorMethods
     {
-        static public readonly MethodInfo MiConstruct = typeof(IFunction).GetMethod("Construct");
-        static public readonly MethodInfo MiHasInstance = typeof(IFunction).GetMethod("HasInstance");
+        static public readonly MethodInfo MiConstruct = typeof(IConstructor).GetMethod("Construct");
+        static public readonly MethodInfo MiHasInstance = typeof(IConstructor).GetMethod("HasInstance");
     }
 }

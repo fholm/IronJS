@@ -25,7 +25,11 @@ namespace IronJS.Runtime
             return Lambda.Delegate.Invoke(callScope);
         }
 
-        public virtual IObj Construct(object[] args)
+        #endregion
+
+        #region IConstructor Members
+
+        public IObj Construct(object[] args)
         {
             var newObject = Context.ObjectConstructor.Construct();
             var callScope = Scope.CreateCallScope(Scope, this, newObject, args, Lambda.Params);
@@ -64,7 +68,7 @@ namespace IronJS.Runtime
 
         public Meta GetMetaObject(Et parameter)
         {
-            return new IFunctionMeta(parameter, this);
+            return new IConstructorMeta(parameter, this);
         }
 
         #endregion

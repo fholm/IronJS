@@ -6,15 +6,13 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class Number_ctor : Obj, IFunction
+    public class Number_ctor : NativeConstructor
     {
         public IObj Number_prototype { get; private set; }
 
-        protected Number_ctor(Context context)
+        public Number_ctor(Context context)
+            : base(context)
         {
-            Context = context;
-            Class = ObjClass.Function;
-
             Number_prototype = new Number_prototype(Context);
             Number_prototype.SetOwnProperty("constructor", this);
 
@@ -26,19 +24,17 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("POSITIVE_INFINITY", double.PositiveInfinity);
         }
 
-        #region IFunction Members
-
-        public object Call(IObj that, object[] args)
-        {
-            return args != null && args.Length > 0 ? JsTypeConverter.ToNumber(args[0]) : 0.0D;
-        }
-
         public IObj Construct()
         {
             return Construct(null);
         }
 
-        public IObj Construct(object[] args)
+        override public object Call(IObj that, object[] args)
+        {
+            return args != null && args.Length > 0 ? JsTypeConverter.ToNumber(args[0]) : 0.0D;
+        }
+
+        override public IObj Construct(object[] args)
         {
             var num = args != null && args.Length > 0 ? JsTypeConverter.ToNumber(args[0]) : 0.0D;
             var obj = new ValueObj(num);
@@ -49,30 +45,5 @@ namespace IronJS.Runtime.Builtins
 
             return obj;
         }
-
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IFunctionMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public Number_ctor Create(Context context)
-        {
-            return new Number_ctor(context);
-        }
-
-        #endregion
     }
 }

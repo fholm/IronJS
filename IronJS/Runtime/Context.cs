@@ -29,18 +29,33 @@ namespace IronJS.Runtime
 
         protected Context()
         {
-            FunctionConstructor = Function_ctor.Create(this);
-            ObjectConstructor = Object_ctor.Create(this);
-            ArrayConstructor = new Array_ctor(this);
-            StringConstructor = String_ctor.Create(this);
-            BooleanConstructor = Boolean_ctor.Create(this);
-            NumberConstructor = Number_ctor.Create(this);
-            RegExpContructor = RegExp_ctor.Create(this);
-            MathObject = Math_obj.Create(this);
+            /*
+             * Because of all the circular dependencies
+             * between the native objects we have to
+             * first create the Function and Function.prototype object
+             * then create the Object and Object.prototype
+             * */
+            FunctionConstructor = new Function_ctor(this);
+            ObjectConstructor = new Object_ctor(this);
 
+            /*
+             * Then connect the dependencies between 
+             * Object/Function manually
+             * */
             ObjectConstructor.Prototype = FunctionConstructor.Function_prototype;
             FunctionConstructor.Prototype = FunctionConstructor.Function_prototype;
             FunctionConstructor.Function_prototype.Prototype = ObjectConstructor.Object_prototype;
+
+            /*
+             * And after that, we can create the rest
+             * of the native objects
+             * */
+            ArrayConstructor = new Array_ctor(this);
+            StringConstructor = new String_ctor(this);
+            BooleanConstructor = new Boolean_ctor(this);
+            NumberConstructor = new Number_ctor(this);
+            RegExpContructor = new RegExp_ctor(this);
+            MathObject = new Math_obj(this);
         }
 
         public void SetupGlobals(Scope globals)

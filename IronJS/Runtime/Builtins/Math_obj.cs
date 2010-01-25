@@ -5,7 +5,7 @@ namespace IronJS.Runtime.Builtins
 {
     public class Math_obj : Obj
     {
-        internal Math_obj(Context context)
+        public Math_obj(Context context)
             : base()
         {
             Context = context;
@@ -39,11 +39,6 @@ namespace IronJS.Runtime.Builtins
             SetOwnProperty("sin", new Math_obj_sin(Context));
             SetOwnProperty("sqrt", new Math_obj_sqrt(Context));
             SetOwnProperty("tan", new Math_obj_tan(Context));
-        }
-
-        internal static Math_obj Create(Context context)
-        {
-            return new Math_obj(context);
         }
     }
 }

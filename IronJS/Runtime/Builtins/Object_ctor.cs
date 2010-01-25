@@ -6,14 +6,16 @@ using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
-    public class Object_ctor : Obj, IFunction
+    public class Object_ctor : NativeConstructor
     {
         public IObj Object_prototype { get; private set; }
 
-        protected Object_ctor(Context context)
+        public Object_ctor(Context context)
+            : base(context)
         {
-            Context = context;
-            Object_prototype = CreatePrototype();
+            Object_prototype = new Object_prototype(context);
+            Object_prototype.SetOwnProperty("constructor", this);
+
             Put("prototype", Object_prototype);
         }
 
@@ -22,28 +24,8 @@ namespace IronJS.Runtime.Builtins
             return Construct(null);
         }
 
-        protected IObj CreatePrototype()
-        {
-            var obj = new Obj();
-
-            obj.Class = ObjClass.Object;
-            obj.Prototype = null;
-            obj.Context = Context;
-            obj.SetOwnProperty("constructor", this);
-            obj.SetOwnProperty("toString", new Object_prototype_toString(Context));
-            obj.SetOwnProperty("valueOf", new Object_prototype_valueOf(Context));
-            obj.SetOwnProperty("hasOwnProperty", new Object_prototype_hasOwnProperty(Context));
-            obj.SetOwnProperty("isPrototypeOf", new Object_prototype_isPrototypeOf(Context));
-            obj.SetOwnProperty("propertyIsEnumerable", new Object_prototype_propertyIsEnumerable(Context));
-            obj.SetOwnProperty("toLocaleString", new Object_prototype_toLocaleString(Context));
-
-            return obj;
-        }
-
-        #region IFunction Members
-
         // 15.2.1.1
-        public object Call(IObj that, object[] args)
+        override public object Call(IObj that, object[] args)
         {
             // step 1
             if (args.Length == 0 
@@ -55,7 +37,7 @@ namespace IronJS.Runtime.Builtins
             return JsTypeConverter.ToObject(args[0], Context);
         }
 
-        public IObj Construct(object[] args)
+        override public IObj Construct(object[] args)
         {
             // step 8 (verification)
             if (args != null
@@ -82,30 +64,5 @@ namespace IronJS.Runtime.Builtins
             obj.Prototype = Object_prototype;
             return obj;
         }
-
-        public bool HasInstance(object obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IFunctionMeta(parameter, this);
-        }
-
-        #endregion
-
-        #region Static
-
-        static public Object_ctor Create(Context context)
-        {
-            return new Object_ctor(context);
-        }
-
-        #endregion 
     }
 }

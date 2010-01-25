@@ -2,7 +2,7 @@
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
-{
+{ 
     public class VoidNode : Node
     {
         public Node Target { get; protected set; }

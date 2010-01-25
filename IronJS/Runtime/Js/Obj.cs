@@ -16,24 +16,10 @@ namespace IronJS.Runtime.Js
         protected readonly Dictionary<object, Property> Properties 
             = new Dictionary<object, Property>();
 
-        public Obj()
-        {
-
-        }
-
         public override string ToString()
         {
             return "[object " + Class + "]";
         }
-
-        #region IDynamicMetaObjectProvider Members
-
-        public Meta GetMetaObject(Et parameter)
-        {
-            return new IObjMeta(parameter, this);
-        }
-
-        #endregion
 
         #region IObj Members
 
@@ -170,6 +156,15 @@ namespace IronJS.Runtime.Js
         public virtual List<object> GetAllPropertyNames()
         {
             return Properties.Keys.ToList();
+        }
+
+        #endregion
+
+        #region IDynamicMetaObjectProvider Members
+
+        public Meta GetMetaObject(Et parameter)
+        {
+            return new IObjMeta(parameter, this);
         }
 
         #endregion

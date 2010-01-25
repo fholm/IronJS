@@ -21,12 +21,12 @@
         public bool IsReadOnly { get; protected set; }
         public bool IsDeletable { get; protected set; }
 
-        public object Get()
+        public virtual object Get()
         {
             return Value;
         }
 
-        public object Set(object value)
+        public virtual object Set(object value)
         {
             if (IsReadOnly)
                 throw InternalRuntimeError.New(

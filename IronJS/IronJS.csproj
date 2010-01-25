@@ -121,6 +121,7 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype.cs" />
+    <Compile Include="Runtime\Js\Descriptors\DoubleProperty.cs" />
     <Compile Include="Runtime\Js\Descriptors\NativeProperty.cs" />
     <Compile Include="Runtime\Js\Descriptors\UserProperty.cs" />
     <Compile Include="Runtime\Js\IConstructor.cs" />

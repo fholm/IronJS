@@ -5,8 +5,8 @@ namespace IronJS.Compiler.Ast
 {
     public class IndexAccessNode : Node
     {
-        public readonly Node Target;
-        public readonly Node Index;
+        public Node Target { get; protected set; }
+        public Node Index { get; protected set; }
 
         public IndexAccessNode(Node target, Node index)
             : base(NodeType.IndexAccess)

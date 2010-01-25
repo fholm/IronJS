@@ -5,7 +5,7 @@ namespace IronJS.Compiler.Ast
 {
     public class TypeOfNode : Node
     {
-        public readonly Node Target;
+        public Node Target { get; protected set; }
 
         public TypeOfNode(Node target)
             : base(NodeType.TypeOf)

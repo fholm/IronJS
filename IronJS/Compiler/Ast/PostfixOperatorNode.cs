@@ -6,8 +6,8 @@ namespace IronJS.Compiler.Ast
 {
     public class PostfixOperatorNode : Node
     {
-        public readonly Node Target;
-        public readonly ExpressionType Op;
+        public Node Target { get; protected set; }
+        public ExpressionType Op { get; protected set; }
 
         public PostfixOperatorNode(Node node, ExpressionType op)
             : base(NodeType.PostfixOperator)

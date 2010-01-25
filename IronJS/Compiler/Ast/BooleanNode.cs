@@ -4,7 +4,7 @@ namespace IronJS.Compiler.Ast
 {
     public class BooleanNode : Node
     {
-        public readonly bool Value;
+        public bool Value { get; protected set; }
 
         public BooleanNode(bool value)
             : base(NodeType.Boolean)

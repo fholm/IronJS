@@ -6,8 +6,8 @@ namespace IronJS.Compiler.Ast
 {
     public class InNode : Node
     {
-        private Node Target;
-        private Node Property;
+        public Node Target { get; protected set; }
+        public Node Property { get; protected set; }
 
         public InNode(Node target, Node property)
             : base(NodeType.In)

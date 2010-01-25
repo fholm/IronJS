@@ -12,8 +12,8 @@ namespace IronJS.Compiler.Ast
 {
     public class CallNode : Node
     {
-        public readonly Node Target;
-        public readonly List<Node> Args;
+        public Node Target { get; protected set; }
+        public List<Node> Args { get; protected set; }
 
         public CallNode(Node target, List<Node> args)
             : base(NodeType.Call)

@@ -7,8 +7,8 @@ namespace IronJS.Compiler.Ast
 {
     public class MemberAccessNode : Node
     {
-        public readonly Node Target;
-        public readonly string Name;
+        public Node Target { get; protected set; }
+        public string Name { get; protected set; }
 
         public MemberAccessNode(Node target, string member)
             : base(NodeType.MemberAccess)

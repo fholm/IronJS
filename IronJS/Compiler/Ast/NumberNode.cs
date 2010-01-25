@@ -6,7 +6,7 @@ namespace IronJS.Compiler.Ast
 {
     public class NumberNode : Node
     {
-        public readonly double Value;
+        public double Value { get; protected set; }
 
         public NumberNode(double value)
             : base(NodeType.Number)

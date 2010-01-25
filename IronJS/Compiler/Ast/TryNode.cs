@@ -6,9 +6,9 @@ namespace IronJS.Compiler.Ast
 {
     public class TryNode : Node
     {
-        public readonly Node Body;
-        public readonly CatchNode Catch;
-        public readonly Node Finally;
+        public Node Body { get; protected set; }
+        public CatchNode Catch { get; protected set; }
+        public Node Finally { get; protected set; }
 
         public TryNode(Node body, CatchNode _catch, Node _finally)
             : base(NodeType.Try)

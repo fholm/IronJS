@@ -10,9 +10,9 @@ namespace IronJS.Compiler.Ast
 {
     public class LambdaNode : Node
     {
-        public readonly List<IdentifierNode> Args;
-        public readonly Node Body;
-        public readonly string Name;
+        public List<IdentifierNode> Args { get; protected set; }
+        public Node Body { get; protected set; }
+        public string Name { get; protected set; }
 
         public LambdaNode(List<IdentifierNode> args, Node body, string name)
             : base(NodeType.Lambda)

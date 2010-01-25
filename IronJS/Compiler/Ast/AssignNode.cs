@@ -6,8 +6,8 @@ namespace IronJS.Compiler.Ast
 {
     public class AssignNode : Node
     {
-        public readonly Node Target;
-        public readonly Node Value;
+        public Node Target { get; protected set; }
+        public Node Value { get; protected set; }
 
         public AssignNode(Node target, Node value)
             : base(NodeType.Assign)

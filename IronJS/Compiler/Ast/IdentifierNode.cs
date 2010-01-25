@@ -7,8 +7,8 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
-        public readonly string Name;
-        public bool IsLocal;
+        public string Name { get; protected set; }
+        public bool IsLocal { get; set; }
 
         public IdentifierNode(string name)
             : base(NodeType.Identifier)

@@ -7,10 +7,10 @@ namespace IronJS.Compiler.Ast
     // 12.6.3
     public class ForStepNode : LoopNode
     {
-        public readonly Node Setup;
-        public readonly Node Test;
-        public readonly Node Incr;
-        public readonly Node Body;
+        public Node Setup { get; protected set; }
+        public Node Test { get; protected set; }
+        public Node Incr { get; protected set; }
+        public Node Body { get; protected set; }
 
         public ForStepNode(Node setup, Node test, Node incr, Node body)
             : base(NodeType.ForStep)

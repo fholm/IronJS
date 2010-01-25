@@ -7,9 +7,9 @@ namespace IronJS.Compiler.Ast
 {
     public class BinaryOpNode : Node
     {
-        public readonly Node Left;
-        public readonly Node Right;
-        public readonly ExpressionType Op;
+        public Node Left { get; protected set; }
+        public Node Right { get; protected set; }
+        public ExpressionType Op { get; protected set; }
 
         public BinaryOpNode(Node left, Node right, ExpressionType op)
             : base(NodeType.BinaryOp)

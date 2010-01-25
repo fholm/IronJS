@@ -10,9 +10,9 @@ namespace IronJS.Compiler.Ast
 
     public class WhileNode : LoopNode
     {
-        public readonly Node Test;
-        public readonly Node Body;
-        public readonly WhileType Loop;
+        public Node Test { get; protected set; }
+        public Node Body { get; protected set; }
+        public WhileType Loop { get; protected set; }
 
         public WhileNode(Node test, Node body, WhileType type)
             : base(NodeType.While)

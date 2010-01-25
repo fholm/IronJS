@@ -6,12 +6,12 @@ namespace IronJS.Compiler.Ast
 {
     public class ThrowNode : Node
     {
-        public readonly Node Target;
+        public Node Value { get; protected set; }
 
-        public ThrowNode(Node target)
+        public ThrowNode(Node value)
             : base(NodeType.Throw)
         {
-            Target = target;
+            Value = value;
         }
 
         public override Et Walk(EtGenerator etgen)
@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast
                 AstUtils.SimpleNewHelper(
                     JsRuntimeError.Ctor,
                     etgen.GenerateConvertToObject(
-                        Target.Walk(etgen)
+                        Value.Walk(etgen)
                     )
                 )
             );

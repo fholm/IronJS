@@ -5,8 +5,8 @@ namespace IronJS.Compiler.Ast
 {
     public class UnaryOpNode : Node
     {
-        public readonly Node Target;
-        public readonly ExpressionType Op;
+        public Node Target { get; protected set; }
+        public ExpressionType Op { get; protected set; }
 
         public UnaryOpNode(Node target, ExpressionType op)
             : base(NodeType.UnaryOp)

@@ -5,7 +5,7 @@ namespace IronJS.Compiler.Ast
     // 12.8
     public class BreakNode : Node
     {
-        public readonly string Label;
+        public string Label { get; protected set; }
 
         public BreakNode(string label)
             : base(NodeType.Break)

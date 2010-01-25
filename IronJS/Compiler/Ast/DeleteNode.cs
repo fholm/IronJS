@@ -8,7 +8,7 @@ namespace IronJS.Compiler.Ast
 {
     public class DeleteNode : Node
     {
-        public readonly Node Target;
+        public Node Target { get; protected set; }
 
         public DeleteNode(Node target)
             : base(NodeType.Delete)

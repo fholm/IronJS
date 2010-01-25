@@ -5,8 +5,8 @@ namespace IronJS.Compiler.Ast
 {
     public class InstanceOfNode : Node
     {
-        public readonly Node Target;
-        public readonly Node Function;
+        public Node Target { get; protected set; }
+        public Node Function { get; protected set; }
 
         public InstanceOfNode(Node target, Node function)
             : base(NodeType.InstanceOf)

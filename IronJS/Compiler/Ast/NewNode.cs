@@ -10,9 +10,9 @@ namespace IronJS.Compiler.Ast
 {
     public class NewNode : Node
     {
-        public readonly Node Target;
-        public readonly List<Node> Args;
-        public readonly List<AutoPropertyNode> Properties;
+        public Node Target { get; protected set; }
+        public List<Node> Args { get; protected set; }
+        public List<AutoPropertyNode> Properties { get; protected set; }
 
         public bool HasProperties { get { return Properties != null; } }
 

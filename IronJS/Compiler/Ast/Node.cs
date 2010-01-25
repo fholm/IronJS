@@ -23,9 +23,9 @@ namespace IronJS.Compiler.Ast
 
     abstract public class Node
     {
-        public readonly NodeType Type;
-        public readonly int Line;
-        public readonly int Column;
+        public NodeType Type { get; protected set; }
+        public int Line { get; protected set; }
+        public int Column { get; protected set; }
 
         public Node(NodeType type, ITree node)
             : this(type)

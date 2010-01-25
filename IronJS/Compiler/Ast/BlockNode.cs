@@ -8,8 +8,8 @@ namespace IronJS.Compiler.Ast
 {
     public class BlockNode : Node
     {
-        public readonly List<Node> Nodes;
-        public readonly bool IsEmpty;
+        public List<Node> Nodes { get; protected set; }
+        public bool IsEmpty { get; protected set; }
 
         public BlockNode(List<Node> nodes)
             : base(NodeType.Block)

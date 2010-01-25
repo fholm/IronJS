@@ -8,10 +8,10 @@ namespace IronJS.Compiler.Ast
 {
     public class SwitchNode : Node, ILabelableNode
     {
-        public readonly Node Target;
-        public readonly Node Default;
-        public readonly List<Tuple<Node, Node>> Cases;
-        public string Label;
+        public Node Target { get; protected set; }
+        public Node Default { get; protected set; }
+        public List<Tuple<Node, Node>> Cases { get; protected set; }
+        public string Label { get; protected set; }
 
         public SwitchNode(Node taret, Node _default, List<Tuple<Node, Node>> cases)
             : base(NodeType.Switch)

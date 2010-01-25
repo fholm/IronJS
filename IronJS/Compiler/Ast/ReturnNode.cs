@@ -5,7 +5,7 @@ namespace IronJS.Compiler.Ast
 {
     public class ReturnNode : Node
     {
-        public readonly Node Value;
+        public Node Value { get; protected set; }
 
         public ReturnNode(Node value)
             : base(NodeType.Return)

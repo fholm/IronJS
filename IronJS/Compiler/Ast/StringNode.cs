@@ -6,7 +6,7 @@ namespace IronJS.Compiler.Ast
 {
     public class StringNode : Node
     {
-        public readonly string Value;
+        public string Value { get; protected set; }
 
         public StringNode(string value)
             : base(NodeType.String)

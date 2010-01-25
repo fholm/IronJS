@@ -5,8 +5,8 @@ namespace IronJS.Compiler.Ast
 {
     public class RegexNode : Node
     {
-        public readonly string Regex;
-        public readonly string Modifiers;
+        public string Regex { get; protected set; }
+        public string Modifiers { get; protected set; }
 
         public RegexNode(string regex)
             : base(NodeType.Regex)

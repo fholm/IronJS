@@ -7,10 +7,10 @@ namespace IronJS.Compiler.Ast
 {
     public class IfNode : Node
     {
-        public readonly Node Test;
-        public readonly Node TrueBranch;
-        public readonly Node ElseBranch;
-        public readonly bool HasElseBranch;
+        public Node Test { get; protected set; }
+        public Node TrueBranch { get; protected set; }
+        public Node ElseBranch { get; protected set; }
+        public bool HasElseBranch { get; protected set; }
 
         public IfNode(Node test, Node trueBranch, Node elseBranch)
             : base(NodeType.If)

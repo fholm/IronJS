@@ -5,8 +5,8 @@ namespace IronJS.Compiler.Ast
 {
     public class AutoPropertyNode : Node
     {
-        public readonly object Name;
-        public readonly Node Value;
+        public object Name { get; protected set; }
+        public Node Value { get; protected set; }
 
         public AutoPropertyNode(object name, Node value)
             : base(NodeType.AutoProperty)

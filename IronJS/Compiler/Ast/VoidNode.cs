@@ -5,9 +5,9 @@ namespace IronJS.Compiler.Ast
 {
     public class VoidNode : Node
     {
-        public readonly Ast.Node Target;
+        public Node Target { get; protected set; }
 
-        public VoidNode(Ast.Node target)
+        public VoidNode(Node target)
             : base(NodeType.Void)
         {
             Target = target;

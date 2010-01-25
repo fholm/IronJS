@@ -6,8 +6,8 @@ namespace IronJS.Compiler.Ast
 {
     public class UnsignedRightShiftNode : Node
     {
-        public readonly Node Left;
-        public readonly Node Right;
+        public Node Left { get; protected set; }
+        public Node Right { get; protected set; }
 
         public UnsignedRightShiftNode(Node left, Node right)
             : base(NodeType.UnsignedRightShift)

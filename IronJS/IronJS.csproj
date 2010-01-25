@@ -236,7 +236,7 @@
     <Compile Include="Runtime\Js\Property.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\RegExpObj.cs" />
+    <Compile Include="Runtime\Js\RegExp.cs" />
     <Compile Include="Runtime\Js\Scope.cs" />
     <Compile Include="Runtime\Js\FunctionTable.cs" />
     <Compile Include="Runtime\Js\Undefined.cs">
@@ -247,6 +247,7 @@
     <Compile Include="Runtime\Utils\EtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Utils\HelperFunctions.cs" />
     <Compile Include="Runtime\Utils\RestrictUtils.cs">
       <SubType>Code</SubType>
     </Compile>

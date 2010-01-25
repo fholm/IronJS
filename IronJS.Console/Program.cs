@@ -3,6 +3,7 @@ using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using System.Collections.Generic;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Testing
 {
@@ -22,7 +23,7 @@ namespace IronJS.Testing
 
             globals.Global(
                 "println",
-                typeof(Operators).GetMethod("PrintLine")
+                typeof(HelperFunctions).GetMethod("PrintLine")
             );
 
             compiled(globals);

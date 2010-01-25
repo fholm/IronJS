@@ -3,7 +3,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    class AutoPropertyNode : Node
+    public class AutoPropertyNode : Node
     {
         public readonly object Name;
         public readonly Node Value;

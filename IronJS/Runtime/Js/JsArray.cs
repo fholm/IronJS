@@ -62,32 +62,10 @@ namespace IronJS.Runtime.Js
 
         public object DefaultValue(ValueHint hint)
         {
-            //TODO: This is an exact duplicate of Obj.DefaultValue, refactor into method
-            object toString;
-            object valueOf;
-
             if (hint == ValueHint.String)
-            {
-                toString = this.Search("toString");
-                if (toString is IFunction)
-                    return (toString as IFunction).Call(this, null);
+                return this.DefaultValueString();
 
-                valueOf = this.Search("valueOf");
-                if (valueOf is IFunction)
-                    return (valueOf as IFunction).Call(this, null);
-
-                throw new ShouldThrowTypeError();
-            }
-
-            valueOf = this.Search("valueOf");
-            if (valueOf is IFunction)
-                return (valueOf as IFunction).Call(this, null);
-
-            toString = this.Search("toString");
-            if (toString is IFunction)
-                return (toString as IFunction).Call(this, null);
-
-            throw new ShouldThrowTypeError();
+            return this.DefaultValueNumber();
         }
 
         public List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames()

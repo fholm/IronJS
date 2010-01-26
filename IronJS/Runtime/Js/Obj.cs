@@ -41,43 +41,27 @@ namespace IronJS.Runtime.Js
             IDescriptor<IObj> descriptor;
 
             if (Properties.TryGetValue(name, out descriptor))
-                return descriptor.IsReadOnly;
+                return !descriptor.IsReadOnly;
 
             return true;
         }
 
         public bool TryDelete(object name)
         {
-            return Properties.Remove(name);
+            IDescriptor<IObj> descriptor;
+
+            if (Properties.TryGetValue(name, out descriptor))
+                return descriptor.IsDeletable ? Properties.Remove(name) : false;
+
+            return true; //TODO: Verify we should return true if property doesn't exist
         }
 
         public object DefaultValue(ValueHint hint)
         {
-            object toString;
-            object valueOf;
-
             if (hint == ValueHint.String)
-            {
-                toString = this.Search("toString");
-                if (toString is IFunction)
-                    return (toString as IFunction).Call(this, null);
+                return this.DefaultValueString();
 
-                valueOf = this.Search("valueOf");
-                if (valueOf is IFunction)
-                    return (valueOf as IFunction).Call(this, null);
-
-                throw new ShouldThrowTypeError();
-            }
-
-            valueOf = this.Search("valueOf");
-            if (valueOf is IFunction)
-                return (valueOf as IFunction).Call(this, null);
-
-            toString = this.Search("toString");
-            if (toString is IFunction)
-                return (toString as IFunction).Call(this, null);
-
-            throw new ShouldThrowTypeError();
+            return this.DefaultValueNumber();
         }
 
         public List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames()

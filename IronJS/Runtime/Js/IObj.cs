@@ -50,7 +50,8 @@ namespace IronJS.Runtime.Js
 
     public static class IObjUtils
     {
-        static public readonly MethodInfo MiTryDelete = typeof(IObj).GetMethod("TryDelete");
+        static public readonly MethodInfo MiTryDelete 
+            = typeof(IObj).GetMethod("TryDelete");
 
         public static bool HasValue(this IObj obj)
         {
@@ -155,6 +156,36 @@ namespace IronJS.Runtime.Js
                 obj.Set(name, new UserProperty(obj, value));
 
             return value;
+        }
+
+        /*
+         * */
+        public static object DefaultValueString(this IObj obj)
+        {
+            var toString = obj.Search("toString");
+            if (toString is IFunction)
+                return (toString as IFunction).Call(obj, null);
+
+            var valueOf = obj.Search("valueOf");
+            if (valueOf is IFunction)
+                return (valueOf as IFunction).Call(obj, null);
+
+            throw new ShouldThrowTypeError();
+        }
+
+        /*
+         * */
+        public static object DefaultValueNumber(this IObj obj)
+        {
+            var valueOf = obj.Search("valueOf");
+            if (valueOf is IFunction)
+                return (valueOf as IFunction).Call(obj, null);
+
+            var toString = obj.Search("toString");
+            if (toString is IFunction)
+                return (toString as IFunction).Call(obj, null);
+
+            throw new ShouldThrowTypeError();
         }
     }
 }

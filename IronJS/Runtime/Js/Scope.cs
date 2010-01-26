@@ -44,12 +44,12 @@ namespace IronJS.Runtime.Js
             ParentScope = parentScope;
         }
 
-        public Scope(Context context, Scope parentScope)
+        public Scope(Scope parentScope, Context context)
         {
             ParentScope = parentScope;
 
-            JsObject = context.CreateObject();
-            JsObject.Prototype = null;
+            JsObject = new Obj();
+            JsObject.Context = context;
             JsObject.Class = ObjClass.Internal;
         }
 
@@ -148,7 +148,7 @@ namespace IronJS.Runtime.Js
 
         public static Scope CreateGlobal(Context context)
         {
-            return new Scope(context, null);
+            return new Scope(null, context);
         }
 
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args)
@@ -158,7 +158,7 @@ namespace IronJS.Runtime.Js
 
         public static Scope CreateCallScope(Scope closure, IFunction callee, IObj that, object[] args, string[] parms)
         {
-            var callScope = new Scope(closure.JsObject.Context, closure);
+            var callScope = new Scope(closure, closure.JsObject.Context);
             var argsObject = closure.JsObject.Context.ObjectConstructor.Construct();
 
             callScope.Local("this", that);

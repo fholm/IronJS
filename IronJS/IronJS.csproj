@@ -54,8 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\Ast\ArrayNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />
-    <Compile Include="Compiler\Ast\AutoPropertyNode.cs" />
     <Compile Include="Compiler\Ast\BlockNode.cs" />
     <Compile Include="Compiler\AstGenerator.cs" />
     <Compile Include="Compiler\Ast\BreakNode.cs" />
@@ -99,6 +99,7 @@
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
+    <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />

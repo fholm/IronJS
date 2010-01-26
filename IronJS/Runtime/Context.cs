@@ -13,7 +13,8 @@ namespace IronJS.Runtime
 {
     public class Context
     {
-        static readonly public MethodInfo MiCreateObject = typeof(Context).GetMethod("CreateObject", Type.EmptyTypes);
+        static readonly public MethodInfo MiCreateObject = typeof(Context).GetMethod("CreateObject");
+        static readonly public MethodInfo MiCreateArray = typeof(Context).GetMethod("CreateArray", new[] { typeof(object[]) });
         static readonly public MethodInfo MiCreateString = typeof(Context).GetMethod("CreateString", new[] { typeof(object) });
         static readonly public MethodInfo MiCreateNumber = typeof(Context).GetMethod("CreateNumber", new[] { typeof(object) });
         static readonly public MethodInfo MiCreateBoolean = typeof(Context).GetMethod("CreateBoolean", new[] { typeof(object) });
@@ -106,14 +107,14 @@ namespace IronJS.Runtime
             return BooleanConstructor.Construct(new[] { value });
         }
 
-        public Obj CreateObject()
+        public IObj CreateArray(object[] args)
         {
-            var obj = new Obj();
+            return ArrayConstructor.Construct(args);
+        }
 
-            obj.Context = this;
-            obj.Class = ObjClass.Object;
-
-            return obj;
+        public IObj CreateObject()
+        {
+            return ObjectConstructor.Construct();
         }
 
         public UserFunction CreateFunction(Scope scope, Lambda lambda)

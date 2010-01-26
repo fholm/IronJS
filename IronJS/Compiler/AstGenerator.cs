@@ -399,15 +399,10 @@ namespace IronJS.Compiler
 
         private Node BuildArray(ITree node)
         {
-            var i = 0;
-            var arrayElements = node.Map(
-                    x => new AutoPropertyNode(i++, Build(x.GetChildSafe(0)))
-                ); 
-
-            return new NewNode(
-                new IdentifierNode("Array"),
-                new List<Node>(),
-                arrayElements
+            return new ArrayNode(
+                node.Map(
+                    x => Build(x.GetChildSafe(0))
+                )
             );
         }
 
@@ -765,7 +760,7 @@ namespace IronJS.Compiler
 
             for (int i = 0; i < node.ChildCount; ++i)
             {
-                var assignNode = Build(node.GetChildSafe(0));
+                var assignNode = Build(node.GetChildSafe(i));
 
                 if (assignNode is AssignNode)
                 {
@@ -783,18 +778,16 @@ namespace IronJS.Compiler
 
         private Node BuildObject(ITree node)
         {
-            var namedProps = node.Map(
-                    x => new AutoPropertyNode(
-                        x.GetChildSafe(0).Text.Trim('\'', '"'), // TODO: this probably trims '"bar' to just bar when it should be "bar
-                        Build(x.GetChildSafe(1))
-                    )   
-                );
+            var propertyDict = new Dictionary<string, Node>();
 
-            return new NewNode(
-                new IdentifierNode("Object"), 
-                new List<Node>(), 
-                namedProps
+            node.EachChild(x => 
+                propertyDict.Add(
+                    x.GetChildSafe(0).Text.Trim('\'', '"'),
+                    Build(x.GetChildSafe(1))
+                )
             );
+
+            return new ObjectNode(propertyDict);
         }
 
         private Node BuildWhile(ITree node)

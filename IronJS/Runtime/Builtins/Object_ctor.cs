@@ -60,8 +60,12 @@ namespace IronJS.Runtime.Builtins
             }
 
             // step 8
-            var obj = Context.CreateObject();
+            var obj = new Obj();
+
+            obj.Class = ObjClass.Object;
+            obj.Context = Context;
             obj.Prototype = Object_prototype;
+
             return obj;
         }
     }

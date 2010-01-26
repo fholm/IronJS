@@ -76,6 +76,18 @@ namespace IronJS.Tests
         }
 
         [TestMethod]
+        public void TestObjectAccessingNumberPropertiesAreOkWithBothIntAndString()
+        {
+            ScriptRunner.Run(
+                @"
+                foo = {}; 
+                foo[0] = 'lol'; 
+                assertEqual(foo['0'], foo[0], 'foo[\'0\'] and foo[0] should be equal');
+                "
+            );
+        }
+
+        [TestMethod]
         public void TestObjectNumericalIndexShouldBeSameAsStringIndex()
         {
             Assert.AreEqual(

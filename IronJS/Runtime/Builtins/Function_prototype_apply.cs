@@ -1,5 +1,6 @@
 ﻿using System;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -8,7 +9,9 @@ namespace IronJS.Runtime.Builtins
         public Function_prototype_apply(Context context, IFunction function_prototype)
             : base(context, function_prototype)
         {
-            SetOwn("length", 2);
+            Set("length",
+                new UserProperty(this, 2.0D)
+            );
         }
 
         public override object Call(IObj that, object[] args)

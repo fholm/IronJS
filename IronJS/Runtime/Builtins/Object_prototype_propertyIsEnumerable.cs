@@ -1,5 +1,6 @@
 ﻿using System;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -8,7 +9,9 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_propertyIsEnumerable(Context context)
             : base(context)
         {
-            SetOwn("length", 1);
+            Set("length",
+                new UserProperty(this, 1.0D)
+            );
         }
 
         public override object Call(IObj that, object[] args)

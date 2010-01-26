@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -7,7 +8,9 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_toLocaleString(Context context)
             : base(context)
         {
-            SetOwn("length", 0);
+            Set("length",
+                new UserProperty(this, 0.0D)
+            );
         }
 
         public override object Call(IObj that, object[] args)

@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -7,9 +8,23 @@ namespace IronJS.Runtime.Builtins
         public Function_prototype(Context context)
             : base(context, null)
         {
-            SetOwn("toString", new Function_prototype_toString(context, this));
-            SetOwn("apply", new Function_prototype_apply(context, this));
-            SetOwn("call", new Function_prototype_call(context, this));
+            Set("toString", 
+                new UserProperty(
+                    this, new Function_prototype_toString(context, this)
+                )
+            );
+
+            Set("apply", 
+                new UserProperty(
+                    this, new Function_prototype_apply(context, this)
+                )
+            );
+
+            Set("call", 
+                new UserProperty(
+                    this, new Function_prototype_call(context, this)
+                )
+            );
         }
 
         public override object Call(Js.IObj that, object[] args)

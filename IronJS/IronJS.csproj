@@ -259,7 +259,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Utils\TypeConverter.cs" />
-    <Compile Include="Tuple.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\InterOp\" />

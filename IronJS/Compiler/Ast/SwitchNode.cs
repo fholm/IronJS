@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
@@ -48,11 +49,11 @@ namespace IronJS.Compiler.Ast
                                 Et.Call(
                                     typeof(Operators).GetMethod("StrictEquality"),
                                     tmp,
-                                    x.First.Walk(etgen)
+                                    x.Item1.Walk(etgen)
                                 )
                             ),
                             Et.Block(
-                                x.Second.Walk(etgen),
+                                x.Item2.Walk(etgen),
                                 Et.Assign(
                                     hasMatched,
                                     Et.Constant(true)

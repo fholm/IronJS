@@ -80,8 +80,8 @@ namespace IronJS.Compiler
                                     FuncTableExpr,
                                     AstUtils.SimpleNewHelper(
                                         Lambda.Ctor1Arg,
-                                        x.First,
-                                        Et.Constant(x.Second.ToArray())
+                                        x.Item1,
+                                        Et.Constant(x.Item2.ToArray())
                                     )
                                 )
                             )

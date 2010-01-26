@@ -71,9 +71,9 @@ namespace IronJS.Runtime.Js
 
         public object Pull(object name)
         {
-            object value;
+            IDescriptor<IObj> value;
 
-            if(!JsObject.Get(name, out value))
+            if(!JsObject.Search(name, out value))
             {
                 if(ParentScope != null)
                     return ParentScope.Pull(name);
@@ -84,7 +84,7 @@ namespace IronJS.Runtime.Js
                 );
             }
 
-            return value;
+            return value.Get();
         }
 
         public object Delete(object name)
@@ -107,6 +107,7 @@ namespace IronJS.Runtime.Js
         /// <returns>Function result</returns>
         public object Call(object name, object[] args)
         {
+            /*
             object obj;
 
             if (JsObject.TryGet(name, out obj))
@@ -138,6 +139,9 @@ namespace IronJS.Runtime.Js
                 );
 
             return ParentScope.Call(name, args);
+            */
+
+            return null;
         }
 
         #region Static

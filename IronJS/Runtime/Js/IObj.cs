@@ -2,10 +2,10 @@
 using System.Dynamic;
 using System.Reflection;
 using IronJS.Runtime.Js.Descriptors;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js
 {
-    //TODO: need support for 'Host' object class
     public enum ObjClass { Object, Function, Boolean, Number, String, Math, Array, Internal, RegExp }
 
     //
@@ -24,9 +24,9 @@ namespace IronJS.Runtime.Js
         bool Has(object name);
         void Set(object name, IDescriptor<IObj> descriptor);
         bool Get(object name, out IDescriptor<IObj> descriptor);
-
         bool CanSet(object name); 
         bool TryDelete(object name);
+
         object DefaultValue(ValueHint hint);
         List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames();
     }
@@ -73,6 +73,11 @@ namespace IronJS.Runtime.Js
 
             descriptor = null;
             return false;
+        }
+
+        public static double GetNumber(this IObj obj, object name)
+        {
+            return JsTypeConverter.ToNumber(obj.Get(name));
         }
 
         public static object Get(this IObj obj, int name)

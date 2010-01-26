@@ -23,7 +23,7 @@ namespace IronJS.Runtime.Builtins
                 if (arg is JsArray)
                 {
                     var arr = arg as JsArray;
-                    var len = arr.Length;
+                    var len = arr.Length.Value;
 
                     for (var i = 0; i < len; ++i)
                     {

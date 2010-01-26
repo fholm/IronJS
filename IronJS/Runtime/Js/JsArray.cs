@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using IronJS.Runtime.Js.Descriptors;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 
@@ -11,39 +12,20 @@ namespace IronJS.Runtime.Js
         static public readonly ConstructorInfo Ctor
             = typeof(Obj).GetConstructor(Type.EmptyTypes);
 
-        protected readonly Dictionary<object, IDescriptor<IObj>> Properties
+        internal readonly Dictionary<object, IDescriptor<IObj>> Properties
             = new Dictionary<object, IDescriptor<IObj>>();
 
-        protected object ToArrayIndex(object name)
+        public LengthProperty Length { get; protected set; }
+
+        public JsArray()
         {
-            if (name is int)
-                return name;
+            Length = new LengthProperty(this);
+            Properties.Add("length", Length);
+        }
 
-            if (name is double)
-            {
-                var intval = (int)(double)name;
-
-                if ((double)intval == (double)name)
-                    return intval;
-            }
-
-            if (name is string)
-            {
-                var strval = (string)name;
-
-                if (Char.IsNumber(strval[0]))
-                {
-                    int intval;
-
-                    if (int.TryParse(strval, out intval))
-                    {
-                        if (intval.ToString() == strval)
-                            return intval;
-                    }
-                }
-            }
-
-            return name;
+        protected object IsArrayIndex(object name)
+        {
+            return name is int;
         }
 
         #region IObj Members
@@ -54,28 +36,28 @@ namespace IronJS.Runtime.Js
 
         public bool Has(object name)
         {
-            return Properties.ContainsKey(ToArrayIndex(name));
+            return Properties.ContainsKey(name);
         }
 
         public void Set(object name, IDescriptor<IObj> descriptor)
         {
-            Properties.Add(ToArrayIndex(name), descriptor);
+            Properties.Add(name, descriptor);
         }
 
         public bool Get(object name, out IDescriptor<IObj> descriptor)
         {
-            return Properties.TryGetValue(ToArrayIndex(name), out descriptor);
+            return Properties.TryGetValue(name, out descriptor);
         }
 
         public bool CanSet(object name)
         {
             IDescriptor<IObj> descriptor;
-            return Properties.TryGetValue(ToArrayIndex(name), out descriptor) ? descriptor.IsReadOnly : true;
+            return Properties.TryGetValue(name, out descriptor) ? descriptor.IsReadOnly : true;
         }
 
         public bool TryDelete(object name)
         {
-            return Properties.Remove(ToArrayIndex(name));
+            return Properties.Remove(name);
         }
 
         public object DefaultValue(ValueHint hint)

@@ -23,7 +23,8 @@ namespace IronJS.Runtime.Builtins
             // 15.4.3.1
             this.Set("prototype", 
                 new NativeProperty(
-                    this, Array_prototype, 
+                    this, 
+                    Array_prototype, 
                     isReadOnly: true, 
                     isDeletable: false, 
                     isEnumerable: false

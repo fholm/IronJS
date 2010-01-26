@@ -7,6 +7,7 @@ using IronJS.Runtime.Builtins;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using System.Collections.Generic;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime
 {
@@ -120,12 +121,14 @@ namespace IronJS.Runtime
             var obj = new UserFunction(scope, lambda);
 
             var protoObj = ObjectConstructor.Construct();
-            protoObj.SetOwn("constructor", obj);
+            protoObj.Set("constructor", 
+                new NativeProperty(protoObj, obj, isReadOnly: false, isDeletable: true, isEnumerable: false)
+            );
 
             obj.Context = this;
             obj.Class = ObjClass.Function;
             obj.Prototype = FunctionConstructor.Function_prototype;
-            obj.SetOwn("prototype", protoObj);
+            obj.Set("prototype", protoObj);
 
             return obj;
         }

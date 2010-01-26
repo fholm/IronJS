@@ -17,13 +17,13 @@ namespace IronJS.Runtime.Builtins
 
             if (len != 0)
             {
-                var result = that.Get((double)len - 1);
+                var result = that.Get(len);
                 that.TryDelete(len);
-                that.Set("length", (double)len - 1);
+                that.Set("length", len - 1);
                 return result;
             }
 
-            that.Set("length", (double)len);
+            that.Set("length", len);
             return Undefined.Instance;
         }
     }

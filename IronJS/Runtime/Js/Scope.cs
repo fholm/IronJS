@@ -73,7 +73,7 @@ namespace IronJS.Runtime.Js
         {
             object value;
 
-            if(!JsObject.TryGet(name, out value))
+            if(!JsObject.Get(name, out value))
             {
                 if(ParentScope != null)
                     return ParentScope.Pull(name);
@@ -160,15 +160,15 @@ namespace IronJS.Runtime.Js
             callScope.Local("this", that);
             callScope.Local("arguments", argsObject);
 
-            argsObject.SetOwn("length", args.Length);
-            argsObject.SetOwn("callee", callee);
+            argsObject.Set("length", args.Length);
+            argsObject.Set("callee", callee);
 
             for (var i = 0; i < args.Length; ++i)
             {
                 if (parms != null && i < parms.Length)
                     callScope.Local(parms[i], args[i]);
 
-                argsObject.SetOwn((double)i, args[i]);
+                argsObject.Set((double)i, args[i]);
             }
 
             return callScope;

@@ -32,12 +32,12 @@ namespace IronJS.Runtime.Builtins
                      : Math.Min(end, len);
 
             var n = 0.0D;
-            object val;
+            IDescriptor<IObj> descriptor;
 
             while(ks < ke)
             {
-                if (that.TryGet(ks, out val))
-                    newArray.SetOwn(n, val);
+                if (that.Get(ks, out descriptor))
+                    newArray.Set(n, descriptor.Get());
 
                 ++ks;
                 ++n;

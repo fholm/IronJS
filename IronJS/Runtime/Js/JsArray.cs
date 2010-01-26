@@ -21,10 +21,10 @@ namespace IronJS.Runtime.Js
 
             if (name is double)
             {
-                index = (int)(double)name;
+                var intval = (int)(double)name;
 
-                if ((double)index == name)
-                    return (object)intval;
+                if ((double)intval == (double)name)
+                    return intval;
             }
 
             if (name is string)
@@ -59,7 +59,7 @@ namespace IronJS.Runtime.Js
 
         public void Set(object name, IDescriptor<IObj> descriptor)
         {
-            return Properties.Add(ToArrayIndex(name), descriptor);
+            Properties.Add(ToArrayIndex(name), descriptor);
         }
 
         public bool Get(object name, out IDescriptor<IObj> descriptor)
@@ -69,6 +69,7 @@ namespace IronJS.Runtime.Js
 
         public bool CanSet(object name)
         {
+            IDescriptor<IObj> descriptor;
             return Properties.TryGetValue(ToArrayIndex(name), out descriptor) ? descriptor.IsReadOnly : true;
         }
 

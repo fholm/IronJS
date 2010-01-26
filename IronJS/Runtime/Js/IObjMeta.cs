@@ -7,11 +7,11 @@ using Restrict = System.Dynamic.BindingRestrictions;
 
 namespace IronJS.Runtime.Js
 {
+    //TODO: check all Get/Set operations it's ok to just type-restrict on the target
+
     class IObjMeta : Meta
     {
         Context _context;
-
-        //TODO: check all Get/Set operations it's ok to just type-restrict on the target
 
         public IObjMeta(Et parameter, IObj jsObj)
             : base(parameter, Restrict.Empty, jsObj)

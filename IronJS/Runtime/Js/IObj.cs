@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Js
 {
@@ -14,7 +15,7 @@ namespace IronJS.Runtime.Js
     {
         // 8.6.2
         ObjClass Class { get; set; }  // [[Class]]
-        IObj Prototype { get; set;  } // [[Prototype]]
+        IObj Prototype { get; set; }  // [[Prototype]]
 
         // implementation specific
         Context Context { get; set; }
@@ -58,6 +59,64 @@ namespace IronJS.Runtime.Js
         public static bool IsFunction(this IObj obj)
         {
             return (obj is IFunction);
+        }
+
+        public static bool Search(this IObj obj, object name, out IDescriptor<IObj> descriptor)
+        {
+            while (obj != null)
+            {
+                if (obj.Get(name, out descriptor))
+                    return true;
+
+                obj = obj.Prototype;
+            }
+
+            descriptor = null;
+            return false;
+        }
+
+        public static object Get(this IObj obj, int name)
+        {
+            return obj.Get((double)name);
+        }
+
+        public static object Get(this IObj obj, object name)
+        {
+            IDescriptor<IObj> descriptor;
+
+            if (obj.Get(name, out descriptor))
+                return descriptor.Get();
+
+            return Undefined.Instance;
+        }
+
+        public static object Set(this IObj obj, object name, int value)
+        {
+            return obj.Set(name, (double)value);
+        }
+
+        public static object Set(this IObj obj, int name, int value)
+        {
+            return obj.Set((double)name, (double)value);
+        }
+
+        public static object Set(this IObj obj, int name, object value)
+        {
+            return obj.Set((double)name, value);
+        }
+
+        public static object Set(this IObj obj, object name, object value)
+        {
+            IDescriptor<IObj> descriptor;
+
+            if (obj.Get(name, out descriptor))
+                descriptor.Set(value);
+            else
+                obj.Set(
+                    name, new UserProperty(obj, value)
+                );
+
+            return value;
         }
     }
 }

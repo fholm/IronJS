@@ -8,9 +8,7 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_toString(Context context)
             : base(context)
         {
-            Set("length",
-                new UserProperty(this, 0.0D)
-            );
+            this.Set("length", 0);
         }
 
         public override object Call(IObj that, object[] args)

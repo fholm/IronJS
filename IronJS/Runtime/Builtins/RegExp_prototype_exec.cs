@@ -51,13 +51,13 @@ namespace IronJS.Runtime.Builtins
                 lastIndex = e;
 
             var resultArray = Context.ArrayConstructor.Construct();
-            resultArray.SetOwn("index", match.Index);
-            resultArray.SetOwn("input", str);
-            resultArray.SetOwn("length", n);
+            resultArray.Set("index", match.Index);
+            resultArray.Set("input", str);
+            resultArray.Set("length", n);
 
             var d = 0.0D;
             foreach (Group group in match.Groups)
-                resultArray.SetOwn(d++, group.Value);
+                resultArray.Set(d++, group.Value);
 
             return resultArray;
         }

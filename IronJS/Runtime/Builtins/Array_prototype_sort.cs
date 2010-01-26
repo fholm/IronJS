@@ -16,13 +16,14 @@ namespace IronJS.Runtime.Builtins
         {
             var len = JsTypeConverter.ToNumber(that.Get("length"));
             var vals = new List<object>();
-            object val;
+            IDescriptor<IObj> descriptor;
 
             for (var d = 0.0D; d < len; ++d)
             {
-                if (that.TryGet(d, out val))
-                    vals.Add(val);
+                if (that.Get(d, out descriptor))
+                    vals.Add(descriptor.Get());
             }
+
             if (!HasArgs(args))
             {
                 vals.Sort((a, b) => {
@@ -41,7 +42,7 @@ namespace IronJS.Runtime.Builtins
             {
                 if ((int)d < vals.Count)
                 {
-                    that.SetOwn(d, vals[(int)d]);
+                    that.Set(d, vals[(int)d]);
                 }
                 else
                 {

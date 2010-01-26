@@ -15,10 +15,10 @@ namespace IronJS.Runtime.Builtins
             : base(context)
         {
             RegExp_prototype = new RegExp_prototype(Context);
-            RegExp_prototype.SetOwn("constructor", this);
+            RegExp_prototype.Set("constructor", this);
 
-            SetOwn("prototype", RegExp_prototype);
-            SetOwn("length", 2.0D);
+            this.Set("prototype", RegExp_prototype);
+            this.Set("length", 2.0D);
         }
 
         public IObj Construct(object pattern, object flags)
@@ -50,11 +50,11 @@ namespace IronJS.Runtime.Builtins
             regExpObj.Prototype = RegExp_prototype;
             regExpObj.Context = Context;
             regExpObj.Match = new Regex(strPattern, options);
-            regExpObj.SetOwn("ignoreCase", ignoreCase);
-            regExpObj.SetOwn("global", global);
-            regExpObj.SetOwn("multiline", multiline);
-            regExpObj.SetOwn("source", pattern);
-            regExpObj.SetOwn("lastIndex", 0.0D);
+            regExpObj.Set("ignoreCase", ignoreCase);
+            regExpObj.Set("global", global);
+            regExpObj.Set("multiline", multiline);
+            regExpObj.Set("source", pattern);
+            regExpObj.Set("lastIndex", 0.0D);
 
             return regExpObj;
         }

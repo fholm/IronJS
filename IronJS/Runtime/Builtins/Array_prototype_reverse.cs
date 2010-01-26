@@ -24,8 +24,8 @@ namespace IronJS.Runtime.Builtins
             var begin = 0.0D;
             var end = 0.0D;
 
-            object beginValue;
-            object endValue;
+            IDescriptor<IObj> beginDescriptor;
+            IDescriptor<IObj> endDescriptor;
 
             bool hasBegin;
             bool hasEnd;
@@ -37,8 +37,8 @@ namespace IronJS.Runtime.Builtins
 
                 end = len - begin - 1;
 
-                hasBegin = that.TryGet(begin, out beginValue);
-                hasEnd = that.TryGet(end, out endValue);
+                hasBegin = that.Get(begin, out beginDescriptor);
+                hasEnd = that.Get(end, out endDescriptor);
 
                 if (!hasEnd)
                 {
@@ -49,7 +49,7 @@ namespace IronJS.Runtime.Builtins
                     }
                     else
                     {
-                        that.SetOwn(end, beginValue);
+                        that.Set(end, beginDescriptor.Get());
                         that.TryDelete(begin);
                     }
                 }
@@ -62,14 +62,14 @@ namespace IronJS.Runtime.Builtins
                     }
                     else
                     {
-                        that.SetOwn(begin, endValue);
+                        that.Set(begin, endDescriptor.Get());
                         that.TryDelete(end);
                     }
                 }
                 else
                 {
-                    that.SetOwn(begin, endValue);
-                    that.SetOwn(end, beginValue);
+                    that.Set(begin, endDescriptor.Get());
+                    that.Set(end, beginDescriptor.Get());
                 }
 
                 ++begin;

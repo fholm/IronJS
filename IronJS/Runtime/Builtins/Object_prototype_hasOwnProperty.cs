@@ -16,7 +16,7 @@ namespace IronJS.Runtime.Builtins
         public override object Call(IObj that, object[] args)
         {
             if (HasArgs(args))
-                return that.HasOwn(args[0]);
+                return that.Has(args[0]);
 
             return false;
         }

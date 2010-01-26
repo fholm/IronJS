@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -10,9 +11,26 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Object;
 
-            SetOwn("exec", new RegExp_prototype_exec(Context));
-            SetOwn("test", new RegExp_prototype_test(Context));
-            SetOwn("toString", new RegExp_prototype_toString(Context));
+            Set("exec", 
+                new UserProperty(
+                    this,
+                    new RegExp_prototype_exec(Context)
+                )
+            );
+
+            Set("test",
+                new UserProperty(
+                    this,
+                    new RegExp_prototype_test(Context)
+                )
+            );
+
+            Set("toString",
+                new UserProperty(
+                    this,
+                    new RegExp_prototype_toString(Context)
+                )
+            );
         }
     }
 }

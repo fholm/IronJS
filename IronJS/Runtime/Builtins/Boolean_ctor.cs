@@ -14,9 +14,9 @@ namespace IronJS.Runtime.Builtins
             : base(context)
         {
             Boolean_prototype = new Boolean_prototype(Context);
-            Boolean_prototype.SetOwn("constructor", this);
+            Boolean_prototype.Set("constructor", this);
 
-            SetOwn("prototype", Boolean_prototype);
+            this.Set("prototype", Boolean_prototype);
         }
 
         public IObj Construct()

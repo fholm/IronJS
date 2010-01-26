@@ -14,9 +14,9 @@ namespace IronJS.Runtime.Builtins
             : base(context)
         {
             Object_prototype = new Object_prototype(context);
-            Object_prototype.SetOwn("constructor", this);
+            Object_prototype.Set("constructor", this);
 
-            Set("prototype", Object_prototype);
+            this.Set("prototype", Object_prototype);
         }
 
         public IObj Construct()

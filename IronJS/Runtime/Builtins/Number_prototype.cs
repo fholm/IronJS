@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -11,12 +12,12 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Number;
 
-            SetOwn("toString", new Number_prototype_toString(Context));
-            SetOwn("toLocaleString", new Number_prototype_toLocaleString(Context));
-            SetOwn("valueOf", new Number_prototype_valueOf(Context));
-            SetOwn("toFixed", new Number_prototype_toFixed(Context));
-            SetOwn("toExponential", new Number_prototype_toExponential(Context));
-            SetOwn("toPrecision", new Number_prototype_toPrecision(Context));
+            this.Set("toString", new Number_prototype_toString(Context));
+            this.Set("toLocaleString", new Number_prototype_toLocaleString(Context));
+            this.Set("valueOf", new Number_prototype_valueOf(Context));
+            this.Set("toFixed", new Number_prototype_toFixed(Context));
+            this.Set("toExponential", new Number_prototype_toExponential(Context));
+            this.Set("toPrecision", new Number_prototype_toPrecision(Context));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {

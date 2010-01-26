@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -11,23 +12,24 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.String;
 
-            SetOwn("toString", new String_prototype_toString(Context));
-            SetOwn("valueOf", new String_prototype_valueOf(Context));
-            SetOwn("charAt", new String_prototype_charAt(Context));
-            SetOwn("charCodeAt", new String_prototype_charCodeAt(Context));
-            SetOwn("concat", new String_prototype_concat(Context));
-            SetOwn("indexOf", new String_prototype_indexOf(Context));
-            SetOwn("lastIndexOf", new String_prototype_lastIndexOf(Context));
-            SetOwn("match", new String_prototype_match(Context));
-            SetOwn("replace", new String_prototype_replace(Context));
-            SetOwn("search", new String_prototype_search(Context));
-            SetOwn("slice", new String_prototype_slice(Context));
-            SetOwn("split", new String_prototype_split(Context));
-            SetOwn("substring", new String_prototype_substring(Context));
-            SetOwn("toLowerCase", new String_prototype_toLowerCase(Context));
-            SetOwn("toLocaleLowerCase", new String_prototype_toLocaleLowerCase(Context));
-            SetOwn("toUpperCase", new String_prototype_toUpperCase(Context));
-            SetOwn("toLocaleUpperCase", new String_prototype_toLocaleUpperCase(Context));
+            this.Set("toString", new String_prototype_toString(Context));
+            this.Set("valueOf", new String_prototype_valueOf(Context));
+            this.Set("charAt", new String_prototype_charAt(Context));
+            this.Set("charCodeAt", new String_prototype_charCodeAt(Context));
+            this.Set("concat", new String_prototype_concat(Context));
+            this.Set("indexOf", new String_prototype_indexOf(Context));
+            this.Set("lastIndexOf", new String_prototype_lastIndexOf(Context));
+            this.Set("match", new String_prototype_match(Context));
+            this.Set("replace", new String_prototype_replace(Context));
+            this.Set("search", new String_prototype_search(Context));
+            this.Set("slice", new String_prototype_slice(Context));
+            this.Set("split", new String_prototype_split(Context));
+            this.Set("substring", new String_prototype_substring(Context));
+            this.Set("toLowerCase", new String_prototype_toLowerCase(Context));
+            this.Set("toLocaleLowerCase", new String_prototype_toLocaleLowerCase(Context));
+            this.Set("toUpperCase", new String_prototype_toUpperCase(Context));
+            this.Set("toLocaleUpperCase", new String_prototype_toLocaleUpperCase(Context));
+
         }
     }
 }

@@ -14,26 +14,28 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
+            var k = 0;
+            var objs = ArrayUtils.Insert((object)that, args);
             var arrayObj = Context.ArrayConstructor.Construct();
-            var k = 0.0D;
 
-            args = ArrayUtils.Insert((object)that, args);
-
-            foreach (var arg in args)
+            foreach (var arg in objs)
             {
                 if (arg is JsArray)
                 {
                     var arr = arg as JsArray;
-                    var len = (double)arr.Length;
-                    for (var i = 0.0D; i < len; ++i)
+                    var len = arr.Length;
+
+                    for (var i = 0; i < len; ++i)
                     {
-                        if (arr.HasOwn(i))
-                            arrayObj.SetOwn(k++, arr.Get(i));
+                        if (arr.Has(i))
+                        {
+                            arrayObj.Set(k++, arr.Get(i));
+                        }
                     }
                 }
                 else
                 {
-                    arrayObj.SetOwn(k++, JsTypeConverter.ToString(arg));
+                    arrayObj.Set(k++, JsTypeConverter.ToString(arg));
                 }
             }
 

@@ -14,13 +14,13 @@ namespace IronJS.Runtime.Builtins
             Context = context;
             Prototype = null;
             Class = ObjClass.Object;
-            
-            SetOwn("toString", new Object_prototype_toString(Context));
-            SetOwn("valueOf", new Object_prototype_valueOf(Context));
-            SetOwn("hasOwnProperty", new Object_prototype_hasOwnProperty(Context));
-            SetOwn("isPrototypeOf", new Object_prototype_isPrototypeOf(Context));
-            SetOwn("propertyIsEnumerable", new Object_prototype_propertyIsEnumerable(Context));
-            SetOwn("toLocaleString", new Object_prototype_toLocaleString(Context));
+
+            this.Set("toString", new Object_prototype_toString(Context));
+            this.Set("valueOf", new Object_prototype_valueOf(Context));
+            this.Set("hasOwnProperty", new Object_prototype_hasOwnProperty(Context));
+            this.Set("isPrototypeOf", new Object_prototype_isPrototypeOf(Context));
+            this.Set("propertyIsEnumerable", new Object_prototype_propertyIsEnumerable(Context));
+            this.Set("toLocaleString", new Object_prototype_toLocaleString(Context));
         }
     }
 }

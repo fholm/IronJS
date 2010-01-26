@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Builtins
 
             if (len == 0.0D)
             {
-                that.SetOwn("length", 0.0D);
+                that.Set("length", 0.0D);
                 return Undefined.Instance;
             }
 
@@ -26,11 +26,11 @@ namespace IronJS.Runtime.Builtins
 
             for (; d < len; ++d)
             {
-                object val;
+                IDescriptor<IObj> descriptor;
 
-                if (that.TryGet(d, out val))
+                if (that.Get(d, out descriptor))
                 {
-                    that.SetOwn(d - 1.0D, val);
+                    that.Set(d - 1.0D, descriptor.Get());
                     that.TryDelete(d);
                 }
                 else
@@ -39,7 +39,7 @@ namespace IronJS.Runtime.Builtins
                 }
             }
 
-            that.SetOwn("length", d - 1.0D);
+            that.Set("length", d - 1.0D);
             return shifted;
         }
     }

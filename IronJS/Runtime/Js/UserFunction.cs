@@ -1,5 +1,4 @@
-﻿using System;
-using IronJS.Runtime.Js;
+﻿using IronJS.Runtime.Js.Descriptors;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 
@@ -14,7 +13,12 @@ namespace IronJS.Runtime.Js
         {
             Scope = scope;
             Lambda = lambda;
-            SetOwn("length", (double) lambda.Params.Length);
+            Set("length",
+                new UserProperty(
+                    this,
+                    (double) lambda.Params.Length
+                )
+            );
         }
 
         #region IFunction Members
@@ -34,7 +38,7 @@ namespace IronJS.Runtime.Js
             var newObject = Context.ObjectConstructor.Construct();
             var callScope = Scope.CreateCallScope(Scope, this, newObject, args, Lambda.Params);
 
-            var prototype = GetOwn("prototype");
+            var prototype = this.Get("prototype");
 
             (newObject as Obj).Prototype = (prototype is IObj)
                                            ? (prototype as IObj)
@@ -49,7 +53,7 @@ namespace IronJS.Runtime.Js
             if (!(obj is IObj))
                 return false;
 
-            var prototype = Get("prototype");
+            var prototype = this.Get("prototype");
 
             if (!(prototype is IObj))
                 throw InternalRuntimeError.New("prototype property is not a object");

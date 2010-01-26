@@ -2,6 +2,7 @@
 using System.Web;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -10,7 +11,7 @@ namespace IronJS.Runtime.Builtins
         public Global_obj_decodeURIComponent(Context context)
             : base(context)
         {
-            SetOwn("length", 1.0D);
+            Set("length", new UserProperty(this, 1.0D));
         }
 
         public override object Call(IObj that, object[] args)

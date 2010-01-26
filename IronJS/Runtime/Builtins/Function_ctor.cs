@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Builtins
             : base(context, null)
         {
             Function_prototype = new Function_prototype(context);
-            Set("prototype", Function_prototype);
+            this.Set("prototype", Function_prototype);
         }
 
         public IObj Construct()

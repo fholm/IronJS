@@ -1,8 +1,6 @@
-﻿using System;
-using IronJS.Runtime.Js;
+﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 using IronJS.Runtime.Utils;
-using Et = System.Linq.Expressions.Expression;
-using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -17,13 +15,20 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.FunctionConstructor.Function_prototype;
 
             Array_prototype = new Array_prototype(context);
-            Array_prototype.SetOwn("constructor", this);
+            Array_prototype.Set("constructor", this);
 
             // 15.4.3
-            SetOwn("length", 1.0D);
+            this.Set("length", 1);
 
             // 15.4.3.1
-            SetOwn("prototype", Array_prototype);
+            this.Set("prototype", 
+                new NativeProperty(
+                    this, Array_prototype, 
+                    isReadOnly: true, 
+                    isDeletable: false, 
+                    isEnumerable: false
+                )
+            );
         }
 
         public IObj Construct()
@@ -41,7 +46,7 @@ namespace IronJS.Runtime.Builtins
 
         override public IObj Construct(object[] args)
         {
-            var arrayObj = new Array();
+            var arrayObj = new JsArray();
 
             arrayObj.Class = ObjClass.Array;
             arrayObj.Prototype = Array_prototype;
@@ -51,7 +56,7 @@ namespace IronJS.Runtime.Builtins
             {
                 // 15.4.2.1
                 for (int i = 0; i < args.Length; ++i)
-                    arrayObj.SetOwn((double)i, args[i]);
+                    arrayObj.Set(i, args[i]);
             }
             else if(args != null)
             {
@@ -60,7 +65,7 @@ namespace IronJS.Runtime.Builtins
 
                 if ((double)JsTypeConverter.ToInt32(len) == len)
                 {
-                    arrayObj.SetOwn("length", len);
+                    arrayObj.Set("length", len);
                 }
                 else
                 {

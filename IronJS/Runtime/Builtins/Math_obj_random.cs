@@ -1,6 +1,7 @@
 ﻿using System;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -11,7 +12,7 @@ namespace IronJS.Runtime.Builtins
         public Math_obj_random(Context context)
             : base(context)
         {
-            SetOwn("length", 0.0D);
+            Set("length", new UserProperty(this, 0.0D));
         }
 
         public override object Call(IObj that, object[] args)

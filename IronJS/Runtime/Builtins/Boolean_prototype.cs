@@ -1,4 +1,5 @@
 ﻿using IronJS.Runtime.Js;
+using IronJS.Runtime.Js.Descriptors;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -11,8 +12,8 @@ namespace IronJS.Runtime.Builtins
             Prototype = context.ObjectConstructor.Object_prototype;
             Class = ObjClass.Boolean;
 
-            SetOwn("toString", new Boolean_prototype_toString(Context));
-            SetOwn("valueOf", new Boolean_prototype_valueOf(Context));
+            this.Set("toString", new Boolean_prototype_toString(Context));
+            this.Set("valueOf", new Boolean_prototype_valueOf(Context));
         }
     }
 }

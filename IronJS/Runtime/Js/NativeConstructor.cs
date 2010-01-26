@@ -31,7 +31,7 @@ namespace IronJS.Runtime.Js
             if (!(obj is IObj))
                 return false;
 
-            var prototype = Get("prototype");
+            var prototype = this.Get("prototype");
 
             if (!(prototype is IObj))
                 throw InternalRuntimeError.New("prototype property is not a object");

@@ -1,6 +1,8 @@
 ![IronJS][1]
 
-IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
+# IronJS
+
+IronJS is a JavaScript implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
 
 ## License
 
@@ -11,6 +13,8 @@ IronJS is released under the [GNU General Public License v3](http://www.gnu.org/
 What you need to use IronJS
 
 * An understanding that this is alpha quality software, it will crash on you.
+    * A result of this is that the code base is very volatile and will change often
+	* No backwards compabitility with previous versions are guaranteed untill 1.0
 * Requires .NET 4.0 Beta 2, since a few C# 4.0 specific features are used (Covariance most notably)
 * The Dynamic Language Runtime from Microsoft.
 
@@ -29,10 +33,20 @@ This list is not in any chronological or priority order
 * Implement the remaining Native Objects
     * Error Objects
 	* Date Object
-	* Missing functionality from other native objects
-* Performance optimizations
-    * Precompiling + caching inline regular expressions
-	* String value wrapper class instead of String_ctor.Create()
+	* Missing functionality from other objects
+* Proper syntax error reporting
+* Visual Studio debugger hooks
+    * Break points
+	* Step through code
+* Mono compatibility
+* DLR performance optmizations
+* Move to a Expression.Reduce() based AST
+
+## Thanks to
+
+* Bill Chiles (For the excellent SymPL example and putting up with my all my questions)
+* Dino Viehland (For answering a lot of my questions)
+* Christian Knutsson (Logo design)
 
 ## ECMAScript 3.0 Compliance
 

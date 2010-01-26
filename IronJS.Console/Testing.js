@@ -1,5 +1,4 @@
-﻿
-println("abc".length);
+﻿println("abc".length);
 println("abc".toString());
 println("abc".valueOf());
 println("abc".charAt(1));
@@ -30,13 +29,8 @@ println((1).toLocaleString());
 println((1).valueOf());
 println((1000000000000000128).toString());
 println((1000000000000000128).toFixed(0));
-
 println((1000000000000000128).toExponential(0));
-
-
 println((3.14).toPrecision(2));
-
-
 println(parseInt("3"));
 println(parseFloat("3.14"));
 

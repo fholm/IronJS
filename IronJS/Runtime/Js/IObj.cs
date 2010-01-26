@@ -80,11 +80,6 @@ namespace IronJS.Runtime.Js
             return JsTypeConverter.ToNumber(obj.Get(name));
         }
 
-        public static object Get(this IObj obj, int name)
-        {
-            return obj.Get((double)name);
-        }
-
         public static object Get(this IObj obj, object name)
         {
             IDescriptor<IObj> descriptor;
@@ -102,12 +97,7 @@ namespace IronJS.Runtime.Js
 
         public static object Set(this IObj obj, int name, int value)
         {
-            return obj.Set((double)name, (double)value);
-        }
-
-        public static object Set(this IObj obj, int name, object value)
-        {
-            return obj.Set((double)name, value);
+            return obj.Set(name, (double)value);
         }
 
         public static object Set(this IObj obj, object name, object value)
@@ -117,9 +107,7 @@ namespace IronJS.Runtime.Js
             if (obj.Get(name, out descriptor))
                 descriptor.Set(value);
             else
-                obj.Set(
-                    name, new UserProperty(obj, value)
-                );
+                obj.Set(name, new UserProperty(obj, value));
 
             return value;
         }

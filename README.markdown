@@ -36,6 +36,7 @@ This list is not in any chronological or priority order
 * Visual Studio debugger hooks
     * Break points
 	* Step through code
+* Make it run on Mono
 
 ## ECMAScript 3.0 Compliance
 

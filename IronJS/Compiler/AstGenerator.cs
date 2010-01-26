@@ -765,7 +765,7 @@ namespace IronJS.Compiler
 
             for (int i = 0; i < node.ChildCount; ++i)
             {
-                var assignNode = Build(node.GetChildSafe(0));
+                var assignNode = Build(node.GetChildSafe(i));
 
                 if (assignNode is AssignNode)
                 {

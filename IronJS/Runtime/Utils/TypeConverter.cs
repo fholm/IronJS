@@ -4,6 +4,7 @@ using IronJS.Extensions;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
+using System.Reflection;
 
 namespace IronJS.Runtime.Utils
 {
@@ -340,5 +341,35 @@ namespace IronJS.Runtime.Utils
             return obj.Expression;
         }
 
+        static public readonly MethodInfo MiToArrayIndex =
+            typeof(JsTypeConverter).GetMethod("ToArrayIndex");
+        static public object ToArrayIndex(object obj)
+        {
+            if (obj is int)
+            {
+                return obj;
+            }
+            else if (obj is double)
+            {
+                var intval = (int)(double)obj;
+
+                if ((double)intval == (double)obj)
+                    return intval;
+            }
+            else if (obj is string)
+            {
+                var strval = (string)obj;
+
+                if (strval.Length > 0 && Char.IsNumber(strval[0]))
+                {
+                    int result;
+
+                    if (int.TryParse(strval, out result))
+                        return result;
+                }
+            }
+
+            return obj;
+        }
     }
 }

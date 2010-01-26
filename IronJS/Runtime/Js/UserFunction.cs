@@ -3,7 +3,7 @@ using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 
-namespace IronJS.Runtime
+namespace IronJS.Runtime.Js
 {
     public class UserFunction : Obj, IConstructor
     {
@@ -66,7 +66,7 @@ namespace IronJS.Runtime
 
         #region IDynamicMetaObjectProvider Members
 
-        public Meta GetMetaObject(Et parameter)
+        public override Meta GetMetaObject(Et parameter)
         {
             return new IConstructorMeta(parameter, this);
         }

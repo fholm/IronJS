@@ -1,19 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using Microsoft.Scripting.Utils;
+using System.Globalization;
+using IronJS.Extensions;
 using IronJS.Runtime.Js;
-
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Restrict = System.Dynamic.BindingRestrictions;
-using EtParam = System.Linq.Expressions.ParameterExpression;
-using IronJS.Extensions;
-using System.Globalization;
 
 namespace IronJS.Runtime.Utils
 {
@@ -39,11 +29,11 @@ namespace IronJS.Runtime.Utils
             if (obj == null)
                 return false;
 
-            if (obj is Js.Undefined)
-                return false;
-
             if (obj is bool)
                 return ((bool)obj) ? true : false;
+
+            if (obj is Js.Undefined)
+                return false;
 
             if (obj is double)
                 return Convert.ToBoolean((double)obj);
@@ -124,6 +114,9 @@ namespace IronJS.Runtime.Utils
             if (obj == null)
                 return "null";
 
+            if (obj is string)
+                return (string)obj;
+
             if (obj is Js.Undefined)
                 return "undefined";
 
@@ -143,9 +136,6 @@ namespace IronJS.Runtime.Utils
                 return dbl.ToString(CultureInfo.InvariantCulture).ToLower();
             }
 
-            if (obj is string)
-                return (string)obj;
-
             return ToString(ToPrimitive(obj, ValueHint.String));
         }
 
@@ -159,19 +149,19 @@ namespace IronJS.Runtime.Utils
         static internal IObj ToObject(object obj, Context context)
         {
             if (obj == null || obj is Undefined)
-                throw new NotImplementedException("C# throwing of JS exceptions not implemented");
-
-            if (obj is string)
-                throw new NotImplementedException();
-
-            if (obj is double)
-                throw new NotImplementedException();
-
-            if (obj is bool)
-                throw new NotImplementedException();
+                throw new ShouldThrowTypeError();
 
             if (obj is IObj)
-                return ((IObj)obj);
+                return (IObj)obj;
+
+            if (obj is string)
+                return context.StringConstructor.Construct((string)obj);
+
+            if (obj is double)
+                return context.NumberConstructor.Construct((double)obj);
+
+            if (obj is bool)
+                return context.BooleanConstructor.Construct((bool)obj);
 
             throw new NotImplementedException("Can't convert host objects to JS objects");
         }
@@ -324,7 +314,7 @@ namespace IronJS.Runtime.Utils
         static public Et EtToObject(Meta obj, Context context)
         {
             if (obj.LimitType == typeof(Js.Undefined) || (obj.HasValue && obj.Value == null))
-                throw new NotImplementedException("Need do handle null/undefined in ToObject");
+                throw new ShouldThrowTypeError();
 
             if (obj.LimitType == typeof(double))
                 return Et.Call(

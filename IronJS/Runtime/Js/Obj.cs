@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js
 
         public override string ToString()
         {
-            return "[object " + Class + "]";
+            return "IronJS: " + Class;
         }
 
         #region IObj Members
@@ -161,7 +161,7 @@ namespace IronJS.Runtime.Js
 
         #region IDynamicMetaObjectProvider Members
 
-        public Meta GetMetaObject(Et parameter)
+        public virtual Meta GetMetaObject(Et parameter)
         {
             return new IObjMeta(parameter, this);
         }

@@ -25,17 +25,22 @@ namespace IronJS.Runtime.Js
 
         #region IFunction Members
 
-        abstract public object Call(IObj that, object[] args);
+        public abstract object Call(IObj that, object[] args);
 
         #endregion
 
         #region IDynamicMetaObjectProvider Members
 
-        virtual public Meta GetMetaObject(Et parameter)
+        public override Meta GetMetaObject(Et parameter)
         {
             return new IFunctionMeta(parameter, this);
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return "IronJS: NativeFunction";
+        }
     }
 }

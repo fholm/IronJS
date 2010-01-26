@@ -65,24 +65,5 @@ namespace IronJS.Runtime.Js
         {
             return (obj is IFunction);
         }
-
-        static internal Et EtSetOwnProperty(Et target, object name, Et value)
-        {
-            return Et.Call(
-                target,
-                IObjMethods.MiSetOwnProperty,
-                Et.Constant(name, typeof(object)),
-                value
-            );
-        }
-
-        static internal Et EtHasProperty(Et target, Et name)
-        {
-            return Et.Call(
-                target,
-                IObjMethods.MiHasProperty,
-                name
-            );
-        }
     }
 }

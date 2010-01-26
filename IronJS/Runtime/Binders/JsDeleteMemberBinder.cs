@@ -16,6 +16,9 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackDeleteMember(Meta target, Meta errorSuggestion)
         {
+            if (!target.HasValue) 
+                return Defer(target);
+
             throw new NotImplementedException();
         }
     }

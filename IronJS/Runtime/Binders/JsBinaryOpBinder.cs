@@ -8,7 +8,6 @@ using Restrict = System.Dynamic.BindingRestrictions;
 
 namespace IronJS.Runtime.Binders
 {
-
     class JsBinaryOpBinder : BinaryOperationBinder
     {
         Context _context;
@@ -21,9 +20,11 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackBinaryOperation(Meta target, Meta arg, Meta error)
         {
-            //TODO: insert defer
+            if (!target.HasValue || !arg.HasValue)
+                return Defer(target, arg);
+
             //TODO: optimize common double + double case for all operations
-            //TODO: handle infinity + zero stuff correct
+            //TODO: verify infinity + zero cases
 
             Et expr = null;
             var typeRestriction = true;

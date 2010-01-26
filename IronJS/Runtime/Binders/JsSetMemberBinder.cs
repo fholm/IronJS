@@ -16,6 +16,9 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackSetMember(Meta target, Meta value, Meta error)
         {
+            if (!target.HasValue || !value.HasValue)
+                return Defer(target, value);
+
             throw new NotImplementedException();
         }
     }

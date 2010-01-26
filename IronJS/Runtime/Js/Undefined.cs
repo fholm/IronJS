@@ -40,7 +40,7 @@ namespace IronJS.Runtime.Js
 
         public override string ToString()
         {
-            return "undefined";
+            return "[IronJS: undefined]";
         }
     }
 }

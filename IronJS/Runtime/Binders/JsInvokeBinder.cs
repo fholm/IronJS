@@ -22,6 +22,10 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackInvoke(Meta target, Meta[] args, Meta error)
         {
+            Meta[] deferArgs;
+            if (BinderUtils.NeedsToDefer(target, args, out deferArgs))
+                return Defer(deferArgs);
+
             // handles invocation of Undefined
             if (object.ReferenceEquals(target.Value, Js.Undefined.Instance))
             {

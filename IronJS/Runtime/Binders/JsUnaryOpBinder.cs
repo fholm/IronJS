@@ -19,7 +19,8 @@ namespace IronJS.Runtime.Binders
 
         public override Meta FallbackUnaryOperation(Meta target, Meta errorSuggestion)
         {
-            //TODO: insert defer
+            if (!target.HasValue)
+                return Defer(target);
 
             Et expr = null;
 

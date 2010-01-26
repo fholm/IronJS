@@ -21,17 +21,11 @@ namespace IronJS.Runtime.Builtins
 
         public IObj Construct()
         {
-            return Construct(null);
+            return Construct(false);
         }
 
-        override public object Call(IObj that, object[] args)
+        public IObj Construct(bool bol)
         {
-            return args != null && args.Length > 0 ? JsTypeConverter.ToBoolean(args[0]) : false;
-        }
-
-        override public IObj Construct(object[] args)
-        {
-            var bol = args != null && args.Length > 0 ? JsTypeConverter.ToBoolean(args[0]) : false;
             var obj = new ValueObj(bol);
 
             obj.Class = ObjClass.Boolean;
@@ -39,6 +33,20 @@ namespace IronJS.Runtime.Builtins
             obj.Context = Context;
 
             return obj;
+        }
+
+        override public object Call(IObj that, object[] args)
+        {
+            return HasArgs(args) ? JsTypeConverter.ToBoolean(args[0]) : false;
+        }
+
+        override public IObj Construct(object[] args)
+        {
+            return Construct(
+                HasArgs(args) 
+                ? JsTypeConverter.ToBoolean(args[0]) 
+                : false
+            );
         }
     }
 }

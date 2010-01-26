@@ -18,8 +18,9 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            return IObjUtils.EtHasProperty(
+            return Et.Call(
                 EtUtils.Cast<IObj>(Target.Walk(etgen)),
+                IObjMethods.MiHasProperty,
                 Property.Walk(etgen)
             );
         }

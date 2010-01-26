@@ -21,8 +21,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindSetIndex(SetIndexBinder binder, Meta[] indexes, Meta value)
         {
-            //TODO: insert defer
-
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
@@ -39,8 +37,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindGetIndex(GetIndexBinder binder, Meta[] indexes)
         {
-            //TODO: insert defer
-
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
@@ -56,8 +52,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindDeleteIndex(DeleteIndexBinder binder, Meta[] indexes)
         {
-            //TODO: insert defer
-
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
@@ -73,8 +67,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindGetMember(GetMemberBinder binder)
         {
-            //TODO: insert defer
-
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
@@ -90,8 +82,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindSetMember(SetMemberBinder binder, Meta value)
         {
-            //TODO: insert defer
-
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
@@ -123,8 +113,6 @@ namespace IronJS.Runtime.Js
 
         public override Meta BindInvokeMember(InvokeMemberBinder binder, Meta[] args)
         {
-            //TODO: insert defer
-
             var selfExpr = EtUtils.Cast<IObj>(this.Expression);
             var tmp = Et.Parameter(typeof(object), "#tmp");
 

@@ -1,4 +1,4 @@
-# IronJS
+![IronJS][1]
 
 IronJS is a JavaScript implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
 
@@ -37,6 +37,7 @@ This list is not in any chronological or priority order
     * Break points
 	* Step through code
 * Mono compatibility
+* DLR performance optmizations
 
 ## Thanks to
 
@@ -883,3 +884,5 @@ _This list is not complete at the moment_
 		</tr>
 	</tbody>
 </table>
+
+  [1]: http://ironjs.com/IronJS_logo_github_transparent.png

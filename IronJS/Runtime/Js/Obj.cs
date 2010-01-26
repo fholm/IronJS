@@ -53,7 +53,31 @@ namespace IronJS.Runtime.Js
 
         public object DefaultValue(ValueHint hint)
         {
-            throw new NotImplementedException();
+            object toString;
+            object valueOf;
+
+            if (hint == ValueHint.String)
+            {
+                toString = this.Search("toString");
+                if (toString is IFunction)
+                    return (toString as IFunction).Call(this, null);
+
+                valueOf = this.Search("valueOf");
+                if (valueOf is IFunction)
+                    return (valueOf as IFunction).Call(this, null);
+
+                throw new ShouldThrowTypeError();
+            }
+
+            valueOf = this.Search("valueOf");
+            if (valueOf is IFunction)
+                return (valueOf as IFunction).Call(this, null);
+
+            toString = this.Search("toString");
+            if (toString is IFunction)
+                return (toString as IFunction).Call(this, null);
+
+            throw new ShouldThrowTypeError();
         }
 
         public List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames()

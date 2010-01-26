@@ -23,7 +23,7 @@ namespace IronJS.Runtime.Builtins
             var global = JsTypeConverter.ToBoolean(regex.Get("global"));
 
             if (!global)
-                return (regex.Get("exec") as IFunction).Call(regex, new[] { (object) that });
+                return (regex.Search("exec") as IFunction).Call(regex, new[] { (object) that });
 
             var matches = regex.Match.Matches(str);
             var results = Context.ArrayConstructor.Construct();

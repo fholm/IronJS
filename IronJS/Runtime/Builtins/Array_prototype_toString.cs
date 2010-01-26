@@ -15,7 +15,7 @@ namespace IronJS.Runtime.Builtins
             if (!(that is JsArray))
                 throw new ShouldThrowTypeError();
 
-            return ((that as IObj).Get("join") as IFunction).Call(that, new object[] { });
+            return ((that as IObj).Search("join") as IFunction).Call(that, new object[] { });
         }
     }
 }

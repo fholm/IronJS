@@ -36,7 +36,13 @@ This list is not in any chronological or priority order
 * Visual Studio debugger hooks
     * Break points
 	* Step through code
-* Make it run on Mono
+* Mono compatibility
+
+## Thanks to
+
+* Bill Chiles (For the excellent SymPL example and putting up with my all my questions)
+* Dino Viehland (For answering a lot of my questions)
+* Christian Knutsson (Logo design)
 
 ## ECMAScript 3.0 Compliance
 

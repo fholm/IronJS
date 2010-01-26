@@ -864,7 +864,8 @@ namespace IronJS.Compiler
             return new IfNode(
                 Build(node.GetChildSafe(0)), 
                 Build(node.GetChildSafe(1)), 
-                Build(node.GetChild(2)) // can be null
+                Build(node.GetChild(2)), // can be null
+                node.Type == EcmaParser.QUE
             );
         }
 

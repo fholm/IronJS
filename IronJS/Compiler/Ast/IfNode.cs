@@ -11,14 +11,16 @@ namespace IronJS.Compiler.Ast
         public Node TrueBranch { get; protected set; }
         public Node ElseBranch { get; protected set; }
         public bool HasElseBranch { get; protected set; }
+        public bool IsTernary { get; protected set; }
 
-        public IfNode(Node test, Node trueBranch, Node elseBranch)
+        public IfNode(Node test, Node trueBranch, Node elseBranch, bool isTernary)
             : base(NodeType.If)
         {
             Test = test;
             TrueBranch = trueBranch;
             ElseBranch = elseBranch;
             HasElseBranch = elseBranch != null;
+            IsTernary = isTernary;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

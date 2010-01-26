@@ -41,7 +41,7 @@ namespace IronJS.Runtime.Builtins
 
         override public IObj Construct(object[] args)
         {
-            var arrayObj = new ArrayObj();
+            var arrayObj = new Array();
 
             arrayObj.Class = ObjClass.Array;
             arrayObj.Prototype = Array_prototype;

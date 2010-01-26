@@ -21,21 +21,13 @@ namespace IronJS.Runtime.Js
 
         // 8.6.2
         bool Has(object name);
-        bool HasOwn(object name);
-
-        IDescriptor<IObj> Get(object name);
-        IDescriptor<IObj> GetOwn(object name);
-
-        object Set(object name, IDescriptor<IObj> descriptor);
-        object SetOwn(object name, IDescriptor<IObj> descriptor);
-
-        bool TryGet(object name, out IDescriptor<IObj> descriptor);
-        bool TryGetOwn(object name, out IDescriptor<IObj> descriptor);
+        void Set(object name, IDescriptor<IObj> descriptor);
+        bool Get(object name, out IDescriptor<IObj> descriptor);
 
         bool CanSet(object name); 
         bool TryDelete(object name);
         object DefaultValue(ValueHint hint);
-        List<object> GetAllPropertyNames();
+        List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames();
     }
 
     public static class IObjMethods

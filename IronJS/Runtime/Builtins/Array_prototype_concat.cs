@@ -21,9 +21,9 @@ namespace IronJS.Runtime.Builtins
 
             foreach (var arg in args)
             {
-                if (arg is ArrayObj)
+                if (arg is JsArray)
                 {
-                    var arr = arg as ArrayObj;
+                    var arr = arg as JsArray;
                     var len = (double)arr.Length;
                     for (var i = 0.0D; i < len; ++i)
                     {

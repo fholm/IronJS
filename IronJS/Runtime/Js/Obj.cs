@@ -12,149 +12,53 @@ namespace IronJS.Runtime.Js
         static public readonly ConstructorInfo Ctor 
             = typeof(Obj).GetConstructor(Type.EmptyTypes);
 
-        protected readonly Dictionary<object, Property> Properties 
-            = new Dictionary<object, Property>();
-
-        public override string ToString()
-        {
-            return "IronJS: " + Class;
-        }
+        protected readonly Dictionary<object, IDescriptor<IObj>> Properties
+            = new Dictionary<object, IDescriptor<IObj>>();
 
         #region IObj Members
 
-        public Context Context { get; set; }
         public ObjClass Class { get; set; }
         public IObj Prototype { get; set; }
+        public Context Context { get; set; }
 
-        public virtual object DefaultValue(ValueHint hint)
+        public bool Has(object name)
         {
-            object toString;
-            object valueOf;
-
-            if (hint == ValueHint.String)
-            {
-                toString = Get("toString");
-                if (toString is IFunction)
-                    return (toString as IFunction).Call(this, null);
-
-                valueOf = Get("valueOf");
-                if (valueOf is IFunction)
-                    return (valueOf as IFunction).Call(this, null);
-
-                throw new ShouldThrowTypeError();
-            }
-
-            valueOf = Get("valueOf");
-            if (valueOf is IFunction)
-                return (valueOf as IFunction).Call(this, null);
-
-            toString = Get("toString");
-            if (toString is IFunction)
-                return (toString as IFunction).Call(this, null);
-
-            throw new ShouldThrowTypeError();
+            return Properties.ContainsKey(name);
         }
 
-        public virtual object Get(object key)
+        public void Set(object name, IDescriptor<IObj> descriptor)
         {
-            Property result;
-
-            if (Properties.TryGetValue(key, out result))
-                return result.Value;
-
-            if (Prototype != null)
-                return Prototype.Get(key);
-
-            return Js.Undefined.Instance;
+            Properties[name] = descriptor;
         }
 
-        public bool TryGet(object name, out object value)
+        public bool Get(object name, out IDescriptor<IObj> descriptor)
         {
-            Property result;
-
-            if (Properties.TryGetValue(name, out result))
-            {
-                value = result.Value;
-                return true;
-            }
-
-            if (Prototype != null)
-                return Prototype.TryGet(name, out value);
-
-            value = null;
-            return false;
+            return Properties.TryGetValue(name, out descriptor);
         }
 
-        public virtual object Set(object key, object value)
+        public bool CanSet(object name)
         {
-            IObj obj = this;
+            IDescriptor<IObj> descriptor;
 
-            while (obj != null)
-            {
-                if (obj.HasOwn(key))
-                    return obj.SetOwn(key, value);
-
-                obj = obj.Prototype;
-            }
-
-            Properties[key] = new Property(value);
-            return value;
-        }
-
-        public virtual bool CanSet(object key)
-        {
-            if (Properties.ContainsKey(key))
-                return Properties[key].NotHasAttr(PropertyAttrs.ReadOnly);
-
-            if (Prototype != null)
-                return Prototype.CanSet(key);
+            if (Properties.TryGetValue(name, out descriptor))
+                return descriptor.IsReadOnly;
 
             return true;
         }
 
-        public virtual bool HasOwn(object key)
+        public bool TryDelete(object name)
         {
-            return Properties.ContainsKey(key);
+            return Properties.Remove(name);
         }
 
-        public virtual object GetOwn(object key)
+        public object DefaultValue(ValueHint hint)
         {
-            Property property;
-
-            if (Properties.TryGetValue(key, out property))
-                return property.Value;
-
-            return Js.Undefined.Instance;
+            throw new NotImplementedException();
         }
 
-        public virtual object SetOwn(object key, object value)
+        public List<KeyValuePair<object, IDescriptor<IObj>>> GetAllPropertyNames()
         {
-            Properties[key] = new Property(value);
-            return value;
-        }
-
-        public virtual bool Has(object name)
-        {
-            if (HasOwn(name))
-                return true;
-
-            if (Prototype != null)
-                return Prototype.Has(name);
-
-            return false;
-        }
-
-        public virtual bool TryDelete(object name)
-        {
-            if (HasOwn(name))
-                return Properties.Remove(name);
-
-            return false;
-        }
-
-        public virtual List<object> GetAllPropertyNames()
-        {
-            return Properties.Keys.ToList();
+            return Properties.ToList();
         }
 
         #endregion

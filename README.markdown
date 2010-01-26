@@ -1,6 +1,6 @@
 # IronJS
 
-IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
+IronJS is a JavaScript implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into yor .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
 
 ## License
 
@@ -11,6 +11,8 @@ IronJS is released under the [GNU General Public License v3](http://www.gnu.org/
 What you need to use IronJS
 
 * An understanding that this is alpha quality software, it will crash on you.
+    * A result of this is that the code base is very volatile and will change often
+	* No backwards compabitility with previous versions are guaranteed untill 1.0
 * Requires .NET 4.0 Beta 2, since a few C# 4.0 specific features are used (Covariance most notably)
 * The Dynamic Language Runtime from Microsoft.
 

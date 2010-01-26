@@ -12,7 +12,7 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            if (!(that is ArrayObj))
+            if (!(that is JsArray))
                 throw new ShouldThrowTypeError();
 
             return ((that as IObj).Get("join") as IFunction).Call(that, new object[] { });

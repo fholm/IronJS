@@ -222,7 +222,7 @@
     <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
-    <Compile Include="Runtime\Js\ArrayObj.cs" />
+    <Compile Include="Runtime\Js\JsArray.cs" />
     <Compile Include="Runtime\Js\UserFunction.cs" />
     <Compile Include="Runtime\Js\IFunction.cs">
       <SubType>Code</SubType>

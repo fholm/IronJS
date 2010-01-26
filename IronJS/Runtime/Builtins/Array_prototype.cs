@@ -2,7 +2,7 @@
 
 namespace IronJS.Runtime.Builtins
 {
-    class Array_prototype : ArrayObj
+    class Array_prototype : JsArray
     {
         public Array_prototype(Context context)
             : base()

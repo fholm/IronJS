@@ -61,6 +61,31 @@ namespace IronJS.Runtime.Js
             return (obj is IFunction);
         }
 
+        /*
+         * */
+        static public readonly MethodInfo MiSearchObject = 
+            typeof(IObjUtils).GetMethod("Search", new [] {
+                typeof(IObj), 
+                typeof(object)
+            });
+        public static object Search(this IObj obj, object name)
+        {
+            IDescriptor<IObj> descriptor;
+
+            if (obj.Search(name, out descriptor))
+                return descriptor.Get();
+
+            return Undefined.Instance;
+        }
+
+        /*
+         * */
+        static public readonly MethodInfo MiSearchDescriptor =
+            typeof(IObjUtils).GetMethod("Search", new[] {
+                typeof(IObj), 
+                typeof(object), 
+                typeof(IDescriptor<IObj>).MakeByRefType()
+            });
         public static bool Search(this IObj obj, object name, out IDescriptor<IObj> descriptor)
         {
             while (obj != null)
@@ -75,11 +100,10 @@ namespace IronJS.Runtime.Js
             return false;
         }
 
-        public static double GetNumber(this IObj obj, object name)
-        {
-            return JsTypeConverter.ToNumber(obj.Get(name));
-        }
-
+        /*
+         * */
+        static public readonly MethodInfo MiGet = 
+            typeof(IObjUtils).GetMethod("Get");
         public static object Get(this IObj obj, object name)
         {
             IDescriptor<IObj> descriptor;
@@ -90,16 +114,27 @@ namespace IronJS.Runtime.Js
             return Undefined.Instance;
         }
 
+        /*
+         * */
+        static public readonly MethodInfo MiSetInt = 
+            typeof(IObjUtils).GetMethod("Set", new[] { 
+                typeof(IObj), 
+                typeof(object), 
+                typeof(int) 
+            });
         public static object Set(this IObj obj, object name, int value)
         {
             return obj.Set(name, (double)value);
         }
 
-        public static object Set(this IObj obj, int name, int value)
-        {
-            return obj.Set(name, (double)value);
-        }
-
+        /*
+         * */
+        static public readonly MethodInfo MiSetObj = 
+            typeof(IObjUtils).GetMethod("Set", new[] { 
+                typeof(IObj), 
+                typeof(object), 
+                typeof(object) 
+            });
         public static object Set(this IObj obj, object name, object value)
         {
             IDescriptor<IObj> descriptor;

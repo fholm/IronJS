@@ -69,8 +69,8 @@ namespace IronJS.Runtime.Js
         {
             return new Meta(
                 Et.Call(
+                    IObjUtils.MiGet,
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiGet,
                     Et.Constant(binder.Name)
                 ),
                 Restrict.GetTypeRestriction(
@@ -84,8 +84,8 @@ namespace IronJS.Runtime.Js
         {
             return new Meta(
                 Et.Call(
+                    IObjUtils.MiSetObj,
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiPut,
                     Et.Constant(binder.Name),
                     EtUtils.Box(value.Expression)
                 ),
@@ -122,8 +122,8 @@ namespace IronJS.Runtime.Js
                     Et.Assign(
                         tmp,
                         Et.Call(
+                            IObjUtils.MiSearchObject,
                             selfExpr,
-                            IObjMethods.MiGet,
                             Et.Constant(binder.Name)
                         )
                     ),

@@ -33,6 +33,8 @@ namespace IronJS.Compiler
             var root = (ITree)program.Tree;
             var nodes = new List<Node>();
 
+            Console.WriteLine(root.ToStringTree());
+
             if (root.IsNil)
             {
                 root.EachChild(node => {
@@ -195,7 +197,7 @@ namespace IronJS.Compiler
                  * Assignments
                  */
                 case EcmaParser.VAR:
-                    return BuildVarAssign(node.GetChildSafe(0));
+                    return BuildVarAssign(node);
 
                 case EcmaParser.ASSIGN:
                     return BuildAssign(node, false);
@@ -401,7 +403,7 @@ namespace IronJS.Compiler
         {
             var i = 0;
             var arrayElements = node.Map(
-                    x => new AutoPropertyNode((double) i++, Build(x.GetChildSafe(0)))
+                    x => new AutoPropertyNode(i++, Build(x.GetChildSafe(0)))
                 ); 
 
             return new NewNode(
@@ -761,17 +763,24 @@ namespace IronJS.Compiler
 
         private Node BuildVarAssign(ITree node)
         {
-            var assignNode = Build(node);
+            var nodes = new List<Node>();
 
-            if (assignNode is AssignNode)
+            for (int i = 0; i < node.ChildCount; ++i)
             {
-                var target = ((AssignNode)assignNode).Target;
+                var assignNode = Build(node.GetChildSafe(0));
 
-                if (target is IdentifierNode)
-                    ((IdentifierNode)target).IsLocal = true;
+                if (assignNode is AssignNode)
+                {
+                    var target = ((AssignNode)assignNode).Target;
+
+                    if (target is IdentifierNode)
+                        ((IdentifierNode)target).IsLocal = true;
+                }
+
+                nodes.Add(assignNode);
             }
 
-            return assignNode;
+            return new BlockNode(nodes);
         }
 
         private Node BuildObject(ITree node)

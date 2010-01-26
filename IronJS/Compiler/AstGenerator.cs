@@ -33,8 +33,6 @@ namespace IronJS.Compiler
             var root = (ITree)program.Tree;
             var nodes = new List<Node>();
 
-            Console.WriteLine(root.ToStringTree());
-
             if (root.IsNil)
             {
                 root.EachChild(node => {

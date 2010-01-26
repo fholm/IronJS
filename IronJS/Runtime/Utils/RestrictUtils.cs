@@ -1,32 +1,24 @@
-﻿
+﻿using Meta = System.Dynamic.DynamicMetaObject;
+using Restrict = System.Dynamic.BindingRestrictions;
+
 namespace IronJS.Runtime.Utils
 {
-    using Meta2 = System.Dynamic.DynamicMetaObject;
-    using Restrict2 = System.Dynamic.BindingRestrictions;
-
     enum RestrictFlag { Instance, Type }
 
     static class RestrictUtils
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="args"></param>
-        /// <param name="instanceRestrict"></param>
-        /// <returns></returns>
-        internal static Restrict2 BuildCallRestrictions(Meta2 target, Meta2[] args, RestrictFlag flag)
+        internal static Restrict BuildCallRestrictions(Meta target, Meta[] args, RestrictFlag flag)
         {
             var restrictions =
                 target.Restrictions.Merge(
-                    Restrict2.Combine(args)
+                    Restrict.Combine(args)
                 );
 
             if (flag == RestrictFlag.Instance)
             {
                 restrictions =
                     restrictions.Merge(
-                        Restrict2.GetInstanceRestriction(
+                        Restrict.GetInstanceRestriction(
                             target.Expression,
                             target.Value
                         )
@@ -36,7 +28,7 @@ namespace IronJS.Runtime.Utils
             {
                 restrictions =
                     restrictions.Merge(
-                        Restrict2.GetTypeRestriction(
+                        Restrict.GetTypeRestriction(
                             target.Expression,
                             target.LimitType
                         )
@@ -45,13 +37,13 @@ namespace IronJS.Runtime.Utils
 
             for (var i = 0; i < args.Length; ++i)
             {
-                Restrict2 restr;
+                Restrict restr;
 
                 // HasValue and Value == null, means we have a null value
                 if (args[i].HasValue && args[i].Value == null)
                 {
                     restr =
-                        Restrict2.GetInstanceRestriction(
+                        Restrict.GetInstanceRestriction(
                             args[i].Expression, 
                             null
                         );
@@ -59,7 +51,7 @@ namespace IronJS.Runtime.Utils
                 else
                 {
                     restr =
-                        Restrict2.GetTypeRestriction(
+                        Restrict.GetTypeRestriction(
                             args[i].Expression, 
                             args[i].LimitType
                         );
@@ -71,15 +63,15 @@ namespace IronJS.Runtime.Utils
             return restrictions;
         }
 
-        internal static Restrict2 GetNullHandledTypeRestriction(Meta2 target)
+        internal static Restrict GetNullHandledTypeRestriction(Meta target)
         {
             if (target.HasValue && target.Value == null)
-                return Restrict2.GetInstanceRestriction(
+                return Restrict.GetInstanceRestriction(
                         target.Expression,
                         null
                     );
 
-            return Restrict2.GetTypeRestriction(
+            return Restrict.GetTypeRestriction(
                     target.Expression,
                     target.LimitType
                 );

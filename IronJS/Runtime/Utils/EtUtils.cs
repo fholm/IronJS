@@ -1,28 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using Microsoft.Scripting.Utils;
-using IronJS.Runtime.Js;
-
+using System.Reflection;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-using EtParam = System.Linq.Expressions.ParameterExpression;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 using Restrict = System.Dynamic.BindingRestrictions;
-using System.Reflection;
 
 namespace IronJS.Runtime.Utils
 {
     static class EtUtils
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="expr"></param>
-        /// <returns></returns>
         internal static Et Box(Et expr)
         {
             if (!expr.Type.IsValueType)
@@ -47,12 +35,6 @@ namespace IronJS.Runtime.Utils
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expr"></param>
-        /// <returns></returns>
         internal static Et Cast<T>(Et expr)
         {
             if (expr.Type == typeof(void))
@@ -61,15 +43,6 @@ namespace IronJS.Runtime.Utils
             return Et.Convert(expr, typeof(T));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="args"></param>
-        /// <param name="tests"></param>
-        /// <param name="excType"></param>
-        /// <param name="excArgs"></param>
-        /// <returns></returns>
         internal static Meta CreateThrow(Meta target, Meta[] args, Restrict tests, Type excType, params object[] excArgs)
         {
             Et[] argExprs = null;
@@ -113,12 +86,6 @@ namespace IronJS.Runtime.Utils
             );
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="args"></param>
-        /// <returns></returns>
         internal static Et[] ConvertAll<T>(Meta[] args)
         {
             Et[] callArgs = new Et[args.Length];
@@ -135,12 +102,6 @@ namespace IronJS.Runtime.Utils
             return callArgs;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="args"></param>
-        /// <param name="paramInfo"></param>
-        /// <returns></returns>
         internal static Et[] ConvertToParamTypes(Meta[] args, ParameterInfo[] paramInfo)
         {
             Et[] callArgs = new Et[args.Length];

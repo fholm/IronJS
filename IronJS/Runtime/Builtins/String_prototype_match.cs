@@ -27,10 +27,10 @@ namespace IronJS.Runtime.Builtins
 
             var matches = regex.Match.Matches(str);
             var results = Context.ArrayConstructor.Construct();
-            
-            var d = 0.0D;
+
+            int n = 0;
             foreach (Match match in matches)
-                results.Set(d++, match.Groups[0].Value);
+                results.SetIndex(n++, match.Groups[0].Value);
 
             return results;
         }

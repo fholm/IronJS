@@ -41,7 +41,6 @@ namespace IronJS.Runtime.Js
         static public readonly MethodInfo MiPut = typeof(IObj).GetMethod("Put");
         static public readonly MethodInfo MiCanPut = typeof(IObj).GetMethod("CanPut");
         static public readonly MethodInfo MiHasProperty = typeof(IObj).GetMethod("HasProperty");
-        static public readonly MethodInfo MiDelete = typeof(IObj).GetMethod("Delete");
         static public readonly MethodInfo MiDefaultValue = typeof(IObj).GetMethod("DefaultValue");
         static public readonly MethodInfo MiHasOwnProperty = typeof(IObj).GetMethod("HasOwnProperty");
         static public readonly MethodInfo MiSetOwnProperty = typeof(IObj).GetMethod("HasSetProperty");
@@ -51,6 +50,8 @@ namespace IronJS.Runtime.Js
 
     public static class IObjUtils
     {
+        static public readonly MethodInfo MiTryDelete = typeof(IObj).GetMethod("TryDelete");
+
         public static bool HasValue(this IObj obj)
         {
             return (obj is IValueObj);
@@ -116,15 +117,24 @@ namespace IronJS.Runtime.Js
 
         /*
          * */
-        static public readonly MethodInfo MiSetInt = 
-            typeof(IObjUtils).GetMethod("Set", new[] { 
+        static public readonly MethodInfo MiGetIndex =
+            typeof(IObjUtils).GetMethod("GetIndex");
+        public static object GetIndex(this IObj obj, object name)
+        {
+            return obj.Get(JsTypeConverter.ToArrayIndex(name));
+        }
+
+        /*
+         * */
+        static public readonly MethodInfo MiSetIndex = 
+            typeof(IObjUtils).GetMethod("SetIndex", new[] { 
                 typeof(IObj), 
                 typeof(object), 
-                typeof(int) 
+                typeof(object) 
             });
-        public static object Set(this IObj obj, object name, int value)
+        public static object SetIndex(this IObj obj, object name, object value)
         {
-            return obj.Set(name, (double)value);
+            return obj.Set(name, JsTypeConverter.ToArrayIndex(value));
         }
 
         /*

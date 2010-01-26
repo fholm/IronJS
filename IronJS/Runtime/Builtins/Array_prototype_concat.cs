@@ -29,13 +29,13 @@ namespace IronJS.Runtime.Builtins
                     {
                         if (arr.Has(i))
                         {
-                            arrayObj.Set(k++, arr.Get(i));
+                            arrayObj.SetIndex(k++, arr.GetIndex(i));
                         }
                     }
                 }
                 else
                 {
-                    arrayObj.Set(k++, JsTypeConverter.ToString(arg));
+                    arrayObj.SetIndex(k++, JsTypeConverter.ToString(arg));
                 }
             }
 

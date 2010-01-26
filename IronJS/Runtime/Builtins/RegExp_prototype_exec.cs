@@ -44,20 +44,17 @@ namespace IronJS.Runtime.Builtins
                 return null;
             }
             
-            int n = match.Groups.Count;
-            int e = match.Index + match.Length;
-
             if (global)
-                lastIndex = e;
+                lastIndex = match.Index + match.Length;
 
             var resultArray = Context.ArrayConstructor.Construct();
             resultArray.Set("index", match.Index);
             resultArray.Set("input", str);
-            resultArray.Set("length", n);
+            resultArray.Set("length", match.Groups.Count);
 
-            var d = 0.0D;
+            var i = 0;
             foreach (Group group in match.Groups)
-                resultArray.Set(d++, group.Value);
+                resultArray.SetIndex(i++, group.Value);
 
             return resultArray;
         }

@@ -23,9 +23,12 @@ namespace IronJS.Runtime.Js
         {
             return new Meta(
                 Et.Call(
+                    IObjUtils.MiSetObj,
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiPut,
-                    EtUtils.Box(indexes[0].Expression),
+                    Et.Call(
+                        JsTypeConverter.MiToArrayIndex,
+                        EtUtils.Box(indexes[0].Expression)
+                    ),
                     EtUtils.Box(value.Expression)
                 ),
                 Restrict.GetTypeRestriction(
@@ -39,9 +42,12 @@ namespace IronJS.Runtime.Js
         {
             return new Meta(
                 Et.Call(
+                    IObjUtils.MiSearchObject,
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiGet,
-                    EtUtils.Box(indexes[0].Expression)
+                    Et.Call(
+                        JsTypeConverter.MiToArrayIndex,
+                        EtUtils.Box(indexes[0].Expression)
+                    )
                 ),
                 Restrict.GetTypeRestriction(
                     this.Expression,
@@ -55,8 +61,11 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiDelete,
-                    EtUtils.Box(indexes[0].Expression)
+                    IObjUtils.MiTryDelete,
+                    Et.Call(
+                        JsTypeConverter.MiToArrayIndex,
+                        EtUtils.Box(indexes[0].Expression)
+                    )
                 ),
                 Restrict.GetTypeRestriction(
                     this.Expression,
@@ -101,7 +110,7 @@ namespace IronJS.Runtime.Js
             return new Meta(
                 Et.Call(
                     EtUtils.Cast<IObj>(this.Expression),
-                    IObjMethods.MiDelete,
+                    IObjUtils.MiTryDelete,
                     Et.Constant(binder.Name)
                 ),
                 Restrict.GetTypeRestriction(

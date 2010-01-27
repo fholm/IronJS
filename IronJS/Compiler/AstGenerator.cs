@@ -496,10 +496,13 @@ namespace IronJS.Compiler
 
         private Node BuildIndexAccess(ITree node)
         {
+            return null;
+            /*
             return new IndexAccessNode(
                 Build(node.GetChildSafe(0)),
                 Build(node.GetChildSafe(1))
             );
+            */
         }
 
         private Node BuildThrow(ITree node)
@@ -578,9 +581,7 @@ namespace IronJS.Compiler
         private Node BuildContinue(ITree node)
         {
             if (node.ChildCount == 0)
-            {
                 return new ContinueNode();
-            }
 
             return new ContinueNode(node.GetChildSafe(0).Text);
         }
@@ -589,9 +590,7 @@ namespace IronJS.Compiler
         private Node BuildBreak(ITree node)
         {
             if (node.ChildCount == 0)
-            {
                 return new BreakNode(null);
-            }
 
             return new BreakNode(node.GetChildSafe(0).Text);
         }
@@ -845,12 +844,8 @@ namespace IronJS.Compiler
 
         private Node BuildNew(ITree node)
         {
-            var newNode = node.GetChildSafe(0);
-            var argsNode = node.GetChild(1); // can be null
-
             return new NewNode(
-                Build(newNode.GetChildSafe(0)),
-                argsNode == null ? new List<Node>() : argsNode.Map(x => { return Build(x); })
+                Build(node.GetChildSafe(0))
             );
         }
 
@@ -882,22 +877,37 @@ namespace IronJS.Compiler
 
         private Node BuildMemberAccess(ITree node)
         {
-            if (node.GetChildSafe(0).Type == EcmaParser.NEW)
-                return BuildNew(node);
+            return null;
+            var member = node.GetChildSafe(1);
+            var target = node.GetChildSafe(0);
+            Node targetNode = null;
+
+            if (target.Type == EcmaParser.NEW)
+                return new NewNode(
+                    new MemberAccessNode(
+                        Build(
+                        member.Text
+                    )
+                );
 
             return new MemberAccessNode(
-                Build(node.GetChildSafe(0)), 
-                node.GetChildSafe(1).Text
+                targetNode, 
+                member.Text
             );
         }
 
         private Node BuildCall(ITree node)
         {
-            var callTree = node.GetChildSafe(0);
+            var callTarget = node.GetChildSafe(0);
 
-            if (callTree.Type == EcmaParser.NEW)
+            if (callTarget.Type == EcmaParser.NEW)
             {
-                return BuildNew(node);
+                return new NewNode(
+                    Build(callTarget),
+                    node.GetChildSafe(1).Map(
+                        x => Build(x)
+                    )
+                );
             }
             else
             {
@@ -907,7 +917,7 @@ namespace IronJS.Compiler
                 // if we have a new node nested
                 // inside byfield/byindex nodes
 
-                var firstChild = callTree;
+                var firstChild = callTarget;
                 var foundNewNode = false;
 
                 while (firstChild != null)
@@ -942,7 +952,7 @@ namespace IronJS.Compiler
                     // if we found a new-node and 
                     // rewrote the tree
                     return new NewNode(
-                        Build(callTree),
+                        Build(callTarget),
                         argsTree.Map(x => Build(x))
                     );
                 }
@@ -951,7 +961,7 @@ namespace IronJS.Compiler
                     // if we fail, it's just 
                     // a normal function call
                     return new CallNode(
-                        Build(callTree),
+                        Build(callTarget),
                         argsTree.Map(x =>Build(x))
                     );
                 }

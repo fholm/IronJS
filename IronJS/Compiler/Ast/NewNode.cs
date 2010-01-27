@@ -23,13 +23,13 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public NewNode(IdentifierNode target)
+        public NewNode(Node target)
             : this(target, new List<Node>())
         {
 
         }
 
-        public NewNode(IdentifierNode targets, List<Node> args, List<AutoPropertyNode> properties)
+        public NewNode(Node targets, List<Node> args, List<AutoPropertyNode> properties)
             : this(targets, args)
         {
             Properties = properties;

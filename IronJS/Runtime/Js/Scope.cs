@@ -75,8 +75,11 @@ namespace IronJS.Runtime.Js
 
             if(!JsObject.Search(name, out value))
             {
-                if(ParentScope != null)
-                    return ParentScope.Pull(name);
+                if (ParentScope != null)
+                {
+                    var val = ParentScope.Pull(name);
+                    return val;
+                }
 
                 throw InternalRuntimeError.New(
                     InternalRuntimeError.NOT_DEFINED,

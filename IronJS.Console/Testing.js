@@ -1,3 +1,10 @@
 ﻿
+with ({}) {
+    println("inside");
+}
+
+/*
 foo = ['a', 'b', 'c', 'd'];
 original = foo.join('');
+println(original);
+*/

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using IronJS.Runtime.Utils;
+﻿using IronJS.Runtime.Utils;
 
 namespace IronJS.Runtime.Js.Descriptors
 {

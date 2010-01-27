@@ -41,6 +41,9 @@ namespace IronJS.Runtime.Js
 
         public void Set(object name, IDescriptor<IObj> descriptor)
         {
+            if (name is int)
+                Length.Set((int)name + 1);
+
             Properties.Add(name, descriptor);
         }
 

@@ -8,6 +8,10 @@ IronJS is a JavaScript implementation built on top of the [Dynamic Language Runt
 
 IronJS is released under the [Microsoft Public License (Ms-PL)](http://www.microsoft.com/opensource/licenses.mspx#Ms-PL).
 
+## Twitter
+
+If you want to follow the commits of IronJS you can [follow it on twitter](http://twitter.com/ironjs).
+
 ## Requirements
 
 What you need to use IronJS

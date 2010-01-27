@@ -399,7 +399,7 @@ namespace IronJS.Compiler
 
         private Node BuildArray(ITree node)
         {
-            var i = 0;
+            var i = 0.0D;
             var arrayElements = node.Map(
                     x => new AutoPropertyNode(i++, Build(x.GetChildSafe(0)))
                 ); 
@@ -461,8 +461,9 @@ namespace IronJS.Compiler
 
         private Node BuildCommaExpression(ITree node)
         {
-            return new BlockNode(
-                node.Map(x => Build(x))
+            return new AssignmentBlockNode(
+                node.Map(x => Build(x)),
+                false
             );
         }
 
@@ -778,7 +779,10 @@ namespace IronJS.Compiler
                 nodes.Add(assignNode);
             }
 
-            return new BlockNode(nodes);
+            if (nodes.Count == 1)
+                return nodes[0];
+
+            return new AssignmentBlockNode(nodes, false);
         }
 
         private Node BuildObject(ITree node)

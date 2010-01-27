@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\Ast\AssignmentBlockNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />
     <Compile Include="Compiler\Ast\AutoPropertyNode.cs" />
     <Compile Include="Compiler\Ast\BlockNode.cs" />

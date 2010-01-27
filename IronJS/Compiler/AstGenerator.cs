@@ -861,7 +861,8 @@ namespace IronJS.Compiler
         private Node BuildString(ITree node)
         {
             return new StringNode(
-                node.Text.Substring(1, node.Text.Length - 2)
+                node.Text.Substring(1, node.Text.Length - 2),
+                node.Text[0]
             );
         }
 

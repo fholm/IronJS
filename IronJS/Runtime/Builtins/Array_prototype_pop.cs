@@ -13,17 +13,19 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            var len = JsTypeConverter.ToInt32(that.Get("length"));
+            var n = JsTypeConverter.ToInt32(that.Get("length")) - 1;
 
-            if (len != 0)
+            if (n != -1)
             {
-                var result = that.Get(len);
-                that.TryDelete(len);
-                that.Set("length", len - 1);
+                var result = that.Get(n);
+
+                that.TryDelete(n);
+                that.Set("length", n);
+
                 return result;
             }
 
-            that.Set("length", len);
+            that.Set("length", 0);
             return Undefined.Instance;
         }
     }

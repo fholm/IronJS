@@ -21,7 +21,10 @@ namespace IronJS.Compiler.Ast
             return Et.Call(
                 EtUtils.Cast<IObj>(Target.Walk(etgen)),
                 IObjUtils.MiHas,
-                Property.Walk(etgen)
+                Et.Call(
+                    JsTypeConverter.MiToArrayIndex,
+                    Property.Walk(etgen)
+                )
             );
         }
     }

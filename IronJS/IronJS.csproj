@@ -267,7 +267,7 @@
     <Folder Include="Runtime\InterOp\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Compiler\Parser\ES3Parser-and-ES3Lexer-LICENSE.txt" />
+    <Content Include="Compiler\Parser\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />

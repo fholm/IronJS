@@ -26,7 +26,14 @@ namespace IronJS.Runtime.Js.Descriptors
 
         public object Set(object value)
         {
-            return Value = JsTypeConverter.ToInt32(value);
+            var newValue = JsTypeConverter.ToInt32(value);
+
+            var n = Value - 1;
+
+            for (; n >= newValue; --n)
+                Owner.TryDelete(n);
+
+            return Value = newValue;
         }
 
         #endregion

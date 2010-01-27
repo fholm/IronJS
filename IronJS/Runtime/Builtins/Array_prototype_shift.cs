@@ -22,7 +22,7 @@ namespace IronJS.Runtime.Builtins
             }
 
             object shifted = that.Get(0);
-            var d = 0;
+            var d = 1;
 
             for (; d < len; ++d)
             {

@@ -17,12 +17,7 @@ namespace IronJS.Runtime.Builtins
 
             IDescriptor<IObj> descriptor;
             foreach (var arg in args)
-            {
-                if (that.Get(n, out descriptor))
-                    descriptor.Set(arg);
-                else
-                    that.Set(1, 1); // TODO <- uhm..
-            }
+                that.Set(n++, arg);
 
             return n;
         }

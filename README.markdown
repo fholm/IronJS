@@ -47,6 +47,7 @@ This list is not in any chronological or priority order
 * Bill Chiles (For the excellent SymPL example and putting up with my all my questions)
 * Dino Viehland (For answering a lot of my questions)
 * Christian Knutsson (Logo design)
+* Justin Greene (Finding bugs and submitting patches)
 
 ## ECMAScript 3.0 Compliance
 

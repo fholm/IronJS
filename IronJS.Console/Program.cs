@@ -1,8 +1,6 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
-using System.Collections.Generic;
 using IronJS.Runtime.Utils;
 
 namespace IronJS.Testing

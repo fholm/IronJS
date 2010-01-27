@@ -53,6 +53,9 @@ namespace IronJS.Runtime.Js
         static public readonly MethodInfo MiTryDelete 
             = typeof(IObj).GetMethod("TryDelete");
 
+        static public readonly MethodInfo MiHas
+            = typeof(IObj).GetMethod("Has");
+
         public static bool HasValue(this IObj obj)
         {
             return (obj is IValueObj);
@@ -156,6 +159,19 @@ namespace IronJS.Runtime.Js
                 obj.Set(name, new UserProperty(obj, value));
 
             return value;
+        }
+
+        /*
+         * */
+        static public readonly MethodInfo MiSetInt =
+            typeof(IObjUtils).GetMethod("Set", new[] { 
+                typeof(IObj), 
+                typeof(object), 
+                typeof(int) 
+            });
+        public static object Set(this IObj obj, object name, int value)
+        {
+            return obj.Set(name, (double)value);
         }
 
         /*

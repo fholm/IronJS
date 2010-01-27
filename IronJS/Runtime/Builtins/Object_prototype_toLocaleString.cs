@@ -8,14 +8,12 @@ namespace IronJS.Runtime.Builtins
         public Object_prototype_toLocaleString(Context context)
             : base(context)
         {
-            Set("length",
-                new UserProperty(this, 0.0D)
-            );
+            this.Set("length", 0);
         }
 
         public override object Call(IObj that, object[] args)
         {
-            return (that.Get("toString") as IFunction).Call(that, args);
+            return (that.Search("toString") as IFunction).Call(that, args);
         }
     }
 }

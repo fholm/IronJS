@@ -13,16 +13,16 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            var len = JsTypeConverter.ToNumber(that.Get("length"));
+            var len = JsTypeConverter.ToInt32(that.Get("length"));
 
-            if (len == 0.0D)
+            if (len == 0)
             {
-                that.Set("length", 0.0D);
+                that.Set("length", 0);
                 return Undefined.Instance;
             }
 
-            object shifted = that.Get(0.0D);
-            var d = 1.0D;
+            object shifted = that.Get(0);
+            var d = 0;
 
             for (; d < len; ++d)
             {
@@ -30,16 +30,16 @@ namespace IronJS.Runtime.Builtins
 
                 if (that.Get(d, out descriptor))
                 {
-                    that.Set(d - 1.0D, descriptor.Get());
+                    that.Set(d - 1, descriptor.Get());
                     that.TryDelete(d);
                 }
                 else
                 {
-                    that.TryDelete(d - 1.0D);
+                    that.TryDelete(d - 1);
                 }
             }
 
-            that.Set("length", d - 1.0D);
+            that.Set("length", d - 1);
             return shifted;
         }
     }

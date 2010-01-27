@@ -15,14 +15,14 @@ namespace IronJS.Runtime.Builtins
         public override object Call(IObj that, object[] args)
         {
 
-            var len = JsTypeConverter.ToNumber(
+            var len = JsTypeConverter.ToInt32(
                      that.Get("length")
                  );
 
-            var half = Math.Floor(len / 2);
+            var half = (int) Math.Floor((double)len / 2.0);
 
-            var begin = 0.0D;
-            var end = 0.0D;
+            var begin = 0;
+            var end = 0;
 
             IDescriptor<IObj> beginDescriptor;
             IDescriptor<IObj> endDescriptor;

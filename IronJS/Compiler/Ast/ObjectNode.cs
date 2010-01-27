@@ -41,9 +41,7 @@ namespace IronJS.Compiler.Ast
                         Context.MiCreateObject
                     )
                 ),
-                Et.Block(
-                    exprs
-                ),
+                etgen.BlockIfNotEmpty(exprs),
                 tmp
             );
         }

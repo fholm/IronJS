@@ -18,7 +18,7 @@ namespace IronJS.Runtime.Builtins
             var vals = new List<object>();
             IDescriptor<IObj> descriptor;
 
-            for (var d = 0.0D; d < len; ++d)
+            for (var d = 0; d < len; ++d)
             {
                 if (that.Get(d, out descriptor))
                     vals.Add(descriptor.Get());
@@ -38,7 +38,7 @@ namespace IronJS.Runtime.Builtins
                 vals.Sort((a, b) => (int)(double)func.Call(that, new[] { a, b }) );
             }
 
-            for (var d = 0.0D; d < len; ++d)
+            for (var d = 0; d < len; ++d)
             {
                 if ((int)d < vals.Count)
                 {

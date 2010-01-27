@@ -1,3 +1,3 @@
 ﻿
-var foo = { bar: 1 };
-var bar = ['a', 'b', 'c', 'd'];
+foo = ['a', 'b', 'c', 'd'];
+original = foo.join('');

@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            var n = (double) JsTypeConverter.ToInt32(that.Get("length"));
+            var n = JsTypeConverter.ToInt32(that.Get("length"));
 
             IDescriptor<IObj> descriptor;
             foreach (var arg in args)
@@ -21,7 +21,7 @@ namespace IronJS.Runtime.Builtins
                 if (that.Get(n, out descriptor))
                     descriptor.Set(arg);
                 else
-                    that.Set(1, 1);
+                    that.Set(1, 1); // TODO <- uhm..
             }
 
             return n;

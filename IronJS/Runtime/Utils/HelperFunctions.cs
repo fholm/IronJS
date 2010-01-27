@@ -6,7 +6,7 @@ namespace IronJS.Runtime.Utils
     {
         static public object PrintLine(object obj)
         {
-            //Console.WriteLine(JsTypeConverter.ToString(obj));
+            Console.WriteLine(JsTypeConverter.ToString(obj));
             return obj;
         }
     }

@@ -61,7 +61,6 @@ namespace IronJS.Runtime.Builtins
             }
             else if(args != null)
             {
-                // 15.4.2.2
                 var len = JsTypeConverter.ToNumber(args[0]);
 
                 if ((double)JsTypeConverter.ToInt32(len) == len)

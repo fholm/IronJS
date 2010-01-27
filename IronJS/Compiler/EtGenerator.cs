@@ -120,7 +120,15 @@ namespace IronJS.Compiler
             if (node != null)
                 return node.Walk(this);
 
-            return Et.Default(typeof(object));
+            return AstUtils.Empty();
+        }
+
+        internal Et BlockIfNotEmpty(IEnumerable<Et> nodes)
+        {
+            if (nodes.Count() > 0)
+                return Et.Block(nodes);
+
+            return AstUtils.Empty();
         }
 
         internal Et GenerateConvertToObject(Et target)

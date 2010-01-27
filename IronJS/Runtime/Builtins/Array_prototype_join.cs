@@ -14,7 +14,6 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            // 15.4.4.5
             string sep;
 
             if (HasArgs(args))
@@ -33,7 +32,6 @@ namespace IronJS.Runtime.Builtins
                 sep = ",";
             }
 
-
             var length = JsTypeConverter.ToInt32(that.Get("length"));
 
             if (length == 0)
@@ -41,7 +39,7 @@ namespace IronJS.Runtime.Builtins
 
             var sb = new StringBuilder();
 
-            for (var i = 0.0D; i < (double)length; ++i)
+            for (var i = 0; i < (double)length; ++i)
             {
                 var val = that.Get(i);
                 sb.Append(sep);

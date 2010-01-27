@@ -8,6 +8,10 @@ IronJS is a JavaScript implementation built on top of the [Dynamic Language Runt
 
 IronJS is released under the [Microsoft Public License (Ms-PL)](http://www.microsoft.com/opensource/licenses.mspx#Ms-PL).
 
+## Twitter
+
+If you want to follow the commits of IronJS you can [follow it on twitter](http://twitter.com/ironjs).
+
 ## Requirements
 
 What you need to use IronJS
@@ -22,7 +26,7 @@ What you need to use IronJS
 
 This list is not in any chronological or priority order
 
-* Refactor properties to use the new Descriptor model based on the IDescriptor interface - **25%**
+* Refactor properties to use the new Descriptor model based on the IDescriptor interface - **50%**
 * Implement canonical DLR binders - **DONE**
 * Get basic .NET/CLR inter-op working
     * Property and Field access (static + instance)
@@ -47,6 +51,7 @@ This list is not in any chronological or priority order
 * Bill Chiles (For the excellent SymPL example and putting up with my all my questions)
 * Dino Viehland (For answering a lot of my questions)
 * Christian Knutsson (Logo design)
+* Justin Greene (Finding bugs and submitting patches)
 
 ## ECMAScript 3.0 Compliance
 

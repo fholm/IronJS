@@ -781,6 +781,11 @@ namespace IronJS.Compiler
                         ((IdentifierNode)target).IsLocal = true;
                 }
 
+                var identifierNode = assignNode as IdentifierNode;
+
+                if (identifierNode != null)
+                    identifierNode.IsLocal = true;
+
                 nodes.Add(assignNode);
             }
 

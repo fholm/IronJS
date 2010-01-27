@@ -7,9 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Console", "IronJS.Co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7B29A318-9F08-4970-AA2E-759DE1C11312}"
 	ProjectSection(SolutionItems) = preProject
-		GPL-V3.txt = GPL-V3.txt
-		IRONJS-LICENSE.txt = IRONJS-LICENSE.txt
 		IronJS.vsmdi = IronJS.vsmdi
+		LICENSE.txt = LICENSE.txt
 		Local.testsettings = Local.testsettings
 		README.markdown = README.markdown
 		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings

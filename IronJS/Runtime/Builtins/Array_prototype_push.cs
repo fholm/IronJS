@@ -15,7 +15,6 @@ namespace IronJS.Runtime.Builtins
         {
             var n = JsTypeConverter.ToInt32(that.Get("length"));
 
-            IDescriptor<IObj> descriptor;
             foreach (var arg in args)
                 that.Set(n++, arg);
 

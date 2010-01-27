@@ -12,6 +12,12 @@ namespace IronJS.Runtime.Js.Descriptors
             Value = 0;
         }
 
+        public void Update(int value)
+        {
+            if (Value <= value)
+                Value = value + 1;
+        }
+
         #region IDescriptor<JsArray> Members
 
         public JsArray Owner { get; protected set; }

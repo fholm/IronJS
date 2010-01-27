@@ -22,24 +22,24 @@ namespace IronJS.Runtime.Builtins
             }
 
             object shifted = that.Get(0);
-            var d = 1;
+            var n = 1;
 
-            for (; d < len; ++d)
+            for (; n < len; ++n)
             {
                 IDescriptor<IObj> descriptor;
 
-                if (that.Get(d, out descriptor))
+                if (that.Get(n, out descriptor))
                 {
-                    that.Set(d - 1, descriptor.Get());
-                    that.TryDelete(d);
+                    that.Set(n - 1, descriptor.Get());
+                    that.TryDelete(n);
                 }
                 else
                 {
-                    that.TryDelete(d - 1);
+                    that.TryDelete(n - 1);
                 }
             }
 
-            that.Set("length", d - 1);
+            that.Set("length", n - 1);
             return shifted;
         }
     }

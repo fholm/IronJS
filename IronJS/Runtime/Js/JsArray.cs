@@ -23,6 +23,11 @@ namespace IronJS.Runtime.Js
             Properties.Add("length", Length);
         }
 
+        public override string ToString()
+        {
+            return (string) (this.Search("join") as IFunction).Call(this, new object[] { "," });
+        }
+
         protected object IsArrayIndex(object name)
         {
             return name is int;
@@ -42,7 +47,7 @@ namespace IronJS.Runtime.Js
         public void Set(object name, IDescriptor<IObj> descriptor)
         {
             if (name is int)
-                Length.Set((int)name + 1);
+                Length.Update((int)name);
 
             Properties.Add(name, descriptor);
         }

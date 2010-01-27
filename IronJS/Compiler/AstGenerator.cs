@@ -33,6 +33,8 @@ namespace IronJS.Compiler
             var root = (ITree)program.Tree;
             var nodes = new List<Node>();
 
+            Console.WriteLine(root.ToStringTree());
+
             if (root.IsNil)
             {
                 root.EachChild(node => {
@@ -782,7 +784,7 @@ namespace IronJS.Compiler
             if (nodes.Count == 1)
                 return nodes[0];
 
-            return new AssignmentBlockNode(nodes, false);
+            return new AssignmentBlockNode(nodes, true);
         }
 
         private Node BuildObject(ITree node)
@@ -817,20 +819,18 @@ namespace IronJS.Compiler
         {
             if (node.ChildCount > 2)
             {
-                return new AssignNode(
-                    Build(node.GetChildSafe(0)), 
-                    BuildLambda(
-                        node.GetChildSafe(1), 
-                        node.GetChildSafe(2), 
-                        node.GetChildSafe(0).Text
-                    ));
+                return BuildLambda(
+                    node.GetChildSafe(1),
+                    node.GetChildSafe(2),
+                    node.GetChildSafe(0).Text
+                );
             }
             else
             {
                 return BuildLambda(
                     node.GetChildSafe(0), 
                     node.GetChildSafe(1), 
-                    "<lambda>"
+                    null
                 );
             }
         }
@@ -846,11 +846,11 @@ namespace IronJS.Compiler
         private Node BuildNew(ITree node)
         {
             var newNode = node.GetChildSafe(0);
-            var argsNode = node.GetChildSafe(1);
+            var argsNode = node.GetChild(1); // can be null
 
             return new NewNode(
-                Build(newNode.GetChildSafe(0)), 
-                argsNode.Map( x => { return Build(x); })
+                Build(newNode.GetChildSafe(0)),
+                argsNode == null ? new List<Node>() : argsNode.Map(x => { return Build(x); })
             );
         }
 
@@ -882,6 +882,9 @@ namespace IronJS.Compiler
 
         private Node BuildMemberAccess(ITree node)
         {
+            if (node.GetChildSafe(0).Type == EcmaParser.NEW)
+                return BuildNew(node);
+
             return new MemberAccessNode(
                 Build(node.GetChildSafe(0)), 
                 node.GetChildSafe(1).Text
@@ -925,6 +928,12 @@ namespace IronJS.Compiler
                         break;
                     }
 
+                    if (firstChild.Type == EcmaParser.CALL)
+                        break;
+
+                    if (firstChild.Type == EcmaParser.PAREXPR)
+                        break;
+
                     firstChild = firstChild.GetChild(0);
                 }
 
@@ -939,7 +948,8 @@ namespace IronJS.Compiler
                 }
                 else
                 {
-                    // if we fail, it's just a normal function call
+                    // if we fail, it's just 
+                    // a normal function call
                     return new CallNode(
                         Build(callTree),
                         argsTree.Map(x =>Build(x))

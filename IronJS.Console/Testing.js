@@ -1,20 +1,20 @@
-﻿(function (window, undefined) {
+﻿
+var lambda = function () {
 
-    // Define a local copy of jQuery
-    var jQuery = function (selector, context) {
-        // The jQuery object is actually just the init constructor 'enhanced'
-        return new jQuery.fn.init(selector, context);
-    },
+};
 
-    // Map over jQuery in case of overwrite
-	_jQuery = window.jQuery,
+function foo(func) {
+    println(typeof func);
+};
 
-    // Map over the $ in case of overwrite
-	_$ = window.$,
+foo(function bar() { println("test"); });
 
-    // Use the correct document accordingly with window argument (sandbox)
-	document = window.document,
+bar();
 
-    // A central reference to the root jQuery(document)
-	rootjQuery;
-});
+foo(function () {});
+
+/*
+var foo = { baz: function () { this.bar = function () { println("test"); } } };
+
+var test = new a.b.c.d
+*/

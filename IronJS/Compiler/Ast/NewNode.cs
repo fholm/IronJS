@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public NewNode(IdentifierNode target)
+        public NewNode(Node target)
             : this(target, new List<Node>())
         {
 

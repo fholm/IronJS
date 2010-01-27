@@ -62,15 +62,45 @@ namespace IronJS.Compiler.Ast
 
             etgen.ExitFunctionScope();
 
-            return Et.Call(
-                Et.Constant(etgen.Context),
-                Context.MiCreateFunction,
-                etgen.FunctionScope.ScopeExpr,
-                FunctionTable.EtPull(
-                    etgen.FuncTableExpr,
-                    etgen.LambdaId
-                )
-            );
+            if (Name == null)
+            {
+                return Et.Call(
+                    Et.Constant(etgen.Context),
+                    Context.MiCreateFunction,
+                    etgen.FunctionScope.ScopeExpr,
+                    FunctionTable.EtPull(
+                        etgen.FuncTableExpr,
+                        etgen.LambdaId
+                    )
+                );
+            }
+            else
+            {
+                var tmp = Et.Parameter(typeof(IFunction), "#tmp");
+
+                return Et.Block(
+                    new[] { tmp },
+                    Et.Assign(
+                        tmp,
+                        Et.Call(
+                            Et.Constant(etgen.Context),
+                            Context.MiCreateFunction,
+                            etgen.FunctionScope.ScopeExpr,
+                            FunctionTable.EtPull(
+                                etgen.FuncTableExpr,
+                                etgen.LambdaId
+                            )
+                        )
+                    ),
+                    Et.Call(
+                        etgen.FunctionScope.ScopeExpr,
+                        Scope.MiLocal,
+                        Et.Constant(Name, typeof(object)),
+                        tmp
+                    ),
+                    tmp
+                );
+            }
         }
     }
 }

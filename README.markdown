@@ -6,7 +6,7 @@ IronJS is a JavaScript implementation built on top of the [Dynamic Language Runt
 
 ## License
 
-IronJS is released under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html).
+IronJS is released under the [Microsoft Public License (Ms-PL)](http://www.microsoft.com/opensource/licenses.mspx#Ms-PL).
 
 ## Requirements
 

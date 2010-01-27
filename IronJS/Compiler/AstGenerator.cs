@@ -33,6 +33,8 @@ namespace IronJS.Compiler
             var root = (ITree)program.Tree;
             var nodes = new List<Node>();
 
+            Console.WriteLine(root.ToStringTree());
+
             if (root.IsNil)
             {
                 root.EachChild(node => {
@@ -489,10 +491,17 @@ namespace IronJS.Compiler
 
         private Node BuildIndexAccess(ITree node)
         {
-            return new IndexAccessNode(
-                Build(node.GetChildSafe(0)),
-                Build(node.GetChildSafe(1))
-            );
+            if (RewriteIfContainsNew(node.GetChildSafe(0)))
+            {
+                return new NewNode(Build(node));
+            }
+            else
+            {
+                return new IndexAccessNode(
+                    Build(node.GetChildSafe(0)),
+                    Build(node.GetChildSafe(1))
+                );
+            }
         }
 
         private Node BuildThrow(ITree node)
@@ -571,9 +580,7 @@ namespace IronJS.Compiler
         private Node BuildContinue(ITree node)
         {
             if (node.ChildCount == 0)
-            {
                 return new ContinueNode();
-            }
 
             return new ContinueNode(node.GetChildSafe(0).Text);
         }
@@ -582,9 +589,7 @@ namespace IronJS.Compiler
         private Node BuildBreak(ITree node)
         {
             if (node.ChildCount == 0)
-            {
                 return new BreakNode(null);
-            }
 
             return new BreakNode(node.GetChildSafe(0).Text);
         }
@@ -777,7 +782,7 @@ namespace IronJS.Compiler
             if (nodes.Count == 1)
                 return nodes[0];
 
-            return new AssignmentBlockNode(nodes, false);
+            return new AssignmentBlockNode(nodes, true);
         }
 
         private Node BuildObject(ITree node)
@@ -810,20 +815,18 @@ namespace IronJS.Compiler
         {
             if (node.ChildCount > 2)
             {
-                return new AssignNode(
-                    Build(node.GetChildSafe(0)), 
-                    BuildLambda(
-                        node.GetChildSafe(1), 
-                        node.GetChildSafe(2), 
-                        node.GetChildSafe(0).Text
-                    ));
+                return BuildLambda(
+                    node.GetChildSafe(1),
+                    node.GetChildSafe(2),
+                    node.GetChildSafe(0).Text
+                );
             }
             else
             {
                 return BuildLambda(
                     node.GetChildSafe(0), 
                     node.GetChildSafe(1), 
-                    "<lambda>"
+                    null
                 );
             }
         }
@@ -838,12 +841,8 @@ namespace IronJS.Compiler
 
         private Node BuildNew(ITree node)
         {
-            var newNode = node.GetChildSafe(0);
-            var argsNode = node.GetChildSafe(1);
-
             return new NewNode(
-                Build(newNode.GetChildSafe(0)), 
-                argsNode.Map( x => { return Build(x); })
+                Build(node.GetChildSafe(0))
             );
         }
 
@@ -875,69 +874,34 @@ namespace IronJS.Compiler
 
         private Node BuildMemberAccess(ITree node)
         {
-            return new MemberAccessNode(
-                Build(node.GetChildSafe(0)), 
-                node.GetChildSafe(1).Text
-            );
+            if (RewriteIfContainsNew(node.GetChildSafe(0)))
+            {
+                return new NewNode(Build(node));
+            }
+            else
+            {
+                return new MemberAccessNode(
+                    Build(node.GetChildSafe(0)),
+                    node.GetChildSafe(1).Text
+                );
+            }
         }
 
         private Node BuildCall(ITree node)
         {
-            var callTree = node.GetChildSafe(0);
-
-            if (callTree.Type == EcmaParser.NEW)
+            if (RewriteIfContainsNew(node.GetChildSafe(0)))
             {
-                return BuildNew(node);
+                return new NewNode(
+                    Build(node.GetChildSafe(0)),
+                    node.GetChildSafe(1).Map(x => Build(x))
+                );
             }
             else
             {
-                var argsTree = node.GetChildSafe(1);
-
-                // we need to rewrite the tree 
-                // if we have a new node nested
-                // inside byfield/byindex nodes
-
-                var firstChild = callTree;
-                var foundNewNode = false;
-
-                while (firstChild != null)
-                {
-                    if (firstChild.Type == EcmaParser.NEW)
-                    {
-                        var child = firstChild.GetChildSafe(0);
-
-                        var idNode = new CommonTree(
-                            new CommonToken(
-                                child.Type, 
-                                child.Text
-                            )
-                        );
-
-                        firstChild.Parent.ReplaceChildren(0, 0, idNode);
-                        foundNewNode = true;
-                        break;
-                    }
-
-                    firstChild = firstChild.GetChild(0);
-                }
-
-                if (foundNewNode)
-                {
-                    // if we found a new-node and 
-                    // rewrote the tree
-                    return new NewNode(
-                        Build(callTree),
-                        argsTree.Map(x => Build(x))
-                    );
-                }
-                else
-                {
-                    // if we fail, it's just a normal function call
-                    return new CallNode(
-                        Build(callTree),
-                        argsTree.Map(x =>Build(x))
-                    );
-                }
+                return new CallNode(
+                    Build(node.GetChildSafe(0)),
+                    node.GetChildSafe(1).Map(x => Build(x))
+                );
             }
         }
 
@@ -965,6 +929,37 @@ namespace IronJS.Compiler
                 Build(lhs), 
                 Build(rhs)
             );
+        }
+
+        private bool RewriteIfContainsNew(ITree node)
+        {
+            while (node != null)
+            {
+                if (node.Type == EcmaParser.NEW)
+                {
+                    var child = node.GetChildSafe(0);
+
+                    var idNode = new CommonTree(
+                        new CommonToken(
+                            child.Type,
+                            child.Text
+                        )
+                    );
+
+                    node.Parent.ReplaceChildren(0, 0, idNode);
+                    return true;
+                }
+
+                if (node.Type == EcmaParser.CALL)
+                    return false;
+
+                if (node.Type == EcmaParser.PAREXPR)
+                    return false;
+
+                node = node.GetChild(0);
+            }
+
+            return false;
         }
 
         static internal string Name(int type)

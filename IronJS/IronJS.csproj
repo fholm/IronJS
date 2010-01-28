@@ -149,6 +149,7 @@
     <Compile Include="Runtime\Js\IConstructor.cs" />
     <Compile Include="Runtime\Js\IConstructorMeta.cs" />
     <Compile Include="Runtime\Js\IDescriptor.cs" />
+    <Compile Include="Runtime\Js\JsObj.cs" />
     <Compile Include="Runtime\Js\NativeConstructor.cs" />
     <Compile Include="Runtime\Js\Operators.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
@@ -246,6 +247,7 @@
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Js\JsArray.cs" />
+    <Compile Include="Runtime\Js\Errors\PropertyIsReadOnly.cs" />
     <Compile Include="Runtime\Js\UserFunction.cs" />
     <Compile Include="Runtime\Js\IFunction.cs">
       <SubType>Code</SubType>

@@ -7,14 +7,18 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
-        public string Name { get; protected set; }
         public bool IsLocal { get; set; }
+        public bool IsClosure { get; set; }
+        public bool IsDefinition { get; set; }
+
+        public string Name { get; protected set; }
 
         public IdentifierNode(string name)
             : base(NodeType.Identifier)
         {
             Name = name;
             IsLocal = false;
+            IsDefinition = false;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

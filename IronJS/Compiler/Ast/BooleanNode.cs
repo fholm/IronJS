@@ -14,7 +14,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et Walk(EtGenerator etgen)
         {
-            return Et.Constant(Value, typeof(object));
+            return etgen.Generate<bool>(Value);
         }
     }
 }

@@ -17,23 +17,8 @@ namespace IronJS.Testing
             var etGenerator = new Compiler.EtGenerator();
             var astNodes = astBuilder.Build("Testing.js", Encoding.UTF8);
             var compiled = etGenerator.Build(astNodes, context);
-            var globals = Scope.CreateGlobal(context);
-
-            context.SetupGlobals(globals);
-
-            globals.Global(
-                "println",
-                typeof(HelperFunctions).GetMethod("PrintLine")
-            );
-
-            globals.Global(
-                "time", 
-                typeof(HelperFunctions).GetMethod("Timer")
-            );
-
-
-            compiled(globals);
-            Console.ReadLine();
+            var obj = new JsObj();
+            compiled.Invoke(null, new[] { obj });
         }
     }
 }

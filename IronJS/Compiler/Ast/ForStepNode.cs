@@ -25,28 +25,6 @@ namespace IronJS.Compiler.Ast
         public override Et LoopWalk(EtGenerator etgen)
         {
             return Et.Block(
-                Et.Assign(
-                    etgen.Tmp,
-                    Et.Constant(1, typeof(object))
-                ),
-                AstUtils.Loop(
-                    Et.LessThan(
-                        Et.Convert(etgen.Tmp, typeof(int)),
-                        Et.Constant(10000000, typeof(int))
-                    ),
-                    Et.Assign(
-                        etgen.Tmp,
-                        EtUtils.Box(Et.Add(
-                            Et.Convert(etgen.Tmp, typeof(int)),
-                            Et.Constant(1)
-                        ))
-                    ),
-                    AstUtils.Empty(),
-                    AstUtils.Empty()
-                )
-            );
-
-            return Et.Block(
                 Setup.Walk(etgen),
                 AstUtils.Loop(
                     Et.Dynamic(

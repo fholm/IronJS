@@ -2,6 +2,7 @@
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System.Reflection.Emit;
 
 namespace IronJS.Testing
 {

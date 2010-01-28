@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.Reflection;
 using IronJS.Extensions;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using System.Reflection;
 
 namespace IronJS.Runtime.Utils
 {

@@ -2,6 +2,8 @@
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Testing
 {
@@ -10,6 +12,9 @@ namespace IronJS.Testing
         //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {
+            arr = ArrayUtils.RemoveFirst(arr);
+            arr = ArrayUtils.RemoveFirst(arr);
+
             var context = new Context();
             var astBuilder = new Compiler.AstGenerator();
             var etGenerator = new Compiler.EtGenerator();

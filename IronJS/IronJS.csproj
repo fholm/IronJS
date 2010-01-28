@@ -265,10 +265,10 @@
     <Folder Include="Runtime\InterOp\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Compiler\Parser\ES3Parser-and-ES3Lexer-LICENSE.txt" />
+    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
+    <Content Include="Compiler\Parser\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

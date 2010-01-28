@@ -2,8 +2,6 @@
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using System.Reflection.Emit;
-using System;
 
 namespace IronJS.Testing
 {
@@ -31,9 +29,7 @@ namespace IronJS.Testing
                 typeof(HelperFunctions).GetMethod("Timer")
             );
 
-
             compiled(globals);
-            Console.ReadLine();
         }
     }
 }

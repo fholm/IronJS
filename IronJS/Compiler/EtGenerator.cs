@@ -26,8 +26,12 @@ namespace IronJS.Compiler
         internal bool IsInsideWith { get { return _withCount > 0; } }
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
 
+        internal ParameterExpression Tmp;
+
         public Action<Scope> Build(List<Ast.Node> astNodes, Context context)
         {
+            Tmp = Et.Parameter(typeof(object), "i");
+
             // Context we're compiling this code for
             Context = context;
 
@@ -64,7 +68,7 @@ namespace IronJS.Compiler
 
             return Et.Lambda<Action<Scope>>(
                 Et.Block(
-                    new[] { FuncTableExpr, GlobalScopeExpr },
+                    new[] { FuncTableExpr, GlobalScopeExpr, Tmp },
 
                     // Create instance of our functable
                     Et.Assign(

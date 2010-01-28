@@ -23,6 +23,14 @@ namespace IronJS.Runtime.Js
             return args != null && args.Length >= length;
         }
 
+        public bool HasArgN(object[] args, int n)
+        {
+            return args != null 
+                && n < args.Length 
+                && args[n] != null 
+                && !(args[n] is Undefined);
+        }
+
         #region IFunction Members
 
         public abstract object Call(IObj that, object[] args);

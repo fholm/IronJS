@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -14,43 +15,32 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            var len = JsTypeConverter.ToNumber(that.Get("length"));
-            var vals = new List<object>();
-            IDescriptor<IObj> descriptor;
+            if (that is JsArray)
+            {
+                var array = that as JsArray;
 
-            for (var d = 0; d < len; ++d)
-            {
-                if (that.Get(d, out descriptor))
-                    vals.Add(descriptor.Get());
-            }
-
-            if (!HasArgs(args))
-            {
-                vals.Sort((a, b) => {
-                    var an = JsTypeConverter.ToNumber(JsTypeConverter.ToPrimitive(a));
-                    var bn = JsTypeConverter.ToNumber(JsTypeConverter.ToPrimitive(b));
-                    return (int)an - (int)bn;
-                });
-            }
-            else
-            {
-                var func = args[0] as IFunction;
-                vals.Sort((a, b) => (int)(double)func.Call(that, new[] { a, b }) );
-            }
-
-            for (var d = 0; d < len; ++d)
-            {
-                if ((int)d < vals.Count)
+                if (HasArgN(args, 0))
                 {
-                    that.Set(d, vals[(int)d]);
+                    var func = args[0] as IFunction;
+                    if (func == null)
+                        throw new ShouldThrowTypeError();
+
+                    Array.Sort(array.Values, (a, b) =>
+                        Convert.ToInt32(func.Call(that, new[] { a.Get(), b.Get() }))
+                    );
                 }
                 else
                 {
-                    that.TryDelete(d);
+                    Array.Sort(array.Values, (a, b) =>
+                          JsTypeConverter.ToInt32(JsTypeConverter.ToPrimitive(a.Get()))
+                        - JsTypeConverter.ToInt32(JsTypeConverter.ToPrimitive(b.Get()))
+                    );
                 }
+
+                return array;
             }
 
-            return that;
+            throw new NotImplementedException();
         }
     }
 }

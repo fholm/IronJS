@@ -14,66 +14,13 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-
-            var len = JsTypeConverter.ToInt32(
-                     that.Get("length")
-                 );
-
-            var half = (int) Math.Floor((double)len / 2.0);
-
-            var begin = 0;
-            var end = 0;
-
-            IDescriptor<IObj> beginDescriptor;
-            IDescriptor<IObj> endDescriptor;
-
-            bool hasBegin;
-            bool hasEnd;
-
-            while (true)
+            if (that is JsArray)
             {
-                if (begin == half)
-                    return that;
-
-                end = len - begin - 1;
-
-                hasBegin = that.Get(begin, out beginDescriptor);
-                hasEnd = that.Get(end, out endDescriptor);
-
-                if (!hasEnd)
-                {
-                    if (!hasBegin)
-                    {
-                        that.TryDelete(begin);
-                        that.TryDelete(end);
-                    }
-                    else
-                    {
-                        that.Set(end, beginDescriptor.Get());
-                        that.TryDelete(begin);
-                    }
-                }
-                else if (!hasBegin)
-                {
-                    if (!hasEnd)
-                    {
-                        that.TryDelete(begin);
-                        that.TryDelete(end);
-                    }
-                    else
-                    {
-                        that.Set(begin, endDescriptor.Get());
-                        that.TryDelete(end);
-                    }
-                }
-                else
-                {
-                    that.Set(begin, endDescriptor.Get());
-                    that.Set(end, beginDescriptor.Get());
-                }
-
-                ++begin;
+                Array.Reverse((that as JsArray).Values);
+                return that;
             }
+
+            throw new NotImplementedException();
         }
     }
 }

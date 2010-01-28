@@ -4,18 +4,9 @@ namespace IronJS.Runtime.Js.Descriptors
 {
     public class LengthProperty : IDescriptor<JsArray>
     {
-        public int Value { get; protected set; }
-
         public LengthProperty(JsArray owner)
         {
             Owner = owner;
-            Value = 0;
-        }
-
-        public void Update(int value)
-        {
-            if (Value <= value)
-                Value = value + 1;
         }
 
         #region IDescriptor<JsArray> Members
@@ -27,19 +18,12 @@ namespace IronJS.Runtime.Js.Descriptors
 
         public object Get()
         {
-            return (double)Value;
+            return (double) Owner.Values.Length;
         }
 
         public object Set(object value)
         {
-            var newValue = JsTypeConverter.ToInt32(value);
-
-            var n = Value - 1;
-
-            for (; n >= newValue; --n)
-                Owner.TryDelete(n);
-
-            return Value = newValue;
+            return null;
         }
 
         #endregion

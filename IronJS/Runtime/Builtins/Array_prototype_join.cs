@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -14,44 +15,33 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            string sep;
+            var buf = new StringBuilder();
+            var sep = HasArgN(args, 0) 
+                         ? JsTypeConverter.ToString(args[0]) 
+                         : ",";
 
-            if (HasArgs(args))
-            {
-                if (args[0] is Undefined)
-                {
-                    sep = ",";
-                }
-                else
-                {
-                    sep = JsTypeConverter.ToString(args[0]);
-                }
-            }
-            else
-            {
-                sep = ",";
-            }
-
-            var length = JsTypeConverter.ToInt32(that.Get("length"));
+            var length = (that is JsArray)
+                ? (that as JsArray).Values.Length
+                : JsTypeConverter.ToInt32(that.Get("length"));
 
             if (length == 0)
                 return "";
-
-            var sb = new StringBuilder();
-
-            for (var i = 0; i < (double)length; ++i)
+            
+            object value;
+            for (var i = 0; i < length; ++i)
             {
-                var val = that.Get(i);
-                sb.Append(sep);
+                value = that.Get(i);
 
-                if (!(val is Undefined))
-                    sb.Append(JsTypeConverter.ToString(val));
+                buf.Append(sep);
+
+                if (!(value is Undefined))
+                    buf.Append(JsTypeConverter.ToString(value));
             }
 
             if (sep.Length > 0)
-                return sb.ToString().Substring(sep.Length, sb.Length - sep.Length);
+                return buf.ToString().Substring(sep.Length, buf.Length - sep.Length);
 
-            return sb.ToString();
+            return buf.ToString();
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Builtins
 {
@@ -13,12 +15,19 @@ namespace IronJS.Runtime.Builtins
 
         public override object Call(IObj that, object[] args)
         {
-            var n = JsTypeConverter.ToInt32(that.Get("length"));
+            if (that is JsArray)
+            {
+                //TODO: optimize this to grow array once instead of multiple times
+                var array = that as JsArray;
+                var length = array.Values.Length;
 
-            foreach (var arg in args)
-                that.Set(n++, arg);
+                foreach (var arg in args)
+                    array.Set(length++, arg);
 
-            return n;
+                return length;
+            }
+
+            throw new NotImplementedException();
         }
     }
 }

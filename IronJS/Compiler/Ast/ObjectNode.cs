@@ -10,9 +10,9 @@ namespace IronJS.Compiler.Ast
 {
     public class ObjectNode : Node
     {
-        public Dictionary<string, Node> Properties { get; protected set; }
+        public Dictionary<string, INode> Properties { get; protected set; }
 
-        public ObjectNode(Dictionary<string, Node> properties, ITree node)
+        public ObjectNode(Dictionary<string, INode> properties, ITree node)
             : base(NodeType.Object, node)
         {
             Properties = properties;

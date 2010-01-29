@@ -9,15 +9,15 @@ namespace IronJS.Compiler.Ast
 {
     public class DeleteNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
 
-        public DeleteNode(Node target, ITree node)
+        public DeleteNode(INode target, ITree node)
             : base(NodeType.Delete, node)
         {
             Target = target;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             Target = Target.Optimize(astopt);
             return this;

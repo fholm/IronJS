@@ -8,10 +8,10 @@ namespace IronJS.Compiler.Ast
 {
     public class InstanceOfNode : Node
     {
-        public Node Target { get; protected set; }
-        public Node Function { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Function { get; protected set; }
 
-        public InstanceOfNode(Node target, Node function, ITree node)
+        public InstanceOfNode(INode target, INode function, ITree node)
             : base(NodeType.InstanceOf, node)
         {
             Target = target;

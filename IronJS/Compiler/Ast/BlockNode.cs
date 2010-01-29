@@ -9,19 +9,19 @@ namespace IronJS.Compiler.Ast
 {
     public class BlockNode : Node
     {
-        public List<Node> Nodes { get; protected set; }
+        public List<INode> Nodes { get; protected set; }
         public bool IsEmpty { get; protected set; }
 
-        public BlockNode(List<Node> nodes, ITree node)
+        public BlockNode(List<INode> nodes, ITree node)
             : base(NodeType.Block, node)
         {
             Nodes = nodes;
             IsEmpty = nodes.Count == 0;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
-            var nodes = new List<Node>();
+            var nodes = new List<INode>();
 
             foreach (var node in Nodes)
                 nodes.Add(node.Optimize(astopt));

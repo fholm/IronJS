@@ -8,9 +8,9 @@ namespace IronJS.Compiler.Ast
 {
     public class ReturnNode : Node
     {
-        public Node Value { get; protected set; }
+        public INode Value { get; protected set; }
 
-        public ReturnNode(Node value, ITree node)
+        public ReturnNode(INode value, ITree node)
             : base(NodeType.Return, node)
         {
             Value = value;

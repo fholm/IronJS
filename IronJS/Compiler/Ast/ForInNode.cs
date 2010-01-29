@@ -10,11 +10,11 @@ namespace IronJS.Compiler.Ast
     // 12.6.4
     public class ForInNode : LoopNode
     {
-        public Node Target { get; protected set; }
-        public Node Source { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Source { get; protected set; }
+        public INode Body { get; protected set; }
 
-        public ForInNode(Node target, Node source, Node body, ITree node)
+        public ForInNode(INode target, INode source, INode body, ITree node)
             : base(NodeType.ForIn, node)
         {
             Target = target;

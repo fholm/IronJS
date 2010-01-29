@@ -13,21 +13,21 @@ namespace IronJS.Compiler.Ast
 {
     public class CallNode : Node
     {
-        public Node Target { get; protected set; }
-        public List<Node> Args { get; protected set; }
+        public INode Target { get; protected set; }
+        public List<INode> Args { get; protected set; }
 
-        public CallNode(Node target, List<Node> args, ITree node)
+        public CallNode(INode target, List<INode> args, ITree node)
             : base(NodeType.Call, node)
         {
             Target = target;
             Args = args;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             Target = Target.Optimize(astopt);
 
-            var args = new List<Node>();
+            var args = new List<INode>();
             foreach (var arg in Args)
                 args.Add(arg.Optimize(astopt));
             Args = args;

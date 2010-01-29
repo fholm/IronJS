@@ -11,10 +11,10 @@ namespace IronJS.Compiler.Ast
     public class LambdaNode : Node
     {
         public List<string> Args { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Body { get; protected set; }
         public string Name { get; protected set; }
 
-        public LambdaNode(List<string> args, Node body, string name, ITree node)
+        public LambdaNode(List<string> args, INode body, string name, ITree node)
             : base(NodeType.Lambda, node)
         {
             Args = args;
@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Ast
             Name = name;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             astopt.EnterScope();
             Body = Body.Optimize(astopt);

@@ -9,9 +9,9 @@ namespace IronJS.Compiler.Ast
 {
     public class ThrowNode : Node
     {
-        public Node Value { get; protected set; }
+        public INode Value { get; protected set; }
 
-        public ThrowNode(Node value, ITree node)
+        public ThrowNode(INode value, ITree node)
             : base(NodeType.Throw, node)
         {
             Value = value;

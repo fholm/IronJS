@@ -8,11 +8,11 @@ namespace IronJS.Compiler.Ast
 {
     public class BinaryOpNode : Node
     {
-        public Node Left { get; protected set; }
-        public Node Right { get; protected set; }
+        public INode Left { get; protected set; }
+        public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public BinaryOpNode(Node left, Node right, ExpressionType op, ITree node)
+        public BinaryOpNode(INode left, INode right, ExpressionType op, ITree node)
             : base(NodeType.BinaryOp, node)
         {
             Left = left;

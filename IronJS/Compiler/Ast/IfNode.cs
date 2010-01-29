@@ -8,13 +8,13 @@ namespace IronJS.Compiler.Ast
 {
     public class IfNode : Node
     {
-        public Node Test { get; protected set; }
-        public Node TrueBranch { get; protected set; }
-        public Node ElseBranch { get; protected set; }
+        public INode Test { get; protected set; }
+        public INode TrueBranch { get; protected set; }
+        public INode ElseBranch { get; protected set; }
         public bool HasElseBranch { get { return ElseBranch != null; } }
         public bool IsTernary { get; protected set; }
 
-        public IfNode(Node test, Node trueBranch, Node elseBranch, bool isTernary, ITree node)
+        public IfNode(INode test, INode trueBranch, INode elseBranch, bool isTernary, ITree node)
             : base(NodeType.If, node)
         {
             Test = test;
@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             Test = Test.Optimize(astopt);
             TrueBranch = TrueBranch.Optimize(astopt);

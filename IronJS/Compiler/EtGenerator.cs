@@ -29,7 +29,7 @@ namespace IronJS.Compiler
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
         internal bool IsGlobal { get { return FunctionScope == null; } }
 
-        public MethodInfo Build(List<Ast.Node> astNodes, Context context)
+        public MethodInfo Build(List<Ast.INode> astNodes, Context context)
         {
             var domain = AppDomain.CurrentDomain;
 
@@ -96,7 +96,7 @@ namespace IronJS.Compiler
             FunctionScope = FunctionScope.Parent;
         }
 
-        internal Et WalkIfNotNull(Ast.Node node)
+        internal Et WalkIfNotNull(Ast.INode node)
         {
             if (node != null)
                 return node.Generate(this);
@@ -133,7 +133,7 @@ namespace IronJS.Compiler
         }
 
         // 11.13.1
-        internal Et GenerateAssign(Ast.Node target, Et value)
+        internal Et GenerateAssign(Ast.INode target, Et value)
         {
             if (target is Ast.IdentifierNode)
             {

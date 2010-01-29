@@ -10,12 +10,12 @@ namespace IronJS.Compiler.Ast
 {
     public class SwitchNode : Node, IStatementNode
     {
-        public Node Target { get; protected set; }
-        public Node Default { get; protected set; }
-        public List<Tuple<Node, Node>> Cases { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Default { get; protected set; }
+        public List<Tuple<INode, INode>> Cases { get; protected set; }
         public string Label { get; protected set; }
 
-        public SwitchNode(Node taret, Node _default, List<Tuple<Node, Node>> cases, ITree node)
+        public SwitchNode(INode taret, INode _default, List<Tuple<INode, INode>> cases, ITree node)
             : base(NodeType.Switch, node)
         {
             Target = taret;

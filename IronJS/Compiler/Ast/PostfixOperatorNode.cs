@@ -9,10 +9,10 @@ namespace IronJS.Compiler.Ast
 {
     public class PostfixOperatorNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public PostfixOperatorNode(Node node, ExpressionType op, ITree tree)
+        public PostfixOperatorNode(INode node, ExpressionType op, ITree tree)
             : base(NodeType.PostfixOperator, tree)
         {
             Target = node;

@@ -8,10 +8,10 @@ namespace IronJS.Compiler.Ast
 {
     public class UnaryOpNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public UnaryOpNode(Node target, ExpressionType op, ITree node)
+        public UnaryOpNode(INode target, ExpressionType op, ITree node)
             : base(NodeType.UnaryOp, node)
         {
             Target = target;

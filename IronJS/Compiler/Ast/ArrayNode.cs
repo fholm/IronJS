@@ -8,9 +8,9 @@ namespace IronJS.Compiler.Ast
 {
     public class ArrayNode : Node
     {
-        public List<Node> Values { get; protected set; }
+        public List<INode> Values { get; protected set; }
 
-        public ArrayNode(List<Node> values, ITree node)
+        public ArrayNode(List<INode> values, ITree node)
             : base(NodeType.Array, node)
         {
             Values = values;

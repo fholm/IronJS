@@ -10,9 +10,9 @@ namespace IronJS.Compiler
         public bool IsGlobal { get { return Scope == null; } }
         public Optimizer.Scope Scope { get; protected set; }
 
-        public List<Node> Optimize(List<Node> astNodes)
+        public List<INode> Optimize(List<INode> astNodes)
         {
-            var optimizedNodes = new List<Node>();
+            var optimizedNodes = new List<INode>();
 
             foreach (var node in astNodes)
                 optimizedNodes.Add(node.Optimize(this));

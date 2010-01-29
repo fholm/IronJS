@@ -7,17 +7,17 @@ namespace IronJS.Compiler.Ast
 {
     public class AssignNode : Node
     {
-        public Node Target { get; protected set; }
-        public Node Value { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Value { get; protected set; }
 
-        public AssignNode(Node target, Node value, ITree node)
+        public AssignNode(INode target, INode value, ITree node)
             : base(NodeType.Assign, node)
         {
             Target = target;
             Value = value;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             Target = Target.Optimize(astopt);
             Value = Value.Optimize(astopt);

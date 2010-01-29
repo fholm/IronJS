@@ -8,17 +8,17 @@ namespace IronJS.Compiler.Ast
 {
     public class IndexAccessNode : Node
     {
-        public Node Target { get; protected set; }
-        public Node Index { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Index { get; protected set; }
 
-        public IndexAccessNode(Node target, Node index, ITree node)
+        public IndexAccessNode(INode target, INode index, ITree node)
             : base(NodeType.IndexAccess, node)
         {
             Target = target;
             Index = index;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             if (Target is IdentifierNode)
             {

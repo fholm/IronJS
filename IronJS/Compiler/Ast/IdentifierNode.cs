@@ -35,7 +35,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Name + " " + GetVarType() + ")");
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             if (!astopt.IsGlobal)
             {

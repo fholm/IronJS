@@ -8,9 +8,9 @@ namespace IronJS.Compiler.Ast
 {
     public class TypeOfNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
 
-        public TypeOfNode(Node target, ITree node)
+        public TypeOfNode(INode target, ITree node)
             : base(NodeType.TypeOf, node)
         {
             Target = target;

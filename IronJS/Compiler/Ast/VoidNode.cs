@@ -5,12 +5,12 @@ using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
-{ 
+{
     public class VoidNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
 
-        public VoidNode(Node target, ITree node)
+        public VoidNode(INode target, ITree node)
             : base(NodeType.Void, node)
         {
             Target = target;

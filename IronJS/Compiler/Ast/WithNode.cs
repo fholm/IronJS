@@ -9,10 +9,10 @@ namespace IronJS.Compiler.Ast
 {
     public class WithNode : Node
     {
-        public Node Target { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Body { get; protected set; }
 
-        public WithNode(Node target, Node body, ITree node)
+        public WithNode(INode target, INode body, ITree node)
             : base(NodeType.With, node)
         {
             Target = target;

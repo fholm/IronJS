@@ -9,11 +9,11 @@ namespace IronJS.Compiler.Ast
 {
     public class TryNode : Node
     {
-        public Node Body { get; protected set; }
+        public INode Body { get; protected set; }
         public CatchNode Catch { get; protected set; }
-        public Node Finally { get; protected set; }
+        public INode Finally { get; protected set; }
 
-        public TryNode(Node body, CatchNode _catch, Node _finally, ITree node)
+        public TryNode(INode body, CatchNode _catch, INode _finally, ITree node)
             : base(NodeType.Try, node)
         {
             Body = body;

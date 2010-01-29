@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast
         Integer
     }
 
-    abstract public class Node
+    abstract public class Node : INode
     {
         private NodeType nodeType;
         private ITree node;
@@ -60,14 +60,9 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Type + ")");
         }
 
-        public virtual Node Optimize(AstOptimizer astopt)
+        public virtual INode Optimize(AstOptimizer astopt)
         {
             return this;
-        }
-
-        public override string ToString()
-        {
-            return Type.ToString();
         }
 
         #region abstract

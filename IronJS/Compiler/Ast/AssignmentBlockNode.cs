@@ -7,7 +7,7 @@ namespace IronJS.Compiler.Ast
     {
         public bool IsLocal { get; protected set; }
 
-        public AssignmentBlockNode(List<Node> nodes, bool isLocal, ITree node)
+        public AssignmentBlockNode(List<INode> nodes, bool isLocal, ITree node)
             : base(nodes, node)
         {
             IsLocal = isLocal;

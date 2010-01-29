@@ -9,11 +9,11 @@ namespace IronJS.Compiler.Ast
 {
     public class LogicalNode : Node
     {
-        public Node Left { get; protected set; }
-        public Node Right { get; protected set; }
+        public INode Left { get; protected set; }
+        public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public LogicalNode(Node left, Node right, ExpressionType op, ITree node)
+        public LogicalNode(INode left, INode right, ExpressionType op, ITree node)
             : base(NodeType.Logical, node)
         {
             Left = left;

@@ -9,10 +9,10 @@ namespace IronJS.Compiler.Ast
 {
     public class UnsignedRightShiftNode : Node
     {
-        public Node Left { get; protected set; }
-        public Node Right { get; protected set; }
+        public INode Left { get; protected set; }
+        public INode Right { get; protected set; }
 
-        public UnsignedRightShiftNode(Node left, Node right, ITree node)
+        public UnsignedRightShiftNode(INode left, INode right, ITree node)
             : base(NodeType.UnsignedRightShift, node)
         {
             Left = left;

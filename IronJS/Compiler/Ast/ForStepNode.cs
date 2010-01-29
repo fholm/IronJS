@@ -9,12 +9,12 @@ namespace IronJS.Compiler.Ast
     // 12.6.3
     public class ForStepNode : LoopNode
     {
-        public Node Setup { get; protected set; }
-        public Node Test { get; protected set; }
-        public Node Incr { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Setup { get; protected set; }
+        public INode Test { get; protected set; }
+        public INode Incr { get; protected set; }
+        public INode Body { get; protected set; }
 
-        public ForStepNode(Node setup, Node test, Node incr, Node body, ITree node)
+        public ForStepNode(INode setup, INode test, INode incr, INode body, ITree node)
             : base(NodeType.ForStep, node)
         {
             Setup = setup;
@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override Node Optimize(AstOptimizer astopt)
+        public override INode Optimize(AstOptimizer astopt)
         {
             if (Setup != null)
                 Setup = Setup.Optimize(astopt);

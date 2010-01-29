@@ -13,18 +13,18 @@ namespace IronJS.Compiler.Ast
 {
     public class NewNode : Node
     {
-        public Node Target { get; protected set; }
-        public List<Node> Args { get; protected set; }
+        public INode Target { get; protected set; }
+        public List<INode> Args { get; protected set; }
 
-        public NewNode(Node target, List<Node> args, ITree node)
+        public NewNode(INode target, List<INode> args, ITree node)
             : base(NodeType.New, node)
         {
             Target = target;
             Args = args;
         }
 
-        public NewNode(Node target, ITree node)
-            : this(target, new List<Node>(), node)
+        public NewNode(INode target, ITree node)
+            : this(target, new List<INode>(), node)
         {
 
         }

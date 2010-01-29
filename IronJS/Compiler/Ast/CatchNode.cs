@@ -6,10 +6,10 @@ namespace IronJS.Compiler.Ast
 {
     public class CatchNode : Node
     {
-        public Node Target { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Body { get; protected set; }
 
-        public CatchNode(Node target, Node body, ITree node)
+        public CatchNode(INode target, INode body, ITree node)
             : base(NodeType.Catch, node)
         {
             Target = target;

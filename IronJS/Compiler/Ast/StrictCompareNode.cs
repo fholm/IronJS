@@ -10,11 +10,11 @@ namespace IronJS.Compiler.Ast
 {
     public class StrictCompareNode : Node
     {
-        public Node Left { get; protected set; }
-        public Node Right { get; protected set; }
+        public INode Left { get; protected set; }
+        public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public StrictCompareNode(Node left, Node right, ExpressionType op, ITree node)
+        public StrictCompareNode(INode left, INode right, ExpressionType op, ITree node)
             : base(NodeType.StrictCompare, node)
         {
             Left = left;

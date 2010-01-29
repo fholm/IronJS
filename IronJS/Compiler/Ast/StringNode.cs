@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Type + " '" + Value + "')");
+            writer.AppendLine(indentStr + "('" + Value + "')");
         }
 
         public override Et Walk(EtGenerator etgen)

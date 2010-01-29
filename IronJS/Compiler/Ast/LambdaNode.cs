@@ -10,11 +10,11 @@ namespace IronJS.Compiler.Ast
 {
     public class LambdaNode : Node
     {
-        public List<IdentifierNode> Args { get; protected set; }
+        public List<string> Args { get; protected set; }
         public Node Body { get; protected set; }
         public string Name { get; protected set; }
 
-        public LambdaNode(List<IdentifierNode> args, Node body, string name)
+        public LambdaNode(List<string> args, Node body, string name)
             : base(NodeType.Lambda)
         {
             Args = args;
@@ -28,12 +28,12 @@ namespace IronJS.Compiler.Ast
 
             writer.AppendLine(indentStr + "(" + Type + " " + Name);
             var argsIndentStr = new String(' ', (indent + 1) * 2);
-            writer.AppendLine(argsIndentStr + "(Args");
+            writer.Append(argsIndentStr + "(Args");
 
             foreach (var node in Args)
-                node.Print(writer, indent + 2);
+                writer.Append(" " + node);
 
-            writer.AppendLine(argsIndentStr + ")");
+            writer.AppendLine(")");
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }
@@ -56,7 +56,7 @@ namespace IronJS.Compiler.Ast
                         etgen.FunctionScope.ScopeExpr
                     ),
                     // parameter names
-                    Args.Select(x => x.Name).ToList()
+                    Args
                 )
             );
 

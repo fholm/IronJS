@@ -17,15 +17,6 @@ namespace IronJS.Compiler.Ast
             Name = member;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
-        {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Type + " " + Name);
-            Target.Print(writer, indent + 1);
-            writer.AppendLine(indentStr + ")");
-        }
-
         public override Et Walk(EtGenerator etgen)
         {
             return Et.Dynamic(
@@ -37,6 +28,15 @@ namespace IronJS.Compiler.Ast
                     Target.Walk(etgen)
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type + " " + Name);
+            Target.Print(writer, indent + 1);
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

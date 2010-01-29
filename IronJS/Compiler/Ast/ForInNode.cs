@@ -198,5 +198,18 @@ namespace IronJS.Compiler.Ast
                 )
             );
         }
+
+        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            Target.Print(writer, indent + 1);
+            Source.Print(writer, indent + 1);
+            Body.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
+        }
     }
 }

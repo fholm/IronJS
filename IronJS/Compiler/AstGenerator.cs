@@ -33,8 +33,6 @@ namespace IronJS.Compiler
             var root = (ITree)program.Tree;
             var nodes = new List<Node>();
 
-            Console.WriteLine(root.ToStringTree());
-
             if (root.IsNil)
             {
                 root.EachChild(node => {
@@ -45,6 +43,9 @@ namespace IronJS.Compiler
             {
                 nodes.Add(Build(root));
             }
+
+            foreach (var node in nodes)
+                Console.WriteLine(node.Print());
 
             return nodes;
         }
@@ -845,7 +846,7 @@ namespace IronJS.Compiler
 
         private Node BuildLambda(ITree argsNode, ITree block, string name)
         {
-            var args = argsNode.Map(x => new IdentifierNode(x.Text));
+            var args = argsNode.Map(x => x.Text);
             var body = BuildBlock(block);
 
             return new LambdaNode(args, body, name);

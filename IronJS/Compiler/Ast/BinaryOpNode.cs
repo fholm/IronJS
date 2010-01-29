@@ -19,18 +19,6 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
-        {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Type + ":" + Op);
-
-            Left.Print(writer, indent + 1);
-            Right.Print(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
-
         public override Et Walk(EtGenerator etgen)
         {
             return Et.Dynamic(
@@ -39,6 +27,18 @@ namespace IronJS.Compiler.Ast
                 Left.Walk(etgen),
                 Right.Walk(etgen)
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Op);
+
+            Left.Print(writer, indent + 1);
+            Right.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

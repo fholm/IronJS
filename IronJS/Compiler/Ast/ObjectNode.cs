@@ -18,6 +18,14 @@ namespace IronJS.Compiler.Ast
             Properties = properties;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Object;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             var tmp = Et.Parameter(typeof(IObj), "#tmp");
@@ -55,7 +63,7 @@ namespace IronJS.Compiler.Ast
             var indentStr2 = new String(' ', (indent + 1) * 2);
             var indentStr3 = new String(' ', (indent + 2) * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             foreach (var kvp in Properties)
             {

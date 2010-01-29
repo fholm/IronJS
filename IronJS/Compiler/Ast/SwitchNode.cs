@@ -8,7 +8,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class SwitchNode : Node, IStatementNode
+    public class SwitchNode : Node, ILabelableNode
     {
         public INode Target { get; protected set; }
         public INode Default { get; protected set; }
@@ -78,7 +78,7 @@ namespace IronJS.Compiler.Ast
             var indentStr2 = new String(' ', (indent + 1)* 2);
             var indentStr3 = new String(' ', (indent + 2) * 2);
 
-            writer.AppendLine(indentStr + "(" + Type + "");
+            writer.AppendLine(indentStr + "(" + NodeType + "");
             Target.Print(writer, indent + 1);
 
             foreach (var cas in Cases)

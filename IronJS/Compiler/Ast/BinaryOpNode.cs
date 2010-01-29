@@ -20,6 +20,17 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                if (Left.ExprType == Right.ExprType)
+                    return Left.ExprType;
+
+                return JsType.Dynamic;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(

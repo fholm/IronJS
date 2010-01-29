@@ -5,12 +5,20 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class NullNode : Node
+    public class NullNode : Node, INode
     {
         public NullNode(ITree node)
             : base(NodeType.Null, node)
         {
 
+        }
+
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Null;
+            }
         }
 
         public override Et Generate(EtGenerator etgen)

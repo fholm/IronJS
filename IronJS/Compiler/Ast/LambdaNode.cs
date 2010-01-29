@@ -22,6 +22,14 @@ namespace IronJS.Compiler.Ast
             Name = name;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Object;
+            }
+        }
+
         public override INode Optimize(AstOptimizer astopt)
         {
             astopt.EnterScope();
@@ -99,7 +107,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type + " " + Name);
+            writer.AppendLine(indentStr + "(" + NodeType + " " + Name);
             var argsIndentStr = new String(' ', (indent + 1) * 2);
             writer.Append(argsIndentStr + "(Args");
 

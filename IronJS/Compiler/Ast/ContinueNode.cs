@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Text;
 using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class ContinueNode : Node
+    public class ContinueNode : Node, INode
     {
         public string Label { get; protected set; }
 
@@ -22,11 +23,11 @@ namespace IronJS.Compiler.Ast
             return Et.Continue(etgen.FunctionScope.LabelScope.Continue(Label));
         }
 
-        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.Append(indentStr + "(" + Type);
+            writer.Append(indentStr + "(" + NodeType);
 
             if (Label != null)
                 writer.Append(" " + Label);

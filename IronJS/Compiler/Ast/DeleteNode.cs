@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Dynamic;
+using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
@@ -15,6 +16,14 @@ namespace IronJS.Compiler.Ast
             : base(NodeType.Delete, node)
         {
             Target = target;
+        }
+
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Boolean;
+            }
         }
 
         public override INode Optimize(AstOptimizer astopt)
@@ -66,11 +75,11 @@ namespace IronJS.Compiler.Ast
             throw new NotImplementedException();
         }
 
-        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
                 Target.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }

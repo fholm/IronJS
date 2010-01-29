@@ -23,6 +23,20 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                if (IsTernary)
+                {
+                    if (TrueBranch.ExprType == ElseBranch.ExprType)
+                        return TrueBranch.ExprType;
+                }
+
+                return JsType.Dynamic;
+            }
+        }
+
         public override INode Optimize(AstOptimizer astopt)
         {
             Test = Test.Optimize(astopt);
@@ -54,7 +68,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Test.Print(writer, indent + 1);
             TrueBranch.Print(writer, indent + 1);

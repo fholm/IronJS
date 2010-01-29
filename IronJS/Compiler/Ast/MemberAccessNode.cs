@@ -20,11 +20,8 @@ namespace IronJS.Compiler.Ast
 
         public override INode Optimize(AstOptimizer astopt)
         {
-            if (Target is IdentifierNode)
-            {
-                if (Target is IdentifierNode)
-                    (Target as IdentifierNode).Variable.UsedWith.Add(GetType());
-            }
+            //if (Target is IdentifierNode)
+            //    (Target as IdentifierNode).Variable.AssignedFrom.Add(GetType());
 
             return this;
         }
@@ -46,7 +43,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type + " " + Name);
+            writer.AppendLine(indentStr + "(" + NodeType + " " + Name);
             Target.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }

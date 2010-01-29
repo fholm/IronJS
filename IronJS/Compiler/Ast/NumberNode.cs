@@ -5,7 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class NumberNode<T> : Node
+    public class NumberNode<T> : Node, INode
     {
         public T Value { get; protected set; }
 
@@ -13,6 +13,17 @@ namespace IronJS.Compiler.Ast
             : base(type, node)
         {
             Value = value;
+        }
+
+        public override JsType ExprType
+        {
+            get
+            {
+                if (this.GetType() == typeof(NumberNode<int>))
+                    return JsType.Integer;
+
+                return JsType.Double;
+            }
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

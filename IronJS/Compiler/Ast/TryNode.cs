@@ -79,7 +79,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Body.Print(writer, indent + 1);
 

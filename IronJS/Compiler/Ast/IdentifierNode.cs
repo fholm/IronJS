@@ -8,11 +8,11 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
+        public string Name { get; protected set; }
+        public Optimizer.Variable Variable { get; set; }
+
         public bool IsDefinition { get; set; }
         public bool IsGlobal { get { return Variable == null; } }
-        public Optimizer.Variable Variable { get; set; }
-        public string Name { get; protected set; }
-
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
@@ -21,18 +21,10 @@ namespace IronJS.Compiler.Ast
             IsDefinition = false;
         }
 
-        public Optimizer.VarType GetVarType()
-        {
-            if (Variable == null)
-                return Optimizer.VarType.Dynamic;
-
-            return Variable.CalculateType();
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Name + " " + GetVarType() + ")");
+            writer.AppendLine(indentStr + "(" + Name + ")");
         }
 
         public override INode Optimize(AstOptimizer astopt)

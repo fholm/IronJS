@@ -21,6 +21,17 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                if (Left.ExprType == Right.ExprType)
+                    return Left.ExprType;
+
+                return JsType.Dynamic;
+            }
+        }
+
 
         public override void Print(StringBuilder writer, int indent = 0)
         {

@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.Append(indentStr + "(" + Type);
+            writer.Append(indentStr + "(" + NodeType);
 
             if (Label != null)
                 writer.Append(" " + Label);

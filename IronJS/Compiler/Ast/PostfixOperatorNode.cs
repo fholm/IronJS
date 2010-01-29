@@ -19,6 +19,17 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                if (Target.ExprType == JsType.Integer)
+                    return JsType.Integer;
+
+                return JsType.Double;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             var tmp = Et.Parameter(typeof(double), "#tmp");

@@ -6,7 +6,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class ArrayNode : Node
+    public class ArrayNode : Node, INode
     {
         public List<INode> Values { get; protected set; }
 
@@ -14,6 +14,14 @@ namespace IronJS.Compiler.Ast
             : base(NodeType.Array, node)
         {
             Values = values;
+        }
+
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Object;
+            }
         }
 
         public override Et Generate(EtGenerator etgen)

@@ -18,6 +18,14 @@ namespace IronJS.Compiler.Ast
             Function = function;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Boolean;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             return Et.Call(
@@ -31,7 +39,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Target.Print(writer, indent + 1);
             Function.Print(writer, indent + 1);

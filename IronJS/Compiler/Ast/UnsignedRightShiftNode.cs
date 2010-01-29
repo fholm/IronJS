@@ -19,6 +19,14 @@ namespace IronJS.Compiler.Ast
             Right = right;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Integer;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             //TODO: to much boxing/conversion going on
@@ -55,7 +63,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Left.Print(writer, indent + 1);
             Right.Print(writer, indent + 1);

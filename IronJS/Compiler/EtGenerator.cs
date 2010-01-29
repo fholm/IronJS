@@ -184,7 +184,7 @@ namespace IronJS.Compiler
 
             throw new EtCompilerError(
                 EtCompilerError.CANT_ASSIGN_TO_NODE_TYPE,
-                target.Type
+                target.NodeType
             );
         }
     }

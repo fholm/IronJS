@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
@@ -200,11 +201,11 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Target.Print(writer, indent + 1);
             Source.Print(writer, indent + 1);

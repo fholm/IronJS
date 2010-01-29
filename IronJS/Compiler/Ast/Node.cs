@@ -25,13 +25,14 @@ namespace IronJS.Compiler.Ast
         private NodeType nodeType;
         private ITree node;
 
-        public NodeType Type { get; protected set; }
+        public NodeType NodeType { get; protected set; }
         public int Line { get; protected set; }
         public int Column { get; protected set; }
+        public virtual JsType ExprType { get { return JsType.Dynamic; } }
 
         public Node(NodeType type, ITree node)
         {
-            Type = type;
+            NodeType = type;
 
             if (node != null)
             {
@@ -57,7 +58,7 @@ namespace IronJS.Compiler.Ast
         public virtual void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Type + ")");
+            writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
         public virtual INode Optimize(AstOptimizer astopt)
@@ -65,7 +66,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        #region abstract
+        #region Abstract
 
         public abstract Et Generate(EtGenerator etgen);
 

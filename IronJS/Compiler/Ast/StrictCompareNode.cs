@@ -22,6 +22,14 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Boolean;
+            }
+        }
+
         public override Expression Generate(EtGenerator etgen)
         {
             // for both

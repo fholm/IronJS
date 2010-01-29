@@ -5,7 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class AssignNode : Node
+    public class AssignNode : Node, INode
     {
         public INode Target { get; protected set; }
         public INode Value { get; protected set; }
@@ -22,8 +22,8 @@ namespace IronJS.Compiler.Ast
             Target = Target.Optimize(astopt);
             Value = Value.Optimize(astopt);
 
-            if (Target is IdentifierNode)
-                (Target as IdentifierNode).Variable.UsedWith.Add(Value.GetType());
+            //if (Target is IdentifierNode)
+                //(Target as IdentifierNode).Variable.AssignedFrom.Add(Value.GetType());
 
             return this;
         }
@@ -40,12 +40,27 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type + " ");
+            writer.AppendLine(indentStr + "(" + NodeType + " ");
 
             Target.Print(writer, indent + 1);
             Value.Print(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }
+
+        #region IExpressionNode Members
+
+        public JsType ExpressionType
+        {
+            get
+            {
+                if (Target.ExprType == Value.ExprType)
+                    return Target.ExprType;
+
+                return JsType.Dynamic;
+            }
+        }
+
+        #endregion
     }
 }

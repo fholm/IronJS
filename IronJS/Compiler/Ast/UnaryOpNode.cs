@@ -18,6 +18,26 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                if (Op == ExpressionType.Not)
+                    return JsType.Boolean;
+
+                if (Op == ExpressionType.OnesComplement)
+                    return JsType.Integer;
+
+                if (Op == ExpressionType.UnaryPlus)
+                    return JsType.Double;
+
+                if (Op == ExpressionType.Negate)
+                    return JsType.Double;
+
+                throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(

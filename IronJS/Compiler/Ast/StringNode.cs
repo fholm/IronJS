@@ -5,7 +5,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class StringNode : Node
+    public class StringNode : Node, INode
     {
         public string Value { get; protected set; }
         public char Delimiter { get; protected set; }
@@ -15,6 +15,14 @@ namespace IronJS.Compiler.Ast
         {
             Value = value;
             Delimiter = delimiter;
+        }
+
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.String;
+            }
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

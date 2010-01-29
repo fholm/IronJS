@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq.Expressions;
+using System.Text;
 using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
@@ -59,11 +59,11 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             Setup.Print(writer, indent + 1);
             Test.Print(writer, indent + 1);

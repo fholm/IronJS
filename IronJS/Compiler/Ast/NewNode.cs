@@ -29,6 +29,14 @@ namespace IronJS.Compiler.Ast
 
         }
 
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Object;
+            }
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             var target = Target.Generate(etgen);
@@ -63,7 +71,7 @@ namespace IronJS.Compiler.Ast
             var indentStr = new String(' ', indent * 2);
             var indentStr2 = new String(' ', (indent + 1) * 2);
 
-            writer.AppendLine(indentStr + "(" + Type);
+            writer.AppendLine(indentStr + "(" + NodeType);
 
             writer.AppendLine(indentStr2 + "(Args");
             foreach (var arg in Args)

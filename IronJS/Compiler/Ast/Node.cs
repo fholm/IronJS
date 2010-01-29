@@ -7,7 +7,7 @@ namespace IronJS.Compiler.Ast
 {
     public enum NodeType
     {
-        Assign, Identifier, Number, Null,
+        Assign, Identifier, Double, Null,
         MemberAccess, Call, If, Eq, Block,
         String, ClrNew, Lambda, While, BinaryOp,
         Object, New, AutoProperty, Return,
@@ -16,7 +16,8 @@ namespace IronJS.Compiler.Ast
         UnsignedRightShift, ForStep, ForIn,
         Break, Continue, With, Try, Catch,
         Throw, IndexAccess, Delete, In,
-        Switch, InstanceOf, Regex, Array
+        Switch, InstanceOf, Regex, Array,
+        Integer
     }
 
     abstract public class Node

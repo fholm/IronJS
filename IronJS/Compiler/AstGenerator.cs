@@ -715,7 +715,7 @@ namespace IronJS.Compiler
                         Build(node.GetChildSafe(0)),
                         new BinaryOpNode(
                             Build(node.GetChildSafe(0)),
-                            new NumberNode(1.0, node),
+                            new NumberNode<double>(1.0, NodeType.Double, node),
                             type == ExpressionType.PreIncrementAssign
                                   ? ExpressionType.Add
                                   : ExpressionType.Subtract,
@@ -958,7 +958,10 @@ namespace IronJS.Compiler
 
         private Node BuildNumber(ITree node)
         {
-            return new NumberNode(Double.Parse(node.Text, CultureInfo.InvariantCulture), node);
+            if (node.Text.Contains("."))
+                return new NumberNode<double>(Double.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Double, node);
+            else
+                return new NumberNode<int>(Int32.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Integer, node);
         }
 
         private Node BuildIdentifier(ITree node)

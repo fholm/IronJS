@@ -5,12 +5,12 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class NumberNode : Node
+    public class NumberNode<T> : Node
     {
-        public double Value { get; protected set; }
+        public T Value { get; protected set; }
 
-        public NumberNode(double value, ITree node)
-            : base(NodeType.Number, node)
+        public NumberNode(T value, NodeType type, ITree node)
+            : base(type, node)
         {
             Value = value;
         }
@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et Generate(EtGenerator etgen)
         {
-            return etgen.Generate<double>(Value);
+            return etgen.Generate<T>(Value);
         }
     }
 }

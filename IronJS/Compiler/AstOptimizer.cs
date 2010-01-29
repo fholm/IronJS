@@ -7,7 +7,12 @@ namespace IronJS.Compiler
     {
         public List<Node> Optimize(List<Node> astNodes)
         {
-            return astNodes;
+            var optimizedNodes = new List<Node>();
+
+            foreach (var node in astNodes)
+                optimizedNodes.Add(node.Optimize(this));
+
+            return optimizedNodes;
         }
     }
 }

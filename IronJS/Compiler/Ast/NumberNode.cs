@@ -26,15 +26,20 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override Et Generate2(EtGenerator etgen)
         {
-            var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Value + ")");
+            return Et.Constant(Value, typeof(T));
         }
 
         public override Et Generate(EtGenerator etgen)
         {
             return etgen.Generate<T>(Value);
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            writer.AppendLine(indentStr + "(" + Value + ")");
         }
     }
 }

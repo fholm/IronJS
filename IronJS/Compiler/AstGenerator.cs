@@ -882,10 +882,11 @@ namespace IronJS.Compiler
 
         private INode BuildLambda(ITree argsNode, ITree block, string name)
         {
-            var args = argsNode.Map(x => x.Text);
+            var args = argsNode.Map(x => new IdentifierNode(x.Text, x));
             var body = BuildBlock(block);
+            var nameNode = name == null ? null : new IdentifierNode(name, argsNode);
 
-            return new LambdaNode(args, body, name, argsNode);
+            return new LambdaNode(args, body, nameNode, argsNode);
         }
 
         private INode BuildNew(ITree node)

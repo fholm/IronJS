@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime;
@@ -10,11 +11,12 @@ namespace IronJS.Compiler.Ast
 {
     public class LambdaNode : Node
     {
-        public List<string> Args { get; protected set; }
+        public IdentifierNode Name { get; protected set; }
+        public List<IdentifierNode> Args { get; protected set; }
         public INode Body { get; protected set; }
-        public string Name { get; protected set; }
+        public bool IsLambda { get { return Name == null; } }
 
-        public LambdaNode(List<string> args, INode body, string name, ITree node)
+        public LambdaNode(List<IdentifierNode> args, INode body, IdentifierNode name, ITree node)
             : base(NodeType.Lambda, node)
         {
             Args = args;
@@ -32,10 +34,44 @@ namespace IronJS.Compiler.Ast
 
         public override INode Optimize(AstOptimizer astopt)
         {
+            if (!astopt.IsGlobal)
+            {
+                if (!IsLambda)
+                    astopt.Scope.CreateVariable(Name.Name).AssignedFrom.Add(this);
+            }
+
             astopt.EnterScope();
+
+            foreach (var arg in Args)
+                astopt.Scope.CreateVariable(arg.Name).UsedAs.Add(JsType.Dynamic);
+
             Body = Body.Optimize(astopt);
+
             astopt.ExitScope();
             return this;
+        }
+
+        public override Et Generate2(EtGenerator etgen)
+        {
+            etgen.Enter();
+
+            var lambda = Et.Lambda(
+                Et.Block(
+                    etgen.LambdaScope.Variables.Values,
+                    Body.Generate2(etgen)
+                )
+            );
+
+            etgen.LambdaScope = etgen.LambdaScope.Exit();
+
+            if (IsLambda)
+            {
+                return lambda;
+            }
+            else
+            {
+                return etgen.GenerateAssign2(Name, lambda);
+            }
         }
 
         public override Et Generate(EtGenerator etgen)
@@ -56,7 +92,7 @@ namespace IronJS.Compiler.Ast
                         etgen.FunctionScope.ScopeExpr
                     ),
                     // parameter names
-                    Args
+                    Args.Select(x => x.Name).ToList()
                 )
             );
 

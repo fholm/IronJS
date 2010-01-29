@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using IronJS.Runtime;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Testing
 {
@@ -16,6 +18,10 @@ namespace IronJS.Testing
 
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
+
+            var etGenerator = new Compiler.EtGenerator();
+            var compiled = etGenerator.Build2(astNodes, new Context());
+            compiled(new JsObj());
 
             Console.ReadLine();
         }

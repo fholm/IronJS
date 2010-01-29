@@ -6,11 +6,11 @@ namespace IronJS.Compiler.Optimizer
 {
     public class Variable
     {
-
         public bool IsInsideWith { get; set; }
         public HashSet<Ast.JsType> UsedAs { get; protected set; }
         public HashSet<Ast.INode> AssignedFrom { get; protected set; }
         public bool IsSearched { get; set; }
+        public bool CanBeDeleted { get; set; }
 
         public Ast.JsType ExprType
         {

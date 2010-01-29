@@ -31,7 +31,10 @@ namespace IronJS.Compiler.Ast
             Target = Target.Optimize(astopt);
 
             if (Target is IdentifierNode)
+            {
                 (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+                (Target as IdentifierNode).Variable.CanBeDeleted = true;
+            }
 
             return this;
         }

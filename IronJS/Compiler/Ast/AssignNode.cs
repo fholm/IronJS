@@ -17,6 +17,22 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
+        public override Et Generate2(EtGenerator etgen)
+        {
+            return etgen.GenerateAssign2(
+                Target, 
+                Value.Generate2(etgen)
+            );
+        }
+
+        public override Et Generate(EtGenerator etgen)
+        {
+            return etgen.GenerateAssign(
+                Target,
+                Value.Generate(etgen)
+            );
+        }
+
         public override INode Optimize(AstOptimizer astopt)
         {
             Target = Target.Optimize(astopt);
@@ -26,14 +42,6 @@ namespace IronJS.Compiler.Ast
                 (Target as IdentifierNode).Variable.AssignedFrom.Add(Value);
 
             return this;
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return etgen.GenerateAssign(
-                Target,
-                Value.Generate(etgen)
-            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

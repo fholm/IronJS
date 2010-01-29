@@ -29,6 +29,11 @@ namespace IronJS.Compiler.Ast
             }
         }
 
+        public override Et Generate2(EtGenerator etgen)
+        {
+            return base.Generate2(etgen);
+        }
+
         public override INode Optimize(AstOptimizer astopt)
         {
             if (!astopt.IsGlobal)
@@ -62,7 +67,7 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Name + " " + ExprType + ")");
+            writer.AppendLine(indentStr + "(" + Name + (Variable.CanBeDeleted ? "?" : "") + " " + ExprType + ")");
         }
     }
 }

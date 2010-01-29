@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using IronJS.Extensions;
 using Antlr.Runtime.Tree;
+using IronJS.Extensions;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -73,6 +74,11 @@ namespace IronJS.Compiler.Ast
         public virtual INode Optimize(AstOptimizer astopt)
         {
             return this;
+        }
+
+        public virtual Et Generate2(EtGenerator etgen)
+        {
+            return AstUtils.Empty();
         }
 
         #region Abstract

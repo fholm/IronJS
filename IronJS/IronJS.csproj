@@ -134,10 +134,10 @@
     <Compile Include="Compiler\Ast\IfNode.cs" />
     <Compile Include="Compiler\Ast\Interfaces\ILabelableNode.cs" />
     <Compile Include="Compiler\Ast\LambdaNode.cs" />
-    <Compile Include="Compiler\Ast\Bases\LoopNode.cs" />
+    <Compile Include="Compiler\Ast\Base\LoopNode.cs" />
     <Compile Include="Compiler\Ast\MemberAccessNode.cs" />
     <Compile Include="Compiler\Ast\NewNode.cs" />
-    <Compile Include="Compiler\Ast\Bases\Node.cs" />
+    <Compile Include="Compiler\Ast\Base\Node.cs" />
     <Compile Include="Compiler\Ast\NullNode.cs" />
     <Compile Include="Compiler\Ast\NumberNode.cs" />
     <Compile Include="Compiler\Ast\RegexNode.cs" />
@@ -167,6 +167,7 @@
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
+    <Compile Include="Compiler\LambdaScope.cs" />
     <Compile Include="Compiler\Optimizer\Scope.cs" />
     <Compile Include="Compiler\Optimizer\Variable.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />

@@ -11,6 +11,7 @@ using System.Reflection.Emit;
 using LambdaTuple = System.Tuple<System.Linq.Expressions.Expression<IronJS.Runtime.LambdaType>, System.Collections.Generic.List<string>>;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Compiler
 {
@@ -19,15 +20,44 @@ namespace IronJS.Compiler
     {
         int _withCount;
 
-        internal Context Context { get; private set; }
         internal FunctionScope FunctionScope { get; private set; }
         internal List<LambdaTuple> LambdaTuples { get; private set; }
         internal ParameterExpression FuncTableExpr { get; private set; }
-        internal ParameterExpression GlobalScopeExpr { get; private set; }
-
         internal bool IsInsideWith { get { return _withCount > 0; } }
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
         internal bool IsGlobal { get { return FunctionScope == null; } }
+
+
+        // Build2
+        internal Context Context { get; private set; }
+        internal ParameterExpression GlobalScopeExpr { get; private set; }
+        internal List<Et> GlobalExprs { get; private set; }
+        internal LambdaScope LambdaScope { get; set; }
+        internal bool IsGlobal2 { get { return LambdaScope == null; } }
+
+        public Action<JsObj> Build2(List<Ast.INode> astNodes, Context context)
+        {
+            Context = context;
+            LambdaScope = null;
+            GlobalExprs = new List<Et>();
+            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
+
+            foreach (var node in astNodes)
+                GlobalExprs.Add(node.Generate2(this));
+
+            return Et.Lambda<Action<JsObj>>(
+                Et.Block(GlobalExprs),
+                new[] { GlobalScopeExpr }
+            ).Compile();
+        }
+
+        public void Enter()
+        {
+            if (LambdaScope == null)
+                LambdaScope = new LambdaScope(null);
+            else
+                LambdaScope = LambdaScope.Enter();
+        }
 
         public MethodInfo Build(List<Ast.INode> astNodes, Context context)
         {
@@ -186,6 +216,72 @@ namespace IronJS.Compiler
                 EtCompilerError.CANT_ASSIGN_TO_NODE_TYPE,
                 target.NodeType
             );
+        }
+
+        internal bool TypesMatch(Ast.IdentifierNode target, Et value)
+        {
+            if (target.ExprType == Ast.JsType.Integer)
+                return value.Type == typeof(int);
+
+            if (target.ExprType == Ast.JsType.String)
+                return value.Type == typeof(string);
+
+            return false;
+        }
+
+        internal EtParam CreateVariable2(string name, Type type)
+        {
+            return LambdaScope[name] = Et.Parameter(type, name);
+        }
+
+        internal Et GenerateAssign2(Ast.INode target, Et value)
+        {
+            var idNode = target as Ast.IdentifierNode;
+            if (idNode != null)
+            {
+                if (IsGlobal2)
+                {
+                    return Et.Call(
+                        GlobalScopeExpr,
+                        typeof(JsObj).GetMethod("Set"),
+                        Et.Constant(idNode.Name),
+                        value
+                    );
+                }
+                else
+                {
+                    var typesMatch = TypesMatch(idNode, value);
+                    EtParam variable;
+
+                    if (idNode.IsDefinition)
+                    {
+                        if (typesMatch)
+                            variable = CreateVariable2(idNode.Name, value.Type);
+                        else
+                            variable = CreateVariable2(idNode.Name, typeof(object));
+                    }
+                    else
+                        variable = LambdaScope[idNode.Name];
+
+                    if (!typesMatch)
+                    {
+                        if (variable.Type != typeof(object))
+                            throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
+
+                        return Et.Assign(
+                            variable,
+                            EtUtils.Box2(value)
+                        );
+                    }
+
+                    return Et.Assign(
+                        variable,
+                        value
+                    );
+                }
+            }
+
+            throw new NotImplementedException();
         }
     }
 }

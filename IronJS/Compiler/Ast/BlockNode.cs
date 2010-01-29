@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -17,6 +18,16 @@ namespace IronJS.Compiler.Ast
         {
             Nodes = nodes;
             IsEmpty = nodes.Count == 0;
+        }
+
+        public override Et Generate2(EtGenerator etgen)
+        {
+            if(Nodes.Count > 0)
+                return Et.Block(
+                    Nodes.Select(x => x.Generate2(etgen))
+                );
+
+            return AstUtils.Empty();
         }
 
         public override INode Optimize(AstOptimizer astopt)

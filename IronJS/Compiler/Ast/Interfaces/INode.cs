@@ -13,6 +13,7 @@ namespace IronJS.Compiler.Ast
         JsType ExprType { get; }
 
         Et Generate(EtGenerator etgen);
+        Et Generate2(EtGenerator etgen);
         INode Optimize(AstOptimizer astopt);
         JsType EvalTypes(params INode[] nodes);
 

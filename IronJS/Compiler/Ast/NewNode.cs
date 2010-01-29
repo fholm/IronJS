@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Text;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
@@ -53,6 +55,23 @@ namespace IronJS.Compiler.Ast
                 EtUtils.CreateBlockIfNotEmpty(exprs),
                 EtUtils.Box(tmp)
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            var indentStr2 = new String(' ', (indent + 1) * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            writer.AppendLine(indentStr2 + "(Args");
+            foreach (var arg in Args)
+                arg.Print(writer, indent + 2);
+            writer.AppendLine(indentStr2 + ")");
+
+            Target.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

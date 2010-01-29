@@ -23,20 +23,6 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
-        {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Type);
-
-            TrueBranch.Print(writer, indent + 1);
-
-            if(ElseBranch != null)
-                ElseBranch.Print(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
-
         public override Et Walk(EtGenerator etgen)
         {
             var trueBranch = TrueBranch.Walk(etgen);
@@ -52,5 +38,21 @@ namespace IronJS.Compiler.Ast
                 EtUtils.Cast<object>(elseBranch)
             );
         }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            Test.Print(writer, indent + 1);
+            TrueBranch.Print(writer, indent + 1);
+
+            if (ElseBranch != null)
+                ElseBranch.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
+        }
+
     }
 }

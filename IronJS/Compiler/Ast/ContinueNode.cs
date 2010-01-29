@@ -1,4 +1,5 @@
 ﻿using Et = System.Linq.Expressions.Expression;
+using System;
 
 namespace IronJS.Compiler.Ast
 {
@@ -25,5 +26,18 @@ namespace IronJS.Compiler.Ast
 
             return Et.Continue(etgen.FunctionScope.LabelScope.Continue(Label));
         }
+
+        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.Append(indentStr + "(" + Type);
+
+            if (Label != null)
+                writer.Append(" " + Label);
+
+            writer.AppendLine(")");
+        }
+    
     }
 }

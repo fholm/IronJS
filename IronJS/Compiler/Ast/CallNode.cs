@@ -4,9 +4,9 @@ using System.Dynamic;
 using System.Linq;
 using System.Text;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {

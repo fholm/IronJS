@@ -1,8 +1,8 @@
 ﻿using System;
-using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Utils;
 using System.Dynamic;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -57,6 +57,15 @@ namespace IronJS.Compiler.Ast
             }
 
             throw new NotImplementedException();
+        }
+
+        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+                Target.Print(writer, indent + 1);
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

@@ -17,16 +17,15 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override Node Optimize(AstOptimizer astopt)
         {
-            var indentStr = new String(' ', indent * 2);
+            Target = Target.Optimize(astopt);
+            Value = Value.Optimize(astopt);
 
-            writer.AppendLine(indentStr + "(" + Type + " ");
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.UsedWith.Add(Value.GetType());
 
-            Target.Print(writer, indent + 1);
-            Value .Print(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
+            return this;
         }
 
         public override Et Generate(EtGenerator etgen)
@@ -35,6 +34,18 @@ namespace IronJS.Compiler.Ast
                 Target,
                 Value.Generate(etgen)
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type + " ");
+
+            Target.Print(writer, indent + 1);
+            Value.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

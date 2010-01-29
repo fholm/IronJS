@@ -14,6 +14,9 @@ namespace IronJS.Testing
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
                 astNodes = astOptimizer.Optimize(astNodes);
 
+            foreach (var node in astNodes)
+                Console.WriteLine(node.Print());
+
             Console.ReadLine();
         }
     }

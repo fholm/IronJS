@@ -1,5 +1,6 @@
 ﻿using System;
 using Antlr.Runtime.Tree;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -15,6 +16,11 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
+        public override Et Generate(EtGenerator etgen)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Print(System.Text.StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
@@ -26,11 +32,6 @@ namespace IronJS.Compiler.Ast
 
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
-        }
-
-        public override System.Linq.Expressions.Expression Generate(EtGenerator etgen)
-        {
-            throw new NotImplementedException();
         }
     }
 }

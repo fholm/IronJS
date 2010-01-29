@@ -8,7 +8,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class SwitchNode : Node, ILabelableNode
+    public class SwitchNode : Node, IStatementNode
     {
         public Node Target { get; protected set; }
         public Node Default { get; protected set; }

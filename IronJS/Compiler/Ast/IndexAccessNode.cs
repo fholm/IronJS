@@ -18,6 +18,17 @@ namespace IronJS.Compiler.Ast
             Index = index;
         }
 
+        public override Node Optimize(AstOptimizer astopt)
+        {
+            if (Target is IdentifierNode)
+            {
+                if (Target is IdentifierNode)
+                    (Target as IdentifierNode).Variable.UsedWith.Add(GetType());
+            }
+
+            return this;
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(

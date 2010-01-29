@@ -9,7 +9,7 @@ namespace IronJS.Compiler.Ast
     {
         Assign, Identifier, Double, Null,
         MemberAccess, Call, If, Eq, Block,
-        String, ClrNew, Lambda, While, BinaryOp,
+        String, Lambda, While, BinaryOp,
         Object, New, AutoProperty, Return,
         UnaryOp, Logical, PostfixOperator,
         TypeOf, Boolean, Void, StrictCompare,

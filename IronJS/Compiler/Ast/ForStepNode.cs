@@ -23,92 +23,25 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public class Mutable<T>
+        public override Node Optimize(AstOptimizer astopt)
         {
-            public T Value;
+            if (Setup != null)
+                Setup = Setup.Optimize(astopt);
+
+            if(Test != null)
+                Test = Test.Optimize(astopt);
+
+            if (Incr != null)
+                Incr = Incr.Optimize(astopt);
+
+            if (Body != null)
+                Body = Body.Optimize(astopt);
+
+            return this;
         }
 
         public override Et LoopWalk(EtGenerator etgen)
         {
-            /*
-            var tmp = Et.Variable(typeof(int), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp,
-                    Et.Constant(0, typeof(int))
-                ),
-                AstUtils.Loop(
-                    Et.LessThan(
-                        tmp,
-                        Et.Constant(
-                            10000000, 
-                            typeof(int)
-                        )
-                    ),
-                    Et.Assign(
-                        tmp,
-                        Et.Add(
-                            tmp,
-                            Et.Constant(1, typeof(int))
-                        )
-                    ),
-                    AstUtils.Empty(),
-                    AstUtils.Empty()
-                )
-            );
-            */
-
-            var field = typeof(Mutable<double>).GetField("Value");
-            var tmp = Et.Variable(typeof(Mutable<double>), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp,
-                    AstUtils.SimpleNewHelper(
-                        typeof(Mutable<double>).GetConstructor(System.Type.EmptyTypes)
-                    )
-                ),
-                Et.Assign(
-                    Et.Field(
-                        tmp,
-                        field
-                    ),
-                    Et.Constant(0.0D, typeof(double))
-                ),
-                AstUtils.Loop(
-                    Et.LessThan(
-                        Et.Field(
-                            tmp,
-                            field
-                        ),
-                        Et.Constant(10000000.0D, typeof(double))
-                    ),
-                    Et.Assign(
-                        Et.Field(
-                            tmp,
-                            field
-                        ),
-                        Et.Convert(
-                            Et.Dynamic(
-                                etgen.Context.CreateBinaryOpBinder(ExpressionType.Add),
-                                typeof(object),
-                                Et.Field(
-                                    tmp,
-                                    field
-                                ),
-                                Et.Constant(1.0D, typeof(object))
-                            ),
-                            typeof(double)
-                        )
-                    ),
-                    AstUtils.Empty(),
-                    AstUtils.Empty()
-                )
-            );
-
             return Et.Block(
                 Setup.Generate(etgen),
                 AstUtils.Loop(

@@ -23,21 +23,16 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override Node Optimize(AstOptimizer astopt)
         {
-            var indentStr = new String(' ', indent * 2);
+            Target = Target.Optimize(astopt);
 
-            writer.AppendLine(indentStr + "(" + Type);
-            Target.Print(writer, indent + 1);
+            var args = new List<Node>();
+            foreach (var arg in Args)
+                args.Add(arg.Optimize(astopt));
+            Args = args;
 
-            var argsIndentStr = new String(' ', (indent + 1) * 2);
-            writer.AppendLine(argsIndentStr + "(Args");
-
-            foreach (var node in Args)
-                node.Print(writer, indent + 2);
-
-            writer.AppendLine(argsIndentStr + ")");
-            writer.AppendLine(indentStr + ")");
+            return this;
         }
 
         public override Et Generate(EtGenerator etgen)
@@ -128,6 +123,23 @@ namespace IronJS.Compiler.Ast
                     args
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+            Target.Print(writer, indent + 1);
+
+            var argsIndentStr = new String(' ', (indent + 1) * 2);
+            writer.AppendLine(argsIndentStr + "(Args");
+
+            foreach (var node in Args)
+                node.Print(writer, indent + 2);
+
+            writer.AppendLine(argsIndentStr + ")");
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

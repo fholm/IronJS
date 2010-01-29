@@ -130,8 +130,9 @@
     <Compile Include="Compiler\Ast\CallNode.cs" />
     <Compile Include="Compiler\Ast\ContinueNode.cs" />
     <Compile Include="Compiler\Ast\IdentifierNode.cs" />
+    <Compile Include="Compiler\Ast\IExpressionNode.cs" />
     <Compile Include="Compiler\Ast\IfNode.cs" />
-    <Compile Include="Compiler\Ast\ILabelableNode.cs" />
+    <Compile Include="Compiler\Ast\IStatementNode.cs" />
     <Compile Include="Compiler\Ast\LambdaNode.cs" />
     <Compile Include="Compiler\Ast\LoopNode.cs" />
     <Compile Include="Compiler\Ast\MemberAccessNode.cs" />
@@ -167,6 +168,8 @@
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
+    <Compile Include="Compiler\Optimizer\Scope.cs" />
+    <Compile Include="Compiler\Optimizer\Variable.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />

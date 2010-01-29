@@ -11,7 +11,7 @@ namespace IronJS.Compiler.Ast
         public Node Test { get; protected set; }
         public Node TrueBranch { get; protected set; }
         public Node ElseBranch { get; protected set; }
-        public bool HasElseBranch { get; protected set; }
+        public bool HasElseBranch { get { return ElseBranch != null; } }
         public bool IsTernary { get; protected set; }
 
         public IfNode(Node test, Node trueBranch, Node elseBranch, bool isTernary, ITree node)
@@ -20,8 +20,18 @@ namespace IronJS.Compiler.Ast
             Test = test;
             TrueBranch = trueBranch;
             ElseBranch = elseBranch;
-            HasElseBranch = elseBranch != null;
             IsTernary = isTernary;
+        }
+
+        public override Node Optimize(AstOptimizer astopt)
+        {
+            Test = Test.Optimize(astopt);
+            TrueBranch = TrueBranch.Optimize(astopt);
+
+            if(HasElseBranch)
+                ElseBranch = ElseBranch.Optimize(astopt);
+
+            return this;
         }
 
         public override Et Generate(EtGenerator etgen)

@@ -8,12 +8,6 @@ namespace IronJS.Compiler.Ast
     {
         public string Label { get; protected set; }
 
-        public ContinueNode(ITree node)
-            : this(null, node)
-        {
-
-        }
-
         public ContinueNode(string label, ITree node)
             : base(NodeType.Continue, node)
         {

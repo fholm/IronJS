@@ -1,6 +1,6 @@
 ﻿using System;
-using Et = System.Linq.Expressions.Expression;
 using Antlr.Runtime.Tree;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {

@@ -492,10 +492,10 @@ namespace IronJS.Compiler
             var label = node.GetChildSafe(0);
             var target = Build(node.GetChildSafe(1));
 
-            if (!(target is ILabelableNode))
+            if (!(target is IStatementNode))
                 throw new CompilerError("Can only label nodes that implement ILabelableNode");
 
-           (target as ILabelableNode).SetLabel(label.Text);
+           (target as IStatementNode).SetLabel(label.Text);
            return target;
         }
 
@@ -821,13 +821,13 @@ namespace IronJS.Compiler
                     var target = ((AssignNode)assignNode).Target;
 
                     if (target is IdentifierNode)
-                        ((IdentifierNode)target).IsLocal = true;
+                        ((IdentifierNode)target).IsDefinition = true;
                 }
 
                 var identifierNode = assignNode as IdentifierNode;
 
                 if (identifierNode != null)
-                    identifierNode.IsLocal = true;
+                    identifierNode.IsDefinition = true;
 
                 nodes.Add(assignNode);
             }

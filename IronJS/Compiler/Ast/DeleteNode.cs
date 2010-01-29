@@ -17,6 +17,12 @@ namespace IronJS.Compiler.Ast
             Target = target;
         }
 
+        public override Node Optimize(AstOptimizer astopt)
+        {
+            Target = Target.Optimize(astopt);
+            return this;
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             if (Target is MemberAccessNode)

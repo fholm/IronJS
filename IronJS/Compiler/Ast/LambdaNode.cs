@@ -22,6 +22,14 @@ namespace IronJS.Compiler.Ast
             Name = name;
         }
 
+        public override Node Optimize(AstOptimizer astopt)
+        {
+            astopt.EnterScope();
+            Body = Body.Optimize(astopt);
+            astopt.ExitScope();
+            return this;
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             etgen.EnterFunctionScope();

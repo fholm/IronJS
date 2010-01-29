@@ -139,7 +139,7 @@ namespace IronJS.Compiler
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                if (idNode.IsLocal)
+                if (idNode.IsDefinition)
                 {
                     return Et.Call(
                         FunctionScope.ScopeExpr,

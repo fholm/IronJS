@@ -3,7 +3,7 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    abstract public class LoopNode : Node, ILabelableNode
+    abstract public class LoopNode : Node, IStatementNode
     {
         public string Label { get; protected set; }
 

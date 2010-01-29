@@ -19,6 +19,27 @@ namespace IronJS.Compiler.Ast
             IsEmpty = nodes.Count == 0;
         }
 
+        public override Node Optimize(AstOptimizer astopt)
+        {
+            var nodes = new List<Node>();
+
+            foreach (var node in Nodes)
+                nodes.Add(node.Optimize(astopt));
+
+            Nodes = nodes;
+            return this;
+        }
+
+        public override Et Generate(EtGenerator etgen)
+        {
+            if (Nodes.Count == 0)
+                return Et.Default(typeof(object));
+
+            return Et.Block(
+                Nodes.Select(x => x.Generate(etgen))
+            );
+        }
+
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
@@ -40,14 +61,5 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
-        {
-            if (Nodes.Count == 0)
-                return Et.Default(typeof(object));
-
-            return Et.Block(
-                Nodes.Select(x => x.Generate(etgen))
-            );
-        }
     }
 }

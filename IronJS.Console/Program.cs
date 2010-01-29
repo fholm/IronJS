@@ -1,7 +1,5 @@
-﻿using System.Text;
-using IronJS.Runtime;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
+﻿using System;
+using System.Text;
 
 namespace IronJS.Testing
 {
@@ -10,26 +8,16 @@ namespace IronJS.Testing
         //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {
-            var context = new Context();
-            var astBuilder = new Compiler.AstGenerator();
-            var etGenerator = new Compiler.EtGenerator();
-            var astNodes = astBuilder.Build("Testing.js", Encoding.UTF8);
-            var compiled = etGenerator.Build(astNodes, context);
-            var globals = Scope.CreateGlobal(context);
+            var astGenerator = new Compiler.AstGenerator();
+            var astOptimizer = new Compiler.AstOptimizer();
 
-            context.SetupGlobals(globals);
+            var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
+                astNodes = astOptimizer.Optimize(astNodes);
 
-            globals.Global(
-                "println",
-                typeof(HelperFunctions).GetMethod("PrintLine")
-            );
+            foreach (var node in astNodes)
+                Console.WriteLine(node.Print());
 
-            globals.Global(
-                "time", 
-                typeof(HelperFunctions).GetMethod("Timer")
-            );
-
-            compiled(globals);
+            Console.ReadLine();
         }
     }
 }

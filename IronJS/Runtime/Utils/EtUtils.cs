@@ -22,6 +22,14 @@ namespace IronJS.Runtime.Utils
             return Et.Convert(expr, typeof(object));
         }
 
+        internal static Et Box2(Et expr)
+        {
+            if (expr.Type == typeof(void))
+                return Et.Block(expr, Et.Default(typeof(object)));
+
+            return Et.Convert(expr, typeof(object));
+        }
+
         internal static Et CastForBitOp(Et expr)
         {
             // we need to go object > double > int

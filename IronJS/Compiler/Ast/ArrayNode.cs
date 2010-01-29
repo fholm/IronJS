@@ -1,29 +1,37 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime;
-using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class ArrayNode : Node
+    public class ArrayNode : Node, INode
     {
-        public List<Node> Values { get; protected set; }
+        public List<INode> Values { get; protected set; }
 
-        public ArrayNode(List<Node> values)
-            : base(NodeType.Array)
+        public ArrayNode(List<INode> values, ITree node)
+            : base(NodeType.Array, node)
         {
             Values = values;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override JsType ExprType
+        {
+            get
+            {
+                return JsType.Object;
+            }
+        }
+
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Call(
                 Et.Constant(etgen.Context),
                 Context.MiCreateArray,
                 Et.NewArrayInit(
                     typeof(object),
-                    Values.Select(x => x.Walk(etgen))
+                    Values.Select(x => x.Generate(etgen))
                 )
             );
         }

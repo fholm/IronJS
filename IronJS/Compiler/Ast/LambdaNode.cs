@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
@@ -10,35 +10,35 @@ namespace IronJS.Compiler.Ast
 {
     public class LambdaNode : Node
     {
-        public List<IdentifierNode> Args { get; protected set; }
-        public Node Body { get; protected set; }
+        public List<string> Args { get; protected set; }
+        public INode Body { get; protected set; }
         public string Name { get; protected set; }
 
-        public LambdaNode(List<IdentifierNode> args, Node body, string name)
-            : base(NodeType.Lambda)
+        public LambdaNode(List<string> args, INode body, string name, ITree node)
+            : base(NodeType.Lambda, node)
         {
             Args = args;
             Body = body;
             Name = name;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override JsType ExprType
         {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Type + " " + Name);
-            var argsIndentStr = new String(' ', (indent + 1) * 2);
-            writer.AppendLine(argsIndentStr + "(Args");
-
-            foreach (var node in Args)
-                node.Print(writer, indent + 2);
-
-            writer.AppendLine(argsIndentStr + ")");
-            Body.Print(writer, indent + 1);
-            writer.AppendLine(indentStr + ")");
+            get
+            {
+                return JsType.Object;
+            }
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override INode Optimize(AstOptimizer astopt)
+        {
+            astopt.EnterScope();
+            Body = Body.Optimize(astopt);
+            astopt.ExitScope();
+            return this;
+        }
+
+        public override Et Generate(EtGenerator etgen)
         {
             etgen.EnterFunctionScope();
 
@@ -47,7 +47,7 @@ namespace IronJS.Compiler.Ast
                     Et.Lambda<LambdaType>(
                         Et.Block(
                             // lambda body
-                            Body.Walk(etgen),
+                            Body.Generate(etgen),
                             Et.Label(
                                 etgen.FunctionScope.ReturnLabel,
                                 Undefined.Expr // 12.9
@@ -56,7 +56,7 @@ namespace IronJS.Compiler.Ast
                         etgen.FunctionScope.ScopeExpr
                     ),
                     // parameter names
-                    Args.Select(x => x.Name).ToList()
+                    Args
                 )
             );
 
@@ -101,6 +101,22 @@ namespace IronJS.Compiler.Ast
                     tmp
                 );
             }
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + NodeType + " " + Name);
+            var argsIndentStr = new String(' ', (indent + 1) * 2);
+            writer.Append(argsIndentStr + "(Args");
+
+            foreach (var node in Args)
+                writer.Append(" " + node);
+
+            writer.AppendLine(")");
+            Body.Print(writer, indent + 1);
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

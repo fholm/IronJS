@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
@@ -10,26 +13,34 @@ namespace IronJS.Compiler.Ast
 {
     public class NewNode : Node
     {
-        public Node Target { get; protected set; }
-        public List<Node> Args { get; protected set; }
+        public INode Target { get; protected set; }
+        public List<INode> Args { get; protected set; }
 
-        public NewNode(Node target, List<Node> args)
-            : base(NodeType.New)
+        public NewNode(INode target, List<INode> args, ITree node)
+            : base(NodeType.New, node)
         {
             Target = target;
             Args = args;
         }
 
-        public NewNode(Node target)
-            : this(target, new List<Node>())
+        public NewNode(INode target, ITree node)
+            : this(target, new List<INode>(), node)
         {
 
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override JsType ExprType
         {
-            var target = Target.Walk(etgen);
-            var args = Args.Select(x => x.Walk(etgen)).ToArray();
+            get
+            {
+                return JsType.Object;
+            }
+        }
+
+        public override Et Generate(EtGenerator etgen)
+        {
+            var target = Target.Generate(etgen);
+            var args = Args.Select(x => x.Generate(etgen)).ToArray();
             var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 
@@ -53,6 +64,23 @@ namespace IronJS.Compiler.Ast
                 EtUtils.CreateBlockIfNotEmpty(exprs),
                 EtUtils.Box(tmp)
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            var indentStr2 = new String(' ', (indent + 1) * 2);
+
+            writer.AppendLine(indentStr + "(" + NodeType);
+
+            writer.AppendLine(indentStr2 + "(Args");
+            foreach (var arg in Args)
+                arg.Print(writer, indent + 2);
+            writer.AppendLine(indentStr2 + ")");
+
+            Target.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

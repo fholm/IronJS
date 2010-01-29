@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -6,17 +9,28 @@ namespace IronJS.Compiler.Ast
 {
     public class PostfixOperatorNode : Node
     {
-        public Node Target { get; protected set; }
+        public INode Target { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public PostfixOperatorNode(Node node, ExpressionType op)
-            : base(NodeType.PostfixOperator)
+        public PostfixOperatorNode(INode node, ExpressionType op, ITree tree)
+            : base(NodeType.PostfixOperator, tree)
         {
             Target = node;
             Op = op;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override JsType ExprType
+        {
+            get
+            {
+                if (Target.ExprType == JsType.Integer)
+                    return JsType.Integer;
+
+                return JsType.Double;
+            }
+        }
+
+        public override Et Generate(EtGenerator etgen)
         {
             var tmp = Et.Parameter(typeof(double), "#tmp");
 
@@ -29,7 +43,7 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateConvertBinder(typeof(double)),
                         typeof(double),
-                        Target.Walk(etgen)
+                        Target.Generate(etgen)
                     )
                 ),
 
@@ -51,6 +65,15 @@ namespace IronJS.Compiler.Ast
 
                 tmp // return the old value
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Op);
+            Target.Print(writer, indent + 1);
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

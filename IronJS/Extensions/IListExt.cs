@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Et = System.Linq.Expressions.Expression;
-using Node = IronJS.Compiler.Ast.Node;
+using Node = IronJS.Compiler.Ast.INode;
 
 namespace IronJS.Extensions
 {

@@ -3,46 +3,45 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
     public class CallNode : Node
     {
-        public Node Target { get; protected set; }
-        public List<Node> Args { get; protected set; }
+        public INode Target { get; protected set; }
+        public List<INode> Args { get; protected set; }
 
-        public CallNode(Node target, List<Node> args)
-            : base(NodeType.Call)
+        public CallNode(INode target, List<INode> args, ITree node)
+            : base(NodeType.Call, node)
         {
             Target = target;
             Args = args;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override INode Optimize(AstOptimizer astopt)
         {
-            var indentStr = new String(' ', indent * 2);
+            Target = Target.Optimize(astopt);
 
-            writer.AppendLine(indentStr + "(" + Type);
-            Target.Print(writer, indent + 1);
+            var args = new List<INode>();
+            foreach (var arg in Args)
+                args.Add(arg.Optimize(astopt));
+            Args = args;
 
-            var argsIndentStr = new String(' ', (indent + 1) * 2);
-            writer.AppendLine(argsIndentStr + "(Args");
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
 
-            foreach (var node in Args)
-                node.Print(writer, indent + 2);
-
-            writer.AppendLine(argsIndentStr + ")");
-            writer.AppendLine(indentStr + ")");
+            return this;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             var args = Args.Select(
-                x => EtUtils.Cast<object>(x.Walk(etgen))
+                x => EtUtils.Cast<object>(x.Generate(etgen))
             ).ToArray();
 
             /*
@@ -83,7 +82,7 @@ namespace IronJS.Compiler.Ast
                 var target = (Ast.MemberAccessNode)Target;
                 var tmp = Et.Variable(typeof(object), "#tmp");
                 var targetExpr = etgen.GenerateConvertToObject(
-                        target.Target.Walk(etgen)
+                        target.Target.Generate(etgen)
                     );
 
                 return Et.Block(
@@ -119,7 +118,7 @@ namespace IronJS.Compiler.Ast
                 ),
                 typeof(object),
                 ArrayUtils.Insert(
-                    Target.Walk(etgen),
+                    Target.Generate(etgen),
                     Et.Property(
                         etgen.GlobalScopeExpr,
                         Scope.PiJsObject
@@ -127,6 +126,23 @@ namespace IronJS.Compiler.Ast
                     args
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + NodeType);
+            Target.Print(writer, indent + 1);
+
+            var argsIndentStr = new String(' ', (indent + 1) * 2);
+            writer.AppendLine(argsIndentStr + "(Args");
+
+            foreach (var node in Args)
+                node.Print(writer, indent + 2);
+
+            writer.AppendLine(argsIndentStr + ")");
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

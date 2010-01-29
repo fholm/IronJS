@@ -6,12 +6,14 @@ using System.Linq.Expressions;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using System.Reflection;
+using System.Reflection.Emit;
+using LambdaTuple = System.Tuple<System.Linq.Expressions.Expression<IronJS.Runtime.LambdaType>, System.Collections.Generic.List<string>>;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler
 {
-    using LambdaTuple = Tuple<Expression<LambdaType>, List<string>>;
 
     public class EtGenerator
     {
@@ -25,78 +27,51 @@ namespace IronJS.Compiler
 
         internal bool IsInsideWith { get { return _withCount > 0; } }
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
+        internal bool IsGlobal { get { return FunctionScope == null; } }
 
-        internal ParameterExpression Tmp;
-
-        public Action<Scope> Build(List<Ast.Node> astNodes, Context context)
+        public MethodInfo Build(List<Ast.INode> astNodes, Context context)
         {
-            Tmp = Et.Parameter(typeof(object), "i");
+            var domain = AppDomain.CurrentDomain;
+
+            // Create dynamic assembly
+            var asmName = new AssemblyName("IronJSAssembly");
+            var dynAsm = domain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
+
+            // Create a dynamic module and type
+            var dynMod = dynAsm.DefineDynamicModule("IronJSModule", "IronJSModule.dll");
+            var typeBuilder = dynMod.DefineType("IronJSType");
+            
+            // Create our method builder for this type builder
+            var methodBuilder = typeBuilder.DefineMethod(
+                "Global", MethodAttributes.Public | MethodAttributes.Static
+            );
 
             // Context we're compiling this code for
             Context = context;
 
-            // Holds the uncompiled tuples of Expression<LambdaType> and List<string> of parameter
-            LambdaTuples = new List<LambdaTuple>();
-
-            // Function table
-            FuncTableExpr = 
-                Et.Parameter(
-                    typeof(FunctionTable), 
-                    "#functbl"
-                );
-
-            // Global function scope
-            FunctionScope = new FunctionScope();
-
             // Store the frame expr for global frame
-            GlobalScopeExpr = Et.Parameter(typeof(Scope), "#globals");
+            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
 
             // Stores all global expressions
             var globalExprs = new List<Et>();
 
-            // Store our "true" globals expression
-            globalExprs.Add(
-                Et.Assign(
-                    GlobalScopeExpr,
-                    FunctionScope.ScopeExpr
-                )
-            );
-
             // Walk each global node
             foreach (var node in astNodes)
-                globalExprs.Add(node.Walk(this));
+                globalExprs.Add(node.Generate(this));
 
-            return Et.Lambda<Action<Scope>>(
+            Et.Lambda<Action<JsObj>>(
                 Et.Block(
-                    new[] { FuncTableExpr, GlobalScopeExpr, Tmp },
-
-                    // Create instance of our functable
-                    Et.Assign(
-                        FuncTableExpr,
-                        FunctionTable.EtNew()
-                    ),
-
-                    // Push functions into functable
-                    LambdaTuples.Count > 0 
-                      ? (Et) Et.Block(
-                            LambdaTuples.Select(x => 
-                                FunctionTable.EtPush(
-                                    FuncTableExpr,
-                                    AstUtils.SimpleNewHelper(
-                                        Lambda.Ctor,
-                                        x.Item1,
-                                        Et.Constant(x.Item2.ToArray())
-                                    )
-                                )
-                            )
-                        )
-                      : (Et) AstUtils.Empty(), // hack
-
-                    // Execute global scope
-                    Et.Block(globalExprs)
+                    globalExprs
                 ),
-                FunctionScope.ScopeExpr
-            ).Compile();
+                new[] { GlobalScopeExpr }
+            ).CompileToMethod(methodBuilder);
+
+            // Finalize type
+            typeBuilder.CreateType();
+
+            // Get created type and method
+            var type = dynAsm.GetType("IronJSType");
+            return type.GetMethod("Global");
         }
 
         internal void EnterWith()
@@ -111,7 +86,9 @@ namespace IronJS.Compiler
 
         internal void EnterFunctionScope()
         {
-            FunctionScope = FunctionScope.Enter();
+            FunctionScope = (FunctionScope == null)
+                            ? new FunctionScope()
+                            : FunctionScope.Enter();
         }
 
         internal void ExitFunctionScope()
@@ -119,10 +96,10 @@ namespace IronJS.Compiler
             FunctionScope = FunctionScope.Parent;
         }
 
-        internal Et WalkIfNotNull(Ast.Node node)
+        internal Et WalkIfNotNull(Ast.INode node)
         {
             if (node != null)
-                return node.Walk(this);
+                return node.Generate(this);
 
             return AstUtils.Empty();
         }
@@ -144,14 +121,25 @@ namespace IronJS.Compiler
             );
         }
 
+        internal Et Generate<T>(T value)
+        {
+            return Et.Convert(
+                Et.Constant(
+                    value,
+                    typeof(T)
+                ),
+                typeof(object)
+            );
+        }
+
         // 11.13.1
-        internal Et GenerateAssign(Ast.Node target, Et value)
+        internal Et GenerateAssign(Ast.INode target, Et value)
         {
             if (target is Ast.IdentifierNode)
             {
                 var idNode = (Ast.IdentifierNode)target;
 
-                if (idNode.IsLocal)
+                if (idNode.IsDefinition)
                 {
                     return Et.Call(
                         FunctionScope.ScopeExpr,
@@ -163,9 +151,9 @@ namespace IronJS.Compiler
                 else
                 {
                     return Et.Call(
-                        FunctionScope.ScopeExpr,
-                        Scope.MiGlobal,
-                        Et.Constant(idNode.Name, typeof(object)),
+                        GlobalScopeExpr,
+                        typeof(JsObj).GetMethod("Set"),
+                        Generate<string>(idNode.Name),
                         EtUtils.Cast<object>(value)
                     );
                 }
@@ -177,7 +165,7 @@ namespace IronJS.Compiler
                 return Et.Dynamic(
                     Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
-                    maNode.Target.Walk(this),
+                    maNode.Target.Generate(this),
                     EtUtils.Cast<object>(value)
                 );
             }
@@ -188,15 +176,15 @@ namespace IronJS.Compiler
                 return Et.Dynamic(
                     Context.CreateSetIndexBinder(new CallInfo(1)),
                     typeof(object),
-                    ixNode.Target.Walk(this),
-                    ixNode.Index.Walk(this),
+                    ixNode.Target.Generate(this),
+                    ixNode.Index.Generate(this),
                     EtUtils.Cast<object>(value)
                 );
             }
 
             throw new EtCompilerError(
                 EtCompilerError.CANT_ASSIGN_TO_NODE_TYPE,
-                target.Type
+                target.NodeType
             );
         }
     }

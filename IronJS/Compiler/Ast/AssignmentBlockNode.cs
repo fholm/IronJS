@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Antlr.Runtime.Tree;
 
 namespace IronJS.Compiler.Ast
 {
@@ -6,8 +7,8 @@ namespace IronJS.Compiler.Ast
     {
         public bool IsLocal { get; protected set; }
 
-        public AssignmentBlockNode(List<Node> nodes, bool isLocal)
-            : base(nodes)
+        public AssignmentBlockNode(List<INode> nodes, bool isLocal, ITree node)
+            : base(nodes, node)
         {
             IsLocal = isLocal;
         }

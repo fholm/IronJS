@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -10,28 +11,16 @@ namespace IronJS.Compiler.Ast
 
     public class WhileNode : LoopNode
     {
-        public Node Test { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Test { get; protected set; }
+        public INode Body { get; protected set; }
         public WhileType Loop { get; protected set; }
 
-        public WhileNode(Node test, Node body, WhileType type)
-            : base(NodeType.While)
+        public WhileNode(INode test, INode body, WhileType type, ITree node)
+            : base(NodeType.While, node)
         {
             Test = test;
             Body = body;
             Loop = type;
-        }
-
-        public override void Print(StringBuilder writer, int indent = 0)
-        {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Loop);
-
-            Test.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
         }
 
         public override Et LoopWalk(EtGenerator etgen)
@@ -41,13 +30,13 @@ namespace IronJS.Compiler.Ast
             var test = Et.Dynamic(
                 etgen.Context.CreateConvertBinder(typeof(bool)),
                 typeof(bool),
-                Test.Walk(etgen)
+                Test.Generate(etgen)
             );
 
             // while
             if (Loop == Ast.WhileType.While)
             {
-                var body = Body.Walk(etgen);
+                var body = Body.Generate(etgen);
 
                 loop = AstUtils.While(
                     test,
@@ -62,7 +51,7 @@ namespace IronJS.Compiler.Ast
             {
                 var bodyExprs = new List<Et>();
 
-                bodyExprs.Add(Body.Walk(etgen));
+                bodyExprs.Add(Body.Generate(etgen));
 
                 // test last, instead of first
                 bodyExprs.Add(
@@ -81,6 +70,18 @@ namespace IronJS.Compiler.Ast
             }
 
             return loop;
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Loop);
+
+            Test.Print(writer, indent + 1);
+            Body.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

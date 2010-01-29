@@ -1,4 +1,7 @@
-﻿using IronJS.Runtime;
+﻿using System;
+using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -6,26 +9,47 @@ namespace IronJS.Compiler.Ast
 {
     public class TryNode : Node
     {
-        public Node Body { get; protected set; }
-        public CatchNode Catch { get; protected set; }
-        public Node Finally { get; protected set; }
+        public INode Body { get; protected set; }
+        public INode Target { get; protected set; } 
+        public INode Catch { get; protected set; }
+        public INode Finally { get; protected set; }
 
-        public TryNode(Node body, CatchNode _catch, Node _finally)
-            : base(NodeType.Try)
+        public TryNode(INode body, INode target, INode _catch, INode _finally, ITree node)
+            : base(NodeType.Try, node)
         {
             Body = body;
             Catch = _catch;
+            Target = target;
             Finally = _finally;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override INode Optimize(AstOptimizer astopt)
+        {
+            Body = Body.Optimize(astopt);
+
+            if (Target != null)
+                Target = Target.Optimize(astopt);
+
+            if (Catch != null)
+                Catch = Catch.Optimize(astopt);
+
+            if (Finally != null)
+                Finally = Finally.Optimize(astopt);
+
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+
+            return this;
+        }
+
+        public override Et Generate(EtGenerator etgen)
         {
             // try ... finally
             if (Catch == null)
             {
                 return Et.TryFinally(
-                    Body.Walk(etgen),
-                    Finally.Walk(etgen)
+                    Body.Generate(etgen),
+                    Finally.Generate(etgen)
                 );
             }
             else
@@ -34,14 +58,14 @@ namespace IronJS.Compiler.Ast
 
                 var catchBody = Et.Block(
                     etgen.GenerateAssign(
-                        Catch.Target,
+                        Target,
                         Et.Property(
                             catchParam,
                             "JsObj"
                         )
                     ),
                     Et.Block(
-                        Catch.Body.Walk(etgen)
+                        Catch.Generate(etgen)
                     )
                 );
 
@@ -50,7 +74,7 @@ namespace IronJS.Compiler.Ast
                     EtUtils.Cast<object>(catchBody)
                 );
 
-                var tryBody = EtUtils.Box(Body.Walk(etgen));
+                var tryBody = EtUtils.Box(Body.Generate(etgen));
 
                 // try ... catch 
                 if (Finally == null)
@@ -65,11 +89,34 @@ namespace IronJS.Compiler.Ast
                 {
                     return Et.TryCatchFinally(
                         tryBody,
-                        Finally.Walk(etgen),
+                        Finally.Generate(etgen),
                         catchBlock
                     );
                 }
             }
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + NodeType);
+
+            Body.Print(writer, indent + 1);
+
+            if (Catch != null)
+                Catch.Print(writer, indent + 1);
+
+            if (Finally != null)
+            {
+                var indentStr2 = new String(' ', (indent + 1) * 2);
+
+                writer.AppendLine(indentStr2 + "(Finally");
+                    Finally.Print(writer, indent + 2);
+                writer.AppendLine(indentStr2 + ")");
+            }
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

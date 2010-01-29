@@ -1,10 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler
 {
-    class FunctionScope
+    public class FunctionScope
     {
         LabelScope _labelScope;
 
@@ -64,6 +66,5 @@ namespace IronJS.Compiler
         {
             return Parent;
         }
-
     }
 }

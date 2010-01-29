@@ -1,20 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Js;
-using System.Collections.Generic;
 
 namespace IronJS.Compiler.Ast
 {
     // 12.6.4
     public class ForInNode : LoopNode
     {
-        public Node Target { get; protected set; }
-        public Node Source { get; protected set; }
-        public Node Body { get; protected set; }
+        public INode Target { get; protected set; }
+        public INode Source { get; protected set; }
+        public INode Body { get; protected set; }
 
-        public ForInNode(Node target, Node source, Node body)
-            : base(NodeType.ForIn)
+        public ForInNode(INode target, INode source, INode body, ITree node)
+            : base(NodeType.ForIn, node)
         {
             Target = target;
             Source = source;
@@ -79,7 +81,7 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateConvertBinder(typeof(IObj)),
                         typeof(IObj),
-                        Source.Walk(etgen)
+                        Source.Generate(etgen)
                     )
                 ),
                 // var set = new HashSet<object>();
@@ -171,7 +173,7 @@ namespace IronJS.Compiler.Ast
                                         ),
 
                                         // <node.Body>
-                                        Body.Walk(etgen)
+                                        Body.Generate(etgen)
                                     )
                                 )
                             ),
@@ -197,6 +199,19 @@ namespace IronJS.Compiler.Ast
                     outerBreak
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + NodeType);
+
+            Target.Print(writer, indent + 1);
+            Source.Print(writer, indent + 1);
+            Body.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

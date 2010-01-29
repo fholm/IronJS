@@ -164,7 +164,6 @@
     <Compile Include="Compiler\FunctionScope.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
-    <Compile Include="Compiler\IntegerNode.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />

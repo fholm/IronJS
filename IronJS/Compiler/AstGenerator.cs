@@ -598,9 +598,12 @@ namespace IronJS.Compiler
         private Node BuildContinue(ITree node)
         {
             if (node.ChildCount == 0)
-                return new ContinueNode(node);
+                return new ContinueNode(null, node);
 
-            return new ContinueNode(node.GetChildSafe(0).Text, node);
+            return new ContinueNode(
+                node.GetChildSafe(0).Text, 
+                node
+            );
         }
 
         // 12.8
@@ -609,7 +612,10 @@ namespace IronJS.Compiler
             if (node.ChildCount == 0)
                 return new BreakNode(null, node);
 
-            return new BreakNode(node.GetChildSafe(0).Text, node);
+            return new BreakNode(
+                node.GetChildSafe(0).Text, 
+                node
+            );
         }
 
         private Node BuildFor(ITree node)
@@ -692,17 +698,26 @@ namespace IronJS.Compiler
 
         private Node BuildVoidOp(ITree node)
         {
-            return new VoidNode(Build(node.GetChildSafe(0)), node);
+            return new VoidNode(
+                Build(node.GetChildSafe(0)), 
+                node
+            );
         }
 
         private Node BuildBoolean(ITree node)
         {
-            return new BooleanNode(node.Type == 5, node);
+            return new BooleanNode(
+                node.Type == 5, 
+                node
+            );
         }
 
         private Node BuildTypeOfOp(ITree node)
         {
-            return new TypeOfNode(Build(node.GetChildSafe(0)), node);
+            return new TypeOfNode(
+                Build(node.GetChildSafe(0)), 
+                node
+            );
         }
 
         private Node BuildIncDecNode(ITree node, ExpressionType type)

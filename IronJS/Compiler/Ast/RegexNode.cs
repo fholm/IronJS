@@ -1,4 +1,6 @@
-﻿using IronJS.Runtime;
+﻿using System;
+using System.Text;
+using IronJS.Runtime;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -24,6 +26,15 @@ namespace IronJS.Compiler.Ast
                 Et.Constant(Regex, typeof(object)),
                 Et.Constant(Modifiers, typeof(object))
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.Append(indentStr + "(" + Type);
+            writer.Append(" " + "/" + Regex + "/" + Modifiers);
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

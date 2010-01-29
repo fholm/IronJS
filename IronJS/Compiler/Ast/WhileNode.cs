@@ -22,18 +22,6 @@ namespace IronJS.Compiler.Ast
             Loop = type;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
-        {
-            var indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Loop);
-
-            Test.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
-
         public override Et LoopWalk(EtGenerator etgen)
         {
             Et loop = null;
@@ -81,6 +69,18 @@ namespace IronJS.Compiler.Ast
             }
 
             return loop;
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Loop);
+
+            Test.Print(writer, indent + 1);
+            Body.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

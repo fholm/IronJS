@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
@@ -44,6 +46,25 @@ namespace IronJS.Compiler.Ast
                 etgen.BlockIfNotEmpty(exprs),
                 tmp
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            var indentStr2 = new String(' ', (indent + 1) * 2);
+            var indentStr3 = new String(' ', (indent + 2) * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            foreach (var kvp in Properties)
+            {
+                writer.AppendLine(indentStr2 + "(Property ");
+                writer.AppendLine(indentStr3 + "(" + kvp.Key + ")");
+                kvp.Value.Print(writer, indent + 2);
+                writer.AppendLine(indentStr2 + ")");
+            }
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

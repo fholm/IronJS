@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -13,8 +14,16 @@ namespace IronJS.Compiler.Ast
         {
             Label = label;
         }
+    
+        public override Et Walk(EtGenerator etgen)
+        {
+            if (Label == null)
+                return Et.Break(etgen.FunctionScope.LabelScope.Break());
 
-        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+            return Et.Break(etgen.FunctionScope.LabelScope.Break(Label));
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
 
@@ -24,14 +33,6 @@ namespace IronJS.Compiler.Ast
                 writer.Append(" " + Label);
 
             writer.AppendLine(")");
-        }
-    
-        public override Et Walk(EtGenerator etgen)
-        {
-            if (Label == null)
-                return Et.Break(etgen.FunctionScope.LabelScope.Break());
-
-            return Et.Break(etgen.FunctionScope.LabelScope.Break(Label));
         }
     }
 }

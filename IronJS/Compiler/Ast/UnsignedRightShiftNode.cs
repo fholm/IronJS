@@ -1,6 +1,8 @@
 ﻿using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
+using System.Text;
+using System;
 
 namespace IronJS.Compiler.Ast
 {
@@ -46,6 +48,18 @@ namespace IronJS.Compiler.Ast
                     typeof(double)
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            Left.Print(writer, indent + 1);
+            Right.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

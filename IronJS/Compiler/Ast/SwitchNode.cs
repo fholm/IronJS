@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
@@ -69,6 +69,33 @@ namespace IronJS.Compiler.Ast
             etgen.FunctionScope.ExitLabelScope();
 
             return et;
+        }
+
+        public override void Print(System.Text.StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            var indentStr2 = new String(' ', (indent + 1)* 2);
+            var indentStr3 = new String(' ', (indent + 2) * 2);
+
+            writer.AppendLine(indentStr + "(" + Type + "");
+            Target.Print(writer, indent + 1);
+
+            foreach (var cas in Cases)
+            {
+                writer.AppendLine(indentStr2 + "(Case");
+                cas.Item1.Print(writer, indent + 2);
+                cas.Item2.Print(writer, indent + 2);
+                writer.AppendLine(indentStr2 + ")");
+            }
+
+            if (Default != null)
+            {
+                writer.AppendLine(indentStr2 + "(Default");
+                Default.Print(writer, indent + 2);
+                writer.AppendLine(indentStr2 + ")");
+            }
+
+            writer.AppendLine(indentStr + ")");
         }
 
         #region ILabelableNode Members

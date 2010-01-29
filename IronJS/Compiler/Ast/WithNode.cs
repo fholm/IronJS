@@ -2,6 +2,8 @@
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
+using System;
+using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
@@ -40,6 +42,18 @@ namespace IronJS.Compiler.Ast
                     )
                 )
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            Target.Print(writer, indent + 1);
+            Body.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

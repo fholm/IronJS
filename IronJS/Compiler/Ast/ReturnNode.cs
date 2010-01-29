@@ -1,4 +1,6 @@
-﻿using IronJS.Runtime.Utils;
+﻿using System;
+using System.Text;
+using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -20,6 +22,18 @@ namespace IronJS.Compiler.Ast
                 EtUtils.Cast<object>(Value.Walk(etgen)),
                 typeof(object)
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+
+            writer.AppendLine(indentStr + "(" + Type);
+
+            if (Value != null)
+                Value.Print(writer, indent + 1);
+
+            writer.AppendLine(indentStr + ")");
         }
     }
 }

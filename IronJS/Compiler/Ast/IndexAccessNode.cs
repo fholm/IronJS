@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Dynamic;
 using System.Text;
+using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -10,20 +11,20 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public Node Index { get; protected set; }
 
-        public IndexAccessNode(Node target, Node index)
-            : base(NodeType.IndexAccess)
+        public IndexAccessNode(Node target, Node index, ITree node)
+            : base(NodeType.IndexAccess, node)
         {
             Target = target;
             Index = index;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(
                 etgen.Context.CreateGetIndexBinder(new CallInfo(1)),
                 typeof(object),
-                Target.Walk(etgen),
-                Index.Walk(etgen)
+                Target.Generate(etgen),
+                Index.Generate(etgen)
             );
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -11,14 +12,14 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public PostfixOperatorNode(Node node, ExpressionType op)
-            : base(NodeType.PostfixOperator)
+        public PostfixOperatorNode(Node node, ExpressionType op, ITree tree)
+            : base(NodeType.PostfixOperator, tree)
         {
             Target = node;
             Op = op;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             var tmp = Et.Parameter(typeof(double), "#tmp");
 
@@ -31,7 +32,7 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateConvertBinder(typeof(double)),
                         typeof(double),
-                        Target.Walk(etgen)
+                        Target.Generate(etgen)
                     )
                 ),
 

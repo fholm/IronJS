@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -8,8 +9,8 @@ namespace IronJS.Compiler.Ast
     {
         public double Value { get; protected set; }
 
-        public NumberNode(double value)
-            : base(NodeType.Number)
+        public NumberNode(double value, ITree node)
+            : base(NodeType.Number, node)
         {
             Value = value;
         }
@@ -20,7 +21,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Value + ")");
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return etgen.Generate<double>(Value);
         }

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Js;
-using System.Collections.Generic;
 
 namespace IronJS.Compiler.Ast
 {
@@ -13,8 +14,8 @@ namespace IronJS.Compiler.Ast
         public Node Source { get; protected set; }
         public Node Body { get; protected set; }
 
-        public ForInNode(Node target, Node source, Node body)
-            : base(NodeType.ForIn)
+        public ForInNode(Node target, Node source, Node body, ITree node)
+            : base(NodeType.ForIn, node)
         {
             Target = target;
             Source = source;
@@ -79,7 +80,7 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateConvertBinder(typeof(IObj)),
                         typeof(IObj),
-                        Source.Walk(etgen)
+                        Source.Generate(etgen)
                     )
                 ),
                 // var set = new HashSet<object>();
@@ -171,7 +172,7 @@ namespace IronJS.Compiler.Ast
                                         ),
 
                                         // <node.Body>
-                                        Body.Walk(etgen)
+                                        Body.Generate(etgen)
                                     )
                                 )
                             ),

@@ -21,22 +21,27 @@ namespace IronJS.Compiler.Ast
 
     abstract public class Node
     {
+        private NodeType nodeType;
+        private ITree node;
+
         public NodeType Type { get; protected set; }
         public int Line { get; protected set; }
         public int Column { get; protected set; }
 
         public Node(NodeType type, ITree node)
-            : this(type)
-        {
-            Line = node.Line;
-            Column = node.CharPositionInLine;
-        }
-         
-        //[Obsolete("This constructor is obsolete and will replaced by (NodeType, ITree)")]
-        //TODO: this constructor should be removed so we can use the one that saves line numbers + column positions
-        public Node(NodeType type)
         {
             Type = type;
+
+            if (node != null)
+            {
+                Line = node.Line;
+                Column = node.CharPositionInLine;
+            }
+            else
+            {
+                Line = -1;
+                Column = -1;
+            }
         }
 
         public string Print()
@@ -54,6 +59,11 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Type + ")");
         }
 
+        public virtual Node Optimize(AstOptimizer astopt)
+        {
+            return this;
+        }
+
         public override string ToString()
         {
             return Type.ToString();
@@ -61,7 +71,7 @@ namespace IronJS.Compiler.Ast
 
         #region abstract
 
-        public abstract Et Walk(EtGenerator etgen);
+        public abstract Et Generate(EtGenerator etgen);
 
         #endregion
     }

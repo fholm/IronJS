@@ -57,7 +57,7 @@ namespace IronJS.Compiler
 
             // Walk each global node
             foreach (var node in astNodes)
-                globalExprs.Add(node.Walk(this));
+                globalExprs.Add(node.Generate(this));
 
             Et.Lambda<Action<JsObj>>(
                 Et.Block(
@@ -99,7 +99,7 @@ namespace IronJS.Compiler
         internal Et WalkIfNotNull(Ast.Node node)
         {
             if (node != null)
-                return node.Walk(this);
+                return node.Generate(this);
 
             return AstUtils.Empty();
         }
@@ -165,7 +165,7 @@ namespace IronJS.Compiler
                 return Et.Dynamic(
                     Context.CreateSetMemberBinder(maNode.Name),
                     typeof(object),
-                    maNode.Target.Walk(this),
+                    maNode.Target.Generate(this),
                     EtUtils.Cast<object>(value)
                 );
             }
@@ -176,8 +176,8 @@ namespace IronJS.Compiler
                 return Et.Dynamic(
                     Context.CreateSetIndexBinder(new CallInfo(1)),
                     typeof(object),
-                    ixNode.Target.Walk(this),
-                    ixNode.Index.Walk(this),
+                    ixNode.Target.Generate(this),
+                    ixNode.Index.Generate(this),
                     EtUtils.Cast<object>(value)
                 );
             }

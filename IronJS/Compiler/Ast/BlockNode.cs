@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -11,8 +12,8 @@ namespace IronJS.Compiler.Ast
         public List<Node> Nodes { get; protected set; }
         public bool IsEmpty { get; protected set; }
 
-        public BlockNode(List<Node> nodes)
-            : base(NodeType.Block)
+        public BlockNode(List<Node> nodes, ITree node)
+            : base(NodeType.Block, node)
         {
             Nodes = nodes;
             IsEmpty = nodes.Count == 0;
@@ -39,13 +40,13 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             if (Nodes.Count == 0)
                 return Et.Default(typeof(object));
 
             return Et.Block(
-                Nodes.Select(x => x.Walk(etgen))
+                Nodes.Select(x => x.Generate(etgen))
             );
         }
     }

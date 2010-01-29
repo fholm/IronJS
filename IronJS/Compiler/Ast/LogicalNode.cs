@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -12,8 +13,8 @@ namespace IronJS.Compiler.Ast
         public Node Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public LogicalNode(Node left, Node right, ExpressionType op)
-            : base(NodeType.Logical)
+        public LogicalNode(Node left, Node right, ExpressionType op, ITree node)
+            : base(NodeType.Logical, node)
         {
             Left = left;
             Right = right;
@@ -33,7 +34,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + ")");
         }
 
-        public override Expression Walk(EtGenerator etgen)
+        public override Expression Generate(EtGenerator etgen)
         {
             var tmp = Et.Parameter(typeof(object), "#tmp");
 
@@ -42,7 +43,7 @@ namespace IronJS.Compiler.Ast
 
                 Et.Assign(
                     tmp,
-                    EtUtils.Cast<object>(Left.Walk(etgen))
+                    EtUtils.Cast<object>(Left.Generate(etgen))
                 ),
 
                 Et.Condition(
@@ -54,14 +55,14 @@ namespace IronJS.Compiler.Ast
 
                     EtUtils.Cast<object>(
                         Op == ExpressionType.AndAlso
-                               ? Right.Walk(etgen) // &&
+                               ? Right.Generate(etgen) // &&
                                : tmp               // ||
                     ),
 
                     EtUtils.Cast<object>(
                         Op == ExpressionType.AndAlso
                                ? tmp               // &&
-                               : Right.Walk(etgen) // ||
+                               : Right.Generate(etgen) // ||
                     )
                 )
             );

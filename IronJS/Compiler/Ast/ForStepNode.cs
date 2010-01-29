@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -13,8 +14,8 @@ namespace IronJS.Compiler.Ast
         public Node Incr { get; protected set; }
         public Node Body { get; protected set; }
 
-        public ForStepNode(Node setup, Node test, Node incr, Node body)
-            : base(NodeType.ForStep)
+        public ForStepNode(Node setup, Node test, Node incr, Node body, ITree node)
+            : base(NodeType.ForStep, node)
         {
             Setup = setup;
             Test = test;
@@ -109,15 +110,15 @@ namespace IronJS.Compiler.Ast
             );
 
             return Et.Block(
-                Setup.Walk(etgen),
+                Setup.Generate(etgen),
                 AstUtils.Loop(
                     Et.Dynamic(
                         etgen.Context.CreateConvertBinder(typeof(bool)),
                         typeof(bool),
-                        Test.Walk(etgen)
+                        Test.Generate(etgen)
                     ),
-                    Incr.Walk(etgen),
-                    Body.Walk(etgen),
+                    Incr.Generate(etgen),
+                    Body.Generate(etgen),
                     null,
                     etgen.FunctionScope.LabelScope.Break(),
                     etgen.FunctionScope.LabelScope.Continue()

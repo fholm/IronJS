@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
     public class NullNode : Node
     {
-        public NullNode()
-            : base(NodeType.Null)
+        public NullNode(ITree node)
+            : base(NodeType.Null, node)
         {
 
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Default(typeof(object));
         }

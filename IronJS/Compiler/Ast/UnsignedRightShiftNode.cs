@@ -1,8 +1,9 @@
-﻿using IronJS.Runtime.Js;
+﻿using System;
+using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
-using System.Text;
-using System;
 
 namespace IronJS.Compiler.Ast
 {
@@ -11,14 +12,14 @@ namespace IronJS.Compiler.Ast
         public Node Left { get; protected set; }
         public Node Right { get; protected set; }
 
-        public UnsignedRightShiftNode(Node left, Node right)
-            : base(NodeType.UnsignedRightShift)
+        public UnsignedRightShiftNode(Node left, Node right, ITree node)
+            : base(NodeType.UnsignedRightShift, node)
         {
             Left = left;
             Right = right;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             //TODO: to much boxing/conversion going on
             return EtUtils.Box(
@@ -30,7 +31,7 @@ namespace IronJS.Compiler.Ast
                             Et.Dynamic(
                                 etgen.Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
-                                Left.Walk(etgen)
+                                Left.Generate(etgen)
                             ),
                             typeof(int)
                         ),
@@ -39,7 +40,7 @@ namespace IronJS.Compiler.Ast
                             Et.Dynamic(
                                 etgen.Context.CreateConvertBinder(typeof(double)),
                                 typeof(double),
-                                Right.Walk(etgen)
+                                Right.Generate(etgen)
                             ),
                             typeof(int)
                         )

@@ -119,6 +119,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\AstOptimizer.cs" />
     <Compile Include="Compiler\Ast\ArrayNode.cs" />
     <Compile Include="Compiler\Ast\AssignmentBlockNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />

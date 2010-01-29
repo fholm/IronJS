@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
@@ -10,14 +11,14 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public string Name { get; protected set; }
 
-        public MemberAccessNode(Node target, string member)
-            : base(NodeType.MemberAccess)
+        public MemberAccessNode(Node target, string member, ITree node)
+            : base(NodeType.MemberAccess, node)
         {
             Target = target;
             Name = member;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(
                 etgen.Context.CreateGetMemberBinder(Name),
@@ -25,7 +26,7 @@ namespace IronJS.Compiler.Ast
                 Et.Dynamic(
                     etgen.Context.CreateConvertBinder(typeof(IObj)),
                     typeof(object),
-                    Target.Walk(etgen)
+                    Target.Generate(etgen)
                 )
             );
         }

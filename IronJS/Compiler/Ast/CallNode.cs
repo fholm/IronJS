@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
@@ -15,8 +16,8 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public List<Node> Args { get; protected set; }
 
-        public CallNode(Node target, List<Node> args)
-            : base(NodeType.Call)
+        public CallNode(Node target, List<Node> args, ITree node)
+            : base(NodeType.Call, node)
         {
             Target = target;
             Args = args;
@@ -39,10 +40,10 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + ")");
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             var args = Args.Select(
-                x => EtUtils.Cast<object>(x.Walk(etgen))
+                x => EtUtils.Cast<object>(x.Generate(etgen))
             ).ToArray();
 
             /*
@@ -83,7 +84,7 @@ namespace IronJS.Compiler.Ast
                 var target = (Ast.MemberAccessNode)Target;
                 var tmp = Et.Variable(typeof(object), "#tmp");
                 var targetExpr = etgen.GenerateConvertToObject(
-                        target.Target.Walk(etgen)
+                        target.Target.Generate(etgen)
                     );
 
                 return Et.Block(
@@ -119,7 +120,7 @@ namespace IronJS.Compiler.Ast
                 ),
                 typeof(object),
                 ArrayUtils.Insert(
-                    Target.Walk(etgen),
+                    Target.Generate(etgen),
                     Et.Property(
                         etgen.GlobalScopeExpr,
                         Scope.PiJsObject

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Dynamic;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
@@ -10,13 +11,13 @@ namespace IronJS.Compiler.Ast
     {
         public Node Target { get; protected set; }
 
-        public DeleteNode(Node target)
-            : base(NodeType.Delete)
+        public DeleteNode(Node target, ITree node)
+            : base(NodeType.Delete, node)
         {
             Target = target;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             if (Target is MemberAccessNode)
             {
@@ -26,7 +27,7 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateDeleteMemberBinder(maNode.Name),
                         typeof(void),
-                        maNode.Target.Walk(etgen)
+                        maNode.Target.Generate(etgen)
                     )
                 );
             }
@@ -39,8 +40,8 @@ namespace IronJS.Compiler.Ast
                     Et.Dynamic(
                         etgen.Context.CreateDeleteIndexBinder(new CallInfo(1)),
                         typeof(void),
-                        iaNode.Target.Walk(etgen),
-                        iaNode.Index.Walk(etgen)
+                        iaNode.Target.Generate(etgen),
+                        iaNode.Index.Generate(etgen)
                     )
                 );
             }

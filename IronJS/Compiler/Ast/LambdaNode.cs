@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Js;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -13,15 +14,15 @@ namespace IronJS.Compiler.Ast
         public Node Body { get; protected set; }
         public string Name { get; protected set; }
 
-        public LambdaNode(List<string> args, Node body, string name)
-            : base(NodeType.Lambda)
+        public LambdaNode(List<string> args, Node body, string name, ITree node)
+            : base(NodeType.Lambda, node)
         {
             Args = args;
             Body = body;
             Name = name;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             etgen.EnterFunctionScope();
 
@@ -30,7 +31,7 @@ namespace IronJS.Compiler.Ast
                     Et.Lambda<LambdaType>(
                         Et.Block(
                             // lambda body
-                            Body.Walk(etgen),
+                            Body.Generate(etgen),
                             Et.Label(
                                 etgen.FunctionScope.ReturnLabel,
                                 Undefined.Expr // 12.9

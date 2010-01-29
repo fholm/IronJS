@@ -1,5 +1,6 @@
-﻿using Et = System.Linq.Expressions.Expression;
-using System;
+﻿using System;
+using Antlr.Runtime.Tree;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -7,19 +8,19 @@ namespace IronJS.Compiler.Ast
     {
         public string Label { get; protected set; }
 
-        public ContinueNode()
-            : this(null)
+        public ContinueNode(ITree node)
+            : this(null, node)
         {
 
         }
 
-        public ContinueNode(string label)
-            : base(NodeType.Continue)
+        public ContinueNode(string label, ITree node)
+            : base(NodeType.Continue, node)
         {
             Label = label;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             if (Label == null)
                 return Et.Continue(etgen.FunctionScope.LabelScope.Continue());

@@ -1,9 +1,9 @@
-﻿using IronJS.Runtime;
-using IronJS.Runtime.Js;
-using Et = System.Linq.Expressions.Expression;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using System;
+﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime.Js;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -12,17 +12,17 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public Node Body { get; protected set; }
 
-        public WithNode(Node target, Node body)
-            : base(NodeType.With)
+        public WithNode(Node target, Node body, ITree node)
+            : base(NodeType.With, node)
         {
             Target = target;
             Body = body;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             etgen.EnterWith();
-            var body = Body.Walk(etgen);
+            var body = Body.Generate(etgen);
             etgen.ExitWith();
 
             return Et.Block(
@@ -30,7 +30,7 @@ namespace IronJS.Compiler.Ast
                     AstUtils.SimpleNewHelper(
                         Scope.Ctor2Args,
                         etgen.FunctionScope.ScopeExpr,
-                        Target.Walk(etgen)
+                        Target.Generate(etgen)
                     )
                 ),
                 body,

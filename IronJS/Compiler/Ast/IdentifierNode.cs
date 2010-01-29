@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
@@ -13,8 +14,8 @@ namespace IronJS.Compiler.Ast
 
         public string Name { get; protected set; }
 
-        public IdentifierNode(string name)
-            : base(NodeType.Identifier)
+        public IdentifierNode(string name, ITree node)
+            : base(NodeType.Identifier, node)
         {
             Name = name;
             IsLocal = false;
@@ -27,7 +28,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Name + ")");
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Call(
                 etgen.FunctionScope.ScopeExpr,

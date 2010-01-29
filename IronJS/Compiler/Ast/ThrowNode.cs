@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
@@ -10,19 +11,19 @@ namespace IronJS.Compiler.Ast
     {
         public Node Value { get; protected set; }
 
-        public ThrowNode(Node value)
-            : base(NodeType.Throw)
+        public ThrowNode(Node value, ITree node)
+            : base(NodeType.Throw, node)
         {
             Value = value;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Throw(
                 AstUtils.SimpleNewHelper(
                     JsRuntimeError.Ctor,
                     etgen.GenerateConvertToObject(
-                        Value.Walk(etgen)
+                        Value.Generate(etgen)
                     )
                 )
             );

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
@@ -9,16 +10,16 @@ namespace IronJS.Compiler.Ast
     {
         public Node Target { get; protected set; }
 
-        public VoidNode(Node target)
-            : base(NodeType.Void)
+        public VoidNode(Node target, ITree node)
+            : base(NodeType.Void, node)
         {
             Target = target;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Block(
-                Target.Walk(etgen),
+                Target.Generate(etgen),
                 Undefined.Expr
             );
         }

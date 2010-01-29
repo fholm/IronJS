@@ -1,4 +1,5 @@
 ﻿using System;
+using Antlr.Runtime.Tree;
 
 namespace IronJS.Compiler.Ast
 {
@@ -7,8 +8,8 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public Node Body { get; protected set; }
 
-        public CatchNode(Node target, Node body)
-            : base(NodeType.Catch)
+        public CatchNode(Node target, Node body, ITree node)
+            : base(NodeType.Catch, node)
         {
             Target = target;
             Body = body;
@@ -27,7 +28,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + ")");
         }
 
-        public override System.Linq.Expressions.Expression Walk(EtGenerator etgen)
+        public override System.Linq.Expressions.Expression Generate(EtGenerator etgen)
         {
             throw new NotImplementedException();
         }

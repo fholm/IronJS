@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -13,8 +14,8 @@ namespace IronJS.Compiler.Ast
         public bool HasElseBranch { get; protected set; }
         public bool IsTernary { get; protected set; }
 
-        public IfNode(Node test, Node trueBranch, Node elseBranch, bool isTernary)
-            : base(NodeType.If)
+        public IfNode(Node test, Node trueBranch, Node elseBranch, bool isTernary, ITree node)
+            : base(NodeType.If, node)
         {
             Test = test;
             TrueBranch = trueBranch;
@@ -23,16 +24,16 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
-            var trueBranch = TrueBranch.Walk(etgen);
+            var trueBranch = TrueBranch.Generate(etgen);
             var elseBranch = etgen.WalkIfNotNull(ElseBranch);
 
             return Et.Condition(
                 Et.Dynamic(
                     etgen.Context.CreateConvertBinder(typeof(bool)),
                     typeof(bool),
-                    Test.Walk(etgen)
+                    Test.Generate(etgen)
                 ),
                 EtUtils.Cast<object>(trueBranch),
                 EtUtils.Cast<object>(elseBranch)

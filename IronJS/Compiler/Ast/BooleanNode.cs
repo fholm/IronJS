@@ -1,5 +1,6 @@
 ﻿using System;
 using Et = System.Linq.Expressions.Expression;
+using Antlr.Runtime.Tree;
 
 namespace IronJS.Compiler.Ast
 {
@@ -7,8 +8,8 @@ namespace IronJS.Compiler.Ast
     {
         public bool Value { get; protected set; }
 
-        public BooleanNode(bool value)
-            : base(NodeType.Boolean)
+        public BooleanNode(bool value, ITree node)
+            : base(NodeType.Boolean, node)
         {
             Value = value;
         }
@@ -19,7 +20,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + Value.ToString().ToLower() + ")");
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return etgen.Generate<bool>(Value);
         }

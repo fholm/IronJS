@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
@@ -10,19 +11,19 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public Node Function { get; protected set; }
 
-        public InstanceOfNode(Node target, Node function)
-            : base(NodeType.InstanceOf)
+        public InstanceOfNode(Node target, Node function, ITree node)
+            : base(NodeType.InstanceOf, node)
         {
             Target = target;
             Function = function;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Call(
                 typeof(Operators).GetMethod("InstanceOf"),
-                Target.Walk(etgen),
-                Function.Walk(etgen)
+                Target.Generate(etgen),
+                Function.Generate(etgen)
             );
         }
 

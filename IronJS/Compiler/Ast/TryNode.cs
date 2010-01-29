@@ -1,8 +1,9 @@
-﻿using IronJS.Runtime;
+﻿using System;
+using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
-using System;
-using System.Text;
 
 namespace IronJS.Compiler.Ast
 {
@@ -12,22 +13,22 @@ namespace IronJS.Compiler.Ast
         public CatchNode Catch { get; protected set; }
         public Node Finally { get; protected set; }
 
-        public TryNode(Node body, CatchNode _catch, Node _finally)
-            : base(NodeType.Try)
+        public TryNode(Node body, CatchNode _catch, Node _finally, ITree node)
+            : base(NodeType.Try, node)
         {
             Body = body;
             Catch = _catch;
             Finally = _finally;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             // try ... finally
             if (Catch == null)
             {
                 return Et.TryFinally(
-                    Body.Walk(etgen),
-                    Finally.Walk(etgen)
+                    Body.Generate(etgen),
+                    Finally.Generate(etgen)
                 );
             }
             else
@@ -43,7 +44,7 @@ namespace IronJS.Compiler.Ast
                         )
                     ),
                     Et.Block(
-                        Catch.Body.Walk(etgen)
+                        Catch.Body.Generate(etgen)
                     )
                 );
 
@@ -52,7 +53,7 @@ namespace IronJS.Compiler.Ast
                     EtUtils.Cast<object>(catchBody)
                 );
 
-                var tryBody = EtUtils.Box(Body.Walk(etgen));
+                var tryBody = EtUtils.Box(Body.Generate(etgen));
 
                 // try ... catch 
                 if (Finally == null)
@@ -67,7 +68,7 @@ namespace IronJS.Compiler.Ast
                 {
                     return Et.TryCatchFinally(
                         tryBody,
-                        Finally.Walk(etgen),
+                        Finally.Generate(etgen),
                         catchBlock
                     );
                 }

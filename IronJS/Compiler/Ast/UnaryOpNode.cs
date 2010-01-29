@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
+using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -10,19 +11,19 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
-        public UnaryOpNode(Node target, ExpressionType op)
-            : base(NodeType.UnaryOp)
+        public UnaryOpNode(Node target, ExpressionType op, ITree node)
+            : base(NodeType.UnaryOp, node)
         {
             Target = target;
             Op = op;
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(
                 etgen.Context.CreateUnaryOpBinder(Op),
                 typeof(object),
-                Target.Walk(etgen)
+                Target.Generate(etgen)
             );
         }
 

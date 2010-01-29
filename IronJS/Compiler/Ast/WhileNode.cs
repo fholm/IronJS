@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -14,8 +15,8 @@ namespace IronJS.Compiler.Ast
         public Node Body { get; protected set; }
         public WhileType Loop { get; protected set; }
 
-        public WhileNode(Node test, Node body, WhileType type)
-            : base(NodeType.While)
+        public WhileNode(Node test, Node body, WhileType type, ITree node)
+            : base(NodeType.While, node)
         {
             Test = test;
             Body = body;
@@ -29,13 +30,13 @@ namespace IronJS.Compiler.Ast
             var test = Et.Dynamic(
                 etgen.Context.CreateConvertBinder(typeof(bool)),
                 typeof(bool),
-                Test.Walk(etgen)
+                Test.Generate(etgen)
             );
 
             // while
             if (Loop == Ast.WhileType.While)
             {
-                var body = Body.Walk(etgen);
+                var body = Body.Generate(etgen);
 
                 loop = AstUtils.While(
                     test,
@@ -50,7 +51,7 @@ namespace IronJS.Compiler.Ast
             {
                 var bodyExprs = new List<Et>();
 
-                bodyExprs.Add(Body.Walk(etgen));
+                bodyExprs.Add(Body.Generate(etgen));
 
                 // test last, instead of first
                 bodyExprs.Add(

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
+using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
@@ -15,23 +16,23 @@ namespace IronJS.Compiler.Ast
         public Node Target { get; protected set; }
         public List<Node> Args { get; protected set; }
 
-        public NewNode(Node target, List<Node> args)
-            : base(NodeType.New)
+        public NewNode(Node target, List<Node> args, ITree node)
+            : base(NodeType.New, node)
         {
             Target = target;
             Args = args;
         }
 
-        public NewNode(Node target)
-            : this(target, new List<Node>())
+        public NewNode(Node target, ITree node)
+            : this(target, new List<Node>(), node)
         {
 
         }
 
-        public override Et Walk(EtGenerator etgen)
+        public override Et Generate(EtGenerator etgen)
         {
-            var target = Target.Walk(etgen);
-            var args = Args.Select(x => x.Walk(etgen)).ToArray();
+            var target = Target.Generate(etgen);
+            var args = Args.Select(x => x.Generate(etgen)).ToArray();
             var tmp = Et.Variable(typeof(IObj), "#tmp");
             var exprs = new List<Et>();
 

@@ -134,10 +134,10 @@
     <Compile Include="Compiler\Ast\IfNode.cs" />
     <Compile Include="Compiler\Ast\Interfaces\ILabelableNode.cs" />
     <Compile Include="Compiler\Ast\LambdaNode.cs" />
-    <Compile Include="Compiler\Ast\LoopNode.cs" />
+    <Compile Include="Compiler\Ast\Bases\LoopNode.cs" />
     <Compile Include="Compiler\Ast\MemberAccessNode.cs" />
     <Compile Include="Compiler\Ast\NewNode.cs" />
-    <Compile Include="Compiler\Ast\Node.cs" />
+    <Compile Include="Compiler\Ast\Bases\Node.cs" />
     <Compile Include="Compiler\Ast\NullNode.cs" />
     <Compile Include="Compiler\Ast\NumberNode.cs" />
     <Compile Include="Compiler\Ast\RegexNode.cs" />

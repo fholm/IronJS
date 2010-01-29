@@ -32,6 +32,9 @@ namespace IronJS.Compiler.Ast
                 args.Add(arg.Optimize(astopt));
             Args = args;
 
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+
             return this;
         }
 

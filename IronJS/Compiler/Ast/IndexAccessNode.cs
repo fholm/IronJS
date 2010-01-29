@@ -20,8 +20,8 @@ namespace IronJS.Compiler.Ast
 
         public override INode Optimize(AstOptimizer astopt)
         {
-            //if (Target is IdentifierNode)
-                //(Target as IdentifierNode).Variable.AssignedFrom.Add(GetType());
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
 
             return this;
         }

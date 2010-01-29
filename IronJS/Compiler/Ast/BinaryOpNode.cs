@@ -31,6 +31,20 @@ namespace IronJS.Compiler.Ast
             }
         }
 
+        public override INode Optimize(AstOptimizer astopt)
+        {
+            Left = Left.Optimize(astopt);
+            Right = Right.Optimize(astopt);
+
+            if (Left is IdentifierNode)
+                (Left as IdentifierNode).Variable.AssignedFrom.Add(Right);
+
+            if (Right is IdentifierNode)
+                (Right as IdentifierNode).Variable.AssignedFrom.Add(Left);
+
+            return this;
+        }
+
         public override Et Generate(EtGenerator etgen)
         {
             return Et.Dynamic(

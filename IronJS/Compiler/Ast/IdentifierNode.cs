@@ -21,10 +21,12 @@ namespace IronJS.Compiler.Ast
             IsDefinition = false;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override JsType ExprType
         {
-            var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Name + ")");
+            get
+            {
+                return Variable.ExprType;
+            }
         }
 
         public override INode Optimize(AstOptimizer astopt)
@@ -55,6 +57,12 @@ namespace IronJS.Compiler.Ast
                 Scope.MiPull,
                 Et.Constant(Name, typeof(object))
             );
+        }
+
+        public override void Print(StringBuilder writer, int indent = 0)
+        {
+            var indentStr = new String(' ', indent * 2);
+            writer.AppendLine(indentStr + "(" + Name + " " + ExprType + ")");
         }
     }
 }

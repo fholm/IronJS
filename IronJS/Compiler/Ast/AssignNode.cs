@@ -22,8 +22,8 @@ namespace IronJS.Compiler.Ast
             Target = Target.Optimize(astopt);
             Value = Value.Optimize(astopt);
 
-            //if (Target is IdentifierNode)
-                //(Target as IdentifierNode).Variable.AssignedFrom.Add(Value.GetType());
+            if (Target is IdentifierNode)
+                (Target as IdentifierNode).Variable.AssignedFrom.Add(Value);
 
             return this;
         }

@@ -9,7 +9,7 @@ namespace IronJS.Extensions
     {
         public static Type EvalType(this HashSet<Type> set)
         {
-            set.Remove(JsTypes.Self);
+            set.Remove(null);
 
             if (set.Count == 1)
                 return set.First();

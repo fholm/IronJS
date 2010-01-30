@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Optimizer
                     return UsedAs.EvalType();
                 }
 
-                return Ast.JsTypes.Self;
+                return null;
             }
         }
 

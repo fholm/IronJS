@@ -50,6 +50,23 @@ namespace IronJS.Compiler
             ).Compile();
         }
 
+        // Build3
+        public Action<JsObj> Build3(List<Ast.INode> astNodes, Context context)
+        {
+            Context = context;
+            LambdaScope = null;
+            GlobalExprs = new List<Et>();
+            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
+
+            foreach (var node in astNodes)
+                GlobalExprs.Add(node.Generate2(this));
+
+            return Et.Lambda<Action<JsObj>>(
+                Et.Block(GlobalExprs),
+                new[] { GlobalScopeExpr }
+            ).Compile();
+        }
+
         public void Enter()
         {
             if (LambdaScope == null)

@@ -5,6 +5,7 @@ using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using IronJS.Compiler.Ast;
+using System.Collections.Generic;
 
 namespace IronJS.Testing
 {

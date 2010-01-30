@@ -22,7 +22,6 @@ namespace IronJS.Compiler.Ast
         public static readonly Type Object = typeof(JsObj);
         public static readonly Type Dynamic = typeof(object);
         public static readonly Type Action = typeof(Action);
-        public static readonly Type Self = typeof(SelfMarker);
 
         public static Type CreateFuncType(params Type[] types)
         {

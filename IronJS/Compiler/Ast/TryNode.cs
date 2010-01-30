@@ -23,18 +23,18 @@ namespace IronJS.Compiler.Ast
             Finally = _finally;
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Body = Body.Optimize(astopt);
+            Body = Body.Analyze(astopt);
 
             if (Target != null)
-                Target = Target.Optimize(astopt);
+                Target = Target.Analyze(astopt);
 
             if (Catch != null)
-                Catch = Catch.Optimize(astopt);
+                Catch = Catch.Analyze(astopt);
 
             if (Finally != null)
-                Finally = Finally.Optimize(astopt);
+                Finally = Finally.Analyze(astopt);
 
             if (Target is IdentifierNode)
                 (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);

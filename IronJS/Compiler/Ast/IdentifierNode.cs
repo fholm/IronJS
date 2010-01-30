@@ -2,8 +2,8 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -34,23 +34,23 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate2(EtGenerator etgen)
+        public override Et GenerateStatic(IjsEtGenerator etgen)
         {
             if (IsGlobal)
             {
                 return Et.Call(
-                    etgen.GlobalScopeExpr,
-                    typeof(JsObj).GetMethod("Get"),
-                    EtUtils.Box2(etgen.Generate(Name))
+                    etgen.GlobalsExpr,
+                    typeof(IjsObj).GetMethod("Get"),
+                    etgen.Constant(Name)
                 );
             }
-            else
-                return etgen.LambdaScope[Name];
+
+            throw new NotImplementedException();
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            if (!astopt.IsGlobal)
+            if (!astopt.InGlobalScope)
             {
                 if (IsDefinition)
                 {

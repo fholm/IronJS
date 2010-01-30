@@ -11,34 +11,33 @@ namespace IronJS.Compiler.Ast
     public class BlockNode : Node
     {
         public List<INode> Nodes { get; protected set; }
-        public bool IsEmpty { get; protected set; }
+        public bool IsEmpty { get { return Nodes == null || Nodes.Count == 0; } }
 
         public BlockNode(List<INode> nodes, ITree node)
             : base(NodeType.Block, node)
         {
             Nodes = nodes;
-            IsEmpty = nodes.Count == 0;
         }
 
-        public override Et Generate2(EtGenerator etgen)
-        {
-            if(Nodes.Count > 0)
-                return Et.Block(
-                    Nodes.Select(x => x.Generate2(etgen))
-                );
-
-            return AstUtils.Empty();
-        }
-
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
             var nodes = new List<INode>();
 
             foreach (var node in Nodes)
-                nodes.Add(node.Optimize(astopt));
+                nodes.Add(node.Analyze(astopt));
 
             Nodes = nodes;
             return this;
+        }
+
+        public override Et GenerateStatic(IjsEtGenerator etgen)
+        {
+            if (IsEmpty)
+                return AstUtils.Empty();
+
+            return Et.Block(
+                Nodes.Select(x => x.GenerateStatic(etgen))
+            );
         }
 
         public override Et Generate(EtGenerator etgen)

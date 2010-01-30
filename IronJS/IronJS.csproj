@@ -119,7 +119,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compiler\AstOptimizer.cs" />
+    <Compile Include="Compiler\AstAnalyzer.cs" />
     <Compile Include="Compiler\Ast\ArrayNode.cs" />
     <Compile Include="Compiler\Ast\AssignmentBlockNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />
@@ -161,9 +161,12 @@
     <Compile Include="Compiler\Ast\TryNode.cs" />
     <Compile Include="Compiler\Ast\ThrowNode.cs" />
     <Compile Include="Compiler\Ast\IndexAccessNode.cs" />
+    <Compile Include="Compiler\IjsEtGenerator.cs" />
     <Compile Include="Compiler\FunctionScope.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
+    <Compile Include="Compiler\IjsContext.cs" />
+    <Compile Include="Compiler\IjsScope.cs" />
     <Compile Include="Compiler\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
@@ -201,7 +204,7 @@
     <Compile Include="Runtime\Js\IConstructor.cs" />
     <Compile Include="Runtime\Js\IConstructorMeta.cs" />
     <Compile Include="Runtime\Js\IDescriptor.cs" />
-    <Compile Include="Runtime\Js\JsObj.cs" />
+    <Compile Include="Runtime\Js\IjsObj.cs" />
     <Compile Include="Runtime\Js\NativeConstructor.cs" />
     <Compile Include="Runtime\Js\Operators.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
@@ -343,9 +346,6 @@
   <ItemGroup>
     <Content Include="Compiler\Parser\LICENSE.txt" />
     <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Compiler\Parser\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

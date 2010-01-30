@@ -6,12 +6,15 @@ namespace IronJS.Compiler.Optimizer
 {
     public class Variable
     {
-        public bool IsInsideWith { get; set; }
-        public HashSet<Type> UsedAs { get; protected set; }
-        public HashSet<Ast.INode> AssignedFrom { get; protected set; }
         public bool IsResolving { get; set; }
+        public bool IsParameter { get; set; }
+        public bool IsInsideWith { get; set; }
         public bool TypeResolved { get; set; }
         public bool CanBeDeleted { get; set; }
+        public bool IsClosedOver { get; set; }
+
+        public HashSet<Type> UsedAs { get; protected set; }
+        public HashSet<Ast.INode> AssignedFrom { get; protected set; }
 
         public Type ExprType
         {
@@ -39,9 +42,13 @@ namespace IronJS.Compiler.Optimizer
 
         public Variable()
         {
-            TypeResolved = false;
+            IsParameter = false;
             IsResolving = false;
+            TypeResolved = false;
+            IsClosedOver = false;
             IsInsideWith = false;
+            CanBeDeleted = false;
+
             UsedAs = new HashSet<Type>();
             AssignedFrom = new HashSet<Ast.INode>();
         }

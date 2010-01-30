@@ -27,10 +27,10 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Target = Target.Optimize(astopt);
-            Property = Target.Optimize(astopt);
+            Target = Target.Analyze(astopt);
+            Property = Target.Analyze(astopt);
 
             if (Target is IdentifierNode)
                 (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);

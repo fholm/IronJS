@@ -4,10 +4,10 @@ using IronJS.Compiler.Ast;
 
 namespace IronJS.Compiler
 {
-    public class AstOptimizer
+    public class AstAnalyzer
     {
         public bool IsInsideWith { get { return false; } }
-        public bool IsGlobal { get { return Scope == null; } }
+        public bool InGlobalScope { get { return Scope == null; } }
         public Optimizer.Scope Scope { get; protected set; }
 
         public List<INode> Optimize(List<INode> astNodes)
@@ -15,7 +15,7 @@ namespace IronJS.Compiler
             var optimizedNodes = new List<INode>();
 
             foreach (var node in astNodes)
-                optimizedNodes.Add(node.Optimize(this));
+                optimizedNodes.Add(node.Analyze(this));
 
             return optimizedNodes;
         }

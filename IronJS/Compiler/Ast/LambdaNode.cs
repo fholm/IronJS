@@ -1,20 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    public class IjsFunc
+    {
+        public MethodInfo MethodInfo;
+
+        public IjsFunc(MethodInfo methodInfo)
+        {
+            MethodInfo = methodInfo;
+        }
+    }
+
     public class LambdaNode : Node
     {
         public IdentifierNode Name { get; protected set; }
         public List<IdentifierNode> Args { get; protected set; }
         public INode Body { get; protected set; }
         public bool IsLambda { get { return Name == null; } }
+        public Type ReturnType { get { return typeof(object); } }
 
         public LambdaNode(List<IdentifierNode> args, INode body, IdentifierNode name, ITree node)
             : base(NodeType.Lambda, node)
@@ -37,27 +50,59 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer analyzer)
         {
-            if (!astopt.IsGlobal)
+            if (!analyzer.InGlobalScope)
             {
                 if (!IsLambda)
                 {
-                    var variable = astopt.Scope.CreateVariable(Name.Name);
-                    variable.UsedAs.Add(ExprType);
-                    Name.Variable = variable;
+                    Name.Analyze(analyzer);
+                    Name.Variable.UsedAs.Add(ExprType);
                 }
             }
 
-            astopt.EnterScope();
+            analyzer.EnterScope();
 
             foreach (var arg in Args)
-                astopt.Scope.CreateVariable(arg.Name).UsedAs.Add(JsTypes.Dynamic);
+            {
+                arg.Analyze(analyzer);
+                arg.Variable.IsParameter = true;
+            }
 
-            Body = Body.Optimize(astopt);
+            Body = Body.Analyze(analyzer);
 
-            astopt.ExitScope();
+            analyzer.ExitScope();
             return this;
+        }
+
+        public override Et GenerateStatic(IjsEtGenerator etgen)
+        {
+            var typ = etgen.CompileFunction(
+                ++etgen.MethodCount,
+                Args,
+                Body,
+                typeof(object)
+            );
+
+            if (IsLambda)
+            {
+                var getType = typeof(Type).GetMethod("GetType", new[] { typeof(string) });
+                var getMethod = typeof(Type).GetMethod("GetMethod", new[] { typeof(string) });
+
+                return Et.New(
+                    typeof(IjsFunc).GetConstructor(new[] { typeof(MethodInfo) }),
+                    Et.Call(
+                        Et.Call(
+                            getType,
+                            etgen.Constant(typ.Name)
+                        ),
+                        getMethod,
+                        etgen.Constant("func")
+                    )
+                );
+            }
+
+            throw new NotImplementedException();
         }
 
         public override Et Generate2(EtGenerator etgen)

@@ -2,7 +2,7 @@
 
 namespace IronJS.Runtime.Js
 {
-    public class JsObj
+    public class IjsObj
     {
         public Dictionary<object, object> Properties =
             new Dictionary<object, object>();

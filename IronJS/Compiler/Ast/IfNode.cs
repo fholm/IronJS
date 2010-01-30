@@ -37,13 +37,13 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Test = Test.Optimize(astopt);
-            TrueBranch = TrueBranch.Optimize(astopt);
+            Test = Test.Analyze(astopt);
+            TrueBranch = TrueBranch.Analyze(astopt);
 
             if(HasElseBranch)
-                ElseBranch = ElseBranch.Optimize(astopt);
+                ElseBranch = ElseBranch.Analyze(astopt);
 
             return this;
         }

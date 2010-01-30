@@ -23,19 +23,19 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
             if (Setup != null)
-                Setup = Setup.Optimize(astopt);
+                Setup = Setup.Analyze(astopt);
 
             if(Test != null)
-                Test = Test.Optimize(astopt);
+                Test = Test.Analyze(astopt);
 
             if (Incr != null)
-                Incr = Incr.Optimize(astopt);
+                Incr = Incr.Analyze(astopt);
 
             if (Body != null)
-                Body = Body.Optimize(astopt);
+                Body = Body.Analyze(astopt);
 
             return this;
         }

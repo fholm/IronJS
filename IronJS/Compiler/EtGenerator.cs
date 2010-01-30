@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Emit;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using System.Reflection;
-using System.Reflection.Emit;
-using LambdaTuple = System.Tuple<System.Linq.Expressions.Expression<IronJS.Runtime.LambdaType>, System.Collections.Generic.List<string>>;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using EtParam = System.Linq.Expressions.ParameterExpression;
-using System.Runtime.CompilerServices;
+using LambdaTuple = System.Tuple<System.Linq.Expressions.Expression<IronJS.Runtime.LambdaType>, System.Collections.Generic.List<string>>;
 
 namespace IronJS.Compiler
 {
@@ -29,17 +28,17 @@ namespace IronJS.Compiler
         internal bool IsGlobal { get { return FunctionScope == null; } }
 
         // Build2
-        public Action<JsObj> Build2(List<Ast.INode> astNodes, Context context)
+        public Action<IjsObj> Build2(List<Ast.INode> astNodes, Context context)
         {
             Context = context;
             LambdaScope = null;
             GlobalExprs = new List<Et>();
-            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
+            GlobalScopeExpr = Et.Parameter(typeof(IjsObj), "#globals");
 
             foreach (var node in astNodes)
                 GlobalExprs.Add(node.Generate2(this));
 
-            return Et.Lambda<Action<JsObj>>(
+            return Et.Lambda<Action<IjsObj>>(
                 Et.Block(GlobalExprs),
                 new[] { GlobalScopeExpr }
             ).Compile();
@@ -77,12 +76,12 @@ namespace IronJS.Compiler
             Context = context;
             LambdaScope = null;
             GlobalExprs = new List<Et>();
-            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
+            GlobalScopeExpr = Et.Parameter(typeof(IjsObj), "#globals");
 
             foreach (var node in astNodes)
                 GlobalExprs.Add(node.Generate2(this));
 
-            var lambda = Et.Lambda<Action<JsObj>>(
+            var lambda = Et.Lambda<Action<IjsObj>>(
                 Et.Block(GlobalExprs),
                 new[] { GlobalScopeExpr }
             );
@@ -129,7 +128,7 @@ namespace IronJS.Compiler
             Context = context;
 
             // Store the frame expr for global frame
-            GlobalScopeExpr = Et.Parameter(typeof(JsObj), "#globals");
+            GlobalScopeExpr = Et.Parameter(typeof(IjsObj), "#globals");
 
             // Stores all global expressions
             var globalExprs = new List<Et>();
@@ -138,7 +137,7 @@ namespace IronJS.Compiler
             foreach (var node in astNodes)
                 globalExprs.Add(node.Generate(this));
 
-            Et.Lambda<Action<JsObj>>(
+            Et.Lambda<Action<IjsObj>>(
                 Et.Block(
                     globalExprs
                 ),
@@ -227,7 +226,7 @@ namespace IronJS.Compiler
                 {
                     return Et.Call(
                         GlobalScopeExpr,
-                        typeof(JsObj).GetMethod("Set"),
+                        typeof(IjsObj).GetMethod("Set"),
                         Generate<string>(idNode.Name),
                         EtUtils.Cast<object>(value)
                     );
@@ -277,7 +276,7 @@ namespace IronJS.Compiler
                 {
                     return Et.Call(
                         GlobalScopeExpr,
-                        typeof(JsObj).GetMethod("Set"),
+                        typeof(IjsObj).GetMethod("Set"),
                         Et.Constant(idNode.Name),
                         EtUtils.Box2(value)
                     );

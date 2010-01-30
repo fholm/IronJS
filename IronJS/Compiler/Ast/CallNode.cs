@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Antlr.Runtime.Tree;
@@ -9,11 +11,7 @@ using IronJS.Runtime.Binders2;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using System.Linq.Expressions;
-using Microsoft.Scripting.Generation;
-using System.Reflection;
 
 namespace IronJS.Compiler.Ast
 {
@@ -29,13 +27,13 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Target = Target.Optimize(astopt);
+            Target = Target.Analyze(astopt);
 
             var args = new List<INode>();
             foreach (var arg in Args)
-                args.Add(arg.Optimize(astopt));
+                args.Add(arg.Analyze(astopt));
             Args = args;
 
             var idNode = Target as IdentifierNode;
@@ -47,6 +45,62 @@ namespace IronJS.Compiler.Ast
                 );
 
             return this;
+        }
+
+        public override Et GenerateStatic(IjsEtGenerator etgen)
+        {
+            var idNode = Target as IdentifierNode;
+            if (idNode != null)
+            {
+                if (idNode.IsGlobal)
+                {
+                    var delegateType = typeof(Func<CallSite, object, object, object>);
+
+                    var callSite = CallSite.Create(
+                        delegateType,
+                        new JsInvokeBinder2(
+                            new CallInfo(Args.Count)
+                        )
+                     );
+
+                    var serializer = callSite.Binder as Microsoft.Scripting.Runtime.IExpressionSerializable;
+                    var siteType = callSite.GetType();
+
+                    var field = Expression.Field(null,
+                        etgen.TypeGen.AddStaticField(siteType, "callsite$1")
+                    );
+                    var init = Expression.Call(siteType.GetMethod("Create"), serializer.CreateExpression());
+
+
+                    return Expression.Block(
+                        Et.IfThen(
+                            Et.Equal(
+                                Et.Constant(null, typeof(object)),
+                                field
+                            ),
+                            Expression.Assign(
+                                field, init
+                            )
+                        ),
+                        Expression.Call(
+                            Expression.Field(
+                                field,
+                                siteType.GetField("Target")
+                            ),
+                            delegateType.GetMethod("Invoke"),
+                            field,
+                            idNode.GenerateStatic(etgen),
+                            etgen.GlobalsExpr
+                        )
+                    );
+                }
+                else
+                {
+
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         public override Et Generate2(EtGenerator etgen)

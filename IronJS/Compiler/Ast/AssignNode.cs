@@ -2,6 +2,8 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -17,12 +19,34 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override Et Generate2(EtGenerator etgen)
+        public override Et GenerateStatic(IjsEtGenerator etgen)
         {
-            return etgen.GenerateAssign2(
-                Target, 
-                Value.Generate2(etgen)
-            );
+            var idNode = Target as IdentifierNode;
+            if (idNode != null)
+            {
+                if (idNode.IsGlobal)
+                {
+                    return Et.Call(
+                        etgen.GlobalsExpr,
+                        typeof(IjsObj).GetMethod("Set"),
+                        etgen.Constant<string>(idNode.Name),
+                        EtUtils.Box2(Value.GenerateStatic(etgen))
+                    );
+                }
+                else
+                {
+                    if (idNode.IsDefinition)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         public override Et Generate(EtGenerator etgen)
@@ -33,10 +57,10 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Target = Target.Optimize(astopt);
-            Value = Value.Optimize(astopt);
+            Target = Target.Analyze(astopt);
+            Value = Value.Analyze(astopt);
 
             var idNode = (Target as IdentifierNode);
             if (idNode != null && !idNode.IsGlobal)

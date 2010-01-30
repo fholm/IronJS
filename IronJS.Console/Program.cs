@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using IronJS.Compiler.Ast;
-using System.Collections.Generic;
 
 namespace IronJS.Testing
 {
     class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var astGenerator = new Compiler.AstGenerator();
-            var astOptimizer = new Compiler.AstOptimizer();
+            var astOptimizer = new Compiler.AstAnalyzer();
 
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
                 astNodes = astOptimizer.Optimize(astNodes);
@@ -22,7 +19,7 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            var globals = new JsObj();
+            var globals = new IjsObj();
 
             globals.Set(
                 "time", 
@@ -34,10 +31,11 @@ namespace IronJS.Testing
                 typeof(Console).GetMethod("WriteLine", new[] { typeof(int) })
             );
 
-            var etGenerator = new Compiler.EtGenerator();
-            var compiled = etGenerator.Build3(astNodes, new Context());
+            var context = new Compiler.IjsContext();
+            var etGenerator = new Compiler.IjsEtGenerator();
+            var compiled = etGenerator.Generate(astNodes, context);
 
-            compiled.Invoke(null, new[] { (object) globals } );
+            compiled.GetMethod("func").Invoke(null, new[] { (object) globals });
         }
     }
 }

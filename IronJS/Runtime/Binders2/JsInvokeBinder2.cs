@@ -7,6 +7,7 @@ using Microsoft.Scripting.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
+using IronJS.Compiler.Ast;
 
 namespace IronJS.Runtime.Binders2
 {
@@ -30,7 +31,7 @@ namespace IronJS.Runtime.Binders2
                         Et.Call(
                             Et.Convert(target.Expression, type),
                             invoke,
-                            Et.Constant((JsObj)args[0].Value, typeof(JsObj))
+                            Et.Constant((IjsObj)args[0].Value, typeof(IjsObj))
                         )
                     ),
                     RestrictUtils.BuildCallRestrictions(
@@ -44,6 +45,11 @@ namespace IronJS.Runtime.Binders2
 
             //TODO: refine this so it works properly... very ugly now
             var methodInfo = target.Value as MethodInfo;
+
+            if (methodInfo == null)
+                if (target.Value is IjsFunc)
+                    methodInfo = (target.Value as IjsFunc).MethodInfo;
+
             if (methodInfo != null)
             {
                 return new Meta(

@@ -87,12 +87,18 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
-        public virtual INode Optimize(AstOptimizer astopt)
+        public virtual INode Analyze(AstAnalyzer astopt)
         {
             return this;
         }
 
         public virtual Et Generate2(EtGenerator etgen)
+        {
+            return AstUtils.Empty();
+        }
+
+
+        public virtual Et GenerateStatic(IjsEtGenerator etgen)
         {
             return AstUtils.Empty();
         }

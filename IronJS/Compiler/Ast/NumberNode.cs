@@ -26,9 +26,9 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate2(EtGenerator etgen)
+        public override Et GenerateStatic(IjsEtGenerator etgen)
         {
-            return etgen.Generate<T>(Value);
+            return etgen.Constant(Value);
         }
 
         public override Et Generate(EtGenerator etgen)

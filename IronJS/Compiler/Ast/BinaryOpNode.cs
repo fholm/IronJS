@@ -44,10 +44,10 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Optimize(AstOptimizer astopt)
+        public override INode Analyze(AstAnalyzer astopt)
         {
-            Left = Left.Optimize(astopt);
-            Right = Right.Optimize(astopt);
+            Left = Left.Analyze(astopt);
+            Right = Right.Analyze(astopt);
 
             if (Left is IdentifierNode)
                 (Left as IdentifierNode).Variable.AssignedFrom.Add(Right);

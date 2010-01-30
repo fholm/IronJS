@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
         public static readonly Type Boolean = typeof(bool);
         public static readonly Type Null = typeof(object);
         public static readonly Type Undefined = typeof(Undefined);
-        public static readonly Type Object = typeof(JsObj);
+        public static readonly Type Object = typeof(IjsObj);
         public static readonly Type Dynamic = typeof(object);
         public static readonly Type Action = typeof(Action);
 
@@ -49,7 +49,8 @@ namespace IronJS.Compiler.Ast
 
         Et Generate(EtGenerator etgen);
         Et Generate2(EtGenerator etgen);
-        INode Optimize(AstOptimizer astopt);
+        Et GenerateStatic(IjsEtGenerator etgen);
+        INode Analyze(AstAnalyzer astopt);
         Type EvalTypes(params INode[] nodes);
         bool IdenticalTypes(params INode[] nodes);
 

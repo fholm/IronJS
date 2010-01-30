@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime.Binders2;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using System.Linq.Expressions;
+using Microsoft.Scripting.Generation;
+using System.Reflection;
 
 namespace IronJS.Compiler.Ast
 {
@@ -50,14 +56,38 @@ namespace IronJS.Compiler.Ast
             {
                 if(idNode.IsGlobal)
                 {
-                    return Et.Dynamic(
-                        etgen.Context.CreateInvokeBinder2(
+                    var delegateType = typeof(Func<CallSite, object, object, object>);
+                    var callSite = CallSite.Create(
+                        delegateType, 
+                        new JsInvokeBinder2(
                             new CallInfo(Args.Count)
+                        )
+                     );
+
+                    var serializer = callSite.Binder as Microsoft.Scripting.Runtime.IExpressionSerializable;
+                    var siteType = callSite.GetType();
+                    var field = Expression.Field(null,
+                        etgen.TypBuilder.DefineField("$callsite1", siteType, FieldAttributes.Static | FieldAttributes.Public)
+                    );
+                    var init = Expression.Call(siteType.GetMethod("Create"), serializer.CreateExpression());
+
+                    // ($site = siteExpr).Target.Invoke($site, *args)
+                    var site = Expression.Variable(siteType, "$site");
+
+                    return Expression.Block(
+                        new[] { site },
+                        Expression.Assign(
+                            field, init
                         ),
-                        typeof(void),
-                        ArrayUtils.Insert(
+                        Expression.Call(
+                            Expression.Field( 
+                                Expression.Assign(site, field),
+                                site.Type.GetField("Target")
+                            ),
+                            delegateType.GetMethod("Invoke"),
+                            site,
                             idNode.Generate2(etgen),
-                            Args.Select(x => x.Generate2(etgen)).ToArray()
+                            etgen.GlobalScopeExpr
                         )
                     );
                 }

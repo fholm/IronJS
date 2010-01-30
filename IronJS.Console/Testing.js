@@ -1,4 +1,15 @@
-﻿function y() {
+﻿
+
+var i = 0;
+var y = 1;
+
+var x = function () {
+    i = 2;
+};
+
+x();
+
+/*function y() {
     function x() {
         
     };
@@ -20,3 +31,4 @@
 time(function () {
     y();
 });
+*/

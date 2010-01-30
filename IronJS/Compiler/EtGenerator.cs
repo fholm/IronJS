@@ -12,6 +12,7 @@ using LambdaTuple = System.Tuple<System.Linq.Expressions.Expression<IronJS.Runti
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using EtParam = System.Linq.Expressions.ParameterExpression;
+using System.Runtime.CompilerServices;
 
 namespace IronJS.Compiler
 {
@@ -28,12 +29,6 @@ namespace IronJS.Compiler
         internal bool IsGlobal { get { return FunctionScope == null; } }
 
         // Build2
-        internal Context Context { get; private set; }
-        internal ParameterExpression GlobalScopeExpr { get; private set; }
-        internal List<Et> GlobalExprs { get; private set; }
-        internal LambdaScope LambdaScope { get; set; }
-        internal bool IsGlobal2 { get { return LambdaScope == null; } }
-
         public Action<JsObj> Build2(List<Ast.INode> astNodes, Context context)
         {
             Context = context;
@@ -51,8 +46,34 @@ namespace IronJS.Compiler
         }
 
         // Build3
-        public Action<JsObj> Build3(List<Ast.INode> astNodes, Context context)
+        internal ParameterExpression GlobalScopeExpr { get; private set; }
+        internal Context Context { get; private set; }
+        internal List<Et> GlobalExprs { get; private set; }
+        internal LambdaScope LambdaScope { get; set; }
+        internal bool IsGlobal2 { get { return LambdaScope == null; } }
+        internal TypeBuilder TypBuilder { get; set; }
+
+        int _counter = 0;
+        public MethodBuilder CreateMethod()
         {
+            return TypBuilder.DefineMethod(
+                 "_" + (++_counter), MethodAttributes.Public | MethodAttributes.Static
+            );
+        }
+
+        public MethodInfo Build3(List<Ast.INode> astNodes, Context context)
+        {
+            // Get domain
+            var domain = AppDomain.CurrentDomain;
+
+            // Create dynamic assembly
+            var asmName = new AssemblyName("IronJS`Assembly1");
+            var dynAsm = domain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
+
+            // Create a dynamic module and type
+            var dynMod = dynAsm.DefineDynamicModule("IronJS`Module1", "IronJS_Module1.dll");
+            TypBuilder = dynMod.DefineType("IronJS`Class1");
+
             Context = context;
             LambdaScope = null;
             GlobalExprs = new List<Et>();
@@ -61,10 +82,17 @@ namespace IronJS.Compiler
             foreach (var node in astNodes)
                 GlobalExprs.Add(node.Generate2(this));
 
-            return Et.Lambda<Action<JsObj>>(
+            var lambda = Et.Lambda<Action<JsObj>>(
                 Et.Block(GlobalExprs),
                 new[] { GlobalScopeExpr }
-            ).Compile();
+            );
+
+            var method = CreateMethod();
+            lambda.CompileToMethod(method);
+
+            TypBuilder.CreateType();
+            var type = dynAsm.GetType("IronJS`Class1");
+            return type.GetMethod(method.Name);
         }
 
         public void Enter()
@@ -174,12 +202,8 @@ namespace IronJS.Compiler
 
         internal Et Generate<T>(T value)
         {
-            return Et.Convert(
-                Et.Constant(
-                    value,
-                    typeof(T)
-                ),
-                typeof(object)
+            return Et.Constant(
+                value, typeof(T)
             );
         }
 

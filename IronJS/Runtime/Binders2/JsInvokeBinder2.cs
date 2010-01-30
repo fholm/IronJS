@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Dynamic;
+using System.Reflection;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Runtime;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using IronJS.Runtime.Utils;
-using System.Reflection;
 
 namespace IronJS.Runtime.Binders2
 {
-    class JsInvokeBinder2 : InvokeBinder
+    public class JsInvokeBinder2 : InvokeBinder, IExpressionSerializable
     {
-        Context _context;
-
-        public JsInvokeBinder2(CallInfo callInfo, Context context)
+        public JsInvokeBinder2(CallInfo callInfo)
             : base(callInfo)
         {
-            _context = context;
+
         }
 
         public override Meta FallbackInvoke(Meta target, Meta[] args, Meta errorSuggestion)
@@ -28,7 +29,8 @@ namespace IronJS.Runtime.Binders2
                     EtUtils.Box2(
                         Et.Call(
                             Et.Convert(target.Expression, type),
-                            invoke
+                            invoke,
+                            Et.Constant((JsObj)args[0].Value, typeof(JsObj))
                         )
                     ),
                     RestrictUtils.BuildCallRestrictions(
@@ -62,7 +64,27 @@ namespace IronJS.Runtime.Binders2
                 );
             }
 
-            throw new NotImplementedException();
+            return new Meta(
+                Et.Constant("foo", typeof(object)),
+                BindingRestrictions.Empty
+            );
         }
+
+        public static JsInvokeBinder2 Create(int argCount)
+        {
+            return new JsInvokeBinder2(new CallInfo(argCount));
+        }
+
+        #region IExpressionSerializable Members
+
+        public Et CreateExpression()
+        {
+            return AstUtils.SimpleCallHelper(
+                GetType().GetMethod("Create"),
+                Et.Constant(1)
+            );
+        }
+
+        #endregion
     }
 }

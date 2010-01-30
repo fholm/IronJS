@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et Generate2(EtGenerator etgen)
         {
-            return Et.Constant(Value, typeof(T));
+            return etgen.Generate<T>(Value);
         }
 
         public override Et Generate(EtGenerator etgen)

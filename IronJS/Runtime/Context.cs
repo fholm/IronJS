@@ -246,7 +246,7 @@ namespace IronJS.Runtime
             if (_invokeBinders2.ContainsKey(callInfo))
                 return _invokeBinders2[callInfo];
 
-            return _invokeBinders2[callInfo] = new JsInvokeBinder2(callInfo, this);
+            return _invokeBinders2[callInfo] = new JsInvokeBinder2(callInfo);
         }
 
         Dictionary<CallInfo, JsCreateInstanceBinder> _createInstanceBinders

@@ -3,6 +3,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -40,7 +41,7 @@ namespace IronJS.Compiler.Ast
                 return Et.Call(
                     etgen.GlobalScopeExpr,
                     typeof(JsObj).GetMethod("Get"),
-                    Et.Constant(Name, typeof(object))
+                    EtUtils.Box2(etgen.Generate(Name))
                 );
             }
             else

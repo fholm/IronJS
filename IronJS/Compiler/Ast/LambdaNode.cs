@@ -68,10 +68,14 @@ namespace IronJS.Compiler.Ast
                 Et.Block(
                     etgen.LambdaScope.Variables.Values,
                     Body.Generate2(etgen)
-                )
+                ),
+                etgen.GlobalScopeExpr
             );
 
             etgen.Exit();
+
+            var method = etgen.CreateMethod();
+            lambda.CompileToMethod(method);
 
             if (IsLambda)
             {

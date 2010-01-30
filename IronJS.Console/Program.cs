@@ -11,7 +11,6 @@ namespace IronJS.Testing
 {
     class Program
     {
-        //TODO: fix pretty-print of AST tree for all nodes
         static void Main(string[] args)
         {
             var astGenerator = new Compiler.AstGenerator();
@@ -36,10 +35,9 @@ namespace IronJS.Testing
             );
 
             var etGenerator = new Compiler.EtGenerator();
-            var compiled = etGenerator.Build2(astNodes, new Context());
+            var compiled = etGenerator.Build3(astNodes, new Context());
 
-            compiled(globals);
-            Console.ReadLine();
+            compiled.Invoke(null, new[] { (object) globals } );
         }
     }
 }

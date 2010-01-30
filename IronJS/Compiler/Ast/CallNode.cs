@@ -44,16 +44,26 @@ namespace IronJS.Compiler.Ast
             var idNode = Target as IdentifierNode;
             if (idNode != null)
             {
-                return Et.Dynamic(
-                    etgen.Context.CreateInvokeBinder2(
-                        new CallInfo(Args.Count)
-                    ),
-                    typeof(object),
-                    ArrayUtils.Insert(
+                if(idNode.IsGlobal)
+                {
+                    return Et.Dynamic(
+                        etgen.Context.CreateInvokeBinder2(
+                            new CallInfo(Args.Count)
+                        ),
+                        typeof(void),
+                        ArrayUtils.Insert(
+                            Target.Generate2(etgen),
+                            Args.Select(x => x.Generate2(etgen)).ToArray()
+                        )
+                    );
+                }
+                else
+                {
+                    return Et.Invoke(
                         Target.Generate2(etgen),
                         Args.Select(x => x.Generate2(etgen)).ToArray()
-                    )
-                );
+                    );
+                }
             }
 
             throw new NotImplementedException();

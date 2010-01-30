@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Utils
             return obj;
         }
 
-        static public void Timer(Func<object> func)
+        static public void Timer(Action func)
         {
             var start = DateTime.Now;
             func();

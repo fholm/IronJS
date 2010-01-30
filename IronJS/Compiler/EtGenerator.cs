@@ -235,6 +235,9 @@ namespace IronJS.Compiler
 
         internal EtParam CreateVariable2(string name, Type type)
         {
+            if (name == "x" || name == "x")
+                type = typeof(Action);
+
             return LambdaScope[name] = Et.Parameter(type, name);
         }
 
@@ -270,7 +273,17 @@ namespace IronJS.Compiler
                     if (!typesMatch)
                     {
                         if (variable.Type != typeof(object))
-                            throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
+                        {
+                            if (variable.Type == variable.Type)
+                            {
+                                return Et.Assign(
+                                    variable,
+                                    value
+                                );
+                            }
+                            else
+                                throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
+                        }
 
                         return Et.Assign(
                             variable,

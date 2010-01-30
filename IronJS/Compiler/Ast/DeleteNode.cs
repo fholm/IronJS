@@ -18,11 +18,11 @@ namespace IronJS.Compiler.Ast
             Target = target;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Boolean;
+                return JsTypes.Boolean;
             }
         }
 
@@ -32,7 +32,7 @@ namespace IronJS.Compiler.Ast
 
             if (Target is IdentifierNode)
             {
-                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);
                 (Target as IdentifierNode).Variable.CanBeDeleted = true;
             }
 

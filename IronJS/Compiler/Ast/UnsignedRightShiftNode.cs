@@ -19,11 +19,11 @@ namespace IronJS.Compiler.Ast
             Right = right;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Integer;
+                return JsTypes.Integer;
             }
         }
 

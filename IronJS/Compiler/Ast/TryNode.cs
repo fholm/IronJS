@@ -37,7 +37,7 @@ namespace IronJS.Compiler.Ast
                 Finally = Finally.Optimize(astopt);
 
             if (Target is IdentifierNode)
-                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+                (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);
 
             return this;
         }

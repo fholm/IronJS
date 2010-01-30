@@ -19,14 +19,14 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                if (Target.ExprType == JsType.Integer)
-                    return JsType.Integer;
+                if (Target.ExprType == JsTypes.Integer)
+                    return JsTypes.Integer;
 
-                return JsType.Double;
+                return JsTypes.Double;
             }
         }
 

@@ -7,39 +7,42 @@ namespace IronJS.Compiler.Optimizer
     public class Variable
     {
         public bool IsInsideWith { get; set; }
-        public HashSet<Ast.JsType> UsedAs { get; protected set; }
+        public HashSet<Type> UsedAs { get; protected set; }
         public HashSet<Ast.INode> AssignedFrom { get; protected set; }
-        public bool IsSearched { get; set; }
+        public bool IsResolving { get; set; }
+        public bool TypeResolved { get; set; }
         public bool CanBeDeleted { get; set; }
 
-        public Ast.JsType ExprType
+        public Type ExprType
         {
             get
             {
-                if (!IsSearched)
+                if (!IsResolving)
                 {
-                    if(AssignedFrom != null)
+                    if(!TypeResolved)
                     {
-                        IsSearched = true;
+                        IsResolving = true;
+
                         foreach (var node in AssignedFrom)
                             UsedAs.Add(node.ExprType);
 
-                        AssignedFrom = null;
-                        IsSearched = false;
+                        TypeResolved = true;
+                        IsResolving = false;
                     }
 
                     return UsedAs.EvalType();
                 }
 
-                return Ast.JsType.Self;
+                return Ast.JsTypes.Self;
             }
         }
 
         public Variable()
         {
-            IsSearched = false;
+            TypeResolved = false;
+            IsResolving = false;
             IsInsideWith = false;
-            UsedAs = new HashSet<Ast.JsType>();
+            UsedAs = new HashSet<Type>();
             AssignedFrom = new HashSet<Ast.INode>();
         }
     }

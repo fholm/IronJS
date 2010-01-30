@@ -3,6 +3,7 @@ using System.Linq;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime;
 using Et = System.Linq.Expressions.Expression;
+using System;
 
 namespace IronJS.Compiler.Ast
 {
@@ -16,11 +17,11 @@ namespace IronJS.Compiler.Ast
             Values = values;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Object;
+                return JsTypes.Object;
             }
         }
 

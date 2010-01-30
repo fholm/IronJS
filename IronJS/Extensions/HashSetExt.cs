@@ -1,39 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using IronJS.Compiler.Ast;
 
 namespace IronJS.Extensions
 {
     public static class HashSetExt
     {
-        public static JsType EvalType(this HashSet<JsType> set)
+        public static Type EvalType(this HashSet<Type> set)
         {
-            set.Remove(JsType.Self);
+            set.Remove(JsTypes.Self);
 
             if (set.Count == 1)
-            {
-                if (set.Contains(JsType.Boolean))
-                    return JsType.Boolean;
+                return set.First();
 
-                if (set.Contains(JsType.Double))
-                    return JsType.Double;
-
-                if (set.Contains(JsType.String))
-                    return JsType.String;
-
-                if (set.Contains(JsType.Integer))
-                    return JsType.Integer;
-
-                if (set.Contains(JsType.Null))
-                    return JsType.Null;
-
-                if (set.Contains(JsType.Object))
-                    return JsType.Object;
-
-                if (set.Contains(JsType.Undefined))
-                    return JsType.Undefined;
-            }
-
-            return JsType.Dynamic;
+            return JsTypes.Dynamic;
         }
     }
 }

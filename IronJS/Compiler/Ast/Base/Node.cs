@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
         public NodeType NodeType { get; protected set; }
         public int Line { get; protected set; }
         public int Column { get; protected set; }
-        public virtual JsType ExprType { get { return JsType.Dynamic; } }
+        public virtual Type ExprType { get { return JsTypes.Dynamic; } }
 
         public Node(NodeType type, ITree node)
         {
@@ -62,9 +62,9 @@ namespace IronJS.Compiler.Ast
             return false;
         }
         
-        public JsType EvalTypes(params INode[] nodes)
+        public Type EvalTypes(params INode[] nodes)
         {
-            var set = new HashSet<JsType>();
+            var set = new HashSet<Type>();
 
             foreach (var node in nodes)
                 set.Add(node.ExprType);

@@ -50,7 +50,7 @@ namespace IronJS.Compiler.Ast
                 setup = Setup.Generate2(etgen);
 
             if (Test != null)
-                if (Test.ExprType == JsType.Boolean)
+                if (Test.ExprType == JsTypes.Boolean)
                     test = Test.Generate2(etgen);
                 else
                     test = Et.Dynamic(

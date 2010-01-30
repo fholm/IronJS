@@ -16,11 +16,11 @@ namespace IronJS.Compiler.Ast
             Target = target;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Undefined;
+                return JsTypes.Undefined;
             }
         }
 

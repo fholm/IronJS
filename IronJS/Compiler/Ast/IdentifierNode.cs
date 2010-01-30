@@ -22,12 +22,12 @@ namespace IronJS.Compiler.Ast
             IsDefinition = false;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
                 if (IsGlobal)
-                    return JsType.Dynamic;
+                    return JsTypes.Dynamic;
 
                 return Variable.ExprType;
             }

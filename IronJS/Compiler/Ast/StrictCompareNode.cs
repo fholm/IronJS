@@ -22,11 +22,11 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Boolean;
+                return JsTypes.Boolean;
             }
         }
 

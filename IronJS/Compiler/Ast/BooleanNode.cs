@@ -15,11 +15,11 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Boolean;
+                return JsTypes.Boolean;
             }
         }
 

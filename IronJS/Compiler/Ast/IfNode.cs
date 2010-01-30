@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast
                         return TrueBranch.ExprType;
                 }
 
-                return JsType.Dynamic;
+                return JsTypes.Dynamic;
             }
         }
 

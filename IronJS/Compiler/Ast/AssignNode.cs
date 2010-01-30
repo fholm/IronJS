@@ -56,20 +56,5 @@ namespace IronJS.Compiler.Ast
 
             writer.AppendLine(indentStr + ")");
         }
-
-        #region IExpressionNode Members
-
-        public JsType ExpressionType
-        {
-            get
-            {
-                if (Target.ExprType == Value.ExprType)
-                    return Target.ExprType;
-
-                return JsType.Dynamic;
-            }
-        }
-
-        #endregion
     }
 }

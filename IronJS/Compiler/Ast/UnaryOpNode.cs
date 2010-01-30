@@ -18,21 +18,21 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
                 if (Op == ExpressionType.Not)
-                    return JsType.Boolean;
+                    return JsTypes.Boolean;
 
                 if (Op == ExpressionType.OnesComplement)
-                    return JsType.Integer;
+                    return JsTypes.Integer;
 
                 if (Op == ExpressionType.UnaryPlus)
-                    return JsType.Double;
+                    return JsTypes.Double;
 
                 if (Op == ExpressionType.Negate)
-                    return JsType.Double;
+                    return JsTypes.Double;
 
                 throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
             }

@@ -17,11 +17,11 @@ namespace IronJS.Compiler.Ast
             Delimiter = delimiter;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.String;
+                return JsTypes.String;
             }
         }
 

@@ -6,7 +6,10 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public enum JsType { String, Integer, Double, Boolean, Null, Undefined, Object, Dynamic, Self }
+    public static class SelfMarker
+    {
+
+    }
 
     public static class JsTypes
     {
@@ -19,13 +22,22 @@ namespace IronJS.Compiler.Ast
         public static readonly Type Object = typeof(JsObj);
         public static readonly Type Dynamic = typeof(object);
         public static readonly Type Action = typeof(Action);
+        public static readonly Type Self = typeof(SelfMarker);
 
-        public static Type CreateFunction(params Type[] types)
+        public static Type CreateFuncType(params Type[] types)
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             var systemCore = assemblies.First(x => x.FullName.StartsWith("System.Core"));
-            var type = systemCore.GetType("System.Func`" + types.Length);
-            return type.MakeGenericType(types);
+
+            if (types.Length == 0)
+            {
+                return systemCore.GetType("System.Action");
+            }
+            else
+            {
+                var type = systemCore.GetType("System.Func`" + types.Length);
+                return type.MakeGenericType(types);
+            }
         }
     }
 
@@ -34,12 +46,12 @@ namespace IronJS.Compiler.Ast
         int Line { get; }
         int Column { get; }
         NodeType NodeType { get; }
-        JsType ExprType { get; }
+        Type ExprType { get; }
 
         Et Generate(EtGenerator etgen);
         Et Generate2(EtGenerator etgen);
         INode Optimize(AstOptimizer astopt);
-        JsType EvalTypes(params INode[] nodes);
+        Type EvalTypes(params INode[] nodes);
         bool IdenticalTypes(params INode[] nodes);
 
         string Print();

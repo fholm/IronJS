@@ -21,14 +21,14 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
                 if (Left.ExprType == Right.ExprType)
                     return Left.ExprType;
 
-                return JsType.Dynamic;
+                return JsTypes.Dynamic;
             }
         }
 

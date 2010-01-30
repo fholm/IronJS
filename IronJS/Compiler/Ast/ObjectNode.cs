@@ -18,11 +18,11 @@ namespace IronJS.Compiler.Ast
             Properties = properties;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Object;
+                return JsTypes.Object;
             }
         }
 

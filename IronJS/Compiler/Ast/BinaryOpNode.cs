@@ -33,12 +33,12 @@ namespace IronJS.Compiler.Ast
             Right = right;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
                 if (IsComparisonOp)
-                    return JsType.Boolean;
+                    return JsTypes.Boolean;
 
                 return EvalTypes(Left, Right);
             }
@@ -65,7 +65,7 @@ namespace IronJS.Compiler.Ast
                 var left = Left.Generate2(etgen);
                 var right = Right.Generate2(etgen);
 
-                if (Left.ExprType == JsType.Integer)
+                if (Left.ExprType == JsTypes.Integer)
                 {
                     if (Op == ExpressionType.LessThan)
                         return Et.LessThan(left, right);

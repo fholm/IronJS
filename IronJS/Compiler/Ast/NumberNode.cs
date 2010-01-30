@@ -15,14 +15,14 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
                 if (this.GetType() == typeof(NumberNode<int>))
-                    return JsType.Integer;
+                    return JsTypes.Integer;
 
-                return JsType.Double;
+                return JsTypes.Double;
             }
         }
 

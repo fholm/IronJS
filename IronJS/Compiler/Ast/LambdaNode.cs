@@ -27,11 +27,13 @@ namespace IronJS.Compiler.Ast
                 Name.IsDefinition = true;
         }
 
-        public override JsType ExprType
+        public override Type ExprType
         {
             get
             {
-                return JsType.Object;
+                return JsTypes.CreateFuncType(
+                    Args.Select(x => x.ExprType).ToArray()
+                );
             }
         }
 
@@ -42,7 +44,7 @@ namespace IronJS.Compiler.Ast
                 if (!IsLambda)
                 {
                     var variable = astopt.Scope.CreateVariable(Name.Name);
-                    variable.UsedAs.Add(JsType.Object);
+                    variable.UsedAs.Add(ExprType);
                     Name.Variable = variable;
                 }
             }
@@ -50,7 +52,7 @@ namespace IronJS.Compiler.Ast
             astopt.EnterScope();
 
             foreach (var arg in Args)
-                astopt.Scope.CreateVariable(arg.Name).UsedAs.Add(JsType.Dynamic);
+                astopt.Scope.CreateVariable(arg.Name).UsedAs.Add(JsTypes.Dynamic);
 
             Body = Body.Optimize(astopt);
 

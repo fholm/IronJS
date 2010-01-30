@@ -34,7 +34,11 @@ namespace IronJS.Compiler.Ast
 
             var idNode = Target as IdentifierNode;
             if (idNode != null && !idNode.IsGlobal)
-                idNode.Variable.UsedAs.Add(JsType.Object);
+                idNode.Variable.UsedAs.Add(
+                    JsTypes.CreateFuncType(
+                        Args.Select(x => x.ExprType).ToArray()
+                    ) 
+                );
 
             return this;
         }
@@ -52,7 +56,7 @@ namespace IronJS.Compiler.Ast
                         ),
                         typeof(void),
                         ArrayUtils.Insert(
-                            Target.Generate2(etgen),
+                            idNode.Generate2(etgen),
                             Args.Select(x => x.Generate2(etgen)).ToArray()
                         )
                     );
@@ -60,7 +64,7 @@ namespace IronJS.Compiler.Ast
                 else
                 {
                     return Et.Invoke(
-                        Target.Generate2(etgen),
+                        idNode.Generate2(etgen),
                         Args.Select(x => x.Generate2(etgen)).ToArray()
                     );
                 }

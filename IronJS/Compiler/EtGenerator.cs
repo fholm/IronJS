@@ -222,22 +222,8 @@ namespace IronJS.Compiler
             );
         }
 
-        internal bool TypesMatch(Ast.IdentifierNode target, Et value)
-        {
-            if (target.ExprType == Ast.JsType.Integer)
-                return value.Type == typeof(int);
-
-            if (target.ExprType == Ast.JsType.String)
-                return value.Type == typeof(string);
-
-            return false;
-        }
-
         internal EtParam CreateVariable2(string name, Type type)
         {
-            if (name == "x" || name == "x")
-                type = typeof(Action);
-
             return LambdaScope[name] = Et.Parameter(type, name);
         }
 
@@ -257,7 +243,7 @@ namespace IronJS.Compiler
                 }
                 else
                 {
-                    var typesMatch = TypesMatch(idNode, value);
+                    var typesMatch = target.ExprType == value.Type;
                     EtParam variable;
 
                     if (idNode.IsDefinition)
@@ -274,15 +260,7 @@ namespace IronJS.Compiler
                     {
                         if (variable.Type != typeof(object))
                         {
-                            if (variable.Type == variable.Type)
-                            {
-                                return Et.Assign(
-                                    variable,
-                                    value
-                                );
-                            }
-                            else
-                                throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
+                            throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
                         }
 
                         return Et.Assign(

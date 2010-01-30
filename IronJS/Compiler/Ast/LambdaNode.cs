@@ -22,6 +22,9 @@ namespace IronJS.Compiler.Ast
             Args = args;
             Body = body;
             Name = name;
+
+            if (Name != null)
+                Name.IsDefinition = true;
         }
 
         public override JsType ExprType
@@ -37,7 +40,11 @@ namespace IronJS.Compiler.Ast
             if (!astopt.IsGlobal)
             {
                 if (!IsLambda)
-                    astopt.Scope.CreateVariable(Name.Name).AssignedFrom.Add(this);
+                {
+                    var variable = astopt.Scope.CreateVariable(Name.Name);
+                    variable.UsedAs.Add(JsType.Object);
+                    Name.Variable = variable;
+                }
             }
 
             astopt.EnterScope();
@@ -62,7 +69,7 @@ namespace IronJS.Compiler.Ast
                 )
             );
 
-            etgen.LambdaScope = etgen.LambdaScope.Exit();
+            etgen.Exit();
 
             if (IsLambda)
             {

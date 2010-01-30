@@ -16,6 +16,7 @@ namespace IronJS.Compiler.Ast
         Et Generate2(EtGenerator etgen);
         INode Optimize(AstOptimizer astopt);
         JsType EvalTypes(params INode[] nodes);
+        bool IdenticalTypes(params INode[] nodes);
 
         string Print();
         void Print(StringBuilder writer, int indent = 0);

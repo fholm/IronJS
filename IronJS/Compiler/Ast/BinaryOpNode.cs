@@ -12,6 +12,19 @@ namespace IronJS.Compiler.Ast
         public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
+        public bool IsComparisonOp
+        {
+            get
+            {
+                return (Op == ExpressionType.LessThan
+                    || Op == ExpressionType.LessThanOrEqual
+                    || Op == ExpressionType.GreaterThan
+                    || Op == ExpressionType.GreaterThanOrEqual
+                    || Op == ExpressionType.Equal
+                    || Op == ExpressionType.NotEqual);
+            }
+        }
+
         public BinaryOpNode(INode left, INode right, ExpressionType op, ITree node)
             : base(NodeType.BinaryOp, node)
         {
@@ -24,6 +37,9 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
+                if (IsComparisonOp)
+                    return JsType.Boolean;
+
                 return EvalTypes(Left, Right);
             }
         }
@@ -40,6 +56,30 @@ namespace IronJS.Compiler.Ast
                 (Right as IdentifierNode).Variable.AssignedFrom.Add(Left);
 
             return this;
+        }
+
+        public override Et Generate2(EtGenerator etgen)
+        {
+            if (IdenticalTypes(Left, Right))
+            {
+                var left = Left.Generate2(etgen);
+                var right = Right.Generate2(etgen);
+
+                if (Left.ExprType == JsType.Integer)
+                {
+                    if (Op == ExpressionType.LessThan)
+                        return Et.LessThan(left, right);
+
+                    if (Op == ExpressionType.Add)
+                        return Et.Add(left, right);
+                }
+            }
+            else
+            {
+
+            }
+
+            throw new NotImplementedException();
         }
 
         public override Et Generate(EtGenerator etgen)

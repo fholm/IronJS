@@ -11,10 +11,10 @@ namespace IronJS.Runtime.Utils
             return obj;
         }
 
-        static public void Timer(IFunction func)
+        static public void Timer(Func<object> func)
         {
             var start = DateTime.Now;
-            func.Call(null, new object[] {});
+            func();
             var stop = DateTime.Now;
             var total = stop.Subtract(start);
             Console.WriteLine(total.TotalMilliseconds);

@@ -13,6 +13,7 @@ namespace IronJS.Compiler.Ast
 
         public bool IsDefinition { get; set; }
         public bool IsGlobal { get { return Variable == null; } }
+        public bool IsDeletable { get { return IsGlobal ? false : Variable.CanBeDeleted; } }
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
@@ -25,13 +26,25 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
+                if (IsGlobal)
+                    return JsType.Dynamic;
+
                 return Variable.ExprType;
             }
         }
 
         public override Et Generate2(EtGenerator etgen)
         {
-            return base.Generate2(etgen);
+            if (IsGlobal)
+            {
+                return Et.Call(
+                    etgen.GlobalScopeExpr,
+                    typeof(JsObj).GetMethod("Get"),
+                    Et.Constant(Name, typeof(object))
+                );
+            }
+            else
+                return etgen.LambdaScope[Name];
         }
 
         public override INode Optimize(AstOptimizer astopt)
@@ -67,7 +80,7 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Name + (Variable.CanBeDeleted ? "?" : "") + " " + ExprType + ")");
+            writer.AppendLine(indentStr + "(" + Name + (IsDeletable ? "?" : "") + " " + ExprType + ")");
         }
     }
 }

@@ -27,7 +27,6 @@ namespace IronJS.Compiler
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
         internal bool IsGlobal { get { return FunctionScope == null; } }
 
-
         // Build2
         internal Context Context { get; private set; }
         internal ParameterExpression GlobalScopeExpr { get; private set; }
@@ -57,6 +56,11 @@ namespace IronJS.Compiler
                 LambdaScope = new LambdaScope(null);
             else
                 LambdaScope = LambdaScope.Enter();
+        }
+
+        public void Exit()
+        {
+            LambdaScope = LambdaScope.Parent;
         }
 
         public MethodInfo Build(List<Ast.INode> astNodes, Context context)
@@ -239,13 +243,13 @@ namespace IronJS.Compiler
             var idNode = target as Ast.IdentifierNode;
             if (idNode != null)
             {
-                if (IsGlobal2)
+                if (idNode.IsGlobal)
                 {
                     return Et.Call(
                         GlobalScopeExpr,
                         typeof(JsObj).GetMethod("Set"),
                         Et.Constant(idNode.Name),
-                        value
+                        EtUtils.Box2(value)
                     );
                 }
                 else

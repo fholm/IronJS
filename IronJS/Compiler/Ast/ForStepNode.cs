@@ -40,6 +40,41 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
+        public override Et Generate2(EtGenerator etgen)
+        {
+            Et test = AstUtils.Empty();
+            Et setup = AstUtils.Empty();
+            Et incr = AstUtils.Empty();
+
+            if (Setup != null)
+                setup = Setup.Generate2(etgen);
+
+            if (Test != null)
+                if (Test.ExprType == JsType.Boolean)
+                    test = Test.Generate2(etgen);
+                else
+                    test = Et.Dynamic(
+                        etgen.Context.CreateConvertBinder(typeof(bool)),
+                        typeof(bool),
+                        Test.Generate2(etgen)
+                    );
+            else
+                test = Et.Constant(true, typeof(bool));
+
+            if (Incr != null)
+                incr = Incr.Generate2(etgen);
+
+            return Et.Block(
+                setup,
+                AstUtils.Loop(
+                    test,
+                    incr,
+                    Body.Generate2(etgen),
+                    AstUtils.Empty()
+                )
+            );
+        }
+
         public override Et LoopWalk(EtGenerator etgen)
         {
             return Et.Block(

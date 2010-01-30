@@ -8,6 +8,7 @@ using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 using System.Collections.Generic;
 using IronJS.Runtime.Js.Descriptors;
+using IronJS.Runtime.Binders2;
 
 namespace IronJS.Runtime
 {
@@ -236,6 +237,16 @@ namespace IronJS.Runtime
                 return _invokeBinders[callInfo];
 
             return _invokeBinders[callInfo] = new JsInvokeBinder(callInfo, this);
+        }
+
+        Dictionary<CallInfo, JsInvokeBinder2> _invokeBinders2
+            = new Dictionary<CallInfo, JsInvokeBinder2>();
+        internal JsInvokeBinder2 CreateInvokeBinder2(CallInfo callInfo)
+        {
+            if (_invokeBinders2.ContainsKey(callInfo))
+                return _invokeBinders2[callInfo];
+
+            return _invokeBinders2[callInfo] = new JsInvokeBinder2(callInfo, this);
         }
 
         Dictionary<CallInfo, JsCreateInstanceBinder> _createInstanceBinders

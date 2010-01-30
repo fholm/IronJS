@@ -2,6 +2,7 @@
 using System.Text;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Testing
 {
@@ -19,10 +20,22 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
+            var globals = new JsObj();
+
+            globals.Set(
+                "time", 
+                typeof(HelperFunctions).GetMethod("Timer")
+            );
+
+            globals.Set(
+                "print",
+                typeof(Console).GetMethod("WriteLine", new[] { typeof(int) })
+            );
+
             var etGenerator = new Compiler.EtGenerator();
             var compiled = etGenerator.Build2(astNodes, new Context());
-            compiled(new JsObj());
 
+            compiled(globals);
             Console.ReadLine();
         }
     }

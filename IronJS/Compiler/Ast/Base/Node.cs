@@ -45,6 +45,22 @@ namespace IronJS.Compiler.Ast
                 Column = -1;
             }
         }
+
+        public bool IdenticalTypes(params INode[] nodes)
+        {
+            if (nodes.Length > 0)
+            {
+                var type = nodes[0].ExprType;
+
+                for (int i = 0; i < nodes.Length; ++i)
+                    if (nodes[i].ExprType != type)
+                        return false;
+
+                return true;
+            }
+
+            return false;
+        }
         
         public JsType EvalTypes(params INode[] nodes)
         {

@@ -32,10 +32,31 @@ namespace IronJS.Compiler.Ast
                 args.Add(arg.Optimize(astopt));
             Args = args;
 
-            if (Target is IdentifierNode)
-                (Target as IdentifierNode).Variable.UsedAs.Add(JsType.Object);
+            var idNode = Target as IdentifierNode;
+            if (idNode != null && !idNode.IsGlobal)
+                idNode.Variable.UsedAs.Add(JsType.Object);
 
             return this;
+        }
+
+        public override Et Generate2(EtGenerator etgen)
+        {
+            var idNode = Target as IdentifierNode;
+            if (idNode != null)
+            {
+                return Et.Dynamic(
+                    etgen.Context.CreateInvokeBinder2(
+                        new CallInfo(Args.Count)
+                    ),
+                    typeof(object),
+                    ArrayUtils.Insert(
+                        Target.Generate2(etgen),
+                        Args.Select(x => x.Generate2(etgen)).ToArray()
+                    )
+                );
+            }
+
+            throw new NotImplementedException();
         }
 
         public override Et Generate(EtGenerator etgen)

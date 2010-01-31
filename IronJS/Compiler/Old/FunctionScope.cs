@@ -22,7 +22,7 @@ namespace IronJS.Compiler
                 if (_labelScope != null)
                     return _labelScope;
 
-                throw new CompilerError("Not inside a labelled statement or a loop");
+                throw new IjsCompilerError("Not inside a labelled statement or a loop");
             }
         }
 

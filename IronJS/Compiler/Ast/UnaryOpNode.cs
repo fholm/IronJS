@@ -23,16 +23,16 @@ namespace IronJS.Compiler.Ast
             get
             {
                 if (Op == ExpressionType.Not)
-                    return JsTypes.Boolean;
+                    return IjsTypes.Boolean;
 
                 if (Op == ExpressionType.OnesComplement)
-                    return JsTypes.Integer;
+                    return IjsTypes.Integer;
 
                 if (Op == ExpressionType.UnaryPlus)
-                    return JsTypes.Double;
+                    return IjsTypes.Double;
 
                 if (Op == ExpressionType.Negate)
-                    return JsTypes.Double;
+                    return IjsTypes.Double;
 
                 throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
             }

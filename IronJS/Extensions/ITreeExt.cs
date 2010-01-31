@@ -11,10 +11,10 @@ namespace IronJS.Extensions
             var child = that.GetChild(n);
 
             if (child == null)
-                throw new Compiler.CompilerError("Expected child");
+                throw new Compiler.IjsCompilerError("Expected child");
 
             if (!child.IsNil && child.Type == 0)
-                throw new Compiler.CompilerError(String.Format("Unexpected '{0}'", child.Text));
+                throw new Compiler.IjsCompilerError(String.Format("Unexpected '{0}'", child.Text));
 
             return child;
         }

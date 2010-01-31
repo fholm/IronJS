@@ -22,18 +22,18 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.Boolean;
+                return IjsTypes.Boolean;
             }
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Target = Target.Analyze(astopt);
 
             if (Target is IdentifierNode)
             {
-                (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);
-                (Target as IdentifierNode).Variable.CanBeDeleted = true;
+                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
+                (Target as IdentifierNode).VarInfo.CanBeDeleted = true;
             }
 
             return this;

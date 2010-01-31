@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Optimizer;
 using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -10,11 +10,13 @@ namespace IronJS.Compiler.Ast
     public class IdentifierNode : Node
     {
         public string Name { get; protected set; }
-        public Optimizer.Variable Variable { get; set; }
+        public IjsVarInfo VarInfo { get; set; }
 
         public bool IsDefinition { get; set; }
-        public bool IsGlobal { get { return Variable == null; } }
-        public bool IsDeletable { get { return IsGlobal ? false : Variable.CanBeDeleted; } }
+
+        public bool IsLocal { get { return !IsGlobal; } }
+        public bool IsGlobal { get { return VarInfo == null; } }
+        public bool IsDeletable { get { return IsGlobal ? false : VarInfo.CanBeDeleted; } }
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
@@ -28,13 +30,41 @@ namespace IronJS.Compiler.Ast
             get
             {
                 if (IsGlobal)
-                    return JsTypes.Dynamic;
+                    return IjsTypes.Dynamic;
 
-                return Variable.ExprType;
+                return VarInfo.ExprType;
             }
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
+        {
+            if (!astopt.IsInsideWith)
+            {
+                if (!astopt.InGlobalScope)
+                {
+                    if (IsDefinition)
+                    {
+                        VarInfo = astopt.Scope.CreateVariable(Name);
+                    }
+                    else
+                    {
+                        IjsVarInfo variable;
+
+                        if (astopt.Scope.GetVariable(Name, out variable))
+                        {
+                            VarInfo = variable;
+
+                            if (!astopt.Scope.Variables.ContainsKey(Name))
+                                astopt.Scope.FuncInfo.ClosesOver.Add(this);
+                        }
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             if (IsGlobal)
             {
@@ -52,31 +82,22 @@ namespace IronJS.Compiler.Ast
                 }
                 else
                 {
+                    if (etgen.Scope.FuncInfo.ClosesOver.Contains(this))
+                    {
+                        return Et.Field(
+                            Et.Field(
+                                etgen.ClosureExpr,
+                                etgen.Scope.FuncInfo.ClosureType.GetField(Name)
+                            ),
+                            typeof(IjsClosureCell<>).MakeGenericType(ExprType).GetField("Value")
+                        );
+                    }
+
                     return etgen.Scope[Name].Item1;
                 }
             }
+
             throw new NotImplementedException();
-        }
-
-        public override INode Analyze(AstAnalyzer astopt)
-        {
-            if (!astopt.InGlobalScope)
-            {
-                if (IsDefinition)
-                {
-                    Variable = astopt.Scope.CreateVariable(Name);
-                    Variable.IsInsideWith = astopt.IsInsideWith;
-                }
-                else
-                {
-                    Optimizer.Variable variable;
-
-                    if (astopt.Scope.GetVariable(Name, out variable))
-                        Variable = variable;
-                }
-            }
-
-            return this;
         }
 
         public override Et Generate(EtGenerator etgen)

@@ -19,8 +19,13 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.Boolean;
+                return IjsTypes.Boolean;
             }
+        }
+
+        public override Et EtGen(IjsEtGenerator etgen)
+        {
+            return etgen.Constant(Value);
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

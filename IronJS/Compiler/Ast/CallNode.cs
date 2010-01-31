@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Optimizer;
 using IronJS.Runtime.Binders2;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using Microsoft.Scripting.Utils;
+using ArrayUtils = Microsoft.Scripting.Utils.ArrayUtils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -27,31 +27,47 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Target = Target.Analyze(astopt);
 
             var args = new List<INode>();
+
             foreach (var arg in Args)
                 args.Add(arg.Analyze(astopt));
+
             Args = args;
 
             var idNode = Target as IdentifierNode;
-            if (idNode != null && !idNode.IsGlobal)
-                idNode.Variable.UsedAs.Add(typeof(IjsFunc));
+            if (idNode != null && idNode.IsLocal)
+                idNode.VarInfo.UsedAs.Add(typeof(IjsFunc));
 
             return this;
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             var idNode = Target as IdentifierNode;
             if (idNode != null && !idNode.IsGlobal)
             {
-                return Et.Call(
-                    idNode.Variable.Lambda.Method,
-                    etgen.GlobalsExpr
-                );
+                IjsFuncInfo funcInfo;
+                if(idNode.VarInfo.GetFuncInfo(out funcInfo))
+                {
+                    if (funcInfo.IsCompiled)
+                    {
+                        return Et.Call(
+                            funcInfo.CompiledMethod,
+                            EtUtils.ConvertToParamTypes(
+                                new[] { etgen.GlobalsExpr }.Concat(
+                                    Args.Select(x => x.EtGen(etgen))
+                                ),
+                                funcInfo.CompiledMethod.GetParameters()
+                            )
+                        );
+                    }
+                }
+
+                throw new NotImplementedException();
             }
             else
             {
@@ -59,7 +75,7 @@ namespace IronJS.Compiler.Ast
                 {
                     return Et.Call(
                         typeof(HelperFunctions).GetMethod("Timer"),
-                        Args[0].GenerateStatic(etgen),
+                        Args[0].EtGen(etgen),
                         etgen.GlobalsExpr
                     );
                 }
@@ -95,64 +111,10 @@ namespace IronJS.Compiler.Ast
                         ),
                         delegateType.GetMethod("Invoke"),
                         field,
-                        idNode.GenerateStatic(etgen),
+                        idNode.EtGen(etgen),
                         etgen.GlobalsExpr
                     )
                 );
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public override Et Generate2(EtGenerator etgen)
-        {
-            var idNode = Target as IdentifierNode;
-            if (idNode != null)
-            {
-                if(idNode.IsGlobal)
-                {
-                    var delegateType = typeof(Func<CallSite, object, object, object>);
-                    var callSite = CallSite.Create(
-                        delegateType, 
-                        new JsInvokeBinder2(
-                            new CallInfo(Args.Count)
-                        )
-                     );
-
-                    var serializer = callSite.Binder as Microsoft.Scripting.Runtime.IExpressionSerializable;
-                    var siteType = callSite.GetType();
-                    var field = Expression.Field(null,
-                        etgen.TypBuilder.DefineField("$callsite1", siteType, FieldAttributes.Static | FieldAttributes.Public)
-                    );
-                    var init = Expression.Call(siteType.GetMethod("Create"), serializer.CreateExpression());
-
-                    // ($site = siteExpr).Target.Invoke($site, *args)
-                    var site = Expression.Variable(siteType, "$site");
-
-                    return Expression.Block(
-                        new[] { site },
-                        Expression.Assign(
-                            field, init
-                        ),
-                        Expression.Call(
-                            Expression.Field( 
-                                Expression.Assign(site, field),
-                                site.Type.GetField("Target")
-                            ),
-                            delegateType.GetMethod("Invoke"),
-                            site,
-                            idNode.Generate2(etgen),
-                            etgen.GlobalScopeExpr
-                        )
-                    );
-                }
-                else
-                {
-                    return Et.Invoke(
-                        idNode.Generate2(etgen),
-                        Args.Select(x => x.Generate2(etgen)).ToArray()
-                    );
-                }
             }
 
             throw new NotImplementedException();

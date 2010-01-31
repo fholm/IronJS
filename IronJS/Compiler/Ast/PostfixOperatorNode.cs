@@ -23,10 +23,10 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                if (Target.ExprType == JsTypes.Integer)
-                    return JsTypes.Integer;
+                if (Target.ExprType == IjsTypes.Integer)
+                    return IjsTypes.Integer;
 
-                return JsTypes.Double;
+                return IjsTypes.Double;
             }
         }
 

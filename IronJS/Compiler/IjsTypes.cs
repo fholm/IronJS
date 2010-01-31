@@ -1,17 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IronJS.Runtime.Js;
-using Et = System.Linq.Expressions.Expression;
 
-namespace IronJS.Compiler.Ast
+namespace IronJS.Compiler
 {
-    public static class SelfMarker
-    {
-
-    }
-
-    public static class JsTypes
+    public static class IjsTypes
     {
         public static readonly Type String = typeof(string);
         public static readonly Type Integer = typeof(int);
@@ -38,23 +33,5 @@ namespace IronJS.Compiler.Ast
                 return type.MakeGenericType(types);
             }
         }
-    }
-
-    public interface INode
-    {
-        int Line { get; }
-        int Column { get; }
-        NodeType NodeType { get; }
-        Type ExprType { get; }
-
-        Et Generate(EtGenerator etgen);
-        Et Generate2(EtGenerator etgen);
-        Et GenerateStatic(IjsEtGenerator etgen);
-        INode Analyze(AstAnalyzer astopt);
-        Type EvalTypes(params INode[] nodes);
-        bool IdenticalTypes(params INode[] nodes);
-
-        string Print();
-        void Print(StringBuilder writer, int indent = 0);
     }
 }

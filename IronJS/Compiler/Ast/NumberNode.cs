@@ -20,13 +20,13 @@ namespace IronJS.Compiler.Ast
             get
             {
                 if (this.GetType() == typeof(NumberNode<int>))
-                    return JsTypes.Integer;
+                    return IjsTypes.Integer;
 
-                return JsTypes.Double;
+                return IjsTypes.Double;
             }
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             return etgen.Constant(Value);
         }

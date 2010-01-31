@@ -33,11 +33,11 @@ namespace IronJS.Compiler.Ast
                         return TrueBranch.ExprType;
                 }
 
-                return JsTypes.Dynamic;
+                return IjsTypes.Dynamic;
             }
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Test = Test.Analyze(astopt);
             TrueBranch = TrueBranch.Analyze(astopt);

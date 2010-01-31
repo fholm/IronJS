@@ -33,14 +33,20 @@ namespace IronJS.Runtime.Js
             }
         }
 
+        internal static Et StaticExpr
+        {
+            get
+            {
+                return Et.Property(
+                    null,
+                    typeof(Undefined).GetProperty("Instance")
+                );
+            }
+        }
+
         private Undefined()
         {
 
-        }
-
-        public override string ToString()
-        {
-            return "[IronJS: undefined]";
         }
     }
 }

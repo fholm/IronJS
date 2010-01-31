@@ -21,11 +21,11 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.String;
+                return IjsTypes.String;
             }
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             return etgen.Constant(Value);
         }
@@ -38,7 +38,7 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "('" + Value + "')");
+            writer.AppendLine(indentStr + "(" + Delimiter + Value + Delimiter + ")");
         }
     }
 }

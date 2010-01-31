@@ -12,7 +12,7 @@ using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
 
 namespace IronJS.Compiler
 {
-    public class AstGenerator
+    public class IjsAstGenerator
     {
         public List<INode> Build(string fileName, Encoding encoding)
         {
@@ -387,7 +387,7 @@ namespace IronJS.Compiler
                  * Error handling
                  */
                 default:
-                    throw new Compiler.CompilerError(
+                    throw new Compiler.IjsCompilerError(
                         String.Format("Unrecognized token '{0}'", Name(node))
                     );
             }
@@ -490,7 +490,7 @@ namespace IronJS.Compiler
             var target = Build(node.GetChildSafe(1));
 
             if (!(target is ILabelableNode))
-                throw new CompilerError("Can only label nodes that implement ILabelableNode");
+                throw new IjsCompilerError("Can only label nodes that implement ILabelableNode");
 
            (target as ILabelableNode).SetLabel(label.Text);
            return target;
@@ -886,7 +886,7 @@ namespace IronJS.Compiler
             var body = BuildBlock(block);
             var nameNode = name == null ? null : new IdentifierNode(name, argsNode);
 
-            return new LambdaNode(args, body, nameNode, argsNode);
+            return new FuncNode(args, body, nameNode, argsNode);
         }
 
         private INode BuildNew(ITree node)

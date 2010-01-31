@@ -8,6 +8,7 @@ using Microsoft.Scripting.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Binders2
 {
@@ -52,22 +53,52 @@ namespace IronJS.Runtime.Binders2
 
             if (methodInfo != null)
             {
-                return new Meta(
-                    EtUtils.Box(
-                        Et.Call(
-                            methodInfo,
-                            EtUtils.ConvertToParamTypes(
-                                args,
-                                methodInfo.GetParameters()
+                var closure = target.Value.GetType().GetField("Closure");
+
+                if (closure == null)
+                {
+                    return new Meta(
+                        EtUtils.Box(
+                            Et.Call(
+                                methodInfo,
+                                EtUtils.ConvertToParamTypes(
+                                    args,
+                                    methodInfo.GetParameters()
+                                )
                             )
+                        ),
+                        RestrictUtils.BuildCallRestrictions(
+                            target,
+                            args,
+                            RestrictFlag.Instance
                         )
-                    ),
-                    RestrictUtils.BuildCallRestrictions(
-                        target,
-                        args,
-                        RestrictFlag.Instance
-                    )
-                );
+                    );
+                }
+                else
+                {
+                    return new Meta(
+                        EtUtils.Box(
+                            Et.Call(
+                                methodInfo,
+                                EtUtils.ConvertToParamTypes(
+                                    ArrayUtils.Append(
+                                        DynamicUtils.GetExpressions(args),
+                                        Et.Field(
+                                            Et.Convert(target.Expression, target.LimitType),
+                                            closure
+                                        )
+                                    ),
+                                    methodInfo.GetParameters()
+                                )
+                            )
+                        ),
+                        RestrictUtils.BuildCallRestrictions(
+                            target,
+                            args,
+                            RestrictFlag.Instance
+                        )
+                    );
+                }
             }
 
             throw new NotImplementedException();

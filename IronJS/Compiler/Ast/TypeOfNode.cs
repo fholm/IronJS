@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.String;
+                return IjsTypes.String;
             }
         }
         

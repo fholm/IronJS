@@ -1,17 +1,16 @@
 ﻿using System;
+using System.Linq;
 using IronJS.Extensions;
 using System.Collections.Generic;
+using IronJS.Compiler.Ast;
 
 namespace IronJS.Compiler.Optimizer
 {
-    public class Variable
+    public class IjsVarInfo
     {
-
         public string Name { get; set; }
-        public Ast.LambdaNode Lambda { get; set; }
         public bool IsResolving { get; set; }
         public bool IsParameter { get; set; }
-        public bool IsInsideWith { get; set; }
         public bool TypeResolved { get; set; }
         public bool CanBeDeleted { get; set; }
         public bool IsClosedOver { get; set; }
@@ -43,19 +42,37 @@ namespace IronJS.Compiler.Optimizer
             }
         }
 
-        public Variable(string name)
+        public IjsVarInfo(string name)
         {
             Name = name;
-            Lambda = null;
             IsParameter = false;
             IsResolving = false;
             TypeResolved = false;
             IsClosedOver = false;
-            IsInsideWith = false;
             CanBeDeleted = false;
 
             UsedAs = new HashSet<Type>();
             AssignedFrom = new HashSet<Ast.INode>();
+        }
+
+        public bool GetFuncInfo(out IjsFuncInfo funcInfo)
+        {
+            if(ExprType == typeof(IjsFunc))
+            {
+                if(AssignedFrom.Count == 1)
+                {
+                    var first = AssignedFrom.First() as FuncNode;
+
+                    if (first != null)
+                    {
+                        funcInfo = first.FuncInfo;
+                        return true;
+                    }
+                }
+            }
+
+            funcInfo = null;
+            return false;
         }
     }
 }

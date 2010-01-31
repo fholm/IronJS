@@ -38,34 +38,34 @@ namespace IronJS.Compiler.Ast
             get
             {
                 if (IsComparisonOp)
-                    return JsTypes.Boolean;
+                    return IjsTypes.Boolean;
 
                 return EvalTypes(Left, Right);
             }
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Left = Left.Analyze(astopt);
             Right = Right.Analyze(astopt);
 
             if (Left is IdentifierNode)
-                (Left as IdentifierNode).Variable.AssignedFrom.Add(Right);
+                (Left as IdentifierNode).VarInfo.AssignedFrom.Add(Right);
 
             if (Right is IdentifierNode)
-                (Right as IdentifierNode).Variable.AssignedFrom.Add(Left);
+                (Right as IdentifierNode).VarInfo.AssignedFrom.Add(Left);
 
             return this;
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             if (IdenticalTypes(Left, Right))
             {
-                var left = Left.GenerateStatic(etgen);
-                var right = Right.GenerateStatic(etgen);
+                var left = Left.EtGen(etgen);
+                var right = Right.EtGen(etgen);
 
-                if (Left.ExprType == JsTypes.Integer)
+                if (Left.ExprType == IjsTypes.Integer)
                 {
                     if (Op == ExpressionType.LessThan)
                         return Et.LessThan(left, right);

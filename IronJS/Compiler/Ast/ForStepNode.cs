@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             if (Setup != null)
                 Setup = Setup.Analyze(astopt);
@@ -40,18 +40,18 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             Et test = AstUtils.Empty();
             Et setup = AstUtils.Empty();
             Et incr = AstUtils.Empty();
 
             if (Setup != null)
-                setup = Setup.GenerateStatic(etgen);
+                setup = Setup.EtGen(etgen);
 
             if (Test != null)
-                if (Test.ExprType == JsTypes.Boolean)
-                    test = Test.GenerateStatic(etgen);
+                if (Test.ExprType == IjsTypes.Boolean)
+                    test = Test.EtGen(etgen);
                 else
                     throw new NotImplementedException();
 
@@ -59,14 +59,14 @@ namespace IronJS.Compiler.Ast
                 test = Et.Constant(true, typeof(bool));
 
             if (Incr != null)
-                incr = Incr.GenerateStatic(etgen);
+                incr = Incr.EtGen(etgen);
 
             return Et.Block(
                 setup,
                 AstUtils.Loop(
                     test,
                     incr,
-                    Body.GenerateStatic(etgen),
+                    Body.EtGen(etgen),
                     AstUtils.Empty()
                 )
             );

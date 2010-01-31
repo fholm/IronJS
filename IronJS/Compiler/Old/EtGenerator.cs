@@ -27,28 +27,11 @@ namespace IronJS.Compiler
         internal int LambdaId { get { return LambdaTuples.Count - 1; } }
         internal bool IsGlobal { get { return FunctionScope == null; } }
 
-        // Build2
-        public Action<IjsObj> Build2(List<Ast.INode> astNodes, Context context)
-        {
-            Context = context;
-            LambdaScope = null;
-            GlobalExprs = new List<Et>();
-            GlobalScopeExpr = Et.Parameter(typeof(IjsObj), "#globals");
-
-            foreach (var node in astNodes)
-                GlobalExprs.Add(node.Generate2(this));
-
-            return Et.Lambda<Action<IjsObj>>(
-                Et.Block(GlobalExprs),
-                new[] { GlobalScopeExpr }
-            ).Compile();
-        }
-
         // Build3
         internal ParameterExpression GlobalScopeExpr { get; private set; }
         internal Context Context { get; private set; }
         internal List<Et> GlobalExprs { get; private set; }
-        internal LambdaScope LambdaScope { get; set; }
+        internal IjsFuncScope LambdaScope { get; set; }
         internal bool IsGlobal2 { get { return LambdaScope == null; } }
         internal TypeBuilder TypBuilder { get; set; }
 
@@ -60,44 +43,10 @@ namespace IronJS.Compiler
             );
         }
 
-        public MethodInfo Build3(List<Ast.INode> astNodes, Context context)
-        {
-            // Get domain
-            var domain = AppDomain.CurrentDomain;
-
-            // Create dynamic assembly
-            var asmName = new AssemblyName("IronJS`Assembly1");
-            var dynAsm = domain.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
-
-            // Create a dynamic module and type
-            var dynMod = dynAsm.DefineDynamicModule("IronJS`Module1", "IronJS_Module1.dll");
-            TypBuilder = dynMod.DefineType("IronJS`Class1");
-
-            Context = context;
-            LambdaScope = null;
-            GlobalExprs = new List<Et>();
-            GlobalScopeExpr = Et.Parameter(typeof(IjsObj), "#globals");
-
-            foreach (var node in astNodes)
-                GlobalExprs.Add(node.Generate2(this));
-
-            var lambda = Et.Lambda<Action<IjsObj>>(
-                Et.Block(GlobalExprs),
-                new[] { GlobalScopeExpr }
-            );
-
-            var method = CreateMethod();
-            lambda.CompileToMethod(method);
-
-            TypBuilder.CreateType();
-            var type = dynAsm.GetType("IronJS`Class1");
-            return type.GetMethod(method.Name);
-        }
-
         public void Enter()
         {
             if (LambdaScope == null)
-                LambdaScope = new LambdaScope(null);
+                LambdaScope = new IjsFuncScope(null);
             else
                 LambdaScope = LambdaScope.Enter();
         }

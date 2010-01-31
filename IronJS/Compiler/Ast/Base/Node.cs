@@ -12,7 +12,7 @@ namespace IronJS.Compiler.Ast
     {
         Assign, Identifier, Double, Null,
         MemberAccess, Call, If, Eq, Block,
-        String, Lambda, While, BinaryOp,
+        String, Func, While, BinaryOp,
         Object, New, AutoProperty, Return,
         UnaryOp, Logical, PostfixOperator,
         TypeOf, Boolean, Void, StrictCompare,
@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
         public NodeType NodeType { get; protected set; }
         public int Line { get; protected set; }
         public int Column { get; protected set; }
-        public virtual Type ExprType { get { return JsTypes.Dynamic; } }
+        public virtual Type ExprType { get { return IjsTypes.Dynamic; } }
 
         public Node(NodeType type, ITree node)
         {
@@ -87,26 +87,19 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
-        public virtual INode Analyze(AstAnalyzer astopt)
+        public virtual INode Analyze(IjsAstAnalyzer astopt)
         {
             return this;
         }
 
-        public virtual Et Generate2(EtGenerator etgen)
+        public virtual Et EtGen(IjsEtGenerator etgen)
         {
             return AstUtils.Empty();
         }
 
-
-        public virtual Et GenerateStatic(IjsEtGenerator etgen)
+        public virtual Et Generate(EtGenerator etgen)
         {
             return AstUtils.Empty();
         }
-
-        #region Abstract
-
-        public abstract Et Generate(EtGenerator etgen);
-
-        #endregion
     }
 }

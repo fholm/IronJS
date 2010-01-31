@@ -58,7 +58,7 @@ namespace IronJS.Runtime.Binders
                 target,
                 new Meta[] {},
                 restrictions,
-                typeof(Compiler.CompilerError),
+                typeof(Compiler.IjsCompilerError),
                 "No conversions for type '" + Type.Name + "' available"
             );
         }

@@ -6,6 +6,7 @@ using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
 using Restrict = System.Dynamic.BindingRestrictions;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Utils
 {
@@ -110,20 +111,30 @@ namespace IronJS.Runtime.Utils
             return callArgs;
         }
 
-        internal static Et[] ConvertToParamTypes(Meta[] args, ParameterInfo[] paramInfo)
+        internal static Et[] ConvertToParamTypes(IEnumerable<Et> args, ParameterInfo[] paramInfo)
         {
-            Et[] callArgs = new Et[args.Length];
+            Et[] converted = new Et[args.Count()];
 
-            for (int i = 0; i < args.Length; i++)
+            var n = 0;
+
+            foreach (var arg in args)
             {
-                callArgs[i] =
-                    Et.Convert(
-                        args[i].Expression,
-                        paramInfo[i].ParameterType
-                    );
+                converted[n] = Et.Convert(
+                    arg,
+                    paramInfo[n].ParameterType
+                );
+                ++n;
             }
 
-            return callArgs;
+            return converted;
+        }
+
+        internal static Et[] ConvertToParamTypes(IEnumerable<Meta> args, ParameterInfo[] paramInfo)
+        {
+            return ConvertToParamTypes(
+                args.Select(x => x.Expression), 
+                paramInfo
+            );
         }
 
 

@@ -17,7 +17,7 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.Null;
+                return IjsTypes.Null;
             }
         }
 

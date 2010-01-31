@@ -2,22 +2,22 @@
 
 namespace IronJS.Compiler
 {
-    public class CompilerError : Error
+    public class IjsCompilerError : Error
     {
-        internal CompilerError(string msg)
+        internal IjsCompilerError(string msg)
             : base(msg)
         {
 
         }
 
-        internal CompilerError(string msg, params object[] parms)
+        internal IjsCompilerError(string msg, params object[] parms)
             : this(String.Format(msg, parms))
         {
 
         }
     }
 
-    public class AstCompilerError : CompilerError
+    public class AstCompilerError : IjsCompilerError
     {
         internal AstCompilerError(string msg, params object[] parms)
             : base(msg, parms)
@@ -26,7 +26,7 @@ namespace IronJS.Compiler
         }
     }
 
-    public class EtCompilerError : CompilerError
+    public class EtCompilerError : IjsCompilerError
     {
         internal const string CANT_ASSIGN_TO_NODE_TYPE = "Can't assign to node of type '{0}'";
         internal const string NOT_INSIDE_LOOP = "Not inside a loop";

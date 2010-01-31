@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 
@@ -10,8 +9,8 @@ namespace IronJS.Testing
     {
         public static void Main(string[] args)
         {
-            var astGenerator = new Compiler.AstGenerator();
-            var astOptimizer = new Compiler.AstAnalyzer();
+            var astGenerator = new Compiler.IjsAstGenerator();
+            var astOptimizer = new Compiler.IjsAstAnalyzer();
 
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
                 astNodes = astOptimizer.Optimize(astNodes);
@@ -36,7 +35,6 @@ namespace IronJS.Testing
             var compiled = etGenerator.Generate(astNodes, context);
 
             compiled.Invoke(null, new[] { (object) globals });
-            Console.ReadLine();
         }
     }
 }

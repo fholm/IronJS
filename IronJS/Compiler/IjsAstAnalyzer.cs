@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using IronJS.Compiler.Ast;
+using IronJS.Compiler.Optimizer;
 
 namespace IronJS.Compiler
 {
-    public class AstAnalyzer
+    public class IjsAstAnalyzer
     {
         public bool IsInsideWith { get { return false; } }
         public bool InGlobalScope { get { return Scope == null; } }
-        public Optimizer.Scope Scope { get; protected set; }
+        public IjsAnalyzeScope Scope { get; protected set; }
 
         public List<INode> Optimize(List<INode> astNodes)
         {
@@ -20,12 +20,12 @@ namespace IronJS.Compiler
             return optimizedNodes;
         }
 
-        public void EnterScope()
+        public void EnterScope(IjsFuncInfo funcInfo)
         {
             if (Scope == null)
-                Scope = new Optimizer.Scope(null);
+                Scope = new Optimizer.IjsAnalyzeScope(null, funcInfo);
             else
-                Scope = Scope.Enter();
+                Scope = Scope.Enter(funcInfo);
         }
 
         public void ExitScope()

@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return JsTypes.Boolean;
+                return IjsTypes.Boolean;
             }
         }
 

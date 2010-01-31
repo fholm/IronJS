@@ -18,7 +18,7 @@ namespace IronJS.Compiler.Ast
             Name = member;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             //if (Target is IdentifierNode)
             //    (Target as IdentifierNode).Variable.AssignedFrom.Add(GetType());

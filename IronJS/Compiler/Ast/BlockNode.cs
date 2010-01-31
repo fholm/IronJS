@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
             Nodes = nodes;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             var nodes = new List<INode>();
 
@@ -30,13 +30,13 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
             if (IsEmpty)
                 return AstUtils.Empty();
 
             return Et.Block(
-                Nodes.Select(x => x.GenerateStatic(etgen))
+                Nodes.Select(x => x.EtGen(etgen))
             );
         }
 

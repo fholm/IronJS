@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
-using EtParam = System.Linq.Expressions.ParameterExpression;
-using IronJS.Compiler.Optimizer;
 
 namespace IronJS.Compiler.Ast
 {
@@ -21,71 +17,21 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Target = Target.Analyze(astopt);
             Value = Value.Analyze(astopt);
 
             var idNode = (Target as IdentifierNode);
-            if (idNode != null && !idNode.IsGlobal)
-                idNode.Variable.UsedAs.Add(Value.ExprType);
+            if (idNode != null && idNode.IsLocal)
+                idNode.VarInfo.AssignedFrom.Add(Value);
 
             return this;
         }
 
-        public override Et GenerateStatic(IjsEtGenerator etgen)
+        public override Et EtGen(IjsEtGenerator etgen)
         {
-            var idNode = Target as IdentifierNode;
-            if (idNode != null)
-            {
-                if (idNode.IsGlobal)
-                {
-                    return Et.Call(
-                        etgen.GlobalsExpr,
-                        typeof(IjsObj).GetMethod("Set"),
-                        etgen.Constant<string>(idNode.Name),
-                        EtUtils.Box2(Value.GenerateStatic(etgen))
-                    );
-                }
-                else
-                {
-                    var typesMatch = Target.ExprType == Value.ExprType;
-                    Tuple<EtParam, Variable> variable;
-
-                    if (idNode.IsDefinition)
-                    {
-                        if (typesMatch)
-                            variable = etgen.DefineVar(idNode.Variable);
-                        else
-                            variable = etgen.DefineVar(idNode.Variable);
-                    }
-                    else
-                        variable = etgen.Scope[idNode.Name];
-
-                    if (!typesMatch)
-                    {
-                        if (variable.Item1.Type != typeof(object))
-                        {
-                            throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
-                        }
-
-                        return Et.Assign(
-                            variable.Item1,
-                            EtUtils.Box2(Value.GenerateStatic(etgen))
-                        );
-                    }
-
-                    if (Value is LambdaNode)
-                        variable.Item2.Lambda = Value as LambdaNode;
-
-                    return Et.Assign(
-                        variable.Item1,
-                        Value.GenerateStatic(etgen)
-                    );
-                }
-            }
-
-            throw new NotImplementedException();
+            return etgen.GenAssignEt(Target, Value);
         }
 
         public override Et Generate(EtGenerator etgen)

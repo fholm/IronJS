@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
                 if (Left.ExprType == Right.ExprType)
                     return Left.ExprType;
 
-                return JsTypes.Dynamic;
+                return IjsTypes.Dynamic;
             }
         }
 

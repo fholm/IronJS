@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using IronJS.Compiler.Ast;
+using System.Linq;
+using IronJS.Compiler;
 
 namespace IronJS.Extensions
 {
@@ -14,7 +14,7 @@ namespace IronJS.Extensions
             if (set.Count == 1)
                 return set.First();
 
-            return JsTypes.Dynamic;
+            return IjsTypes.Dynamic;
         }
     }
 }

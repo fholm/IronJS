@@ -2,37 +2,39 @@
 
 namespace IronJS.Compiler.Optimizer
 {
-    public class Scope
+    public class IjsAnalyzeScope
     {
-        public Scope Parent { get; protected set; }
-        public Dictionary<string, Variable> Variables { get; protected set; }
+        public IjsAnalyzeScope Parent { get; protected set; }
+        public IjsFuncInfo FuncInfo { get; protected set; }
+        public Dictionary<string, IjsVarInfo> Variables { get; protected set; }
 
-        public Scope(Scope parent)
+        public IjsAnalyzeScope(IjsAnalyzeScope parent, IjsFuncInfo funcInfo)
         {
             Parent = parent;
-            Variables = new Dictionary<string, Variable>();
+            FuncInfo = funcInfo;
+            Variables = new Dictionary<string, IjsVarInfo>();
         }
 
-        public Scope Enter()
+        public IjsAnalyzeScope Enter(IjsFuncInfo funcInfo)
         {
-            return new Scope(this);
+            return new IjsAnalyzeScope(this, funcInfo);
         }
 
-        public Scope Exit()
+        public IjsAnalyzeScope Exit()
         {
             return Parent;
         }
 
-        public Variable CreateVariable(string name)
+        public IjsVarInfo CreateVariable(string name)
         {
             if (Variables.ContainsKey(name))
                 throw new AstCompilerError("A variable named {0} already exists", name);
 
-            Variables.Add(name, new Variable(name));
+            Variables.Add(name, new IjsVarInfo(name));
             return Variables[name];
         }
 
-        public bool GetVariable(string name, out Variable variable)
+        public bool GetVariable(string name, out IjsVarInfo variable)
         {
             if (Variables.TryGetValue(name, out variable))
                 return true;

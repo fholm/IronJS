@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Finally = _finally;
         }
 
-        public override INode Analyze(AstAnalyzer astopt)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Body = Body.Analyze(astopt);
 
@@ -37,7 +37,7 @@ namespace IronJS.Compiler.Ast
                 Finally = Finally.Analyze(astopt);
 
             if (Target is IdentifierNode)
-                (Target as IdentifierNode).Variable.UsedAs.Add(JsTypes.Object);
+                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
 
             return this;
         }

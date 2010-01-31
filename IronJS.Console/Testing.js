@@ -5,6 +5,13 @@ var y = 1;
 
 var x = function () {
     i = 2;
+
+    var x = 2;
+    var z = 1;
+
+    var k = x + z;
+
+    r = 2;
 };
 
 x();

@@ -1,14 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using IronJS.Compiler.Optimizer;
 using EtParam = System.Linq.Expressions.ParameterExpression;
 
 namespace IronJS.Compiler
 {
     public class IjsScope
     {
-        public Dictionary<string, EtParam> Variables =
-            new Dictionary<string, EtParam>();
+        public Dictionary<string, Tuple<EtParam, Variable>> Variables =
+            new Dictionary<string, Tuple<EtParam, Variable>>();
 
-        public EtParam this[string name]
+        public Tuple<EtParam, Variable> this[string name]
         {
             get
             {

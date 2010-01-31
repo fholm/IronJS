@@ -12,6 +12,14 @@ namespace IronJS.Compiler.Ast
         public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
 
+        public BinaryOpNode(INode left, INode right, ExpressionType op, ITree node)
+            : base(NodeType.BinaryOp, node)
+        {
+            Op = op;
+            Left = left;
+            Right = right;
+        }
+
         public bool IsComparisonOp
         {
             get
@@ -23,14 +31,6 @@ namespace IronJS.Compiler.Ast
                     || Op == ExpressionType.Equal
                     || Op == ExpressionType.NotEqual);
             }
-        }
-
-        public BinaryOpNode(INode left, INode right, ExpressionType op, ITree node)
-            : base(NodeType.BinaryOp, node)
-        {
-            Op = op;
-            Left = left;
-            Right = right;
         }
 
         public override Type ExprType
@@ -58,12 +58,12 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et Generate2(EtGenerator etgen)
+        public override Et GenerateStatic(IjsEtGenerator etgen)
         {
             if (IdenticalTypes(Left, Right))
             {
-                var left = Left.Generate2(etgen);
-                var right = Right.Generate2(etgen);
+                var left = Left.GenerateStatic(etgen);
+                var right = Right.GenerateStatic(etgen);
 
                 if (Left.ExprType == JsTypes.Integer)
                 {

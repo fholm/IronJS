@@ -31,6 +31,7 @@ namespace IronJS.Compiler
     using Et = Expression;
     using EtParm = ParameterExpression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
+using IronJS.Compiler.Optimizer;
 
     public class IjsEtGenerator
     {
@@ -40,7 +41,8 @@ namespace IronJS.Compiler
         public TypeGen TypeGen { get { return TypeGenStack.Peek(); } }
         public Stack<TypeGen> TypeGenStack { get; protected set; }
         public EtParm GlobalsExpr { get; protected set; }
-        public IjsScope Scope { get; protected set; }
+        public IjsScope Scope { get { return Scopes.Peek(); } }
+        public Stack<IjsScope> Scopes { get; protected set; }
         public List<Tuple<int, MemberExpression, Ast.LambdaNode>> Functions { get; protected set; }
 
         public Type Generate(List<Ast.INode> astNodes, IjsContext context)
@@ -48,7 +50,8 @@ namespace IronJS.Compiler
             // Setup common properties
             MethodCount = -1;
             Functions = new List<Tuple<int, MemberExpression, Ast.LambdaNode>>();
-            TypeGenStack = new Stack<Microsoft.Scripting.Generation.TypeGen>();
+            TypeGenStack = new Stack<TypeGen>();
+            Scopes = new Stack<IjsScope>();
 
             // Setup type generator
             AsmGen = new AssemblyGen(new AssemblyName("IjsAsm@codeUnit"), ".\\", ".dll", false);
@@ -56,7 +59,7 @@ namespace IronJS.Compiler
 
             // Expression used by all methods
             GlobalsExpr = Et.Parameter(typeof(IjsObj), "$globals");
-
+            
             var mbGlobal = CompileFunction(
                 "fun$global",
                 new EtParm[] { }, 
@@ -70,17 +73,16 @@ namespace IronJS.Compiler
 
         internal Type CompileFunction(int funN, IEnumerable<Ast.IdentifierNode> parameters, Ast.INode body, Type returnType)
         {
-            Scope = new IjsScope();
+            Scopes.Push(new IjsScope());
 
             var etParameters = new List<EtParm>();
 
             foreach (var parameter in parameters)
-                Scope[parameter.Name] = 
-                    Et.Parameter(parameter.ExprType, "$" + parameter.Name);
+                DefineVar(parameter.Variable);
 
             var mb = CompileFunction(
                 "fun$" + funN,
-                Scope.Variables.Values,
+                Scope.Variables.Where(x => x.Value.Item2.IsParameter).Select(x => x.Value.Item1),
                 body,
                 returnType
             );
@@ -88,16 +90,9 @@ namespace IronJS.Compiler
             return mb;
         }
 
-        Type CompileFunction(string functionName, IEnumerable<EtParm> parameters, Ast.INode body, Type returnType)
+        Type CompileFunction(string functionName, IEnumerable<EtParm> parameters, Ast.INode body, Type returnType, bool newType = true)
         {
             TypeGenStack.Push(new TypeGen(AsmGen, ModGen.DefineType(functionName)));
-            return CompileFunction(functionName, parameters, body.GenerateStatic(this), returnType, false);
-        }
-
-        Type CompileFunction(string functionName, IEnumerable<EtParm> parameters, Et body, Type returnType, bool newType = true)
-        {
-            if(newType)
-                TypeGenStack.Push(new TypeGen(AsmGen, ModGen.DefineType(functionName)));
 
             parameters = new[] {
                 GlobalsExpr
@@ -112,7 +107,12 @@ namespace IronJS.Compiler
             );
 
             var lambda = Et.Lambda(
-                body,
+                Et.Block(
+                    Scopes.Count > 0
+                        ? Scope.Variables.Where(x => !x.Value.Item2.IsParameter).Select(x => x.Value.Item1)
+                        : new EtParm[] { },
+                    body.GenerateStatic(this)
+                ),
                 parameters
             );
 
@@ -124,6 +124,13 @@ namespace IronJS.Compiler
         internal Et Constant<T>(T value)
         {
             return Et.Constant(value);
+        }
+
+        internal Tuple<EtParm, Variable> DefineVar(Variable varInfo)
+        {
+            return Scope[varInfo.Name] = Tuple.Create(
+                Et.Variable(varInfo.ExprType, "$" + varInfo.Name), varInfo
+            );
         }
     }
 }

@@ -44,7 +44,17 @@ namespace IronJS.Compiler.Ast
                     etgen.Constant(Name)
                 );
             }
+            else
+            {
+                if (IsDefinition)
+                {
 
+                }
+                else
+                {
+                    return etgen.Scope[Name].Item1;
+                }
+            }
             throw new NotImplementedException();
         }
 

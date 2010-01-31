@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Optimizer
             if (Variables.ContainsKey(name))
                 throw new AstCompilerError("A variable named {0} already exists", name);
 
-            Variables.Add(name, new Variable());
+            Variables.Add(name, new Variable(name));
             return Variables[name];
         }
 

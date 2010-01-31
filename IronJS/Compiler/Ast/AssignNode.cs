@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
+using Et = System.Linq.Expressions.Expression;
+using EtParam = System.Linq.Expressions.ParameterExpression;
+using IronJS.Compiler.Optimizer;
 
 namespace IronJS.Compiler.Ast
 {
@@ -35,14 +37,36 @@ namespace IronJS.Compiler.Ast
                 }
                 else
                 {
+                    var typesMatch = Target.ExprType == Value.ExprType;
+                    Tuple<EtParam, Variable> variable;
+
                     if (idNode.IsDefinition)
                     {
-
+                        if (typesMatch)
+                            variable = etgen.DefineVar(idNode.Variable);
+                        else
+                            variable = etgen.DefineVar(idNode.Variable);
                     }
                     else
-                    {
+                        variable = etgen.Scope[idNode.Name];
 
+                    if (!typesMatch)
+                    {
+                        if (variable.Item1.Type != typeof(object))
+                        {
+                            throw new ArgumentException("Expression types did not mach, but variable.Type is not typeof(object)");
+                        }
+
+                        return Et.Assign(
+                            variable.Item1,
+                            EtUtils.Box2(Value.GenerateStatic(etgen))
+                        );
                     }
+
+                    return Et.Assign(
+                        variable.Item1,
+                        Value.GenerateStatic(etgen)
+                    );
                 }
             }
 

@@ -19,6 +19,8 @@ using System.Linq;
 using Microsoft.Scripting.Generation;
 using System;
 using IronJS.Runtime.Js;
+using System.Runtime.CompilerServices;
+using IronJS.Compiler.Optimizer;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -30,8 +32,6 @@ namespace IronJS.Compiler
 {
     using Et = Expression;
     using EtParm = ParameterExpression;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-using IronJS.Compiler.Optimizer;
 
     public class IjsEtGenerator
     {
@@ -45,43 +45,57 @@ using IronJS.Compiler.Optimizer;
         public Stack<IjsScope> Scopes { get; protected set; }
         public List<Tuple<int, MemberExpression, Ast.LambdaNode>> Functions { get; protected set; }
 
-        public Type Generate(List<Ast.INode> astNodes, IjsContext context)
+        int _callSiteN = 0;
+        TypeGen _callSiteType;
+        public MemberExpression CreateCallSiteField<T>() where T : class
+        {
+            return Et.Field(
+                null,
+                _callSiteType.AddStaticField(
+                    typeof(CallSite<T>), 
+                    "_" + (_callSiteN++)
+                )
+            );
+        }
+
+        int _asmN = 0;
+        public MethodInfo Generate(List<Ast.INode> astNodes, IjsContext context)
         {
             // Setup common properties
-            MethodCount = -1;
             Functions = new List<Tuple<int, MemberExpression, Ast.LambdaNode>>();
             TypeGenStack = new Stack<TypeGen>();
             Scopes = new Stack<IjsScope>();
 
             // Setup type generator
-            AsmGen = new AssemblyGen(new AssemblyName("IjsAsm@codeUnit"), ".\\", ".dll", false);
+            AsmGen = new AssemblyGen(new AssemblyName("isj_asm_" + (_asmN++)), ".\\", ".dll", false);
             ModGen = AsmGen.AssemblyBuilder.GetDynamicModule(AsmGen.AssemblyBuilder.GetName().Name);
+            _callSiteType = new TypeGen(AsmGen, ModGen.DefineType("$callsites"));
 
             // Expression used by all methods
             GlobalsExpr = Et.Parameter(typeof(IjsObj), "$globals");
             
-            var mbGlobal = CompileFunction(
-                "fun$global",
+            var miGlobal = CompileFunction(
+                "$fun_global",
                 new EtParm[] { }, 
                 new Ast.BlockNode(astNodes, null),
                 typeof(object)
             );
 
-            var x = AsmGen.SaveAssembly();
-            return mbGlobal;
+            _callSiteType.FinishType();
+            AsmGen.SaveAssembly();
+
+            return miGlobal;
         }
 
-        internal Type CompileFunction(int funN, IEnumerable<Ast.IdentifierNode> parameters, Ast.INode body, Type returnType)
+        internal MethodInfo CompileFunction(int funN, IEnumerable<Ast.IdentifierNode> parameters, Ast.INode body, Type returnType)
         {
-            Scopes.Push(new IjsScope());
-
             var etParameters = new List<EtParm>();
 
             foreach (var parameter in parameters)
                 DefineVar(parameter.Variable);
 
             var mb = CompileFunction(
-                "fun$" + funN,
+                "$fun_" + funN,
                 Scope.Variables.Where(x => x.Value.Item2.IsParameter).Select(x => x.Value.Item1),
                 body,
                 returnType
@@ -90,18 +104,21 @@ using IronJS.Compiler.Optimizer;
             return mb;
         }
 
-        Type CompileFunction(string functionName, IEnumerable<EtParm> parameters, Ast.INode body, Type returnType, bool newType = true)
+        MethodInfo CompileFunction(string functionName, IEnumerable<EtParm> parameters, Ast.INode body, Type returnType, bool newType = true)
         {
+            Scopes.Push(new IjsScope());
             TypeGenStack.Push(new TypeGen(AsmGen, ModGen.DefineType(functionName)));
+            var bodyExpr = body.GenerateStatic(this);
 
             parameters = new[] {
                 GlobalsExpr
             }.Concat(parameters);
 
             var mb = TypeGen.TypeBuilder.DefineMethod(
-                "func",
+                "call",
                 MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.Final, 
-                CallingConventions.Standard,
+                CallingConventions.Standard
+                ,
                 returnType, 
                 parameters.Select(x => x.Type).ToArray()
             );
@@ -111,14 +128,16 @@ using IronJS.Compiler.Optimizer;
                     Scopes.Count > 0
                         ? Scope.Variables.Where(x => !x.Value.Item2.IsParameter).Select(x => x.Value.Item1)
                         : new EtParm[] { },
-                    body.GenerateStatic(this)
+                    bodyExpr
                 ),
                 parameters
             );
 
             lambda.CompileToMethod(mb);
 
-            return TypeGenStack.Pop().FinishType();
+            Scopes.Pop();
+
+            return TypeGenStack.Pop().FinishType().GetMethod("call");
         }
 
         internal Et Constant<T>(T value)
@@ -129,7 +148,7 @@ using IronJS.Compiler.Optimizer;
         internal Tuple<EtParm, Variable> DefineVar(Variable varInfo)
         {
             return Scope[varInfo.Name] = Tuple.Create(
-                Et.Variable(varInfo.ExprType, "$" + varInfo.Name), varInfo
+                Et.Variable(varInfo.ExprType, varInfo.Name), varInfo
             );
         }
     }

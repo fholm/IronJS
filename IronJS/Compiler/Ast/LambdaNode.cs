@@ -28,6 +28,7 @@ namespace IronJS.Compiler.Ast
         public INode Body { get; protected set; }
         public bool IsLambda { get { return Name == null; } }
         public Type ReturnType { get { return typeof(object); } }
+        public MethodInfo Method { get; protected set; }
 
         public LambdaNode(List<IdentifierNode> args, INode body, IdentifierNode name, ITree node)
             : base(NodeType.Lambda, node)
@@ -44,9 +45,12 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
+                return typeof(IjsFunc);
+                /*
                 return JsTypes.CreateFuncType(
                     Args.Select(x => x.ExprType).ToArray()
                 );
+                */
             }
         }
 
@@ -77,8 +81,8 @@ namespace IronJS.Compiler.Ast
 
         public override Et GenerateStatic(IjsEtGenerator etgen)
         {
-            var typ = etgen.CompileFunction(
-                ++etgen.MethodCount,
+            Method = etgen.CompileFunction(
+                etgen.MethodCount++,
                 Args,
                 Body,
                 typeof(object)
@@ -94,10 +98,10 @@ namespace IronJS.Compiler.Ast
                     Et.Call(
                         Et.Call(
                             getType,
-                            etgen.Constant(typ.Name)
+                            etgen.Constant(Method.DeclaringType.Name)
                         ),
                         getMethod,
-                        etgen.Constant("func")
+                        etgen.Constant("call")
                     )
                 );
             }

@@ -1,5 +1,7 @@
 ﻿using System;
 using IronJS.Runtime.Js;
+using System.Reflection;
+using IronJS.Compiler.Ast;
 
 namespace IronJS.Runtime.Utils
 {
@@ -11,10 +13,10 @@ namespace IronJS.Runtime.Utils
             return obj;
         }
 
-        static public void Timer(Action func)
+        static public void Timer(IjsFunc func, IjsObj globals)
         {
             var start = DateTime.Now;
-            func();
+            func.MethodInfo.Invoke(null, new object[] { globals });
             var stop = DateTime.Now;
             var total = stop.Subtract(start);
             Console.WriteLine(total.TotalMilliseconds);

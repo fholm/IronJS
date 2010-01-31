@@ -6,7 +6,9 @@ namespace IronJS.Compiler.Optimizer
 {
     public class Variable
     {
+
         public string Name { get; set; }
+        public Ast.LambdaNode Lambda { get; set; }
         public bool IsResolving { get; set; }
         public bool IsParameter { get; set; }
         public bool IsInsideWith { get; set; }
@@ -44,6 +46,7 @@ namespace IronJS.Compiler.Optimizer
         public Variable(string name)
         {
             Name = name;
+            Lambda = null;
             IsParameter = false;
             IsResolving = false;
             TypeResolved = false;

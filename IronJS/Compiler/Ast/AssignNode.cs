@@ -21,6 +21,18 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
+        public override INode Analyze(AstAnalyzer astopt)
+        {
+            Target = Target.Analyze(astopt);
+            Value = Value.Analyze(astopt);
+
+            var idNode = (Target as IdentifierNode);
+            if (idNode != null && !idNode.IsGlobal)
+                idNode.Variable.UsedAs.Add(Value.ExprType);
+
+            return this;
+        }
+
         public override Et GenerateStatic(IjsEtGenerator etgen)
         {
             var idNode = Target as IdentifierNode;
@@ -63,6 +75,9 @@ namespace IronJS.Compiler.Ast
                         );
                     }
 
+                    if (Value is LambdaNode)
+                        variable.Item2.Lambda = Value as LambdaNode;
+
                     return Et.Assign(
                         variable.Item1,
                         Value.GenerateStatic(etgen)
@@ -79,18 +94,6 @@ namespace IronJS.Compiler.Ast
                 Target,
                 Value.Generate(etgen)
             );
-        }
-
-        public override INode Analyze(AstAnalyzer astopt)
-        {
-            Target = Target.Analyze(astopt);
-            Value = Value.Analyze(astopt);
-
-            var idNode = (Target as IdentifierNode);
-            if (idNode != null && !idNode.IsGlobal)
-                idNode.Variable.AssignedFrom.Add(Value);
-
-            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

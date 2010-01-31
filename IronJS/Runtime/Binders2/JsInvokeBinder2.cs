@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Dynamic;
 using System.Reflection;
+using IronJS.Compiler.Ast;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Runtime;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using IronJS.Compiler.Ast;
 
 namespace IronJS.Runtime.Binders2
 {
@@ -70,10 +70,7 @@ namespace IronJS.Runtime.Binders2
                 );
             }
 
-            return new Meta(
-                Et.Constant("foo", typeof(object)),
-                BindingRestrictions.Empty
-            );
+            throw new NotImplementedException();
         }
 
         public static JsInvokeBinder2 Create(int argCount)

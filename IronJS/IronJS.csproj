@@ -344,7 +344,6 @@
     <Folder Include="Runtime\InterOp\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Compiler\Parser\LICENSE.txt" />
     <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

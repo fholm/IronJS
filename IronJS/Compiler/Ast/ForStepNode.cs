@@ -40,36 +40,33 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et Generate2(EtGenerator etgen)
+        public override Et GenerateStatic(IjsEtGenerator etgen)
         {
             Et test = AstUtils.Empty();
             Et setup = AstUtils.Empty();
             Et incr = AstUtils.Empty();
 
             if (Setup != null)
-                setup = Setup.Generate2(etgen);
+                setup = Setup.GenerateStatic(etgen);
 
             if (Test != null)
                 if (Test.ExprType == JsTypes.Boolean)
-                    test = Test.Generate2(etgen);
+                    test = Test.GenerateStatic(etgen);
                 else
-                    test = Et.Dynamic(
-                        etgen.Context.CreateConvertBinder(typeof(bool)),
-                        typeof(bool),
-                        Test.Generate2(etgen)
-                    );
+                    throw new NotImplementedException();
+
             else
                 test = Et.Constant(true, typeof(bool));
 
             if (Incr != null)
-                incr = Incr.Generate2(etgen);
+                incr = Incr.GenerateStatic(etgen);
 
             return Et.Block(
                 setup,
                 AstUtils.Loop(
                     test,
                     incr,
-                    Body.Generate2(etgen),
+                    Body.GenerateStatic(etgen),
                     AstUtils.Empty()
                 )
             );

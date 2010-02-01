@@ -4,6 +4,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Optimizer;
 using IronJS.Runtime.Js;
+using IronJS.Extensions;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -110,12 +111,12 @@ namespace IronJS.Compiler.Ast
             var indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + 
                 "(" +
-                    (VarInfo.IsGlobal ? "#" : "") +
+                    (VarInfo.IsGlobal ? "$" : "") +
                     Name + 
                     (VarInfo.IsDeletable ? "!" : "") + 
                     (VarInfo.IsClosedOver ? "?" : "") + 
                     " " + 
-                    ExprType.Name.Split('.').Last() + 
+                    ExprType.ShortName() + 
                 ")"
             );
         }

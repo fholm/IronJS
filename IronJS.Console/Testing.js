@@ -6,11 +6,11 @@ var y = function () {
 
         var r = 2;
 
-        y2 = function () {
+        a = function () {
             return r;
         };
 
-        y2();
+        a();
         return z;
     };
 

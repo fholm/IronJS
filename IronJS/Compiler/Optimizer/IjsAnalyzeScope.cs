@@ -44,15 +44,18 @@ namespace IronJS.Compiler.Optimizer
             if (_variable.TryGetValue(name, out variable))
                 return true;
 
-            if (Parent != null)
+            var parent = Parent;
+            while (parent != null)
             {
-                if (Parent.GetVariable(name, out variable))
+                if (parent._variable.TryGetValue(name, out variable))
                 {
-                    if(Parent.Parent != null)
+                    if (parent.Parent != null)
                         variable.IsClosedOver = true;
 
                     return true;
                 }
+
+                parent = parent.Parent;
             }
 
             variable = null;

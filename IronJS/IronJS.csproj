@@ -179,6 +179,7 @@
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />
     <Compile Include="Extensions\IListExt.cs" />
+    <Compile Include="Extensions\TypeExt.cs" />
     <Compile Include="Runtime\Binders2\JsCustomBinder2.cs" />
     <Compile Include="Runtime\Binders2\JsInvokeBinder2.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />

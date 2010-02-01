@@ -1,11 +1,14 @@
 ﻿
 var y = function () {
     var z = 4;
-    
-    return function () {
-        return z;
+
+    x = function () {
+        for (var i = 0; i < 1000000; ++i) {
+            print(z);
+        }
     };
+
+    x();
 };
 
-var x = y();
-var z = x();
+y();

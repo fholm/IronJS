@@ -5,10 +5,10 @@ using IronJS.Compiler.Ast;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Runtime;
+using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
-using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime.Binders2
 {

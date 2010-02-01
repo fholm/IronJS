@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Linq;
-using IronJS.Extensions;
 using System.Collections.Generic;
+using System.Linq;
 using IronJS.Compiler.Ast;
+using IronJS.Extensions;
 
 namespace IronJS.Compiler.Optimizer
 {

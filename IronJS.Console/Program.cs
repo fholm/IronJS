@@ -34,7 +34,14 @@ namespace IronJS.Testing
             var etGenerator = new Compiler.IjsEtGenerator();
             var compiled = etGenerator.Generate(astNodes, context);
 
-            compiled.Invoke(null, new[] { (object) globals });
+            try
+            {
+                compiled.Invoke(null, new[] { (object)globals });
+            }
+            catch(Exception ex)
+            {
+                return;
+            }
         }
     }
 }

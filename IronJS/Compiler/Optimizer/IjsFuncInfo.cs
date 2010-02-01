@@ -25,7 +25,7 @@ namespace IronJS.Compiler.Optimizer
         public bool IsLambda { get; set; }
         public bool IsCompiled { get { return CompiledMethod != null; } }
         public bool UsesArgumentsObject { get; set; }
-        public Type ExprType { get { return typeof(IjsFunc); } }
+        public Type ExprType { get { return IjsTypes.Func; } }
         public Type ReturnType { get { return IjsTypes.Dynamic; } }
         public MethodInfo CompiledMethod { get; set; }
         public FuncNode AstNode { get; set; }

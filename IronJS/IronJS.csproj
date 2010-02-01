@@ -148,7 +148,7 @@
     <Compile Include="Compiler\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
-    <Compile Include="Compiler\IjsFunc.cs" />
+    <Compile Include="Runtime\Js2\IjsFunc.cs" />
     <Compile Include="Compiler\IjsTypes.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
@@ -178,8 +178,6 @@
     <Compile Include="Extensions\HashSetExt.cs" />
     <Compile Include="Extensions\IListExt.cs" />
     <Compile Include="Extensions\TypeExt.cs" />
-    <Compile Include="Runtime\Binders2\JsCustomBinder2.cs" />
-    <Compile Include="Runtime\Binders2\JsInvokeBinder2.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />
     <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs" />
     <Compile Include="Runtime\Binders\JsDeleteMemberBinder.cs" />
@@ -200,15 +198,6 @@
     <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
     <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype.cs" />
-    <Compile Include="Runtime\Js\Descriptors\LengthProperty.cs" />
-    <Compile Include="Runtime\Js\Descriptors\NativeProperty.cs" />
-    <Compile Include="Runtime\Js\Descriptors\UserProperty.cs" />
-    <Compile Include="Runtime\Js\IConstructor.cs" />
-    <Compile Include="Runtime\Js\IConstructorMeta.cs" />
-    <Compile Include="Runtime\Js\IDescriptor.cs" />
-    <Compile Include="Runtime\Js\IjsObj.cs" />
-    <Compile Include="Runtime\Js\NativeConstructor.cs" />
-    <Compile Include="Runtime\Js\Operators.cs" />
     <Compile Include="Runtime\Builtins\Array_ctor.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype.cs" />
     <Compile Include="Runtime\Builtins\Array_prototype_concat.cs" />
@@ -273,7 +262,6 @@
     <Compile Include="Runtime\Builtins\Function_prototype.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_call.cs" />
     <Compile Include="Runtime\Builtins\Function_prototype_toString.cs" />
-    <Compile Include="Runtime\Js\NativeFunction.cs" />
     <Compile Include="Runtime\Builtins\Object_ctor.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs" />
     <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs" />
@@ -303,34 +291,84 @@
     <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
     <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime\Context.cs" />
-    <Compile Include="Runtime\Js\JsArray.cs" />
-    <Compile Include="Runtime\Js\Errors\PropertyIsReadOnly.cs" />
-    <Compile Include="Runtime\Js\UserFunction.cs" />
+    <Compile Include="Runtime\Js\Descriptors\LengthProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Descriptors\NativeProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Descriptors\UserProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Errors\PropertyIsReadOnly.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\FunctionTable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\IConstructor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\IConstructorMeta.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\IDescriptor.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Js\IFunction.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\IFunctionMeta.cs" />
-    <Compile Include="Runtime\Js\IObj.cs" />
-    <Compile Include="Runtime\Js\IValueObj.cs" />
-    <Compile Include="Runtime\Js\Obj.cs">
+    <Compile Include="Runtime\Js\IFunctionMeta.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js2\IjsObj.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\IObj.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\IObjMeta.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Runtime\Js\IValueObj.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\JsArray.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Js\Lambda.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\NativeConstructor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\NativeFunction.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Obj.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Operators.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Property.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\RegExp.cs" />
-    <Compile Include="Runtime\Js\Scope.cs" />
-    <Compile Include="Runtime\Js\FunctionTable.cs" />
+    <Compile Include="Runtime\Js\RegExp.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\Scope.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\ValueObj.cs" />
+    <Compile Include="Runtime\Js\UserFunction.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js\ValueObj.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\RuntimeError.cs" />
     <Compile Include="Runtime\Utils\BinderUtils.cs" />
     <Compile Include="Runtime\Utils\EtUtils.cs">
@@ -341,6 +379,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Utils\TypeConverter.cs" />
+    <Compile Include="Utils\Benchmark.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\InterOp\" />

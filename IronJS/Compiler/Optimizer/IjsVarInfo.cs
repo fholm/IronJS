@@ -62,7 +62,7 @@ namespace IronJS.Compiler.Optimizer
 
         public bool GetFuncInfo(out IjsFuncInfo funcInfo)
         {
-            if(ExprType == typeof(IjsFunc))
+            if(ExprType == IjsTypes.Func)
             {
                 if(AssignedFrom.Count == 1)
                 {

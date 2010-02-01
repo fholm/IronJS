@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace IronJS.Testing
 {
@@ -10,6 +12,16 @@ namespace IronJS.Testing
     {
         public static void Main(string[] args)
         {
+
+            Console.WriteLine(
+                IronJS.Utils.Benchmark.This(() => { 
+                    return; 
+                }).Take(10).Average()
+            );
+
+            Console.ReadLine();
+            return;
+
             var astGenerator = new Compiler.IjsAstGenerator();
             var astOptimizer = new Compiler.IjsAstAnalyzer();
 
@@ -20,11 +32,6 @@ namespace IronJS.Testing
                 Console.WriteLine(node.Print());
 
             var globals = new IjsObj();
-
-            globals.Set(
-                "time", 
-                typeof(HelperFunctions).GetMethod("Timer")
-            );
 
             globals.Set(
                 "print",

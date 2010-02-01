@@ -1,26 +1,77 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using IronJS.Extensions;
 using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
-using System.Collections.Generic;
-using System.Collections;
+using System.IO;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Testing
 {
     class Program
     {
+        public static void Method()
+        {
+
+        }
+
+        public static Action Test(Action act)
+        {
+            return act;
+        }
+
         public static void Main(string[] args)
         {
 
-            Console.WriteLine(
-                IronJS.Utils.Benchmark.This(() => { 
-                    return; 
-                }).Take(10).Average()
-            );
+            var x = Et.Lambda<Action>(
+                    Et.Default(typeof(object))
+                ).Compile();
+
+
+            Action deleg = delegate() { };
+            Console.WriteLine(IronJS.Utils.Benchmark.This(() =>
+            {
+                for (int i = 0; i < 1000000; ++i) {
+                    /*
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    deleg.Invoke();
+                    */
+                    /*
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    deleg();
+                    */
+                    /*
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    x();
+                    */
+                }
+            }).Take(3).Average());
 
             Console.ReadLine();
-            return;
 
             var astGenerator = new Compiler.IjsAstGenerator();
             var astOptimizer = new Compiler.IjsAstAnalyzer();
@@ -28,8 +79,10 @@ namespace IronJS.Testing
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
                 astNodes = astOptimizer.Optimize(astNodes);
 
-            foreach (var node in astNodes)
-                Console.WriteLine(node.Print());
+            Console.WriteLine(astNodes.PrettyPrint());
+
+            Console.ReadLine();
+            return;
 
             var globals = new IjsObj();
 

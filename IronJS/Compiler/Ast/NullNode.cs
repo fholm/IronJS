@@ -17,7 +17,7 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return IjsTypes.Null;
+                return IjsTypes.Dynamic;
             }
         }
 

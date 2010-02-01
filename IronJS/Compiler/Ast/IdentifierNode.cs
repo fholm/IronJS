@@ -53,10 +53,12 @@ namespace IronJS.Compiler.Ast
 
                     if (VarInfo.IsLocal)
                     {
-                        if (!astopt.Scope.HasVariable(Name))
+                        var scope = astopt.Scope;
+                        while(!scope.HasVariable(Name))
                         {
                             VarInfo.IsClosedOver = true;
-                            astopt.Scope.FuncInfo.ClosesOver.Add(this);
+                            scope.FuncInfo.ClosesOver.Add(VarInfo);
+                            scope = scope.Parent;
                         }
                     }
                 }
@@ -78,7 +80,7 @@ namespace IronJS.Compiler.Ast
                     (VarInfo.IsGlobal ? "$" : "") +
                     Name + 
                     (VarInfo.IsDeletable ? "!" : "") + 
-                    (VarInfo.IsClosedOver ? "?" : "") + 
+                    (VarInfo.IsClosedOver ? "^" : "") + 
                     " " + 
                     ExprType.ShortName() + 
                 ")"

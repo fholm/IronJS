@@ -176,7 +176,7 @@
     <Compile Include="Compiler\Optimizer\IjsVarInfo.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />
-    <Compile Include="Extensions\IListExt.cs" />
+    <Compile Include="Extensions\IEnumerableExt.cs" />
     <Compile Include="Extensions\TypeExt.cs" />
     <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />
     <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs" />

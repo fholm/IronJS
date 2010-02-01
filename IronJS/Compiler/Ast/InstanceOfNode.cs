@@ -32,7 +32,7 @@ namespace IronJS.Compiler.Ast
             Function = Target.Analyze(astopt);
 
             IfIdentiferUsedAs(Target, IjsTypes.Object);
-            IfIdentiferUsedAs(Function, IjsTypes.Func);
+            IfIdentiferUsedAs(Function, IjsTypes.Object);
 
             return this;
         }

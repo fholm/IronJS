@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace IronJS.Utils
 {
+    /*
+     * Credit for this class goes to 
+     * the users Svish and Henk 
+     * Holterman on Stack Overflow
+     * */
     public sealed class Benchmark : IEnumerable<long>
     {
         private readonly Action subject;

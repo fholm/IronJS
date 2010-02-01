@@ -25,13 +25,25 @@ namespace IronJS.Compiler.Optimizer
         public bool IsLambda { get; set; }
         public bool IsCompiled { get { return CompiledMethod != null; } }
         public bool UsesArgumentsObject { get; set; }
-        public Type ExprType { get { return IjsTypes.Func; } }
-        public Type ReturnType { get { return IjsTypes.Dynamic; } }
-        public MethodInfo CompiledMethod { get; set; }
-        public FuncNode AstNode { get; set; }
-        public HashSet<Type> Returns { get; protected set; }
-        public HashSet<IdentifierNode> ClosesOver { get; protected set; }
+        public bool HasBranches { get; set; }
+        public bool IsSimple { get { return !HasBranches; } }
+        public Type ExprType { get { return IjsTypes.Object; } }
         public Type ClosureType { get; set; }
+        public FuncNode AstNode { get; set; }
+        public MethodInfo CompiledMethod { get; set; }
+        public HashSet<Type> Returns { get; protected set; }
+        public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
+
+        public Type ReturnType
+        {
+            get
+            {
+                if (IsSimple)
+                    return Returns.EvalType();
+
+                return IjsTypes.Dynamic;
+            }
+        }
 
         public IjsFuncInfo(FuncNode node)
         {
@@ -40,7 +52,7 @@ namespace IronJS.Compiler.Optimizer
             CompiledMethod = null;
             UsesArgumentsObject = false;
             Returns = new HashSet<Type>();
-            ClosesOver = new HashSet<IdentifierNode>();
+            ClosesOver = new HashSet<IjsVarInfo>();
         }
     }
 }

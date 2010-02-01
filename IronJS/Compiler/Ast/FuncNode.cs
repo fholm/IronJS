@@ -71,6 +71,8 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
+            var indentStr2 = new String(' ', (indent + 1) * 2);
+            var indentStr3 = new String(' ', (indent + 3) * 2);
 
             writer.AppendLine(indentStr 
                 + "(" + NodeType 
@@ -78,8 +80,17 @@ namespace IronJS.Compiler.Ast
                 + " " + FuncInfo.ReturnType.ShortName()
             );
 
-            var argsIndentStr = new String(' ', (indent + 1) * 2);
-            writer.Append(argsIndentStr + "(Args");
+            if (FuncInfo.ClosesOver.Count > 0)
+            {
+                writer.AppendLine(indentStr2 + "(Closure");
+
+                foreach (var id in FuncInfo.ClosesOver)
+                    writer.AppendLine(indentStr3 + "(" + id.Name + ")");
+
+                writer.AppendLine(indentStr2 + ")");
+            }
+
+            writer.Append(indentStr2 + "(Args");
 
             foreach (var node in Args)
                 writer.Append(" " + node);

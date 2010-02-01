@@ -4,3 +4,8 @@
 * Compile time analysis of global/local variables
 * Static caching of CallSite<T> and MethodInfo objects
 * Custom closures classes, resolved at compile time, using IjsClosureCell<T>
+* A-head of time compilation of regexps where possible
+* String concatenation, turn (1 + "" + b) into String.Concat(1, "", b)
+* Number addition
+	- Turn 1 + true into Add(1, true) without going through the DLR
+	- Turn a + true into Add(a, true), only works if we know that a is a number

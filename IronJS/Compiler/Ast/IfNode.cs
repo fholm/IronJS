@@ -45,6 +45,9 @@ namespace IronJS.Compiler.Ast
             if(HasElseBranch)
                 ElseBranch = ElseBranch.Analyze(astopt);
 
+            if (!IsTernary)
+                astopt.Scope.FuncInfo.HasBranches = true;
+
             return this;
         }
 

@@ -24,7 +24,7 @@ namespace IronJS.Compiler.Ast
             for (int i = 0; i < Args.Count; ++i)
                 Args[i] = Args[i].Analyze(astopt);
 
-            IfIdentiferUsedAs(Target, IjsTypes.Func);
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
         }

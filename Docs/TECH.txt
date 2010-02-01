@@ -1,0 +1,6 @@
+* Hidden classes (stolen from V8)
+* Building hidden classes at compile time for resolvable cases
+* Inline caching (CallSite<T> for most, custom for property access)
+* Compile time analysis of global/local variables
+* Static caching of CallSite<T> and MethodInfo objects
+* Custom closures classes, resolved at compile time, using IjsClosureCell<T>

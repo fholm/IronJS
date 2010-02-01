@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast
             if (Target is IdentifierNode)
             {
                 (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
-                (Target as IdentifierNode).VarInfo.CanBeDeleted = true;
+                (Target as IdentifierNode).VarInfo.IsDeletable = true;
             }
 
             return this;

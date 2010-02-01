@@ -10,44 +10,6 @@ namespace IronJS.Testing
     {
         public static void Main(string[] args)
         {
-            var arr = new object[10];
-            var start = DateTime.Now;
-            var x = 10;
-
-            for (int i = 0; i < 10000000; ++i)
-            {
-                if (x == 10)
-                    x = 10;
-            }
-
-            var stop = DateTime.Now;
-            var total = stop.Subtract(start);
-            Console.WriteLine(total.TotalMilliseconds);
-
-            var dict = new Dictionary<string, object>();
-            dict.Add("lo2l", 0);
-            dict.Add("lo12l", 0);
-            dict.Add("lol23", 0);
-            dict.Add("lo12l2", 0); 
-            dict.Add("lol324", 0);
-            dict.Add("l5ol2", 0); 
-            dict.Add("lol2353", 0);
-            dict.Add("lol232", 0); 
-            dict.Add("lol235", 0);
-            dict.Add("lol432", 0);
-
-            start = DateTime.Now;
-            bool obj = true;
-            for (int j = 0; j < 10000000; ++j)
-            {
-                if (obj)
-                    obj = true;
-            }
-
-            stop = DateTime.Now;
-            total = stop.Subtract(start);
-            Console.WriteLine(total.TotalMilliseconds);
-
             var astGenerator = new Compiler.IjsAstGenerator();
             var astOptimizer = new Compiler.IjsAstAnalyzer();
 
@@ -56,6 +18,9 @@ namespace IronJS.Testing
 
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
+
+            Console.ReadLine();
+            return;
 
             var globals = new IjsObj();
 

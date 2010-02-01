@@ -6,13 +6,12 @@ namespace IronJS.Compiler.Optimizer
     {
         public IjsAnalyzeScope Parent { get; protected set; }
         public IjsFuncInfo FuncInfo { get; protected set; }
-        public Dictionary<string, IjsVarInfo> Variables { get; protected set; }
 
         public IjsAnalyzeScope(IjsAnalyzeScope parent, IjsFuncInfo funcInfo)
         {
             Parent = parent;
             FuncInfo = funcInfo;
-            Variables = new Dictionary<string, IjsVarInfo>();
+            _variable = new Dictionary<string, IjsVarInfo>();
         }
 
         public IjsAnalyzeScope Enter(IjsFuncInfo funcInfo)
@@ -25,25 +24,33 @@ namespace IronJS.Compiler.Optimizer
             return Parent;
         }
 
+        Dictionary<string, IjsVarInfo> _variable;
+        public bool HasVariable(string name)
+        {
+            return _variable.ContainsKey(name);
+        }
+
         public IjsVarInfo CreateVariable(string name)
         {
-            if (Variables.ContainsKey(name))
+            if (HasVariable(name))
                 throw new AstCompilerError("A variable named {0} already exists", name);
 
-            Variables.Add(name, new IjsVarInfo(name));
-            return Variables[name];
+            _variable.Add(name, new IjsVarInfo(name));
+            return _variable[name];
         }
 
         public bool GetVariable(string name, out IjsVarInfo variable)
         {
-            if (Variables.TryGetValue(name, out variable))
+            if (_variable.TryGetValue(name, out variable))
                 return true;
 
             if (Parent != null)
             {
                 if (Parent.GetVariable(name, out variable))
                 {
-                    variable.IsClosedOver = true;
+                    if(Parent.Parent != null)
+                        variable.IsClosedOver = true;
+
                     return true;
                 }
             }

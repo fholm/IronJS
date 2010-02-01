@@ -11,10 +11,14 @@ namespace IronJS.Compiler.Optimizer
         public string Name { get; set; }
         public bool IsResolving { get; set; }
         public bool IsParameter { get; set; }
-        public bool TypeResolved { get; set; }
-        public bool CanBeDeleted { get; set; }
+        public bool IsDeletable { get; set; }
         public bool IsClosedOver { get; set; }
+        public bool IsGlobal { get; set; }
+        public bool IsLocal { get { return !IsGlobal; } }
+        public bool TypeResolved { get { return RealType != null; } }
+        public bool IsAssignedOnce { get { return AssignedFrom.Count == 1; } }
 
+        public Type RealType { protected get; set; }
         public HashSet<Type> UsedAs { get; protected set; }
         public HashSet<Ast.INode> AssignedFrom { get; protected set; }
 
@@ -31,13 +35,14 @@ namespace IronJS.Compiler.Optimizer
                         foreach (var node in AssignedFrom)
                             UsedAs.Add(node.ExprType);
 
-                        TypeResolved = true;
                         IsResolving = false;
+                        RealType = UsedAs.EvalType();
                     }
 
-                    return UsedAs.EvalType();
+                    return RealType;
                 }
 
+                // null is used to break circular references
                 return null;
             }
         }
@@ -45,11 +50,11 @@ namespace IronJS.Compiler.Optimizer
         public IjsVarInfo(string name)
         {
             Name = name;
+            IsGlobal = false;
             IsParameter = false;
             IsResolving = false;
-            TypeResolved = false;
+            IsDeletable = false;
             IsClosedOver = false;
-            CanBeDeleted = false;
 
             UsedAs = new HashSet<Type>();
             AssignedFrom = new HashSet<Ast.INode>();

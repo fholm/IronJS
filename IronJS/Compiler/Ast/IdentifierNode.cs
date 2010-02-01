@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Optimizer;
@@ -13,10 +14,8 @@ namespace IronJS.Compiler.Ast
         public IjsVarInfo VarInfo { get; set; }
 
         public bool IsDefinition { get; set; }
-
-        public bool IsLocal { get { return !IsGlobal; } }
-        public bool IsGlobal { get { return VarInfo == null; } }
-        public bool IsDeletable { get { return IsGlobal ? false : VarInfo.CanBeDeleted; } }
+        public bool IsLocal { get { return VarInfo.IsLocal; } }
+        public bool IsGlobal { get { return VarInfo.IsGlobal; } }
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
@@ -29,35 +28,41 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                if (IsGlobal)
-                    return IjsTypes.Dynamic;
-
                 return VarInfo.ExprType;
             }
         }
 
         public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            if (!astopt.IsInsideWith)
+            if (astopt.IsInsideWith)
+                throw new NotImplementedException();
+
+            if (IsDefinition)
             {
-                if (!astopt.InGlobalScope)
+                VarInfo = astopt.Scope.CreateVariable(Name);
+                VarInfo.IsGlobal = astopt.InGlobalScope;
+            }
+            else
+            {
+                IjsVarInfo variable;
+
+                if (astopt.Scope.GetVariable(Name, out variable))
                 {
-                    if (IsDefinition)
-                    {
-                        VarInfo = astopt.Scope.CreateVariable(Name);
-                    }
-                    else
-                    {
-                        IjsVarInfo variable;
+                    VarInfo = variable;
 
-                        if (astopt.Scope.GetVariable(Name, out variable))
+                    if (VarInfo.IsLocal)
+                    {
+                        if (!astopt.Scope.HasVariable(Name))
                         {
-                            VarInfo = variable;
-
-                            if (!astopt.Scope.Variables.ContainsKey(Name))
-                                astopt.Scope.FuncInfo.ClosesOver.Add(this);
+                            VarInfo.IsClosedOver = true;
+                            astopt.Scope.FuncInfo.ClosesOver.Add(this);
                         }
                     }
+                }
+                else
+                {
+                    VarInfo = astopt.GlobalScope.CreateVariable(Name);
+                    VarInfo.IsGlobal = true;
                 }
             }
 
@@ -100,19 +105,19 @@ namespace IronJS.Compiler.Ast
             throw new NotImplementedException();
         }
 
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Call(
-                etgen.FunctionScope.ScopeExpr,
-                Scope.MiPull,
-                Et.Constant(Name, typeof(object))
-            );
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Name + (IsDeletable ? "?" : "") + " " + ExprType + ")");
+            writer.AppendLine(indentStr + 
+                "(" +
+                    (VarInfo.IsGlobal ? "#" : "") +
+                    Name + 
+                    (VarInfo.IsDeletable ? "!" : "") + 
+                    (VarInfo.IsClosedOver ? "?" : "") + 
+                    " " + 
+                    ExprType.Name.Split('.').Last() + 
+                ")"
+            );
         }
     }
 }

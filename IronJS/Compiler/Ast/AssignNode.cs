@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Value = Value.Analyze(astopt);
 
             var idNode = (Target as IdentifierNode);
-            if (idNode != null && idNode.IsLocal)
+            if (idNode != null)
                 idNode.VarInfo.AssignedFrom.Add(Value);
 
             return this;

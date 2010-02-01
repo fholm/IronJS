@@ -3,9 +3,15 @@ var y = function () {
     var z = 4;
 
     x = function () {
-        for (var i = 0; i < 1000000; ++i) {
-            print(z);
-        }
+
+        var r = 2;
+
+        y = function () {
+            return r;
+        };
+
+        y();
+        return z;
     };
 
     x();

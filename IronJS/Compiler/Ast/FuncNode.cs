@@ -110,6 +110,21 @@ namespace IronJS.Compiler.Ast
                     var ijsFuncType = typeof(IjsFunc<>).MakeGenericType(FuncInfo.ClosureType);
 
                     var tmp = Et.Variable(FuncInfo.ClosureType, "$tmp");
+                    var closureInitExprs = new List<Et>();
+
+                    
+                    foreach(var cls in FuncInfo.ClosesOver)
+                    {
+                        closureInitExprs.Add(
+                            Et.Assign(
+                                Et.Field(
+                                    tmp,
+                                    FuncInfo.ClosureType.GetField(cls.Name)
+                                ),
+                                etgen.Scope[cls.Name].Item1
+                            )
+                        );
+                    }
 
                     return Et.Block(
                         new[] { tmp },
@@ -119,12 +134,8 @@ namespace IronJS.Compiler.Ast
                                 FuncInfo.ClosureType.GetConstructor(Type.EmptyTypes)
                             )
                         ),
-                        Et.Assign(
-                            Et.Field(
-                                tmp,
-                                FuncInfo.ClosureType.GetField("z")
-                            ),
-                            etgen.Scope["z"].Item1
+                        Et.Block(
+                            closureInitExprs
                         ),
                         Et.New(
                             ijsFuncType.GetConstructor(new[] { typeof(MethodInfo), FuncInfo.ClosureType }),

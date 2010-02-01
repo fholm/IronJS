@@ -37,7 +37,8 @@ namespace IronJS.Compiler
         public TypeGen TypeGen { get { return TypeGenStack.Peek(); } }
         public Stack<TypeGen> TypeGenStack { get; protected set; }
         public EtParam GlobalsExpr { get; protected set; }
-        public EtParam ClosureExpr { get; protected set; }
+        public EtParam ClosureExpr { get { return ClosureExprStack.Peek(); } }
+        public Stack<EtParam> ClosureExprStack { get; protected set; }
         public IjsScope Scope { get { return Scopes.Peek(); } }
         public Stack<IjsScope> Scopes { get; protected set; }
         public List<Tuple<int, MemberExpression, Ast.FuncNode>> Functions { get; protected set; }
@@ -103,6 +104,7 @@ namespace IronJS.Compiler
             ModGen = AsmGen.AssemblyBuilder.GetDynamicModule(AsmGen.AssemblyBuilder.GetName().Name);
             _callSiteType = new TypeGen(AsmGen, ModGen.DefineType(_callSitesClassName));
             _methodInfoType = new TypeGen(AsmGen, ModGen.DefineType(_methodInfoClassName));
+            ClosureExprStack = new Stack<EtParam>();
 
             // Expression used by all methods
             GlobalsExpr = Et.Parameter(typeof(IjsObj), "$globals");
@@ -131,7 +133,7 @@ namespace IronJS.Compiler
                 );
 
             var closureType = closureTypeGen.FinishType();
-            ClosureExpr = Et.Parameter(closureType, "$closure");
+            ClosureExprStack.Push(Et.Parameter(closureType, "$closure"));
 
             TypeGenStack.Push(new TypeGen(AsmGen, ModGen.DefineType(string.Format(_funcClassNameFormat, _funN++))));
 
@@ -165,6 +167,7 @@ namespace IronJS.Compiler
             );
 
             Scopes.Pop();
+            ClosureExprStack.Pop();
 
             return TypeGenStack.Pop().FinishType().GetMethod(_callMethodName);
         }

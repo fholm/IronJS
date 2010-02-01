@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using IronJS.Extensions;
 using IronJS.Runtime.Js;
-using System.IO;
+using Microsoft.Scripting.Generation;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Testing
 {
     class Program
     {
-        public static void Method()
+        public static void Method(int x)
         {
 
         }
@@ -28,10 +29,29 @@ namespace IronJS.Testing
                 ).Compile();
 
 
+            var y = CompilerHelpers.CompileToMethod<Action>(
+                Et.Lambda<Action>(
+                    Et.Default(typeof(object))
+                ),
+                DebugInfoGenerator.CreatePdbGenerator(),
+                false
+            );
+
+            object z = 1;
             Action deleg = delegate() { };
             Console.WriteLine(IronJS.Utils.Benchmark.This(() =>
             {
                 for (int i = 0; i < 1000000; ++i) {
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
+                    Method((int)z);
                     /*
                     deleg.Invoke();
                     deleg.Invoke();
@@ -67,6 +87,30 @@ namespace IronJS.Testing
                     x();
                     x();
                     x();
+                    */
+                    /*
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    y();
+                    */
+                    /*
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
+                    Method();
                     */
                 }
             }).Take(3).Average());

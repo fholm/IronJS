@@ -17,16 +17,10 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            return Et.Throw(
-                AstUtils.SimpleNewHelper(
-                    JsRuntimeError.Ctor,
-                    etgen.GenerateConvertToObject(
-                        Value.Generate(etgen)
-                    )
-                )
-            );
+            Value = Value.Analyze(astopt);
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

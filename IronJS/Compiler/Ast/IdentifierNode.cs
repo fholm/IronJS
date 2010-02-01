@@ -70,42 +70,6 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            if (IsGlobal)
-            {
-                return Et.Call(
-                    etgen.GlobalsExpr,
-                    typeof(IjsObj).GetMethod("Get"),
-                    etgen.Constant(Name)
-                );
-            }
-            else
-            {
-                if (IsDefinition)
-                {
-
-                }
-                else
-                {
-                    if (etgen.Scope.FuncInfo.ClosesOver.Contains(this))
-                    {
-                        return Et.Field(
-                            Et.Field(
-                                etgen.ClosureExpr,
-                                etgen.Scope.FuncInfo.ClosureType.GetField(Name)
-                            ),
-                            typeof(IjsClosureCell<>).MakeGenericType(ExprType).GetField("Value")
-                        );
-                    }
-
-                    return etgen.Scope[Name].Item1;
-                }
-            }
-
-            throw new NotImplementedException();
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

@@ -1,4 +1,5 @@
 ﻿using Antlr.Runtime.Tree;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -13,12 +14,9 @@ namespace IronJS.Compiler.Ast
 
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public virtual Et LoopWalk(IjsEtGenerator etgen)
         {
-            etgen.FunctionScope.EnterLabelScope(Label, true);
-            var et = LoopWalk(etgen);
-            etgen.FunctionScope.ExitLabelScope();
-            return et;
+            return AstUtils.Empty();
         }
 
         #region ILabelableNode Members
@@ -29,7 +27,5 @@ namespace IronJS.Compiler.Ast
         }
         
         #endregion
-
-        abstract public Et LoopWalk(EtGenerator etgen);
     }
 }

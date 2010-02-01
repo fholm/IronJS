@@ -26,13 +26,15 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            return Et.Call(
-                typeof(Operators).GetMethod("InstanceOf"),
-                Target.Generate(etgen),
-                Function.Generate(etgen)
-            );
+            Target = Target.Analyze(astopt);
+            Function = Target.Analyze(astopt);
+
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
+            IfIdentiferUsedAs(Function, IjsTypes.Func);
+
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

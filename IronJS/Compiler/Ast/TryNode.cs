@@ -42,60 +42,6 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et Generate(EtGenerator etgen)
-        {
-            // try ... finally
-            if (Catch == null)
-            {
-                return Et.TryFinally(
-                    Body.Generate(etgen),
-                    Finally.Generate(etgen)
-                );
-            }
-            else
-            {
-                var catchParam = Et.Parameter(typeof(JsRuntimeError), "#catch");
-
-                var catchBody = Et.Block(
-                    etgen.GenerateAssign(
-                        Target,
-                        Et.Property(
-                            catchParam,
-                            "JsObj"
-                        )
-                    ),
-                    Et.Block(
-                        Catch.Generate(etgen)
-                    )
-                );
-
-                var catchBlock = Et.Catch(
-                    catchParam,
-                    EtUtils.Cast<object>(catchBody)
-                );
-
-                var tryBody = EtUtils.Box(Body.Generate(etgen));
-
-                // try ... catch 
-                if (Finally == null)
-                {
-                    return Et.TryCatch(
-                        tryBody,
-                        catchBlock
-                    );
-                }
-                // try ... catch ... finally
-                else
-                {
-                    return Et.TryCatchFinally(
-                        tryBody,
-                        Finally.Generate(etgen),
-                        catchBlock
-                    );
-                }
-            }
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

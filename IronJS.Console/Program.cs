@@ -19,9 +19,6 @@ namespace IronJS.Testing
             foreach (var node in astNodes)
                 Console.WriteLine(node.Print());
 
-            Console.ReadLine();
-            return;
-
             var globals = new IjsObj();
 
             globals.Set(

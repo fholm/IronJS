@@ -40,57 +40,6 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            Et test = AstUtils.Empty();
-            Et setup = AstUtils.Empty();
-            Et incr = AstUtils.Empty();
-
-            if (Setup != null)
-                setup = Setup.EtGen(etgen);
-
-            if (Test != null)
-                if (Test.ExprType == IjsTypes.Boolean)
-                    test = Test.EtGen(etgen);
-                else
-                    throw new NotImplementedException();
-
-            else
-                test = Et.Constant(true, typeof(bool));
-
-            if (Incr != null)
-                incr = Incr.EtGen(etgen);
-
-            return Et.Block(
-                setup,
-                AstUtils.Loop(
-                    test,
-                    incr,
-                    Body.EtGen(etgen),
-                    AstUtils.Empty()
-                )
-            );
-        }
-
-        public override Et LoopWalk(EtGenerator etgen)
-        {
-            return Et.Block(
-                Setup.Generate(etgen),
-                AstUtils.Loop(
-                    Et.Dynamic(
-                        etgen.Context.CreateConvertBinder(typeof(bool)),
-                        typeof(bool),
-                        Test.Generate(etgen)
-                    ),
-                    Incr.Generate(etgen),
-                    Body.Generate(etgen),
-                    null,
-                    etgen.FunctionScope.LabelScope.Break(),
-                    etgen.FunctionScope.LabelScope.Continue()
-                )
-            );
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

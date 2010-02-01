@@ -32,6 +32,12 @@ namespace IronJS.Compiler.Ast
             }
         }
 
+        public override INode Analyze(IjsAstAnalyzer astopt)
+        {
+            Left = Left.Analyze(astopt);
+            Right = Right.Analyze(astopt);
+            return this;
+        }
 
         public override void Print(StringBuilder writer, int indent = 0)
         {
@@ -43,40 +49,6 @@ namespace IronJS.Compiler.Ast
             Right.Print(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
-        }
-
-        public override Expression Generate(EtGenerator etgen)
-        {
-            var tmp = Et.Parameter(typeof(object), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-
-                Et.Assign(
-                    tmp,
-                    EtUtils.Cast<object>(Left.Generate(etgen))
-                ),
-
-                Et.Condition(
-                    Et.Dynamic(
-                        etgen.Context.CreateConvertBinder(typeof(bool)),
-                        typeof(bool),
-                        tmp
-                    ),
-
-                    EtUtils.Cast<object>(
-                        Op == ExpressionType.AndAlso
-                               ? Right.Generate(etgen) // &&
-                               : tmp               // ||
-                    ),
-
-                    EtUtils.Cast<object>(
-                        Op == ExpressionType.AndAlso
-                               ? tmp               // &&
-                               : Right.Generate(etgen) // ||
-                    )
-                )
-            );
         }
     }
 }

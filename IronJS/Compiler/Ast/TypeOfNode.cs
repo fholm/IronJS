@@ -23,13 +23,11 @@ namespace IronJS.Compiler.Ast
                 return IjsTypes.String;
             }
         }
-        
-        public override Et Generate(EtGenerator etgen)
+
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            return Et.Call(
-                typeof(Operators).GetMethod("TypeOf"),
-                Target.Generate(etgen)
-            );
+            Target = Target.Analyze(astopt);
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

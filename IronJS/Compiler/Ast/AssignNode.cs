@@ -17,29 +17,22 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
+        public override Type ExprType
+        {
+            get
+            {
+                return Value.ExprType;
+            }
+        }
+
         public override INode Analyze(IjsAstAnalyzer astopt)
         {
             Target = Target.Analyze(astopt);
             Value = Value.Analyze(astopt);
 
-            var idNode = (Target as IdentifierNode);
-            if (idNode != null)
-                idNode.VarInfo.AssignedFrom.Add(Value);
+            IfIdentifierAssignedFrom(Target, Value);
 
             return this;
-        }
-
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            return etgen.GenAssignEt(Target, Value);
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return etgen.GenerateAssign(
-                Target,
-                Value.Generate(etgen)
-            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

@@ -23,55 +23,6 @@ namespace IronJS.Compiler.Ast
             Loop = type;
         }
 
-        public override Et LoopWalk(EtGenerator etgen)
-        {
-            Et loop = null;
-
-            var test = Et.Dynamic(
-                etgen.Context.CreateConvertBinder(typeof(bool)),
-                typeof(bool),
-                Test.Generate(etgen)
-            );
-
-            // while
-            if (Loop == Ast.WhileType.While)
-            {
-                var body = Body.Generate(etgen);
-
-                loop = AstUtils.While(
-                    test,
-                    body,
-                    null,
-                    etgen.FunctionScope.LabelScope.Break(),
-                    etgen.FunctionScope.LabelScope.Continue()
-                );
-            }
-            // do ... while
-            else if (Loop == Ast.WhileType.DoWhile)
-            {
-                var bodyExprs = new List<Et>();
-
-                bodyExprs.Add(Body.Generate(etgen));
-
-                // test last, instead of first
-                bodyExprs.Add(
-                    Et.IfThenElse(
-                        test,
-                        Et.Continue(etgen.FunctionScope.LabelScope.Continue()),
-                        Et.Break(etgen.FunctionScope.LabelScope.Break())
-                    )
-                );
-
-                loop = Et.Loop(
-                    Et.Block(bodyExprs),
-                    etgen.FunctionScope.LabelScope.Break(),
-                    etgen.FunctionScope.LabelScope.Continue()
-                );
-            }
-
-            return loop;
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

@@ -38,13 +38,10 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            return Et.Dynamic(
-                etgen.Context.CreateUnaryOpBinder(Op),
-                typeof(object),
-                Target.Generate(etgen)
-            );
+            Target = Target.Analyze(astopt);
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

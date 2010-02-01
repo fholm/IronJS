@@ -20,23 +20,8 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            //if (Target is IdentifierNode)
-            //    (Target as IdentifierNode).Variable.AssignedFrom.Add(GetType());
-
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
             return this;
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Dynamic(
-                etgen.Context.CreateGetMemberBinder(Name),
-                typeof(object),
-                Et.Dynamic(
-                    etgen.Context.CreateConvertBinder(typeof(IObj)),
-                    typeof(object),
-                    Target.Generate(etgen)
-                )
-            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

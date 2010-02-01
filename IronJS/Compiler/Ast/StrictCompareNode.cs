@@ -30,20 +30,15 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Expression Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            // for both
-            Et expr = Et.Call(
-                typeof(Operators).GetMethod("StrictEquality"),
-                EtUtils.Cast<object>(Left.Generate(etgen)),
-                EtUtils.Cast<object>(Right.Generate(etgen))
-            );
+            Left = Left.Analyze(astopt);
+            Right = Right.Analyze(astopt);
 
-            // specific to 11.9.5
-            if (Op == ExpressionType.NotEqual)
-                expr = Et.Not(Et.Convert(expr, typeof(bool)));
+            IfIdentiferUsedAs(Left, Right.ExprType);
+            IfIdentiferUsedAs(Right, Left.ExprType);
 
-            return expr;
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

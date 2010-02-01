@@ -15,14 +15,6 @@ namespace IronJS.Compiler.Ast
         {
             Label = label;
         }
-    
-        public override Et Generate(EtGenerator etgen)
-        {
-            if (Label == null)
-                return Et.Break(etgen.FunctionScope.LabelScope.Break());
-
-            return Et.Break(etgen.FunctionScope.LabelScope.Break(Label));
-        }
 
         public override void Print(StringBuilder writer, int indent = 0)
         {

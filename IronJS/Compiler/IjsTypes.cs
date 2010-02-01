@@ -13,6 +13,7 @@ namespace IronJS.Compiler
         public static readonly Type Null = typeof(object);
         public static readonly Type Undefined = typeof(Undefined);
         public static readonly Type Object = typeof(IjsObj);
+        public static readonly Type Func = typeof(IjsFunc);
         public static readonly Type Dynamic = typeof(object);
         public static readonly Type Action = typeof(Action);
 

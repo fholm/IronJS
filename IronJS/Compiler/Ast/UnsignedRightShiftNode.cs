@@ -27,36 +27,15 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            //TODO: to much boxing/conversion going on
-            return EtUtils.Box(
-                Et.Convert(
-                    Et.Call(
-                        typeof(Operators).GetMethod("UnsignedRightShift"),
+            Left = Left.Analyze(astopt);
+            Right = Right.Analyze(astopt);
 
-                        Et.Convert(
-                            Et.Dynamic(
-                                etgen.Context.CreateConvertBinder(typeof(double)),
-                                typeof(double),
-                                Left.Generate(etgen)
-                            ),
-                            typeof(int)
-                        ),
+            IfIdentiferUsedAs(Left, Right.ExprType);
+            IfIdentiferUsedAs(Right, Left.ExprType);
 
-                        Et.Convert(
-                            Et.Dynamic(
-                                etgen.Context.CreateConvertBinder(typeof(double)),
-                                typeof(double),
-                                Right.Generate(etgen)
-                            ),
-                            typeof(int)
-                        )
-
-                    ),
-                    typeof(double)
-                )
-            );
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

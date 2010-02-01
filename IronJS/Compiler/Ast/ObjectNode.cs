@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
@@ -26,35 +27,12 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            var tmp = Et.Parameter(typeof(IObj), "#tmp");
-            var exprs = new List<Et>();
+            foreach (var key in Properties.Keys.ToList())
+                Properties[key] = Properties[key].Analyze(astopt);
 
-            foreach (var kvp in Properties)
-            {
-                exprs.Add(
-                    Et.Call(
-                        IObjUtils.MiSetObj,
-                        tmp,
-                        Et.Constant(kvp.Key, typeof(object)),
-                        kvp.Value.Generate(etgen)
-                    )
-                );
-            }
-
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp,
-                    Et.Call(
-                        Et.Constant(etgen.Context),
-                        Context.MiCreateObject
-                    )
-                ),
-                etgen.BlockIfNotEmpty(exprs),
-                tmp
-            );
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

@@ -26,27 +26,6 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            return Et.Return(
-                etgen.Scope.ReturnLabel,
-                Et.Convert(
-                    Value.EtGen(etgen), 
-                    etgen.Scope.ReturnLabel.Type
-                ),
-                etgen.Scope.ReturnLabel.Type
-            );
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Return(
-                etgen.FunctionScope.ReturnLabel, 
-                EtUtils.Cast<object>(Value.Generate(etgen)),
-                typeof(object)
-            );
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime;
 using Et = System.Linq.Expressions.Expression;
-using System;
 
 namespace IronJS.Compiler.Ast
 {
@@ -25,16 +25,12 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            return Et.Call(
-                Et.Constant(etgen.Context),
-                Context.MiCreateArray,
-                Et.NewArrayInit(
-                    typeof(object),
-                    Values.Select(x => x.Generate(etgen))
-                )
-            );
+            for (int i = 0; i < Values.Count; ++i)
+                Values[i] = Values[i].Analyze(astopt);
+
+            return this;
         }
     }
 }

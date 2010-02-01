@@ -12,27 +12,6 @@ using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
-    public class IjsFunc
-    {
-        public MethodInfo MethodInfo;
-
-        public IjsFunc(MethodInfo methodInfo)
-        {
-            MethodInfo = methodInfo;
-        }
-    }
-
-    public class IjsFunc<T> : IjsFunc
-    {
-        public T Closure;
-
-        public IjsFunc(MethodInfo methodInfo, T closure)
-            : base(methodInfo)
-        {
-            Closure = closure;
-        }
-    }
-
     public class FuncNode : Node
     {
         public INode Body { get; protected set; }
@@ -85,69 +64,8 @@ namespace IronJS.Compiler.Ast
             Body = Body.Analyze(analyzer);
 
             analyzer.ExitScope();
+
             return this;
-        }
-
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            FuncInfo.CompiledMethod = 
-                etgen.CompileFunction(
-                    Args,
-                    Body,
-                    FuncInfo
-                );
-
-            if (FuncInfo.IsLambda)
-            {
-                if (FuncInfo.ClosureType == null)
-                {
-                    return Et.New(
-                        typeof(IjsFunc).GetConstructor(new[] { typeof(MethodInfo) }),
-                        etgen.CreateMethodInfoField(FuncInfo.CompiledMethod.DeclaringType.Name)
-                    );
-                }
-                else
-                {
-                    var ijsFuncType = typeof(IjsFunc<>).MakeGenericType(FuncInfo.ClosureType);
-
-                    var tmp = Et.Variable(FuncInfo.ClosureType, "$tmp");
-                    var closureInitExprs = new List<Et>();
-
-                    
-                    foreach(var cls in FuncInfo.ClosesOver)
-                    {
-                        closureInitExprs.Add(
-                            Et.Assign(
-                                Et.Field(
-                                    tmp,
-                                    FuncInfo.ClosureType.GetField(cls.Name)
-                                ),
-                                etgen.Scope[cls.Name].Item1
-                            )
-                        );
-                    }
-
-                    return Et.Block(
-                        new[] { tmp },
-                        Et.Assign(
-                            tmp,
-                            Et.New(
-                                FuncInfo.ClosureType.GetConstructor(Type.EmptyTypes)
-                            )
-                        ),
-                        Et.Block(
-                            closureInitExprs
-                        ),
-                        Et.New(
-                            ijsFuncType.GetConstructor(new[] { typeof(MethodInfo), FuncInfo.ClosureType }),
-                            etgen.CreateMethodInfoField(FuncInfo.CompiledMethod.DeclaringType.Name),
-                            tmp
-                        )
-                    );
-                }
-            }
-
-            throw new NotImplementedException();
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

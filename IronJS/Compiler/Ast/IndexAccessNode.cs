@@ -20,22 +20,13 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            if (Target is IdentifierNode)
-                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
+            Target = Target.Analyze(astopt);
+            Index = Index.Analyze(astopt);
+
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
         }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Dynamic(
-                etgen.Context.CreateGetIndexBinder(new CallInfo(1)),
-                typeof(object),
-                Target.Generate(etgen),
-                Index.Generate(etgen)
-            );
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

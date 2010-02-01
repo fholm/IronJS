@@ -30,41 +30,10 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            var tmp = Et.Parameter(typeof(double), "#tmp");
-
-            return Et.Block(
-                new[] { tmp },
-
-                // the value we will return
-                Et.Assign(
-                    tmp,
-                    Et.Dynamic(
-                        etgen.Context.CreateConvertBinder(typeof(double)),
-                        typeof(double),
-                        Target.Generate(etgen)
-                    )
-                ),
-
-                // calc new value
-                etgen.GenerateAssign(
-                    Target,
-                    EtUtils.Box(
-                        Et.Add(
-                            tmp,
-                            Et.Constant(
-                                Op == ExpressionType.PostIncrementAssign
-                                         ? 1.0    // 11.3.1
-                                         : -1.0,  // 11.3.2
-                                typeof(double)
-                            )
-                        )
-                    )
-                ),
-
-                tmp // return the old value
-            );
+            Target = Target.Analyze(astopt);
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

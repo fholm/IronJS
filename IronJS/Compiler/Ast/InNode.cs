@@ -32,22 +32,9 @@ namespace IronJS.Compiler.Ast
             Target = Target.Analyze(astopt);
             Property = Target.Analyze(astopt);
 
-            if (Target is IdentifierNode)
-                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Call(
-                EtUtils.Cast<IObj>(Target.Generate(etgen)),
-                IObjUtils.MiHas,
-                Et.Call(
-                    JsTypeConverter.MiToArrayIndex,
-                    Property.Generate(etgen)
-                )
-            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

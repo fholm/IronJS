@@ -49,47 +49,10 @@ namespace IronJS.Compiler.Ast
             Left = Left.Analyze(astopt);
             Right = Right.Analyze(astopt);
 
-            if (Left is IdentifierNode)
-                (Left as IdentifierNode).VarInfo.AssignedFrom.Add(Right);
-
-            if (Right is IdentifierNode)
-                (Right as IdentifierNode).VarInfo.AssignedFrom.Add(Left);
+            IfIdentiferUsedAs(Left, Right.ExprType);
+            IfIdentiferUsedAs(Right, Left.ExprType);
 
             return this;
-        }
-
-        public override Et EtGen(IjsEtGenerator etgen)
-        {
-            if (IdenticalTypes(Left, Right))
-            {
-                var left = Left.EtGen(etgen);
-                var right = Right.EtGen(etgen);
-
-                if (Left.ExprType == IjsTypes.Integer)
-                {
-                    if (Op == ExpressionType.LessThan)
-                        return Et.LessThan(left, right);
-
-                    if (Op == ExpressionType.Add)
-                        return Et.Add(left, right);
-                }
-            }
-            else
-            {
-
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Dynamic(
-                etgen.Context.CreateBinaryOpBinder(Op),
-                typeof(object),
-                Left.Generate(etgen),
-                Right.Generate(etgen)
-            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

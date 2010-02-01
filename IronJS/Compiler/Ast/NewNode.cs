@@ -37,33 +37,17 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            var target = Target.Generate(etgen);
-            var args = Args.Select(x => x.Generate(etgen)).ToArray();
-            var tmp = Et.Variable(typeof(IObj), "#tmp");
-            var exprs = new List<Et>();
-
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp,
-                    EtUtils.Cast<IObj>(
-                        Et.Dynamic(
-                            etgen.Context.CreateInstanceBinder(
-                                new CallInfo(args.Length)
-                            ),
-                            typeof(object),
-                            ArrayUtils.Insert(
-                                target,
-                                args
-                            )
-                        )
-                    )
-                ),
-                EtUtils.CreateBlockIfNotEmpty(exprs),
-                EtUtils.Box(tmp)
+            IfIdentiferUsedAs(
+                Target = Target.Analyze(astopt), 
+                IjsTypes.Func
             );
+
+            for (int i = 0; i < Args.Count; ++i)
+                Args[i] = Args[i].Analyze(astopt);
+
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

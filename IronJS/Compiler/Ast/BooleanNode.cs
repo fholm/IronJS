@@ -33,10 +33,5 @@ namespace IronJS.Compiler.Ast
             var indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + Value.ToString().ToLower() + ")");
         }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            return etgen.Generate<bool>(Value);
-        }
     }
 }

@@ -24,52 +24,28 @@ namespace IronJS.Compiler.Ast
             Label = null;
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            etgen.FunctionScope.EnterLabelScope(Label, false);
+            Target = Target.Analyze(astopt);
 
-            var tmp = Et.Variable(typeof(object), "#switch-tmp");
-            var hasMatched = Et.Variable(typeof(bool), "#switch-has-matched");
+            if(Default != null)
+                Default = Default.Analyze(astopt);
 
-            var et = Et.Block(
-                new[] { tmp, hasMatched },
-                Et.Assign(
-                    hasMatched,
-                    Et.Constant(false)
-                ),
-                Et.Assign(
-                    tmp,
-                    Target.Generate(etgen)
-                ),
-                Et.Block(
-                    Cases.Select(x => 
-                        Et.IfThen(
-                            Et.MakeBinary(
-                                ExpressionType.OrElse,
-                                hasMatched,
-                                Et.Call(
-                                    typeof(Operators).GetMethod("StrictEquality"),
-                                    tmp,
-                                    x.Item1.Generate(etgen)
-                                )
-                            ),
-                            Et.Block(
-                                x.Item2.Generate(etgen),
-                                Et.Assign(
-                                    hasMatched,
-                                    Et.Constant(true)
-                                )
-                            )
-                        )
+            var cases = new List<Tuple<INode, INode>>();
+
+            foreach (var _case in Cases)
+            {
+                cases.Add(
+                    Tuple.Create(
+                        _case.Item1.Analyze(astopt),
+                        _case.Item2.Analyze(astopt)
                     )
-                ),
-                Default.Generate(etgen),
-                Et.Label(etgen.FunctionScope.LabelScope.Break(Label))
-            );
+                );
+            }
 
-            etgen.FunctionScope.ExitLabelScope();
+            Cases = cases;
 
-            return et;
+            return this;
         }
 
         public override void Print(System.Text.StringBuilder writer, int indent = 0)

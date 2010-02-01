@@ -72,6 +72,18 @@ namespace IronJS.Compiler.Ast
             return set.EvalType();
         }
 
+        public void IfIdentifierAssignedFrom(INode node, INode value)
+        {
+            if (node is IdentifierNode)
+                (node as IdentifierNode).VarInfo.AssignedFrom.Add(value);
+        }
+
+        public void IfIdentiferUsedAs(INode node, Type type)
+        {
+            if (node is IdentifierNode)
+                (node as IdentifierNode).VarInfo.UsedAs.Add(type);
+        }
+
         public string Print()
         {
             var writer = new StringBuilder();
@@ -93,11 +105,6 @@ namespace IronJS.Compiler.Ast
         }
 
         public virtual Et EtGen(IjsEtGenerator etgen)
-        {
-            return AstUtils.Empty();
-        }
-
-        public virtual Et Generate(EtGenerator etgen)
         {
             return AstUtils.Empty();
         }

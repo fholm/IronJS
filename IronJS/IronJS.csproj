@@ -148,8 +148,8 @@
     <Compile Include="Compiler\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
+    <Compile Include="Compiler\IjsFunc.cs" />
     <Compile Include="Compiler\IjsTypes.cs" />
-    <Compile Include="Compiler\Old\EtGenerator.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
     <Compile Include="Compiler\Ast\PostfixOperatorNode.cs" />
@@ -164,12 +164,10 @@
     <Compile Include="Compiler\Ast\ThrowNode.cs" />
     <Compile Include="Compiler\Ast\IndexAccessNode.cs" />
     <Compile Include="Compiler\IjsEtGenerator.cs" />
-    <Compile Include="Compiler\Old\FunctionScope.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\IjsContext.cs" />
     <Compile Include="Compiler\IjsScope.cs" />
-    <Compile Include="Compiler\Old\LabelScope.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Compiler\IjsFuncScope.cs" />

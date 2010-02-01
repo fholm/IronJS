@@ -9,6 +9,7 @@ using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using Meta = System.Dynamic.DynamicMetaObject;
+using IronJS.Compiler;
 
 namespace IronJS.Runtime.Binders2
 {

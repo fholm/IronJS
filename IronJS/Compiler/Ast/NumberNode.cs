@@ -31,11 +31,6 @@ namespace IronJS.Compiler.Ast
             return etgen.Constant(Value);
         }
 
-        public override Et Generate(EtGenerator etgen)
-        {
-            return etgen.Generate<T>(Value);
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

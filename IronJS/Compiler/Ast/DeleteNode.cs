@@ -30,56 +30,11 @@ namespace IronJS.Compiler.Ast
         {
             Target = Target.Analyze(astopt);
 
-            if (Target is IdentifierNode)
-            {
-                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
-                (Target as IdentifierNode).VarInfo.IsDeletable = true;
-            }
+            var idNode = (Target as IdentifierNode);
+            if (idNode != null)
+                idNode.VarInfo.IsDeletable = true;
 
             return this;
-        }
-
-        public override Et Generate(EtGenerator etgen)
-        {
-            if (Target is MemberAccessNode)
-            {
-                var maNode = (MemberAccessNode)Target;
-
-                return EtUtils.Box(
-                    Et.Dynamic(
-                        etgen.Context.CreateDeleteMemberBinder(maNode.Name),
-                        typeof(void),
-                        maNode.Target.Generate(etgen)
-                    )
-                );
-            }
-
-            if (Target is IndexAccessNode)
-            {
-                var iaNode = (IndexAccessNode)Target;
-
-                return EtUtils.Box(
-                    Et.Dynamic(
-                        etgen.Context.CreateDeleteIndexBinder(new CallInfo(1)),
-                        typeof(void),
-                        iaNode.Target.Generate(etgen),
-                        iaNode.Index.Generate(etgen)
-                    )
-                );
-            }
-
-            if (Target is IdentifierNode)
-            {
-                var idNode = (IdentifierNode)Target;
-
-                return Et.Call(
-                    etgen.FunctionScope.ScopeExpr,
-                    Scope.MiDelete,
-                    Et.Constant(idNode.Name, typeof(object))
-                );
-            }
-
-            throw new NotImplementedException();
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

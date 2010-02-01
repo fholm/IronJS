@@ -19,16 +19,6 @@ namespace IronJS.Compiler.Ast
             Modifiers = regex.Substring(lastIndex + 1);
         }
 
-        public override Et Generate(EtGenerator etgen)
-        {
-            return Et.Call(
-                Et.Constant(etgen.Context),
-                Context.MiCreateRegExp,
-                Et.Constant(Regex, typeof(object)),
-                Et.Constant(Modifiers, typeof(object))
-            );
-        }
-
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

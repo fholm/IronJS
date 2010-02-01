@@ -19,29 +19,11 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override Et Generate(EtGenerator etgen)
+        public override INode Analyze(IjsAstAnalyzer astopt)
         {
-            etgen.EnterWith();
-            var body = Body.Generate(etgen);
-            etgen.ExitWith();
-
-            return Et.Block(
-                Et.Assign(etgen.FunctionScope.ScopeExpr,
-                    AstUtils.SimpleNewHelper(
-                        Scope.Ctor2Args,
-                        etgen.FunctionScope.ScopeExpr,
-                        Target.Generate(etgen)
-                    )
-                ),
-                body,
-                Et.Assign(
-                    etgen.FunctionScope.ScopeExpr,
-                    Et.Property(
-                        etgen.FunctionScope.ScopeExpr,
-                        Scope.PiParentScope
-                    )
-                )
-            );
+            Target = Target.Analyze(astopt);
+            Body = Body.Analyze(astopt);
+            return this;
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

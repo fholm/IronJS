@@ -17,11 +17,9 @@ namespace IronJS.Compiler.Optimizer
 
         public bool IsGlobal { get; set; }
         public bool IsLocal { get { return !IsGlobal; } }
-
-        public bool TypeIsResolved { get { return ResolvedType != null; } }
         public bool IsAssignedOnce { get { return AssignedFrom.Count == 1; } }
 
-        public Type ResolvedType { protected get; set; }
+        public Type ForcedType { protected get; set; }
         public HashSet<Type> UsedAs { get; protected set; }
         public HashSet<Ast.INode> AssignedFrom { get; protected set; }
 
@@ -29,20 +27,18 @@ namespace IronJS.Compiler.Optimizer
         {
             get
             {
+                if (ForcedType != null)
+                    return ForcedType;
+
                 if (!IsResolving)
                 {
-                    if(!TypeIsResolved)
-                    {
-                        IsResolving = true;
+                    IsResolving = true;
 
-                        foreach (var node in AssignedFrom)
-                            UsedAs.Add(node.ExprType);
+                    foreach (var node in AssignedFrom)
+                        UsedAs.Add(node.ExprType);
 
-                        IsResolving = false;
-                        ResolvedType = UsedAs.EvalType();
-                    }
-
-                    return ResolvedType;
+                    IsResolving = false;
+                    return UsedAs.EvalType();
                 }
 
                 // null is used to break circular references
@@ -61,26 +57,6 @@ namespace IronJS.Compiler.Optimizer
 
             UsedAs = new HashSet<Type>();
             AssignedFrom = new HashSet<Ast.INode>();
-        }
-
-        public bool GetFuncInfo(out IjsFuncInfo funcInfo)
-        {
-            if(ExprType == IjsTypes.Object)
-            {
-                if(AssignedFrom.Count == 1)
-                {
-                    var first = AssignedFrom.First() as FuncNode;
-
-                    if (first != null)
-                    {
-                        funcInfo = first.FuncInfo;
-                        return true;
-                    }
-                }
-            }
-
-            funcInfo = null;
-            return false;
         }
     }
 }

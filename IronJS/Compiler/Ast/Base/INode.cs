@@ -12,7 +12,7 @@ namespace IronJS.Compiler.Ast
         Type ExprType { get; }
 
         Et EtGen(IjsEtGenerator etgen);
-        INode Analyze(IjsAstAnalyzer astopt);
+        INode Analyze(FuncNode astopt);
         Type EvalTypes(params INode[] nodes);
         bool IdenticalTypes(params INode[] nodes);
 

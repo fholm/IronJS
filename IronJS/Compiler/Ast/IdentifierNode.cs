@@ -30,27 +30,24 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode func)
         {
-            if (astopt.IsInsideWith)
-                throw new NotImplementedException();
-
             if (IsDefinition)
             {
-                VarInfo = astopt.Scope.CreateVariable(Name);
-                VarInfo.IsGlobal = astopt.InGlobalScope;
+                VarInfo = func.CreateVariable(Name);
+                VarInfo.IsGlobal = func.IsGlobalScope;
             }
             else
             {
                 IjsVarInfo variable;
 
-                if (astopt.Scope.GetVariable(Name, out variable))
+                if (func.Function.GetVariable(Name, out variable))
                 {
                     VarInfo = variable;
 
                     if (VarInfo.IsLocal)
                     {
-                        var scope = astopt.Scope;
+                        var scope = func.Function;
 
                         while(!scope.HasVariable(Name))
                         {
@@ -62,7 +59,7 @@ namespace IronJS.Compiler.Ast
                 }
                 else
                 {
-                    VarInfo = astopt.GlobalScope.CreateVariable(Name);
+                    VarInfo = func.GlobalScope.CreateVariable(Name);
                     VarInfo.IsGlobal = true;
                 }
             }

@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
             Nodes = nodes;
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             var nodes = new List<INode>();
 

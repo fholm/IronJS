@@ -17,7 +17,7 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             Target = Target.Analyze(astopt);
 

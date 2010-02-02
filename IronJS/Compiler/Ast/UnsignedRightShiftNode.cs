@@ -27,7 +27,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             Left = Left.Analyze(astopt);
             Right = Right.Analyze(astopt);

@@ -9,27 +9,39 @@ using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Extensions;
 using Et = System.Linq.Expressions.Expression;
+using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
     public class FuncNode : Node
     {
-        public INode Body { get; protected set; }
+        public FuncNode Parent { get; protected set; }
         public IdentifierNode Name { get; protected set; }
-        public List<IdentifierNode> Args { get; protected set; }
-        public IjsFuncInfo FuncInfo { get; protected set; }
+        public List<IdentifierNode> Parameters { get; protected set; }
+        public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
+        public INode Body { get; protected set; }
+        public List<IdentifierNode> Locals { get; protected set; }
+        public HashSet<INode> Returns { get; protected set; }
+        public LabelTarget ReturnLabel { get; protected set; }
 
-        public FuncNode(List<IdentifierNode> args, INode body, IdentifierNode name, ITree node)
+        public bool IsNamed { get { return !IsLambda; } }
+        public bool IsLambda { get { return Name == null; } }
+
+        public bool IsBranched { get; set; }
+        public bool IsSimple { get { return !IsBranched; } }
+
+        public bool IsGlobalScope { get; protected set; }
+        public bool IsNotGlobalScope { get { return !IsGlobalScope; } }
+
+        public FuncNode(IdentifierNode name, List<IdentifierNode> parameters, INode body, ITree node)
             : base(NodeType.Func, node)
         {
-            Args = args;
             Body = body;
             Name = name;
+            Parameters = parameters;
+            Locals = new List<IdentifierNode>();
 
-            FuncInfo = new IjsFuncInfo(this);
-            FuncInfo.IsLambda = Name == null;
-
-            if (Name != null)
+            if (IsNamed)
                 Name.IsDefinition = true;
         }
 
@@ -37,33 +49,43 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                return FuncInfo.ExprType;
+                return IjsTypes.Object;
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer analyzer)
+        public Type ReturnType
         {
-            if (!analyzer.InGlobalScope)
+            get
             {
-                if (!FuncInfo.IsLambda)
-                {
-                    Name.Analyze(analyzer);
-                    Name.VarInfo.AssignedFrom.Add(this);
-                    Name.VarInfo.UsedAs.Add(ExprType);
-                }
+                if (IsSimple)
+                    return Returns.EvalType();
+
+                return IjsTypes.Dynamic;
+            }
+        }
+
+        public INode Analyze()
+        {
+            return Analyze(this);
+        }
+
+        public override INode Analyze(FuncNode func)
+        {
+            Parent = func;
+
+            if (IsNamed)
+            {
+                Name.Analyze(func);
+                Name.VarInfo.AssignedFrom.Add(this);
             }
 
-            analyzer.EnterScope(FuncInfo);
-
-            foreach (var arg in Args)
+            foreach (var param in Parameters)
             {
-                arg.Analyze(analyzer);
-                arg.VarInfo.IsParameter = true;
+                param.Analyze(this);
+                param.VarInfo.IsParameter = true;
             }
 
-            Body = Body.Analyze(analyzer);
-
-            analyzer.ExitScope();
+            Body = Body.Analyze(this);
 
             return this;
         }
@@ -77,14 +99,14 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr 
                 + "(" + NodeType 
                 + (" " + Name + " ").TrimEnd() 
-                + " " + FuncInfo.ReturnType.ShortName()
+                + " " + ReturnType.ShortName()
             );
 
-            if (FuncInfo.ClosesOver.Count > 0)
+            if (ClosesOver.Count > 0)
             {
                 writer.AppendLine(indentStr2 + "(Closure");
 
-                foreach (var id in FuncInfo.ClosesOver)
+                foreach (var id in ClosesOver)
                     writer.AppendLine(indentStr3 + "(" + id.Name + ")");
 
                 writer.AppendLine(indentStr2 + ")");
@@ -92,12 +114,22 @@ namespace IronJS.Compiler.Ast
 
             writer.Append(indentStr2 + "(Args");
 
-            foreach (var node in Args)
+            foreach (var node in Parameters)
                 writer.Append(" " + node);
 
             writer.AppendLine(")");
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
+        }
+
+        public static FuncNode CreateGlobal(List<INode> body)
+        {
+            return new FuncNode(
+                null, 
+                new List<IdentifierNode>(), 
+                new BlockNode(body, null), 
+                null
+            ) { IsGlobalScope = true };
         }
     }
 }

@@ -99,7 +99,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
-        public virtual INode Analyze(IjsAstAnalyzer astopt)
+        public virtual INode Analyze(FuncNode astopt)
         {
             return this;
         }

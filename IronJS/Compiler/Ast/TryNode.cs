@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Finally = _finally;
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             Body = Body.Analyze(astopt);
 

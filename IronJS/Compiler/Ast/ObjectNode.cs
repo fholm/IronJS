@@ -27,7 +27,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             foreach (var key in Properties.Keys.ToList())
                 Properties[key] = Properties[key].Analyze(astopt);

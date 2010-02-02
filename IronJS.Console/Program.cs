@@ -6,6 +6,7 @@ using IronJS.Extensions;
 using IronJS.Runtime.Js;
 using Microsoft.Scripting.Generation;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Compiler.Ast;
 
 namespace IronJS.Testing
 {
@@ -14,12 +15,10 @@ namespace IronJS.Testing
         public static void Main(string[] args)
         {
             var astGenerator = new Compiler.IjsAstGenerator();
-            var astOptimizer = new Compiler.IjsAstAnalyzer();
-
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
-                astNodes = astOptimizer.Optimize(astNodes);
+            var globalScope = FuncNode.CreateGlobal(astNodes).Analyze();
 
-            Console.WriteLine(astNodes.PrettyPrint());
+            Console.WriteLine(globalScope.Print());
 
             Console.ReadLine();
             return;

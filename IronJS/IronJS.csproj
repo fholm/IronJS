@@ -120,7 +120,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compiler\IjsAstAnalyzer.cs" />
     <Compile Include="Compiler\Ast\ArrayNode.cs" />
     <Compile Include="Compiler\Ast\AssignmentBlockNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />
@@ -172,8 +171,6 @@
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Compiler\IjsFuncScope.cs" />
-    <Compile Include="Compiler\Optimizer\IjsFuncInfo.cs" />
-    <Compile Include="Compiler\Optimizer\IjsAnalyzeScope.cs" />
     <Compile Include="Compiler\Optimizer\IjsVarInfo.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />

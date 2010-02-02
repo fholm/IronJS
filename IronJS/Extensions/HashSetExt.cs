@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using IronJS.Compiler;
+using IronJS.Compiler.Ast;
 
 namespace IronJS.Extensions
 {
@@ -15,6 +16,15 @@ namespace IronJS.Extensions
                 return set.First();
 
             return IjsTypes.Dynamic;
+        }
+
+        public static Type EvalType(this HashSet<INode> set)
+        {
+            set.Remove(null);
+
+            return new HashSet<Type>(
+                set.Select(x => x.ExprType)
+            ).EvalType();
         }
     }
 }

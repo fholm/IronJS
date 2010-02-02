@@ -37,7 +37,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             Test = Test.Analyze(astopt);
             TrueBranch = TrueBranch.Analyze(astopt);
@@ -46,7 +46,7 @@ namespace IronJS.Compiler.Ast
                 ElseBranch = ElseBranch.Analyze(astopt);
 
             if (!IsTernary)
-                astopt.Scope.FuncInfo.HasBranches = true;
+                astopt.IsBranched = true;
 
             return this;
         }

@@ -867,7 +867,8 @@ namespace IronJS.Compiler
                 return BuildLambda(
                     node.GetChildSafe(1),
                     node.GetChildSafe(2),
-                    node.GetChildSafe(0).Text
+                    node.GetChildSafe(0).Text,
+                    node
                 );
             }
             else
@@ -875,18 +876,22 @@ namespace IronJS.Compiler
                 return BuildLambda(
                     node.GetChildSafe(0), 
                     node.GetChildSafe(1), 
-                    null
+                    null,
+                    node
                 );
             }
         }
 
-        private INode BuildLambda(ITree argsNode, ITree block, string name)
+        private INode BuildLambda(ITree args, ITree body, string name, ITree node)
         {
-            var args = argsNode.Map(x => new IdentifierNode(x.Text, x));
-            var body = BuildBlock(block);
-            var nameNode = name == null ? null : new IdentifierNode(name, argsNode);
-
-            return new FuncNode(args, body, nameNode, argsNode);
+            return new FuncNode(
+                (name == null)
+                    ? null 
+                    : new IdentifierNode(name, args),
+                args.Map(x => new IdentifierNode(x.Text, x)),
+                BuildBlock(body), 
+                node
+            );
         }
 
         private INode BuildNew(ITree node)

@@ -37,7 +37,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             IfIdentiferUsedAs(
                 Target = Target.Analyze(astopt), 

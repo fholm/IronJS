@@ -10,7 +10,7 @@ namespace IronJS.Compiler.Ast
     public class ReturnNode : Node
     {
         public INode Value { get; protected set; }
-        public IjsFuncInfo FuncInfo { get; protected set; }
+        public FuncNode FuncNode { get; protected set; }
 
         public ReturnNode(INode value, ITree node)
             : base(NodeType.Return, node)
@@ -18,11 +18,13 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode func)
         {
-            Value = Value.Analyze(astopt);
-            FuncInfo = astopt.Scope.FuncInfo;
-            FuncInfo.Returns.Add(Value.ExprType);
+            Value = Value.Analyze(func);
+
+            FuncNode = func;
+            FuncNode.Returns.Add(Value);
+
             return this;
         }
 

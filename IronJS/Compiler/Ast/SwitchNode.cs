@@ -24,7 +24,7 @@ namespace IronJS.Compiler.Ast
             Label = null;
         }
 
-        public override INode Analyze(IjsAstAnalyzer astopt)
+        public override INode Analyze(FuncNode astopt)
         {
             Target = Target.Analyze(astopt);
 

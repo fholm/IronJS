@@ -148,7 +148,6 @@
     <Compile Include="Compiler\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
-    <Compile Include="Runtime\Js2\IjsFunc.cs" />
     <Compile Include="Compiler\IjsTypes.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
@@ -173,14 +172,6 @@
     <Compile Include="Extensions\HashSetExt.cs" />
     <Compile Include="Extensions\IEnumerableExt.cs" />
     <Compile Include="Extensions\TypeExt.cs" />
-    <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs" />
-    <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs" />
-    <Compile Include="Runtime\Binders\JsDeleteMemberBinder.cs" />
-    <Compile Include="Runtime\Binders\JsSetIndexBinder.cs" />
-    <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs" />
-    <Compile Include="Runtime\Binders\JsConvertBinder.cs" />
-    <Compile Include="Runtime\Binders\JsGetIndexBinder.cs" />
-    <Compile Include="Runtime\Binders\JsSetMemberBinder.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />
@@ -188,104 +179,331 @@
     <Compile Include="Error.cs" />
     <Compile Include="Extensions\ITreeExt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\Binders\JsGetMemberBinder.cs" />
-    <Compile Include="Runtime\Binders\JsInvokeBinder.cs" />
-    <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs" />
-    <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype.cs" />
-    <Compile Include="Runtime\Builtins\Array_ctor.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_concat.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_join.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_pop.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_push.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_shift.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_slice.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_sort.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_splice.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs" />
-    <Compile Include="Runtime\Builtins\Boolean_ctor.cs" />
-    <Compile Include="Runtime\Builtins\Boolean_prototype.cs" />
-    <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_decodeURI.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_decodeURIComponent.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_encodeURI.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_encodeURIComponent.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_eval.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_isFinite.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_isNaN.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_parseFloat.cs" />
-    <Compile Include="Runtime\Builtins\Global_obj_parseInt.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_abs.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_acos.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_asin.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_atan.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_atan2.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_ceil.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_cos.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_exp.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_floor.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_log.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_max.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_min.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_pow.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_random.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_round.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_sin.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_sqrt.cs" />
-    <Compile Include="Runtime\Builtins\Math_obj_tan.cs" />
-    <Compile Include="Runtime\Builtins\Number_ctor.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype_toExponential.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype_toLocaleString.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype_toPrecision.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\Number_prototype_valueOf.cs" />
-    <Compile Include="Runtime\Builtins\RegExp_ctor.cs" />
-    <Compile Include="Runtime\Builtins\RegExp_prototype.cs" />
-    <Compile Include="Runtime\Builtins\RegExp_prototype_exec.cs" />
-    <Compile Include="Runtime\Builtins\RegExp_prototype_test.cs" />
-    <Compile Include="Runtime\Builtins\RegExp_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs" />
-    <Compile Include="Runtime\Builtins\Function_prototype_apply.cs" />
-    <Compile Include="Runtime\Builtins\Function_ctor.cs" />
-    <Compile Include="Runtime\Builtins\Function_prototype.cs" />
-    <Compile Include="Runtime\Builtins\Function_prototype_call.cs" />
-    <Compile Include="Runtime\Builtins\Function_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\Object_ctor.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_propertyIsEnumerable.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_toLocaleString.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs" />
-    <Compile Include="Runtime\Builtins\String_ctor.cs" />
-    <Compile Include="Runtime\Builtins\String_ctor_fromCharCode.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_charAt.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_concat.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_localeCompare.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_match.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_replace.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_search.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_slice.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_split.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_substring.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_toLocaleLowerCase.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_toLocaleUpperCase.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_toLowerCase.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_toString.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_toUpperCase.cs" />
-    <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs" />
+    <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsConvertBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsDeleteMemberBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsGetIndexBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsGetMemberBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsInvokeBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsSetIndexBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsSetMemberBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_concat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_join.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_pop.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_push.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_shift.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_slice.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_sort.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_splice.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Boolean_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Boolean_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Function_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Function_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Function_prototype_apply.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Function_prototype_call.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Function_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_decodeURI.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_decodeURIComponent.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_encodeURI.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_encodeURIComponent.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_eval.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_isFinite.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_isNaN.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_parseFloat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Global_obj_parseInt.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_abs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_acos.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_asin.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_atan.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_atan2.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_ceil.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_cos.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_exp.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_floor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_log.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_max.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_min.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_pow.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_random.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_round.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_sin.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_sqrt.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Math_obj_tan.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_toExponential.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_toLocaleString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_toPrecision.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Number_prototype_valueOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_propertyIsEnumerable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_toLocaleString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\RegExp_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\RegExp_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\RegExp_prototype_exec.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\RegExp_prototype_test.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\RegExp_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_ctor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_ctor_fromCharCode.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_charAt.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_concat.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_localeCompare.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_match.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_replace.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_search.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_slice.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_split.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_substring.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_toLocaleLowerCase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_toLocaleUpperCase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_toLowerCase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_toString.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_toUpperCase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Context.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Delegates.cs" />
-    <Compile Include="Runtime\Context.cs" />
+    <Compile Include="Runtime\Js2\IjsFunc.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Js2\IjsObj.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Js\Descriptors\LengthProperty.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -314,9 +532,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\IFunctionMeta.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js2\IjsObj.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\IObj.cs">
@@ -364,23 +579,28 @@
     <Compile Include="Runtime\Js\ValueObj.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\RuntimeError.cs" />
-    <Compile Include="Runtime\Utils\BinderUtils.cs" />
+    <Compile Include="Runtime\RuntimeError.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Runtime\Utils\BinderUtils.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Utils\EtUtils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Utils\HelperFunctions.cs" />
+    <Compile Include="Runtime\Utils\HelperFunctions.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Runtime\Utils\RestrictUtils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Utils\TypeConverter.cs" />
+    <Compile Include="Runtime\Utils\TypeConverter.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utils\Benchmark.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\InterOp\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

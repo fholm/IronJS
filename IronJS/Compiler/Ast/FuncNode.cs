@@ -25,7 +25,6 @@ namespace IronJS.Compiler.Ast
     {
         public FuncNode Parent { get; protected set; }
         public IdentifierNode Name { get; protected set; }
-        public Type ClosureType { get; set; }
         public List<IdentifierNode> Parameters { get; protected set; }
         public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
         public INode Body { get; protected set; }
@@ -204,8 +203,7 @@ namespace IronJS.Compiler.Ast
                 new BlockNode(body, null), 
                 null
             ) { 
-                IsGlobalScope = true, 
-                ClosureType = typeof(object)
+                IsGlobalScope = true
             };
         }
     }

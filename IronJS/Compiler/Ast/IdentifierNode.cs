@@ -11,12 +11,9 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
-        public string Name { get; protected set; }
-        public IjsVarInfo VarInfo { get; set; }
-
         public bool IsDefinition { get; set; }
-        public bool IsLocal { get { return VarInfo.IsLocal; } }
-        public bool IsGlobal { get { return VarInfo.IsGlobal; } }
+        public IjsVarInfo VarInfo { get; set; }
+        public string Name { get; protected set; }
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
@@ -54,6 +51,7 @@ namespace IronJS.Compiler.Ast
                     if (VarInfo.IsLocal)
                     {
                         var scope = astopt.Scope;
+
                         while(!scope.HasVariable(Name))
                         {
                             VarInfo.IsClosedOver = true;
@@ -75,8 +73,9 @@ namespace IronJS.Compiler.Ast
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + 
+            writer.AppendLine(indentStr +
                 "(" +
+                    (IsDefinition ? ">" : "") +
                     (VarInfo.IsGlobal ? "$" : "") +
                     Name + 
                     (VarInfo.IsDeletable ? "!" : "") + 

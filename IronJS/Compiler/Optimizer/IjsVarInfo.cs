@@ -9,16 +9,19 @@ namespace IronJS.Compiler.Optimizer
     public class IjsVarInfo
     {
         public string Name { get; set; }
+
         public bool IsResolving { get; set; }
         public bool IsParameter { get; set; }
         public bool IsDeletable { get; set; }
         public bool IsClosedOver { get; set; }
+
         public bool IsGlobal { get; set; }
         public bool IsLocal { get { return !IsGlobal; } }
-        public bool TypeResolved { get { return RealType != null; } }
+
+        public bool TypeIsResolved { get { return ResolvedType != null; } }
         public bool IsAssignedOnce { get { return AssignedFrom.Count == 1; } }
 
-        public Type RealType { protected get; set; }
+        public Type ResolvedType { protected get; set; }
         public HashSet<Type> UsedAs { get; protected set; }
         public HashSet<Ast.INode> AssignedFrom { get; protected set; }
 
@@ -28,7 +31,7 @@ namespace IronJS.Compiler.Optimizer
             {
                 if (!IsResolving)
                 {
-                    if(!TypeResolved)
+                    if(!TypeIsResolved)
                     {
                         IsResolving = true;
 
@@ -36,10 +39,10 @@ namespace IronJS.Compiler.Optimizer
                             UsedAs.Add(node.ExprType);
 
                         IsResolving = false;
-                        RealType = UsedAs.EvalType();
+                        ResolvedType = UsedAs.EvalType();
                     }
 
-                    return RealType;
+                    return ResolvedType;
                 }
 
                 // null is used to break circular references

@@ -21,11 +21,31 @@ namespace IronJS.Testing
             return act;
         }
 
+        public class Cell
+        {
+            public static Cell<T> Create<T>(T value)
+            {
+                return new Cell<T>(value);
+            }
+        }
+
+        public class Cell<T>
+        {
+            public T Value;
+
+            public Cell(T value)
+            {
+                Value = value;
+            }
+        }
+
         public static void Main(string[] args)
         {
+            var param = Et.Parameter(typeof(object), "#tmp");
 
-            var x = Et.Lambda<Action>(
-                    Et.Default(typeof(object))
+            var x = Et.Lambda<Action<object>>(
+                    Et.Default(typeof(object)),
+                    param
                 ).Compile();
 
 
@@ -37,11 +57,34 @@ namespace IronJS.Testing
                 false
             );
 
-            object z = 1;
+            var x2 = Cell.Create(1);
             Action deleg = delegate() { };
             Console.WriteLine(IronJS.Utils.Benchmark.This(() =>
             {
                 for (int i = 0; i < 1000000; ++i) {
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    x2 = Cell.Create(x2.Value * x2.Value);
+                    /*
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    x(x2);
+                    */
+                    /*
                     Method((int)z);
                     Method((int)z);
                     Method((int)z);
@@ -52,6 +95,7 @@ namespace IronJS.Testing
                     Method((int)z);
                     Method((int)z);
                     Method((int)z);
+                    */
                     /*
                     deleg.Invoke();
                     deleg.Invoke();
@@ -75,18 +119,6 @@ namespace IronJS.Testing
                     deleg();
                     deleg();
                     deleg();
-                    */
-                    /*
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
-                    x();
                     */
                     /*
                     y();

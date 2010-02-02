@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Optimizer;
 using IronJS.Runtime.Utils;
 using Et = System.Linq.Expressions.Expression;
 

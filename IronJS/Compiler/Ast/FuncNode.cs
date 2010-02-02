@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Optimizer;
 using IronJS.Runtime;
 using IronJS.Runtime.Js;
 using IronJS.Extensions;
@@ -20,7 +19,7 @@ namespace IronJS.Compiler.Ast
         public List<IdentifierNode> Parameters { get; protected set; }
         public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
         public INode Body { get; protected set; }
-        public List<IdentifierNode> Locals { get; protected set; }
+        public Dictionary<string, IjsVarInfo> Locals { get; protected set; }
         public HashSet<INode> Returns { get; protected set; }
         public LabelTarget ReturnLabel { get; protected set; }
 
@@ -39,7 +38,9 @@ namespace IronJS.Compiler.Ast
             Body = body;
             Name = name;
             Parameters = parameters;
-            Locals = new List<IdentifierNode>();
+            Locals = new Dictionary<string, IjsVarInfo>();
+            ClosesOver = new HashSet<IjsVarInfo>();
+            Returns = new HashSet<INode>();
 
             if (IsNamed)
                 Name.IsDefinition = true;
@@ -90,6 +91,66 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
+        public IjsVarInfo CreateLocal(string name)
+        {
+            if (HasLocal(name))
+                throw new ArgumentException("A variable named '" + name + "' already exists");
+
+            return Locals[name] = new IjsVarInfo(name);
+        }
+
+        public bool HasLocal(string name)
+        {
+            return Locals.ContainsKey(name);
+        }
+
+        public IjsVarInfo GetLocal(string name)
+        {
+            return Locals[name];
+        }
+
+        public IjsVarInfo GetNonLocal(string name)
+        {
+            IjsVarInfo varInfo;
+
+            var parentFunctions = new HashSet<FuncNode>();
+            var parent = Parent;
+
+            while(true)
+            {
+                if(parent.HasLocal(name))
+                {
+                    if (parent.IsGlobalScope)
+                    {
+                        return parent.GetLocal(name);
+                    }
+                    else
+                    {
+                        varInfo = parent.GetLocal(name);
+                        varInfo.IsClosedOver = true;
+
+                        foreach (var subParent in parentFunctions)
+                            subParent.ClosesOver.Add(varInfo);
+
+                        ClosesOver.Add(varInfo);
+
+                        return varInfo;
+                    }
+                }
+
+                if (parent.Parent == null)
+                    break;
+
+                parentFunctions.Add(parent);
+                parent = parent.Parent;
+            }
+
+            varInfo = parent.CreateLocal(name);
+            varInfo.IsGlobal = true;
+
+            return varInfo;
+        }
+
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
@@ -122,7 +183,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + ")");
         }
 
-        public static FuncNode CreateGlobal(List<INode> body)
+        public static FuncNode CreateGlobalScope(List<INode> body)
         {
             return new FuncNode(
                 null, 

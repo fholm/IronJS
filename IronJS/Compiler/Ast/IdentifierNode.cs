@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Optimizer;
 using IronJS.Runtime.Js;
 using IronJS.Extensions;
 using Et = System.Linq.Expressions.Expression;
@@ -34,33 +33,18 @@ namespace IronJS.Compiler.Ast
         {
             if (IsDefinition)
             {
-                VarInfo = func.CreateVariable(Name);
+                VarInfo = func.CreateLocal(Name);
                 VarInfo.IsGlobal = func.IsGlobalScope;
             }
             else
             {
-                IjsVarInfo variable;
-
-                if (func.Function.GetVariable(Name, out variable))
+                if (func.HasLocal(Name))
                 {
-                    VarInfo = variable;
-
-                    if (VarInfo.IsLocal)
-                    {
-                        var scope = func.Function;
-
-                        while(!scope.HasVariable(Name))
-                        {
-                            VarInfo.IsClosedOver = true;
-                            scope.FuncInfo.ClosesOver.Add(VarInfo);
-                            scope = scope.Parent;
-                        }
-                    }
+                    VarInfo = func.GetLocal(Name);
                 }
                 else
                 {
-                    VarInfo = func.GlobalScope.CreateVariable(Name);
-                    VarInfo.IsGlobal = true;
+                    VarInfo = func.GetNonLocal(Name);
                 }
             }
 

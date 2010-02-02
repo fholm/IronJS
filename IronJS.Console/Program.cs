@@ -16,7 +16,7 @@ namespace IronJS.Testing
         {
             var astGenerator = new Compiler.IjsAstGenerator();
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
-            var globalScope = FuncNode.CreateGlobal(astNodes).Analyze();
+            var globalScope = FuncNode.CreateGlobalScope(astNodes).Analyze();
 
             Console.WriteLine(globalScope.Print());
 

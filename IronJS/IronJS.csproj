@@ -171,7 +171,7 @@
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Compiler\IjsFuncScope.cs" />
-    <Compile Include="Compiler\Optimizer\IjsVarInfo.cs" />
+    <Compile Include="Compiler\IjsVarInfo.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />
     <Compile Include="Extensions\IEnumerableExt.cs" />

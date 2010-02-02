@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using IronJS.Compiler.Ast;
-using IronJS.Compiler.Optimizer;
 using Et = System.Linq.Expressions.Expression;
 using EtParam = System.Linq.Expressions.ParameterExpression;
 

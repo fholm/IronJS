@@ -4,7 +4,7 @@ using System.Linq;
 using IronJS.Compiler.Ast;
 using IronJS.Extensions;
 
-namespace IronJS.Compiler.Optimizer
+namespace IronJS.Compiler
 {
     public class IjsVarInfo
     {

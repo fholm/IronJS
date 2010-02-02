@@ -31,12 +31,13 @@ namespace IronJS.Compiler
                 if (!IsResolving)
                 {
                     IsResolving = true;
+                    var set = new HashSet<Type>(UsedAs);
 
                     foreach (var node in AssignedFrom)
-                        UsedAs.Add(node.ExprType);
+                        set.Add(node.ExprType);
 
                     IsResolving = false;
-                    return UsedAs.EvalType();
+                    return set.EvalType();
                 }
 
                 // null is used to break circular references

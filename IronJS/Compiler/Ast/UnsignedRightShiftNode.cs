@@ -32,8 +32,8 @@ namespace IronJS.Compiler.Ast
             Left = Left.Analyze(astopt);
             Right = Right.Analyze(astopt);
 
-            IfIdentiferUsedAs(Left, Right.ExprType);
-            IfIdentiferUsedAs(Right, Left.ExprType);
+            IfIdentifierAssignedFrom(Left, Right);
+            IfIdentifierAssignedFrom(Right, Left);
 
             return this;
         }

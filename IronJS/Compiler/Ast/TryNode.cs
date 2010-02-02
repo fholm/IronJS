@@ -36,8 +36,7 @@ namespace IronJS.Compiler.Ast
             if (Finally != null)
                 Finally = Finally.Analyze(astopt);
 
-            if (Target is IdentifierNode)
-                (Target as IdentifierNode).VarInfo.UsedAs.Add(IjsTypes.Object);
+            IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
         }

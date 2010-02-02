@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using IronJS.Extensions;
-using IronJS.Runtime.Js;
-using Microsoft.Scripting.Generation;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Compiler.Ast;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Testing
 {
@@ -20,9 +15,6 @@ namespace IronJS.Testing
 
             Console.WriteLine(globalScope.Print());
 
-            Console.ReadLine();
-            return;
-
             var globals = new IjsObj();
 
             globals.Set(
@@ -30,9 +22,8 @@ namespace IronJS.Testing
                 typeof(Console).GetMethod("WriteLine", new[] { typeof(int) })
             );
 
-            var context = new Compiler.IjsContext();
             var etGenerator = new Compiler.IjsEtGenerator();
-            var compiled = etGenerator.Generate(astNodes, context);
+            var compiled = etGenerator.Generate(globalScope);
 
             try
             {

@@ -12,15 +12,16 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
-using System.Reflection;
+using System;
+using IronJS.Compiler.Ast;
+using IronJS.Runtime.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler
 {
     public class IjsEtGenerator
     {
-        public MethodInfo Generate(List<Ast.INode> astNodes, IjsContext context)
+        public Action<IjsObj> Generate(FuncNode global)
         {
             return null;
         }

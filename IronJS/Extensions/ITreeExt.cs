@@ -38,23 +38,5 @@ namespace IronJS.Extensions
 
             return list;
         }
-
-        public static void Print(this ITree that, int indent = 0, int indentWidth = 2)
-        {
-            var indentStr = new String(' ', indent * indentWidth);
-
-            Console.Write(indentStr + "(" + that.Text);
-
-            if (that.ChildCount > 0)
-            {
-                Console.WriteLine("");
-                that.EachChild(x => x.Print(indent + 2, indentWidth));
-                Console.WriteLine(indentStr + ")");
-            }
-            else
-            {
-                Console.WriteLine(")");
-            }
-        }
     }
 }

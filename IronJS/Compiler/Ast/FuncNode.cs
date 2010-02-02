@@ -1,14 +1,23 @@
-﻿using System;
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Fredrik Holmström
+ *
+ * This source code is subject to terms and conditions of the Microsoft Public License. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the  Microsoft Public License, please send an email to 
+ * dlr@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Microsoft Public License.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime;
-using IronJS.Runtime.Js;
 using IronJS.Extensions;
-using Et = System.Linq.Expressions.Expression;
-using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
@@ -16,6 +25,7 @@ namespace IronJS.Compiler.Ast
     {
         public FuncNode Parent { get; protected set; }
         public IdentifierNode Name { get; protected set; }
+        public Type ClosureType { get; set; }
         public List<IdentifierNode> Parameters { get; protected set; }
         public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
         public INode Body { get; protected set; }
@@ -38,9 +48,10 @@ namespace IronJS.Compiler.Ast
             Body = body;
             Name = name;
             Parameters = parameters;
+
             Locals = new Dictionary<string, IjsVarInfo>();
-            ClosesOver = new HashSet<IjsVarInfo>();
             Returns = new HashSet<INode>();
+            ClosesOver = new HashSet<IjsVarInfo>();
 
             if (IsNamed)
                 Name.IsDefinition = true;
@@ -65,14 +76,15 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public INode Analyze()
+        public FuncNode Analyze()
         {
-            return Analyze(this);
+            return (FuncNode) Analyze(this);
         }
 
         public override INode Analyze(FuncNode func)
         {
-            Parent = func;
+            if(func != this)
+                Parent = func;
 
             if (IsNamed)
             {
@@ -81,10 +93,7 @@ namespace IronJS.Compiler.Ast
             }
 
             foreach (var param in Parameters)
-            {
                 param.Analyze(this);
-                param.VarInfo.IsParameter = true;
-            }
 
             Body = Body.Analyze(this);
 
@@ -155,7 +164,7 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
             var indentStr2 = new String(' ', (indent + 1) * 2);
-            var indentStr3 = new String(' ', (indent + 3) * 2);
+            var indentStr3 = new String(' ', (indent + 2) * 2);
 
             writer.AppendLine(indentStr 
                 + "(" + NodeType 
@@ -168,17 +177,21 @@ namespace IronJS.Compiler.Ast
                 writer.AppendLine(indentStr2 + "(Closure");
 
                 foreach (var id in ClosesOver)
-                    writer.AppendLine(indentStr3 + "(" + id.Name + ")");
+                    writer.AppendLine(indentStr3 + "(" + id.Name + " " + id.ExprType.ShortName() + ")");
 
                 writer.AppendLine(indentStr2 + ")");
             }
 
-            writer.Append(indentStr2 + "(Args");
+            if(Parameters.Count > 0)
+            {
+                writer.AppendLine(indentStr2 + "(Parameters");
 
-            foreach (var node in Parameters)
-                writer.Append(" " + node);
+                foreach (var id in Parameters)
+                    id.Print(writer, indent + 2);
 
-            writer.AppendLine(")");
+                writer.AppendLine(indentStr2 + ")");
+            }
+
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }
@@ -190,7 +203,10 @@ namespace IronJS.Compiler.Ast
                 new List<IdentifierNode>(), 
                 new BlockNode(body, null), 
                 null
-            ) { IsGlobalScope = true };
+            ) { 
+                IsGlobalScope = true, 
+                ClosureType = typeof(object)
+            };
         }
     }
 }

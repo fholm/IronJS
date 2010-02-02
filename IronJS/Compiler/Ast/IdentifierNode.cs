@@ -10,6 +10,7 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
+        public bool IsParameter { get; set; }
         public bool IsDefinition { get; set; }
         public IjsVarInfo VarInfo { get; set; }
         public string Name { get; protected set; }

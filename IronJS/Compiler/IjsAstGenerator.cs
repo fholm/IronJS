@@ -888,7 +888,12 @@ namespace IronJS.Compiler
                 (name == null)
                     ? null 
                     : new IdentifierNode(name, args),
-                args.Map(x => new IdentifierNode(x.Text, x)),
+                args.Map(x => {
+                        var param = new IdentifierNode(x.Text, x);
+                        param.IsDefinition = true;
+                        param.IsParameter = true;
+                        return param;
+                    }),
                 BuildBlock(body), 
                 node
             );

@@ -1,5 +1,5 @@
 ﻿
-var y = function () {
+var y = function (p) {
     var a = 1;
     var b = 2;
     var c = 3;
@@ -12,6 +12,7 @@ var y = function () {
             var __a = a;
             var __b = b;
             var __c = _c;
+            var __p = p;
         };
     }
 

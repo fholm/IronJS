@@ -2,6 +2,8 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js;
+using IronJS.Compiler.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -10,6 +12,8 @@ namespace IronJS.Compiler.Ast
         public INode Target { get; protected set; }
         public INode Value { get; protected set; }
 
+        public override Type ExprType { get { return Value.ExprType; } }
+
         public AssignNode(INode target, INode value, ITree node)
             : base(NodeType.Assign, node)
         {
@@ -17,12 +21,10 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override Type ExprType
+
+        public override Et EtGen(FuncNode func)
         {
-            get
-            {
-                return Value.ExprType;
-            }
+            return IjsEtGenUtils.Assign(func, Target, Value.EtGen(func));
         }
 
         public override INode Analyze(FuncNode astopt)

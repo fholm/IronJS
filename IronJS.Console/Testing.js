@@ -1,4 +1,5 @@
 ﻿
+/*
 var y = function (p) {
     var a = 1;
     var b = 2;
@@ -20,3 +21,14 @@ var y = function (p) {
 };
 
 y();
+*/
+
+var x = 1;
+var y = "foo";
+var z = true;
+
+y = function (a) {
+    return a;
+};
+
+var _ = y(2);

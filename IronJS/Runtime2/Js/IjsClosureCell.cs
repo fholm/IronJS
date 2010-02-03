@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IronJS.Compiler
+namespace IronJS.Runtime2.Js
 {
     public class IjsClosureCell<T>
     {

@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Binders;
+using IronJS.Runtime2.Js;
+using Microsoft.Scripting.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -27,6 +33,18 @@ namespace IronJS.Compiler.Ast
             IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
+        }
+
+        public override Et EtGen(FuncNode func)
+        {
+            return Et.Dynamic(
+                new IjsInvokeBinder(new CallInfo(Args.Count)),
+                IjsTypes.Dynamic,
+                ArrayUtils.Insert(
+                    Target.EtGen(func),
+                    Args.Select(x => x.EtGen(func)).ToArray()
+                )
+            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

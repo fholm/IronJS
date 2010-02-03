@@ -9,13 +9,11 @@ namespace IronJS.Compiler
         public string Name { get; set; }
 
         public bool IsResolving { get; set; }
-        public bool IsParameter { get; set; }
         public bool IsDeletable { get; set; }
         public bool IsClosedOver { get; set; }
 
         public bool IsGlobal { get; set; }
         public bool IsLocal { get { return !IsGlobal; } }
-        public bool IsAssignedOnce { get { return AssignedFrom.Count == 1; } }
 
         public Type ForcedType { protected get; set; }
         public HashSet<Type> UsedAs { get; protected set; }
@@ -49,7 +47,6 @@ namespace IronJS.Compiler
         {
             Name = name;
             IsGlobal = false;
-            IsParameter = false;
             IsResolving = false;
             IsDeletable = false;
             IsClosedOver = false;

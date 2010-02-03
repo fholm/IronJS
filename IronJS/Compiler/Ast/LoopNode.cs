@@ -1,6 +1,7 @@
 ﻿using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -14,7 +15,7 @@ namespace IronJS.Compiler.Ast
 
         }
 
-        public virtual Et LoopWalk(IjsEtGenerator etgen)
+        public virtual Et LoopWalk(FuncNode etgen)
         {
             return AstUtils.Empty();
         }

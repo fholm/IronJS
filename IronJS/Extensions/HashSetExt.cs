@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IronJS.Compiler;
 using IronJS.Compiler.Ast;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Extensions
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -11,8 +12,8 @@ namespace IronJS.Compiler.Ast
         NodeType NodeType { get; }
         Type ExprType { get; }
 
-        Et EtGen(IjsEtGenerator etgen);
-        INode Analyze(FuncNode astopt);
+        Et EtGen(FuncNode func);
+        INode Analyze(FuncNode func);
         Type EvalTypes(params INode[] nodes);
         bool IdenticalTypes(params INode[] nodes);
 

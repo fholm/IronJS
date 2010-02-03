@@ -3,6 +3,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {

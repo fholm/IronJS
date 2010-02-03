@@ -2,7 +2,9 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Utils;
+using IronJS.Runtime2.Js;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Compiler.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -25,6 +27,17 @@ namespace IronJS.Compiler.Ast
             FuncNode.Returns.Add(Value);
 
             return this;
+        }
+
+        public override Et EtGen(FuncNode func)
+        {
+            return Et.Return(
+                func.ReturnLabel,
+                IjsEtGenUtils.Box(
+                    Value.EtGen(func)
+                ),
+                func.ReturnType
+            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

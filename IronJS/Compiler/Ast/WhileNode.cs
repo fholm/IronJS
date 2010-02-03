@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 

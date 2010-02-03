@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using IronJS.Compiler.Ast;
-using IronJS.Runtime.Js;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Testing
 {
@@ -11,28 +11,16 @@ namespace IronJS.Testing
         {
             var astGenerator = new Compiler.IjsAstGenerator();
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
-            var globalScope = FuncNode.CreateGlobalScope(astNodes).Analyze();
+            var globalScope = GlobalFuncNode.Create(astNodes).Analyze();
 
             Console.WriteLine(globalScope.Print());
+            Console.ReadLine();
+            return;
 
-            var globals = new IjsObj();
+            var compiled = globalScope.Compile();
+            var closure = new IjsClosure(new IjsObj());
 
-            globals.Set(
-                "print",
-                typeof(Console).GetMethod("WriteLine", new[] { typeof(int) })
-            );
-
-            var etGenerator = new Compiler.IjsEtGenerator();
-            var compiled = etGenerator.Generate(globalScope);
-
-            try
-            {
-                //compiled.Invoke(null, new[] { (object)globals });
-            }
-            catch(Exception ex)
-            {
-                return;
-            }
+            compiled(closure);
         }
     }
 }

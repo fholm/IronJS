@@ -890,8 +890,10 @@ namespace IronJS.Compiler
                     : new IdentifierNode(name, args),
                 args.Map(x => {
                         var param = new IdentifierNode(x.Text, x);
+
                         param.IsDefinition = true;
                         param.IsParameter = true;
+
                         return param;
                     }),
                 BuildBlock(body), 
@@ -980,9 +982,9 @@ namespace IronJS.Compiler
         private INode BuildNumber(ITree node)
         {
             if (node.Text.Contains("."))
-                return new NumberNode<double>(Double.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Double, node);
+                return new NumberNode<double>(double.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Double, node);
             else
-                return new NumberNode<int>(Int32.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Integer, node);
+                return new NumberNode<long>(long.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Integer, node);
         }
 
         private INode BuildIdentifier(ITree node)

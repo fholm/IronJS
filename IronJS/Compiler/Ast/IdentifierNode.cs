@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
+using IronJS.Compiler.Utils;
 using IronJS.Extensions;
+using IronJS.Runtime2.Js;
 using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
@@ -14,20 +14,12 @@ namespace IronJS.Compiler.Ast
         public bool IsDefinition { get; set; }
         public IjsVarInfo VarInfo { get; set; }
         public string Name { get; protected set; }
+        public override Type ExprType { get { return VarInfo.ExprType; } }
 
         public IdentifierNode(string name, ITree node)
             : base(NodeType.Identifier, node)
         {
             Name = name;
-            IsDefinition = false;
-        }
-
-        public override Type ExprType
-        {
-            get
-            {
-                return VarInfo.ExprType;
-            }
         }
 
         public override INode Analyze(FuncNode func)
@@ -39,22 +31,37 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                if (func.HasLocal(Name))
-                {
-                    VarInfo = func.GetLocal(Name);
-                }
-                else
-                {
-                    VarInfo = func.GetNonLocal(Name);
-                }
+                VarInfo = func.HasLocal(Name)
+                        ? func.GetLocal(Name)
+                        : func.GetNonLocal(Name);
             }
 
             return this;
         }
 
+        public override Et EtGen(FuncNode func)
+        {
+            if (VarInfo.IsGlobal)
+            {
+                return Et.Convert(
+                    Et.Call(
+                        func.GlobalField,
+                        typeof(IjsObj).GetMethod("Get"),
+                        IjsEtGenUtils.Constant(Name)
+                    ),
+                    ExprType
+                );
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);
+
             writer.AppendLine(indentStr +
                 "(" +
                     (IsDefinition ? ">" : "") +

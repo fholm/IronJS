@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Extensions;
+using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -99,12 +100,12 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
-        public virtual INode Analyze(FuncNode astopt)
+        public virtual INode Analyze(FuncNode func)
         {
             return this;
         }
 
-        public virtual Et EtGen(IjsEtGenerator etgen)
+        public virtual Et EtGen(FuncNode func)
         {
             return AstUtils.Empty();
         }

@@ -2,6 +2,8 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Compiler.Utils;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -19,16 +21,16 @@ namespace IronJS.Compiler.Ast
         {
             get
             {
-                if (this.GetType() == typeof(NumberNode<int>))
+                if (this.GetType() == typeof(NumberNode<long>))
                     return IjsTypes.Integer;
 
                 return IjsTypes.Double;
             }
         }
 
-        public override Et EtGen(IjsEtGenerator etgen)
+        public override Et EtGen(FuncNode func)
         {
-            return etgen.Constant(Value);
+            return IjsEtGenUtils.Constant(Value);
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

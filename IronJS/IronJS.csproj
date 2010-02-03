@@ -124,6 +124,7 @@
     <Compile Include="Compiler\Ast\AssignmentBlockNode.cs" />
     <Compile Include="Compiler\Ast\AssignNode.cs" />
     <Compile Include="Compiler\Ast\BlockNode.cs" />
+    <Compile Include="Compiler\Ast\GlobalFuncNode.cs" />
     <Compile Include="Compiler\IjsAstGenerator.cs" />
     <Compile Include="Compiler\Ast\BreakNode.cs" />
     <Compile Include="Compiler\Ast\BinaryOpNode.cs" />
@@ -145,10 +146,15 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
-    <Compile Include="Compiler\IjsClosureCell.cs" />
+    <Compile Include="Compiler\IjsIVarInfo.cs" />
+    <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
+    <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
+    <Compile Include="Runtime2\Js\IjsClosure.cs" />
+    <Compile Include="Runtime2\Js\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
-    <Compile Include="Compiler\IjsTypes.cs" />
+    <Compile Include="Runtime2\Js\IjsProxy.cs" />
+    <Compile Include="Runtime2\Js\IjsTypes.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />
     <Compile Include="Compiler\Ast\PostfixOperatorNode.cs" />
@@ -162,12 +168,12 @@
     <Compile Include="Compiler\Ast\TryNode.cs" />
     <Compile Include="Compiler\Ast\ThrowNode.cs" />
     <Compile Include="Compiler\Ast\IndexAccessNode.cs" />
-    <Compile Include="Compiler\IjsEtGenerator.cs" />
     <Compile Include="Compiler\Ast\InNode.cs" />
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Compiler\IjsVarInfo.cs" />
+    <Compile Include="Compiler\Utils\IjsEtGenUtils.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />
     <Compile Include="Extensions\IEnumerableExt.cs" />
@@ -179,6 +185,8 @@
     <Compile Include="Error.cs" />
     <Compile Include="Extensions\ITreeExt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime2\Js\Meta\IjsMeta.cs" />
+    <Compile Include="Runtime2\Js\Meta\IjsProxy.cs" />
     <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -498,10 +506,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Delegates.cs" />
-    <Compile Include="Runtime\Js2\IjsFunc.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js2\IjsObj.cs">
+    <Compile Include="Runtime2\Js\IjsObj.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Descriptors\LengthProperty.cs">

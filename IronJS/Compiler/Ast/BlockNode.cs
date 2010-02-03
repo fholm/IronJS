@@ -5,6 +5,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -30,7 +31,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(IjsEtGenerator etgen)
+        public override Et EtGen(FuncNode etgen)
         {
             if (IsEmpty)
                 return AstUtils.Empty();

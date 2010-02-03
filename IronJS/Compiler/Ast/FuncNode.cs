@@ -17,7 +17,10 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Utils;
 using IronJS.Extensions;
+using IronJS.Runtime2.Js;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
@@ -25,12 +28,13 @@ namespace IronJS.Compiler.Ast
     {
         public FuncNode Parent { get; protected set; }
         public IdentifierNode Name { get; protected set; }
+        public INode Body { get; protected set; }
+        public HashSet<INode> Returns { get; protected set; }
+
         public List<IdentifierNode> Parameters { get; protected set; }
         public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
-        public INode Body { get; protected set; }
         public Dictionary<string, IjsVarInfo> Locals { get; protected set; }
-        public HashSet<INode> Returns { get; protected set; }
-        public LabelTarget ReturnLabel { get; protected set; }
+        public Dictionary<string, IjsIVarInfo> Globals { get; protected set; }
 
         public bool IsNamed { get { return !IsLambda; } }
         public bool IsLambda { get { return Name == null; } }
@@ -40,6 +44,16 @@ namespace IronJS.Compiler.Ast
 
         public bool IsGlobalScope { get; protected set; }
         public bool IsNotGlobalScope { get { return !IsGlobalScope; } }
+
+        public override Type ExprType { get { return IjsTypes.Object; } }
+        public Type ReturnType { get { return IjsTypes.Dynamic; } }
+
+        /*
+         * Compilation properties
+         */
+        public LabelTarget ReturnLabel { get; protected set; }
+        public ParameterExpression ClosureParm { get; protected set; }
+        public MemberExpression GlobalField { get; protected set; }
 
         public FuncNode(IdentifierNode name, List<IdentifierNode> parameters, INode body, ITree node)
             : base(NodeType.Func, node)
@@ -56,29 +70,6 @@ namespace IronJS.Compiler.Ast
                 Name.IsDefinition = true;
         }
 
-        public override Type ExprType
-        {
-            get
-            {
-                return IjsTypes.Object;
-            }
-        }
-
-        public Type ReturnType
-        {
-            get
-            {
-                if (IsSimple)
-                    return Returns.EvalType();
-
-                return IjsTypes.Dynamic;
-            }
-        }
-
-        public FuncNode Analyze()
-        {
-            return (FuncNode) Analyze(this);
-        }
 
         public override INode Analyze(FuncNode func)
         {
@@ -97,6 +88,38 @@ namespace IronJS.Compiler.Ast
             Body = Body.Analyze(this);
 
             return this;
+        }
+
+        public override Expression EtGen(FuncNode func)
+        {
+            return IjsEtGenUtils.New(
+                typeof(IjsProxy),
+                Et.Constant(this),
+                IjsEtGenUtils.New(
+                    typeof(IjsClosure),
+                    func.GlobalField
+                )
+            );
+        }
+
+        public Delegate Compile(Type closureType, params Type[] paramTypes)
+        {
+            ClosureParm = Et.Parameter(closureType, "$closure");
+            GlobalField = Et.Field(ClosureParm, "Globals");
+            ReturnLabel = Et.Label(ReturnType, "$return");
+
+            var lambda = Et.Lambda(
+                Et.Block(
+                    Body.EtGen(this),
+                    Et.Label(
+                        ReturnLabel,
+                        Et.Default(ReturnType)
+                    )
+                ),
+                new[] { ClosureParm }
+            );
+
+            return lambda.Compile();
         }
 
         public IjsVarInfo CreateLocal(string name)
@@ -193,18 +216,6 @@ namespace IronJS.Compiler.Ast
 
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
-        }
-
-        public static FuncNode CreateGlobalScope(List<INode> body)
-        {
-            return new FuncNode(
-                null, 
-                new List<IdentifierNode>(), 
-                new BlockNode(body, null), 
-                null
-            ) { 
-                IsGlobalScope = true
-            };
         }
     }
 }

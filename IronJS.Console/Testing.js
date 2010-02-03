@@ -29,18 +29,9 @@ var y = function (a) {
     
     for (var i = 0; i < a; ++i) {
         x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
     }
 };
 
 time(function () {
-    y(1000000)
+    y(10000000)
 });

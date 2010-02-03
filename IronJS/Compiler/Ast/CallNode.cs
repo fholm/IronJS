@@ -66,12 +66,40 @@ namespace IronJS.Compiler.Ast
 
             if (target.Name.StartsWith("x"))
             {
-                return Et.Call(
-                    field_xpr,
-                    method,
-                    constant,
-                    IjsEtGenUtils.Box(Target.EtGen(func))
-                );
+
+                return
+                    Et.Block(
+                        new[] { ForStepNode.TMP },
+                        Et.Assign(
+                            ForStepNode.TMP,
+                            IjsEtGenUtils.Box(Target.EtGen(func))
+                        ),
+                        Et.IfThenElse(
+                            Et.Equal(
+                                ForStepNode.TST,
+                                Et.Default(typeof(object))
+                            ),
+                            Et.Block(
+                                Et.Assign(
+                                    ForStepNode.TST,
+                                    ForStepNode.TMP
+                                ),
+                                Et.Invoke(
+                                    Et.Lambda(
+                                        Et.Call(
+                                            field_xpr,
+                                            method,
+                                            constant,
+                                            ForStepNode.TMP
+                                        )
+                                    )
+                                )
+                            ),
+                            Et.Block(
+                                
+                            )
+                        )
+                    );
 
                 /*
                 return Et.Block(

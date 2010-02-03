@@ -5,6 +5,7 @@ using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 using IronJS.Compiler.Utils;
+using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
@@ -42,10 +43,8 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public class Foo
-        {
-            public Func<object> Proxy;
-        }
+        public static ParameterExpression TMP = Et.Variable(typeof(object), "__tmp__");
+        public static ParameterExpression TST = Et.Variable(typeof(object), "__tst__");
 
         public override Et EtGen(FuncNode func)
         {
@@ -68,29 +67,13 @@ namespace IronJS.Compiler.Ast
             if (Incr != null)
                 incr = Incr.EtGen(func);
 
-            var tmp = Et.Variable(typeof(Foo), "lambda");
-
             return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp,
-                    IjsEtGenUtils.New(typeof(Foo))
-                ),
-                Et.Assign(
-                    Et.Field(
-                        tmp, "Proxy"
-                    ),
-                    Et.Lambda(Body.EtGen(func))
-                ),
+                new[] { TMP, TST },
                 setup,
                 AstUtils.Loop(
                     test,
                     incr,
-                    Et.Invoke(
-                        Et.Field(
-                            tmp, "Proxy"
-                        )
-                    ),
+                    Body.EtGen(func),
                     AstUtils.Empty()
                 )
             );

@@ -10,9 +10,8 @@ namespace IronJS.Compiler.Ast
 {
     public class IdentifierNode : Node
     {
-        public bool IsParameter { get; set; }
         public bool IsDefinition { get; set; }
-        public IjsVarInfo VarInfo { get; set; }
+        public IjsIVar VarInfo { get; set; }
         public string Name { get; protected set; }
         public override Type ExprType { get { return VarInfo.ExprType; } }
 
@@ -27,11 +26,10 @@ namespace IronJS.Compiler.Ast
             if (IsDefinition)
             {
                 VarInfo = func.CreateLocal(Name);
-                VarInfo.IsGlobal = func.IsGlobalScope;
             }
             else
             {
-                VarInfo = func.HasLocal(Name)
+                VarInfo = (func.HasLocal(Name) | func.HasParameter(Name))
                         ? func.GetLocal(Name)
                         : func.GetNonLocal(Name);
             }
@@ -41,7 +39,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et EtGen(FuncNode func)
         {
-            if (VarInfo.IsGlobal)
+            if (func.IsGlobal(VarInfo))
             {
                 return Et.Convert(
                     Et.Call(
@@ -51,6 +49,10 @@ namespace IronJS.Compiler.Ast
                     ),
                     ExprType
                 );
+            }
+            else if (func.IsLocal(VarInfo))
+            {
+                return VarInfo.Expr;
             }
             else
             {
@@ -62,16 +64,8 @@ namespace IronJS.Compiler.Ast
         {
             var indentStr = new String(' ', indent * 2);
 
-            writer.AppendLine(indentStr +
-                "(" +
-                    (IsDefinition ? ">" : "") +
-                    (VarInfo.IsGlobal ? "$" : "") +
-                    Name + 
-                    (VarInfo.IsDeletable ? "!" : "") + 
-                    (VarInfo.IsClosedOver ? "^" : "") + 
-                    " " + 
-                    ExprType.ShortName() + 
-                ")"
+            writer.AppendLine(
+                indentStr + "(" + (IsDefinition ? ">" : "") + Name + " " + ExprType.ShortName() + ")"
             );
         }
     }

@@ -14,8 +14,6 @@ namespace IronJS.Testing
             var globalScope = GlobalFuncNode.Create(astNodes).Analyze();
 
             Console.WriteLine(globalScope.Print());
-            Console.ReadLine();
-            return;
 
             var compiled = globalScope.Compile();
             var closure = new IjsClosure(new IjsObj());

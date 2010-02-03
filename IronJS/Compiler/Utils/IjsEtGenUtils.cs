@@ -46,7 +46,7 @@ namespace IronJS.Compiler.Utils
             {
                 var varInfo = idNode.VarInfo;
 
-                if (varInfo.IsGlobal)
+                if (func.IsGlobal(varInfo))
                 {
                     return Et.Call(
                         func.GlobalField,
@@ -55,16 +55,21 @@ namespace IronJS.Compiler.Utils
                         Box(value)
                     );
                 }
-                else
+                else if(func.IsLocal(idNode.VarInfo))
                 {
-                    if (varInfo.IsClosedOver)
+                    var localVarInfo = varInfo as IjsLocalVar;
+                    if (idNode.IsDefinition)
                     {
-
+                        localVarInfo.Expr = Et.Variable(
+                            localVarInfo.ExprType,
+                            idNode.Name
+                        );
                     }
-                    else
-                    {
 
-                    }
+                    return Et.Assign(
+                        localVarInfo.Expr,
+                        value
+                    );
                 }
             }
 

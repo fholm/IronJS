@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using Antlr.Runtime.Tree;
@@ -21,6 +22,7 @@ using IronJS.Compiler.Utils;
 using IronJS.Extensions;
 using IronJS.Runtime2.Js;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -31,10 +33,10 @@ namespace IronJS.Compiler.Ast
         public INode Body { get; protected set; }
         public HashSet<INode> Returns { get; protected set; }
 
-        public List<IdentifierNode> Parameters { get; protected set; }
-        public HashSet<IjsVarInfo> ClosesOver { get; protected set; }
-        public Dictionary<string, IjsVarInfo> Locals { get; protected set; }
-        public Dictionary<string, IjsIVarInfo> Globals { get; protected set; }
+        public Dictionary<string, IjsClosureVar> ClosesOver { get; protected set; }
+        public Dictionary<string, IjsParameter> Parameters { get; protected set; }
+        public Dictionary<string, IjsLocalVar> Locals { get; protected set; }
+        public Dictionary<string, IjsLocalVar> Globals { get; protected set; }
 
         public bool IsNamed { get { return !IsLambda; } }
         public bool IsLambda { get { return Name == null; } }
@@ -42,7 +44,7 @@ namespace IronJS.Compiler.Ast
         public bool IsBranched { get; set; }
         public bool IsSimple { get { return !IsBranched; } }
 
-        public bool IsGlobalScope { get; protected set; }
+        public bool IsGlobalScope { get { return Locals == Globals; } }
         public bool IsNotGlobalScope { get { return !IsGlobalScope; } }
 
         public override Type ExprType { get { return IjsTypes.Object; } }
@@ -55,16 +57,21 @@ namespace IronJS.Compiler.Ast
         public ParameterExpression ClosureParm { get; protected set; }
         public MemberExpression GlobalField { get; protected set; }
 
-        public FuncNode(IdentifierNode name, List<IdentifierNode> parameters, INode body, ITree node)
+        public FuncNode(IdentifierNode name, IEnumerable<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node)
         {
             Body = body;
             Name = name;
-            Parameters = parameters;
 
-            Locals = new Dictionary<string, IjsVarInfo>();
+            Locals = new Dictionary<string, IjsLocalVar>();
+            Parameters = new Dictionary<string, IjsParameter>();
+            ClosesOver = new Dictionary<string, IjsClosureVar>();
+
+            if (parameters != null)
+                foreach (var param in parameters)
+                    Parameters.Add(param, new IjsParameter());
+
             Returns = new HashSet<INode>();
-            ClosesOver = new HashSet<IjsVarInfo>();
 
             if (IsNamed)
                 Name.IsDefinition = true;
@@ -73,17 +80,17 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(FuncNode func)
         {
-            if(func != this)
-                Parent = func;
-
-            if (IsNamed)
+            if (func != this)
             {
-                Name.Analyze(func);
-                Name.VarInfo.AssignedFrom.Add(this);
-            }
+                Parent = func;
+                Globals = func.Globals;
 
-            foreach (var param in Parameters)
-                param.Analyze(this);
+                if (IsNamed)
+                {
+                    Name.Analyze(func);
+                    (Name.VarInfo as IjsLocalVar).AssignedFrom.Add(this);
+                }
+            }
 
             Body = Body.Analyze(this);
 
@@ -104,30 +111,58 @@ namespace IronJS.Compiler.Ast
 
         public Delegate Compile(Type closureType, params Type[] paramTypes)
         {
-            ClosureParm = Et.Parameter(closureType, "$closure");
+            ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
-            ReturnLabel = Et.Label(ReturnType, "$return");
+            ReturnLabel = Et.Label(ReturnType, "__return__");
+
+            var n = 0;
+            foreach (var kvp in Parameters)
+                kvp.Value.Expr = Et.Parameter(paramTypes[n++], kvp.Key);
 
             var lambda = Et.Lambda(
                 Et.Block(
+                    (Locals != Globals) // HACK
+                        ? Locals.Select(x => x.Value.Expr) 
+                        : new ParameterExpression[] {},
                     Body.EtGen(this),
                     Et.Label(
                         ReturnLabel,
                         Et.Default(ReturnType)
                     )
                 ),
-                new[] { ClosureParm }
+                new[] { ClosureParm }.Concat(
+                    Parameters.Select(x => x.Value.Expr)
+                )
             );
 
             return lambda.Compile();
         }
 
-        public IjsVarInfo CreateLocal(string name)
+        internal bool IsGlobal(IjsIVar varInfo)
         {
-            if (HasLocal(name))
-                throw new ArgumentException("A variable named '" + name + "' already exists");
+            if(varInfo is IjsLocalVar)
+                return Globals.ContainsValue(varInfo as IjsLocalVar);
 
-            return Locals[name] = new IjsVarInfo(name);
+            return false;
+        }
+
+        internal bool IsLocal(IjsIVar varInfo)
+        {
+            if (varInfo is IjsLocalVar)
+                return Locals.ContainsValue(varInfo as IjsLocalVar);
+
+            if (varInfo is IjsParameter)
+                return Parameters.ContainsValue(varInfo as IjsParameter);
+
+            return false;
+        }
+
+        internal bool IsClosedOver(IjsIVar varInfo)
+        {
+            if (varInfo is IjsClosureVar)
+                return ClosesOver.ContainsValue(varInfo as IjsClosureVar);
+
+            return false;
         }
 
         public bool HasLocal(string name)
@@ -135,21 +170,35 @@ namespace IronJS.Compiler.Ast
             return Locals.ContainsKey(name);
         }
 
-        public IjsVarInfo GetLocal(string name)
+        public bool HasParameter(string name)
         {
-            return Locals[name];
+            return Parameters.ContainsKey(name);
         }
 
-        public IjsVarInfo GetNonLocal(string name)
+        public IjsCloseableVar CreateLocal(string name)
         {
-            IjsVarInfo varInfo;
+            return Locals[name] = new IjsLocalVar();
+        }
 
-            var parentFunctions = new HashSet<FuncNode>();
+        public IjsCloseableVar GetLocal(string name)
+        {
+            if (HasLocal(name))
+                return Locals[name];
+
+            if (HasParameter(name))
+                return Parameters[name];
+
+            throw new AstCompilerError("No local variable named '{0}' exists", name);
+        }
+
+        public IjsIVar GetNonLocal(string name)
+        {
             var parent = Parent;
+            var parentFunctions = new HashSet<FuncNode>();
 
-            while(true)
+            while (true)
             {
-                if(parent.HasLocal(name))
+                if (parent.HasLocal(name) || parent.HasParameter(name))
                 {
                     if (parent.IsGlobalScope)
                     {
@@ -157,29 +206,27 @@ namespace IronJS.Compiler.Ast
                     }
                     else
                     {
-                        varInfo = parent.GetLocal(name);
+                        var varInfo = parent.GetLocal(name);
                         varInfo.IsClosedOver = true;
 
                         foreach (var subParent in parentFunctions)
-                            subParent.ClosesOver.Add(varInfo);
+                            if(!subParent.ClosesOver.ContainsKey(name))
+                                subParent.ClosesOver.Add(name, new IjsClosureVar(name, subParent));
 
-                        ClosesOver.Add(varInfo);
-
-                        return varInfo;
+                        ClosesOver.Add(name, new IjsClosureVar(name, this));
+                        return ClosesOver[name];
                     }
                 }
 
-                if (parent.Parent == null)
+                if (parent.IsGlobalScope)
                     break;
 
                 parentFunctions.Add(parent);
                 parent = parent.Parent;
             }
 
-            varInfo = parent.CreateLocal(name);
-            varInfo.IsGlobal = true;
-
-            return varInfo;
+            // parent = global scope
+            return parent.CreateLocal(name);
         }
 
         public override void Print(StringBuilder writer, int indent = 0)
@@ -198,8 +245,8 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine(indentStr2 + "(Closure");
 
-                foreach (var id in ClosesOver)
-                    writer.AppendLine(indentStr3 + "(" + id.Name + " " + id.ExprType.ShortName() + ")");
+                foreach (var kvp in ClosesOver)
+                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + kvp.Value.ExprType.ShortName() + ")");
 
                 writer.AppendLine(indentStr2 + ")");
             }
@@ -208,8 +255,8 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine(indentStr2 + "(Parameters");
 
-                foreach (var id in Parameters)
-                    id.Print(writer, indent + 2);
+                foreach (var kvp in Parameters)
+                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + kvp.Value.ExprType.ShortName() + ")");
 
                 writer.AppendLine(indentStr2 + ")");
             }
@@ -217,5 +264,6 @@ namespace IronJS.Compiler.Ast
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }
+
     }
 }

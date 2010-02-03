@@ -41,6 +41,38 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
+        public override Et EtGen(FuncNode func)
+        {
+            Et test = AstUtils.Empty();
+            Et setup = AstUtils.Empty();
+            Et incr = AstUtils.Empty();
+
+            if (Setup != null)
+                setup = Setup.EtGen(func);
+
+            if (Test != null)
+                if (Test.ExprType == IjsTypes.Boolean)
+                    test = Test.EtGen(func);
+                else
+                    throw new NotImplementedException();
+
+            else
+                test = Et.Constant(true, typeof(bool));
+
+            if (Incr != null)
+                incr = Incr.EtGen(func);
+
+            return Et.Block(
+                setup,
+                AstUtils.Loop(
+                    test,
+                    incr,
+                    Body.EtGen(func),
+                    AstUtils.Empty()
+                )
+            );
+        }
+
         public override void Print(StringBuilder writer, int indent = 0)
         {
             var indentStr = new String(' ', indent * 2);

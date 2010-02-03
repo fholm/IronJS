@@ -30,11 +30,6 @@ namespace IronJS.Compiler.Ast
         public override INode Analyze(FuncNode astopt)
         {
             Target = Target.Analyze(astopt);
-
-            var idNode = (Target as IdentifierNode);
-            if (idNode != null)
-                idNode.VarInfo.IsDeletable = true;
-
             return this;
         }
 

@@ -146,7 +146,10 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
-    <Compile Include="Compiler\IjsIVarInfo.cs" />
+    <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
+    <Compile Include="Compiler\Variables\IjsIVar.cs" />
+    <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
+    <Compile Include="Compiler\Variables\IjsParameter.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
@@ -172,7 +175,7 @@
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
-    <Compile Include="Compiler\IjsVarInfo.cs" />
+    <Compile Include="Compiler\Variables\IjsLocalVar.cs" />
     <Compile Include="Compiler\Utils\IjsEtGenUtils.cs" />
     <Compile Include="Extensions\DoubleExt.cs" />
     <Compile Include="Extensions\HashSetExt.cs" />

@@ -725,7 +725,7 @@ namespace IronJS.Compiler
                         Build(node.GetChildSafe(0)),
                         new BinaryOpNode(
                             Build(node.GetChildSafe(0)),
-                            new NumberNode<int>(1, NodeType.Double, node),
+                            new NumberNode<long>(1L, NodeType.Double, node),
                             type == ExpressionType.PreIncrementAssign
                                   ? ExpressionType.Add
                                   : ExpressionType.Subtract,
@@ -888,14 +888,7 @@ namespace IronJS.Compiler
                 (name == null)
                     ? null 
                     : new IdentifierNode(name, args),
-                args.Map(x => {
-                        var param = new IdentifierNode(x.Text, x);
-
-                        param.IsDefinition = true;
-                        param.IsParameter = true;
-
-                        return param;
-                    }),
+                    args.Map(x => x.Text),
                 BuildBlock(body), 
                 node
             );

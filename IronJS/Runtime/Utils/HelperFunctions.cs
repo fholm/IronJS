@@ -1,6 +1,5 @@
 ﻿using System;
-using IronJS.Compiler;
-using IronJS.Runtime.Js;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Runtime.Utils
 {
@@ -10,6 +9,16 @@ namespace IronJS.Runtime.Utils
         {
             Console.WriteLine(JsTypeConverter.ToString(obj));
             return obj;
+        }
+
+        static public void Timer(IjsProxy proxy)
+        {
+            var lambda = (Func<IjsClosure, object>)proxy.Node.Compile(proxy.ClosureType);
+            var start = DateTime.Now;
+            lambda(proxy.Closure);
+            var stop = DateTime.Now;
+            var total = stop.Subtract(start);
+            Console.WriteLine(total.TotalMilliseconds);
         }
     }
 }

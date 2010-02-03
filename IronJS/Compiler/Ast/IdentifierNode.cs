@@ -41,14 +41,27 @@ namespace IronJS.Compiler.Ast
         {
             if (func.IsGlobal(VarInfo))
             {
-                return Et.Convert(
-                    Et.Call(
+                var varInfo = VarInfo as IjsLocalVar;
+
+                if (varInfo.AssignedFrom.Count == 0)
+                {
+                    return Et.Call(
                         func.GlobalField,
                         typeof(IjsObj).GetMethod("Get"),
                         IjsEtGenUtils.Constant(Name)
-                    ),
-                    ExprType
-                );
+                    );
+                }
+                else
+                {
+                    return Et.Convert(
+                        Et.Call(
+                            func.GlobalField,
+                            typeof(IjsObj).GetMethod("Get"),
+                            IjsEtGenUtils.Constant(Name)
+                        ),
+                        ExprType
+                    );
+                }
             }
             else if (func.IsLocal(VarInfo))
             {

@@ -2,6 +2,7 @@
 using System.Text;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Testing
 {
@@ -17,7 +18,7 @@ namespace IronJS.Testing
 
             var compiled = globalScope.Compile();
             var closure = new IjsClosure(new IjsObj());
-
+            closure.Globals.Set("time", new Action<IjsProxy>(HelperFunctions.Timer));
             compiled(closure);
         }
     }

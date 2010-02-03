@@ -4,7 +4,7 @@ using IronJS.Compiler.Ast;
 
 namespace IronJS.Runtime2.Js
 {
-    public class IjsProxy : IDynamicMetaObjectProvider
+    public class IjsProxy : IjsObj, IDynamicMetaObjectProvider
     {
         public readonly FuncNode Node;
         public readonly IjsClosure Closure;

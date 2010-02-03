@@ -24,14 +24,15 @@ return a;
 y();
 */
 
-var x = 1;
-var y = "foo";
-var z = true;
+var y = function (a) {
+    var i = 0;
+    for (i = 0; i < a; ++i) {
 
-y = function (a) {
-    for (var i = 0; i < a; ++i) {
-        
     }
+
+    return i;
 };
 
-var _ = y(2);
+time(function () {
+    i = y(10000000)
+});

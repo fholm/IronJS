@@ -193,6 +193,9 @@ namespace IronJS.Compiler.Ast
 
         public IjsIVar GetNonLocal(string name)
         {
+            if (Parent == null)
+                return CreateLocal(name);
+
             var parent = Parent;
             var parentFunctions = new HashSet<FuncNode>();
 

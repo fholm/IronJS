@@ -24,15 +24,34 @@ return a;
 y();
 */
 
+
 var y = function (a) {
-    var i = 0;
-    for (i = 0; i < a; ++i) {
-
+    var x = function () { };
+    
+    for (var i = 0; i < a; ++i) {
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
     }
-
-    return i;
 };
 
 time(function () {
-    i = y(10000000)
+    y(500000)
 });

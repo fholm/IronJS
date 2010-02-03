@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using IronJS.Compiler.Ast;
-using IronJS.Runtime.Js;
+using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Utils
 {

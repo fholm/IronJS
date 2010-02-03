@@ -24,7 +24,6 @@ return a;
 y();
 */
 
-
 var y = function (a) {
     var x = function () { };
     
@@ -39,19 +38,9 @@ var y = function (a) {
         x();
         x();
         x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
-        x();
     }
 };
 
 time(function () {
-    y(500000)
+    y(1000000)
 });

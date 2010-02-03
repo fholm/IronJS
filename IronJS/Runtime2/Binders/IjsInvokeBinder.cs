@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Dynamic;
-using IronJS.Runtime2.Js;
-using Binding = System.Dynamic.BindingRestrictions;
-using MetaObj = System.Dynamic.DynamicMetaObject;
-using Et = System.Linq.Expressions.Expression;
 using IronJS.Compiler.Utils;
+using IronJS.Runtime2.Js;
+using Et = System.Linq.Expressions.Expression;
+using MetaObj = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime2.Binders
 {

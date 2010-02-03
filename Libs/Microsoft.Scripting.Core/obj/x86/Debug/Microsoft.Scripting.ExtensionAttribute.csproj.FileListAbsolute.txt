@@ -1,0 +1,5 @@
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Core\bin\x86\Debug\Microsoft.Scripting.ExtensionAttribute.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Core\bin\x86\Debug\Microsoft.Scripting.ExtensionAttribute.pdb
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Core\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Core\obj\x86\Debug\Microsoft.Scripting.ExtensionAttribute.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Core\obj\x86\Debug\Microsoft.Scripting.ExtensionAttribute.pdb

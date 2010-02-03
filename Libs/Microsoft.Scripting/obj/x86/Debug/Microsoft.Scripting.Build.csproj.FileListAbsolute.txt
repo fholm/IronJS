@@ -1,0 +1,5 @@
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\bin\x86\Debug\Microsoft.Scripting.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\bin\x86\Debug\Microsoft.Scripting.pdb
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Debug\Microsoft.Scripting.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Debug\Microsoft.Scripting.pdb

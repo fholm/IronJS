@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Compiler.Utils;
+using System.Reflection;
 
 namespace IronJS.Compiler.Ast
 {
@@ -35,16 +38,66 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
+        static Et constant;
+        static Et field_xpr;
+        static MethodInfo method;
+        static CallSite<Func<CallSite, object, object>> x_site;
+
         public override Et EtGen(FuncNode func)
         {
-            return Et.Dynamic(
-                new IjsInvokeBinder(new CallInfo(Args.Count)),
-                IjsTypes.Dynamic,
-                ArrayUtils.Insert(
-                    Target.EtGen(func),
-                    Args.Select(x => x.EtGen(func)).ToArray()
-                )
-            );
+            var target = Target as IdentifierNode;
+
+            if (x_site == null)
+            {
+                x_site = CallSite<Func<CallSite, object, object>>.Create(
+                    new IjsInvokeBinder(
+                        new CallInfo(Args.Count)
+                    )
+                 );
+
+                constant = Et.Constant(x_site, x_site.GetType());
+
+                field_xpr = Et.Field(
+                    constant, "Target"
+                );
+                
+                method = x_site.Target.GetType().GetMethod("Invoke");
+            }
+
+            if (target.Name.StartsWith("x"))
+            {
+                return Et.Call(
+                    field_xpr,
+                    method,
+                    constant,
+                    IjsEtGenUtils.Box(Target.EtGen(func))
+                );
+
+                /*
+                return Et.Block(
+                    new[] { site },
+                    Expression.Call(
+                        Expression.Field(
+                            Expression.Assign(site, access),
+                            cs.GetType().GetField("Target")
+                        ),
+                        node.DelegateType.GetMethod("Invoke"),
+                        DynUtils.ArrayInsert(site, node.Arguments)
+                    )
+                );
+                */
+            }
+            else
+            {
+                return Et.Dynamic(
+                    new IjsInvokeBinder(new CallInfo(Args.Count)),
+                    IjsTypes.Dynamic,
+                    ArrayUtils.Insert(
+                        Target.EtGen(func),
+                        Args.Select(x => x.EtGen(func)).ToArray()
+                    )
+                );
+            }
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

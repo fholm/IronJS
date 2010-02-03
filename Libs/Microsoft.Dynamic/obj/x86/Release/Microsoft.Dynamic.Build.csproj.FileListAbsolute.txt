@@ -1,0 +1,7 @@
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\bin\x86\Release\Microsoft.Dynamic.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\bin\x86\Release\Microsoft.Dynamic.pdb
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\bin\x86\Release\Microsoft.Scripting.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\bin\x86\Release\Microsoft.Scripting.pdb
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\obj\x86\Release\Microsoft.Dynamic.dll
+C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Dynamic\obj\x86\Release\Microsoft.Dynamic.pdb

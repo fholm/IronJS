@@ -20,8 +20,6 @@ namespace IronJS.Testing
             var closure = new IjsClosure(new IjsObj());
             closure.Globals.Set("time", new Action<IjsProxy>(HelperFunctions.Timer));
             compiled(closure);
-
-            Console.ReadLine();
         }
     }
 }

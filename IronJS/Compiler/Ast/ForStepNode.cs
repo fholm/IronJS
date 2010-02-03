@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -62,12 +62,21 @@ namespace IronJS.Compiler.Ast
             if (Incr != null)
                 incr = Incr.EtGen(func);
 
+            var tmp = Et.Variable(typeof(Func<object>), "lambda");
+
             return Et.Block(
+                new[] { tmp },
+                Et.Assign(
+                    tmp,
+                    Et.Lambda(Body.EtGen(func))
+                ),
                 setup,
                 AstUtils.Loop(
                     test,
                     incr,
-                    Body.EtGen(func),
+                    Et.Invoke(
+                        tmp
+                    ),
                     AstUtils.Empty()
                 )
             );

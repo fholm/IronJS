@@ -165,24 +165,8 @@ namespace IronJS.Compiler.Ast
                     oddPairs.Select(x => x.Item2).Concat(
                         CallProxies.Select(x => x.Value)
                     ),
-                    Et.Block(
-                        CallProxies.Select(
-                            x => Et.Assign(x.Value, IjsEtGenUtils.New(x.Key))
-                        ).Concat(
-                            new Et[] {
-                                AstUtils.Empty() // HACK
-                            }
-                        )
-                    ),
-                    Et.Block(
-                        oddPairs.Select(
-                            x => Et.Assign(x.Item2, Et.Convert(x.Item1, x.Item2.Type))
-                        ).Concat(
-                            new Et[] {
-                                AstUtils.Empty() // HACK
-                            }
-                        )
-                    ),
+                    CallProxies.ToBlock(x => Et.Assign(x.Value, IjsEtGenUtils.New(x.Key))),
+                    oddPairs.ToBlock(x => Et.Assign(x.Item2, Et.Convert(x.Item1, x.Item2.Type))),
                     Et.Block(
                         (Locals != Globals) // HACK
                             ? Locals.Select(x => x.Value.Expr) 

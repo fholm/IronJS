@@ -19,6 +19,7 @@
     <SilverlightPath Condition="'$(SilverlightPath)' == ''">$(ProgramFiles)\Microsoft Silverlight\3.0.40818.0\</SilverlightPath>
     <BaseAddress>855638016</BaseAddress>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'FxCop|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

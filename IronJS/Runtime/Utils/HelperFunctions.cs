@@ -13,8 +13,8 @@ namespace IronJS.Runtime.Utils
 
         static public void Timer(IjsFunc proxy)
         {
-            Delegate guard;
-            var lambda = (Func<IjsClosure, object>) proxy.Node.Compile<Func<IjsClosure, object>>(Type.EmptyTypes, out guard);
+            Func<bool> guard;
+            var lambda = proxy.Node.Compile<Func<IjsClosure, object>, Func<bool>>(Type.EmptyTypes, out guard);
 
             var start = DateTime.Now;
             lambda(proxy.Closure);

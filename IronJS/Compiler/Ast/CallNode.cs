@@ -100,7 +100,7 @@ namespace IronJS.Compiler.Ast
 
                 var tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
                 var tmpN_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmpN_ijsproxy__");
-                var tmpN_guard = Et.Variable(typeof(Delegate), "__tmpN_guard__");
+                var tmpN_guard = Et.Variable(guardType, "__tmpN_guard__");
 
 
                 /*
@@ -159,20 +159,17 @@ namespace IronJS.Compiler.Ast
                                     ),
                                     Et.Assign(
                                         funcField,
-                                        Et.Convert(
-                                            Et.Call(
-                                                proxyField,
-                                                typeof(IjsFunc).GetMethod("CreateN"),
-                                                Et.Constant(funcType, typeof(Type)),
-                                                AstUtils.NewArrayHelper(typeof(object), args),
-                                                tmpN_guard
+                                        Et.Call(
+                                            proxyField,
+                                            typeof(IjsFunc).GetMethod("CreateN").MakeGenericMethod(
+                                                funcType, guardType
                                             ),
-                                            funcType
+                                            AstUtils.NewArrayHelper(typeof(object), args),
+                                            tmpN_guard
                                         )
                                     ),
                                     Et.Assign(
-                                        guardField,
-                                        Et.Convert(tmpN_guard, guardType)
+                                        guardField, tmpN_guard
                                     )
                                 )
                             ),

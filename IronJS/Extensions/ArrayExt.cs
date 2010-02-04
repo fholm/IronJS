@@ -23,6 +23,13 @@ namespace IronJS.Extensions
             );
         }
 
+        public static Type[] DropFirstAndLast(this Type[] that)
+        {
+            return ArrayUtils.RemoveFirst(
+                    ArrayUtils.RemoveLast(that)
+                );
+        }
+
         public static Type[] GetLimitTypes(this MetaObj[] that)
         {
             return that.Select(x => x.LimitType).ToArray();

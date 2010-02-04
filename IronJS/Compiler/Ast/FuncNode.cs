@@ -121,18 +121,11 @@ namespace IronJS.Compiler.Ast
             return CallProxies[type] = Et.Parameter(type, "__callproxy__");
         }
 
-        public Delegate Compile<T>(Type[] inTypes, out Delegate guard)
+        public TFunc Compile<TFunc, TGuard>(Type[] inTypes, out TGuard guard)
         {
-            return Compile(typeof(T), inTypes, out guard);
-        }
-
-        public Delegate Compile(Type delegateType, Type[] inTypes, out Delegate guard)
-        {
-            var types = delegateType.GetGenericArguments();
+            var types = typeof(TFunc).GetGenericArguments();
             var closureType = types[0];
-            var paramTypes = ArrayUtils.RemoveLast(
-                    ArrayUtils.RemoveFirst(types)
-                );
+            var paramTypes = types.DropFirstAndLast();
 
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
@@ -167,7 +160,7 @@ namespace IronJS.Compiler.Ast
             var oddPairs = paramPairs.Where(x => x.Item1 != x.Item2);
             var body = Body.EtGen(this);
 
-            var lambda = Et.Lambda(
+            var lambda = Et.Lambda<TFunc>(
                 Et.Block(
                     oddPairs.Select(x => x.Item2).Concat(
                         CallProxies.Select(x => x.Value)
@@ -206,7 +199,7 @@ namespace IronJS.Compiler.Ast
                 )
             );
 
-            guard = Et.Lambda(
+            guard = Et.Lambda<TGuard>(
                 BuildTypeCheck(oddPairs.ToArray()),
                 paramPairs.Select(x => x.Item1)
             ).Compile();

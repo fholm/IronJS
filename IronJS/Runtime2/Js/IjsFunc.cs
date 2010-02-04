@@ -30,22 +30,20 @@ namespace IronJS.Runtime2.Js
         {
             if (Func0 == null)
             {
-                Delegate guard;
+                Func<bool> guard;
 
-                Func0 = (Func<IjsClosure, object>) Node.Compile(
-                    Et.GetDelegateType(new[] { ClosureType, typeof(object) }),
-                    Type.EmptyTypes, 
-                    out guard
+                Func0 = Node.Compile<Func<IjsClosure, object>, Func<bool>>(
+                    Type.EmptyTypes, out guard
                 );
             }
             
             return Func0(Closure);
         }
 
-        public Delegate CreateN(Type delegateType, object[] values, out Delegate guard)
+        public TFunc CreateN<TFunc, TGuard>(object[] values, out TGuard guard)
         {
-            return Node.Compile(
-                delegateType, values.GetTypes(), out guard
+            return Node.Compile<TFunc, TGuard>(
+                values.GetTypes(), out guard
             );
         }
 

@@ -1,11 +1,11 @@
-﻿using System.Dynamic;
+﻿using System;
+using System.Dynamic;
 using System.Linq;
-using Microsoft.Scripting.Utils;
 using IronJS.Extensions;
+using Microsoft.Scripting.Utils;
 using Binding = System.Dynamic.BindingRestrictions;
 using Et = System.Linq.Expressions.Expression;
 using MetaObj = System.Dynamic.DynamicMetaObject;
-using System;
 
 namespace IronJS.Runtime2.Js.Meta
 {
@@ -19,27 +19,7 @@ namespace IronJS.Runtime2.Js.Meta
 
         public override MetaObj BindInvoke(InvokeBinder binder, MetaObj[] args)
         {
-            Delegate guard;
-
-            var lambda = Self.Node.Compile(
-                Et.GetDelegateType(
-                    args.GetLimitTypes()
-                        .AddFirstAndLast(Self.ClosureType, typeof(object))
-                ),
-                args.GetExpressionTypes(),
-                out guard
-            );
-
-            return new MetaObj(
-                Et.Invoke(
-                    Et.Constant(lambda, lambda.GetType()),
-                    ArrayUtils.Insert<Et>(
-                        Et.Constant(Self.Closure, Self.ClosureType),
-                        args.Select(x => Et.Convert(x.Expression, x.LimitType)).ToArray()
-                    )
-                ),
-                CreateRestriction(args)
-            );
+            throw new NotImplementedException();
         }
 
         Binding CreateRestriction(MetaObj[] args)

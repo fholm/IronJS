@@ -23,21 +23,35 @@ return a;
 
 y();
 */
-var x2 = function () { };
+var x2 = function (_) { };
 
-x2();
+x2(1);
 
 var y = function (a) {
 
     var x = x2;
 
     for (var i = 0; i < a; ++i) {
-        x();
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
+        x(i);
     }
+
+
+    return i;
 };
 
 y(2);
 
+var i = 0;
+
 time(function () {
-    y(10000000)
+    i = y(1000000)
 });

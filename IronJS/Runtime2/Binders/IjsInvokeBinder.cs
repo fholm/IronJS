@@ -33,6 +33,22 @@ namespace IronJS.Runtime2.Binders
                 );
             }
 
+            if (target.Value is Func<object, object>)
+            {
+                return new MetaObj(
+                    IjsEtGenUtils.Box(
+                        Et.Invoke(
+                           Et.Convert(target.Expression, typeof(Func<object, object>)),
+                           Et.Convert(args[0].Expression, typeof(object))
+                        )
+                    ),
+                    BindingRestrictions.GetTypeRestriction(
+                        target.Expression,
+                        target.LimitType
+                    )
+                );
+            }
+
             throw new System.NotImplementedException();
         }
     }

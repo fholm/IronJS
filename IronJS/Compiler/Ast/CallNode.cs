@@ -2,15 +2,13 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Utils;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Compiler.Utils;
-using System.Reflection;
 
 namespace IronJS.Compiler.Ast
 {
@@ -43,23 +41,48 @@ namespace IronJS.Compiler.Ast
             var target = Target as IdentifierNode;
 
             var tmp = Et.Variable(typeof(object), "__tmp__");
+            var tmp2 = Et.Variable(typeof(IjsProxy), "__tmp2__");
 
             return Et.Block(
                 new[] { tmp },
                 Et.Assign(
-                    tmp,
-                    target.EtGen(func)
+                    tmp, target.EtGen(func)
                 ),
                 Et.Condition(
-                    Et.TypeIs(
-                        tmp,
-                        typeof(IjsProxy)
-                    ),
+                    Et.TypeIs(tmp, typeof(IjsProxy)),
                     Et.Block(
-                        Et.Call(
-                            Et.Convert(tmp, typeof(IjsProxy)),
-                            typeof(IjsProxy).GetMethod("Call" + Args.Count),
-                            Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
+                        new[] { tmp2 },
+                        Et.Assign(
+                            tmp2, Et.Convert(tmp, typeof(IjsProxy))
+                        ),
+                        Et.Condition(
+                            Et.Equal(
+                                Et.Field(tmp2, "_func" + Args.Count),
+                                Et.Constant(null, typeof(object))
+                            ),
+                            Et.Call(
+                                tmp2,
+                                typeof(IjsProxy).GetMethod("Call" + Args.Count),
+                                Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
+                            ),
+                            Et.Condition(
+                                Et.Invoke(
+                                    Et.Field(tmp2, "_func" + Args.Count + "Guard"),
+                                    Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func))).ToArray()
+                                ),
+                                Et.Invoke(
+                                    Et.Field(tmp2, "_func" + Args.Count),
+                                    ArrayUtils.Insert(
+                                        Et.Field(tmp2, "Closure"),
+                                        Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func))).ToArray()
+                                    )
+                                ),
+                                Et.Call(
+                                    tmp2,
+                                    typeof(IjsProxy).GetMethod("Call" + Args.Count),
+                                    Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
+                                )
+                            )
                         )
                     ),
                     Et.Dynamic(

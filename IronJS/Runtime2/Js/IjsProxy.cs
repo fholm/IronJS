@@ -12,11 +12,12 @@ namespace IronJS.Runtime2.Js
         public Type ClosureType { get { return Closure.GetType(); } }
 
         // 0
-        Func<IjsClosure, object> _func0;
+        public Func<bool> _func0Guard;
+        public Func<IjsClosure, object> _func0;
 
         // 1
-        Func<object, bool> _func1Guard;
-        Func<IjsClosure, object, object> _func1;
+        public Func<object, bool> _func1Guard;
+        public Func<IjsClosure, object, object> _func1;
         Tuple<Func<object, bool>, Func<IjsClosure, object, object>>[] _func1Cache; 
 
         public IjsProxy(FuncNode node, IjsClosure closure)
@@ -28,7 +29,10 @@ namespace IronJS.Runtime2.Js
         public object Call0()
         {
             if (_func0 == null)
-                _func0 = (Func<IjsClosure, object>) (Node.Compile(ClosureType).Item2);
+            {
+                _func0Guard = () => true;
+                _func0 = (Func<IjsClosure, object>)(Node.Compile(ClosureType).Item2);
+            }
             
             return _func0(Closure);
         }

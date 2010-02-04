@@ -7,11 +7,10 @@ using Antlr.Runtime.Tree;
 using IronJS.Compiler.Utils;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
+using IronJS.Runtime2.Js.Proxies;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime2.Js.Proxies;
-using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -101,8 +100,41 @@ namespace IronJS.Compiler.Ast
 
                 var tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
                 var tmpN_ijsproxy = Et.Variable(typeof(IjsProxy), "__tmpN_ijsproxy__");
-                var tmpN_func = Et.Variable(typeof(Delegate), "__tmpN_func__");
                 var tmpN_guard = Et.Variable(typeof(Delegate), "__tmpN_guard__");
+
+
+                /*
+                 * 
+                 * //variables
+                 * $object   // the object we're invoking
+                 * $proxy    // our ironjs specific dispatcher proxy
+                 * $func     // our ironjs function (this contains the AST for the function + already compiled and cached versions)
+                 * 
+                 * // logic
+                 * if($object is IjsFunc) {
+                 * 
+                 *    $func = (IjsFunc)$object;
+                 *    
+                 *    if($proxy.func == $func) {
+                 *          if($proxy.guard(arg1, arg2, ...)) {
+                 *              $proxy.cache(arg1, arg2, ...);
+                 *          } else {
+                 *              $proxy.guard = func.compileGuard(arg1, arg2, ...);
+                 *              $proxy.cache = func.compile(arg1, arg2, ...);
+                 *              $proxy.cache(arg1, arg2, ...);
+                 *          }
+                 *    } else {
+                 *          $proxy.func = $func;
+                 *          $proxy.guard = func.compileGuard(arg1, arg2, ...);
+                 *          $proxy.cache = func.compile(arg1, arg2, ...);
+                 *          $proxy.cache(arg1, arg2, ...);
+                 *    }
+                 * 
+                 * } else {
+                 *      // DynamicExpression
+                 * }
+                 * 
+                 * */
 
                 return Et.Block(
                     new[] { tmpN_object },

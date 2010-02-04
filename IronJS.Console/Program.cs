@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;

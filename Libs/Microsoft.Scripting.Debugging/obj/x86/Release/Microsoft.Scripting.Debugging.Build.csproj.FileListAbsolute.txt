@@ -7,3 +7,12 @@ C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Rele
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\ResolveAssemblyReference.cache
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\Microsoft.Scripting.Debugging.dll
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\Microsoft.Scripting.Debugging.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Scripting.Debugging.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Scripting.Debugging.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Dynamic.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Scripting.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Scripting.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\bin\x86\Release\Microsoft.Dynamic.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\Microsoft.Scripting.Debugging.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting.Debugging\obj\x86\Release\Microsoft.Scripting.Debugging.pdb

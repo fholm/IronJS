@@ -3,3 +3,8 @@ C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\bin\x86\Release\Micros
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\ResolveAssemblyReference.cache
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\Microsoft.Scripting.dll
 C:\Users\Fredrik\Projects\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\Microsoft.Scripting.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting\bin\x86\Release\Microsoft.Scripting.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting\bin\x86\Release\Microsoft.Scripting.pdb
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\Microsoft.Scripting.dll
+C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Libs\Microsoft.Scripting\obj\x86\Release\Microsoft.Scripting.pdb

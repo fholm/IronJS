@@ -38,94 +38,40 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        static Et constant;
-        static Et field_xpr;
-        static MethodInfo method;
-        static CallSite<Func<CallSite, object, object>> x_site;
-
         public override Et EtGen(FuncNode func)
         {
             var target = Target as IdentifierNode;
 
-            if (x_site == null)
-            {
-                x_site = CallSite<Func<CallSite, object, object>>.Create(
-                    new IjsInvokeBinder(
-                        new CallInfo(Args.Count)
-                    )
-                 );
+            var tmp = Et.Variable(typeof(object), "__tmp__");
 
-                constant = Et.Constant(x_site, x_site.GetType());
-
-                field_xpr = Et.Field(
-                    constant, "Target"
-                );
-                
-                method = x_site.Target.GetType().GetMethod("Invoke");
-            }
-
-            if (target.Name.StartsWith("x"))
-            {
-
-                return
+            return Et.Block(
+                new[] { tmp },
+                Et.Assign(
+                    tmp,
+                    target.EtGen(func)
+                ),
+                Et.Condition(
+                    Et.TypeIs(
+                        tmp,
+                        typeof(IjsProxy)
+                    ),
                     Et.Block(
-                        new[] { ForStepNode.TMP },
-                        Et.Assign(
-                            ForStepNode.TMP,
-                            IjsEtGenUtils.Box(Target.EtGen(func))
-                        ),
-                        Et.IfThenElse(
-                            Et.Equal(
-                                ForStepNode.TST,
-                                Et.Default(typeof(object))
-                            ),
-                            Et.Block(
-                                Et.Assign(
-                                    ForStepNode.TST,
-                                    ForStepNode.TMP
-                                ),
-                                Et.Invoke(
-                                    Et.Lambda(
-                                        Et.Call(
-                                            field_xpr,
-                                            method,
-                                            constant,
-                                            ForStepNode.TMP
-                                        )
-                                    )
-                                )
-                            ),
-                            Et.Block(
-                                
-                            )
+                        Et.Call(
+                            Et.Convert(tmp, typeof(IjsProxy)),
+                            typeof(IjsProxy).GetMethod("Call" + Args.Count),
+                            Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
                         )
-                    );
-
-                /*
-                return Et.Block(
-                    new[] { site },
-                    Expression.Call(
-                        Expression.Field(
-                            Expression.Assign(site, access),
-                            cs.GetType().GetField("Target")
-                        ),
-                        node.DelegateType.GetMethod("Invoke"),
-                        DynUtils.ArrayInsert(site, node.Arguments)
+                    ),
+                    Et.Dynamic(
+                        new IjsInvokeBinder(new CallInfo(Args.Count)),
+                        IjsTypes.Dynamic,
+                        ArrayUtils.Insert(
+                            Target.EtGen(func),
+                            Args.Select(x => x.EtGen(func)).ToArray()
+                        )
                     )
-                );
-                */
-            }
-            else
-            {
-                return Et.Dynamic(
-                    new IjsInvokeBinder(new CallInfo(Args.Count)),
-                    IjsTypes.Dynamic,
-                    ArrayUtils.Insert(
-                        Target.EtGen(func),
-                        Args.Select(x => x.EtGen(func)).ToArray()
-                    )
-                );
-            }
+                )
+            );
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

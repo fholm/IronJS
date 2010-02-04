@@ -21,8 +21,8 @@ using Antlr.Runtime.Tree;
 using IronJS.Compiler.Utils;
 using IronJS.Extensions;
 using IronJS.Runtime2.Js;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime.Js;
 
 namespace IronJS.Compiler.Ast
 {
@@ -109,7 +109,7 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public Delegate Compile(Type closureType, params Type[] paramTypes)
+        public Tuple<Delegate, Delegate> Compile(Type closureType, params Type[] paramTypes)
         {
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
@@ -119,23 +119,65 @@ namespace IronJS.Compiler.Ast
             foreach (var kvp in Parameters)
                 kvp.Value.Expr = Et.Parameter(paramTypes[n++], kvp.Key);
 
+            n = 0;
+            var paramExprs = paramTypes.Select(x => Et.Parameter(typeof(object), "__arg" + (n++) + "__")).ToArray();
+
+            n = 0;
             var lambda = Et.Lambda(
                 Et.Block(
-                    (Locals != Globals) // HACK
-                        ? Locals.Select(x => x.Value.Expr) 
-                        : new ParameterExpression[] {},
-                    Body.EtGen(this),
-                    Et.Label(
-                        ReturnLabel,
-                        Et.Default(ReturnType)
+                    Parameters.Select( x => x.Value.Expr),
+                    Et.Block(
+                        Parameters.Select(
+                            x => {
+                                return Et.Assign(
+                                    x.Value.Expr,
+                                    Et.Convert(paramExprs[n++], x.Value.ExprType)
+                                );
+                            }
+                        ).Concat(
+                            new Et[] {
+                                AstUtils.Empty()
+                            }
+                        )
+                    ),
+                    Et.Block(
+                        (Locals != Globals) // HACK
+                            ? Locals.Select(x => x.Value.Expr) 
+                            : new ParameterExpression[] {},
+                        Body.EtGen(this),
+                        Et.Label(
+                            ReturnLabel,
+                            Et.Default(ReturnType)
+                        )
                     )
                 ),
                 new[] { ClosureParm }.Concat(
-                    Parameters.Select(x => x.Value.Expr)
+                    paramExprs
                 )
             );
 
-            return lambda.Compile();
+            LambdaExpression guard;
+
+            if (paramTypes.Length > 0)
+            {
+                var arg1 = Et.Parameter(typeof(object), "__arg1__");
+
+                guard = Et.Lambda(
+                    Et.TypeIs(
+                        arg1,
+                        paramTypes[0]
+                    ),
+                    new[] { arg1 }
+                );
+            }
+            else
+            {
+                guard = Et.Lambda(
+                    Et.Constant(true, typeof(bool))
+                );
+            }
+
+            return Tuple.Create(guard.Compile(), lambda.Compile());
         }
 
         internal bool IsGlobal(IjsIVar varInfo)

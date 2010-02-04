@@ -23,14 +23,20 @@ return a;
 
 y();
 */
+var x2 = function () { };
+
+x2();
 
 var y = function (a) {
-    var x = function () { };
-    
+
+    var x = x2;
+
     for (var i = 0; i < a; ++i) {
         x();
     }
 };
+
+y(2);
 
 time(function () {
     y(10000000)

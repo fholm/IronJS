@@ -55,7 +55,7 @@ namespace IronJS.Compiler.Ast
         {
             if (nodes.Length > 0)
             {
-                var type = nodes[0].ExprType;
+                Type type = nodes[0].ExprType;
 
                 for (int i = 0; i < nodes.Length; ++i)
                     if (nodes[i].ExprType != type)
@@ -69,9 +69,9 @@ namespace IronJS.Compiler.Ast
         
         public Type EvalTypes(params INode[] nodes)
         {
-            var set = new HashSet<Type>();
+            HashSet<Type> set = new HashSet<Type>();
 
-            foreach (var node in nodes)
+            foreach (INode node in nodes)
                 set.Add(node.ExprType);
 
             return HashSetTools.EvalType(set);
@@ -79,11 +79,11 @@ namespace IronJS.Compiler.Ast
 
         public void IfIdentifierAssignedFrom(INode node, INode value)
         {
-            var idNode = node as IdentifierNode;
+            IdentifierNode idNode = node as IdentifierNode;
 
             if (idNode != null)
             {
-                var varInfo = idNode.VarInfo as IjsLocalVar;
+                IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
 
                 if (varInfo != null)
                     varInfo.AssignedFrom.Add(value);
@@ -92,11 +92,11 @@ namespace IronJS.Compiler.Ast
 
         public void IfIdentiferUsedAs(INode node, Type type)
         {
-            var idNode = node as IdentifierNode;
+            IdentifierNode idNode = node as IdentifierNode;
 
             if (idNode != null)
             {
-                var varInfo = idNode.VarInfo as IjsLocalVar;
+                IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
 
                 if (varInfo != null)
                     varInfo.UsedAs.Add(type);
@@ -105,7 +105,7 @@ namespace IronJS.Compiler.Ast
 
         public string Print()
         {
-            var writer = new StringBuilder();
+            StringBuilder writer = new StringBuilder();
 
             Print(writer, 0);
 
@@ -114,7 +114,7 @@ namespace IronJS.Compiler.Ast
 
         public virtual void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 

@@ -49,7 +49,7 @@ namespace IronJS.Compiler.Ast
         {
             if (func.IsGlobal(VarInfo))
             {
-                var varInfo = VarInfo as IjsLocalVar;
+                IjsLocalVar varInfo = VarInfo as IjsLocalVar;
 
                 if (varInfo.AssignedFrom.Count == 0)
                 {
@@ -83,7 +83,7 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(
                 indentStr + "(" + (IsDefinition ? ">" : "") + Name + " " + TypeTools.ShortName(ExprType) + ")"

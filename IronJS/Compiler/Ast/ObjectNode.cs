@@ -35,9 +35,9 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
-            var indentStr2 = new String(' ', (indent + 1) * 2);
-            var indentStr3 = new String(' ', (indent + 2) * 2);
+            string indentStr = new String(' ', indent * 2);
+            string indentStr2 = new String(' ', (indent + 1) * 2);
+            string indentStr3 = new String(' ', (indent + 2) * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 

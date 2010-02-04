@@ -32,12 +32,12 @@ namespace IronJS.Compiler
 
         public List<INode> Build(string source)
         {
-            var lexer = new EcmaLexer(new ANTLRStringStream(source));
-            var parser = new EcmaParser(new CommonTokenStream(lexer));
+            EcmaLexer lexer = new EcmaLexer(new ANTLRStringStream(source));
+            EcmaParser parser = new EcmaParser(new CommonTokenStream(lexer));
 
-            var program = parser.program();
-            var root = (ITree)program.Tree;
-            var nodes = new List<INode>();
+            EcmaParser.program_return program = parser.program();
+            ITree root = (ITree)program.Tree;
+            List<INode> nodes = new List<INode>();
 
             if (root == null)
             {
@@ -425,12 +425,12 @@ namespace IronJS.Compiler
 
         private INode BuildSwitch(ITree node)
         {
-            var def = (INode)(new NullNode(node));
-            var cases = new List<Tuple<INode, INode>>();
+            INode def = (INode)(new NullNode(node));
+            List<Tuple<INode, INode>> cases = new List<Tuple<INode, INode>>();
 
             for (int i = 1; i < node.ChildCount; ++i)
             {
-                var child = ITreeTools.GetChildSafe(node, i);
+                ITree child = ITreeTools.GetChildSafe(node, i);
 
                 if (child.Type == EcmaParser.DEFAULT)
                 {
@@ -438,7 +438,7 @@ namespace IronJS.Compiler
                 }
                 else
                 {
-                    var caseBlock = new List<INode>();
+                    List<INode> caseBlock = new List<INode>();
 
                     for(int j = 1; j < child.ChildCount; ++j)
                         caseBlock.Add(
@@ -841,7 +841,7 @@ namespace IronJS.Compiler
 
         private INode BuildObject(ITree node)
         {
-            var propertyDict = new Dictionary<string, INode>();
+            Dictionary<string, INode> propertyDict = new Dictionary<string, INode>();
 
             ITreeTools.EachChild(node, delegate(ITree child) {
                 propertyDict.Add(
@@ -855,8 +855,8 @@ namespace IronJS.Compiler
 
         private INode BuildWhile(ITree node)
         {
-            var testNode = Build(ITreeTools.GetChildSafe(node, 0));
-            var bodyNode = Build(ITreeTools.GetChildSafe(node, 1));
+            INode testNode = Build(ITreeTools.GetChildSafe(node, 0));
+            INode bodyNode = Build(ITreeTools.GetChildSafe(node, 1));
 
             return new WhileNode(
                 testNode, 
@@ -1008,8 +1008,8 @@ namespace IronJS.Compiler
 
         private INode BuildAssign(ITree node, bool isLocal)
         {
-            var lhs = ITreeTools.GetChildSafe(node, 0);
-            var rhs = ITreeTools.GetChildSafe(node, 1);
+            ITree lhs = ITreeTools.GetChildSafe(node, 0);
+            ITree rhs = ITreeTools.GetChildSafe(node, 1);
 
             return new AssignNode(
                 Build(lhs), 
@@ -1024,9 +1024,9 @@ namespace IronJS.Compiler
             {
                 if (node.Type == EcmaParser.NEW)
                 {
-                    var child = ITreeTools.GetChildSafe(node, 0);
+                    ITree child = ITreeTools.GetChildSafe(node, 0);
 
-                    var idNode = new CommonTree(
+                    CommonTree idNode = new CommonTree(
                         new CommonToken(
                             child.Type,
                             child.Text

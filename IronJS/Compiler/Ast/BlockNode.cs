@@ -26,9 +26,9 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(FuncNode astopt)
         {
-            var nodes = new List<INode>();
+            List<INode> nodes = new List<INode>();
 
-            foreach (var node in Nodes)
+            foreach (INode node in Nodes)
                 nodes.Add(node.Analyze(astopt));
 
             Nodes = nodes;
@@ -44,7 +44,7 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.Append(indentStr + "(" + NodeType + "");
 
@@ -52,7 +52,7 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine();
 
-                foreach (var node in Nodes)
+                foreach (INode node in Nodes)
                     node.Print(writer, indent + 1);
 
                 writer.AppendLine(indentStr + ")");

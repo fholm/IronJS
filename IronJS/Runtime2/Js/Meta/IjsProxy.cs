@@ -32,7 +32,7 @@ namespace IronJS.Runtime2.Js.Meta
 
         Binding CreateRestriction(MetaObj[] args)
         {
-            var restrictions =
+            Binding restrictions =
                 Binding.GetTypeRestriction(
                     Et.Field(
                         SelfExpr, "Closure"
@@ -40,7 +40,7 @@ namespace IronJS.Runtime2.Js.Meta
                     Self.ClosureType
                 );
 
-            foreach(var arg in args)
+            foreach (MetaObj arg in args)
             {
                 if (arg.HasValue && arg.Value == null)
                 {

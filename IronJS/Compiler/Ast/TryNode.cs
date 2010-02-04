@@ -49,7 +49,7 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
@@ -60,7 +60,7 @@ namespace IronJS.Compiler.Ast
 
             if (Finally != null)
             {
-                var indentStr2 = new String(' ', (indent + 1) * 2);
+                string indentStr2 = new String(' ', (indent + 1) * 2);
 
                 writer.AppendLine(indentStr2 + "(Finally");
                     Finally.Print(writer, indent + 2);

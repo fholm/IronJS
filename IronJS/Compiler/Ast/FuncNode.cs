@@ -83,7 +83,7 @@ namespace IronJS.Compiler.Ast
             ClosesOver = new Dictionary<string, IjsClosureVar>();
 
             if (parameters != null)
-                foreach (var param in parameters)
+                foreach (string param in parameters)
                     Parameters.Add(param, new IjsParameter());
 
             Returns = new HashSet<INode>();
@@ -136,17 +136,17 @@ namespace IronJS.Compiler.Ast
 
         public TFunc Compile<TFunc, TGuard>(Type[] inTypes, out TGuard guard)
         {
-            var types = typeof(TFunc).GetGenericArguments();
-            var closureType = types[0];
-            var paramTypes = ArrayTools.DropFirstAndLast(types);
+            Type[] types = typeof(TFunc).GetGenericArguments();
+            Type closureType = types[0];
+            Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
 
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
-            var n = 0;
-            var paramPairs = ArrayTools.Map(paramTypes, x => {
+            int n = 0;
+            ParamTuple[] paramPairs = ArrayTools.Map(paramTypes, x => {
                 ParameterExpression parm;
                 ParameterExpression real;
 
@@ -167,7 +167,7 @@ namespace IronJS.Compiler.Ast
             );
 
             n = 0;
-            foreach (var param in Parameters)
+            foreach (KeyValuePair<string, IjsParameter> param in Parameters)
                 param.Value.Expr = paramPairs[n++].Item2;
 
             ParamTuple[] oddPairs = 
@@ -299,8 +299,8 @@ namespace IronJS.Compiler.Ast
             if (Parent == null)
                 return CreateLocal(name);
 
-            var parent = Parent;
-            var parentFunctions = new HashSet<FuncNode>();
+            FuncNode parent = Parent;
+            HashSet<FuncNode> parentFunctions = new HashSet<FuncNode>();
 
             while (true)
             {
@@ -312,10 +312,10 @@ namespace IronJS.Compiler.Ast
                     }
                     else
                     {
-                        var varInfo = parent.GetLocal(name);
+                        IjsCloseableVar varInfo = parent.GetLocal(name);
                         varInfo.IsClosedOver = true;
 
-                        foreach (var subParent in parentFunctions)
+                        foreach (FuncNode subParent in parentFunctions)
                             if(!subParent.ClosesOver.ContainsKey(name))
                                 subParent.ClosesOver.Add(name, new IjsClosureVar(name, subParent));
 
@@ -337,9 +337,9 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
-            var indentStr2 = new String(' ', (indent + 1) * 2);
-            var indentStr3 = new String(' ', (indent + 2) * 2);
+            string indentStr = new String(' ', indent * 2);
+            string indentStr2 = new String(' ', (indent + 1) * 2);
+            string indentStr3 = new String(' ', (indent + 2) * 2);
 
             writer.AppendLine(indentStr 
                 + "(" + NodeType 
@@ -351,7 +351,7 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine(indentStr2 + "(Closure");
 
-                foreach (var kvp in ClosesOver)
+                foreach (KeyValuePair<string, IjsClosureVar> kvp in ClosesOver)
                     writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + TypeTools.ShortName(ExprType) + ")");
 
                 writer.AppendLine(indentStr2 + ")");
@@ -361,7 +361,7 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine(indentStr2 + "(Parameters");
 
-                foreach (var kvp in Parameters)
+                foreach (KeyValuePair<string, IjsParameter> kvp in Parameters)
                     writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + TypeTools.ShortName(ExprType) + ")");
 
                 writer.AppendLine(indentStr2 + ")");

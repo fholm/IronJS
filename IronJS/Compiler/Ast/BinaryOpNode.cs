@@ -53,8 +53,8 @@ namespace IronJS.Compiler.Ast
         {
             if (IdenticalTypes(Left, Right))
             {
-                var left = Left.EtGen(func);
-                var right = Right.EtGen(func);
+                Et left = Left.EtGen(func);
+                Et right = Right.EtGen(func);
 
                 if (Left.ExprType == IjsTypes.Integer)
                 {
@@ -75,7 +75,7 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + Op);
 

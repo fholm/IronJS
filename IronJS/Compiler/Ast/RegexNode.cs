@@ -15,14 +15,14 @@ namespace IronJS.Compiler.Ast
         public RegexNode(string regex, ITree node)
             : base(NodeType.Regex, node)
         {
-            var lastIndex = regex.LastIndexOf('/');
+            int lastIndex = regex.LastIndexOf('/');
             Regex = regex.Substring(1, lastIndex - 1);
             Modifiers = regex.Substring(lastIndex + 1);
         }
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.Append(indentStr + "(" + NodeType);
             writer.Append(" " + "/" + Regex + "/" + Modifiers);

@@ -15,12 +15,12 @@ namespace IronJS.Runtime.Utils
         static public void Timer(IjsFunc proxy)
         {
             Func<bool> guard;
-            var lambda = proxy.Node.Compile<Func<IjsClosure, object>, Func<bool>>(Type.EmptyTypes, out guard);
+            Func<IjsClosure, object> lambda = proxy.Node.Compile<Func<IjsClosure, object>, Func<bool>>(Type.EmptyTypes, out guard);
 
-            var start = DateTime.Now;
+            DateTime start = DateTime.Now;
             lambda(proxy.Closure);
-            var stop = DateTime.Now;
-            var total = stop.Subtract(start);
+            DateTime stop = DateTime.Now;
+            TimeSpan total = stop.Subtract(start);
             Console.WriteLine(total.TotalMilliseconds);
         }
     }

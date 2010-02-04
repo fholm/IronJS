@@ -11,6 +11,7 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
+    using EtParam = ParameterExpression;
     using System.Text;
     using IronJS.Runtime2.Js.Proxies;
     using IronJS.Compiler.Tools;
@@ -42,12 +43,12 @@ namespace IronJS.Compiler.Ast
 
         public override Et EtGen(FuncNode func)
         {
-            var target = Target as IdentifierNode;
+            IdentifierNode target = Target as IdentifierNode;
 
             if (Args.Count == 0)
             {
-                var tmp0_object = Et.Variable(typeof(object), "__tmp0_object__");
-                var tmp0_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmp0_ijsproxy__");
+                EtParam tmp0_object = Et.Variable(typeof(object), "__tmp0_object__");
+                EtParam tmp0_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmp0_ijsproxy__");
 
                 return Et.Block(
                     new[] { tmp0_object },
@@ -88,28 +89,28 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                var args = IEnumerableTools.Map(Args, delegate(INode node) {
+                Et[] args = IEnumerableTools.Map(Args, delegate(INode node) {
                     return node.EtGen(func);
                 });
 
-                var callType = typeof(IjsCall1<>).MakeGenericType(
+                Type callType = typeof(IjsCall1<>).MakeGenericType(
                         IEnumerableTools.Map(args, delegate(Expression expr) {
                             return expr.Type;
                         })
                     );
 
-                var proxyType = typeof(IjsFunc);
-                var funcType = callType.GetField("Func").FieldType;
-                var guardType = callType.GetField("Guard").FieldType;
+                Type proxyType = typeof(IjsFunc);
+                Type funcType = callType.GetField("Func").FieldType;
+                Type guardType = callType.GetField("Guard").FieldType;
                 
-                var callExpr = func.GetCallProxy(callType);
-                var proxyField = Et.Field(callExpr, "Proxy");
-                var funcField = Et.Field(callExpr, "Func");
-                var guardField = Et.Field(callExpr, "Guard");
+                Et callExpr = func.GetCallProxy(callType);
+                Et proxyField = Et.Field(callExpr, "Proxy");
+                Et funcField = Et.Field(callExpr, "Func");
+                Et guardField = Et.Field(callExpr, "Guard");
 
-                var tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
-                var tmpN_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmpN_ijsproxy__");
-                var tmpN_guard = Et.Variable(guardType, "__tmpN_guard__");
+                EtParam tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
+                EtParam tmpN_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmpN_ijsproxy__");
+                EtParam tmpN_guard = Et.Variable(guardType, "__tmpN_guard__");
 
 
                 /*
@@ -217,18 +218,18 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
+            string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
             Target.Print(writer, indent + 1);
 
-            var indentStr2 = new String(' ', (indent + 1) * 2);
+            string indentStr2 = new String(' ', (indent + 1) * 2);
 
             if (Args.Count > 0)
             {
                 writer.AppendLine(indentStr2 + "(Args");
 
-                foreach (var node in Args)
+                foreach (INode node in Args)
                     node.Print(writer, indent + 2);
 
                 writer.AppendLine(indentStr2 + ")");

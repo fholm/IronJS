@@ -36,9 +36,9 @@ namespace IronJS.Compiler.Ast
             if(Default != null)
                 Default = Default.Analyze(astopt);
 
-            var cases = new List<Tuple<INode, INode>>();
+            List<Tuple<INode, INode>> cases = new List<Tuple<INode, INode>>();
 
-            foreach (var _case in Cases)
+            foreach (Tuple<INode, INode> _case in Cases)
             {
                 cases.Add(
                     Tuple.Create(
@@ -55,14 +55,14 @@ namespace IronJS.Compiler.Ast
 
         public override void Print(System.Text.StringBuilder writer, int indent)
         {
-            var indentStr = new String(' ', indent * 2);
-            var indentStr2 = new String(' ', (indent + 1)* 2);
-            var indentStr3 = new String(' ', (indent + 2) * 2);
+            string indentStr = new String(' ', indent * 2);
+            string indentStr2 = new String(' ', (indent + 1)* 2);
+            string indentStr3 = new String(' ', (indent + 2) * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType + "");
             Target.Print(writer, indent + 1);
 
-            foreach (var cas in Cases)
+            foreach (Tuple<INode, INode> cas in Cases)
             {
                 writer.AppendLine(indentStr2 + "(Case");
                 cas.Item1.Print(writer, indent + 2);

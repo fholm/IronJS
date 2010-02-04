@@ -17,13 +17,13 @@ namespace IronJS.Runtime2.Binders
 
         public override MetaObj FallbackInvoke(MetaObj target, MetaObj[] args, MetaObj errorSuggestion)
         {
-            if (target.Value is Action<IjsProxy>)
+            if (target.Value is Action<IjsFunc>)
             {
                 return new MetaObj(
                     IjsEtGenUtils.Box(
                         Et.Invoke(
-                           Et.Convert(target.Expression, typeof(Action<IjsProxy>)),
-                           Et.Convert(args[0].Expression, typeof(IjsProxy))
+                           Et.Convert(target.Expression, typeof(Action<IjsFunc>)),
+                           Et.Convert(args[0].Expression, typeof(IjsFunc))
                         )
                     ),
                     BindingRestrictions.GetTypeRestriction(

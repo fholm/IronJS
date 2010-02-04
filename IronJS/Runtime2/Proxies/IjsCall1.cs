@@ -4,7 +4,7 @@ namespace IronJS.Runtime2.Js.Proxies
 {
     public class IjsCall1<T>
     {
-        public IjsProxy Proxy;
+        public IjsFunc Proxy;
         public Func<T, bool> Guard;
         public Func<IjsClosure, T, object> Func;
 

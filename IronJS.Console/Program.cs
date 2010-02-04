@@ -20,7 +20,7 @@ namespace IronJS.Testing
             var compiled = globalScope.Compile();
             var closure = new IjsClosure(new IjsObj());
 
-            closure.Globals.Set("time", new Action<IjsProxy>(HelperFunctions.Timer));
+            closure.Globals.Set("time", new Action<IjsFunc>(HelperFunctions.Timer));
             closure.Globals.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 
             compiled(closure);

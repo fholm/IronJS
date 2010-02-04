@@ -45,7 +45,7 @@ namespace IronJS.Compiler.Ast
             if (Args.Count == 0)
             {
                 var tmp0_object = Et.Variable(typeof(object), "__tmp0_object__");
-                var tmp0_ijsproxy = Et.Variable(typeof(IjsProxy), "__tmp0_ijsproxy__");
+                var tmp0_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmp0_ijsproxy__");
 
                 return Et.Block(
                     new[] { tmp0_object },
@@ -54,12 +54,12 @@ namespace IronJS.Compiler.Ast
                         target.EtGen(func)
                     ),
                     Et.Condition(
-                        Et.TypeIs(tmp0_object, typeof(IjsProxy)),
+                        Et.TypeIs(tmp0_object, typeof(IjsFunc)),
                         Et.Block(
                             new[] { tmp0_ijsproxy },
                             Et.Assign(
                                 tmp0_ijsproxy,
-                                Et.Convert(tmp0_object, typeof(IjsProxy))
+                                Et.Convert(tmp0_object, typeof(IjsFunc))
                             ),
                             Et.Condition(
                                 Et.Equal(
@@ -68,7 +68,7 @@ namespace IronJS.Compiler.Ast
                                 ),
                                 Et.Call(
                                     tmp0_ijsproxy,
-                                    typeof(IjsProxy).GetMethod("Invoke0")
+                                    typeof(IjsFunc).GetMethod("Invoke0")
                                 ),
                                 Et.Invoke(
                                     Et.Field(tmp0_ijsproxy, "Func0"),
@@ -89,7 +89,7 @@ namespace IronJS.Compiler.Ast
                 var args = Args.Select(x => x.EtGen(func)).ToArray();
 
                 var callType = typeof(IjsCall1<>).MakeGenericType(args.Select(x => x.Type).ToArray());
-                var proxyType = typeof(IjsProxy);
+                var proxyType = typeof(IjsFunc);
                 var funcType = callType.GetField("Func").FieldType;
                 var guardType = callType.GetField("Guard").FieldType;
                 
@@ -99,12 +99,11 @@ namespace IronJS.Compiler.Ast
                 var guardField = Et.Field(callExpr, "Guard");
 
                 var tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
-                var tmpN_ijsproxy = Et.Variable(typeof(IjsProxy), "__tmpN_ijsproxy__");
+                var tmpN_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmpN_ijsproxy__");
                 var tmpN_guard = Et.Variable(typeof(Delegate), "__tmpN_guard__");
 
 
                 /*
-                 * 
                  * //variables
                  * $object   // the object we're invoking
                  * $proxy    // our ironjs specific dispatcher proxy
@@ -163,7 +162,7 @@ namespace IronJS.Compiler.Ast
                                         Et.Convert(
                                             Et.Call(
                                                 proxyField,
-                                                typeof(IjsProxy).GetMethod("CreateN"),
+                                                typeof(IjsFunc).GetMethod("CreateN"),
                                                 Et.Constant(funcType, typeof(Type)),
                                                 AstUtils.NewArrayHelper(typeof(object), args),
                                                 tmpN_guard

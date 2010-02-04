@@ -101,7 +101,7 @@ namespace IronJS.Compiler.Ast
         public override Expression EtGen(FuncNode func)
         {
             return IjsEtGenUtils.New(
-                typeof(IjsProxy),
+                typeof(IjsFunc),
                 Et.Constant(this),
                 IjsEtGenUtils.New(
                     typeof(IjsClosure),

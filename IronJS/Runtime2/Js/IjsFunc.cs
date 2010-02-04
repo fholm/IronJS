@@ -7,15 +7,17 @@ using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime2.Js
 {
-    public class IjsProxy : IjsObj, IDynamicMetaObjectProvider
+    public class IjsFunc : IjsObj, IDynamicMetaObjectProvider
     {
         public readonly FuncNode Node;
         public readonly IjsClosure Closure;
+
         public Type ClosureType { get { return Closure.GetType(); } }
+
         public Func<IjsClosure, object> Func0;
         public Dictionary<Type, object> FuncCache;
 
-        public IjsProxy(FuncNode node, IjsClosure closure)
+        public IjsFunc(FuncNode node, IjsClosure closure)
         {
             Node = node;
             Closure = closure;

@@ -7,9 +7,9 @@ using MetaObj = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime2.Js.Meta
 {
-    public class IjsProxy : IjsMeta<Js.IjsProxy>
+    public class IjsProxy : IjsMeta<Js.IjsFunc>
     {
-        public IjsProxy(Et parameter, Js.IjsProxy ijsProxy)
+        public IjsProxy(Et parameter, Js.IjsFunc ijsProxy)
             : base(parameter, ijsProxy)
         {
 

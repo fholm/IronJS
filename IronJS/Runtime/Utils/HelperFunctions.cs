@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Utils
             return obj;
         }
 
-        static public void Timer(IjsProxy proxy)
+        static public void Timer(IjsFunc proxy)
         {
             var lambda = (Func<IjsClosure, object>)proxy.Node.Compile(proxy.ClosureType, Type.EmptyTypes, Type.EmptyTypes).Item2;
             var start = DateTime.Now;

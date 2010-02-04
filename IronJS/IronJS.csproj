@@ -150,7 +150,7 @@
     <Compile Include="Runtime2\Js\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
-    <Compile Include="Runtime2\Js\IjsProxy.cs" />
+    <Compile Include="Runtime2\Js\IjsFunc.cs" />
     <Compile Include="Runtime2\Js\IjsTypes.cs" />
     <Compile Include="Compiler\Ast\UnaryOpNode.cs" />
     <Compile Include="Compiler\Ast\LogicalNode.cs" />

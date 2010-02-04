@@ -24,6 +24,8 @@ namespace IronJS.Testing
             closure.Globals.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 
             compiled(closure);
+
+            Console.ReadLine();
         }
     }
 }

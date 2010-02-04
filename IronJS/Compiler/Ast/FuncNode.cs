@@ -56,6 +56,7 @@ namespace IronJS.Compiler.Ast
         public LabelTarget ReturnLabel { get; protected set; }
         public ParameterExpression ClosureParm { get; protected set; }
         public MemberExpression GlobalField { get; protected set; }
+        public Dictionary<Type, ParameterExpression> CallProxies { get; set; }
 
         public FuncNode(IdentifierNode name, IEnumerable<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node)
@@ -109,34 +110,71 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public Tuple<Delegate, Delegate> Compile(Type closureType, params Type[] paramTypes)
+        public ParameterExpression GetCallProxy(Type type)
+        {
+            ParameterExpression expr;
+
+            if (CallProxies.TryGetValue(type, out expr))
+                return expr;
+
+            return CallProxies[type] = Et.Parameter(type, "__callproxy__");
+        }
+
+        public Tuple<Delegate, Delegate> Compile(Type closureType, Type[] paramTypes, Type[] inTypes)
         {
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
+            CallProxies = new Dictionary<Type, ParameterExpression>();
 
             var n = 0;
-            foreach (var kvp in Parameters)
-                kvp.Value.Expr = Et.Parameter(paramTypes[n++], kvp.Key);
+            var paramPairs = paramTypes.Select(x => {
+                    ParameterExpression parm;
+                    ParameterExpression real;
+
+                    if (paramTypes[n] == inTypes[n])
+                    {
+                        parm = real = Et.Parameter(paramTypes[n], "__arg" + n + "__");
+                    }
+                    else
+                    {
+                        parm = Et.Parameter(inTypes[n], "__arg" + n + "__");
+                        real = Et.Parameter(paramTypes[n], "__arg " + n + "__");
+                    }
+
+                    ++n;
+
+                    return Tuple.Create(parm, real);
+                }
+            ).ToArray();
 
             n = 0;
-            var paramExprs = paramTypes.Select(x => Et.Parameter(typeof(object), "__arg" + (n++) + "__")).ToArray();
+            foreach (var param in Parameters)
+                param.Value.Expr = paramPairs[n++].Item2;
 
-            n = 0;
+            var oddPairs = paramPairs.Where(x => x.Item1 != x.Item2);
+            var body = Body.EtGen(this);
+
             var lambda = Et.Lambda(
                 Et.Block(
-                    Parameters.Select( x => x.Value.Expr),
+                    oddPairs.Select(x => x.Item2).Concat(
+                        CallProxies.Select(x => x.Value)
+                    ),
                     Et.Block(
-                        Parameters.Select(
-                            x => {
-                                return Et.Assign(
-                                    x.Value.Expr,
-                                    Et.Convert(paramExprs[n++], x.Value.ExprType)
-                                );
-                            }
+                        CallProxies.Select(
+                            x => Et.Assign(x.Value, IjsEtGenUtils.New(x.Key))
                         ).Concat(
                             new Et[] {
-                                AstUtils.Empty()
+                                AstUtils.Empty() // HACK
+                            }
+                        )
+                    ),
+                    Et.Block(
+                        oddPairs.Select(
+                            x => Et.Assign(x.Item2, Et.Convert(x.Item1, x.Item2.Type))
+                        ).Concat(
+                            new Et[] {
+                                AstUtils.Empty() // HACK
                             }
                         )
                     ),
@@ -144,7 +182,7 @@ namespace IronJS.Compiler.Ast
                         (Locals != Globals) // HACK
                             ? Locals.Select(x => x.Value.Expr) 
                             : new ParameterExpression[] {},
-                        Body.EtGen(this),
+                        body,
                         Et.Label(
                             ReturnLabel,
                             Et.Default(ReturnType)
@@ -152,32 +190,32 @@ namespace IronJS.Compiler.Ast
                     )
                 ),
                 new[] { ClosureParm }.Concat(
-                    paramExprs
+                    paramPairs.Select(x => x.Item1)
                 )
             );
 
-            LambdaExpression guard;
-
-            if (paramTypes.Length > 0)
-            {
-                var arg1 = Et.Parameter(typeof(object), "__arg1__");
-
-                guard = Et.Lambda(
-                    Et.TypeIs(
-                        arg1,
-                        paramTypes[0]
-                    ),
-                    new[] { arg1 }
-                );
-            }
-            else
-            {
-                guard = Et.Lambda(
-                    Et.Constant(true, typeof(bool))
-                );
-            }
+            var guard = Et.Lambda(
+                BuildTypeCheck(oddPairs.ToArray()),
+                paramPairs.Select(x => x.Item1)
+            );
 
             return Tuple.Create(guard.Compile(), lambda.Compile());
+        }
+
+        Et BuildTypeCheck(Tuple<ParameterExpression, ParameterExpression>[] oddPairs)
+        {
+            if (oddPairs.Length == 0)
+                return IjsEtGenUtils.Constant(true);
+
+            return Et.AndAlso(
+                Et.TypeIs(
+                    oddPairs[0].Item1,
+                    oddPairs[0].Item2.Type
+                ),
+                BuildTypeCheck(
+                    Microsoft.Scripting.Utils.ArrayUtils.RemoveFirst(oddPairs)
+                )
+            );
         }
 
         internal bool IsGlobal(IjsIVar varInfo)
@@ -309,6 +347,5 @@ namespace IronJS.Compiler.Ast
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }
-
     }
 }

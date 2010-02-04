@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Compiler.Ast;
-using System.Collections.Generic;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime2.Js
 {
@@ -10,51 +12,38 @@ namespace IronJS.Runtime2.Js
         public readonly FuncNode Node;
         public readonly IjsClosure Closure;
         public Type ClosureType { get { return Closure.GetType(); } }
-
-        // 0
-        public Func<bool> _func0Guard;
-        public Func<IjsClosure, object> _func0;
-
-        // 1
-        public Func<object, bool> _func1Guard;
-        public Func<IjsClosure, object, object> _func1;
-        Tuple<Func<object, bool>, Func<IjsClosure, object, object>>[] _func1Cache; 
+        public Func<IjsClosure, object> Func0;
+        public Dictionary<Type, object> FuncCache;
 
         public IjsProxy(FuncNode node, IjsClosure closure)
         {
             Node = node;
             Closure = closure;
+            FuncCache = new Dictionary<Type, object>();
         }
 
-        public object Call0()
+        public object Invoke0()
         {
-            if (_func0 == null)
-            {
-                _func0Guard = () => true;
-                _func0 = (Func<IjsClosure, object>)(Node.Compile(ClosureType).Item2);
-            }
+            if (Func0 == null)
+                Func0 = (Func<IjsClosure, object>)(Node.Compile(ClosureType, Type.EmptyTypes, Type.EmptyTypes).Item2);
             
-            return _func0(Closure);
+            return Func0(Closure);
         }
 
-        public object Call1(object arg1)
+        public Delegate CreateN(Type delegateType, object[] values, out Delegate guard)
         {
-            if (_func1 == null)
-            {
-                _func1Cache = new Tuple<Func<object, bool>, Func<IjsClosure, object, object>>[10];
+            var types = delegateType.GetGenericArguments();
 
-                var result = Node.Compile(ClosureType, arg1.GetType());
+            var pair = Node.Compile(
+                types[0],
+                values.Select(x => x.GetType()).ToArray(),
+                ArrayUtils.RemoveLast(
+                    ArrayUtils.RemoveFirst(types)
+                )
+            );
 
-                _func1Guard = (Func<object, bool>) result.Item1;
-                _func1 = (Func<IjsClosure, object, object>) result.Item2;
-
-                _func1Cache[0] = Tuple.Create(_func1Guard, _func1);
-            }
-
-            if (_func1Guard(arg1))
-                return _func1(Closure, arg1);
-
-            throw new NotImplementedException();
+            guard = pair.Item1;
+            return pair.Item2;
         }
 
         #region IDynamicMetaObjectProvider Members

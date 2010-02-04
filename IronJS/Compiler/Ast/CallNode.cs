@@ -8,7 +8,10 @@ using IronJS.Compiler.Utils;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
+using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Js.Proxies;
+using IronJS.Runtime.Utils;
 
 namespace IronJS.Compiler.Ast
 {
@@ -40,61 +43,139 @@ namespace IronJS.Compiler.Ast
         {
             var target = Target as IdentifierNode;
 
-            var tmp = Et.Variable(typeof(object), "__tmp__");
-            var tmp2 = Et.Variable(typeof(IjsProxy), "__tmp2__");
+            if (Args.Count == 0)
+            {
+                var tmp0_object = Et.Variable(typeof(object), "__tmp0_object__");
+                var tmp0_ijsproxy = Et.Variable(typeof(IjsProxy), "__tmp0_ijsproxy__");
 
-            return Et.Block(
-                new[] { tmp },
-                Et.Assign(
-                    tmp, target.EtGen(func)
-                ),
-                Et.Condition(
-                    Et.TypeIs(tmp, typeof(IjsProxy)),
-                    Et.Block(
-                        new[] { tmp2 },
-                        Et.Assign(
-                            tmp2, Et.Convert(tmp, typeof(IjsProxy))
-                        ),
-                        Et.Condition(
-                            Et.Equal(
-                                Et.Field(tmp2, "_func" + Args.Count),
-                                Et.Constant(null, typeof(object))
+                return Et.Block(
+                    new[] { tmp0_object },
+                    Et.Assign(
+                        tmp0_object,
+                        target.EtGen(func)
+                    ),
+                    Et.Condition(
+                        Et.TypeIs(tmp0_object, typeof(IjsProxy)),
+                        Et.Block(
+                            new[] { tmp0_ijsproxy },
+                            Et.Assign(
+                                tmp0_ijsproxy,
+                                Et.Convert(tmp0_object, typeof(IjsProxy))
                             ),
-                            Et.Call(
-                                tmp2,
-                                typeof(IjsProxy).GetMethod("Call" + Args.Count),
-                                Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
+                            Et.Condition(
+                                Et.Equal(
+                                    Et.Field(tmp0_ijsproxy, "Func0"),
+                                    Et.Constant(null, typeof(object))
+                                ),
+                                Et.Call(
+                                    tmp0_ijsproxy,
+                                    typeof(IjsProxy).GetMethod("Invoke0")
+                                ),
+                                Et.Invoke(
+                                    Et.Field(tmp0_ijsproxy, "Func0"),
+                                    Et.Field(tmp0_ijsproxy, "Closure")
+                                )
+                            )
+                        ),
+                        Et.Dynamic(
+                            new IjsInvokeBinder(new CallInfo(Args.Count)),
+                            IjsTypes.Dynamic,
+                            Target.EtGen(func)
+                        )
+                    )
+                );
+            }
+            else
+            {
+                var args = Args.Select(x => x.EtGen(func)).ToArray();
+
+                var callType = typeof(IjsCall1<>).MakeGenericType(args.Select(x => x.Type).ToArray());
+                var proxyType = typeof(IjsProxy);
+                var funcType = callType.GetField("Func").FieldType;
+                var guardType = callType.GetField("Guard").FieldType;
+                
+                var callExpr = func.GetCallProxy(callType);
+                var proxyField = Et.Field(callExpr, "Proxy");
+                var funcField = Et.Field(callExpr, "Func");
+                var guardField = Et.Field(callExpr, "Guard");
+
+                var tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
+                var tmpN_ijsproxy = Et.Variable(typeof(IjsProxy), "__tmpN_ijsproxy__");
+                var tmpN_func = Et.Variable(typeof(Delegate), "__tmpN_func__");
+                var tmpN_guard = Et.Variable(typeof(Delegate), "__tmpN_guard__");
+
+                return Et.Block(
+                    new[] { tmpN_object },
+                    Et.Assign(
+                        tmpN_object, target.EtGen(func)
+                    ),
+                    Et.Condition(
+                        Et.TypeIs(
+                            tmpN_object, proxyType
+                        ),
+                        Et.Block(
+                            new[] { tmpN_ijsproxy, tmpN_guard },
+                            Et.Assign(
+                                tmpN_ijsproxy, Et.Convert(tmpN_object, proxyType)
+                            ),
+                            Et.IfThen(
+                                Et.NotEqual(
+                                    tmpN_ijsproxy, proxyField
+                                ),
+                                Et.Block(
+                                    Et.Assign(
+                                        proxyField, tmpN_ijsproxy
+                                    ),
+                                    Et.Assign(
+                                        funcField,
+                                        Et.Convert(
+                                            Et.Call(
+                                                proxyField,
+                                                typeof(IjsProxy).GetMethod("CreateN"),
+                                                Et.Constant(funcType, typeof(Type)),
+                                                AstUtils.NewArrayHelper(typeof(object), args),
+                                                tmpN_guard
+                                            ),
+                                            funcType
+                                        )
+                                    ),
+                                    Et.Assign(
+                                        guardField,
+                                        Et.Convert(tmpN_guard, guardType)
+                                    )
+                                )
                             ),
                             Et.Condition(
                                 Et.Invoke(
-                                    Et.Field(tmp2, "_func" + Args.Count + "Guard"),
-                                    Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func))).ToArray()
+                                    guardField, args
                                 ),
                                 Et.Invoke(
-                                    Et.Field(tmp2, "_func" + Args.Count),
+                                    funcField,
                                     ArrayUtils.Insert(
-                                        Et.Field(tmp2, "Closure"),
-                                        Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func))).ToArray()
+                                        Et.Field(
+                                            tmpN_ijsproxy, "Closure"
+                                        ),
+                                        args
                                     )
                                 ),
-                                Et.Call(
-                                    tmp2,
-                                    typeof(IjsProxy).GetMethod("Call" + Args.Count),
-                                    Args.Select(x => IjsEtGenUtils.Box(x.EtGen(func)))
+                                IjsEtGenUtils.Box(
+                                    Et.Call(
+                                        typeof(Console).GetMethod("WriteLine", new[] { typeof(string) }),
+                                        IjsEtGenUtils.Constant("FAIL")
+                                    )
                                 )
                             )
-                        )
-                    ),
-                    Et.Dynamic(
-                        new IjsInvokeBinder(new CallInfo(Args.Count)),
-                        IjsTypes.Dynamic,
-                        ArrayUtils.Insert(
-                            Target.EtGen(func),
-                            Args.Select(x => x.EtGen(func)).ToArray()
+                        ),
+
+                        // inter-op function call
+                        Et.Dynamic(
+                            new IjsInvokeBinder(new CallInfo(Args.Count)),
+                            IjsTypes.Dynamic,
+                            ArrayUtils.Insert(Target.EtGen(func), args)
                         )
                     )
-                )
-            );
+                );
+            }
         }
 
         public override void Print(StringBuilder writer, int indent = 0)

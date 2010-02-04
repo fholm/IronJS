@@ -145,6 +145,7 @@
     <Compile Include="Compiler\Variables\IjsParameter.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
+    <Compile Include="Runtime2\Proxies\IjsCall1.cs" />
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
     <Compile Include="Runtime2\Js\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />

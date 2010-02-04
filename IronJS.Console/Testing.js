@@ -23,13 +23,9 @@ return a;
 
 y();
 */
-var x2 = function (_) { };
-
-x2(1);
 
 var y = function (a) {
-
-    var x = x2;
+    var x = function (_) { };
 
     for (var i = 0; i < a; ++i) {
         x(i);
@@ -43,15 +39,8 @@ var y = function (a) {
         x(i);
         x(i);
     }
-
-
-    return i;
 };
 
-y(2);
-
-var i = 0;
-
 time(function () {
-    i = y(1000000)
+    y(1000000);
 });

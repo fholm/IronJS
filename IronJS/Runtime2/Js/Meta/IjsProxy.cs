@@ -2,8 +2,8 @@
 using System.Linq;
 using Microsoft.Scripting.Utils;
 using Binding = System.Dynamic.BindingRestrictions;
-using MetaObj = System.Dynamic.DynamicMetaObject;
 using Et = System.Linq.Expressions.Expression;
+using MetaObj = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime2.Js.Meta
 {
@@ -19,8 +19,9 @@ namespace IronJS.Runtime2.Js.Meta
         {
             var lambda = Self.Node.Compile(
                 Self.ClosureType,
-                args.Select(x => x.LimitType).ToArray()
-            );
+                args.Select(x => x.LimitType).ToArray(),
+                args.Select(x => x.Expression.Type).ToArray()
+            ).Item2;
 
             return new MetaObj(
                 Et.Invoke(

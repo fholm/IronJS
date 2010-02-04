@@ -2,6 +2,10 @@ IronJS.Tests/bin/**/*
 
 IronJS.Tests/obj/**/*
 
+IronJS.Tools/bin/**/*
+
+IronJS.Tools/obj/**/*
+
 IronJS/bin/**/*
 IronJS/obj/**/*
 IronJS.Console/bin/**/*

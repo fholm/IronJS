@@ -73,6 +73,11 @@ Global
 		{FC885AA2-AB5A-404A-9059-98D00A8E6C0C}.Release|x86.ActiveCfg = Release|x86
 		{FC885AA2-AB5A-404A-9059-98D00A8E6C0C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = IronJS.Console\IronJS.Console.csproj
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection

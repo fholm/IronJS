@@ -3,7 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Compiler.Ast;
+using IronJS.Extensions;
 using Microsoft.Scripting.Utils;
+using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Runtime2.Js
 {
@@ -27,25 +29,24 @@ namespace IronJS.Runtime2.Js
         public object Invoke0()
         {
             if (Func0 == null)
-                Func0 = (Func<IjsClosure, object>)(Node.Compile(ClosureType, Type.EmptyTypes, Type.EmptyTypes).Item2);
+            {
+                Delegate guard;
+
+                Func0 = (Func<IjsClosure, object>) Node.Compile(
+                    Et.GetDelegateType(new[] { ClosureType, typeof(object) }),
+                    Type.EmptyTypes, 
+                    out guard
+                );
+            }
             
             return Func0(Closure);
         }
 
         public Delegate CreateN(Type delegateType, object[] values, out Delegate guard)
         {
-            var types = delegateType.GetGenericArguments();
-
-            var pair = Node.Compile(
-                types[0],
-                values.Select(x => x.GetType()).ToArray(),
-                ArrayUtils.RemoveLast(
-                    ArrayUtils.RemoveFirst(types)
-                )
+            return Node.Compile(
+                delegateType, values.GetTypes(), out guard
             );
-
-            guard = pair.Item1;
-            return pair.Item2;
         }
 
         #region IDynamicMetaObjectProvider Members

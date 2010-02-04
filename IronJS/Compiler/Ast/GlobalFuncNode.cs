@@ -15,7 +15,8 @@ namespace IronJS.Compiler.Ast
 
         public Func<IjsClosure, object> Compile()
         {
-            return (Func<IjsClosure, object>) Compile(typeof(IjsClosure), Type.EmptyTypes, Type.EmptyTypes).Item2;
+            Delegate guard;
+            return (Func<IjsClosure, object>) Compile<Func<IjsClosure, object>>(Type.EmptyTypes, out guard);
         }
 
         public GlobalFuncNode Analyze()

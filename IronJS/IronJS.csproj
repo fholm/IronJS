@@ -143,6 +143,7 @@
     <Compile Include="Compiler\Variables\IjsIVar.cs" />
     <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
     <Compile Include="Compiler\Variables\IjsParameter.cs" />
+    <Compile Include="Extensions\ArrayExt.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
     <Compile Include="Runtime2\Proxies\IjsCall1.cs" />

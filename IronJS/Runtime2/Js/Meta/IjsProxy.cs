@@ -1,9 +1,11 @@
 ﻿using System.Dynamic;
 using System.Linq;
 using Microsoft.Scripting.Utils;
+using IronJS.Extensions;
 using Binding = System.Dynamic.BindingRestrictions;
 using Et = System.Linq.Expressions.Expression;
 using MetaObj = System.Dynamic.DynamicMetaObject;
+using System;
 
 namespace IronJS.Runtime2.Js.Meta
 {
@@ -17,11 +19,16 @@ namespace IronJS.Runtime2.Js.Meta
 
         public override MetaObj BindInvoke(InvokeBinder binder, MetaObj[] args)
         {
+            Delegate guard;
+
             var lambda = Self.Node.Compile(
-                Self.ClosureType,
-                args.Select(x => x.LimitType).ToArray(),
-                args.Select(x => x.Expression.Type).ToArray()
-            ).Item2;
+                Et.GetDelegateType(
+                    args.GetLimitTypes()
+                        .AddFirstAndLast(Self.ClosureType, typeof(object))
+                ),
+                args.GetExpressionTypes(),
+                out guard
+            );
 
             return new MetaObj(
                 Et.Invoke(

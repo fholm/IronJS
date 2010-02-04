@@ -21,6 +21,7 @@ using Antlr.Runtime.Tree;
 using IronJS.Compiler.Utils;
 using IronJS.Extensions;
 using IronJS.Runtime2.Js;
+using ArrayUtils = Microsoft.Scripting.Utils.ArrayUtils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
 using Et = System.Linq.Expressions.Expression;
 
@@ -120,8 +121,19 @@ namespace IronJS.Compiler.Ast
             return CallProxies[type] = Et.Parameter(type, "__callproxy__");
         }
 
-        public Tuple<Delegate, Delegate> Compile(Type closureType, Type[] paramTypes, Type[] inTypes)
+        public Delegate Compile<T>(Type[] inTypes, out Delegate guard)
         {
+            return Compile(typeof(T), inTypes, out guard);
+        }
+
+        public Delegate Compile(Type delegateType, Type[] inTypes, out Delegate guard)
+        {
+            var types = delegateType.GetGenericArguments();
+            var closureType = types[0];
+            var paramTypes = ArrayUtils.RemoveLast(
+                    ArrayUtils.RemoveFirst(types)
+                );
+
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
@@ -194,12 +206,12 @@ namespace IronJS.Compiler.Ast
                 )
             );
 
-            var guard = Et.Lambda(
+            guard = Et.Lambda(
                 BuildTypeCheck(oddPairs.ToArray()),
                 paramPairs.Select(x => x.Item1)
-            );
+            ).Compile();
 
-            return Tuple.Create(guard.Compile(), lambda.Compile());
+            return lambda.Compile();
         }
 
         Et BuildTypeCheck(Tuple<ParameterExpression, ParameterExpression>[] oddPairs)

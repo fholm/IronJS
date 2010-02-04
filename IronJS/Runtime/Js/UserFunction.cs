@@ -1,5 +1,5 @@
 ﻿using IronJS.Runtime.Js.Descriptors;
-using Et = System.Linq.Expressions.Expression;
+
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js

@@ -1,9 +1,16 @@
 ﻿using System.Dynamic;
-using Et = System.Linq.Expressions.Expression;
-using MetaObj = System.Dynamic.DynamicMetaObject;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Runtime2.Js.Meta
 {
+    using Et = Expression;
+    using MetaObj = DynamicMetaObject;
+
     public class IjsMeta<T> : MetaObj where T : class
     {
         protected T Self { get { return (T)Value; } }

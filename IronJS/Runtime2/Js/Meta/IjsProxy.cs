@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Dynamic;
-using System.Linq;
-using IronJS.Extensions;
+
+using IronJS.Tools;
 using Microsoft.Scripting.Utils;
-using Binding = System.Dynamic.BindingRestrictions;
-using Et = System.Linq.Expressions.Expression;
-using MetaObj = System.Dynamic.DynamicMetaObject;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
+
 
 namespace IronJS.Runtime2.Js.Meta
 {
+    using Et = Expression;
+    using Binding = BindingRestrictions;
+    using MetaObj = DynamicMetaObject;
+
     public class IjsProxy : IjsMeta<Js.IjsFunc>
     {
         public IjsProxy(Et parameter, Js.IjsFunc ijsProxy)

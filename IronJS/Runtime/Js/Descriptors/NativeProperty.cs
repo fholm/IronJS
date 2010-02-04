@@ -4,9 +4,9 @@
     {
         protected object Value;
 
-        public NativeProperty(IObj owner, object value = null, 
-                              bool isReadOnly = false, bool isDeletable = true, 
-                              bool isEnumerable = true)
+        public NativeProperty(IObj owner, object value, 
+                              bool isReadOnly, bool isDeletable, 
+                              bool isEnumerable)
         {
             Owner = owner;
             Value = value ?? Undefined.Instance;

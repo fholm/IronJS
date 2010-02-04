@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
-using IronJS.Runtime.Utils;
-using Microsoft.Scripting.Utils;
-using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+    using System.Text;
+
     public class NewNode : Node
     {
         public INode Target { get; protected set; }
@@ -51,7 +52,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
             var indentStr2 = new String(' ', (indent + 1) * 2);

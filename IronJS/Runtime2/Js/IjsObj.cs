@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections;
-using IronJS.Runtime.Js;
 
 namespace IronJS.Runtime2.Js
 {

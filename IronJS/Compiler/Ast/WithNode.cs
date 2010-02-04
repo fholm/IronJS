@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
 using IronJS.Runtime2.Js;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
+
 
 namespace IronJS.Compiler.Ast
 {
@@ -27,7 +26,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
 

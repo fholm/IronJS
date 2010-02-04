@@ -1,15 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using System.Reflection;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
-using Meta = System.Dynamic.DynamicMetaObject;
-using Restrict = System.Dynamic.BindingRestrictions;
+using System.Dynamic;
 using Microsoft.Scripting.Utils;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Runtime.Utils
 {
+    using Meta = DynamicMetaObject;
+    using Restrict = BindingRestrictions;
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+
     static class EtUtils
     {
         internal static Et Box(Et expr)

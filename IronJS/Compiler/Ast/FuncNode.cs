@@ -14,19 +14,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Utils;
-using IronJS.Extensions;
+
+using IronJS.Compiler.Tools;
+using IronJS.Tools;
 using IronJS.Runtime2.Js;
+using Microsoft.Scripting.Ast;
 using ArrayUtils = Microsoft.Scripting.Utils.ArrayUtils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
+using Microsoft.Scripting.Utils;
+using System;
+using System.Collections.Generic;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Binders;
+using IronJS.Runtime2.Js;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Utils;
+    using Et = Expression;
+    using ParamTuple = Tuple<ParameterExpression, ParameterExpression>;
+
     public class FuncNode : Node
     {
         public FuncNode Parent { get; protected set; }
@@ -125,7 +138,7 @@ namespace IronJS.Compiler.Ast
         {
             var types = typeof(TFunc).GetGenericArguments();
             var closureType = types[0];
-            var paramTypes = types.DropFirstAndLast();
+            var paramTypes = ArrayTools.DropFirstAndLast(types);
 
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
@@ -133,43 +146,60 @@ namespace IronJS.Compiler.Ast
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
             var n = 0;
-            var paramPairs = paramTypes.Select(x => {
-                    ParameterExpression parm;
-                    ParameterExpression real;
+            var paramPairs = ArrayTools.Map(paramTypes, x => {
+                ParameterExpression parm;
+                ParameterExpression real;
 
-                    if (paramTypes[n] == inTypes[n])
-                    {
-                        parm = real = Et.Parameter(paramTypes[n], "__arg" + n + "__");
-                    }
-                    else
-                    {
-                        parm = Et.Parameter(inTypes[n], "__arg" + n + "__");
-                        real = Et.Parameter(paramTypes[n], "__arg " + n + "__");
-                    }
-
-                    ++n;
-
-                    return Tuple.Create(parm, real);
+                if (paramTypes[n] == inTypes[n])
+                {
+                    parm = real = Et.Parameter(paramTypes[n], "__arg" + n + "__");
                 }
-            ).ToArray();
+                else
+                {
+                    parm = Et.Parameter(inTypes[n], "__arg" + n + "__");
+                    real = Et.Parameter(paramTypes[n], "__arg " + n + "__");
+                }
+
+                ++n;
+
+                return Tuple.Create(parm, real);
+            }
+            );
 
             n = 0;
             foreach (var param in Parameters)
                 param.Value.Expr = paramPairs[n++].Item2;
 
-            var oddPairs = paramPairs.Where(x => x.Item1 != x.Item2);
-            var body = Body.EtGen(this);
+            ParamTuple[] oddPairs = 
+            ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
+                return x.Item1 != x.Item2;
+            });
 
-            var lambda = Et.Lambda<TFunc>(
+            Et body = Body.EtGen(this);
+
+            Expression<TFunc> lambda = Et.Lambda<TFunc>(
                 Et.Block(
-                    oddPairs.Select(x => x.Item2).Concat(
-                        CallProxies.Select(x => x.Value)
+                    ArrayTools.Concat(
+                        ArrayTools.Map(
+                            oddPairs,
+                            delegate(ParamTuple x) {
+                                return x.Item2;
+                            }
+                        ),
+                        DictionaryTools.GetValues(CallProxies)
                     ),
-                    CallProxies.ToBlock(x => Et.Assign(x.Value, IjsEtGenUtils.New(x.Key))),
-                    oddPairs.ToBlock(x => Et.Assign(x.Item2, Et.Convert(x.Item1, x.Item2.Type))),
+
+                    AstTools.BuildBlock(CallProxies, delegate(KeyValuePair<Type, ParameterExpression> pair){
+                        return Et.Assign(pair.Value, IjsEtGenUtils.New(pair.Key));
+                    }),
+
+                    AstTools.BuildBlock(oddPairs, delegate(ParamTuple pair) {
+                        return Et.Assign(pair.Item2, Et.Convert(pair.Item1, pair.Item2.Type));
+                    }),
+
                     Et.Block(
                         (Locals != Globals) // HACK
-                            ? Locals.Select(x => x.Value.Expr) 
+                            ? IEnumerableTools.Map(Locals, delegate(KeyValuePair<string, IjsLocalVar> pair){ return pair.Value.Expr; })
                             : new ParameterExpression[] {},
                         body,
                         Et.Label(
@@ -179,19 +209,23 @@ namespace IronJS.Compiler.Ast
                     )
                 ),
                 new[] { ClosureParm }.Concat(
-                    paramPairs.Select(x => x.Item1)
+                    IEnumerableTools.Map(paramPairs, delegate(ParamTuple pair) {
+                        return pair.Item1;
+                    })
                 )
             );
 
             guard = Et.Lambda<TGuard>(
-                BuildTypeCheck(oddPairs.ToArray()),
-                paramPairs.Select(x => x.Item1)
+                BuildTypeCheck(oddPairs),
+                IEnumerableTools.Map(paramPairs, delegate(ParamTuple pair){
+                    return pair.Item1;
+                })
             ).Compile();
 
             return lambda.Compile();
         }
 
-        Et BuildTypeCheck(Tuple<ParameterExpression, ParameterExpression>[] oddPairs)
+        Et BuildTypeCheck(ParamTuple[] oddPairs)
         {
             if (oddPairs.Length == 0)
                 return IjsEtGenUtils.Constant(true);
@@ -301,7 +335,7 @@ namespace IronJS.Compiler.Ast
             return parent.CreateLocal(name);
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
             var indentStr2 = new String(' ', (indent + 1) * 2);
@@ -310,7 +344,7 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr 
                 + "(" + NodeType 
                 + (" " + Name + " ").TrimEnd() 
-                + " " + ReturnType.ShortName()
+                + " " + TypeTools.ShortName(ReturnType)
             );
 
             if (ClosesOver.Count > 0)
@@ -318,7 +352,7 @@ namespace IronJS.Compiler.Ast
                 writer.AppendLine(indentStr2 + "(Closure");
 
                 foreach (var kvp in ClosesOver)
-                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + kvp.Value.ExprType.ShortName() + ")");
+                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + TypeTools.ShortName(ExprType) + ")");
 
                 writer.AppendLine(indentStr2 + ")");
             }
@@ -328,7 +362,7 @@ namespace IronJS.Compiler.Ast
                 writer.AppendLine(indentStr2 + "(Parameters");
 
                 foreach (var kvp in Parameters)
-                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + kvp.Value.ExprType.ShortName() + ")");
+                    writer.AppendLine(indentStr3 + "(" + kvp.Key + " " + TypeTools.ShortName(ExprType) + ")");
 
                 writer.AppendLine(indentStr2 + ")");
             }

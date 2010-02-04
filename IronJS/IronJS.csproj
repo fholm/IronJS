@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="2.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1D95D363-4B2A-49F1-9614-7CA00129AAA5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IronJS</RootNamespace>
     <AssemblyName>IronJS</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -36,7 +36,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Debug\IronJS.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -64,14 +64,15 @@
     <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-    <DebugType>pdbonly</DebugType>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>CLR2</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisLogFile>bin\Debug\IronJS.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -103,14 +104,24 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\Libs\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Dynamic, Version=0.9.6.20, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting, Version=0.9.6.20, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Core">
+      <HintPath>..\Libs\Microsoft.Scripting.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Debugging">
+      <HintPath>..\Libs\Microsoft.Scripting.Debugging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.ExtensionAttribute">
+      <HintPath>..\Libs\Microsoft.Scripting.ExtensionAttribute.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\Ast\ArrayNode.cs" />
@@ -139,11 +150,10 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
-    <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
-    <Compile Include="Compiler\Variables\IjsIVar.cs" />
-    <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
-    <Compile Include="Compiler\Variables\IjsParameter.cs" />
-    <Compile Include="Extensions\ArrayExt.cs" />
+    <Compile Include="Compiler\Tools\Variables\IjsCloseableVar.cs" />
+    <Compile Include="Compiler\Tools\Variables\IjsIVar.cs" />
+    <Compile Include="Compiler\Tools\Variables\IjsClosureVar.cs" />
+    <Compile Include="Compiler\Tools\Variables\IjsParameter.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
     <Compile Include="Runtime2\Proxies\IjsCall1.cs" />
@@ -170,450 +180,39 @@
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
-    <Compile Include="Compiler\Variables\IjsLocalVar.cs" />
-    <Compile Include="Compiler\Utils\IjsEtGenUtils.cs" />
-    <Compile Include="Extensions\DoubleExt.cs" />
-    <Compile Include="Extensions\HashSetExt.cs" />
-    <Compile Include="Extensions\IEnumerableExt.cs" />
-    <Compile Include="Extensions\TypeExt.cs" />
+    <Compile Include="Compiler\Tools\Variables\IjsLocalVar.cs" />
+    <Compile Include="Compiler\Tools\IjsEtGenUtils.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.cs" />
     <Compile Include="Error.cs" />
-    <Compile Include="Extensions\ITreeExt.cs" />
+    <Compile Include="Runtime\Utils\HelperFunctions.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tools\ITreeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime2\Js\Meta\IjsMeta.cs" />
     <Compile Include="Runtime2\Js\Meta\IjsProxy.cs" />
-    <Compile Include="Runtime\Binders\JsBinaryOpBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsConvertBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsCreateInstanceBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsDeleteIndexBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsDeleteMemberBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsGetIndexBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsGetMemberBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsInvokeBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsInvokeMemberBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsSetIndexBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsSetMemberBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Binders\JsUnaryOpBinder.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_concat.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_join.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_pop.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_push.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_reverse.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_shift.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_slice.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_sort.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_splice.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_toLocaleString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Array_prototype_unshift.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Boolean_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Boolean_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Boolean_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Boolean_prototype_valueOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Function_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Function_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Function_prototype_apply.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Function_prototype_call.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Function_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_decodeURI.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_decodeURIComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_encodeURI.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_encodeURIComponent.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_eval.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_isFinite.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_isNaN.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_parseFloat.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Global_obj_parseInt.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_abs.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_acos.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_asin.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_atan.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_atan2.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_ceil.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_cos.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_exp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_floor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_log.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_max.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_min.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_pow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_random.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_round.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_sin.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_sqrt.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Math_obj_tan.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_toExponential.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_toFixed.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_toLocaleString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_toPrecision.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Number_prototype_valueOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_hasOwnProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_isPrototypeOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_propertyIsEnumerable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_toLocaleString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\Object_prototype_valueOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\RegExp_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\RegExp_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\RegExp_prototype_exec.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\RegExp_prototype_test.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\RegExp_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_ctor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_ctor_fromCharCode.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_charAt.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_charCodeAt.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_concat.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_indexOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_lastIndexof.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_localeCompare.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_match.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_replace.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_search.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_slice.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_split.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_substring.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_toLocaleLowerCase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_toLocaleUpperCase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_toLowerCase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_toString.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_toUpperCase.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Builtins\String_prototype_valueOf.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Context.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Delegates.cs" />
     <Compile Include="Runtime2\Js\IjsObj.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Js\Descriptors\LengthProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Descriptors\NativeProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Descriptors\UserProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Errors\PropertyIsReadOnly.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\FunctionTable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IConstructor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IConstructorMeta.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IDescriptor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IFunction.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IFunctionMeta.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IObj.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IObjMeta.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\IValueObj.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\JsArray.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Lambda.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\NativeConstructor.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\NativeFunction.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Obj.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Operators.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Property.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\RegExp.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Scope.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\Undefined.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\UserFunction.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Js\ValueObj.cs">
+    <Compile Include="Runtime2\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\RuntimeError.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\Utils\BinderUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Utils\EtUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Utils\HelperFunctions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Utils\RestrictUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Runtime\Utils\TypeConverter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Utils\Benchmark.cs" />
+    <Compile Include="Tools\HashSetTools.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Runtime\InterOp\" />
+    <ProjectReference Include="..\IronJS.Tools\IronJS.Tools.csproj">
+      <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
+      <Name>IronJS.Tools</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Libs\Microsoft.Dynamic\Microsoft.Dynamic.Build.csproj">
-      <Project>{D4AE44AD-07B9-41DC-BB3B-1FDCDE3C987D}</Project>
-      <Name>Microsoft.Dynamic.Build</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Libs\Microsoft.Scripting\Microsoft.Scripting.Build.csproj">
-      <Project>{EB66B766-6354-4208-A3D4-AACBDCB5C3B3}</Project>
-      <Name>Microsoft.Scripting.Build</Name>
-    </ProjectReference>
+    <Folder Include="Runtime\Js\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

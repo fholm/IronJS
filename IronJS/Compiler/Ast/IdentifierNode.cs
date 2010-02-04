@@ -1,13 +1,21 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Utils;
-using IronJS.Extensions;
+
+using IronJS.Compiler.Tools;
+using IronJS.Tools;
 using IronJS.Runtime2.Js;
-using Et = System.Linq.Expressions.Expression;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = Expression;
+
     public class IdentifierNode : Node
     {
         public bool IsDefinition { get; set; }
@@ -73,12 +81,12 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(
-                indentStr + "(" + (IsDefinition ? ">" : "") + Name + " " + ExprType.ShortName() + ")"
+                indentStr + "(" + (IsDefinition ? ">" : "") + Name + " " + TypeTools.ShortName(ExprType) + ")"
             );
         }
     }

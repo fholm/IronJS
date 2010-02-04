@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text;
 using Antlr.Runtime.Tree;
-using Et = System.Linq.Expressions.Expression;
-using IronJS.Runtime2.Js;
-using IronJS.Compiler.Utils;
+using Microsoft.Scripting.Ast;
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = Expression;
+    using IronJS.Compiler.Tools;
+
     public class AssignNode : Node, INode
     {
         public INode Target { get; protected set; }
@@ -37,7 +38,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
 

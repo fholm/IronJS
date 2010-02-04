@@ -1,7 +1,7 @@
 ﻿using System;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
-using Et = System.Linq.Expressions.Expression;
+
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Builtins

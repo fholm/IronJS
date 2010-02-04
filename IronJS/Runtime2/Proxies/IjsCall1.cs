@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Runtime2.Js.Proxies
 {

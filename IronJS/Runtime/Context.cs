@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Dynamic;
-using System.Linq.Expressions;
+
 using System.Reflection;
 using IronJS.Runtime.Binders;
 using IronJS.Runtime.Builtins;
 using IronJS.Runtime.Js;
-using Et = System.Linq.Expressions.Expression;
+
 using System.Collections.Generic;
 using IronJS.Runtime.Js.Descriptors;
+using Microsoft.Scripting.Ast;
 
 namespace IronJS.Runtime
 {
@@ -123,7 +124,7 @@ namespace IronJS.Runtime
 
             var protoObj = ObjectConstructor.Construct();
             protoObj.Set("constructor", 
-                new NativeProperty(protoObj, obj, isReadOnly: false, isDeletable: true, isEnumerable: false)
+                new NativeProperty(protoObj, obj, false, true, false)
             );
 
             obj.Context = this;

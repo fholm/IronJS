@@ -1,4 +1,4 @@
-﻿using Et = System.Linq.Expressions.Expression;
+﻿
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Js
@@ -18,7 +18,12 @@ namespace IronJS.Runtime.Js
             Prototype = prototype;
         }
 
-        public bool HasArgs(object[] args, int length = 1)
+        public bool HasArgs(object[] args)
+        {
+            return HasArgs(args, 1);
+        }
+
+        public bool HasArgs(object[] args, int length)
         {
             return args != null && args.Length >= length;
         }

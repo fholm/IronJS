@@ -4,7 +4,7 @@
     {
         protected object Value;
 
-        public UserProperty(IObj owner, object value = null)
+        public UserProperty(IObj owner, object value)
         {
             Owner = owner;
             Value = value ?? Undefined.Instance;

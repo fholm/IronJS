@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Linq;
+
 using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Compiler.Ast;
-using IronJS.Extensions;
+using IronJS.Tools;
 using Microsoft.Scripting.Utils;
-using Et = System.Linq.Expressions.Expression;
+using Microsoft.Scripting.Ast;
+
 
 namespace IronJS.Runtime2.Js
 {
@@ -43,13 +44,13 @@ namespace IronJS.Runtime2.Js
         public TFunc CreateN<TFunc, TGuard>(object[] values, out TGuard guard)
         {
             return Node.Compile<TFunc, TGuard>(
-                values.GetTypes(), out guard
+                ArrayTools.GetTypes(values), out guard
             );
         }
 
         #region IDynamicMetaObjectProvider Members
 
-        public DynamicMetaObject GetMetaObject(System.Linq.Expressions.Expression parameter)
+        public DynamicMetaObject GetMetaObject(Expression parameter)
         {
             return new Meta.IjsProxy(parameter, this);
         }

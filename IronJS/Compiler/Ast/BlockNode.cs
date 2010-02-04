@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Antlr.Runtime.Tree;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+    using System.Text;
+
     public class BlockNode : Node
     {
         public List<INode> Nodes { get; protected set; }
@@ -31,17 +35,14 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode etgen)
+        public override Et EtGen(FuncNode func)
         {
-            if (IsEmpty)
-                return AstUtils.Empty();
-
-            return Et.Block(
-                Nodes.Select(x => x.EtGen(etgen))
-            );
+            return AstTools.BuildBlock(Nodes, delegate(INode node){
+                return node.EtGen(func);
+            });
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
 

@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime;
-using Et = System.Linq.Expressions.Expression;
+using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+
     public class ArrayNode : Node, INode
     {
         public List<INode> Values { get; protected set; }

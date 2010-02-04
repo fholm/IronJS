@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Compiler.Utils;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
-using IronJS.Runtime2.Js.Proxies;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+    using System.Text;
+    using IronJS.Runtime2.Js.Proxies;
+    using IronJS.Compiler.Tools;
+    using System.Dynamic;
+
     public class CallNode : Node
     {
         public INode Target { get; protected set; }
@@ -86,9 +88,16 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                var args = Args.Select(x => x.EtGen(func)).ToArray();
+                var args = IEnumerableTools.Map(Args, delegate(INode node) {
+                    return node.EtGen(func);
+                });
 
-                var callType = typeof(IjsCall1<>).MakeGenericType(args.Select(x => x.Type).ToArray());
+                var callType = typeof(IjsCall1<>).MakeGenericType(
+                        IEnumerableTools.Map(args, delegate(Expression expr) {
+                            return expr.Type;
+                        })
+                    );
+
                 var proxyType = typeof(IjsFunc);
                 var funcType = callType.GetField("Func").FieldType;
                 var guardType = callType.GetField("Guard").FieldType;
@@ -206,7 +215,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override void Print(StringBuilder writer, int indent = 0)
+        public override void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
 

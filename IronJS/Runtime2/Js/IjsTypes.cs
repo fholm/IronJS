@@ -1,11 +1,18 @@
 ﻿using System;
-using IronJS.Runtime.Js;
-using IronJS.Runtime2.Js;
 
 namespace IronJS.Runtime2.Js
 {
     public static class IjsTypes
     {
+        internal sealed class SelfClass
+        {
+            private SelfClass()
+            {
+
+            }
+        }
+
+        public static readonly Type Self = typeof(SelfClass);
         public static readonly Type Boolean = typeof(bool);
         public static readonly Type Integer = typeof(long);
         public static readonly Type Double = typeof(double);

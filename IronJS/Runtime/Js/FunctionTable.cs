@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using System.Text;
 using System.Reflection;
 
 namespace IronJS.Runtime.Js
 {
-    using Et = System.Linq.Expressions.Expression;
+    
     using EtParam = System.Linq.Expressions.ParameterExpression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
 

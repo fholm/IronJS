@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Text;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
 using IronJS.Runtime.Utils;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Testing
 {
@@ -14,6 +14,11 @@ namespace IronJS.Testing
             var astGenerator = new Compiler.IjsAstGenerator();
             var astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
             var globalScope = GlobalFuncNode.Create(astNodes).Analyze();
+
+
+            Console.WriteLine("Welcome to IronJS 0.0.2, Runtime: " + System.Environment.Version);
+            Console.Write(">>> ");
+            Console.ReadLine();
 
             Console.WriteLine(globalScope.Print());
 

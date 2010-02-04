@@ -4,7 +4,7 @@ using System.Reflection;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;
 using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
+
 using Meta = System.Dynamic.DynamicMetaObject;
 using Restrict = System.Dynamic.BindingRestrictions;
 

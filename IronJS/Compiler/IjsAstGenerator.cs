@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq.Expressions;
 using System.Text;
-using Antlr.Runtime;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Binders;
+using IronJS.Runtime2.Js;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
+using Antlr.Runtime;
+using System.Globalization;
 using IronJS.Compiler.Ast;
-using IronJS.Extensions;
-using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
-using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
 
 namespace IronJS.Compiler
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+    using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
+    using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
+
     public class IjsAstGenerator
     {
         public List<INode> Build(string fileName, Encoding encoding)

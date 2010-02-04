@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Microsoft.Scripting.Utils;

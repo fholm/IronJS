@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Text;
-using Et = System.Linq.Expressions.Expression;
+
 using IronJS.Runtime2.Js;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
+    using Et = Expression;
+
     public interface INode
     {
         int Line { get; }
@@ -18,6 +26,6 @@ namespace IronJS.Compiler.Ast
         bool IdenticalTypes(params INode[] nodes);
 
         string Print();
-        void Print(StringBuilder writer, int indent = 0);
+        void Print(StringBuilder writer, int indent);
     }
 }

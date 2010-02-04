@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Dynamic;
-using IronJS.Runtime.Js;
 using IronJS.Runtime.Utils;
 using Meta = System.Dynamic.DynamicMetaObject;
 using Restrict = System.Dynamic.BindingRestrictions;

@@ -1,6 +1,6 @@
 ﻿namespace IronJS.Runtime.Js
 {
-    public interface IDescriptor<out T> where T : IObj
+    public interface IDescriptor<T> where T : IObj
     {
         T Owner { get; }
 

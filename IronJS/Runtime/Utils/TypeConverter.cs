@@ -2,15 +2,14 @@
 using System.Globalization;
 using System.Reflection;
 using IronJS.Extensions;
-using IronJS.Runtime.Js;
-using Et = System.Linq.Expressions.Expression;
+
 using Meta = System.Dynamic.DynamicMetaObject;
 
 namespace IronJS.Runtime.Utils
 {
     static public class JsTypeConverter
     {
-        static internal object ToPrimitive(object obj, ValueHint hint = ValueHint.None)
+        static internal object ToPrimitive(object obj, ValueHint hint)
         {
             if (obj == null
                || obj is Js.Undefined

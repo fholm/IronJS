@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Extensions;
+using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
-using Et = System.Linq.Expressions.Expression;
+using IronJS.Tools;
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+
     public enum NodeType
     {
         Assign, Identifier, Double, Null,
@@ -70,7 +74,7 @@ namespace IronJS.Compiler.Ast
             foreach (var node in nodes)
                 set.Add(node.ExprType);
 
-            return set.EvalType();
+            return HashSetTools.EvalType(set);
         }
 
         public void IfIdentifierAssignedFrom(INode node, INode value)
@@ -103,12 +107,12 @@ namespace IronJS.Compiler.Ast
         {
             var writer = new StringBuilder();
 
-            Print(writer);
+            Print(writer, 0);
 
             return writer.ToString();
         }
 
-        public virtual void Print(StringBuilder writer, int indent = 0)
+        public virtual void Print(StringBuilder writer, int indent)
         {
             var indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + NodeType + ")");

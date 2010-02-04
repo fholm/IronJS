@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast
 {

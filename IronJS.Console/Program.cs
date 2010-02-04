@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
@@ -11,16 +11,27 @@ namespace IronJS.Testing
 {
     class Program
     {
-        public static void Main(string[] args)
+        public static void Main (string[] args)
+        
+
+        
+
         {
-            IjsAstGenerator astGenerator = new IjsAstGenerator();
-            List<INode> astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
-            GlobalFuncNode globalScope = GlobalFuncNode.Create(astNodes).Analyze();
+        	IjsAstGenerator astGenerator = new IjsAstGenerator ();
+            
+
+        	
+
+        	List<INode> astNodes = astGenerator.Build ("Testing.js", Encoding.UTF8);
+        	GlobalFuncNode globalScope = GlobalFuncNode.Create (astNodes).Analyze ();
+
+ 
+			Console.WriteLine ("Welcome to IronJS 0.0.2, Runtime: " + System.Environment.Version);
+        	Console.Write (">>> ");
+        	Console.ReadLine ();
 
 
-            Console.WriteLine("Welcome to IronJS 0.0.2, Runtime: " + System.Environment.Version);
-            Console.Write(">>> ");
-            Console.ReadLine();
+        	return;
 
             Console.WriteLine(globalScope.Print());
 

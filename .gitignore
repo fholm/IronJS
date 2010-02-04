@@ -18,6 +18,7 @@ ggt
 
 *.sou
 *.user
+*.pidb
 IronJS/Libs/Microsoft.Dynamic/bin/**/*
 IronJS/Libs/Microsoft.Dynamic/obj/**/*
 IronJS/Libs/Microsoft.Scripting/bin/**/*

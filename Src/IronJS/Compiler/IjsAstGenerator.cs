@@ -428,9 +428,9 @@ namespace IronJS.Compiler
             INode def = (INode)(new NullNode(node));
             List<Tuple<INode, INode>> cases = new List<Tuple<INode, INode>>();
 
-            for (int i = 1; i < node.ChildCount; ++i)
+            for (int childIndex = 1; childIndex < node.ChildCount; ++childIndex)
             {
-                ITree child = ITreeTools.GetChildSafe(node, i);
+                ITree child = ITreeTools.GetChildSafe(node, childIndex);
 
                 if (child.Type == EcmaParser.DEFAULT)
                 {
@@ -440,9 +440,9 @@ namespace IronJS.Compiler
                 {
                     List<INode> caseBlock = new List<INode>();
 
-                    for(int j = 1; j < child.ChildCount; ++j)
+                    for(int subChildIndex = 1; subChildIndex < child.ChildCount; ++subChildIndex)
                         caseBlock.Add(
-                            Build(ITreeTools.GetChildSafe(child, j))
+                            Build(ITreeTools.GetChildSafe(child, subChildIndex))
                         );
 
                     cases.Add(
@@ -813,9 +813,9 @@ namespace IronJS.Compiler
         {
             List<INode> nodes = new List<INode>();
 
-            for (int i = 0; i < node.ChildCount; ++i)
+            for (int childIndex = 0; childIndex < node.ChildCount; ++childIndex)
             {
-                INode assignNode = Build(ITreeTools.GetChildSafe(node, i));
+                INode assignNode = Build(ITreeTools.GetChildSafe(node, childIndex));
 
                 if (assignNode is AssignNode)
                 {

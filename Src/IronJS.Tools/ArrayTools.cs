@@ -20,9 +20,9 @@ namespace IronJS.Tools
         {
             List<T> list = new List<T>();
 
-            for (int i = 0; i < that.Length; ++i)
-                if (predicate(that[i]))
-                    list.Add(that[i]);
+            for (int index = 0; index < that.Length; ++index)
+                if (predicate(that[index]))
+                    list.Add(that[index]);
 
             return list.ToArray();
         }
@@ -47,8 +47,8 @@ namespace IronJS.Tools
         {
             O[] array = new O[that.Length];
 
-            for (int i = 0; i < that.Length; ++i)
-                array[i] = func(that[i]);
+            for (int index = 0; index < that.Length; ++index)
+                array[index] = func(that[index]);
 
             return array;
         }
@@ -75,8 +75,8 @@ namespace IronJS.Tools
         {
             Type[] array = new Type[that.Length];
 
-            for (int i = 0; i < that.Length; ++i)
-                array[i] = that[i].GetType();
+            for (int index = 0; index < that.Length; ++index)
+                array[index] = that[index].GetType();
 
             return array;
         }
@@ -102,8 +102,8 @@ namespace IronJS.Tools
         {
             Type[] array = new Type[that.Length];
 
-            for (int i = 0; i < that.Length; ++i)
-                array[i] = that[i].LimitType;
+            for (int index = 0; index < that.Length; ++index)
+                array[index] = that[index].LimitType;
 
             return array;
         }
@@ -112,8 +112,8 @@ namespace IronJS.Tools
         {
             Type[] array = new Type[that.Length];
 
-            for (int i = 0; i < that.Length; ++i)
-                array[i] = that[i].Expression.Type;
+            for (int index = 0; index < that.Length; ++index)
+                array[index] = that[index].Expression.Type;
 
             return array;
         }

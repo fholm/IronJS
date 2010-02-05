@@ -22,9 +22,9 @@ namespace IronJS.Tools
 
         public static void EachChild(ITree that, Action<ITree> act)
         {
-            for(int i = 0; i < that.ChildCount; ++i)
+            for(int childIndex = 0; childIndex < that.ChildCount; ++childIndex)
             {
-                act(that.GetChild(i));
+                act(that.GetChild(childIndex));
             }
         }
 
@@ -32,9 +32,9 @@ namespace IronJS.Tools
         {
             List<T> list = new List<T>();
 
-            for (int i = 0; i < that.ChildCount; ++i)
+            for (int childIndex = 0; childIndex < that.ChildCount; ++childIndex)
             {
-                list.Add(act(that.GetChild(i)));
+                list.Add(act(that.GetChild(childIndex)));
             }
 
             return list;

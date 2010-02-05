@@ -10,9 +10,9 @@ namespace IronJS.Tools
         {
             TKey[] array = new TKey[that.Count];
 
-            int n = 0;
+            int index = 0;
             foreach (KeyValuePair<TKey, TValue> kvp in that)
-                array[n++] = kvp.Key;
+                array[index++] = kvp.Key;
 
             return array;
         }
@@ -21,9 +21,9 @@ namespace IronJS.Tools
         {
             TValue[] array = new TValue[that.Count];
 
-            int n = 0;
+            int index = 0;
             foreach (KeyValuePair<TKey, TValue> kvp in that)
-                array[n++] = kvp.Value;
+                array[index++] = kvp.Value;
 
             return array;
         }

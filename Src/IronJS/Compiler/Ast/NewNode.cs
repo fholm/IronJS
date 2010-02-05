@@ -48,8 +48,8 @@ namespace IronJS.Compiler.Ast
                 IjsTypes.Object
             );
 
-            for (int i = 0; i < Args.Count; ++i)
-                Args[i] = Args[i].Analyze(astopt);
+            for (int index = 0; index < Args.Count; ++index)
+                Args[index] = Args[index].Analyze(astopt);
 
             return this;
         }

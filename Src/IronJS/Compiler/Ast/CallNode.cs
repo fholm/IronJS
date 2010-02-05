@@ -39,8 +39,8 @@ namespace IronJS.Compiler.Ast
         {
             Target = Target.Analyze(astopt);
 
-            for (int i = 0; i < Args.Count; ++i)
-                Args[i] = Args[i].Analyze(astopt);
+            for (int index = 0; index < Args.Count; ++index)
+                Args[index] = Args[index].Analyze(astopt);
 
             IfIdentiferUsedAs(Target, IjsTypes.Object);
 

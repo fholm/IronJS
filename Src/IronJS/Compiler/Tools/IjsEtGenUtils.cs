@@ -33,20 +33,6 @@ namespace IronJS.Compiler.Tools
             return Et.Convert(value, IjsTypes.Dynamic);
         }
 
-        internal static Et New(Type type, params Et[] parameters)
-        {
-			ConstructorInfo ctor = type.GetConstructor(
-				ArrayTools.Map(parameters, delegate(Et expr) {
-					return expr.Type;
-				})
-			);
-
-            if (ctor == null)
-                throw new NotImplementedException("No constructor taking these parameters exist");
-
-            return AstUtils.SimpleNewHelper(ctor, parameters);
-        }
-
         internal static Et Assign(FuncNode func, Ast.INode Target, Et value)
         {
             IdentifierNode idNode = Target as IdentifierNode;

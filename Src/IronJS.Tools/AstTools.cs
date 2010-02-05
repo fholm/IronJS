@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Dynamic;
 using System.Collections.Generic;
+using System.Reflection;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -25,5 +26,21 @@ namespace IronJS.Tools
 
             return Et.Block(expressions);
         }
+
+		public static Et New(Type type, params Et[] parameters)
+		{
+			ConstructorInfo ctor = type.GetConstructor(
+				ArrayTools.Map(parameters, delegate(Et expr)
+			{
+				return expr.Type;
+			})
+			);
+
+			if (ctor == null)
+				throw new NotImplementedException("No constructor taking these parameters exist");
+
+			return AstUtils.SimpleNewHelper(ctor, parameters);
+		}
+
     }
 }

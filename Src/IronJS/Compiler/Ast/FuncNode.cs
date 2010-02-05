@@ -107,10 +107,10 @@ namespace IronJS.Compiler.Ast
 
         public override Expression EtGen(FuncNode func)
         {
-            return IjsEtGenUtils.New(
+            return AstTools.New(
                 typeof(IjsFunc),
                 Et.Constant(this),
-                IjsEtGenUtils.New(
+				AstTools.New(
                     typeof(IjsClosure),
                     func.GlobalField
                 )
@@ -138,30 +138,30 @@ namespace IronJS.Compiler.Ast
             ReturnLabel = Et.Label(ReturnType, "__return__");
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
-            int paramNum = 0;
 			ParamTuple[] paramPairs = new ParamTuple[paramTypes.Length];
 
-			for (paramNum = 0; paramNum < paramTypes.Length; ++paramNum)
+			int paramIndex;
+			for (paramIndex = 0; paramIndex < paramTypes.Length; ++paramIndex)
 			{
 				ParameterExpression parm;
 				ParameterExpression real;
 
-				if (paramTypes[paramNum] == inTypes[paramNum])
+				if (paramTypes[paramIndex] == inTypes[paramIndex])
 				{
-					parm = real = Et.Parameter(paramTypes[paramNum], "__arg" + paramNum + "__");
+					parm = real = Et.Parameter(paramTypes[paramIndex], "__arg" + paramIndex + "__");
 				}
 				else
 				{
-					parm = Et.Parameter(inTypes[paramNum], "__arg" + paramNum + "__");
-					real = Et.Parameter(paramTypes[paramNum], "__arg " + paramNum + "__");
+					parm = Et.Parameter(inTypes[paramIndex], "__arg" + paramIndex + "__");
+					real = Et.Parameter(paramTypes[paramIndex], "__arg " + paramIndex + "__");
 				}
 
-				paramPairs[paramNum] = Tuple.Create(parm, real);
+				paramPairs[paramIndex] = Tuple.Create(parm, real);
 			}
 
-            paramNum = 0;
+            paramIndex = 0;
             foreach (KeyValuePair<string, IjsParameter> param in Parameters)
-                param.Value.Expr = paramPairs[paramNum++].Item2;
+                param.Value.Expr = paramPairs[paramIndex++].Item2;
 
             ParamTuple[] oddPairs = 
             ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
@@ -183,7 +183,7 @@ namespace IronJS.Compiler.Ast
                     ),
 
                     AstTools.BuildBlock(CallProxies, delegate(KeyValuePair<Type, ParameterExpression> pair){
-                        return Et.Assign(pair.Value, IjsEtGenUtils.New(pair.Key));
+						return Et.Assign(pair.Value, AstTools.New(pair.Key));
                     }),
 
                     AstTools.BuildBlock(oddPairs, delegate(ParamTuple pair) {

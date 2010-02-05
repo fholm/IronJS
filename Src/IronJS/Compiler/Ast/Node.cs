@@ -61,8 +61,8 @@ namespace IronJS.Compiler.Ast
             {
                 Type type = nodes[0].ExprType;
 
-                for (int i = 0; i < nodes.Length; ++i)
-                    if (nodes[i].ExprType != type)
+                for (int index = 0; index < nodes.Length; ++index)
+                    if (nodes[index].ExprType != type)
                         return false;
 
                 return true;

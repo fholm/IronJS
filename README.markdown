@@ -10,11 +10,7 @@ IronJS is released under the [Microsoft Public License (Ms-PL)](http://www.micro
 
 ## Twitter
 
-<<<<<<< HEAD
 If you want to be kept up-to-date with the pushes to IronJS you can [follow it on twitter](http://twitter.com/ironjs).
-=======
-If you want to follow the commits of IronJS you can [follow it on twitter](http://twitter.com/ironjs).
->>>>>>> master
 
 ## Requirements
 

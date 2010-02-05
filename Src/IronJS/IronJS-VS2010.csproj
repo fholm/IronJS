@@ -35,7 +35,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\..\Build\CLR4\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -53,7 +53,7 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
+    <OutputPath>..\..\Build\CLR4\Release\</OutputPath>
     <Optimize>true</Optimize>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisLogFile>bin\Release\IronJS.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
@@ -169,12 +169,6 @@
     <Compile Include="Tools\HashSetTools.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronJS.Tools\IronJS.Tools.csproj">
-      <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
-      <Name>IronJS.Tools</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Runtime\Js\" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +187,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronJS.Tools\IronJS.Tools-VS2010.csproj">
+      <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
+      <Name>IronJS.Tools-VS2010</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -2,13 +2,19 @@
 using System.Dynamic;
 using IronJS.Compiler.Tools;
 using IronJS.Runtime2.Js;
+
+#if CLR2
 using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Runtime2.Binders
 {
     using Et = Expression;
     using MetaObj = DynamicMetaObject;
-    using Microsoft.Scripting.Utils;
+
     public class IjsInvokeBinder : InvokeBinder
     {
         public IjsInvokeBinder(CallInfo callInfo)

@@ -1,12 +1,15 @@
 ﻿using System;
-
 using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Compiler.Ast;
 using IronJS.Tools;
-using Microsoft.Scripting.Utils;
-using Microsoft.Scripting.Ast;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Runtime2.Js
 {

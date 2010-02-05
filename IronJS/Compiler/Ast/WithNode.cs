@@ -2,11 +2,17 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
-using AstUtils = Microsoft.Scripting.Ast.Utils;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+
     public class WithNode : Node
     {
         public INode Target { get; protected set; }

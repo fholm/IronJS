@@ -2,6 +2,12 @@
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
+
 namespace IronJS.Runtime.Utils
 {
     public static class HelperFunctions

@@ -6,16 +6,22 @@ using IronJS.Runtime2.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
+using System.Text;
+using IronJS.Runtime2.Js.Proxies;
+using IronJS.Compiler.Tools;
+using System.Dynamic;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
     using EtParam = ParameterExpression;
-    using System.Text;
-    using IronJS.Runtime2.Js.Proxies;
-    using IronJS.Compiler.Tools;
-    using System.Dynamic;
 
     public class CallNode : Node
     {

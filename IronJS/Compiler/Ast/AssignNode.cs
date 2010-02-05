@@ -2,11 +2,17 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using Microsoft.Scripting.Ast;
+using IronJS.Compiler.Tools;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
-    using IronJS.Compiler.Tools;
 
     public class AssignNode : Node, INode
     {

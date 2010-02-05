@@ -13,30 +13,24 @@
  * ***************************************************************************/
 
 using Antlr.Runtime.Tree;
-using Antlr.Runtime.Tree;
 using IronJS.Compiler.Tools;
-using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
-using IronJS.Tools;
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 using Microsoft.Scripting.Utils;
 using System;
-using System;
-using System.Collections.Generic;
 using System.Collections.Generic;
 using System.Text;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 
 namespace IronJS.Compiler.Ast
 {
-    using ArrayUtils = Microsoft.Scripting.Utils.ArrayUtils;
-	using AstUtils = Utils;
-	using Et = Expression;
+    using Et = Expression;
 	using ParamTuple = Tuple<ParameterExpression, ParameterExpression>;
 
     public class FuncNode : Node

@@ -11,28 +11,12 @@ namespace IronJS.Testing
 {
     class Program
     {
-        public static void Main (string[] args)
-        
-
-        
-
+        public static void Main(string[] args)
         {
-        	IjsAstGenerator astGenerator = new IjsAstGenerator ();
-            
+            IjsAstGenerator astGenerator = new IjsAstGenerator();
 
-        	
-
-        	List<INode> astNodes = astGenerator.Build ("Testing.js", Encoding.UTF8);
-        	GlobalFuncNode globalScope = GlobalFuncNode.Create (astNodes).Analyze ();
-
- 
-			Console.WriteLine ("Welcome to IronJS 0.0.2, Runtime: " + System.Environment.Version);
-        	Console.Write (">>> ");
-        	Console.ReadLine ();
-
-
-        	return;
-
+            List<INode> astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
+            GlobalFuncNode globalScope = GlobalFuncNode.Create(astNodes).Analyze();
             Console.WriteLine(globalScope.Print());
 
             Func<IjsClosure, object> compiled = globalScope.Compile();

@@ -3,15 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS", "IronJS\IronJS.csproj", "{1D95D363-4B2A-49F1-9614-7CA00129AAA5}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DLR", "DLR", "{230111F3-4266-46B8-A45A-CBB7B0FF3E7C}"
-	ProjectSection(SolutionItems) = preProject
-		Libs\Microsoft.Dynamic.dll = Libs\Microsoft.Dynamic.dll
-		Libs\Microsoft.Scripting.Core.dll = Libs\Microsoft.Scripting.Core.dll
-		Libs\Microsoft.Scripting.Debugging.dll = Libs\Microsoft.Scripting.Debugging.dll
-		Libs\Microsoft.Scripting.dll = Libs\Microsoft.Scripting.dll
-		Libs\Microsoft.Scripting.ExtensionAttribute.dll = Libs\Microsoft.Scripting.ExtensionAttribute.dll
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Tools", "IronJS.Tools\IronJS.Tools.csproj", "{F091B7A6-F1B6-4987-8555-6665BF281ACE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Console", "IronJS.Console\IronJS.Console.csproj", "{FC885AA2-AB5A-404A-9059-98D00A8E6C0C}"

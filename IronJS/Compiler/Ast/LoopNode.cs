@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js;
-using IronJS.Tools;
+﻿using Antlr.Runtime.Tree;
+
+#if CLR2
 using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
-
 
     abstract public class LoopNode : Node, ILabelableNode
     {

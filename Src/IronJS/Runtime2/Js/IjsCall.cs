@@ -1,4 +1,7 @@
-﻿/*
+﻿
+
+
+/*
  *GENERATED CODE
  **/
 using System;
@@ -11,7 +14,7 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Runtime2.Js.Proxies
-{	
+{	  
 
 		public class IjsCall<T0>
 		{

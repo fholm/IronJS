@@ -152,6 +152,8 @@ namespace IronJS.Compiler.Ast
             foreach (KeyValuePair<string, IjsParameter> param in Parameters)
                 param.Value.Expr = paramPairs[paramIndex++].Item2;
 
+            //ParamTuple[] paramPairs = SetParameterTypes(paramTypes, inTypes);
+
             ParamTuple[] oddPairs = ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
                 return x.Item1 != x.Item2;
             });
@@ -197,6 +199,9 @@ namespace IronJS.Compiler.Ast
                     return pair.Item1;
                 })
             ).Compile();
+
+            // Reset all parameters to Undefined
+            ResetParameterTypes();
 
             return lambda.Compile();
         }
@@ -368,6 +373,12 @@ namespace IronJS.Compiler.Ast
 					return pair.Value.Expr;
 				}
 			);
-		}
+        }
+
+        void ResetParameterTypes()
+        {
+            foreach (KeyValuePair<string, IjsParameter> param in Parameters)
+                param.Value.Expr = null;
+        }
     }
 }

@@ -9,7 +9,7 @@ using IronJS.Tools;
 using IronJS.Runtime2.Js.Proxies;
 
 #if CLR2
-using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Ast;  
 #else
 using System.Linq.Expressions;
 #endif

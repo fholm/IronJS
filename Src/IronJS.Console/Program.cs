@@ -5,14 +5,23 @@ using IronJS.Compiler;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime.Utils;
 using IronJS.Runtime2.Js;
-using Microsoft.Scripting.Utils;
+using IronJS.Tools;
+using System.Runtime.CompilerServices;
 
-namespace IronJS.Testing
-{
-    class Program
-    {
-        public static void Main(string[] args)
-        {
+#if CLR2
+using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
+#else
+using System.Linq.Expressions;
+#endif
+
+namespace IronJS.Testing {
+    using AstUtils = Microsoft.Scripting.Ast.Utils;
+    using Et = Expression;
+    using EtParam = ParameterExpression;
+
+    class Program {
+        public static void Main(string[] args) {
             IjsAstGenerator astGenerator = new IjsAstGenerator();
 
             List<INode> astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);

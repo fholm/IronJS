@@ -130,38 +130,38 @@ namespace IronJS.Compiler.Ast
         public TFunc Compile<TFunc, TGuard>(Type[] inTypes, out TGuard guard)
         {
             Type[] types = typeof(TFunc).GetGenericArguments();
-            Type closureType = types[0];
-            Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+			Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+			Type closureType = types[0];
 
             ClosureParm = Et.Parameter(closureType, "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
-            int n = 0;
-            ParamTuple[] paramPairs = ArrayTools.Map(paramTypes, x => {
-                ParameterExpression parm;
-                ParameterExpression real;
+            int paramNum = 0;
+			ParamTuple[] paramPairs = new ParamTuple[paramTypes.Length];
 
-                if (paramTypes[n] == inTypes[n])
-                {
-                    parm = real = Et.Parameter(paramTypes[n], "__arg" + n + "__");
-                }
-                else
-                {
-                    parm = Et.Parameter(inTypes[n], "__arg" + n + "__");
-                    real = Et.Parameter(paramTypes[n], "__arg " + n + "__");
-                }
+			for (int paramNum = 0; paramNum < paramTypes.Length; ++paramNum)
+			{
+				ParameterExpression parm;
+				ParameterExpression real;
 
-                ++n;
+				if (paramTypes[paramNum] == inTypes[paramNum])
+				{
+					parm = real = Et.Parameter(paramTypes[paramNum], "__arg" + paramNum + "__");
+				}
+				else
+				{
+					parm = Et.Parameter(inTypes[paramNum], "__arg" + paramNum + "__");
+					real = Et.Parameter(paramTypes[paramNum], "__arg " + paramNum + "__");
+				}
 
-                return Tuple.Create(parm, real);
-            }
-            );
+				paramPairs[paramNum] = Tuple.Create(parm, real);
+			}
 
-            n = 0;
+            paramNum = 0;
             foreach (KeyValuePair<string, IjsParameter> param in Parameters)
-                param.Value.Expr = paramPairs[n++].Item2;
+                param.Value.Expr = paramPairs[paramNum++].Item2;
 
             ParamTuple[] oddPairs = 
             ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {

@@ -35,9 +35,11 @@ namespace IronJS.Compiler.Tools
 
         internal static Et New(Type type, params Et[] parameters)
         {
-            ConstructorInfo ctor = type.GetConstructor(
-                ArrayTools.Map(parameters, x => x.Type)
-            );
+			ConstructorInfo ctor = type.GetConstructor(
+				ArrayTools.Map(parameters, delegate(Et expr) {
+					return expr.Type;
+				});
+			);
 
             if (ctor == null)
                 throw new NotImplementedException("No constructor taking these parameters exist");

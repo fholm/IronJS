@@ -2,6 +2,7 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Tools;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -38,7 +39,7 @@ namespace IronJS.Compiler.Ast
         {
             return Et.Return(
                 func.ReturnLabel,
-                IjsEtGenUtils.Box(
+				AstTools.Box(
                     Value.EtGen(func)
                 ),
                 func.ReturnType

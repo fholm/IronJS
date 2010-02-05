@@ -2,6 +2,7 @@
 using System.Dynamic;
 using IronJS.Compiler.Tools;
 using IronJS.Runtime2.Js;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -28,7 +29,7 @@ namespace IronJS.Runtime2.Binders
             if (target.Value is Action<IjsFunc>)
             {
                 return new MetaObj(
-                    IjsEtGenUtils.Box(
+					AstTools.Box(
                         Et.Invoke(
                            Et.Convert(target.Expression, typeof(Action<IjsFunc>)),
                            Et.Convert(args[0].Expression, typeof(IjsFunc))
@@ -44,7 +45,7 @@ namespace IronJS.Runtime2.Binders
             if (target.Value is Func<object, object>)
             {
                 return new MetaObj(
-                    IjsEtGenUtils.Box(
+					AstTools.Box(
                         Et.Invoke(
                            Et.Convert(target.Expression, typeof(Func<object, object>)),
                            Et.Convert(args[0].Expression, typeof(object))

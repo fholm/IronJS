@@ -1,7 +1,7 @@
 using System;
+using System.Dynamic;
 using System.Collections.Generic;
 using Microsoft.Scripting.Utils;
-using MetaObj = System.Dynamic.DynamicMetaObject;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -11,8 +11,9 @@ using System.Linq.Expressions;
 
 namespace IronJS.Tools
 {
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using Et = Expression;
+	using MetaObj = DynamicMetaObject;
 
     public static class ArrayTools
     {

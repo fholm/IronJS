@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.Scripting.Utils;
 
 namespace IronJS.Tools

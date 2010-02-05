@@ -1,11 +1,11 @@
 using System;
-using System.Text;
-using IronJS.Compiler.Ast;
-using IronJS.Runtime2.Js;
-using IronJS.Runtime.Utils;
-using Microsoft.Scripting.Utils;
-using IronJS.Compiler;
 using System.Collections.Generic;
+using System.Text;
+using IronJS.Compiler;
+using IronJS.Compiler.Ast;
+using IronJS.Runtime.Utils;
+using IronJS.Runtime2.Js;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Testing
 {

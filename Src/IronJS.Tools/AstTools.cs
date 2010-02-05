@@ -17,6 +17,17 @@ namespace IronJS.Tools
 
     public static class AstTools
     {
+		public static Et Box(Et value)
+		{
+			if (value.Type == typeof(void))
+				return Et.Block(
+					value,
+					Et.Default(typeof(object))
+				);
+
+			return Et.Convert(value, typeof(object));
+		}
+
         public static Et BuildBlock<T>(IEnumerable<T> collection, Func<T, Et> filter)
         {
             Et[] expressions = IEnumerableTools.Map(collection, filter);

@@ -81,14 +81,15 @@ namespace IronJS.Compiler.Tools
 
 			// All other types we need
 			Type funcType = typeof(IjsFunc);
-			Type delgateType = proxyType.GetField("Delegate").FieldType;
+			Type delegateType = proxyType.GetField("Delegate").FieldType;
 			Type guardType = proxyType.GetField("Guard").FieldType;
 
 			// All expressions we need through out the building
-			Et callExpr = func.GetCallProxy(callType);
+			Et callExpr = func.GetCallProxy(proxyType);
 			Et funcField = Et.Field(callExpr, "Func");
 			Et delegateField = Et.Field(callExpr, "Delegate");
 			Et guardField = Et.Field(callExpr, "Guard");
+			Et closureField = Et.Field(funcField, "Closure");
 
 			// Temporary variables
 			EtParam tmpObject = Et.Variable(IjsTypes.Dynamic, "__tmpObject__");
@@ -96,23 +97,45 @@ namespace IronJS.Compiler.Tools
 			EtParam tmpGuard = Et.Variable(guardType, "__tmpGuard__");
 
 			return Et.Block(
-				new[] { tmpObject },
-				Et.Assign(
-					tmpObject,
-					target.Compile(func)
-				),
-				Et.Assign(
-					tmpFunc,
-					Et.ConvertChecked(tmpObject, funcType)
-				),
+				new[] { tmpObject, tmpFunc },
+				Et.Assign(tmpObject, target.Compile(func)),
+				Et.Assign(tmpFunc, Et.TypeAs(tmpObject, funcType)),
 				Et.Condition(
 					Et.NotEqual(tmpFunc, Et.Default(funcType)),
 					Et.Block(
-						Et.IfThen(
+						new[] { tmpGuard },
+						Et.Condition(
 							Et.Equal(tmpFunc, funcField),
 							Et.Condition(
 								Et.Invoke(guardField, args),
-								Et.Invoke(delegateField, args),
+								Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args)),
+								Et.Block(
+									Et.Assign(
+										delegateField,
+										Et.Call(
+											funcField,
+											typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
+											AstUtils.NewArrayHelper(typeof(object), args),
+											tmpGuard
+										)
+									),
+									Et.Assign(guardField, tmpGuard),
+									Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args))
+								)
+							),
+							Et.Block(
+								Et.Assign(funcField, tmpFunc),
+								Et.Assign(
+									delegateField,
+									Et.Call(
+										funcField,
+										typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
+										AstUtils.NewArrayHelper(typeof(object), args),
+										tmpGuard
+									)
+								),
+								Et.Assign(guardField, tmpGuard),
+								Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args))
 							)
 						)
 					),

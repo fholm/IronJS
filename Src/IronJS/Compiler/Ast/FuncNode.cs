@@ -187,7 +187,10 @@ namespace IronJS.Compiler.Ast
                     }),
 
                     AstTools.BuildBlock(oddPairs, delegate(ParamTuple pair) {
-                        return Et.Assign(pair.Item2, Et.Convert(pair.Item1, pair.Item2.Type));
+                        if (pair.Item2.Type.IsValueType)
+                            return Et.Assign(pair.Item2, Et.Unbox(pair.Item1, pair.Item2.Type));
+
+                         return Et.Assign(pair.Item2, Et.Convert(pair.Item1, pair.Item2.Type));
                     }),
 
                     Et.Block(

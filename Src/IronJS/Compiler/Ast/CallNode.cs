@@ -49,137 +49,14 @@ namespace IronJS.Compiler.Ast
 
         public override Et Compile(FuncNode func)
         {
-            if (Args.Count == 0)
-            {
+			if (Args.Count == 0)
+			{
 				return IjsAstTools.Call0(func, Target);
-            }
-            else
-            {
-                Et[] args = IEnumerableTools.Map(Args, delegate(INode node) {
-                    return node.Compile(func);
-                });
-
-                Type callType = typeof(IjsCall1<>).MakeGenericType(
-                        IEnumerableTools.Map(args, delegate(Expression expr) {
-                            return expr.Type;
-                        })
-                    );
-
-                Type proxyType = typeof(IjsFunc);
-                Type funcType = callType.GetField("Func").FieldType;
-                Type guardType = callType.GetField("Guard").FieldType;
-                
-                Et callExpr = func.GetCallProxy(callType);
-                Et proxyField = Et.Field(callExpr, "Proxy");
-                Et funcField = Et.Field(callExpr, "Func");
-                Et guardField = Et.Field(callExpr, "Guard");
-
-                EtParam tmpN_object = Et.Variable(typeof(object), "__tmpN_object__");
-                EtParam tmpN_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmpN_ijsproxy__");
-                EtParam tmpN_guard = Et.Variable(guardType, "__tmpN_guard__");
-
-
-                /*
-                 * //variables
-                 * $object   // the object we're invoking
-                 * $proxy    // our ironjs specific dispatcher proxy
-                 * $func     // our ironjs function (this contains the AST for the function + already compiled and cached versions)
-                 * 
-                 * // logic
-                 * if($object is IjsFunc) {
-                 * 
-                 *    $func = (IjsFunc)$object;
-                 *    
-                 *    if($proxy.func == $func) {
-                 *          if($proxy.guard(arg1, arg2, ...)) {
-                 *              $proxy.cache(arg1, arg2, ...);
-                 *          } else {
-                 *              $proxy.guard = func.compileGuard(arg1, arg2, ...);
-                 *              $proxy.cache = func.compile(arg1, arg2, ...);
-                 *              $proxy.cache(arg1, arg2, ...);
-                 *          }
-                 *    } else {
-                 *          $proxy.func = $func;
-                 *          $proxy.guard = func.compileGuard(arg1, arg2, ...);
-                 *          $proxy.cache = func.compile(arg1, arg2, ...);
-                 *          $proxy.cache(arg1, arg2, ...);
-                 *    }
-                 * 
-                 * } else {
-                 *      // DynamicExpression
-                 * }
-                 * 
-                 * */
-
-                return Et.Block(
-                    new[] { tmpN_object },
-                    Et.Assign(
-                        tmpN_object, Target.Compile(func)
-                    ),
-                    Et.Condition(
-                        Et.TypeIs(
-                            tmpN_object, proxyType
-                        ),
-                        Et.Block(
-                            new[] { tmpN_ijsproxy, tmpN_guard },
-                            Et.Assign(
-                                tmpN_ijsproxy, Et.Convert(tmpN_object, proxyType)
-                            ),
-                            Et.IfThen(
-                                Et.NotEqual(
-                                    tmpN_ijsproxy, proxyField
-                                ),
-                                Et.Block(
-                                    Et.Assign(
-                                        proxyField, tmpN_ijsproxy
-                                    ),
-                                    Et.Assign(
-                                        funcField,
-                                        Et.Call(
-                                            proxyField,
-                                            typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(
-                                                funcType, guardType
-                                            ),
-                                            AstUtils.NewArrayHelper(typeof(object), args),
-                                            tmpN_guard
-                                        )
-                                    ),
-                                    Et.Assign(
-                                        guardField, tmpN_guard
-                                    )
-                                )
-                            ),
-                            Et.Condition(
-                                Et.Invoke(
-                                    guardField, args
-                                ),
-                                Et.Invoke(
-                                    funcField,
-                                    ArrayUtils.Insert(
-                                        Et.Field(
-                                            tmpN_ijsproxy, "Closure"
-                                        ),
-                                        args
-                                    )
-                                ),
-								AstTools.Box(
-                                    Et.Call(
-                                        typeof(Console).GetMethod("WriteLine", new[] { typeof(string) }),
-										AstTools.Constant("FAIL")
-                                    )
-                                )
-                            )
-                        ),
-
-                        // inter-op function call
-                        Et.Dynamic(
-                            new IjsInvokeBinder(new CallInfo(Args.Count)),
-                            IjsTypes.Dynamic,
-                            ArrayUtils.Insert(Target.Compile(func), args)
-                        )
-                    )
-                );
-            }
+			}
+			else
+			{
+				return IjsAstTools.CallN(func, Target, Args);
+			}
         }
 
         public override void Print(StringBuilder writer, int indent)

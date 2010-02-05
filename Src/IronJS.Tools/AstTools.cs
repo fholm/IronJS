@@ -58,5 +58,17 @@ namespace IronJS.Tools
 			return AstUtils.SimpleNewHelper(ctor, parameters);
 		}
 
-    }
+
+		public static Et Debug(string msg)
+		{
+#if DEBUG
+			return Et.Call(
+				typeof(Console).GetMethod("WriteLine", new[] { typeof(string) }),
+				Constant(msg)
+			);
+#else		
+			return AstUtils.Empty();
+#endif
+		}
+	}
 }

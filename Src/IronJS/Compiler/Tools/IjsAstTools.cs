@@ -28,6 +28,21 @@ namespace IronJS.Compiler.Tools
 			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
 			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
 
+			/*
+			 * This constructs a block that looks like this
+			 * 
+			 * var tmpFunc = tmpObject as IjsFunc;
+			 * if(tmp != null) {
+			 *		if(tmpFunc.Func0 == null) {
+			 *			tmpFunc.Compile0();
+			 *		}
+			 *		
+			 *		tmpFunc.Func0(tmpFunc.Closure);
+			 * } else {
+			 *		// Dynamic Expression
+			 * }
+			 * */
+
 			return Et.Block(
 				new[] { tmpObject, tmpFunc },
 				Et.Assign(tmpObject, target.Compile(func)),
@@ -98,13 +113,13 @@ namespace IronJS.Compiler.Tools
 			 *			} else {
 			 *				proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
 			 *				proxy.Guard = tmpGuard;
-			 *				proxy.Delegate(arg1, arg2, ...);
+			 *				proxy.Delegate(tmpFunc.Closure, arg1, arg2, ...);
 			 *			}
 			 *		} else {
 			 *			proxy.Func = tmpFunc;
 			 *			proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
 			 *			proxy.Guard = tmpGuard;
-			 *			proxy.Delegate(arg1, arg2, ...);
+			 *			proxy.Delegate(tmpFunc.Closure, arg1, arg2, ...);
 			 *		}
 			 * } else {
 			 *		// Dynamic Expression

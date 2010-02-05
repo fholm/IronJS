@@ -21,7 +21,7 @@ namespace IronJS.Compiler.Tools
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using EtParam = ParameterExpression;
 
-    internal static class IjsAstTools
+    internal static partial class IjsAstTools
     {
 		internal static Et Call0(FuncNode func, INode target)
 		{
@@ -76,11 +76,7 @@ namespace IronJS.Compiler.Tools
 			});
 
 			// Construct the proxy type
-			Type proxyType = typeof(IjsCall1<>).MakeGenericType(
-				IEnumerableTools.Map(args, delegate(Expression expr) {
-					return expr.Type;
-				})
-			);
+			Type proxyType = BuildCallProxyType(args);
 
 			// All other types we need
 			Type funcType = typeof(IjsFunc);

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -106,6 +106,11 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
+    <Compile Include="Compiler\Tools\IjsAstTools1.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IjsAstTools.tt</DependentUpon>
+    </Compile>
     <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
     <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
     <Compile Include="Compiler\Variables\IjsIVar.cs" />
@@ -113,9 +118,12 @@
     <Compile Include="Compiler\Variables\IjsParameter.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
-    <Compile Include="Runtime2\Proxies\IjsCall1.cs" />
+    <Compile Include="Runtime2\Js\IjsCall.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IjsCall.tt</DependentUpon>
+    </Compile>
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
-    <Compile Include="Runtime2\Js\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
     <Compile Include="Runtime2\Js\IjsFunc.cs" />
@@ -149,7 +157,6 @@
     <Compile Include="Tools\ITreeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime2\Js\Meta\IjsMeta.cs" />
-    <Compile Include="Runtime2\Js\Meta\IjsProxy.cs" />
     <Compile Include="Runtime2\Js\IjsObj.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -166,6 +173,19 @@
       <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
       <Name>IronJS.Tools</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Compiler\Tools\IjsAstTools.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IjsAstTools1.cs</LastGenOutput>
+    </None>
+    <None Include="Runtime2\Js\IjsCall.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IjsCall.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Runtime\Js\" />

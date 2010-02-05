@@ -1,22 +1,8 @@
 ﻿
-var y = function (a) {
-
-    var x = function(_) { };
-
-    for (var i = 0; i < a; ++i) {
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-    }
+var y = function() {
+    var z = 2;
+    var x = function() { return z; };
+    return x;
 };
 
-time(function () {
-    y(1000000);
-});
+y();

@@ -1,0 +1,34 @@
+﻿<#@ template language="C#v3.5" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ include file="T4Toolbox.tt" #>
+/*
+ *GENERATED CODE
+ **/
+using System;
+using Microsoft.Scripting.Utils;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
+
+namespace IronJS.Runtime2.Js.Proxies
+{	
+<#  for(int i = 1; i < 16; ++i) {
+	
+		System.Text.StringBuilder sb = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb.Append(", T"+j); } 
+		string str = sb.ToString().Substring(2);
+		
+		#>
+		public class IjsCall<<#= str #>>
+		{
+			public IjsFunc Func;
+			public Func<<#= str #>, bool> Guard;
+			public Func<IjsClosure, <#= str #>, object> Delegate;
+
+			public Type GuardType { get { return Guard.GetType(); } }
+			public Type DelegateType { get { return Delegate.GetType(); } }
+		} 
+		<# } #>
+}

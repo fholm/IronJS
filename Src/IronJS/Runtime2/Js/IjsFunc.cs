@@ -13,7 +13,7 @@ using System.Linq.Expressions;
 
 namespace IronJS.Runtime2.Js
 {
-    public class IjsFunc : IjsObj, IDynamicMetaObjectProvider
+    public class IjsFunc : IjsObj
     {
         public readonly FuncNode Node;
         public readonly IjsClosure Closure;
@@ -50,14 +50,5 @@ namespace IronJS.Runtime2.Js
                 ArrayTools.GetTypes(values), out guard
             );	
         }
-
-        #region IDynamicMetaObjectProvider Members
-
-        public DynamicMetaObject GetMetaObject(Expression parameter)
-        {
-            return new Meta.IjsProxy(parameter, this);
-        }
-
-        #endregion
     }
 }

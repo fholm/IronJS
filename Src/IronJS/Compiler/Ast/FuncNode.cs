@@ -11,22 +11,20 @@
  * You must not remove this notice, or any other, from this software.
  *
  * ***************************************************************************/
-
+using System;
+using System.Collections.Generic;
+using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Tools;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Utils;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
 #else
 using System.Linq.Expressions;
 #endif
-
 
 namespace IronJS.Compiler.Ast
 {
@@ -99,6 +97,7 @@ namespace IronJS.Compiler.Ast
                 {
                     Name.Analyze(func);
                     (Name.VarInfo as IjsLocalVar).AssignedFrom.Add(this);
+					//HACK: We just assume that VarInfo is a IjsLocalVar here
                 }
             }
 
@@ -112,30 +111,16 @@ namespace IronJS.Compiler.Ast
             return AstTools.New(
                 typeof(IjsFunc),
                 Et.Constant(this),
-				AstTools.New(
-                    typeof(IjsClosure),
-                    func.GlobalField
-                )
+				AstTools.New(typeof(IjsClosure), func.GlobalField)
             );
-        }
-
-        public ParameterExpression GetCallProxy(Type type)
-        {
-            ParameterExpression expr;
-
-            if (CallProxies.TryGetValue(type, out expr))
-                return expr;
-
-            return CallProxies[type] = Et.Parameter(type, "__callproxy__");
         }
 
         public TFunc Compile<TFunc, TGuard>(Type[] inTypes, out TGuard guard)
         {
             Type[] types = typeof(TFunc).GetGenericArguments();
 			Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
-			Type closureType = types[0];
 
-            ClosureParm = Et.Parameter(closureType, "__closure__");
+            ClosureParm = Et.Parameter(typeof(IjsClosure), "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
             CallProxies = new Dictionary<Type, ParameterExpression>();
@@ -150,12 +135,13 @@ namespace IronJS.Compiler.Ast
 
 				if (paramTypes[paramIndex] == inTypes[paramIndex])
 				{
-					parm = real = Et.Parameter(paramTypes[paramIndex], "__arg" + paramIndex + "__");
+					parm = 
+					real = Et.Parameter(paramTypes[paramIndex], "__param" + paramIndex + "__");
 				}
 				else
 				{
-					parm = Et.Parameter(inTypes[paramIndex], "__arg" + paramIndex + "__");
-					real = Et.Parameter(paramTypes[paramIndex], "__arg " + paramIndex + "__");
+					parm = Et.Parameter(inTypes[paramIndex], "__param" + paramIndex + "__");
+					real = Et.Parameter(paramTypes[paramIndex], "__param" + paramIndex + "__");
 				}
 
 				paramPairs[paramIndex] = Tuple.Create(parm, real);
@@ -176,8 +162,7 @@ namespace IronJS.Compiler.Ast
                     ArrayTools.Concat(
                         ArrayTools.Map(oddPairs, delegate(ParamTuple x) { return x.Item2; }),
 						ArrayTools.Concat(
-							DictionaryTools.GetValues(CallProxies),
-							GetLocalsExprs()
+							DictionaryTools.GetValues(CallProxies), GetLocalsExprs()
 						)
                     ),
 
@@ -194,15 +179,12 @@ namespace IronJS.Compiler.Ast
 
                     bodyExpr,
 
-                    Et.Label(
-                        ReturnLabel,
-                        Et.Default(ReturnType)
-                    )
+                    Et.Label(ReturnLabel, Et.Default(ReturnType))
                 ),
                 new[] { ClosureParm }.Concat(
                     IEnumerableTools.Map(paramPairs, delegate(ParamTuple pair) {
                         return pair.Item1;
-                    })
+					})
                 )
             );
 
@@ -216,129 +198,6 @@ namespace IronJS.Compiler.Ast
             ).Compile();
 
             return lambda.Compile();
-        }
-
-        Et BuildTypeCheck(ParamTuple[] oddPairs)
-        {
-            if (oddPairs.Length == 0)
-				return AstTools.Constant(true);
-
-            return Et.AndAlso(
-                Et.TypeIs(
-                    oddPairs[0].Item1,
-                    oddPairs[0].Item2.Type
-                ),
-                BuildTypeCheck(
-                    Microsoft.Scripting.Utils.ArrayUtils.RemoveFirst(oddPairs)
-                )
-            );
-        }
-
-		EtParam[] GetLocalsExprs()
-		{
-			if (Locals == Globals)
-				return new EtParam[0];
-
-			return IEnumerableTools.Map(
-				Locals,
-				delegate(KeyValuePair<string, IjsLocalVar> pair) {
-					return pair.Value.Expr;
-				}
-			);
-		}
-
-        internal bool IsGlobal(IjsIVar varInfo)
-        {
-            if(varInfo is IjsLocalVar)
-                return Globals.ContainsValue(varInfo as IjsLocalVar);
-
-            return false;
-        }
-
-        internal bool IsLocal(IjsIVar varInfo)
-        {
-            if (varInfo is IjsLocalVar)
-                return Locals.ContainsValue(varInfo as IjsLocalVar);
-
-            if (varInfo is IjsParameter)
-                return Parameters.ContainsValue(varInfo as IjsParameter);
-
-            return false;
-        }
-
-        internal bool IsClosedOver(IjsIVar varInfo)
-        {
-            if (varInfo is IjsClosureVar)
-                return ClosesOver.ContainsValue(varInfo as IjsClosureVar);
-
-            return false;
-        }
-
-        public bool HasLocal(string name)
-        {
-            return Locals.ContainsKey(name);
-        }
-
-        public bool HasParameter(string name)
-        {
-            return Parameters.ContainsKey(name);
-        }
-
-        public IjsCloseableVar CreateLocal(string name)
-        {
-            return Locals[name] = new IjsLocalVar();
-        }
-
-        public IjsCloseableVar GetLocal(string name)
-        {
-            if (HasLocal(name))
-                return Locals[name];
-
-            if (HasParameter(name))
-                return Parameters[name];
-
-            throw new AstCompilerError("No local variable named '{0}' exists", name);
-        }
-
-        public IjsIVar GetNonLocal(string name)
-        {
-            if (Parent == null)
-                return CreateLocal(name);
-
-            FuncNode parent = Parent;
-            HashSet<FuncNode> parentFunctions = new HashSet<FuncNode>();
-
-            while (true)
-            {
-                if (parent.HasLocal(name) || parent.HasParameter(name))
-                {
-                    if (parent.IsGlobalScope)
-                    {
-                        return parent.GetLocal(name);
-                    }
-                    else
-                    {
-                        IjsCloseableVar varInfo = parent.GetLocal(name);
-                        varInfo.IsClosedOver = true;
-
-                        foreach (FuncNode subParent in parentFunctions)
-                            if(!subParent.ClosesOver.ContainsKey(name))
-                                subParent.ClosesOver.Add(name, new IjsClosureVar(name, subParent));
-
-                        ClosesOver.Add(name, new IjsClosureVar(name, this));
-                        return ClosesOver[name];
-                    }
-                }
-
-                if (parent.IsGlobalScope)
-                    break;
-
-                parentFunctions.Add(parent);
-                parent = parent.Parent;
-            }
-
-            // parent = global scope
-            return parent.CreateLocal(name);
         }
 
         public override void Print(StringBuilder writer, int indent)
@@ -375,6 +234,139 @@ namespace IronJS.Compiler.Ast
 
             Body.Print(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
-        }
+		}
+
+		internal ParameterExpression GetCallProxy(Type type)
+		{
+			ParameterExpression expr;
+
+			if (CallProxies.TryGetValue(type, out expr))
+				return expr;
+
+			return CallProxies[type] = Et.Parameter(type, "__callproxy__");
+		}
+
+		internal bool IsGlobal(IjsIVar varInfo)
+		{
+			if (varInfo is IjsLocalVar)
+				return Globals.ContainsValue(varInfo as IjsLocalVar);
+
+			return false;
+		}
+
+		internal bool IsLocal(IjsIVar varInfo)
+		{
+			if (varInfo is IjsLocalVar)
+				return Locals.ContainsValue(varInfo as IjsLocalVar);
+
+			if (varInfo is IjsParameter)
+				return Parameters.ContainsValue(varInfo as IjsParameter);
+
+			return false;
+		}
+
+		internal bool IsClosedOver(IjsIVar varInfo)
+		{
+			if (varInfo is IjsClosureVar)
+				return ClosesOver.ContainsValue(varInfo as IjsClosureVar);
+
+			return false;
+		}
+
+		internal bool HasLocal(string name)
+		{
+			return Locals.ContainsKey(name);
+		}
+
+		internal bool HasParameter(string name)
+		{
+			return Parameters.ContainsKey(name);
+		}
+
+		internal IjsCloseableVar CreateLocal(string name)
+		{
+			return Locals[name] = new IjsLocalVar();
+		}
+
+		internal IjsCloseableVar GetLocal(string name)
+		{
+			if (HasLocal(name))
+				return Locals[name];
+
+			if (HasParameter(name))
+				return Parameters[name];
+
+			throw new AstCompilerError("No local variable named '{0}' exists", name);
+		}
+
+		internal IjsIVar GetNonLocal(string name)
+		{
+			if (Parent == null)
+				return CreateLocal(name);
+
+			FuncNode parent = Parent;
+			HashSet<FuncNode> parentFunctions = new HashSet<FuncNode>();
+
+			while (true)
+			{
+				if (parent.HasLocal(name) || parent.HasParameter(name))
+				{
+					if (parent.IsGlobalScope)
+					{
+						return parent.GetLocal(name);
+					}
+					else
+					{
+						IjsCloseableVar varInfo = parent.GetLocal(name);
+						varInfo.IsClosedOver = true;
+
+						foreach (FuncNode subParent in parentFunctions)
+							if (!subParent.ClosesOver.ContainsKey(name))
+								subParent.ClosesOver.Add(name, new IjsClosureVar(name, subParent));
+
+						ClosesOver.Add(name, new IjsClosureVar(name, this));
+						return ClosesOver[name];
+					}
+				}
+
+				if (parent.IsGlobalScope)
+					break;
+
+				parentFunctions.Add(parent);
+				parent = parent.Parent;
+			}
+
+			// parent = global scope
+			return parent.CreateLocal(name);
+		}
+
+		Et BuildTypeCheck(ParamTuple[] oddPairs)
+		{
+			if (oddPairs.Length == 0)
+				return AstTools.Constant(true);
+
+			return Et.AndAlso(
+				Et.TypeIs(
+					oddPairs[0].Item1,
+					oddPairs[0].Item2.Type
+				),
+				BuildTypeCheck(
+					Microsoft.Scripting.Utils.ArrayUtils.RemoveFirst(oddPairs)
+				)
+			);
+		}
+
+		EtParam[] GetLocalsExprs()
+		{
+			if (Locals == Globals)
+				return new EtParam[0];
+
+			return IEnumerableTools.Map(
+				Locals,
+				delegate(KeyValuePair<string, IjsLocalVar> pair) {
+					return pair.Value.Expr;
+				}
+			);
+		}
     }
 }

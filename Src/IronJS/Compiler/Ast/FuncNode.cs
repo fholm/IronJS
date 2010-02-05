@@ -141,7 +141,7 @@ namespace IronJS.Compiler.Ast
             int paramNum = 0;
 			ParamTuple[] paramPairs = new ParamTuple[paramTypes.Length];
 
-			for (int paramNum = 0; paramNum < paramTypes.Length; ++paramNum)
+			for (paramNum = 0; paramNum < paramTypes.Length; ++paramNum)
 			{
 				ParameterExpression parm;
 				ParameterExpression real;

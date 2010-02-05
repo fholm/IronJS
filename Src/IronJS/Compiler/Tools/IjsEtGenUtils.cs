@@ -38,7 +38,7 @@ namespace IronJS.Compiler.Tools
 			ConstructorInfo ctor = type.GetConstructor(
 				ArrayTools.Map(parameters, delegate(Et expr) {
 					return expr.Type;
-				});
+				})
 			);
 
             if (ctor == null)

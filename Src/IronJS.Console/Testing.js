@@ -1,10 +1,15 @@
 ﻿
 var y = function() {
-    var z = 2;
-    var x = function() { return 1; };
-    return x;
+    return 2;
 };
 
-y();
+var x = function(z) {
+    print(z);
+}
 
-print(1);
+var _ = y();
+
+x(_);
+
+
+x();

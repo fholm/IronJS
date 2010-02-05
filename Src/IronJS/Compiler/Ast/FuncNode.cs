@@ -35,6 +35,7 @@ namespace IronJS.Compiler.Ast
 	using Microsoft.Scripting.Generation;
 	using System.Reflection;
 	using System.Runtime.CompilerServices;
+    using System.Diagnostics;
 
     public class FuncNode : Node
     {
@@ -119,41 +120,15 @@ namespace IronJS.Compiler.Ast
         public TFunc Compile<TFunc, TGuard>(Type[] inTypes, out TGuard guard)
         {
             Type[] types = typeof(TFunc).GetGenericArguments();
-			Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+            Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
 
             ClosureParm = Et.Parameter(typeof(IjsClosure), "__closure__");
             GlobalField = Et.Field(ClosureParm, "Globals");
             ReturnLabel = Et.Label(ReturnType, "__return__");
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
-			ParamTuple[] paramPairs = new ParamTuple[paramTypes.Length];
-
-			int paramIndex;
-			for (paramIndex = 0; paramIndex < paramTypes.Length; ++paramIndex)
-			{
-				ParameterExpression parm;
-				ParameterExpression real;
-
-				if (paramTypes[paramIndex] == inTypes[paramIndex])
-				{
-					parm = 
-					real = Et.Parameter(paramTypes[paramIndex], "__param" + paramIndex + "__");
-				}
-				else
-				{
-					parm = Et.Parameter(inTypes[paramIndex], "__param" + paramIndex + "__");
-					real = Et.Parameter(paramTypes[paramIndex], "__param" + paramIndex + "__");
-				}
-
-				paramPairs[paramIndex] = Tuple.Create(parm, real);
-			}
-
-            paramIndex = 0;
-            foreach (KeyValuePair<string, IjsParameter> param in Parameters)
-                param.Value.Expr = paramPairs[paramIndex++].Item2;
-
-            //ParamTuple[] paramPairs = SetParameterTypes(paramTypes, inTypes);
-
+            IjsParameter[] defaults;
+            ParamTuple[] paramPairs = SetParameterTypes(inTypes, paramTypes, out defaults);
             ParamTuple[] oddPairs = ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
                 return x.Item1 != x.Item2;
             });
@@ -163,9 +138,10 @@ namespace IronJS.Compiler.Ast
             Expression<TFunc> lambda = Et.Lambda<TFunc>(
                 Et.Block(
                     ArrayTools.Concat(
-                        ArrayTools.Map(oddPairs, delegate(ParamTuple x) { return x.Item2; }),
+                        ArrayTools.Map(oddPairs, delegate(ParamTuple x) { return x.Item1; }),
 						ArrayTools.Concat(
-							DictionaryTools.GetValues(CallProxies), GetLocalsExprs()
+							DictionaryTools.GetValues(CallProxies), 
+                            GetLocalsExprs()
 						)
                     ),
 
@@ -174,10 +150,7 @@ namespace IronJS.Compiler.Ast
                     }),
 
                     AstTools.BuildBlock(oddPairs, delegate(ParamTuple pair) {
-                        if (pair.Item2.Type.IsValueType)
-                            return Et.Assign(pair.Item2, Et.Unbox(pair.Item1, pair.Item2.Type));
-
-                         return Et.Assign(pair.Item2, Et.Convert(pair.Item1, pair.Item2.Type));
+                        return AstTools.Assign(pair.Item2, pair.Item1);
                     }),
 
                     bodyExpr,
@@ -191,6 +164,7 @@ namespace IronJS.Compiler.Ast
                 )
             );
 
+            // Build guard
             guard = Et.Lambda<TGuard>(
                 BuildTypeCheck(oddPairs),
 
@@ -204,6 +178,60 @@ namespace IronJS.Compiler.Ast
             ResetParameterTypes();
 
             return lambda.Compile();
+        }
+
+        ParamTuple[] SetParameterTypes(Type[] inTypes, Type[] realTypes, out IjsParameter[] defaults) {
+
+            List<IjsParameter> defaultsList = new List<IjsParameter>();
+            ParamTuple[] paramPairs = new ParamTuple[inTypes.Length];
+
+            int index = 0;
+            foreach (KeyValuePair<string, IjsParameter> param in Parameters) {
+                if (index < inTypes.Length) {
+
+                    if (param.Value.IsClosedOver) {
+                        paramPairs[index] = Tuple.Create(
+                            Et.Parameter(realTypes[index], "__in:" + param.Key + "__"),
+                            Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(inTypes[index]), "__box:" + param.Key + "__")
+                        );
+
+                    } else {
+                        paramPairs[index] = CreateParamTuple(realTypes[index], inTypes[index], param.Key);
+                    }
+
+                    param.Value.Expr = paramPairs[index].Item1;
+
+                } else {
+                    param.Value.Expr = Et.Parameter(IjsTypes.Dynamic, "__arg:" + index + "__");
+                    defaultsList.Add(param.Value);
+                }
+
+                ++index;
+            }
+
+            for (; index < inTypes.Length; ++index) {
+                paramPairs[index] = CreateParamTuple(realTypes[index], inTypes[index], "arg:" + index);
+            }
+
+            defaults = defaultsList.ToArray();
+
+            return paramPairs;
+        }
+
+        ParamTuple CreateParamTuple(Type intype, Type realtype, string name) {
+
+            if (intype == realtype) {
+                EtParam param = Et.Parameter(realtype, "__" + name + "__");
+                return Tuple.Create(param, param);
+
+            } else {
+
+                return Tuple.Create(
+                    Et.Parameter(intype, "__in:" + name + "__"),
+                    Et.Parameter(realtype, "__real:" + name + "__")
+                );
+            }
+
         }
 
         public override void Print(StringBuilder writer, int indent)
@@ -377,8 +405,9 @@ namespace IronJS.Compiler.Ast
 
         void ResetParameterTypes()
         {
-            foreach (KeyValuePair<string, IjsParameter> param in Parameters)
+            foreach (KeyValuePair<string, IjsParameter> param in Parameters) {
                 param.Value.Expr = null;
+            }
         }
     }
 }

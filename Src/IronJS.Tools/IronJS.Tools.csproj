@@ -67,7 +67,6 @@
     <Compile Include="DictionaryTools.cs" />
     <Compile Include="DoubleTools.cs" />
     <Compile Include="IEnumerableTools.cs" />
-    <Compile Include="StrongBoxTools.cs" />
     <Compile Include="TypeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tuple.cs" />

@@ -17,29 +17,34 @@ namespace IronJS.Tools {
     using EtParam = ParameterExpression;
 
     public static class AstTools {
+
+        public static bool IsStrongBox(Et target) {
+            return target.Type.IsGenericType && target.Type.GetGenericTypeDefinition() == typeof(StrongBox<>);
+        }
+
+        public static Et Value(EtParam target) {
+            if (IsStrongBox(target))
+                return Et.Field(target, "Value");
+
+            return target;
+        }
+
         public static Et Assign(EtParam target, Et value) {
             return Assign(target, value, true);
         }
 
         public static Et Assign(EtParam target, Et value, bool convert) {
-            if (target.Type == value.Type || target.Type == typeof(object))
+            if (target.Type == value.Type)
                 return Et.Assign(target, value);
 
-            if (target.Type.IsGenericType && target.Type.GetGenericTypeDefinition() == typeof(StrongBox<>)) {
-                Type genericArg = target.Type.GetGenericArguments()[0];
+            if (IsStrongBox(target))
+                return AssignStrongBox(target, value, convert);
 
-                if (genericArg == value.Type || genericArg == typeof(object))
-                    return Et.Assign(Et.Field(target, "Value"), value);
+            return AssignParameter(target, value, convert);
 
-                if (!convert)
-                    throw new ArgumentException("Expression types do not match and conversion wasn't allowed");
+        }
 
-                if(value.Type.IsValueType)
-                    return Et.Assign(Et.Field(target, "Value"), Et.Unbox(value, genericArg));
-
-                return Et.Assign(Et.Field(target, "Value"), Et.Convert(value, genericArg));
-            }
-
+        public static Et AssignParameter(EtParam target, Et value, bool convert) {
             if (!convert)
                 throw new ArgumentException("Expression types do not match and conversion wasn't allowed");
 
@@ -50,6 +55,21 @@ namespace IronJS.Tools {
                 Et.Assign(target, Et.Unbox(value, target.Type));
 
             return Et.Assign(target, Et.Convert(value, target.Type));
+        }
+
+        public static Et AssignStrongBox(EtParam target, Et value, bool convert) {
+            Type genericArg = target.Type.GetGenericArguments()[0];
+
+            if (genericArg == value.Type || genericArg == typeof(object))
+                return Et.Assign(Et.Field(target, "Value"), value);
+
+            if (!convert)
+                throw new ArgumentException("Expression types do not match and conversion wasn't allowed");
+
+            if (value.Type.IsValueType)
+                return Et.Assign(Et.Field(target, "Value"), Et.Unbox(value, genericArg));
+
+            return Et.Assign(Et.Field(target, "Value"), Et.Convert(value, genericArg));
         }
 
         public static Et Box(Et value) {
@@ -75,8 +95,8 @@ namespace IronJS.Tools {
         public static Et New(Type type, params Et[] parameters) {
             ConstructorInfo ctor = type.GetConstructor(
                 ArrayTools.Map(parameters, delegate(Et expr) {
-                return expr.Type;
-            })
+                    return expr.Type;
+                })
             );
 
             if (ctor == null)

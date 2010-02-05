@@ -87,6 +87,30 @@ namespace IronJS.Compiler.Tools
 			EtParam tmpFunc = Et.Variable(funcType, "__tmpFunc__");
 			EtParam tmpGuard = Et.Variable(guardType, "__tmpGuard__");
 
+			/*
+			 * This constructs a block that looks like this
+			 * 
+			 * tmpFunc = tmpObject as IjsFunc;
+			 * if(tmpFunc != null) {
+			 *		if(tmpFunc == proxy.Func) {
+			 *			if(proxy.Guard(arg1, arg2, ...)) {
+			 *				proxy.Delegate(arg1, arg2, ...);
+			 *			} else {
+			 *				proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
+			 *				proxy.Guard = tmpGuard;
+			 *				proxy.Delegate(arg1, arg2, ...);
+			 *			}
+			 *		} else {
+			 *			proxy.Func = tmpFunc;
+			 *			proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
+			 *			proxy.Guard = tmpGuard;
+			 *			proxy.Delegate(arg1, arg2, ...);
+			 *		}
+			 * } else {
+			 *		// Dynamic Expression
+			 * }
+			 * */
+
 			return Et.Block(
 				new[] { tmpObject, tmpFunc },
 				Et.Assign(tmpObject, target.Compile(func)),

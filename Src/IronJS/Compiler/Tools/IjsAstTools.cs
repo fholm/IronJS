@@ -177,16 +177,16 @@ namespace IronJS.Compiler.Tools
 
                     if (idNode.IsDefinition)
                     {
-                        localVarInfo.Expr = Et.Variable(
-                            localVarInfo.ExprType,
-                            idNode.Name
-                        );
+						localVarInfo.Expr = Et.Variable(
+							localVarInfo.ExprType,
+							idNode.Name
+						);
                     }
 
-                    return Et.Assign(
-                        localVarInfo.Expr,
-                        value
-                    );
+					if (localVarInfo.IsClosedOver)
+						return Et.Assign(Et.Field(localVarInfo.Expr, "Value"), value);
+
+                    return Et.Assign(localVarInfo.Expr, value);
                 }
             }
 

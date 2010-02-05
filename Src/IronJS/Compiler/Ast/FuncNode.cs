@@ -32,6 +32,9 @@ namespace IronJS.Compiler.Ast
 	using EtParam = ParameterExpression;
 	using AstUtils = Microsoft.Scripting.Ast.Utils;
 	using ParamTuple = Tuple<ParameterExpression, ParameterExpression>;
+	using Microsoft.Scripting.Generation;
+	using System.Reflection;
+	using System.Runtime.CompilerServices;
 
     public class FuncNode : Node
     {
@@ -47,10 +50,8 @@ namespace IronJS.Compiler.Ast
 
         public bool IsNamed { get { return !IsLambda; } }
         public bool IsLambda { get { return Name == null; } }
-
         public bool IsBranched { get; set; }
         public bool IsSimple { get { return !IsBranched; } }
-
         public bool IsGlobalScope { get { return Locals == Globals; } }
         public bool IsNotGlobalScope { get { return !IsGlobalScope; } }
 

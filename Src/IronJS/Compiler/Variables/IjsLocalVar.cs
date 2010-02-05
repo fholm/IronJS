@@ -7,6 +7,7 @@ using IronJS.Tools;
 #if CLR2
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
+using System.Runtime.CompilerServices;
 #else
 using System.Linq.Expressions;
 #endif
@@ -50,7 +51,13 @@ namespace IronJS.Compiler
                         set.Add(variable.ExprType);
 
                     _resolvingType = false;
-                    return HashSetTools.EvalType(set);
+
+					Type type = HashSetTools.EvalType(set);
+
+					if (IsClosedOver)
+						return typeof(StrongBox<>).MakeGenericType(type);
+
+                    return type;
                 }
 
                 // null is used to break circular references

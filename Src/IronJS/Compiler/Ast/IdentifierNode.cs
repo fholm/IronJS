@@ -44,7 +44,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
             if (func.IsGlobal(VarInfo))
             {

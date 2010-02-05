@@ -127,7 +127,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public virtual Et EtGen(FuncNode func)
+        public virtual Et Compile(FuncNode func)
         {
             return AstUtils.Empty();
         }

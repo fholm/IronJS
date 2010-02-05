@@ -47,56 +47,16 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
-            IdentifierNode target = Target as IdentifierNode;
-
             if (Args.Count == 0)
             {
-                EtParam tmp0_object = Et.Variable(typeof(object), "__tmp0_object__");
-                EtParam tmp0_ijsproxy = Et.Variable(typeof(IjsFunc), "__tmp0_ijsproxy__");
-
-                return Et.Block(
-                    new[] { tmp0_object },
-                    Et.Assign(
-                        tmp0_object,
-                        target.EtGen(func)
-                    ),
-                    Et.Condition(
-                        Et.TypeIs(tmp0_object, typeof(IjsFunc)),
-                        Et.Block(
-                            new[] { tmp0_ijsproxy },
-                            Et.Assign(
-                                tmp0_ijsproxy,
-                                Et.Convert(tmp0_object, typeof(IjsFunc))
-                            ),
-                            Et.Condition(
-                                Et.Equal(
-                                    Et.Field(tmp0_ijsproxy, "Func0"),
-                                    Et.Constant(null, typeof(object))
-                                ),
-                                Et.Call(
-                                    tmp0_ijsproxy,
-                                    typeof(IjsFunc).GetMethod("Invoke0")
-                                ),
-                                Et.Invoke(
-                                    Et.Field(tmp0_ijsproxy, "Func0"),
-                                    Et.Field(tmp0_ijsproxy, "Closure")
-                                )
-                            )
-                        ),
-                        Et.Dynamic(
-                            new IjsInvokeBinder(new CallInfo(Args.Count)),
-                            IjsTypes.Dynamic,
-                            Target.EtGen(func)
-                        )
-                    )
-                );
+				return IjsAstTools.CallNoArgs(Target, func);
             }
             else
             {
                 Et[] args = IEnumerableTools.Map(Args, delegate(INode node) {
-                    return node.EtGen(func);
+                    return node.Compile(func);
                 });
 
                 Type callType = typeof(IjsCall1<>).MakeGenericType(
@@ -154,7 +114,7 @@ namespace IronJS.Compiler.Ast
                 return Et.Block(
                     new[] { tmpN_object },
                     Et.Assign(
-                        tmpN_object, target.EtGen(func)
+                        tmpN_object, Target.Compile(func)
                     ),
                     Et.Condition(
                         Et.TypeIs(
@@ -215,7 +175,7 @@ namespace IronJS.Compiler.Ast
                         Et.Dynamic(
                             new IjsInvokeBinder(new CallInfo(Args.Count)),
                             IjsTypes.Dynamic,
-                            ArrayUtils.Insert(Target.EtGen(func), args)
+                            ArrayUtils.Insert(Target.Compile(func), args)
                         )
                     )
                 );

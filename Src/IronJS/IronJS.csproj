@@ -138,7 +138,7 @@
     <Compile Include="Compiler\Ast\InstanceOfNode.cs" />
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
-    <Compile Include="Compiler\Tools\IjsEtGenUtils.cs" />
+    <Compile Include="Compiler\Tools\IjsAstTools.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />

@@ -105,7 +105,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Expression EtGen(FuncNode func)
+        public override Expression Compile(FuncNode func)
         {
             return AstTools.New(
                 typeof(IjsFunc),
@@ -168,7 +168,7 @@ namespace IronJS.Compiler.Ast
                 return x.Item1 != x.Item2;
             });
 
-            Et body = Body.EtGen(this);
+            Et body = Body.Compile(this);
 
             Expression<TFunc> lambda = Et.Lambda<TFunc>(
                 Et.Block(

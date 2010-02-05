@@ -29,9 +29,9 @@ namespace IronJS.Compiler.Ast
         }
 
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
-            return IjsEtGenUtils.Assign(func, Target, Value.EtGen(func));
+            return IjsAstTools.Assign(func, Target, Value.Compile(func));
         }
 
         public override INode Analyze(FuncNode astopt)

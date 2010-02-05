@@ -1,18 +1,18 @@
 ﻿var y = function (a) {
 
-    var x = function(_) { };
+    var x = function() { };
 
     for (var i = 0; i < a; ++i) {
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
-        x(i);
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
+        x();
     }
 };
 

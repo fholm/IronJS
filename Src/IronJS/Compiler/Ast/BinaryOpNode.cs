@@ -55,12 +55,12 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
             if (IdenticalTypes(Left, Right))
             {
-                Et left = Left.EtGen(func);
-                Et right = Right.EtGen(func);
+                Et left = Left.Compile(func);
+                Et right = Right.Compile(func);
 
                 if (Left.ExprType == IjsTypes.Integer)
                 {

@@ -36,7 +36,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
 			return AstTools.Constant(Value);
         }

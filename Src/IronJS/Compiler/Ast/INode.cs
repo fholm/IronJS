@@ -18,7 +18,7 @@ namespace IronJS.Compiler.Ast
         NodeType NodeType { get; }
         Type ExprType { get; }
 
-        Et EtGen(FuncNode func);
+        Et Compile(FuncNode func);
         INode Analyze(FuncNode func);
         Type EvalTypes(params INode[] nodes);
         bool IdenticalTypes(params INode[] nodes);

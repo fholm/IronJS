@@ -50,18 +50,18 @@ namespace IronJS.Compiler.Ast
         public static ParameterExpression TMP = Et.Variable(typeof(object), "__tmp__");
         public static ParameterExpression TST = Et.Variable(typeof(object), "__tst__");
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
             Et test = AstUtils.Empty();
             Et setup = AstUtils.Empty();
             Et incr = AstUtils.Empty();
 
             if (Setup != null)
-                setup = Setup.EtGen(func);
+                setup = Setup.Compile(func);
 
             if (Test != null)
                 if (Test.ExprType == IjsTypes.Boolean)
-                    test = Test.EtGen(func);
+                    test = Test.Compile(func);
                 else
                     throw new NotImplementedException();
 
@@ -69,7 +69,7 @@ namespace IronJS.Compiler.Ast
                 test = Et.Constant(true, typeof(bool));
 
             if (Incr != null)
-                incr = Incr.EtGen(func);
+                incr = Incr.Compile(func);
 
             return Et.Block(
                 new[] { TMP, TST },
@@ -77,7 +77,7 @@ namespace IronJS.Compiler.Ast
                 AstUtils.Loop(
                     test,
                     incr,
-                    Body.EtGen(func),
+                    Body.Compile(func),
                     AstUtils.Empty()
                 )
             );

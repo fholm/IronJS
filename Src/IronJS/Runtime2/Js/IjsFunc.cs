@@ -30,7 +30,7 @@ namespace IronJS.Runtime2.Js
             FuncCache = new Dictionary<Type, object>();
         }
 
-        public object Invoke0()
+        public void Compile0()
         {
             if (Func0 == null)
             {
@@ -40,8 +40,6 @@ namespace IronJS.Runtime2.Js
                     Type.EmptyTypes, out guard
                 );
             }
-            
-            return Func0(Closure);
         }
 
         public TFunc CreateN<TFunc, TGuard>(object[] values, out TGuard guard)

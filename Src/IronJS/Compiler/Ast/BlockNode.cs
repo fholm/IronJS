@@ -41,10 +41,10 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
             return AstTools.BuildBlock(Nodes, delegate(INode node){
-                return node.EtGen(func);
+                return node.Compile(func);
             });
         }
 

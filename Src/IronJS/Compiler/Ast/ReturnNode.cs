@@ -35,12 +35,12 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override Et EtGen(FuncNode func)
+        public override Et Compile(FuncNode func)
         {
             return Et.Return(
                 func.ReturnLabel,
 				AstTools.Box(
-                    Value.EtGen(func)
+                    Value.Compile(func)
                 ),
                 func.ReturnType
             );

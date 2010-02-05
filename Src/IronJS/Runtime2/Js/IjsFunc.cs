@@ -21,13 +21,13 @@ namespace IronJS.Runtime2.Js
         public Type ClosureType { get { return Closure.GetType(); } }
 
         public Func<IjsClosure, object> Func0;
-        public Dictionary<Type, object> FuncCache;
+        public Dictionary<Type, Delegate> FuncCache;
 
         public IjsFunc(FuncNode node, IjsClosure closure)
         {
             Node = node;
             Closure = closure;
-            FuncCache = new Dictionary<Type, object>();
+			FuncCache = new Dictionary<Type, Delegate>();
         }
 
         public void Compile0()
@@ -42,11 +42,13 @@ namespace IronJS.Runtime2.Js
             }
         }
 
-        public TFunc CreateN<TFunc, TGuard>(object[] values, out TGuard guard)
+        public TFunc CompileN<TFunc, TGuard>(object[] values, out TGuard guard)
+			where TFunc : class
+			where TGuard : class
         {
             return Node.Compile<TFunc, TGuard>(
                 ArrayTools.GetTypes(values), out guard
-            );
+            );	
         }
 
         #region IDynamicMetaObjectProvider Members

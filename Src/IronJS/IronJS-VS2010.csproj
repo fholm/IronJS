@@ -113,6 +113,7 @@
     <Compile Include="Compiler\Ast\StringNode.cs" />
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
+    <Compile Include="Compiler\Tools\IjsAstTools.cs" />
     <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
     <Compile Include="Compiler\Variables\IjsIVar.cs" />
     <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
@@ -144,7 +145,6 @@
     <Compile Include="Compiler\Ast\SwitchNode.cs" />
     <Compile Include="Compiler\Ast\ObjectNode.cs" />
     <Compile Include="Compiler\Variables\IjsLocalVar.cs" />
-    <Compile Include="Compiler\Tools\IjsEtGenUtils.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />

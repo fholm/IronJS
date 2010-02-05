@@ -51,7 +51,7 @@ namespace IronJS.Compiler.Ast
         {
             if (Args.Count == 0)
             {
-				return IjsAstTools.CallNoArgs(Target, func);
+				return IjsAstTools.Call0(func, Target);
             }
             else
             {
@@ -137,7 +137,7 @@ namespace IronJS.Compiler.Ast
                                         funcField,
                                         Et.Call(
                                             proxyField,
-                                            typeof(IjsFunc).GetMethod("CreateN").MakeGenericMethod(
+                                            typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(
                                                 funcType, guardType
                                             ),
                                             AstUtils.NewArrayHelper(typeof(object), args),

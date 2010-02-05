@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Dynamic;
+using System.Reflection;
+using System.Collections.Generic;
 using IronJS.Tools;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
-using System.Reflection;
+using IronJS.Runtime2.Binders;
+using IronJS.Runtime2.Js.Proxies;
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -15,12 +20,10 @@ namespace IronJS.Compiler.Tools
     using Et = Expression;
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using EtParam = ParameterExpression;
-	using IronJS.Runtime2.Binders;
-	using System.Dynamic;
 
     internal static class IjsAstTools
     {
-		internal static Et CallNoArgs(INode target, FuncNode func)
+		internal static Et Call0(FuncNode func, INode target)
 		{
 			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
 			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
@@ -57,6 +60,66 @@ namespace IronJS.Compiler.Tools
 						new IjsInvokeBinder(new CallInfo(0)),
 						IjsTypes.Dynamic,
 						tmpObject
+					)
+				)
+			);
+		}
+
+		internal static Et CallN(FuncNode func, INode target, IEnumerable<INode> argsList)
+		{
+			// Build the args array
+			Et[] args = IEnumerableTools.Map(argsList, delegate(INode node) {
+				return node.Compile(func);
+			});
+
+			// Construct the proxy type
+			Type proxyType = typeof(IjsCall1<>).MakeGenericType(
+				IEnumerableTools.Map(args, delegate(Expression expr) {
+					return expr.Type;
+				})
+			);
+
+			// All other types we need
+			Type funcType = typeof(IjsFunc);
+			Type delgateType = proxyType.GetField("Delegate").FieldType;
+			Type guardType = proxyType.GetField("Guard").FieldType;
+
+			// All expressions we need through out the building
+			Et callExpr = func.GetCallProxy(callType);
+			Et funcField = Et.Field(callExpr, "Func");
+			Et delegateField = Et.Field(callExpr, "Delegate");
+			Et guardField = Et.Field(callExpr, "Guard");
+
+			// Temporary variables
+			EtParam tmpObject = Et.Variable(IjsTypes.Dynamic, "__tmpObject__");
+			EtParam tmpFunc = Et.Variable(funcType, "__tmpFunc__");
+			EtParam tmpGuard = Et.Variable(guardType, "__tmpGuard__");
+
+			return Et.Block(
+				new[] { tmpObject },
+				Et.Assign(
+					tmpObject,
+					target.Compile(func)
+				),
+				Et.Assign(
+					tmpFunc,
+					Et.ConvertChecked(tmpObject, funcType)
+				),
+				Et.Condition(
+					Et.NotEqual(tmpFunc, Et.Default(funcType)),
+					Et.Block(
+						Et.IfThen(
+							Et.Equal(tmpFunc, funcField),
+							Et.Condition(
+								Et.Invoke(guardField, args),
+								Et.Invoke(delegateField, args),
+							)
+						)
+					),
+					Et.Dynamic(
+						new IjsInvokeBinder(new CallInfo(args.Length)),
+						IjsTypes.Dynamic,
+						ArrayUtils.Insert(tmpObject, args)
 					)
 				)
 			);

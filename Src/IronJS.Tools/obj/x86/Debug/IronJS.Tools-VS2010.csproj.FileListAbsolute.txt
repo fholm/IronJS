@@ -1,0 +1,9 @@
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\IronJS.Tools.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\IronJS.Tools.pdb
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\Microsoft.Dynamic.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\Microsoft.Scripting.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\Microsoft.Dynamic.pdb
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\bin\x86\Debug\Microsoft.Scripting.pdb
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\obj\x86\Debug\IronJS.Tools.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Tools\obj\x86\Debug\IronJS.Tools.pdb

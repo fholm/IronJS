@@ -1,0 +1,12 @@
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\obj\x86\Release\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Testing.js
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\IronJS.Testing.exe.config
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\IronJS.Testing.exe
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Antlr3.Runtime.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\IronJS.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Microsoft.Dynamic.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Microsoft.Scripting.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\IronJS.Tools.dll
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Microsoft.Dynamic.pdb
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\bin\Release\Microsoft.Scripting.pdb
+C:\Users\Fredrik\Projects\IronJS\IronJS.Console\obj\x86\Release\IronJS.Testing.exe

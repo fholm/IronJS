@@ -64,6 +64,7 @@ namespace IronJS.Compiler.Tools
                 else if(func.IsLocal(idNode.VarInfo))
                 {
                     IjsLocalVar localVarInfo = varInfo as IjsLocalVar;
+
                     if (idNode.IsDefinition)
                     {
                         localVarInfo.Expr = Et.Variable(

@@ -1,9 +1,0 @@
-C:\Users\Fredrik\Projects\IronJS\IronJS\obj\x86\Release\ResolveAssemblyReference.cache
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\IronJS.dll
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\Antlr3.Runtime.dll
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\IronJS.Tools.dll
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\Microsoft.Dynamic.dll
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\Microsoft.Scripting.dll
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\Microsoft.Dynamic.pdb
-C:\Users\Fredrik\Projects\IronJS\IronJS\bin\x86\Release\Microsoft.Scripting.pdb
-C:\Users\Fredrik\Projects\IronJS\IronJS\obj\x86\Release\IronJS.dll

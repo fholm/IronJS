@@ -55,7 +55,7 @@ namespace IronJS.Compiler.Ast
                     return Et.Call(
                         func.GlobalField,
                         typeof(IjsObj).GetMethod("Get"),
-                        IjsEtGenUtils.Constant(Name)
+						AstTools.Constant(Name)
                     );
                 }
                 else
@@ -64,7 +64,7 @@ namespace IronJS.Compiler.Ast
                         Et.Call(
                             func.GlobalField,
                             typeof(IjsObj).GetMethod("Get"),
-                            IjsEtGenUtils.Constant(Name)
+							AstTools.Constant(Name)
                         ),
                         ExprType
                     );

@@ -13,6 +13,7 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
+	using IronJS.Tools;
 
     public class StringNode : Node, INode
     {
@@ -36,7 +37,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et EtGen(FuncNode etgen)
         {
-            return IjsEtGenUtils.Constant(Value);
+			return AstTools.Constant(Value);
         }
 
         public override void Print(StringBuilder writer, int indent)

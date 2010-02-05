@@ -3,6 +3,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using IronJS.Compiler.Tools;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -37,7 +38,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et EtGen(FuncNode func)
         {
-            return IjsEtGenUtils.Constant(Value);
+			return AstTools.Constant(Value);
         }
 
         public override void Print(StringBuilder writer, int indent)

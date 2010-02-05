@@ -40,7 +40,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et EtGen(FuncNode func)
         {
-            return IjsEtGenUtils.Constant(Value);
+			return AstTools.Constant(Value);
         }
 
         public override void Print(StringBuilder writer, int indent)

@@ -25,7 +25,12 @@ namespace IronJS.Tools
                 return AstUtils.Empty();
 
             return Et.Block(expressions);
-        }
+		}
+
+		public static Et Constant<T>(T value)
+		{
+			return Et.Constant(value, typeof(T));
+		}
 
 		public static Et New(Type type, params Et[] parameters)
 		{

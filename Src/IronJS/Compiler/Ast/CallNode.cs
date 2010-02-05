@@ -205,7 +205,7 @@ namespace IronJS.Compiler.Ast
                                 IjsEtGenUtils.Box(
                                     Et.Call(
                                         typeof(Console).GetMethod("WriteLine", new[] { typeof(string) }),
-                                        IjsEtGenUtils.Constant("FAIL")
+										AstTools.Constant("FAIL")
                                     )
                                 )
                             )

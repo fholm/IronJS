@@ -17,10 +17,6 @@ namespace IronJS.Compiler.Tools
 
     internal static class IjsEtGenUtils
     {
-        internal static Et Constant<T>(T value)
-        {
-            return Et.Constant(value, typeof(T));
-        }
 
         internal static Et Box(Et value)
         {
@@ -45,7 +41,7 @@ namespace IronJS.Compiler.Tools
                     return Et.Call(
                         func.GlobalField,
                         typeof(IjsObj).GetMethod("Set"),
-                        Constant(idNode.Name),
+                        AstTools.Constant(idNode.Name),
                         Box(value)
                     );
                 }

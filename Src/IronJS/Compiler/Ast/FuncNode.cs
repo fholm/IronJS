@@ -221,7 +221,7 @@ namespace IronJS.Compiler.Ast
         Et BuildTypeCheck(ParamTuple[] oddPairs)
         {
             if (oddPairs.Length == 0)
-                return IjsEtGenUtils.Constant(true);
+				return AstTools.Constant(true);
 
             return Et.AndAlso(
                 Et.TypeIs(

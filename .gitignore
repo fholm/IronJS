@@ -1,9 +1,11 @@
-IronJS.Tests/bin/**/*
-IronJS.Tests/obj/**/*
-IronJS/bin/**/*
-IronJS/obj/**/*
-IronJS.Console/bin/**/*
-IronJS.Console/obj/**/*
+Src/IronJS.Tests/bin/**/*
+Src/IronJS.Tests/obj/**/*
+Src/IronJS/bin/**/*
+Src/IronJS/obj/**/*
+Src/IronJS.Console/bin/**/*
+Src/IronJS.Console/obj/**/*
+Src/IronJS.Tools/bin/**/*
+Src/IronJS.Tools/obj/**/*
 *.suo
 TestResults/**/*
 TestResults

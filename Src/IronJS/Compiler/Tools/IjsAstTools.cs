@@ -111,13 +111,13 @@ namespace IronJS.Compiler.Tools
 			 *			if(proxy.Guard(arg1, arg2, ...)) {
 			 *				proxy.Delegate(arg1, arg2, ...);
 			 *			} else {
-			 *				proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
+			 *				proxy.Delegate = tmpFunc.CompileN<TFunc, TGuard>([arg1, arg2, ...], out tmpGuard);
 			 *				proxy.Guard = tmpGuard;
 			 *				proxy.Delegate(tmpFunc.Closure, arg1, arg2, ...);
 			 *			}
 			 *		} else {
 			 *			proxy.Func = tmpFunc;
-			 *			proxy.Delegate = tmpFunc.CompileN([arg1, arg2, ...], out tmpGuard);
+			 *			proxy.Delegate = tmpFunc.CompileN<TFunc, TGuard>([arg1, arg2, ...], out tmpGuard);
 			 *			proxy.Guard = tmpGuard;
 			 *			proxy.Delegate(tmpFunc.Closure, arg1, arg2, ...);
 			 *		}
@@ -140,30 +140,14 @@ namespace IronJS.Compiler.Tools
 								Et.Invoke(guardField, args),
 								Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args)),
 								Et.Block(
-									Et.Assign(
-										delegateField,
-										Et.Call(
-											funcField,
-											typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
-											AstUtils.NewArrayHelper(typeof(object), args),
-											tmpGuard
-										)
-									),
+									BuildUpdateExpr(delegateField, funcField, tmpGuard, delegateType, guardType, args),
 									Et.Assign(guardField, tmpGuard),
 									Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args))
 								)
 							),
 							Et.Block(
 								Et.Assign(funcField, tmpFunc),
-								Et.Assign(
-									delegateField,
-									Et.Call(
-										funcField,
-										typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
-										AstUtils.NewArrayHelper(typeof(object), args),
-										tmpGuard
-									)
-								),
+								BuildUpdateExpr(delegateField, funcField, tmpGuard, delegateType, guardType, args),
 								Et.Assign(guardField, tmpGuard),
 								Et.Invoke(delegateField, ArrayUtils.Insert(closureField, args))
 							)
@@ -174,6 +158,19 @@ namespace IronJS.Compiler.Tools
 						IjsTypes.Dynamic,
 						ArrayUtils.Insert(tmpObject, args)
 					)
+				)
+			);
+		}
+
+		private static Et BuildUpdateExpr(Expression delegateField, Expression funcField, ParameterExpression tmpGuard, Type delegateType, Type guardType, Expression[] args)
+		{
+			return Et.Assign(
+				delegateField,
+				Et.Call(
+					funcField,
+					typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
+					AstUtils.NewArrayHelper(typeof(object), args),
+					tmpGuard
 				)
 			);
 		}

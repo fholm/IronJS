@@ -30,26 +30,17 @@ namespace IronJS.Compiler.Tools
 
 			return Et.Block(
 				new[] { tmpObject, tmpFunc },
-				Et.Assign(
-					tmpObject,
-					target.Compile(func)
-				),
+				Et.Assign(tmpObject, target.Compile(func)),
 				Et.Assign(
 					tmpFunc,
-					Et.ConvertChecked(tmpObject, typeof(IjsFunc))
+					Et.TypeAs(tmpObject, typeof(IjsFunc))
 				),
 				Et.Condition(
 					Et.NotEqual(tmpFunc, Et.Default(typeof(IjsFunc))),
 					Et.Block(
 						Et.IfThen(
-							Et.Equal(
-								Et.Field(tmpFunc, "Func0"),
-								Et.Constant(null)
-							),
-							Et.Call(
-								tmpFunc,
-								typeof(IjsFunc).GetMethod("Compile0")
-							)
+							Et.Equal(Et.Field(tmpFunc, "Func0"), Et.Constant(null)),
+							Et.Call(tmpFunc, typeof(IjsFunc).GetMethod("Compile0"))
 						),
 						Et.Invoke(
 							Et.Field(tmpFunc, "Func0"),

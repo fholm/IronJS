@@ -10,6 +10,7 @@ Src/IronJS.Tools/obj/**/*
 TestResults/**/*
 TestResults
 *.dia
+*.dia~
 ~ggt
 *.sou
 *.user

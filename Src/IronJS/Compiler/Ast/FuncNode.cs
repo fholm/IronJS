@@ -31,6 +31,8 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
+	using EtParam = ParameterExpression;
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
 	using ParamTuple = Tuple<ParameterExpression, ParameterExpression>;
 
     public class FuncNode : Node
@@ -163,26 +165,23 @@ namespace IronJS.Compiler.Ast
             foreach (KeyValuePair<string, IjsParameter> param in Parameters)
                 param.Value.Expr = paramPairs[paramIndex++].Item2;
 
-            ParamTuple[] oddPairs = 
-            ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
+            ParamTuple[] oddPairs = ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
                 return x.Item1 != x.Item2;
             });
 
-            Et body = Body.Compile(this);
+            Et bodyExpr = Body.Compile(this);
 
             Expression<TFunc> lambda = Et.Lambda<TFunc>(
                 Et.Block(
                     ArrayTools.Concat(
-                        ArrayTools.Map(
-                            oddPairs,
-                            delegate(ParamTuple x) {
-                                return x.Item2;
-                            }
-                        ),
-                        DictionaryTools.GetValues(CallProxies)
+                        ArrayTools.Map(oddPairs, delegate(ParamTuple x) { return x.Item2; }),
+						ArrayTools.Concat(
+							DictionaryTools.GetValues(CallProxies),
+							GetLocalsExprs()
+						)
                     ),
 
-                    AstTools.BuildBlock(CallProxies, delegate(KeyValuePair<Type, ParameterExpression> pair){
+                    AstTools.BuildBlock(CallProxies, delegate(KeyValuePair<Type, ParameterExpression> pair) {
 						return Et.Assign(pair.Value, AstTools.New(pair.Key));
                     }),
 
@@ -193,15 +192,11 @@ namespace IronJS.Compiler.Ast
                          return Et.Assign(pair.Item2, Et.Convert(pair.Item1, pair.Item2.Type));
                     }),
 
-                    Et.Block(
-                        (Locals != Globals) // HACK
-                            ? IEnumerableTools.Map(Locals, delegate(KeyValuePair<string, IjsLocalVar> pair){ return pair.Value.Expr; })
-                            : new ParameterExpression[] {},
-                        body,
-                        Et.Label(
-                            ReturnLabel,
-                            Et.Default(ReturnType)
-                        )
+                    bodyExpr,
+
+                    Et.Label(
+                        ReturnLabel,
+                        Et.Default(ReturnType)
                     )
                 ),
                 new[] { ClosureParm }.Concat(
@@ -213,6 +208,8 @@ namespace IronJS.Compiler.Ast
 
             guard = Et.Lambda<TGuard>(
                 BuildTypeCheck(oddPairs),
+
+				// Sadly we have to send all parameters to the Guard delegate
                 IEnumerableTools.Map(paramPairs, delegate(ParamTuple pair){
                     return pair.Item1;
                 })
@@ -236,6 +233,19 @@ namespace IronJS.Compiler.Ast
                 )
             );
         }
+
+		EtParam[] GetLocalsExprs()
+		{
+			if (Locals == Globals)
+				return new EtParam[0];
+
+			return IEnumerableTools.Map(
+				Locals,
+				delegate(KeyValuePair<string, IjsLocalVar> pair) {
+					return pair.Value.Expr;
+				}
+			);
+		}
 
         internal bool IsGlobal(IjsIVar varInfo)
         {

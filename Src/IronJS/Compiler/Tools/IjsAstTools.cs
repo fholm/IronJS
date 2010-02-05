@@ -57,10 +57,7 @@ namespace IronJS.Compiler.Tools
 							Et.Equal(Et.Field(tmpFunc, "Func0"), Et.Constant(null)),
 							Et.Call(tmpFunc, typeof(IjsFunc).GetMethod("Compile0"))
 						),
-						Et.Invoke(
-							Et.Field(tmpFunc, "Func0"),
-							Et.Field(tmpFunc, "Closure")
-						)
+						Et.Invoke(Et.Field(tmpFunc, "Func0"), Et.Field(tmpFunc, "Closure"))
 					),
 					Et.Dynamic(
 						new IjsInvokeBinder(new CallInfo(0)),
@@ -162,19 +159,6 @@ namespace IronJS.Compiler.Tools
 			);
 		}
 
-		private static Et BuildUpdateExpr(Expression delegateField, Expression funcField, ParameterExpression tmpGuard, Type delegateType, Type guardType, Expression[] args)
-		{
-			return Et.Assign(
-				delegateField,
-				Et.Call(
-					funcField,
-					typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
-					AstUtils.NewArrayHelper(typeof(object), args),
-					tmpGuard
-				)
-			);
-		}
-
         internal static Et Assign(FuncNode func, INode Target, Et value)
         {
             IdentifierNode idNode = Target as IdentifierNode;
@@ -211,6 +195,20 @@ namespace IronJS.Compiler.Tools
             }
 
             throw new NotImplementedException();
-        }
+		}
+
+		static Et BuildUpdateExpr(Expression delegateField, Expression funcField, ParameterExpression tmpGuard,
+			Type delegateType, Type guardType, Expression[] args)
+		{
+			return Et.Assign(
+				delegateField,
+				Et.Call(
+					funcField,
+					typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
+					AstUtils.NewArrayHelper(typeof(object), args),
+					tmpGuard
+				)
+			);
+		}
     }
 }

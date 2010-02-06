@@ -64,14 +64,6 @@ namespace IronJS.Tools
             return array;
         }
 
-        public static Et ToBlock<T>(T[] that, Func<T, Et> transform)
-        {
-            if (that.Length == 0)
-                return AstUtils.Empty();
-
-            return Et.Block(Map(that, transform));
-        }
-
         public static Type[] GetTypes(object[] that)
         {
             Type[] array = new Type[that.Length];

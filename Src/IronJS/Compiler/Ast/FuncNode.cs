@@ -39,15 +39,15 @@ namespace IronJS.Compiler.Ast
 
     public class FuncNode : Node
     {
-        public FuncNode Parent { get; protected set; }
-        public IdentifierNode Name { get; protected set; }
-        public INode Body { get; protected set; }
-        public HashSet<INode> Returns { get; protected set; }
+        public FuncNode Parent { get; set; }
+        public IdentifierNode Name { get; set; }
+        public INode Body { get; set; }
+        public HashSet<INode> Returns { get; set; }
 
-        public Dictionary<string, IjsClosureVar> ClosesOver { get; protected set; }
-        public Dictionary<string, IjsParameter> Parameters { get; protected set; }
-        public Dictionary<string, IjsLocalVar> Locals { get; protected set; }
-        public Dictionary<string, IjsLocalVar> Globals { get; protected set; }
+        public Dictionary<string, IjsClosureVar> ClosesOver { get; set; }
+        public Dictionary<string, IjsParameter> Parameters { get; set; }
+        public Dictionary<string, IjsLocalVar> Locals { get; set; }
+        public Dictionary<string, IjsLocalVar> Globals { get; set; }
 
         public bool IsNamed { get { return !IsLambda; } }
         public bool IsLambda { get { return Name == null; } }
@@ -128,7 +128,9 @@ namespace IronJS.Compiler.Ast
             CallProxies = new Dictionary<Type, ParameterExpression>();
 
             EtParam[] defaults;
-            ParamTuple[] paramPairs = SetParameterTypes(realTypes, paramTypes, out defaults);
+            EtParam[] boxedParams;
+
+            ParamTuple[] paramPairs = SetParameterTypes(realTypes, paramTypes, out defaults, out boxedParams);
             ParamTuple[] oddPairs = ArrayTools.Filter(paramPairs, delegate(ParamTuple x) {
                 return x.Item1 != x.Item2;
             });
@@ -137,6 +139,7 @@ namespace IronJS.Compiler.Ast
 
             Expression<TFunc> lambda = Et.Lambda<TFunc>(
                 Et.Block(
+                    // Concat all parameters used
                     ArrayTools.Concat(
                         ArrayTools.Map(oddPairs, delegate(ParamTuple x) { return x.Item1; }),
 						ArrayTools.Concat(
@@ -145,22 +148,44 @@ namespace IronJS.Compiler.Ast
 						)
                     ).Concat(defaults),
 
+                    // Assigns all call proxies used inside this function
                     AstTools.BuildBlock(CallProxies, delegate(KeyValuePair<Type, ParameterExpression> pair) {
 						return Et.Assign(pair.Value, AstTools.New(pair.Key));
                     }),
 
+                    // Set up boxes for parameters that are closures
+                    AstTools.BuildBlock(boxedParams, delegate(EtParam param) {
+                        return Et.Assign(param, AstTools.New(param.Type));
+                    }),
+
+                    // Assigns parameter values to correctly typed local variables (casting as needed)
                     AstTools.BuildBlock(oddPairs, delegate(ParamTuple pair) {
                         return AstTools.Assign(pair.Item1, pair.Item2);
                     }),
 
+                    // Sets all named parameters that didn't get values to Undefined
                     AstTools.BuildBlock(defaults, delegate(EtParam expr) {
                         return AstTools.Assign(expr, Undefined.Expr);
                     }),
 
+                    // Sets up all local variables that are closures
+                    AstTools.BuildBlock(
+                        ArrayTools.Filter(DictionaryTools.GetValues(Locals), delegate(IjsLocalVar variable) {
+                            return variable.IsClosedOver;
+                        }),
+                        delegate(IjsLocalVar variable) {
+                            return Et.Assign(variable.Expr, AstTools.New(variable.Expr.Type));
+                        }
+                    ),
+
+                    // This is the body of our function
                     bodyExpr,
 
-                    Et.Label(ReturnLabel, Et.Default(ReturnType))
+                    // Return label target
+                    Et.Label(ReturnLabel, Undefined.Expr)
                 ),
+
+                // Set up parameters
                 new[] { ClosureParm }.Concat(
                     IEnumerableTools.Map(paramPairs, delegate(ParamTuple pair) {
                         return pair.Item2;
@@ -184,8 +209,9 @@ namespace IronJS.Compiler.Ast
             return lambda.Compile();
         }
 
-        ParamTuple[] SetParameterTypes(Type[] realTypes, Type[] paramTypes, out EtParam[] defaults) {
+        ParamTuple[] SetParameterTypes(Type[] realTypes, Type[] paramTypes, out EtParam[] defaults, out EtParam[] boxedParams) {
 
+            List<EtParam> boxedList = new List<EtParam>();
             List<EtParam> defaultsList = new List<EtParam>();
             ParamTuple[] paramPairs = new ParamTuple[realTypes.Length];
 
@@ -194,10 +220,9 @@ namespace IronJS.Compiler.Ast
                 if (index < realTypes.Length) {
 
                     if (param.Value.IsClosedOver) {
-                        paramPairs[index] = Tuple.Create(
-                            Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(realTypes[index]), "__box:" + param.Key + "__"),
-                            Et.Parameter(paramTypes[index], "__param:" + param.Key + "__")
-                        );
+                        EtParam box = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(realTypes[index]), "__box:" + param.Key + "__");
+                        paramPairs[index] = Tuple.Create(box, Et.Parameter(paramTypes[index], "__param:" + param.Key + "__"));
+                        boxedList.Add(box);
 
                     } else {
                         paramPairs[index] = CreateParamTuple(realTypes[index], paramTypes[index], param.Key);
@@ -209,6 +234,7 @@ namespace IronJS.Compiler.Ast
 
                     if (param.Value.IsClosedOver) {
                         param.Value.Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(IjsTypes.Dynamic), "__box:" + param.Key + "__");
+                        boxedList.Add(param.Value.Expr);
                     } else {
                         param.Value.Expr = Et.Parameter(IjsTypes.Dynamic, "__" + param.Key + "__");
                     }
@@ -224,6 +250,7 @@ namespace IronJS.Compiler.Ast
             }
 
             defaults = defaultsList.ToArray();
+            boxedParams = boxedList.ToArray();
 
             return paramPairs;
         }

@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast
             Values = values;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -36,7 +36,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             for (int valuePos = 0; valuePos < Values.Count; ++valuePos)
                 Values[valuePos] = Values[valuePos].Analyze(astopt);

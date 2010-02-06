@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
     using Et = Expression;
     using System.Text;
 
-    public class ForIn : Loop
+    public class ForIn : Node
     {
         public INode Target { get; protected set; }
         public INode Source { get; protected set; }
@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             Target = Target.Analyze(astopt);
             Source = Source.Analyze(astopt);
@@ -44,15 +44,15 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
-            Target.Print(writer, indent + 1);
-            Source.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
+            Source.Write(writer, indent + 1);
+            Body.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

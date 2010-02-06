@@ -29,7 +29,7 @@ namespace IronJS.Compiler.Ast
             Label = label;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 

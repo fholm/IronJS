@@ -16,7 +16,7 @@ namespace IronJS.Compiler.Ast
 
     public enum WhileType { DoWhile, While }
 
-    public class While : Loop
+    public class While : Node
     {
         public INode Test { get; protected set; }
         public INode Body { get; protected set; }
@@ -30,14 +30,14 @@ namespace IronJS.Compiler.Ast
             Loop = type;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + Loop);
 
-            Test.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
+            Test.Write(writer, indent + 1);
+            Body.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

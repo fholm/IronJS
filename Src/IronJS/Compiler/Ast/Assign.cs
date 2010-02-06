@@ -13,13 +13,14 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
+    using System.Collections.Generic;
 
     public class Assign : Node, INode
     {
         public INode Target { get; protected set; }
         public INode Value { get; protected set; }
 
-        public override Type ExprType { get { return Value.ExprType; } }
+        public override Type Type { get { return Value.Type; } }
 
         public Assign(INode target, INode value, ITree node)
             : base(NodeType.Assign, node)
@@ -34,24 +35,24 @@ namespace IronJS.Compiler.Ast
             return IjsAstTools.Assign(func, Target, Value.Compile(func));
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
-            Value = Value.Analyze(astopt);
+            Target = Target.Analyze(stack);
+            Value = Value.Analyze(stack);
 
             IfIdentifierAssignedFrom(Target, Value);
 
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType + " ");
 
-            Target.Print(writer, indent + 1);
-            Value.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
+            Value.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

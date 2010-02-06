@@ -23,7 +23,7 @@ namespace IronJS.Compiler.Ast
             Properties = properties;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -31,7 +31,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             foreach (string key in DictionaryTools.GetKeys(Properties))
                 Properties[key] = Properties[key].Analyze(astopt);
@@ -39,7 +39,7 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
             string indentStr2 = new String(' ', (indent + 1) * 2);
@@ -51,7 +51,7 @@ namespace IronJS.Compiler.Ast
             {
                 writer.AppendLine(indentStr2 + "(Property ");
                 writer.AppendLine(indentStr3 + "(" + kvp.Key + ")");
-                kvp.Value.Print(writer, indent + 2);
+                kvp.Value.Write(writer, indent + 2);
                 writer.AppendLine(indentStr2 + ")");
             }
 

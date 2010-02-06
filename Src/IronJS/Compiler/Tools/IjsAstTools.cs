@@ -83,7 +83,7 @@ namespace IronJS.Compiler.Tools
 			Type guardType = proxyType.GetField("Guard").FieldType;
 
 			// All expressions we need through out the building
-			Et callExpr = func.GetCallProxy(proxyType);
+            Et callExpr = null;
 			Et funcField = Et.Field(callExpr, "Func");
 			Et delegateField = Et.Field(callExpr, "Delegate");
 			Et guardField = Et.Field(callExpr, "Guard");
@@ -156,40 +156,7 @@ namespace IronJS.Compiler.Tools
 
         internal static Et Assign(Function func, INode Target, Et value)
         {
-            Variable idNode = Target as Variable;
-            if (idNode != null)
-            {
-                IjsIVar varInfo = idNode.VarInfo;
-
-                if (func.IsGlobal(varInfo))
-                {
-                    return Et.Call(
-                        func.GlobalField,
-                        typeof(IjsObj).GetMethod("Set"),
-                        AstTools.Constant(idNode.Name),
-						AstTools.Box(value)
-                    );
-                }
-                else if(func.IsLocal(idNode.VarInfo))
-                {
-                    IjsLocalVar localVarInfo = varInfo as IjsLocalVar;
-
-                    if (idNode.IsDefinition)
-                    {
-						localVarInfo.Expr = Et.Variable(
-							localVarInfo.ExprType,
-							idNode.Name
-						);
-                    }
-
-					if (localVarInfo.IsClosedOver)
-						return Et.Assign(Et.Field(localVarInfo.Expr, "Value"), value);
-
-                    return Et.Assign(localVarInfo.Expr, value);
-                }
-            }
-
-            throw new NotImplementedException();
+            return AstUtils.Empty();
 		}
 
 		static Et BuildUpdateExpr(Expression delegateField, Expression funcField, ParameterExpression tmpGuard,

@@ -13,8 +13,9 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
+    using System.Collections.Generic;
 
-    public class For : Loop
+    public class For : Node
     {
         public INode Setup { get; protected set; }
         public INode Test { get; protected set; }
@@ -30,7 +31,7 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             if (Setup != null)
                 Setup = Setup.Analyze(astopt);
@@ -60,7 +61,7 @@ namespace IronJS.Compiler.Ast
                 setup = Setup.Compile(func);
 
             if (Test != null)
-                if (Test.ExprType == IjsTypes.Boolean)
+                if (Test.Type == IjsTypes.Boolean)
                     test = Test.Compile(func);
                 else
                     throw new NotImplementedException();
@@ -83,16 +84,16 @@ namespace IronJS.Compiler.Ast
             );
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
-            Setup.Print(writer, indent + 1);
-            Test.Print(writer, indent + 1);
-            Incr.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
+            Setup.Write(writer, indent + 1);
+            Test.Write(writer, indent + 1);
+            Incr.Write(writer, indent + 1);
+            Body.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 #if CLR2
@@ -15,15 +16,10 @@ namespace IronJS.Compiler.Ast
     {
         int Line { get; }
         int Column { get; }
-        NodeType NodeType { get; }
-        Type ExprType { get; }
+        Type Type { get; }
 
         Et Compile(Function func);
-        INode Analyze(Function func);
-        Type EvalTypes(params INode[] nodes);
-        bool IdenticalTypes(params INode[] nodes);
-
-        string Print();
-        void Print(StringBuilder writer, int indent);
+        INode Analyze(Stack<Function> func);
+        void Write(StringBuilder writer, int indent);
     }
 }

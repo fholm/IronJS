@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Text;
+using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using IronJS.Compiler.Tools;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -13,7 +15,6 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
-	using IronJS.Tools;
 
     public class Str : Node, INode
     {
@@ -27,7 +28,7 @@ namespace IronJS.Compiler.Ast
             Delimiter = delimiter;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -40,7 +41,7 @@ namespace IronJS.Compiler.Ast
 			return AstTools.Constant(Value);
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + Delimiter + Value + Delimiter + ")");

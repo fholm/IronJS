@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js;
-using IronJS.Tools;
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -14,59 +10,44 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
 
-    public class Block : Node
-    {
+    #region Aliases
+    using Et = Expression;
+    #endregion
+
+    public class Block : Node {
         public List<INode> Nodes { get; protected set; }
-        public bool IsEmpty { get { return Nodes == null || Nodes.Count == 0; } }
 
         public Block(List<INode> nodes, ITree node)
-            : base(NodeType.Block, node)
-        {
+            : base(NodeType.Block, node) {
             Nodes = nodes;
         }
 
-        public override INode Analyze(Function astopt)
-        {
-            List<INode> nodes = new List<INode>();
+        public override INode Analyze(Stack<Function> stack) {
+            for (int index = 0; index < Nodes.Count; ++index) {
+                Nodes[index] = Nodes[index].Analyze(stack);
+            }
 
-            foreach (INode node in Nodes)
-                nodes.Add(node.Analyze(astopt));
-
-            Nodes = nodes;
             return this;
         }
 
-        public override Et Compile(Function func)
-        {
-            return AstTools.BuildBlock(Nodes, delegate(INode node){
+        public override Et Compile(Function func) {
+            return AstTools.BuildBlock(Nodes, delegate(INode node) {
                 return node.Compile(func);
             });
         }
 
-        public override void Print(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
+        public override void Write(StringBuilder writer, int indent) {
+            string indentStr = StringTools.Repeat(" ", indent * 2);
 
             writer.Append(indentStr + "(" + NodeType + "");
+            writer.AppendLine();
 
-            if (!IsEmpty)
-            {
-                writer.AppendLine();
+            foreach (INode node in Nodes)
+                node.Write(writer, indent + 1);
 
-                foreach (INode node in Nodes)
-                    node.Print(writer, indent + 1);
-
-                writer.AppendLine(indentStr + ")");
-            }
-            else
-            {
-                writer.AppendLine(" empty)");
-            }
+            writer.AppendLine(indentStr + ")");
         }
 
     }

@@ -5,6 +5,7 @@ using System.Text;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
+using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif
@@ -28,21 +29,21 @@ namespace IronJS.Compiler.Ast
             IsTernary = isTernary;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
                 if (IsTernary)
                 {
-                    if (TrueBranch.ExprType == ElseBranch.ExprType)
-                        return TrueBranch.ExprType;
+                    if (TrueBranch.Type == ElseBranch.Type)
+                        return TrueBranch.Type;
                 }
 
                 return IjsTypes.Dynamic;
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             Test = Test.Analyze(astopt);
             TrueBranch = TrueBranch.Analyze(astopt);
@@ -50,23 +51,20 @@ namespace IronJS.Compiler.Ast
             if(HasElseBranch)
                 ElseBranch = ElseBranch.Analyze(astopt);
 
-            if (!IsTernary)
-                astopt.IsBranched = true;
-
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
-            Test.Print(writer, indent + 1);
-            TrueBranch.Print(writer, indent + 1);
+            Test.Write(writer, indent + 1);
+            TrueBranch.Write(writer, indent + 1);
 
             if (ElseBranch != null)
-                ElseBranch.Print(writer, indent + 1);
+                ElseBranch.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

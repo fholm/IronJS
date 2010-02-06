@@ -25,21 +25,14 @@ namespace IronJS.Compiler.Ast
             Body = body;
         }
 
-        public override INode Analyze(Function astopt)
-        {
-            Target = Target.Analyze(astopt);
-            Body = Body.Analyze(astopt);
-            return this;
-        }
-
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
-            Target.Print(writer, indent + 1);
-            Body.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
+            Body.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

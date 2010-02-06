@@ -85,8 +85,8 @@ namespace IronJS.Tools {
             return Et.Convert(value, typeof(object));
         }
 
-        public static Et BuildBlock<T>(IEnumerable<T> collection, Func<T, Et> filter) {
-            Et[] expressions = IEnumerableTools.Map(collection, filter);
+        public static Et BuildBlock<T>(IEnumerable<T> collection, Func<T, Et> transform) {
+            Et[] expressions = IEnumerableTools.Map(collection, transform);
 
             if (expressions.Length == 0)
                 return AstUtils.Empty();

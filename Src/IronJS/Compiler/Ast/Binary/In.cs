@@ -5,6 +5,7 @@ using System.Text;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
+using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif
@@ -24,7 +25,7 @@ namespace IronJS.Compiler.Ast
             Property = property;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -32,7 +33,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> astopt)
         {
             Target = Target.Analyze(astopt);
             Property = Target.Analyze(astopt);
@@ -42,14 +43,14 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
 
-            Property.Print(writer, indent + 1);
-            Target.Print(writer, indent + 1);
+            Property.Write(writer, indent + 1);
+            Target.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

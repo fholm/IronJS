@@ -34,12 +34,12 @@ namespace IronJS.Compiler.Ast
             Args = args;
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
+            Target = Target.Analyze(stack);
 
             for (int index = 0; index < Args.Count; ++index)
-                Args[index] = Args[index].Analyze(astopt);
+                Args[index] = Args[index].Analyze(stack);
 
             IfIdentiferUsedAs(Target, IjsTypes.Object);
 
@@ -58,12 +58,12 @@ namespace IronJS.Compiler.Ast
 			}
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + NodeType);
-            Target.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
 
             string indentStr2 = new String(' ', (indent + 1) * 2);
 
@@ -72,7 +72,7 @@ namespace IronJS.Compiler.Ast
                 writer.AppendLine(indentStr2 + "(Args");
 
                 foreach (INode node in Args)
-                    node.Print(writer, indent + 2);
+                    node.Write(writer, indent + 2);
 
                 writer.AppendLine(indentStr2 + ")");
             }

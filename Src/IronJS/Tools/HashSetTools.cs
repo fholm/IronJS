@@ -23,7 +23,7 @@ namespace IronJS.Tools
         {
             return HashSetTools.EvalType(
                 new HashSet<Type>(
-                    IEnumerableTools.Map(set, delegate(INode node) { return node.ExprType; })
+                    IEnumerableTools.Map(set, delegate(INode node) { return node.Type; })
                 )
             );
         }

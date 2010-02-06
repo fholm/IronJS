@@ -24,7 +24,7 @@ namespace IronJS.Compiler.Ast
         public INode Left { get; protected set; }
         public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
-        public override Type ExprType { get { return IsComparisonOp ? IjsTypes.Boolean : EvalTypes(Left, Right); } }
+        public override Type Type { get { return IsComparisonOp ? IjsTypes.Boolean : EvalTypes(Left, Right); } }
 
         public bool IsComparisonOp
         {
@@ -44,7 +44,7 @@ namespace IronJS.Compiler.Ast
             Right = right;
         }
 
-        public override INode Analyze(Function func)
+        public override INode Analyze(Stack<Function> func)
         {
             Left = Left.Analyze(func);
             Right = Right.Analyze(func);
@@ -62,7 +62,7 @@ namespace IronJS.Compiler.Ast
                 Et left = Left.Compile(func);
                 Et right = Right.Compile(func);
 
-                if (Left.ExprType == IjsTypes.Integer)
+                if (Left.Type == IjsTypes.Integer)
                 {
                     if (Op == ExpressionType.LessThan)
                         return Et.LessThan(left, right);
@@ -79,14 +79,14 @@ namespace IronJS.Compiler.Ast
             throw new NotImplementedException();
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + Op);
 
-            Left.Print(writer, indent + 1);
-            Right.Print(writer, indent + 1);
+            Left.Write(writer, indent + 1);
+            Right.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

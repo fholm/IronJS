@@ -30,7 +30,7 @@ namespace IronJS.Compiler.Ast
             Value = value;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -43,7 +43,7 @@ namespace IronJS.Compiler.Ast
 			return AstTools.Constant(Value);
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(" + Value.ToString().ToLower() + ")");

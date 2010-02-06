@@ -13,6 +13,7 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
+    using System.Collections.Generic;
 
     public class Postfix : Node
     {
@@ -26,29 +27,29 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
-                if (Target.ExprType == IjsTypes.Integer)
+                if (Target.Type == IjsTypes.Integer)
                     return IjsTypes.Integer;
 
                 return IjsTypes.Double;
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
+            Target = Target.Analyze(stack);
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + Op);
-            Target.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
             writer.AppendLine(indentStr + ")");
         }
     }

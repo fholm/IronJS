@@ -82,23 +82,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\Ast\AssignBlock.cs" />
+    <Compile Include="Compiler\Ast\Interfaces\IVariable.cs" />
+    <Compile Include="Compiler\Ast\Statements\Var.cs" />
+    <Compile Include="Compiler\Ast\Variables\Global.cs" />
+    <Compile Include="Compiler\Ast\Variables\Parameter.cs" />
     <Compile Include="Compiler\IjsAst.cs" />
     <Compile Include="Compiler\Ast\Initializers\Vector.cs" />
-    <Compile Include="Compiler\Ast\Statements\AssignBlock.cs" />
     <Compile Include="Compiler\Ast\Assign.cs" />
     <Compile Include="Compiler\Ast\Block.cs" />
-    <Compile Include="Compiler\Ast\GlobalScope.cs" />
+    <Compile Include="Compiler\Ast\Global.cs" />
     <Compile Include="Compiler\IjsAstGenerator.cs" />
     <Compile Include="Compiler\Ast\Statements\Break.cs" />
     <Compile Include="Compiler\Ast\Binary\Binary.cs" />
     <Compile Include="Compiler\Ast\Invoke.cs" />
     <Compile Include="Compiler\Ast\Statements\Continue.cs" />
-    <Compile Include="Compiler\Ast\Variable.cs" />
+    <Compile Include="Compiler\Ast\Symbol.cs" />
     <Compile Include="Compiler\Ast\Interfaces\INode.cs" />
     <Compile Include="Compiler\Ast\Statements\If.cs" />
     <Compile Include="Compiler\Ast\Interfaces\ILabelable.cs" />
     <Compile Include="Compiler\Ast\Function.cs" />
-    <Compile Include="Compiler\Ast\Statements\Loop.cs" />
     <Compile Include="Compiler\Ast\Member.cs" />
     <Compile Include="Compiler\Ast\Unary\New.cs" />
     <Compile Include="Compiler\Ast\Node.cs" />
@@ -106,19 +109,15 @@
     <Compile Include="Compiler\Ast\Constants\Number.cs" />
     <Compile Include="Compiler\Ast\Regex.cs" />
     <Compile Include="Compiler\Ast\Statements\Return.cs" />
-    <Compile Include="Compiler\Ast\Constants\Text.cs" />
+    <Compile Include="Compiler\Ast\Constants\Str.cs" />
     <Compile Include="Compiler\Ast\Statements\While.cs" />
     <Compile Include="Compiler\Ast\Constants\Bool.cs" />
+    <Compile Include="Compiler\Tools\AnalyzeTools.cs" />
     <Compile Include="Compiler\Tools\IjsAstTools1.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IjsAstTools.tt</DependentUpon>
     </Compile>
-    <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
-    <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
-    <Compile Include="Compiler\Variables\IjsIVar.cs" />
-    <Compile Include="Compiler\Variables\IjsLocalVar.cs" />
-    <Compile Include="Compiler\Variables\IjsParameter.cs" />
     <Compile Include="IjsContext.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />

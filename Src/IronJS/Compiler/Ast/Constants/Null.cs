@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Ast
 
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -27,7 +27,7 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
             writer.AppendLine(indentStr + "(null)");

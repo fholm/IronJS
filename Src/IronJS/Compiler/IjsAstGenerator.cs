@@ -755,21 +755,11 @@ namespace IronJS.Compiler {
             List<INode> nodes = new List<INode>();
 
             for (int childIndex = 0; childIndex < node.ChildCount; ++childIndex) {
-                INode assignNode = Build(ITreeTools.GetChildSafe(node, childIndex));
-
-                if (assignNode is Assign) {
-                    INode target = ((Assign)assignNode).Target;
-
-                    if (target is Variable)
-                        ((Variable)target).IsDefinition = true;
-                }
-
-                Variable identifierNode = assignNode as Variable;
-
-                if (identifierNode != null)
-                    identifierNode.IsDefinition = true;
-
-                nodes.Add(assignNode);
+                nodes.Add(
+                    new Var(
+                        Build(ITreeTools.GetChildSafe(node, childIndex)), node
+                    )
+                );
             }
 
             if (nodes.Count == 1)
@@ -825,7 +815,7 @@ namespace IronJS.Compiler {
             return new Function(
                 (name == null)
                     ? null
-                    : new Variable(name, args),
+                    : new Symbol(name, args),
                     ITreeTools.Map(args, delegate(ITree child) {
                 return child.Text;
             }),
@@ -919,7 +909,7 @@ namespace IronJS.Compiler {
         }
 
         private INode BuildIdentifier(ITree node) {
-            return new Variable(node.Text, node);
+            return new Symbol(node.Text, node);
         }
 
         private INode BuildAssign(ITree node, bool isLocal) {

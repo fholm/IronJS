@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast
 
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -41,20 +41,20 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
             IfIdentiferUsedAs(
-                Target = Target.Analyze(astopt), 
+                Target = Target.Analyze(stack), 
                 IjsTypes.Object
             );
 
             for (int index = 0; index < Args.Count; ++index)
-                Args[index] = Args[index].Analyze(astopt);
+                Args[index] = Args[index].Analyze(stack);
 
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
             string indentStr2 = new String(' ', (indent + 1) * 2);
@@ -63,10 +63,10 @@ namespace IronJS.Compiler.Ast
 
             writer.AppendLine(indentStr2 + "(Args");
             foreach (INode arg in Args)
-                arg.Print(writer, indent + 2);
+                arg.Write(writer, indent + 2);
             writer.AppendLine(indentStr2 + ")");
 
-            Target.Print(writer, indent + 1);
+            Target.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

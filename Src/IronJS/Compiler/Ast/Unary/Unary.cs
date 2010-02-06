@@ -5,6 +5,7 @@ using IronJS.Runtime2.Js;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
+using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif
@@ -23,7 +24,7 @@ namespace IronJS.Compiler.Ast
             Op = op;
         }
 
-        public override Type ExprType
+        public override Type Type
         {
             get
             {
@@ -43,20 +44,20 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Function astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
+            Target = Target.Analyze(stack);
             return this;
         }
 
-        public override void Print(StringBuilder writer, int indent)
+        public override void Write(StringBuilder writer, int indent)
         {
             string indentStr = new String(' ', indent * 2);
 
             writer.AppendLine(indentStr + "(" + Op);
 
             if (Target != null)
-                Target.Print(writer, indent + 1);
+                Target.Write(writer, indent + 1);
 
             writer.AppendLine(indentStr + ")");
         }

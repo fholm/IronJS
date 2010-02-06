@@ -34,11 +34,6 @@ namespace IronJS.Runtime2.Js
         {
             if (Func0 == null)
             {
-                Func<bool> guard;
-
-                Func0 = Node.Compile<Func<IjsClosure, object>, Func<bool>>(
-                    Type.EmptyTypes, out guard
-                );
             }
         }
 
@@ -46,9 +41,8 @@ namespace IronJS.Runtime2.Js
 			where TFunc : class
 			where TGuard : class
         {
-            return Node.Compile<TFunc, TGuard>(
-                ArrayTools.GetTypes(values), out guard
-            );	
+            guard = null;
+            return null;
         }
     }
 }

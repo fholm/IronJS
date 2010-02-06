@@ -83,7 +83,7 @@ namespace IronJS.Compiler.Ast
 
         public void IfIdentifierAssignedFrom(INode node, INode value)
         {
-            IdentifierNode idNode = node as IdentifierNode;
+            Variable idNode = node as Variable;
 
             if (idNode != null)
             {
@@ -96,7 +96,7 @@ namespace IronJS.Compiler.Ast
 
         public void IfIdentiferUsedAs(INode node, Type type)
         {
-            IdentifierNode idNode = node as IdentifierNode;
+            Variable idNode = node as Variable;
 
             if (idNode != null)
             {
@@ -122,12 +122,12 @@ namespace IronJS.Compiler.Ast
             writer.AppendLine(indentStr + "(" + NodeType + ")");
         }
 
-        public virtual INode Analyze(FuncNode func)
+        public virtual INode Analyze(Function func)
         {
             return this;
         }
 
-        public virtual Et Compile(FuncNode func)
+        public virtual Et Compile(Function func)
         {
             return AstUtils.Empty();
         }

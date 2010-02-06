@@ -14,9 +14,9 @@ namespace IronJS.Compiler
     public class IjsClosureVar : IjsIVar
     {
         string _name;
-        FuncNode _func;
+        Function _func;
 
-        public IjsClosureVar(string name, FuncNode func)
+        public IjsClosureVar(string name, Function func)
         {
             _name = name;
             _func = func;

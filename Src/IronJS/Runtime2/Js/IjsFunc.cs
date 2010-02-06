@@ -15,7 +15,7 @@ namespace IronJS.Runtime2.Js
 {
     public class IjsFunc : IjsObj
     {
-        public readonly FuncNode Node;
+        public readonly Function Node;
         public readonly IjsClosure Closure;
 
         public Type ClosureType { get { return Closure.GetType(); } }
@@ -23,7 +23,7 @@ namespace IronJS.Runtime2.Js
         public Func<IjsClosure, object> Func0;
         public Dictionary<Type, Delegate> FuncCache;
 
-        public IjsFunc(FuncNode node, IjsClosure closure)
+        public IjsFunc(Function node, IjsClosure closure)
         {
             Node = node;
             Closure = closure;

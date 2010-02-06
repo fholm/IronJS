@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Tools
 
     internal static partial class IjsAstTools
     {
-		internal static Et Call0(FuncNode func, INode target)
+		internal static Et Call0(Function func, INode target)
 		{
 			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
 			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
@@ -67,7 +67,7 @@ namespace IronJS.Compiler.Tools
 			);
 		}
 
-		internal static Et CallN(FuncNode func, INode target, IEnumerable<INode> argsList)
+		internal static Et CallN(Function func, INode target, IEnumerable<INode> argsList)
 		{
 			// Build the args array
 			Et[] args = IEnumerableTools.Map(argsList, delegate(INode node) {
@@ -154,9 +154,9 @@ namespace IronJS.Compiler.Tools
 			);
 		}
 
-        internal static Et Assign(FuncNode func, INode Target, Et value)
+        internal static Et Assign(Function func, INode Target, Et value)
         {
-            IdentifierNode idNode = Target as IdentifierNode;
+            Variable idNode = Target as Variable;
             if (idNode != null)
             {
                 IjsIVar varInfo = idNode.VarInfo;

@@ -82,6 +82,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Compiler\IjsAst.cs" />
     <Compile Include="Compiler\Ast\Initializers\Vector.cs" />
     <Compile Include="Compiler\Ast\Statements\AssignBlock.cs" />
     <Compile Include="Compiler\Ast\Assign.cs" />

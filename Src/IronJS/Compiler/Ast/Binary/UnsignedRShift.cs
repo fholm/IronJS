@@ -18,7 +18,7 @@ namespace IronJS.Compiler.Ast
         public INode Right { get; protected set; }
 
         public UnsignedRShift(INode left, INode right, ITree node)
-            : base(NodeType.UnsignedRightShift, node)
+            : base(NodeType.UnsignedRShift, node)
         {
             Left = left;
             Right = right;

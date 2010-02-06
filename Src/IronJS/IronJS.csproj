@@ -83,15 +83,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\Ast\AssignBlock.cs" />
-    <Compile Include="Compiler\Ast\Interfaces\IVariable.cs" />
+    <Compile Include="Compiler\Ast\Variables\Variable.cs" />
     <Compile Include="Compiler\Ast\Statements\Var.cs" />
+    <Compile Include="Compiler\Ast\Variables\Closed.cs" />
     <Compile Include="Compiler\Ast\Variables\Global.cs" />
+    <Compile Include="Compiler\Ast\Variables\Local.cs" />
     <Compile Include="Compiler\Ast\Variables\Parameter.cs" />
     <Compile Include="Compiler\IjsAst.cs" />
     <Compile Include="Compiler\Ast\Initializers\Vector.cs" />
     <Compile Include="Compiler\Ast\Assign.cs" />
     <Compile Include="Compiler\Ast\Block.cs" />
-    <Compile Include="Compiler\Ast\Global.cs" />
+    <Compile Include="Compiler\Ast\GlobalScope.cs" />
     <Compile Include="Compiler\IjsAstGenerator.cs" />
     <Compile Include="Compiler\Ast\Statements\Break.cs" />
     <Compile Include="Compiler\Ast\Binary\Binary.cs" />

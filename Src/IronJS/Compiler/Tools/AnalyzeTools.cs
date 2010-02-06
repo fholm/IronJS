@@ -1,23 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using IronJS.Compiler.Ast;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Tools {
     internal static class AnalyzeTools {
         internal static INode GetVariable(Stack<Function> stack, string name) {
-            Stack<Function> traversed = new Stack<Function>();
+            Function current = stack.Peek();
+            Stack<Function> missingStack = new Stack<Function>();
 
-            IVariable variable;
+            Variable variable;
             foreach(Function function in stack) {
                 if (function.Variables.TryGetValue(name, out variable)) {
+                    if (function == current)
+                        return variable;
 
+                    if (variable is Local) {
+                        variable.IsClosedOver = true;
+                        variable.ForceType(IjsTypes.Dynamic);
+
+                        foreach (Function traversed in missingStack) {
+                            traversed[name] = new Closed(traversed, name);
+                        }
+
+                        return current.Variables[name];
+                    }
                 } else {
-                    traversed.Push(function);
+                    missingStack.Push(function);
                 }
             }
 
-            return new Global2(name);
+            return new Global(name);
         }
     }
 }

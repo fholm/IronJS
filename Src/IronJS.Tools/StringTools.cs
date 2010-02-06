@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace IronJS.Tools {
     public static class StringTools {
@@ -9,6 +10,10 @@ namespace IronJS.Tools {
                 buffer.Append(s);
 
             return buffer.ToString();
+        }
+
+        public static string Indent(int times) {
+            return new String(' ', times);
         }
     }
 }

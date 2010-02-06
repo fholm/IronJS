@@ -10,16 +10,11 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
-    using Et = Expression;
-
     public interface INode
     {
-        int Line { get; }
-        int Column { get; }
         Type Type { get; }
-
-        Et Compile(Function func);
-        INode Analyze(Stack<Function> func);
-        void Write(StringBuilder writer, int indent);
+        Expression Compile(Function func);
+        INode Analyze(Stack<Function> stack);
+        void Write(StringBuilder writer, int depth);
     }
 }

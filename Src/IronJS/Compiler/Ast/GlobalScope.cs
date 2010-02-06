@@ -10,9 +10,9 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
-    public class Global : Function
+    public class GlobalScope : Function
     {
-        public Global(INode body)
+        public GlobalScope(INode body)
             : base(null, null, body, null)
         {
             IsGlobalScope = true;
@@ -23,17 +23,17 @@ namespace IronJS.Compiler.Ast
             return null;
         }
 
-        public Global Analyze()
+        public GlobalScope Analyze()
         {
             Stack<Function> stack = new Stack<Function>();
             stack.Push(this);
 
-            return (Global) Analyze(stack);
+            return (GlobalScope) Analyze(stack);
         }
 
-        public static Global Create(List<INode> body)
+        public static GlobalScope Create(List<INode> body)
         {
-            return new Global(new Block(body, null));
+            return new GlobalScope(new Block(body, null));
         }
     }
 }

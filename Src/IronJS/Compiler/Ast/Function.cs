@@ -34,9 +34,9 @@ namespace IronJS.Compiler.Ast {
     #endregion
 
     public class Function : Node {
-        public Symbol Name { get; protected set; }
+        public INode Name { get; protected set; }
         public INode Body { get; protected set; }
-        public Dictionary<string, IVariable> Variables { get; set; }
+        public Dictionary<string, Variable> Variables { get; set; }
 
         public bool IsLambda { get { return Name == null; } }
         public bool IsGlobalScope { get; protected set; }
@@ -47,22 +47,22 @@ namespace IronJS.Compiler.Ast {
         /*
          * Compilation properties
          */
-        public Function(Symbol name, IEnumerable<string> parameters, INode body, ITree node)
+        public Function(INode name, IEnumerable<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node) {
             Body = body;
             Name = name;
-            Variables = new Dictionary<string, IVariable>();
+            Variables = new Dictionary<string, Variable>();
 
             if (parameters != null) {
                 foreach (var param in parameters) {
-                    Variables.Add(param, new Parameter());
+                    this[param] = new Parameter(param);
                 }
-            }
+            }   
         }
 
         public override INode Analyze(Stack<Function> stack) {
             if (!IsLambda) {
-                Name.Analyze(stack);
+                Name = Name.Analyze(stack);
             }
 
             stack.Push(this);
@@ -70,6 +70,33 @@ namespace IronJS.Compiler.Ast {
             stack.Pop();
 
             return this;
+        }
+
+        public Variable this[string name] {
+            get {
+                return Variables[name];
+            }
+            set {
+                Variables[name] = value;
+            }
+        }
+
+        public override void Write(StringBuilder writer, int depth) {
+            string indent = StringTools.Repeat(" ", depth * 2);
+
+            writer.AppendLine(indent + "(Function");
+
+            if (!IsLambda) {
+                Name.Write(writer, depth + 1);
+            }
+
+            foreach (Variable variable in Variables.Values) {
+                variable.Write(writer, depth + 1);
+            }
+
+            Body.Write(writer, depth + 1);
+
+            writer.AppendLine(indent + ")");
         }
     }
 }

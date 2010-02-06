@@ -1,20 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Compiler.Tools;
 using IronJS.Tools;
-using IronJS.Runtime2.Js;
-using System.Collections.Generic;
 
-#if CLR2
-using Microsoft.Scripting.Ast;
-#else
-using System.Linq.Expressions;
-#endif
-
-namespace IronJS.Compiler.Ast
-{
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
 
     public class Symbol : Node
     {

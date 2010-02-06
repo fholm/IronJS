@@ -25,7 +25,7 @@ namespace IronJS.Testing {
         public static void Main(string[] args) {
             IjsAstGenerator astGenerator = new IjsAstGenerator();
             List<INode> astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
-            Global globalScope = Global.Create(astNodes).Analyze();
+            GlobalScope globalScope = GlobalScope.Create(astNodes).Analyze();
             Console.WriteLine(globalScope.Print());
             Console.ReadLine();
             /*

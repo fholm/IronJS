@@ -25,12 +25,12 @@ namespace IronJS.Compiler.Ast
         Object, New, AutoProperty, Return,
         UnaryOp, Logical, PostfixOperator,
         TypeOf, Boolean, Void, StrictCompare,
-        UnsignedRightShift, ForStep, ForIn,
+        UnsignedRShift, ForStep, ForIn,
         Break, Continue, With, Try, Catch,
         Throw, IndexAccess, Delete, In,
         Switch, InstanceOf, Regex, Array,
         Integer, Var, Parameter, Local,
-        Global
+        Global, Closed
     }
 
     abstract public class Node : INode
@@ -56,10 +56,35 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        protected bool IdenticalTypes(params INode[] nodes)
+        public virtual INode Analyze(Stack<Function> func)
         {
-            if (nodes.Length > 0)
-            {
+            return this;
+        }
+
+        public virtual Et Compile(Function func)
+        {
+            return AstUtils.Empty();
+        }
+
+        public string Print() {
+            StringBuilder writer = new StringBuilder();
+
+            Write(writer, 0);
+
+            return writer.ToString();
+        }
+
+        public virtual void Write(StringBuilder writer, int depth) {
+            writer.AppendLine(
+                StringTools.Repeat(" ", depth * 2) +
+                "(" +
+                    TypeTools.ShortName(GetType()) +
+                ")"
+            );
+        }
+
+        protected bool IdenticalTypes(params INode[] nodes) {
+            if (nodes.Length > 0) {
                 Type type = nodes[0].Type;
 
                 for (int index = 0; index < nodes.Length; ++index)
@@ -71,9 +96,8 @@ namespace IronJS.Compiler.Ast
 
             return false;
         }
-        
-        protected Type EvalTypes(params INode[] nodes)
-        {
+
+        protected Type EvalTypes(params INode[] nodes) {
             HashSet<Type> set = new HashSet<Type>();
 
             foreach (INode node in nodes)
@@ -82,12 +106,10 @@ namespace IronJS.Compiler.Ast
             return HashSetTools.EvalType(set);
         }
 
-        public void IfIdentifierAssignedFrom(INode node, INode value)
-        {
+        protected void IfIdentifierAssignedFrom(INode node, INode value) {
             Symbol idNode = node as Symbol;
 
-            if (idNode != null)
-            {
+            if (idNode != null) {
                 /*
                 IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
 
@@ -97,12 +119,10 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public void IfIdentiferUsedAs(INode node, Type type)
-        {
+        protected void IfIdentiferUsedAs(INode node, Type type) {
             Symbol idNode = node as Symbol;
 
-            if (idNode != null)
-            {
+            if (idNode != null) {
                 /*
                 IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
 
@@ -110,31 +130,6 @@ namespace IronJS.Compiler.Ast
                     varInfo.UsedAs.Add(type);
                 */
             }
-        }
-
-        public string Print()
-        {
-            StringBuilder writer = new StringBuilder();
-
-            Write(writer, 0);
-
-            return writer.ToString();
-        }
-
-        public virtual void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + NodeType + ")");
-        }
-
-        public virtual INode Analyze(Stack<Function> func)
-        {
-            return this;
-        }
-
-        public virtual Et Compile(Function func)
-        {
-            return AstUtils.Empty();
         }
     }
 }

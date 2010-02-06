@@ -816,9 +816,9 @@ namespace IronJS.Compiler {
                 (name == null)
                     ? null
                     : new Symbol(name, args),
-                    ITreeTools.Map(args, delegate(ITree child) {
-                return child.Text;
-            }),
+                ITreeTools.Map(args, delegate(ITree child) {
+                    return child.Text;
+                }),
                 BuildBlock(body),
                 node
             );

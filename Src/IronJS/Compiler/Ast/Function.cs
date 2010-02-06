@@ -17,7 +17,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
-
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -28,32 +28,54 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast {
 
     #region Aliases
-
+    using Et = Expression;
     #endregion
 
     public class Function : Node {
         public INode Name { get; private set; }
         public INode Body { get; private set; }
-        public Dictionary<string, Variable> Variables { get; set; }
+        public Dictionary<string, Variable> Variables { get; private set; }
+        public string[] ParameterNames { get; private set; }
         public bool IsLambda { get { return Name == null; } }
         public Type ReturnType { get { return IjsTypes.Dynamic; } }
         public override Type Type { get { return IjsTypes.Object; } }
 
         /*
          * Compilation properties
-         */
-        public Function(INode name, IEnumerable<string> parameters, INode body, ITree node)
+         **/
+        public Et Globals {
+            get {
+                return Et.Field(this["//closure"].Expr, "Globals");
+            }
+        }
+
+        public Et Context {
+            get {
+                return Et.Field(this["//closures"].Expr, "Context");
+            }
+        }
+
+        public LabelTarget ReturnLabel {
+            get;
+            set;
+        }
+
+        public Function(INode name, List<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node) {
             Body = body;
             Name = name;
             Variables = new Dictionary<string, Variable>();
+            ParameterNames = ArrayUtils.Insert("//closures", ArrayUtils.MakeArray(parameters));
+
+            this["//closure"] = new Parameter("//closures");
+            this["//closure"].ForceType(typeof(IjsClosure));
 
             if (parameters != null) {
                 foreach (var param in parameters) {
                     this[param] = new Parameter(param);
                 }
-            }   
-        }
+            }
+        } 
 
         public override INode Analyze(Stack<Function> stack) {
             if (!IsLambda) {
@@ -67,12 +89,33 @@ namespace IronJS.Compiler.Ast {
             return this;
         }
 
+        public override Expression Compile(Function func) {
+            return AstTools.New(
+                typeof(IjsFunc),
+                AstTools.Constant(this),
+                AstTools.New(
+                    typeof(IjsClosure),
+                    func.Context,
+                    func.Globals
+                )
+            );
+        }
+
         public Variable this[string name] {
             get {
                 return Variables[name];
             }
             set {
                 Variables[name] = value;
+            }
+        }
+
+        public Variable this[int argn] {
+            get {
+                return Variables[ParameterNames[argn]];
+            }
+            set {
+                Variables[ParameterNames[argn]] = value;
             }
         }
 

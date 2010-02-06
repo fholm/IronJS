@@ -15,7 +15,7 @@ namespace IronJS.Runtime2.Js
 {
     public class IjsFunc : IjsObj
     {
-        public readonly Function Node;
+        public readonly Function Ast;
         public readonly IjsClosure Closure;
 
         public Type ClosureType { get { return Closure.GetType(); } }
@@ -25,7 +25,7 @@ namespace IronJS.Runtime2.Js
 
         public IjsFunc(Function node, IjsClosure closure)
         {
-            Node = node;
+            Ast = node;
             Closure = closure;
 			FuncCache = new Dictionary<Type, Delegate>();
         }
@@ -34,6 +34,11 @@ namespace IronJS.Runtime2.Js
 			where TFunc : class
 			where TGuard : class
         {
+            Type[] types = typeof(TFunc).GetGenericArguments();
+            Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+
+
+
             guard = null;
             return null;
         }

@@ -53,20 +53,24 @@ namespace IronJS.Compiler.Ast {
             _isClosedOver = true;
         }
 
-        public override void Write(StringBuilder writer, int depth) {
-            writer.AppendLine(StringTools.Indent(depth * 2) + "(" + NodeType + " " + Name + " " + TypeTools.ShortName(Type) + ")");
+        public virtual void Setup() {
+            if (_isClosedOver) {
+                Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(Type), "__" + Name + "__");
+            } else {
+                Expr = Et.Parameter(Type, "__" + Name + "__");
+            }
         }
 
-        public override Expression Compile(Function func) {
-            if (Expr == null) {
-                if (_isClosedOver) {
-                    Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(Type), "__" + Name + "__");
-                } else {
-                    Expr = Et.Parameter(Type, "__" + Name + "__");
-                }
-            }
-
+        public virtual Et Value() {
             return Expr;
+        }
+
+        public override sealed Expression Compile(Function func) {
+            return Value();
+        }
+
+        public override void Write(StringBuilder writer, int depth) {
+            writer.AppendLine(StringTools.Indent(depth * 2) + "(" + NodeType + " " + Name + " " + TypeTools.ShortName(Type) + ")");
         }
 
         protected virtual Type EvalType() {

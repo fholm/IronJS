@@ -95,7 +95,6 @@ namespace IronJS.Compiler {
                 /*
                  * Functions
                  */
-
                 case EcmaParser.FUNCTION:
                     return BuildFunction(node);
 
@@ -108,7 +107,6 @@ namespace IronJS.Compiler {
                 /*
                  * If statement
                  */
-
                 case EcmaParser.IF:
                 case EcmaParser.QUE: // <expr> ? <expr> : <expr>
                     return BuildIf(node);

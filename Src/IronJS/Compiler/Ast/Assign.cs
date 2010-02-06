@@ -40,6 +40,10 @@ namespace IronJS.Compiler.Ast
             Target = Target.Analyze(stack);
             Value = Value.Analyze(stack);
 
+            Closed closed = Target as Closed;
+            if (closed != null)
+                AnalyzeTools.AddClosedType(stack, closed.Name, Value.Type);
+
             IfIdentifierAssignedFrom(Target, Value);
 
             return this;

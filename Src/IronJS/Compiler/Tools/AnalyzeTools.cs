@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
+using System;
 
 namespace IronJS.Compiler.Tools {
     internal static class AnalyzeTools {
@@ -15,8 +16,7 @@ namespace IronJS.Compiler.Tools {
                         return variable;
 
                     if (variable is Local) {
-                        variable.IsClosedOver = true;
-                        variable.ForceType(IjsTypes.Dynamic);
+                        variable.MarkAsClosedOver();
 
                         foreach (Function traversed in missingStack) {
                             traversed[name] = new Closed(traversed, name);
@@ -30,6 +30,17 @@ namespace IronJS.Compiler.Tools {
             }
 
             return new Global(name);
+        }
+
+        internal static void AddClosedType(Stack<Function> stack, string name, Type type) {
+            Variable variable;
+            foreach (Function function in stack) {
+                if (function.Variables.TryGetValue(name, out variable)) {
+                    if (variable is Local) {
+                        variable.UsedAs(type);
+                    }
+                }
+            }
         }
     }
 }

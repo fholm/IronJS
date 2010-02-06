@@ -6,26 +6,12 @@ using Microsoft.Scripting;
 using IronJS.Runtime2.Js;
 
 namespace IronJS {
-    public class IjsContext {
-
-        #region Fields
-
-        public readonly IjsClosure GlobalClosure;
-
-        #endregion
-
-        #region Properties
-
+    public sealed class IjsContext {
+        public IjsClosure GlobalClosure { get; private set; }
         public IjsObj GlobalScope { get { return GlobalClosure.Globals; } }
-
-        #endregion
-
-        #region Constructors
 
         public IjsContext() {
             GlobalClosure = new IjsClosure(this, new IjsObj());
         }
-
-        #endregion
     }
 }

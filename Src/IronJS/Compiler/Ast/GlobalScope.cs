@@ -15,20 +15,26 @@ namespace IronJS.Compiler.Ast
         public GlobalScope(INode body)
             : base(null, null, body, null)
         {
-            IsGlobalScope = true;
+
         }
 
-        public Func<IjsClosure, object> Compile()
+        public Func<IjsClosure, object> Compile(IjsContext context)
         {
-            return null;
+            Func<bool> guard;
+
+            IjsFunc tempFunc = new IjsFunc(this, context.GlobalClosure);
+
+            Func<IjsClosure, object> compiled = 
+                tempFunc.Compile<Func<IjsClosure, object>, Func<bool>>(
+                    ArrayUtils.EmptyObjects, out guard
+                );
+
+            return compiled;
         }
 
         public GlobalScope Analyze()
         {
-            Stack<Function> stack = new Stack<Function>();
-            stack.Push(this);
-
-            return (GlobalScope) Analyze(stack);
+            return (GlobalScope)Analyze(new Stack<Function>());
         }
 
         public static GlobalScope Create(List<INode> body)

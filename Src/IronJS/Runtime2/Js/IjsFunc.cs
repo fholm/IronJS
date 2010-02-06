@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Compiler.Ast;
 using IronJS.Tools;
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif
@@ -30,14 +30,7 @@ namespace IronJS.Runtime2.Js
 			FuncCache = new Dictionary<Type, Delegate>();
         }
 
-        public void Compile0()
-        {
-            if (Func0 == null)
-            {
-            }
-        }
-
-        public TFunc CompileN<TFunc, TGuard>(object[] values, out TGuard guard)
+        public TFunc Compile<TFunc, TGuard>(object[] values, out TGuard guard)
 			where TFunc : class
 			where TGuard : class
         {

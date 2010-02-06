@@ -1,12 +1,11 @@
-﻿
-var a = 1;
-var b = "foo";
-var c = true;
-var x = function(z) {
-    var y = 1;
+﻿var a = 1;
 
-    var d = function() {
-        var _ = y;
+var b = function(c) {
+    var d = 1;
+    var l = c;
+
+    var e = function(x) {
+        var f = d;
     };
-
 };
+

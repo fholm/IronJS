@@ -107,28 +107,18 @@ namespace IronJS.Compiler.Ast
         }
 
         protected void IfIdentifierAssignedFrom(INode node, INode value) {
-            Symbol idNode = node as Symbol;
+            Variable variable = node as Variable;
 
-            if (idNode != null) {
-                /*
-                IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
-
-                if (varInfo != null)
-                    varInfo.AssignedFrom.Add(value);
-                */
+            if (variable != null) {
+                variable.AssignedFrom(value);
             }
         }
 
         protected void IfIdentiferUsedAs(INode node, Type type) {
-            Symbol idNode = node as Symbol;
+            Variable variable = node as Variable;
 
-            if (idNode != null) {
-                /*
-                IjsLocalVar varInfo = idNode.VarInfo as IjsLocalVar;
-
-                if (varInfo != null)
-                    varInfo.UsedAs.Add(type);
-                */
+            if (variable != null) {
+                variable.UsedAs(type);
             }
         }
     }

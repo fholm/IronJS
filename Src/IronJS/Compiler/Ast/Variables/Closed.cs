@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using IronJS.Tools;
+using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast {
     public class Closed : Variable {
@@ -9,6 +7,10 @@ namespace IronJS.Compiler.Ast {
         public Closed(Function function, string name)
             : base(name, NodeType.Closed) {
             _function = function;
+        }
+
+        protected override Type EvalType() {
+            return IjsTypes.Undefined;
         }
     }
 }

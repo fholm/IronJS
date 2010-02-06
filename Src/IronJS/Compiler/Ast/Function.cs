@@ -17,7 +17,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
-using Microsoft.Scripting.Utils;
+
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -28,19 +28,14 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast {
 
     #region Aliases
-    using Et = Expression;
-    using EtParam = ParameterExpression;
-    using ParamTuple = Tuple<ParameterExpression, ParameterExpression>;
+
     #endregion
 
     public class Function : Node {
-        public INode Name { get; protected set; }
-        public INode Body { get; protected set; }
+        public INode Name { get; private set; }
+        public INode Body { get; private set; }
         public Dictionary<string, Variable> Variables { get; set; }
-
         public bool IsLambda { get { return Name == null; } }
-        public bool IsGlobalScope { get; protected set; }
-
         public Type ReturnType { get { return IjsTypes.Dynamic; } }
         public override Type Type { get { return IjsTypes.Object; } }
 
@@ -82,7 +77,8 @@ namespace IronJS.Compiler.Ast {
         }
 
         public override void Write(StringBuilder writer, int depth) {
-            string indent = StringTools.Repeat(" ", depth * 2);
+            string indent = StringTools.Indent(depth * 2);
+            string indent1 = StringTools.Indent((depth + 1) * 2);
 
             writer.AppendLine(indent + "(Function");
 
@@ -90,9 +86,11 @@ namespace IronJS.Compiler.Ast {
                 Name.Write(writer, depth + 1);
             }
 
+            writer.AppendLine(indent1 + "(Variables");
             foreach (Variable variable in Variables.Values) {
-                variable.Write(writer, depth + 1);
+                variable.Write(writer, depth + 2);
             }
+            writer.AppendLine(indent1 + ")");
 
             Body.Write(writer, depth + 1);
 

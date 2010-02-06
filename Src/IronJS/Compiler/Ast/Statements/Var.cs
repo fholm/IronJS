@@ -14,7 +14,7 @@ namespace IronJS.Compiler.Ast {
         public override INode Analyze(Stack<Function> stack) {
             Function function = stack.Peek();
 
-            if (!function.IsGlobalScope) {
+            if (stack.Count > 1) {
                 Symbol symbol = Target as Symbol;
 
                 if (symbol == null) {
@@ -30,7 +30,8 @@ namespace IronJS.Compiler.Ast {
                 function[symbol.Name] = new Local(symbol.Name);
             }
 
-            return Target.Analyze(stack);
+            Target = Target.Analyze(stack);
+            return this;
         }
 
         public override void Write(System.Text.StringBuilder writer, int depth) {

@@ -13,25 +13,21 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler
-{
+namespace IronJS.Compiler {
     using EcmaLexer = IronJS.Compiler.Parser.ES3Lexer;
     using EcmaParser = IronJS.Compiler.Parser.ES3Parser;
 
-    public class IjsAstGenerator
-    {
-        public List<INode> Build(string fileName, Encoding encoding)
-        {
+    public class IjsAstGenerator {
+        public List<INode> Build(string fileName, Encoding encoding) {
             return Build(
                 System.IO.File.ReadAllText(
-                    fileName, 
+                    fileName,
                     encoding
                 )
             );
         }
 
-        public List<INode> Build(string source)
-        {
+        public List<INode> Build(string source) {
             EcmaLexer lexer = new EcmaLexer(new ANTLRStringStream(source));
             EcmaParser parser = new EcmaParser(new CommonTokenStream(lexer));
 
@@ -39,31 +35,24 @@ namespace IronJS.Compiler
             ITree root = (ITree)program.Tree;
             List<INode> nodes = new List<INode>();
 
-            if (root == null)
-            {
+            if (root == null) {
                 nodes.Add(new Null(null));
-            }
-            else if (root.IsNil)
-            {
+            } else if (root.IsNil) {
                 ITreeTools.EachChild(root, delegate(ITree node) {
                     nodes.Add(Build(node));
                 });
-            }
-            else
-            {
+            } else {
                 nodes.Add(Build(root));
             }
 
             return nodes;
         }
 
-        private INode Build(ITree node)
-        {
+        private INode Build(ITree node) {
             if (node == null)
                 return null;
 
-            switch (node.Type)
-            {
+            switch (node.Type) {
 
                 case EcmaParser.WITH:
                     return BuildWith(node);
@@ -399,23 +388,20 @@ namespace IronJS.Compiler
             }
         }
 
-        private INode BuildRegex(ITree node)
-        {
+        private INode BuildRegex(ITree node) {
             return new Regex2(node.Text, node);
         }
 
-        private INode BuildArray(ITree node)
-        {
+        private INode BuildArray(ITree node) {
             return new Vector(
                 ITreeTools.Map<INode>(node, delegate(ITree child) {
-                    return Build(ITreeTools.GetChildSafe(child, 0));
-                }),
+                return Build(ITreeTools.GetChildSafe(child, 0));
+            }),
                 node
             );
         }
 
-        private INode BuildInstanceOf(ITree node)
-        {
+        private INode BuildInstanceOf(ITree node) {
             return new InstanceOf(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -423,24 +409,19 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildSwitch(ITree node)
-        {
+        private INode BuildSwitch(ITree node) {
             INode def = (INode)(new Null(node));
             List<Tuple<INode, INode>> cases = new List<Tuple<INode, INode>>();
 
-            for (int childIndex = 1; childIndex < node.ChildCount; ++childIndex)
-            {
+            for (int childIndex = 1; childIndex < node.ChildCount; ++childIndex) {
                 ITree child = ITreeTools.GetChildSafe(node, childIndex);
 
-                if (child.Type == EcmaParser.DEFAULT)
-                {
+                if (child.Type == EcmaParser.DEFAULT) {
                     def = Build(ITreeTools.GetChildSafe(child, 0));
-                }
-                else
-                {
+                } else {
                     List<INode> caseBlock = new List<INode>();
 
-                    for(int subChildIndex = 1; subChildIndex < child.ChildCount; ++subChildIndex)
+                    for (int subChildIndex = 1; subChildIndex < child.ChildCount; ++subChildIndex)
                         caseBlock.Add(
                             Build(ITreeTools.GetChildSafe(child, subChildIndex))
                         );
@@ -464,8 +445,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
-        private INode BuildCommaExpression(ITree node)
-        {
+        private INode BuildCommaExpression(ITree node) {
             return new AssignBlock(
                 ITreeTools.Map(node, delegate(ITree child) { return Build(child); }),
                 false,
@@ -473,8 +453,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildIn(ITree node)
-        {
+        private INode BuildIn(ITree node) {
             return new In(
                 Build(ITreeTools.GetChildSafe(node, 1)),
                 Build(ITreeTools.GetChildSafe(node, 0)),
@@ -482,34 +461,28 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildDelete(ITree node)
-        {
+        private INode BuildDelete(ITree node) {
             return new Delete(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 node
             );
         }
 
-        private INode BuildLabelled(ITree node)
-        {
+        private INode BuildLabelled(ITree node) {
             ITree label = ITreeTools.GetChildSafe(node, 0);
             INode target = Build(ITreeTools.GetChildSafe(node, 1));
 
             if (!(target is ILabelable))
                 throw new IjsCompilerError("Can only label nodes that implement ILabelableNode");
 
-           (target as ILabelable).SetLabel(label.Text);
-           return target;
+            (target as ILabelable).SetLabel(label.Text);
+            return target;
         }
 
-        private INode BuildIndexAccess(ITree node)
-        {
-            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0)))
-            {
+        private INode BuildIndexAccess(ITree node) {
+            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0))) {
                 return new New(Build(node), node);
-            }
-            else
-            {
+            } else {
                 return new Index(
                     Build(ITreeTools.GetChildSafe(node, 0)),
                     Build(ITreeTools.GetChildSafe(node, 1)),
@@ -518,23 +491,19 @@ namespace IronJS.Compiler
             }
         }
 
-        private INode BuildThrow(ITree node)
-        {
+        private INode BuildThrow(ITree node) {
             return new Throw(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 node
             );
         }
 
-        private INode BuildFinally(ITree node)
-        {
+        private INode BuildFinally(ITree node) {
             return BuildBlock(ITreeTools.GetChildSafe(node, 0));
         }
 
-        private INode BuildTry(ITree node)
-        {
-            if (node.ChildCount > 2)
-            {
+        private INode BuildTry(ITree node) {
+            if (node.ChildCount > 2) {
                 ITree _catch = ITreeTools.GetChildSafe(node, 1);
 
                 return new Try(
@@ -544,13 +513,10 @@ namespace IronJS.Compiler
                     Build(ITreeTools.GetChildSafe(node, 2)),
                     node
                 );
-            }
-            else
-            {
+            } else {
                 ITree secondChild = ITreeTools.GetChildSafe(node, 1);
 
-                if (secondChild.Type == EcmaParser.FINALLY)
-                {
+                if (secondChild.Type == EcmaParser.FINALLY) {
                     return new Try(
                         Build(ITreeTools.GetChildSafe(node, 0)),
                         null,
@@ -558,9 +524,7 @@ namespace IronJS.Compiler
                         Build(ITreeTools.GetChildSafe(node, 1)),
                         node
                     );
-                }
-                else
-                {
+                } else {
                     ITree _catch = ITreeTools.GetChildSafe(node, 1);
 
                     return new Try(
@@ -574,8 +538,7 @@ namespace IronJS.Compiler
             }
         }
 
-        private INode BuildWith(ITree node)
-        {
+        private INode BuildWith(ITree node) {
             return new With(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -583,8 +546,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildDoWhile(ITree node)
-        {
+        private INode BuildDoWhile(ITree node) {
             INode body = Build(ITreeTools.GetChildSafe(node, 0));
             INode test = Build(ITreeTools.GetChildSafe(node, 1));
 
@@ -596,37 +558,33 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildContinue(ITree node)
-        {
+        private INode BuildContinue(ITree node) {
             if (node.ChildCount == 0)
                 return new Continue(null, node);
 
             return new Continue(
-                ITreeTools.GetChildSafe(node, 0).Text, 
+                ITreeTools.GetChildSafe(node, 0).Text,
                 node
             );
         }
 
         // 12.8
-        private INode BuildBreak(ITree node)
-        {
+        private INode BuildBreak(ITree node) {
             if (node.ChildCount == 0)
                 return new Break(null, node);
 
             return new Break(
-                ITreeTools.GetChildSafe(node, 0).Text, 
+                ITreeTools.GetChildSafe(node, 0).Text,
                 node
             );
         }
 
-        private INode BuildFor(ITree node)
-        {
+        private INode BuildFor(ITree node) {
             INode body = Build(ITreeTools.GetChildSafe(node, 1));
             ITree type = ITreeTools.GetChildSafe(node, 0);
 
             // 12.6.3
-            if (type.Type == EcmaParser.FORSTEP)
-            {
+            if (type.Type == EcmaParser.FORSTEP) {
                 ITree init = ITreeTools.GetChildSafe(type, 0);
                 ITree test = ITreeTools.GetChildSafe(type, 1);
                 ITree incr = ITreeTools.GetChildSafe(type, 2);
@@ -651,9 +609,8 @@ namespace IronJS.Compiler
                     node
                 );
             }
-            // 12.6.4
-            else if(type.Type == EcmaParser.FORITER)
-            {
+                // 12.6.4
+            else if (type.Type == EcmaParser.FORITER) {
                 return new ForIn(
                     Build(ITreeTools.GetChildSafe(type, 0)),
                     Build(ITreeTools.GetChildSafe(type, 1)),
@@ -665,8 +622,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
-        private INode BuildUnsignedRightShiftAssign(ITree node)
-        {
+        private INode BuildUnsignedRightShiftAssign(ITree node) {
             return new Assign(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 new UnsignedRShift(
@@ -678,8 +634,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildUnsignedRightShift(ITree node)
-        {
+        private INode BuildUnsignedRightShift(ITree node) {
             return new UnsignedRShift(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -687,8 +642,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildStrictCompare(ITree node, ExpressionType type)
-        {
+        private INode BuildStrictCompare(ITree node, ExpressionType type) {
             return new StrictCompare(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -697,34 +651,29 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildVoidOp(ITree node)
-        {
+        private INode BuildVoidOp(ITree node) {
             return new Ast.Void(
-                Build(ITreeTools.GetChildSafe(node, 0)), 
+                Build(ITreeTools.GetChildSafe(node, 0)),
                 node
             );
         }
 
-        private INode BuildBoolean(ITree node)
-        {
+        private INode BuildBoolean(ITree node) {
             return new Bool(
-                node.Type == 5, 
+                node.Type == 5,
                 node
             );
         }
 
-        private INode BuildTypeOfOp(ITree node)
-        {
+        private INode BuildTypeOfOp(ITree node) {
             return new TypeOf(
-                Build(ITreeTools.GetChildSafe(node, 0)), 
+                Build(ITreeTools.GetChildSafe(node, 0)),
                 node
             );
         }
 
-        private INode BuildIncDecNode(ITree node, ExpressionType type)
-        {
-            switch (type)
-            {
+        private INode BuildIncDecNode(ITree node, ExpressionType type) {
+            switch (type) {
                 case ExpressionType.PreIncrementAssign:
                 case ExpressionType.PreDecrementAssign:
                     return new Assign(
@@ -758,8 +707,7 @@ namespace IronJS.Compiler
             throw new NotImplementedException();
         }
 
-        private INode BuildLogicalNode(ITree node, ExpressionType op)
-        {
+        private INode BuildLogicalNode(ITree node, ExpressionType op) {
             return new Logical(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -768,8 +716,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildUnuaryOp(ITree node, ExpressionType op)
-        {
+        private INode BuildUnuaryOp(ITree node, ExpressionType op) {
             return new Unary(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 op,
@@ -777,8 +724,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildBinaryOpAssign(ITree node, ExpressionType op)
-        {
+        private INode BuildBinaryOpAssign(ITree node, ExpressionType op) {
             return new Assign(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 new Binary(
@@ -791,8 +737,7 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildBinaryOp(ITree node, ExpressionType op)
-        {
+        private INode BuildBinaryOp(ITree node, ExpressionType op) {
             return new Binary(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 Build(ITreeTools.GetChildSafe(node, 1)),
@@ -801,24 +746,20 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildReturn(ITree node)
-        {
+        private INode BuildReturn(ITree node) {
             if (node.ChildCount == 0)
                 return new Return(new Null(node), node);
 
             return new Return(Build(ITreeTools.GetChildSafe(node, 0)), node);
         }
 
-        private INode BuildVarAssign(ITree node)
-        {
+        private INode BuildVarAssign(ITree node) {
             List<INode> nodes = new List<INode>();
 
-            for (int childIndex = 0; childIndex < node.ChildCount; ++childIndex)
-            {
+            for (int childIndex = 0; childIndex < node.ChildCount; ++childIndex) {
                 INode assignNode = Build(ITreeTools.GetChildSafe(node, childIndex));
 
-                if (assignNode is Assign)
-                {
+                if (assignNode is Assign) {
                     INode target = ((Assign)assignNode).Target;
 
                     if (target is Variable)
@@ -839,8 +780,7 @@ namespace IronJS.Compiler
             return new AssignBlock(nodes, true, node);
         }
 
-        private INode BuildObject(ITree node)
-        {
+        private INode BuildObject(ITree node) {
             Dictionary<string, INode> propertyDict = new Dictionary<string, INode>();
 
             ITreeTools.EachChild(node, delegate(ITree child) {
@@ -853,65 +793,57 @@ namespace IronJS.Compiler
             return new Obj(propertyDict, node);
         }
 
-        private INode BuildWhile(ITree node)
-        {
+        private INode BuildWhile(ITree node) {
             INode testNode = Build(ITreeTools.GetChildSafe(node, 0));
             INode bodyNode = Build(ITreeTools.GetChildSafe(node, 1));
 
             return new While(
-                testNode, 
+                testNode,
                 bodyNode,
                 WhileType.While,
                 node
             );
         }
 
-        private INode BuildFunction(ITree node)
-        {
-            if (node.ChildCount > 2)
-            {
+        private INode BuildFunction(ITree node) {
+            if (node.ChildCount > 2) {
                 return BuildLambda(
                     ITreeTools.GetChildSafe(node, 1),
                     ITreeTools.GetChildSafe(node, 2),
                     ITreeTools.GetChildSafe(node, 0).Text,
                     node
                 );
-            }
-            else
-            {
+            } else {
                 return BuildLambda(
                     ITreeTools.GetChildSafe(node, 0),
-                    ITreeTools.GetChildSafe(node, 1), 
+                    ITreeTools.GetChildSafe(node, 1),
                     null,
                     node
                 );
             }
         }
 
-        private INode BuildLambda(ITree args, ITree body, string name, ITree node)
-        {
+        private INode BuildLambda(ITree args, ITree body, string name, ITree node) {
             return new Function(
                 (name == null)
-                    ? null 
+                    ? null
                     : new Variable(name, args),
-                    ITreeTools.Map(args, delegate(ITree child){
-                        return child.Text;
-                    }),
-                BuildBlock(body), 
+                    ITreeTools.Map(args, delegate(ITree child) {
+                return child.Text;
+            }),
+                BuildBlock(body),
                 node
             );
         }
 
-        private INode BuildNew(ITree node)
-        {
+        private INode BuildNew(ITree node) {
             return new New(
                 Build(ITreeTools.GetChildSafe(node, 0)),
                 node
             );
         }
 
-        private INode BuildString(ITree node)
-        {
+        private INode BuildString(ITree node) {
             return new Str(
                 node.Text.Substring(1, node.Text.Length - 2),
                 node.Text[0],
@@ -919,36 +851,30 @@ namespace IronJS.Compiler
             );
         }
 
-        private INode BuildBlock(ITree node)
-        {
+        private INode BuildBlock(ITree node) {
             List<INode> nodes = new List<INode>();
 
-            ITreeTools.EachChild(node, delegate(ITree child){
+            ITreeTools.EachChild(node, delegate(ITree child) {
                 nodes.Add(Build(child));
             });
 
             return new Block(nodes, node);
         }
 
-        private INode BuildIf(ITree node)
-        {
+        private INode BuildIf(ITree node) {
             return new If(
                 Build(ITreeTools.GetChildSafe(node, 0)),
-                Build(ITreeTools.GetChildSafe(node, 1)), 
+                Build(ITreeTools.GetChildSafe(node, 1)),
                 Build(node.GetChild(2)), // can be null
                 node.Type == EcmaParser.QUE,
                 node
             );
         }
 
-        private INode BuildMemberAccess(ITree node)
-        {
-            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0)))
-            {
+        private INode BuildMemberAccess(ITree node) {
+            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0))) {
                 return new New(Build(node), node);
-            }
-            else
-            {
+            } else {
                 return new Member(
                     Build(ITreeTools.GetChildSafe(node, 0)),
                     ITreeTools.GetChildSafe(node, 1).Text,
@@ -957,10 +883,8 @@ namespace IronJS.Compiler
             }
         }
 
-        private INode BuildCall(ITree node)
-        {
-            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0)))
-            {
+        private INode BuildCall(ITree node) {
+            if (RewriteIfContainsNew(ITreeTools.GetChildSafe(node, 0))) {
                 return new New(
                     Build(ITreeTools.GetChildSafe(node, 0)),
                     ITreeTools.Map(
@@ -971,15 +895,12 @@ namespace IronJS.Compiler
                     ),
                     node
                 );
-            }
-            else
-            {
+            } else {
                 return new Invoke(
                     Build(ITreeTools.GetChildSafe(node, 0)),
                     ITreeTools.Map(
                         ITreeTools.GetChildSafe(node, 1),
-                        delegate(ITree child)
-                        {
+                        delegate(ITree child) {
                             return Build(child);
                         }
                     ),
@@ -988,42 +909,35 @@ namespace IronJS.Compiler
             }
         }
 
-        private INode BuildNull(ITree node)
-        {
+        private INode BuildNull(ITree node) {
             return new Null(node);
         }
 
-        private INode BuildNumber(ITree node)
-        {
+        private INode BuildNumber(ITree node) {
             if (node.Text.Contains("."))
                 return new NumberNode<double>(double.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Double, node);
             else
                 return new NumberNode<long>(long.Parse(node.Text, CultureInfo.InvariantCulture), NodeType.Integer, node);
         }
 
-        private INode BuildIdentifier(ITree node)
-        {
+        private INode BuildIdentifier(ITree node) {
             return new Variable(node.Text, node);
         }
 
-        private INode BuildAssign(ITree node, bool isLocal)
-        {
+        private INode BuildAssign(ITree node, bool isLocal) {
             ITree lhs = ITreeTools.GetChildSafe(node, 0);
             ITree rhs = ITreeTools.GetChildSafe(node, 1);
 
             return new Assign(
-                Build(lhs), 
+                Build(lhs),
                 Build(rhs),
                 node
             );
         }
 
-        private bool RewriteIfContainsNew(ITree node)
-        {
-            while (node != null)
-            {
-                if (node.Type == EcmaParser.NEW)
-                {
+        private bool RewriteIfContainsNew(ITree node) {
+            while (node != null) {
+                if (node.Type == EcmaParser.NEW) {
                     ITree child = ITreeTools.GetChildSafe(node, 0);
 
                     CommonTree idNode = new CommonTree(
@@ -1049,13 +963,11 @@ namespace IronJS.Compiler
             return false;
         }
 
-        static internal string Name(int type)
-        {
+        static internal string Name(int type) {
             return EcmaParser.tokenNames[type];
         }
 
-        static internal string Name(ITree node)
-        {
+        static internal string Name(ITree node) {
             return Name(node.Type);
         }
     }

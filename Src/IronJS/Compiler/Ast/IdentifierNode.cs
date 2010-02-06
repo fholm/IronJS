@@ -36,7 +36,7 @@ namespace IronJS.Compiler.Ast
             }
             else
             {
-                VarInfo = (func.HasLocal(Name) | func.HasParameter(Name))
+                VarInfo = (func.IsLocal(Name) | func.IsParameter(Name))
                         ? func.GetLocal(Name)
                         : func.GetNonLocal(Name);
             }

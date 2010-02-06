@@ -73,10 +73,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronJS.Tools\IronJS.Tools.csproj">
-      <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
-      <Name>IronJS.Tools</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IronJS\IronJS.csproj">
       <Project>{1D95D363-4B2A-49F1-9614-7CA00129AAA5}</Project>
       <Name>IronJS</Name>

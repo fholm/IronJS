@@ -114,15 +114,23 @@
     <Compile Include="Compiler\Ast\WhileNode.cs" />
     <Compile Include="Compiler\Ast\BooleanNode.cs" />
     <Compile Include="Compiler\Tools\IjsAstTools.cs" />
+    <Compile Include="Compiler\Tools\IjsAstTools2.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IjsAstTools.tt</DependentUpon>
+    </Compile>
     <Compile Include="Compiler\Variables\IjsCloseableVar.cs" />
     <Compile Include="Compiler\Variables\IjsIVar.cs" />
     <Compile Include="Compiler\Variables\IjsClosureVar.cs" />
     <Compile Include="Compiler\Variables\IjsParameter.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
-    <Compile Include="Runtime2\Proxies\IjsCall1.cs" />
+    <Compile Include="Runtime2\Js\IjsCall.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IjsCall.tt</DependentUpon>
+    </Compile>
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
-    <Compile Include="Runtime2\Js\IjsClosureCell.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
     <Compile Include="Compiler\Ast\DeleteNode.cs" />
     <Compile Include="Runtime2\Js\IjsFunc.cs" />
@@ -156,7 +164,6 @@
     <Compile Include="Tools\ITreeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime2\Js\Meta\IjsMeta.cs" />
-    <Compile Include="Runtime2\Js\Meta\IjsProxy.cs" />
     <Compile Include="Runtime2\Js\IjsObj.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -193,6 +200,19 @@
       <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
       <Name>IronJS.Tools-VS2010</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Compiler\Tools\IjsAstTools.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IjsAstTools2.cs</LastGenOutput>
+    </None>
+    <None Include="Runtime2\Js\IjsCall.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IjsCall.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

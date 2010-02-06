@@ -7,7 +7,6 @@ using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
 using System.Text;
-using IronJS.Runtime2.Js.Proxies;
 using IronJS.Compiler.Tools;
 using System.Dynamic;
 

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
+using System.Runtime.CompilerServices;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
-using System.Runtime.CompilerServices;
 #else
 using System.Linq.Expressions;
 #endif

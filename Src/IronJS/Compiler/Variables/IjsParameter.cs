@@ -11,8 +11,6 @@ namespace IronJS.Compiler
 {
     public class IjsParameter : IjsCloseableVar
     {
-        public bool IsDefault { get; set; }
-
         #region IjsIVarInfo Members
 
         public bool IsClosedOver { get; set; }

@@ -78,6 +78,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\CLR2\Microsoft.Scripting.ExtensionAttribute.dll</HintPath>
     </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler\Ast\ArrayNode.cs" />
@@ -116,6 +118,7 @@
     <Compile Include="Compiler\Variables\IjsIVar.cs" />
     <Compile Include="Compiler\Variables\IjsLocalVar.cs" />
     <Compile Include="Compiler\Variables\IjsParameter.cs" />
+    <Compile Include="IjsContext.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
     <Compile Include="Runtime2\Js\IjsCall.cs">

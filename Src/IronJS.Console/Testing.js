@@ -3,7 +3,10 @@
     return function() { return _ * a; };
 };
 
-var x = function() { return 1; };
-var z = y(x());
-var __ = function() { };
-var ___ = __(1, 2, 3, 4);
+for (var i = 0; i < 10; ++i) {
+    y(1);
+}
+
+y("asd");
+
+y(1);

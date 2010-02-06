@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Dynamic;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -12,9 +11,12 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Tools {
+
+    #region Aliases
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
     using EtParam = ParameterExpression;
+    #endregion
 
     public static class AstTools {
 
@@ -40,14 +42,16 @@ namespace IronJS.Tools {
             if (IsStrongBox(target))
                 return AssignStrongBox(target, value, convert);
 
-            return AssignParameter(target, value, convert);
-
-        }
-
-        public static Et AssignParameter(EtParam target, Et value, bool convert) {
             if (!convert)
                 throw new ArgumentException("Expression types do not match and conversion wasn't allowed");
 
+            return AssignParameter(target, value);
+
+        }
+
+        #region Assign Helpers
+
+        static Et AssignParameter(EtParam target, Et value) {
             if (target.Type.IsGenericType && value.Type.IsGenericType)
                 throw new ArgumentException("Can't cast generic types");
 
@@ -57,7 +61,7 @@ namespace IronJS.Tools {
             return Et.Assign(target, Et.Convert(value, target.Type));
         }
 
-        public static Et AssignStrongBox(EtParam target, Et value, bool convert) {
+        static Et AssignStrongBox(EtParam target, Et value, bool convert) {
             Type genericArg = target.Type.GetGenericArguments()[0];
 
             if (genericArg == value.Type || genericArg == typeof(object))
@@ -71,6 +75,8 @@ namespace IronJS.Tools {
 
             return Et.Assign(Et.Field(target, "Value"), Et.Convert(value, genericArg));
         }
+
+        #endregion
 
         public static Et Box(Et value) {
             if (value.Type == typeof(void))
@@ -104,7 +110,6 @@ namespace IronJS.Tools {
 
             return AstUtils.SimpleNewHelper(ctor, parameters);
         }
-
 
         public static Et Debug(string msg) {
 #if DEBUG

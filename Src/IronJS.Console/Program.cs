@@ -28,13 +28,13 @@ namespace IronJS.Testing {
             GlobalFuncNode globalScope = GlobalFuncNode.Create(astNodes).Analyze();
             Console.WriteLine(globalScope.Print());
 
+            IjsContext context = new IjsContext();
             Func<IjsClosure, object> compiled = globalScope.Compile();
-            IjsClosure closure = new IjsClosure(new IjsObj());
 
-            closure.Globals.Set("time", new Action<IjsFunc>(HelperFunctions.Timer));
-            closure.Globals.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
+            context.GlobalScope.Set("time", new Action<IjsFunc>(HelperFunctions.Timer));
+            context.GlobalScope.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 
-            compiled(closure);
+            object result = compiled(context.GlobalClosure);
         }
     }
 }

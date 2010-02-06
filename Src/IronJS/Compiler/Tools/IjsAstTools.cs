@@ -6,7 +6,6 @@ using IronJS.Tools;
 using IronJS.Compiler.Ast;
 using IronJS.Runtime2.Js;
 using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js.Proxies;
 using Microsoft.Scripting.Utils;
 
 #if CLR2

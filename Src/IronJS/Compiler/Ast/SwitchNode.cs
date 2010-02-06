@@ -11,8 +11,6 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
-
-
     public class SwitchNode : Node, ILabelableNode
     {
         public INode Target { get; protected set; }

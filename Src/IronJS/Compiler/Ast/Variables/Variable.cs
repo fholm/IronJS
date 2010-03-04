@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Text;
-using IronJS.Runtime2.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Ast {
     using Et = Expression;
-    using AstUtils = Utils;
 
-    public class Variable : Node {
+	public abstract class Variable : Node {
         public string Name { get; private set; }
         public ParameterExpression Expr { get; protected set; }
 
@@ -67,10 +65,6 @@ namespace IronJS.Compiler.Ast {
 
         public override sealed Expression Compile(Function func) {
             return Value();
-        }
-
-        public override void Write(StringBuilder writer, int depth) {
-            writer.AppendLine(StringTools.Indent(depth * 2) + "(" + NodeType + " " + Name + " " + TypeTools.ShortName(Type) + ")");
         }
 
         protected virtual Type EvalType() {

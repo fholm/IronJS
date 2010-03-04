@@ -33,13 +33,5 @@ namespace IronJS.Compiler.Ast {
             Target = Target.Analyze(stack);
             return this;
         }
-
-        public override void Write(System.Text.StringBuilder writer, int depth) {
-            string indent = StringTools.Repeat(" ", depth * 2);
-
-            writer.AppendLine(indent + "(Var");
-            Target.Write(writer, depth + 1);
-            writer.AppendLine(indent + ")");
-        }
     }
 }

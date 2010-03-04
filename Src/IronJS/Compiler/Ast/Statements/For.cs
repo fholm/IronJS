@@ -47,55 +47,5 @@ namespace IronJS.Compiler.Ast
 
             return this;
         }
-
-        public static ParameterExpression TMP = Et.Variable(typeof(object), "__tmp__");
-        public static ParameterExpression TST = Et.Variable(typeof(object), "__tst__");
-
-        public override Et Compile(Function func)
-        {
-            Et test = AstUtils.Empty();
-            Et setup = AstUtils.Empty();
-            Et incr = AstUtils.Empty();
-
-            if (Setup != null)
-                setup = Setup.Compile(func);
-
-            if (Test != null)
-                if (Test.Type == IjsTypes.Boolean)
-                    test = Test.Compile(func);
-                else
-                    throw new NotImplementedException();
-
-            else
-                test = Et.Constant(true, typeof(bool));
-
-            if (Incr != null)
-                incr = Incr.Compile(func);
-
-            return Et.Block(
-                new[] { TMP, TST },
-                setup,
-                AstUtils.Loop(
-                    test,
-                    incr,
-                    Body.Compile(func),
-                    AstUtils.Empty()
-                )
-            );
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Setup.Write(writer, indent + 1);
-            Test.Write(writer, indent + 1);
-            Incr.Write(writer, indent + 1);
-            Body.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
     }
 }

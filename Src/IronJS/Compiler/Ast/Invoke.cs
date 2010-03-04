@@ -41,7 +41,7 @@ namespace IronJS.Compiler.Ast
             for (int index = 0; index < Args.Count; ++index)
                 Args[index] = Args[index].Analyze(stack);
 
-            IfIdentiferUsedAs(Target, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
         }
@@ -49,39 +49,9 @@ namespace IronJS.Compiler.Ast
         public override Et Compile(Function func)
         {
 			if (Args.Count == 0)
-			{
 				return IjsAstTools.Call0(func, Target);
-			}
-			else
-			{
-				return IjsAstTools.CallN(func, Target, Args);
-			}
-        }
 
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-            Target.Write(writer, indent + 1);
-
-            string indentStr2 = new String(' ', (indent + 1) * 2);
-
-            if (Args.Count > 0)
-            {
-                writer.AppendLine(indentStr2 + "(Args");
-
-                foreach (INode node in Args)
-                    node.Write(writer, indent + 2);
-
-                writer.AppendLine(indentStr2 + ")");
-            }
-            else
-            {
-                writer.AppendLine(indentStr2 + "(Args)");
-            }
-
-            writer.AppendLine(indentStr + ")");
+			return IjsAstTools.CallN(func, Target, Args);
         }
     }
 }

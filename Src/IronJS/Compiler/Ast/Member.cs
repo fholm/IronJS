@@ -3,6 +3,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using System.Collections.Generic;
+using IronJS.Compiler.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -26,17 +27,8 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(Stack<Function> astopt)
         {
-            IfIdentiferUsedAs(Target, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType + " " + Name);
-            Target.Write(writer, indent + 1);
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

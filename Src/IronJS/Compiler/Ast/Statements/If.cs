@@ -53,21 +53,5 @@ namespace IronJS.Compiler.Ast
 
             return this;
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Test.Write(writer, indent + 1);
-            TrueBranch.Write(writer, indent + 1);
-
-            if (ElseBranch != null)
-                ElseBranch.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
-
     }
 }

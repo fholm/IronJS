@@ -37,8 +37,6 @@ namespace IronJS.Runtime2.Js
             Type[] types = typeof(TFunc).GetGenericArguments();
             Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
 
-
-
             guard = null;
             return null;
         }

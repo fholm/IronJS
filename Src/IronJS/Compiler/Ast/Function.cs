@@ -27,11 +27,12 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast {
 
-    #region Aliases
     using Et = Expression;
-    #endregion
 
     public class Function : Node {
+
+		public const string ClosureParamName = "#closure";
+
         public INode Name { get; private set; }
         public INode Body { get; private set; }
         public Dictionary<string, Variable> Variables { get; private set; }
@@ -45,19 +46,14 @@ namespace IronJS.Compiler.Ast {
          **/
         public Et Globals {
             get {
-                return Et.Field(this["//closure"].Expr, "Globals");
+				return Et.Field(this[ClosureParamName].Expr, "Globals");
             }
         }
 
         public Et Context {
             get {
-                return Et.Field(this["//closures"].Expr, "Context");
+				return Et.Field(this[ClosureParamName].Expr, "Context");
             }
-        }
-
-        public LabelTarget ReturnLabel {
-            get;
-            set;
         }
 
         public Function(INode name, List<string> parameters, INode body, ITree node)
@@ -65,10 +61,10 @@ namespace IronJS.Compiler.Ast {
             Body = body;
             Name = name;
             Variables = new Dictionary<string, Variable>();
-            ParameterNames = ArrayUtils.Insert("//closures", ArrayUtils.MakeArray(parameters));
+			ParameterNames = ArrayUtils.Insert(ClosureParamName, ArrayUtils.MakeArray(parameters));
 
-            this["//closure"] = new Parameter("//closures");
-            this["//closure"].ForceType(typeof(IjsClosure));
+			this[ClosureParamName] = new Parameter(ClosureParamName);
+			this[ClosureParamName].ForceType(typeof(IjsClosure));
 
             if (parameters != null) {
                 foreach (var param in parameters) {
@@ -117,27 +113,6 @@ namespace IronJS.Compiler.Ast {
             set {
                 Variables[ParameterNames[argn]] = value;
             }
-        }
-
-        public override void Write(StringBuilder writer, int depth) {
-            string indent = StringTools.Indent(depth * 2);
-            string indent1 = StringTools.Indent((depth + 1) * 2);
-
-            writer.AppendLine(indent + "(Function");
-
-            if (!IsLambda) {
-                Name.Write(writer, depth + 1);
-            }
-
-            writer.AppendLine(indent1 + "(Variables");
-            foreach (Variable variable in Variables.Values) {
-                variable.Write(writer, depth + 2);
-            }
-            writer.AppendLine(indent1 + ")");
-
-            Body.Write(writer, depth + 1);
-
-            writer.AppendLine(indent + ")");
         }
     }
 }

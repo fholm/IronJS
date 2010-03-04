@@ -11,9 +11,5 @@ namespace IronJS.Compiler.Ast {
             : base(NodeType.Global, null) {
             Name = name;
         }
-
-        public override void Write(StringBuilder writer, int depth) {
-            writer.AppendLine(StringTools.Indent(depth * 2) + "(Global " + Name + ")");
-        }
     }
 }

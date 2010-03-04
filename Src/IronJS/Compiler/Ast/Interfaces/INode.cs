@@ -15,6 +15,5 @@ namespace IronJS.Compiler.Ast
         Type Type { get; }
         Expression Compile(Function func);
         INode Analyze(Stack<Function> stack);
-        void Write(StringBuilder writer, int depth);
     }
 }

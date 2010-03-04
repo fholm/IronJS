@@ -26,11 +26,5 @@ namespace IronJS.Compiler.Ast
                 return IjsTypes.Dynamic;
             }
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(null)");
-        }
     }
 }

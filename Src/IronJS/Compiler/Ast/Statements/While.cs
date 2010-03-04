@@ -29,17 +29,5 @@ namespace IronJS.Compiler.Ast
             Body = body;
             Loop = type;
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Loop);
-
-            Test.Write(writer, indent + 1);
-            Body.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
     }
 }

@@ -7,6 +7,7 @@ using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
 using System.Text;
+using IronJS.Compiler.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -24,7 +25,7 @@ namespace IronJS.Compiler.Ast
         public INode Left { get; protected set; }
         public INode Right { get; protected set; }
         public ExpressionType Op { get; protected set; }
-        public override Type Type { get { return IsComparisonOp ? IjsTypes.Boolean : EvalTypes(Left, Right); } }
+        public override Type Type { get { return IsComparisonOp ? IjsTypes.Boolean : AnalyzeTools.EvalTypes(Left, Right); } }
 
         public bool IsComparisonOp
         {
@@ -49,15 +50,15 @@ namespace IronJS.Compiler.Ast
             Left = Left.Analyze(func);
             Right = Right.Analyze(func);
 
-            IfIdentifierAssignedFrom(Left, Right);
-            IfIdentifierAssignedFrom(Right, Left);
+			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
+			AnalyzeTools.IfIdentifierAssignedFrom(Right, Left);
 
             return this;
         }
 
         public override Et Compile(Function func)
         {
-            if (IdenticalTypes(Left, Right))
+			if (AnalyzeTools.IdenticalTypes(Left, Right))
             {
                 Et left = Left.Compile(func);
                 Et right = Right.Compile(func);
@@ -77,18 +78,6 @@ namespace IronJS.Compiler.Ast
             }
 
             throw new NotImplementedException();
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Op);
-
-            Left.Write(writer, indent + 1);
-            Right.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

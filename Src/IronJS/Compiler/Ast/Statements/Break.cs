@@ -29,17 +29,5 @@ namespace IronJS.Compiler.Ast
         {
             Label = label;
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.Append(indentStr + "(" + NodeType);
-
-            if (Label != null)
-                writer.Append(" " + Label);
-
-            writer.AppendLine(")");
-        }
     }
 }

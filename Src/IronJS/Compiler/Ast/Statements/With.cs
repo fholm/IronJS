@@ -24,17 +24,5 @@ namespace IronJS.Compiler.Ast
             Target = target;
             Body = body;
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Target.Write(writer, indent + 1);
-            Body.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
     }
 }

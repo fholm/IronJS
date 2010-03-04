@@ -40,11 +40,5 @@ namespace IronJS.Compiler.Ast
         {
 			return AstTools.Constant(Value);
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-            writer.AppendLine(indentStr + "(" + Delimiter + Value + Delimiter + ")");
-        }
     }
 }

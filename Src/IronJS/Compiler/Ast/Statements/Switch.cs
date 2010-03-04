@@ -51,33 +51,6 @@ namespace IronJS.Compiler.Ast
             return this;
         }
 
-        public override void Write(System.Text.StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-            string indentStr2 = new String(' ', (indent + 1)* 2);
-            string indentStr3 = new String(' ', (indent + 2) * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType + "");
-            Target.Write(writer, indent + 1);
-
-            foreach (Tuple<INode, INode> cas in Cases)
-            {
-                writer.AppendLine(indentStr2 + "(Case");
-                cas.Item1.Write(writer, indent + 2);
-                cas.Item2.Write(writer, indent + 2);
-                writer.AppendLine(indentStr2 + ")");
-            }
-
-            if (Default != null)
-            {
-                writer.AppendLine(indentStr2 + "(Default");
-                Default.Write(writer, indent + 2);
-                writer.AppendLine(indentStr2 + ")");
-            }
-
-            writer.AppendLine(indentStr + ")");
-        }
-
         #region ILabelableNode Members
 
         public void SetLabel(string label)

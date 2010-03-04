@@ -49,17 +49,5 @@ namespace IronJS.Compiler.Ast
             Target = Target.Analyze(stack);
             return this;
         }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + Op);
-
-            if (Target != null)
-                Target.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
     }
 }

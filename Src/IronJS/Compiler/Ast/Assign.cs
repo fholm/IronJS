@@ -44,21 +44,9 @@ namespace IronJS.Compiler.Ast
             if (closed != null)
                 AnalyzeTools.AddClosedType(stack, closed.Name, Value.Type);
 
-            IfIdentifierAssignedFrom(Target, Value);
+			AnalyzeTools.IfIdentifierAssignedFrom(Target, Value);
 
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType + " ");
-
-            Target.Write(writer, indent + 1);
-            Value.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

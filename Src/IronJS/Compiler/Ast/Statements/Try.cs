@@ -1,16 +1,17 @@
-﻿#if CLR2
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Antlr.Runtime.Tree;
+using IronJS.Runtime2.Js;
+using IronJS.Compiler.Tools;
+
+#if CLR2
 using Microsoft.Scripting.Ast;
 #else
 using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using Antlr.Runtime.Tree;
-    using IronJS.Runtime2.Js;
 
     public class Try : Node {
         public INode Body { get; protected set; }
@@ -38,30 +39,9 @@ namespace IronJS.Compiler.Ast {
             if (Finally != null)
                 Finally = Finally.Analyze(astopt);
 
-            IfIdentiferUsedAs(Target, IjsTypes.Object);
+            AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent) {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Body.Write(writer, indent + 1);
-
-            if (Catch != null)
-                Catch.Write(writer, indent + 1);
-
-            if (Finally != null) {
-                string indentStr2 = new String(' ', (indent + 1) * 2);
-
-                writer.AppendLine(indentStr2 + "(Finally");
-                Finally.Write(writer, indent + 2);
-                writer.AppendLine(indentStr2 + ")");
-            }
-
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

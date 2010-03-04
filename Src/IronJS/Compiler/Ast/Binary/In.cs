@@ -2,10 +2,11 @@
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 using System.Text;
+using System.Collections.Generic;
+using IronJS.Compiler.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif
@@ -38,21 +39,9 @@ namespace IronJS.Compiler.Ast
             Target = Target.Analyze(astopt);
             Property = Target.Analyze(astopt);
 
-            IfIdentiferUsedAs(Target, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Property.Write(writer, indent + 1);
-            Target.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

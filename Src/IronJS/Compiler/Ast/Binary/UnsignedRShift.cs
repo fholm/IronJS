@@ -2,10 +2,11 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
+using System.Collections.Generic;
+using IronJS.Compiler.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif
@@ -37,22 +38,10 @@ namespace IronJS.Compiler.Ast
             Left = Left.Analyze(astopt);
             Right = Right.Analyze(astopt);
 
-            IfIdentifierAssignedFrom(Left, Right);
-            IfIdentifierAssignedFrom(Right, Left);
+			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
+			AnalyzeTools.IfIdentifierAssignedFrom(Right, Left);
 
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-
-            Left.Write(writer, indent + 1);
-            Right.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

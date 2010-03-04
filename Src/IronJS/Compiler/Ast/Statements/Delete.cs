@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
@@ -17,7 +18,6 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
-    using System.Text;
 
     public class Delete : Node
     {
@@ -41,15 +41,6 @@ namespace IronJS.Compiler.Ast
         {
             Target = Target.Analyze(stack);
             return this;
-        }
-
-        public override void Write(StringBuilder writer, int indent)
-        {
-            string indentStr = new String(' ', indent * 2);
-
-            writer.AppendLine(indentStr + "(" + NodeType);
-                Target.Write(writer, indent + 1);
-            writer.AppendLine(indentStr + ")");
         }
     }
 }

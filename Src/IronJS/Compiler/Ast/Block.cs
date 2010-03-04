@@ -37,18 +37,5 @@ namespace IronJS.Compiler.Ast {
                 return node.Compile(func);
             });
         }
-
-        public override void Write(StringBuilder writer, int indent) {
-            string indentStr = StringTools.Repeat(" ", indent * 2);
-
-            writer.Append(indentStr + "(" + NodeType + "");
-            writer.AppendLine();
-
-            foreach (INode node in Nodes)
-                node.Write(writer, indent + 1);
-
-            writer.AppendLine(indentStr + ")");
-        }
-
     }
 }

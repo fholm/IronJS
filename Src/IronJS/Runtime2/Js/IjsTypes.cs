@@ -4,15 +4,12 @@ namespace IronJS.Runtime2.Js
 {
     public static class IjsTypes
     {
-        internal sealed class SelfClass
+        internal sealed class IjsSelf
         {
-            private SelfClass()
-            {
-
-            }
+            private IjsSelf() { }
         }
 
-        public static readonly Type Self = typeof(SelfClass);
+        public static readonly Type Self = typeof(IjsSelf);
         public static readonly Type Boolean = typeof(bool);
         public static readonly Type Integer = typeof(long);
         public static readonly Type Double = typeof(double);

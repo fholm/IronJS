@@ -38,7 +38,8 @@ namespace IronJS.Compiler.Ast
         public NodeType NodeType { get; protected set; }
         public int Line { get; protected set; }
         public int Column { get; protected set; }
-        public virtual Type Type { get { return IjsTypes.Dynamic; } }
+		public virtual Type Type { get { return IjsTypes.Dynamic; } }
+		public INode[] Children { get; protected set; }
 
         public Node(NodeType type, ITree node)
         {
@@ -56,8 +57,14 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public virtual INode Analyze(Stack<Function> func)
+        public virtual INode Analyze(Stack<Function> stack)
         {
+			if (Children != null) {
+				for (int i = 0; i < Children.Length; ++i) {
+					Children[i] = Children[i].Analyze(stack);
+				}
+			}
+
             return this;
         }
 
@@ -65,5 +72,5 @@ namespace IronJS.Compiler.Ast
         {
             return AstUtils.Empty();
         }
-    }
+	}
 }

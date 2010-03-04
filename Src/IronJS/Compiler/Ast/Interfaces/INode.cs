@@ -13,6 +13,7 @@ namespace IronJS.Compiler.Ast
     public interface INode
     {
         Type Type { get; }
+		INode[] Children { get; }
         Expression Compile(Function func);
         INode Analyze(Stack<Function> stack);
     }

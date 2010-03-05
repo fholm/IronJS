@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Text;
-using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
-using IronJS.Compiler.Tools;
 using IronJS.Tools;
 
 #if CLR2

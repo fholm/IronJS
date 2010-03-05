@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 

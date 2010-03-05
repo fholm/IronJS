@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
+using IronJS.Compiler.Tools;
 using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
@@ -18,7 +19,6 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
-    using IronJS.Compiler.Tools;
 
     public class Bool : Node
     {

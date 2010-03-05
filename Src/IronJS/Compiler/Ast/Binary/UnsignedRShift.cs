@@ -11,37 +11,29 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class UnsignedRShift : Node
-    {
-        public INode Left { get; protected set; }
-        public INode Right { get; protected set; }
+namespace IronJS.Compiler.Ast {
+	public class UnsignedRShift : Node {
+		public INode Left { get { return Children[0]; } }
+		public INode Right { get { return Children[1]; } }
 
-        public UnsignedRShift(INode left, INode right, ITree node)
-            : base(NodeType.UnsignedRShift, node)
-        {
-            Left = left;
-            Right = right;
-        }
+		public UnsignedRShift(INode left, INode right, ITree node)
+			: base(NodeType.UnsignedRShift, node) {
+			Children = new[] { left, right };
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Integer;
-            }
-        }
+		public override Type Type {
+			get {
+				return IjsTypes.Integer;
+			}
+		}
 
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            Left = Left.Analyze(astopt);
-            Right = Right.Analyze(astopt);
+		public override INode Analyze(Stack<Function> stack) {
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
 			AnalyzeTools.IfIdentifierAssignedFrom(Right, Left);
 
-            return this;
-        }
-    }
+			return this;
+		}
+	}
 }

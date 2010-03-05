@@ -20,12 +20,10 @@ namespace IronJS.Compiler.Ast
 
     public class Vector : Node, INode
     {
-        public List<INode> Values { get; protected set; }
-
         public Vector(List<INode> values, ITree node)
             : base(NodeType.Array, node)
         {
-            Values = values;
+			Children = values.ToArray();
         }
 
         public override Type Type
@@ -34,14 +32,6 @@ namespace IronJS.Compiler.Ast
             {
                 return IjsTypes.Object;
             }
-        }
-
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            for (int valuePos = 0; valuePos < Values.Count; ++valuePos)
-                Values[valuePos] = Values[valuePos].Analyze(astopt);
-
-            return this;
         }
     }
 }

@@ -15,14 +15,13 @@ namespace IronJS.Compiler.Ast
 {
     public class InstanceOf : Node
     {
-        public INode Target { get; protected set; }
-        public INode Function { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Function { get { return Children[1]; } }
 
         public InstanceOf(INode target, INode function, ITree node)
             : base(NodeType.InstanceOf, node)
         {
-            Target = target;
-            Function = function;
+			Children = new[] { target, function };
         }
 
         public override Type Type
@@ -33,10 +32,9 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Stack<Function> astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
-            Function = Target.Analyze(astopt);
+			base.Analyze(stack);
 
             AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 			AnalyzeTools.IfIdentiferUsedAs(Function, IjsTypes.Object);

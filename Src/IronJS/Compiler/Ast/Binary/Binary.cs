@@ -22,8 +22,8 @@ namespace IronJS.Compiler.Ast
 
     public class Binary : Node
     {
-        public INode Left { get; protected set; }
-        public INode Right { get; protected set; }
+		public INode Left { get { return Children[0]; } }
+		public INode Right { get { return Children[1]; } }
         public ExpressionType Op { get; protected set; }
         public override Type Type { get { return IsComparisonOp ? IjsTypes.Boolean : AnalyzeTools.EvalTypes(Left, Right); } }
 
@@ -41,14 +41,12 @@ namespace IronJS.Compiler.Ast
             : base(NodeType.BinaryOp, node)
         {
             Op = op;
-            Left = left;
-            Right = right;
+			Children = new[] { left, right };
         }
 
-        public override INode Analyze(Stack<Function> func)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Left = Left.Analyze(func);
-            Right = Right.Analyze(func);
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
 			AnalyzeTools.IfIdentifierAssignedFrom(Right, Left);
@@ -72,12 +70,8 @@ namespace IronJS.Compiler.Ast
                         return Et.Add(left, right);
                 }
             }
-            else
-            {
 
-            }
-
-            throw new NotImplementedException();
+			throw new NotImplementedException();
         }
     }
 }

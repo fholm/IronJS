@@ -11,32 +11,23 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class Obj : Node
-    {
-        public Dictionary<string, INode> Properties { get; protected set; }
+namespace IronJS.Compiler.Ast {
+	public class Obj : Node {
+		public string[] PropertyNames { get; protected set; }
 
-        public Obj(Dictionary<string, INode> properties, ITree node)
-            : base(NodeType.Object, node)
-        {
-            Properties = properties;
-        }
+		public Obj(Dictionary<string, INode> properties, ITree node)
+			: base(NodeType.Object, node) {
+			Children = new INode[properties.Count];
+			properties.Values.CopyTo(Children, 0);
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Object;
-            }
-        }
+			PropertyNames = new string[properties.Count];
+			properties.Keys.CopyTo(PropertyNames, 0);
+		}
 
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            foreach (string key in DictionaryTools.GetKeys(Properties))
-                Properties[key] = Properties[key].Analyze(astopt);
-
-            return this;
-        }
-    }
+		public override Type Type {
+			get {
+				return IjsTypes.Object;
+			}
+		}
+	}
 }

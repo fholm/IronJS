@@ -10,38 +10,25 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class Logical : Node
-    {
-        public INode Left { get; protected set; }
-        public INode Right { get; protected set; }
-        public ExpressionType Op { get; protected set; }
+namespace IronJS.Compiler.Ast {
+	public class Logical : Node {
+		public INode Left { get { return Children[0]; } }
+		public INode Right { get { return Children[1]; } }
+		public ExpressionType Op { get; protected set; }
 
-        public Logical(INode left, INode right, ExpressionType op, ITree node)
-            : base(NodeType.Logical, node)
-        {
-            Left = left;
-            Right = right;
-            Op = op;
-        }
+		public Logical(INode left, INode right, ExpressionType op, ITree node)
+			: base(NodeType.Logical, node) {
+			Op = op;
+			Children = new[] { left, right };
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                if (Left.Type == Right.Type)
-                    return Left.Type;
+		public override Type Type {
+			get {
+				if (Left.Type == Right.Type)
+					return Left.Type;
 
-                return IjsTypes.Dynamic;
-            }
-        }
-
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            Left = Left.Analyze(astopt);
-            Right = Right.Analyze(astopt);
-            return this;
-        }
-    }
+				return IjsTypes.Dynamic;
+			}
+		}
+	}
 }

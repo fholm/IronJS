@@ -16,15 +16,14 @@ namespace IronJS.Compiler.Ast
 
     public class StrictCompare : Node
     {
-        public INode Left { get; protected set; }
-        public INode Right { get; protected set; }
+		public INode Left { get { return Children[0]; } }
+		public INode Right { get { return Children[1]; } }
         public ExpressionType Op { get; protected set; }
 
         public StrictCompare(INode left, INode right, ExpressionType op, ITree node)
             : base(NodeType.StrictCompare, node)
         {
-            Left = left;
-            Right = right;
+			Children = new[] { left, right };
             Op = op;
         }
 
@@ -36,10 +35,9 @@ namespace IronJS.Compiler.Ast
             }
         }
 
-        public override INode Analyze(Stack<Function> astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Left = Left.Analyze(astopt);
-            Right = Right.Analyze(astopt);
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
 			AnalyzeTools.IfIdentifierAssignedFrom(Right, Left);

@@ -21,12 +21,12 @@ namespace IronJS.Compiler.Ast
 
     public class Delete : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
 
         public Delete(INode target, ITree node)
             : base(NodeType.Delete, node)
         {
-            Target = target;
+			Children = new[] { target };
         }
 
         public override Type Type
@@ -35,12 +35,6 @@ namespace IronJS.Compiler.Ast
             {
                 return IjsTypes.Boolean;
             }
-        }
-
-        public override INode Analyze(Stack<Function> stack)
-        {
-            Target = Target.Analyze(stack);
-            return this;
         }
     }
 }

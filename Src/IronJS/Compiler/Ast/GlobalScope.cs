@@ -10,9 +10,9 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
-    public class GlobalScope : Function
+    public sealed class GlobalScope : Function
     {
-        public GlobalScope(INode body)
+        private GlobalScope(INode body)
             : base(null, null, body, null)
         {
 

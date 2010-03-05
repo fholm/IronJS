@@ -4,11 +4,11 @@ using IronJS.Tools;
 
 namespace IronJS.Compiler.Ast {
     public class Var : Node {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
 
         public Var(INode target, ITree node)
             : base(NodeType.Var, node) {
-            Target = target;
+            Children = new[] { target };
         }
 
         public override INode Analyze(Stack<Function> stack) {
@@ -30,8 +30,7 @@ namespace IronJS.Compiler.Ast {
                 function[symbol.Name] = new Local(symbol.Name);
             }
 
-            Target = Target.Analyze(stack);
-            return this;
+			return base.Analyze(stack);
         }
     }
 }

@@ -17,16 +17,15 @@ namespace IronJS.Compiler.Ast
 
     public class Assign : Node, INode
     {
-        public INode Target { get; protected set; }
-        public INode Value { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Value { get { return Children[1]; } }
 
         public override Type Type { get { return Value.Type; } }
 
         public Assign(INode target, INode value, ITree node)
             : base(NodeType.Assign, node)
         {
-            Target = target;
-            Value = value;
+			Children = new[] { target, value };
         }
 
 
@@ -37,8 +36,7 @@ namespace IronJS.Compiler.Ast
 
         public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(stack);
-            Value = Value.Analyze(stack);
+			base.Analyze(stack);
 
             Closed closed = Target as Closed;
             if (closed != null)

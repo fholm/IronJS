@@ -15,20 +15,18 @@ namespace IronJS.Compiler.Ast
 {
     public class Index : Node
     {
-        public INode Target { get; protected set; }
-        public INode Value { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Value { get { return Children[1]; } }
 
         public Index(INode target, INode index, ITree node)
             : base(NodeType.IndexAccess, node)
         {
-            Target = target;
-            Value = index;
+			Children = new[] { target, index };
         }
 
         public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(stack);
-            Value = Value.Analyze(stack);
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 

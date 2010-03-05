@@ -12,28 +12,16 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast {
 
-    #region Aliases
     using Et = Expression;
-    #endregion
 
     public class Block : Node {
-        public List<INode> Nodes { get; protected set; }
-
         public Block(List<INode> nodes, ITree node)
             : base(NodeType.Block, node) {
-            Nodes = nodes;
-        }
-
-        public override INode Analyze(Stack<Function> stack) {
-            for (int index = 0; index < Nodes.Count; ++index) {
-                Nodes[index] = Nodes[index].Analyze(stack);
-            }
-
-            return this;
+			Children = nodes.ToArray();
         }
 
         public override Et Compile(Function func) {
-            return AstTools.BuildBlock(Nodes, delegate(INode node) {
+            return AstTools.BuildBlock(Children, delegate(INode node) {
                 return node.Compile(func);
             });
         }

@@ -14,12 +14,12 @@ namespace IronJS.Compiler.Ast
 {
     public class Void : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
 
         public Void(INode target, ITree node)
             : base(NodeType.Void, node)
         {
-            Target = target;
+			Children = new[] { target };
         }
 
         public override Type Type
@@ -28,12 +28,6 @@ namespace IronJS.Compiler.Ast
             {
                 return IjsTypes.Undefined;
             }
-        }
-
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            Target = Target.Analyze(astopt);
-            return this;
         }
     }
 }

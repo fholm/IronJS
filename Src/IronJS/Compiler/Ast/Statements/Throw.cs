@@ -16,18 +16,12 @@ namespace IronJS.Compiler.Ast
 {
     public class Throw : Node
     {
-        public INode Value { get; protected set; }
+		public INode Value { get { return Children[0]; } }
 
         public Throw(INode value, ITree node)
             : base(NodeType.Throw, node)
         {
-            Value = value;
-        }
-
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            Value = Value.Analyze(astopt);
-            return this;
+			Children = new[] { Value };
         }
     }
 }

@@ -16,6 +16,6 @@ namespace IronJS.Runtime2.Js
         public static readonly Type String = typeof(string);
         public static readonly Type Object = typeof(IjsObj);
         public static readonly Type Dynamic = typeof(object);
-        public static readonly Type Undefined = typeof(Undefined);
+		public static readonly Type Undefined = typeof(Undefined);
     }
 }

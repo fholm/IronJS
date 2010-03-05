@@ -12,15 +12,16 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
+	//TODO: Add UsedAs type to all unary operators
     public class Unary : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
         public ExpressionType Op { get; protected set; }
 
         public Unary(INode target, ExpressionType op, ITree node)
             : base(NodeType.UnaryOp, node)
         {
-            Target = target;
+			Children = new[] { target };
             Op = op;
         }
 
@@ -42,12 +43,6 @@ namespace IronJS.Compiler.Ast
 
                 throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
             }
-        }
-
-        public override INode Analyze(Stack<Function> stack)
-        {
-            Target = Target.Analyze(stack);
-            return this;
         }
     }
 }

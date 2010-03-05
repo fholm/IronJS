@@ -14,12 +14,12 @@ namespace IronJS.Compiler.Ast
 {
     public class TypeOf : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
 
         public TypeOf(INode target, ITree node)
             : base(NodeType.TypeOf, node)
         {
-            Target = target;
+			Children = new[] { target };
         }
 
         public override Type Type
@@ -28,12 +28,6 @@ namespace IronJS.Compiler.Ast
             {
                 return IjsTypes.String;
             }
-        }
-
-        public override INode Analyze(Stack<Function> stack)
-        {
-            Target = Target.Analyze(stack);
-            return this;
         }
     }
 }

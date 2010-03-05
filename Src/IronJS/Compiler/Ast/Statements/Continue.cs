@@ -6,6 +6,7 @@ using IronJS.Runtime2.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
+using System.Text;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -17,7 +18,6 @@ namespace IronJS.Compiler.Ast
 {
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using Et = Expression;
-    using System.Text;
 
     public class Continue : Node, INode
     {

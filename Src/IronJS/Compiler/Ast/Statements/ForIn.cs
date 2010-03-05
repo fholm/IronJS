@@ -22,23 +22,19 @@ namespace IronJS.Compiler.Ast
 
     public class ForIn : Node
     {
-        public INode Target { get; protected set; }
-        public INode Source { get; protected set; }
-        public INode Body { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Source { get { return Children[1]; } }
+		public INode Body { get { return Children[2]; } }
 
         public ForIn(INode target, INode source, INode body, ITree node)
             : base(NodeType.ForIn, node)
         {
-            Target = target;
-            Source = source;
-            Body = body;
+			Children = new[] { target, source, body };
         }
 
-        public override INode Analyze(Stack<Function> astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(astopt);
-            Source = Source.Analyze(astopt);
-            Body = Body.Analyze(astopt);
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentiferUsedAs(Source, IjsTypes.Object);
 

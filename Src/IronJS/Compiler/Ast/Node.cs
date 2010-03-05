@@ -36,25 +36,12 @@ namespace IronJS.Compiler.Ast
     abstract public class Node : INode
     {
         public NodeType NodeType { get; protected set; }
-        public int Line { get; protected set; }
-        public int Column { get; protected set; }
-		public virtual Type Type { get { return IjsTypes.Dynamic; } }
 		public INode[] Children { get; protected set; }
+		public virtual Type Type { get { return IjsTypes.Dynamic; } }
 
         public Node(NodeType type, ITree node)
         {
             NodeType = type;
-
-            if (node != null)
-            {
-                Line = node.Line;
-                Column = node.CharPositionInLine;
-            }
-            else
-            {
-                Line = -1;
-                Column = -1;
-            }
         }
 
         public virtual INode Analyze(Stack<Function> stack)

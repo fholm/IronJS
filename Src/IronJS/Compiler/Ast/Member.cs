@@ -15,18 +15,19 @@ namespace IronJS.Compiler.Ast
 {
     public class Member : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
         public string Name { get; protected set; }
 
-        public Member(INode target, string member, ITree node)
+        public Member(INode target, string name, ITree node)
             : base(NodeType.MemberAccess, node)
         {
-            Target = target;
-            Name = member;
+			Children = new[] { target };
+            Name = name;
         }
 
-        public override INode Analyze(Stack<Function> astopt)
+        public override INode Analyze(Stack<Function> stack)
         {
+			base.Analyze(stack);
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
             return this;
         }

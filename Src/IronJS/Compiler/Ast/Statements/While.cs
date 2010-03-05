@@ -18,16 +18,15 @@ namespace IronJS.Compiler.Ast
 
     public class While : Node
     {
-        public INode Test { get; protected set; }
-        public INode Body { get; protected set; }
-        public WhileType Loop { get; protected set; }
+		public INode Test { get { return Children[0]; } }
+		public INode Body { get { return Children[1]; } }
+        public WhileType LoopType { get; protected set; }
 
         public While(INode test, INode body, WhileType type, ITree node)
             : base(NodeType.While, node)
         {
-            Test = test;
-            Body = body;
-            Loop = type;
+			Children = new[] { test, body };
+            LoopType = type;
         }
     }
 }

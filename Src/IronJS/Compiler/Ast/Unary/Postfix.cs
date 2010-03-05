@@ -17,13 +17,13 @@ namespace IronJS.Compiler.Ast
 
     public class Postfix : Node
     {
-        public INode Target { get; protected set; }
+		public INode Target { get { return Children[0]; } }
         public ExpressionType Op { get; protected set; }
 
-        public Postfix(INode node, ExpressionType op, ITree tree)
+        public Postfix(INode target, ExpressionType op, ITree tree)
             : base(NodeType.PostfixOperator, tree)
         {
-            Target = node;
+			Children = new[] { target };
             Op = op;
         }
 
@@ -36,12 +36,6 @@ namespace IronJS.Compiler.Ast
 
                 return IjsTypes.Double;
             }
-        }
-
-        public override INode Analyze(Stack<Function> stack)
-        {
-            Target = Target.Analyze(stack);
-            return this;
         }
     }
 }

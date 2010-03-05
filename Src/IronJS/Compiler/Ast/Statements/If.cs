@@ -14,18 +14,16 @@ namespace IronJS.Compiler.Ast
 {
     public class If : Node
     {
-        public INode Test { get; protected set; }
-        public INode TrueBranch { get; protected set; }
-        public INode ElseBranch { get; protected set; }
+		public INode Test { get { return Children[0]; } }
+		public INode TrueBranch { get { return Children[1]; } }
+		public INode ElseBranch { get { return Children[2]; } }
         public bool HasElseBranch { get { return ElseBranch != null; } }
         public bool IsTernary { get; protected set; }
 
         public If(INode test, INode trueBranch, INode elseBranch, bool isTernary, ITree node)
             : base(NodeType.If, node)
         {
-            Test = test;
-            TrueBranch = trueBranch;
-            ElseBranch = elseBranch;
+			Children = new[] { test, trueBranch, elseBranch };
             IsTernary = isTernary;
         }
 
@@ -41,17 +39,6 @@ namespace IronJS.Compiler.Ast
 
                 return IjsTypes.Dynamic;
             }
-        }
-
-        public override INode Analyze(Stack<Function> astopt)
-        {
-            Test = Test.Analyze(astopt);
-            TrueBranch = TrueBranch.Analyze(astopt);
-
-            if(HasElseBranch)
-                ElseBranch = ElseBranch.Analyze(astopt);
-
-            return this;
         }
     }
 }

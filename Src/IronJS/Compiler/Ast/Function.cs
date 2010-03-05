@@ -33,8 +33,14 @@ namespace IronJS.Compiler.Ast {
 
 		public const string ClosureParamName = "#closure";
 
-        public INode Name { get; private set; }
-        public INode Body { get; private set; }
+		public INode Name {
+			get { return Children[0]; }
+		}
+
+		public INode Body {
+			get { return Children[1]; }
+		}
+
         public Dictionary<string, Variable> Variables { get; private set; }
         public string[] ParameterNames { get; private set; }
         public bool IsLambda { get { return Name == null; } }
@@ -58,8 +64,7 @@ namespace IronJS.Compiler.Ast {
 
         public Function(INode name, List<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node) {
-            Body = body;
-            Name = name;
+			Children = new[] { name, body };
             Variables = new Dictionary<string, Variable>();
 			ParameterNames = ArrayUtils.Insert(ClosureParamName, ArrayUtils.MakeArray(parameters));
 
@@ -74,14 +79,9 @@ namespace IronJS.Compiler.Ast {
         } 
 
         public override INode Analyze(Stack<Function> stack) {
-            if (!IsLambda) {
-                Name = Name.Analyze(stack);
-            }
-
             stack.Push(this);
-            Body = Body.Analyze(stack);
+			base.Analyze(stack);
             stack.Pop();
-
             return this;
         }
 

@@ -2,6 +2,7 @@
 using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Tools;
+using System.Collections.Generic;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -12,23 +13,16 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast
 {
     using Et = Expression;
-    using System.Collections.Generic;
 
     public class Return : Node
     {
-        public INode Value { get; protected set; }
+		public INode Value { get { return Children[0]; } }
         public Function FuncNode { get; protected set; }
 
         public Return(INode value, ITree node)
             : base(NodeType.Return, node)
         {
-            Value = value;
-        }
-
-        public override INode Analyze(Stack<Function> func)
-        {
-            Value = Value.Analyze(func);
-            return this;
+			Children = new[] { value };
         }
     }
 }

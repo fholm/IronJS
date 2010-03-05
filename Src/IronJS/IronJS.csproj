@@ -131,14 +131,14 @@
     </Compile>
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
     <Compile Include="Compiler\IjsCompilerError.cs" />
-    <Compile Include="Compiler\Ast\Statements\Delete.cs" />
+    <Compile Include="Compiler\Ast\Unary\Delete.cs" />
     <Compile Include="Runtime2\Js\IjsFunc.cs" />
     <Compile Include="Runtime2\Js\IjsTypes.cs" />
     <Compile Include="Compiler\Ast\Unary\Unary.cs" />
     <Compile Include="Compiler\Ast\Binary\Logical.cs" />
     <Compile Include="Compiler\Ast\Unary\Postfix.cs" />
     <Compile Include="Compiler\Ast\Unary\TypeOf.cs" />
-    <Compile Include="Compiler\Ast\Statements\Void.cs" />
+    <Compile Include="Compiler\Ast\Unary\Void.cs" />
     <Compile Include="Compiler\Ast\Binary\StrictCompare.cs" />
     <Compile Include="Compiler\Ast\Binary\UnsignedRShift.cs" />
     <Compile Include="Compiler\Ast\Statements\For.cs" />

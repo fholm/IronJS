@@ -11,18 +11,15 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast
 {
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-
     public class With : Node
     {
-        public INode Target { get; protected set; }
-        public INode Body { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Body { get { return Children[1]; } }
 
         public With(INode target, INode body, ITree node)
             : base(NodeType.With, node)
         {
-            Target = target;
-            Body = body;
+			Children = new[] { target, body };
         }
     }
 }

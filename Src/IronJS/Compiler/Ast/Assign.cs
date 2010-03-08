@@ -31,7 +31,7 @@ namespace IronJS.Compiler.Ast
 
         public override Et Compile(Function func)
         {
-            return IjsAstTools.Assign(func, Target, Value.Compile(func));
+            return CompileTools.Assign(func, Target, Value.Compile(func));
         }
 
         public override INode Analyze(Stack<Function> stack)

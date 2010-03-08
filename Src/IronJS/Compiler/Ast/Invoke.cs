@@ -24,22 +24,19 @@ namespace IronJS.Compiler.Ast
 
     public class Invoke : Node
     {
-        public INode Target { get; protected set; }
-        public List<INode> Args { get; protected set; }
+		public INode Target { get { return Children[0]; } }
 
         public Invoke(INode target, List<INode> args, ITree node)
             : base(NodeType.Call, node)
         {
-            Target = target;
-            Args = args;
+			Children = new INode[args.Count + 1];
+			Children[0] = target;
+			args.CopyTo(Children, 1);
         }
 
         public override INode Analyze(Stack<Function> stack)
         {
-            Target = Target.Analyze(stack);
-
-            for (int index = 0; index < Args.Count; ++index)
-                Args[index] = Args[index].Analyze(stack);
+			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 
@@ -48,10 +45,12 @@ namespace IronJS.Compiler.Ast
 
         public override Et Compile(Function func)
         {
-			if (Args.Count == 0)
-				return IjsAstTools.Call0(func, Target);
+			var args = ArrayUtils.RemoveFirst(Children);
 
-			return IjsAstTools.CallN(func, Target, Args);
+			if (args.Length == 0)
+				return CompileTools.Call0(func, Target);
+
+			return CompileTools.CallN(func, Target, args);
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using IronJS.Compiler.Ast;
-using Microsoft.Scripting.Utils;
 using IronJS.Tools;
+using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Tools {
 	internal static class AnalyzeTools {
@@ -25,8 +25,7 @@ namespace IronJS.Compiler.Tools {
 
 						return current.Variables[name];
 					}
-				}
-				else {
+				} else {
 					missingStack.Push(function);
 				}
 			}
@@ -49,9 +48,11 @@ namespace IronJS.Compiler.Tools {
 			if (nodes.Length > 0) {
 				Type type = nodes[0].Type;
 
-				for (int index = 0; index < nodes.Length; ++index)
-					if (nodes[index].Type != type)
+				for (int index = 0; index < nodes.Length; ++index) {
+					if (nodes[index].Type != type) {
 						return false;
+					}
+				}
 
 				return true;
 			}

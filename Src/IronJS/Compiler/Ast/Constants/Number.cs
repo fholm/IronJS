@@ -9,34 +9,28 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
+	using Et = Expression;
 
-    public class NumberNode<T> : Node, INode
-    {
-        public T Value { get; protected set; }
+	public class NumberNode<T> : Node, INode {
+		public T Value { get; protected set; }
 
-        public NumberNode(T value, NodeType type, ITree node)
-            : base(type, node)
-        {
-            Value = value;
-        }
+		public NumberNode(T value, NodeType type, ITree node)
+			: base(type, node) {
+			Value = value;
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                if (this.GetType() == typeof(NumberNode<long>))
-                    return IjsTypes.Integer;
+		public override Type Type {
+			get {
+				if (this.GetType() == typeof(NumberNode<long>))
+					return IjsTypes.Integer;
 
-                return IjsTypes.Double;
-            }
-        }
+				return IjsTypes.Double;
+			}
+		}
 
-        public override Et Compile(Function func)
-        {
+		public override Et Compile(Function func) {
 			return AstTools.Constant(Value);
-        }
-    }
+		}
+	}
 }

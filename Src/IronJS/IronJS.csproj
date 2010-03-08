@@ -116,11 +116,12 @@
     <Compile Include="Compiler\Ast\Statements\While.cs" />
     <Compile Include="Compiler\Ast\Constants\Bool.cs" />
     <Compile Include="Compiler\Tools\AnalyzeTools.cs" />
-    <Compile Include="Compiler\Tools\IjsAstTools1.cs">
+    <Compile Include="Compiler\Tools\CompileTools_Gen.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>IjsAstTools.tt</DependentUpon>
+      <DependentUpon>CompileTools_Gen.tt</DependentUpon>
     </Compile>
+    <Compile Include="Compiler\Tools\DisplayTools.cs" />
     <Compile Include="IjsContext.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
@@ -151,7 +152,7 @@
     <Compile Include="Compiler\Ast\Binary\InstanceOf.cs" />
     <Compile Include="Compiler\Ast\Statements\Switch.cs" />
     <Compile Include="Compiler\Ast\Initializers\Obj.cs" />
-    <Compile Include="Compiler\Tools\IjsAstTools.cs" />
+    <Compile Include="Compiler\Tools\CompileTools.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Compiler\Parser\ES3Lexer.cs" />
     <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />
@@ -181,9 +182,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Compiler\Tools\IjsAstTools.tt">
+    <None Include="Compiler\Tools\CompileTools_Gen.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>IjsAstTools1.cs</LastGenOutput>
+      <LastGenOutput>CompileTools_Gen.cs</LastGenOutput>
     </None>
     <None Include="Runtime2\Js\IjsCall.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

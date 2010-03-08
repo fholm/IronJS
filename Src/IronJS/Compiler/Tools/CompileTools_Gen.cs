@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Tools
     using AstUtils = Microsoft.Scripting.Ast.Utils;
     using EtParam = ParameterExpression;
 
-    internal static partial class IjsAstTools
+    internal static partial class CompileTools
     {
 		static Type BuildCallProxyType(Expression[] args)
 		{

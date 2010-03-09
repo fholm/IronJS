@@ -4,45 +4,33 @@ using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
+using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
 	public class Switch : Node, ILabelable {
-		public INode Target { get; protected set; }
-		public INode Default { get; protected set; }
-		public List<Tuple<INode, INode>> Cases { get; protected set; }
+		public INode Target { get { return Children[0]; } }
+		public INode Default { get { return Children[1]; } }
 		public string Label { get; protected set; }
 
-		public Switch(INode taret, INode _default, List<Tuple<INode, INode>> cases, ITree node)
+		public Switch(INode target, INode _default, List<Tuple<INode, INode>> cases, ITree node)
 			: base(NodeType.Switch, node) {
-			Target = taret;
-			Default = _default;
-			Cases = cases;
-			Label = null;
-		}
+			ContractUtils.RequiresNotNull(cases, "cases");
 
-		public override INode Analyze(Stack<Function> astopt) {
-			Target = Target.Analyze(astopt);
+			Children = new INode[(cases.Count * 2) + 2];
+			Children[0] = target;
+			Children[1] = _default;
 
-			if (Default != null)
-				Default = Default.Analyze(astopt);
-
-			List<Tuple<INode, INode>> cases = new List<Tuple<INode, INode>>();
-
-			foreach (Tuple<INode, INode> _case in Cases) {
-				cases.Add(
-					Tuple.Create(
-						_case.Item1.Analyze(astopt),
-						_case.Item2.Analyze(astopt)
-					)
-				);
+			int offset = 2;
+			foreach (Tuple<INode, INode> pair in cases) {
+				Children[offset] = pair.Item1;
+				Children[offset + 1] = pair.Item2;
+				offset += 2;
 			}
 
-			Cases = cases;
-
-			return this;
+			Label = null;
 		}
 
 		#region ILabelableNode Members

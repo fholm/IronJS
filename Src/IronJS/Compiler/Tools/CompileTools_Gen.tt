@@ -26,11 +26,8 @@ namespace IronJS.Compiler.Tools
 		{
 			Type type = null;
 <# for(int i = 1; i < 16; ++i) { #>
-				
 			<#= i > 1 ? "else " : "" #>if(args.Length == <#= i #>) 
-				type = typeof(IjsCall<<#= new String(',', i-1) #>>);
-<# } #>
-
+				type = typeof(IjsCall<<#= new String(',', i-1) #>>);<# } #>
 			else
 				throw new NotImplementedException("Currently you can't call function with more then 15 arguments");
 

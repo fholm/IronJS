@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Binders;
 using IronJS.Runtime2.Js;
-using IronJS.Tools;
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -13,25 +9,18 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
 
-    public class Vector : Node, INode
-    {
-        public Vector(List<INode> values, ITree node)
-            : base(NodeType.Array, node)
-        {
+	public class Vector : Node, INode {
+		public Vector(List<INode> values, ITree node)
+			: base(NodeType.Array, node) {
 			Children = values.ToArray();
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Object;
-            }
-        }
-    }
+		public override Type Type {
+			get {
+				return IjsTypes.Object;
+			}
+		}
+	}
 }

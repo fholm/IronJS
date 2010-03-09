@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using Antlr.Runtime.Tree;
-using IronJS.Tools;
-using System.Collections.Generic;
+﻿using Antlr.Runtime.Tree;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -10,19 +6,14 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using Et = Expression;
-
-    public class Return : Node
-    {
+namespace IronJS.Compiler.Ast {
+	public class Return : Node {
 		public INode Value { get { return Children[0]; } }
-        public Function FuncNode { get; protected set; }
+		public Function FuncNode { get; protected set; }
 
-        public Return(INode value, ITree node)
-            : base(NodeType.Return, node)
-        {
+		public Return(INode value, ITree node)
+			: base(NodeType.Return, node) {
 			Children = new[] { value };
-        }
-    }
+		}
+	}
 }

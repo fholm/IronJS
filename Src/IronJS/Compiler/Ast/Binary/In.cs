@@ -1,9 +1,8 @@
 ﻿using System;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Js;
-using System.Text;
 using System.Collections.Generic;
+using Antlr.Runtime.Tree;
 using IronJS.Compiler.Tools;
+using IronJS.Runtime2.Js;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -30,9 +29,7 @@ namespace IronJS.Compiler.Ast {
 
 		public override INode Analyze(Stack<Function> stack) {
 			base.Analyze(stack);
-
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
-
 			return this;
 		}
 	}

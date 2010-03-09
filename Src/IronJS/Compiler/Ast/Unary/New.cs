@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
-using System.Text;
 using IronJS.Compiler.Tools;
 
 #if CLR2
@@ -12,9 +11,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
-	using Et = Expression;
-
 	public class New : Node {
 		public INode Target { get; protected set; }
 		public List<INode> Args { get; protected set; }

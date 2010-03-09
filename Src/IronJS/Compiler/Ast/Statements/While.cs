@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Js;
+﻿using Antlr.Runtime.Tree;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -11,8 +7,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
-
 	public enum WhileType { DoWhile, While }
 
 	public class While : Node {

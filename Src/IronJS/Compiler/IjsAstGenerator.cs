@@ -387,7 +387,7 @@ namespace IronJS.Compiler {
         }
 
         private INode BuildRegex(ITree node) {
-            return new Regex2(node.Text, node);
+            return new Regex(node.Text, node);
         }
 
         private INode BuildArray(ITree node) {

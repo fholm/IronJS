@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Js;
+﻿using Antlr.Runtime.Tree;
 
 #if CLR2
 using Microsoft.Scripting.Ast;

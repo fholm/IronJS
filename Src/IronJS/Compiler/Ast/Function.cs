@@ -13,10 +13,8 @@
  * ***************************************************************************/
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
-using IronJS.Tools;
 using Microsoft.Scripting.Utils;
 
 #if CLR2
@@ -27,19 +25,18 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast {
 
-    using Et = Expression;
 
-    public class Function : Node {
+	public class Function : Node {
 
 		public INode Name { get { return Children[0]; } }
 		public INode Body { get { return Children[1]; } }
-        public string[] ParameterNames { get; private set; }
-        public bool IsLambda { get { return Name == null; } }
-        public Type ReturnType { get { return IjsTypes.Dynamic; } }
-        public override Type Type { get { return IjsTypes.Object; } }
-		
-        public Function(INode name, List<string> parameters, INode body, ITree node)
-            : base(NodeType.Func, node) {
+		public string[] ParameterNames { get; private set; }
+		public bool IsLambda { get { return Name == null; } }
+		public Type ReturnType { get { return IjsTypes.Dynamic; } }
+		public override Type Type { get { return IjsTypes.Object; } }
+
+		public Function(INode name, List<string> parameters, INode body, ITree node)
+			: base(NodeType.Func, node) {
 			ContractUtils.RequiresNotNull(parameters, "parameters");
 			_variables = new Dictionary<string, Variable>();
 
@@ -57,14 +54,14 @@ namespace IronJS.Compiler.Ast {
 				Var(parameters[i], new Parameter(parameters[i]));
 				Children[i + 2] = Var(parameters[i]);
 			}
-        } 
+		}
 
-        public override INode Analyze(Stack<Function> stack) {
-            stack.Push(this);
+		public override INode Analyze(Stack<Function> stack) {
+			stack.Push(this);
 			base.Analyze(stack);
-            stack.Pop();
-            return this;
-        }
+			stack.Pop();
+			return this;
+		}
 
 		Dictionary<string, Variable> _variables;
 		public Variable Var(string name) { return _variables[name]; }
@@ -84,5 +81,5 @@ namespace IronJS.Compiler.Ast {
 			);
 		}
 		*/
-    }
+	}
 }

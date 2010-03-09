@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Js;
-using System.Collections.Generic;
+﻿using Antlr.Runtime.Tree;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -11,9 +7,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
-	using Et = Expression;
-
 	public class For : Node {
 		public INode Setup { get { return Children[0]; } }
 		public INode Test { get { return Children[1]; } }

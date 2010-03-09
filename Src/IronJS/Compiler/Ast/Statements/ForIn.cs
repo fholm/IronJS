@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js;
-using IronJS.Tools;
-using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
-using System.Text;
 using IronJS.Compiler.Tools;
+using IronJS.Runtime2.Js;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -16,9 +10,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
-	using Et = Expression;
-
 	public class ForIn : Node {
 		public INode Target { get { return Children[0]; } }
 		public INode Source { get { return Children[1]; } }
@@ -31,9 +22,7 @@ namespace IronJS.Compiler.Ast {
 
 		public override INode Analyze(Stack<Function> stack) {
 			base.Analyze(stack);
-
 			AnalyzeTools.IfIdentiferUsedAs(Source, IjsTypes.Object);
-
 			return this;
 		}
 	}

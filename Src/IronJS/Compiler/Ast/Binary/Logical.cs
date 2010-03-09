@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using System.Collections.Generic;
 #else
 using System.Linq.Expressions;
 #endif

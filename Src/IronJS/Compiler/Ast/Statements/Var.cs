@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Tools;
 
 namespace IronJS.Compiler.Ast {
 	public class Var : Node {

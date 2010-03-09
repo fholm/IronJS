@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Tools;
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif

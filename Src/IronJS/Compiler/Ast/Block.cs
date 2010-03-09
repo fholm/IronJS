@@ -11,19 +11,18 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
+	using Et = Expression;
 
-    using Et = Expression;
-
-    public class Block : Node {
-        public Block(List<INode> nodes, ITree node)
-            : base(NodeType.Block, node) {
+	public class Block : Node {
+		public Block(List<INode> nodes, ITree node)
+			: base(NodeType.Block, node) {
 			Children = nodes.ToArray();
-        }
+		}
 
-        public override Et Compile(Function func) {
-            return AstTools.BuildBlock(Children, delegate(INode node) {
-                return node.Compile(func);
-            });
-        }
-    }
+		public override Et Compile(Function func) {
+			return AstTools.BuildBlock(Children, delegate(INode node) {
+				return node.Compile(func);
+			});
+		}
+	}
 }

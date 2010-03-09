@@ -15,19 +15,16 @@ using System.Linq.Expressions;
 #endif
 
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using Et = Expression;
 
-    public class Break : Node
-    {
-        public string Label { get; protected set; }
+	public class Break : Node {
+		public string Label { get; protected set; }
 
-        public Break(string label, ITree node)
-            : base(NodeType.Break, node)
-        {
-            Label = label;
-        }
-    }
+		public Break(string label, ITree node)
+			: base(NodeType.Break, node) {
+			Label = label;
+		}
+	}
 }

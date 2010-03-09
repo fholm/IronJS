@@ -10,39 +10,34 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
+namespace IronJS.Compiler.Ast {
 	//TODO: Add UsedAs type to all unary operators
-    public class Unary : Node
-    {
+	public class Unary : Node {
 		public INode Target { get { return Children[0]; } }
-        public ExpressionType Op { get; protected set; }
+		public ExpressionType Op { get; protected set; }
 
-        public Unary(INode target, ExpressionType op, ITree node)
-            : base(NodeType.UnaryOp, node)
-        {
+		public Unary(INode target, ExpressionType op, ITree node)
+			: base(NodeType.UnaryOp, node) {
 			Children = new[] { target };
-            Op = op;
-        }
+			Op = op;
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                if (Op == ExpressionType.Not)
-                    return IjsTypes.Boolean;
+		public override Type Type {
+			get {
+				if (Op == ExpressionType.Not)
+					return IjsTypes.Boolean;
 
-                if (Op == ExpressionType.OnesComplement)
-                    return IjsTypes.Integer;
+				if (Op == ExpressionType.OnesComplement)
+					return IjsTypes.Integer;
 
-                if (Op == ExpressionType.UnaryPlus)
-                    return IjsTypes.Double;
+				if (Op == ExpressionType.UnaryPlus)
+					return IjsTypes.Double;
 
-                if (Op == ExpressionType.Negate)
-                    return IjsTypes.Double;
+				if (Op == ExpressionType.Negate)
+					return IjsTypes.Double;
 
-                throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
-            }
-        }
-    }
+				throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
+			}
+		}
+	}
 }

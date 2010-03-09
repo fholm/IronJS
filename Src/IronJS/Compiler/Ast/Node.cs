@@ -13,7 +13,8 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
+
+	using AstUtils = Utils;
 	using Et = Expression;
 
 	public enum NodeType {
@@ -27,7 +28,7 @@ namespace IronJS.Compiler.Ast {
 		Break, Continue, With, Try, Catch,
 		Throw, IndexAccess, Delete, In,
 		Switch, InstanceOf, Regex, Array,
-		Integer, Var, Parameter, Local,
+		Integer, Var, Param, Local,
 		Global, Closed
 	}
 

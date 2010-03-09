@@ -12,12 +12,15 @@ namespace IronJS.Compiler.Tools {
 
 			if (node.Children == null || node.Children.Length == 0) {
 				Console.WriteLine(prefix + "(" + node + ")");
+
 			} else {
 				Console.WriteLine(prefix + "(" + node);
 
 				foreach (INode child in node.Children) {
 					if (child != null) {
 						Print(child, indent + 1);
+					} else {
+						Console.WriteLine(prefix + "    ()");
 					}
 				}
 

@@ -11,5 +11,9 @@ namespace IronJS.Compiler.Ast {
             : base(NodeType.Global, null) {
             Name = name;
         }
+
+		public override string ToString() {
+			return base.ToString() + " " + Name;
+		}
     }
 }

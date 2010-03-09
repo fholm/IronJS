@@ -12,7 +12,7 @@ namespace IronJS.Compiler.Tools {
 
 			Variable variable;
 			foreach (Function function in stack) {
-				if (function.Variables.TryGetValue(name, out variable)) {
+				if (function.Var(name, out variable)) {
 					if (function == current)
 						return variable;
 
@@ -20,10 +20,10 @@ namespace IronJS.Compiler.Tools {
 						variable.MarkAsClosedOver();
 
 						foreach (Function traversed in missingStack) {
-							traversed[name] = new Closed(traversed, name);
+							traversed.Var(name, new Closed(traversed, name));
 						}
 
-						return current.Variables[name];
+						return current.Var(name);
 					}
 				} else {
 					missingStack.Push(function);
@@ -36,7 +36,7 @@ namespace IronJS.Compiler.Tools {
 		internal static void AddClosedType(Stack<Function> stack, string name, Type type) {
 			Variable variable;
 			foreach (Function function in stack) {
-				if (function.Variables.TryGetValue(name, out variable)) {
+				if (function.Var(name, out variable)) {
 					if (variable is Local) {
 						variable.UsedAs(type);
 					}

@@ -11,35 +11,29 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
+namespace IronJS.Compiler.Ast {
 
-    public class In : Node
-    {
+	public class In : Node {
 		public INode Target { get { return Children[0]; } }
 		public INode Property { get { return Children[1]; } }
 
-        public In(INode target, INode property, ITree node)
-            : base(NodeType.In, node)
-        {
+		public In(INode target, INode property, ITree node)
+			: base(NodeType.In, node) {
 			Children = new[] { target, property };
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Boolean;
-            }
-        }
+		public override Type Type {
+			get {
+				return IjsTypes.Boolean;
+			}
+		}
 
-        public override INode Analyze(Stack<Function> stack)
-        {
+		public override INode Analyze(Stack<Function> stack) {
 			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 
-            return this;
-        }
-    }
+			return this;
+		}
+	}
 }

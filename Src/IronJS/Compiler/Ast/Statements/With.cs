@@ -9,17 +9,14 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class With : Node
-    {
+namespace IronJS.Compiler.Ast {
+	public class With : Node {
 		public INode Target { get { return Children[0]; } }
 		public INode Body { get { return Children[1]; } }
 
-        public With(INode target, INode body, ITree node)
-            : base(NodeType.With, node)
-        {
+		public With(INode target, INode body, ITree node)
+			: base(NodeType.With, node) {
 			Children = new[] { target, body };
-        }
-    }
+		}
+	}
 }

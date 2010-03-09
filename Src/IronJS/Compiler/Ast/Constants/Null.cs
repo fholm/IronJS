@@ -8,22 +8,17 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class Null : Node, INode
-    {
-        public Null(ITree node)
-            : base(NodeType.Null, node)
-        {
+namespace IronJS.Compiler.Ast {
+	public class Null : Node, INode {
+		public Null(ITree node)
+			: base(NodeType.Null, node) {
 
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Dynamic;
-            }
-        }
-    }
+		public override Type Type {
+			get {
+				return IjsTypes.Dynamic;
+			}
+		}
+	}
 }

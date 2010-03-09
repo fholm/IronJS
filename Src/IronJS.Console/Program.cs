@@ -24,6 +24,8 @@ namespace IronJS.Testing {
 			GlobalScope globalScope = GlobalScope.Create(astNodes).Analyze();
 
 			DisplayTools.Print(globalScope);
+			Console.ReadLine();
+			return;
 
 			IjsContext context = new IjsContext();
 			Func<IjsClosure, object> compiled = globalScope.Compile(context);

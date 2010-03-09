@@ -10,23 +10,20 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
+namespace IronJS.Compiler.Ast {
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-    public enum WhileType { DoWhile, While }
+	public enum WhileType { DoWhile, While }
 
-    public class While : Node
-    {
+	public class While : Node {
 		public INode Test { get { return Children[0]; } }
 		public INode Body { get { return Children[1]; } }
-        public WhileType LoopType { get; protected set; }
+		public WhileType LoopType { get; protected set; }
 
-        public While(INode test, INode body, WhileType type, ITree node)
-            : base(NodeType.While, node)
-        {
+		public While(INode test, INode body, WhileType type, ITree node)
+			: base(NodeType.While, node) {
 			Children = new[] { test, body };
-            LoopType = type;
-        }
-    }
+			LoopType = type;
+		}
+	}
 }

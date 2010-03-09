@@ -67,6 +67,10 @@ namespace IronJS.Compiler.Ast {
             return Value();
         }
 
+		public override string ToString() {
+			return base.ToString() + " " + Name + " [" + TypeTools.ShortName(Type) + "]";
+		}
+
         protected virtual Type EvalType() {
             HashSet<Type> set = new HashSet<Type>();
 

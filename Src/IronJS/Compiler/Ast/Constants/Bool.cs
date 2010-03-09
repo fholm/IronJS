@@ -15,32 +15,30 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using Et = Expression;
 
-    public class Bool : Node
-    {
-        public bool Value { get; protected set; }
+	public class Bool : Node {
+		public bool Value { get; protected set; }
 
-        public Bool(bool value, ITree node)
-            : base(NodeType.Boolean, node)
-        {
-            Value = value;
-        }
+		public Bool(bool value, ITree node)
+			: base(NodeType.Boolean, node) {
+			Value = value;
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Boolean;
-            }
-        }
+		public override Type Type {
+			get {
+				return IjsTypes.Boolean;
+			}
+		}
 
-        public override Et Compile(Function func)
-        {
+		public override Et Compile(Function func) {
 			return AstTools.Constant(Value);
-        }
-    }
+		}
+
+		public override string ToString() {
+			return base.ToString() + " " + Value.ToString();
+		}
+	}
 }

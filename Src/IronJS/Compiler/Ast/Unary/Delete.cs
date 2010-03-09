@@ -14,27 +14,22 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using Et = Expression;
 
-    public class Delete : Node
-    {
+	public class Delete : Node {
 		public INode Target { get { return Children[0]; } }
 
-        public Delete(INode target, ITree node)
-            : base(NodeType.Delete, node)
-        {
+		public Delete(INode target, ITree node)
+			: base(NodeType.Delete, node) {
 			Children = new[] { target };
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Boolean;
-            }
-        }
-    }
+		public override Type Type {
+			get {
+				return IjsTypes.Boolean;
+			}
+		}
+	}
 }

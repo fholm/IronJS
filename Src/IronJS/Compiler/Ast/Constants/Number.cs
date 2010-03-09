@@ -32,5 +32,9 @@ namespace IronJS.Compiler.Ast {
 		public override Et Compile(Function func) {
 			return AstTools.Constant(Value);
 		}
+
+		public override string ToString() {
+			return base.ToString() + " " + Value.ToString();
+		}
 	}
 }

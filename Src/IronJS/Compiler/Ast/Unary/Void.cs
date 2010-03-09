@@ -10,24 +10,19 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    public class Void : Node
-    {
+namespace IronJS.Compiler.Ast {
+	public class Void : Node {
 		public INode Target { get { return Children[0]; } }
 
-        public Void(INode target, ITree node)
-            : base(NodeType.Void, node)
-        {
+		public Void(INode target, ITree node)
+			: base(NodeType.Void, node) {
 			Children = new[] { target };
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Undefined;
-            }
-        }
-    }
+		public override Type Type {
+			get {
+				return IjsTypes.Undefined;
+			}
+		}
+	}
 }

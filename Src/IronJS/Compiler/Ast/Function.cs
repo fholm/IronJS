@@ -31,51 +31,32 @@ namespace IronJS.Compiler.Ast {
 
     public class Function : Node {
 
-		public const string ClosureParamName = "#closure";
-
-		public INode Name {
-			get { return Children[0]; }
-		}
-
-		public INode Body {
-			get { return Children[1]; }
-		}
-
-        public Dictionary<string, Variable> Variables { get; private set; }
+		public INode Name { get { return Children[0]; } }
+		public INode Body { get { return Children[1]; } }
         public string[] ParameterNames { get; private set; }
         public bool IsLambda { get { return Name == null; } }
         public Type ReturnType { get { return IjsTypes.Dynamic; } }
         public override Type Type { get { return IjsTypes.Object; } }
-
-        /*
-         * Compilation properties
-         **/
-        public Et Globals {
-            get {
-				return Et.Field(this[ClosureParamName].Expr, "Globals");
-            }
-        }
-
-        public Et Context {
-            get {
-				return Et.Field(this[ClosureParamName].Expr, "Context");
-            }
-        }
-
+		
         public Function(INode name, List<string> parameters, INode body, ITree node)
             : base(NodeType.Func, node) {
-			Children = new[] { name, body };
-            Variables = new Dictionary<string, Variable>();
-			ParameterNames = ArrayUtils.Insert(ClosureParamName, ArrayUtils.MakeArray(parameters));
+			ContractUtils.RequiresNotNull(parameters, "parameters");
+			_variables = new Dictionary<string, Variable>();
 
-			this[ClosureParamName] = new Parameter(ClosureParamName);
-			this[ClosureParamName].ForceType(typeof(IjsClosure));
+			Children = new INode[parameters.Count + 3];
+			Children[0] = name;
+			Children[Children.Length - 1] = body;
 
-            if (parameters != null) {
-                foreach (var param in parameters) {
-                    this[param] = new Parameter(param);
-                }
-            }
+			ParameterNames = ArrayUtils.Insert("@closure", ArrayUtils.MakeArray(parameters));
+
+			Var(ParameterNames[0], new Parameter(ParameterNames[0]));
+			Var(ParameterNames[0]).ForceType(typeof(IjsClosure));
+			Children[1] = Var(ParameterNames[0]);
+
+			for (int i = 0; i < parameters.Count; ++i) {
+				Var(parameters[i], new Parameter(parameters[i]));
+				Children[i + 2] = Var(parameters[i]);
+			}
         } 
 
         public override INode Analyze(Stack<Function> stack) {
@@ -85,34 +66,23 @@ namespace IronJS.Compiler.Ast {
             return this;
         }
 
-        public override Expression Compile(Function func) {
-            return AstTools.New(
-                typeof(IjsFunc),
-                AstTools.Constant(this),
-                AstTools.New(
-                    typeof(IjsClosure),
-                    func.Context,
-                    func.Globals
-                )
-            );
-        }
+		Dictionary<string, Variable> _variables;
+		public Variable Var(string name) { return _variables[name]; }
+		public bool Var(string name, out Variable var) { return _variables.TryGetValue(name, out var); }
+		public void Var(string name, Variable var) { _variables[name] = var; }
 
-        public Variable this[string name] {
-            get {
-                return Variables[name];
-            }
-            set {
-                Variables[name] = value;
-            }
-        }
-
-        public Variable this[int argn] {
-            get {
-                return Variables[ParameterNames[argn]];
-            }
-            set {
-                Variables[ParameterNames[argn]] = value;
-            }
-        }
+		/*
+		public override Expression Compile(Function func) {
+			return AstTools.New(
+				typeof(IjsFunc),
+				AstTools.Constant(this),
+				AstTools.New(
+					typeof(IjsClosure)//,
+					//func.Context,
+					//func.Globals
+				)
+			);
+		}
+		*/
     }
 }

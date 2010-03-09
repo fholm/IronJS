@@ -11,48 +11,41 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Compiler.Ast
-{
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using Et = Expression;
+namespace IronJS.Compiler.Ast {
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using Et = Expression;
 
-    public class New : Node
-    {
-        public INode Target { get; protected set; }
-        public List<INode> Args { get; protected set; }
+	public class New : Node {
+		public INode Target { get; protected set; }
+		public List<INode> Args { get; protected set; }
 
-        public New(INode target, List<INode> args, ITree node)
-            : base(NodeType.New, node)
-        {
-            Target = target;
-            Args = args;
-        }
+		public New(INode target, List<INode> args, ITree node)
+			: base(NodeType.New, node) {
+			Target = target;
+			Args = args;
+		}
 
-        public New(INode target, ITree node)
-            : this(target, new List<INode>(), node)
-        {
+		public New(INode target, ITree node)
+			: this(target, new List<INode>(), node) {
 
-        }
+		}
 
-        public override Type Type
-        {
-            get
-            {
-                return IjsTypes.Object;
-            }
-        }
+		public override Type Type {
+			get {
+				return IjsTypes.Object;
+			}
+		}
 
-        public override INode Analyze(Stack<Function> stack)
-        {
+		public override INode Analyze(Stack<Function> stack) {
 			AnalyzeTools.IfIdentiferUsedAs(
-                Target = Target.Analyze(stack), 
-                IjsTypes.Object
-            );
+				Target = Target.Analyze(stack),
+				IjsTypes.Object
+			);
 
-            for (int index = 0; index < Args.Count; ++index)
-                Args[index] = Args[index].Analyze(stack);
+			for (int index = 0; index < Args.Count; ++index)
+				Args[index] = Args[index].Analyze(stack);
 
-            return this;
-        }
-    }
+			return this;
+		}
+	}
 }

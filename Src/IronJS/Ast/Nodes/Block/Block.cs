@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Tools;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -17,7 +18,7 @@ namespace IronJS.Ast.Nodes {
 			Children = nodes.ToArray();
 		}
 
-		public override Et Compile(Lambda func) {
+		public override Et Compile(JitContext func) {
 			return AstTools.BuildBlock(Children, delegate(INode node) {
 				return node.Compile(func);
 			});

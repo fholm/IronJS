@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -50,7 +51,7 @@ namespace IronJS.Ast.Nodes {
 			return this;
 		}
 
-		public virtual Et Compile(Lambda func) {
+		public virtual Et Compile(JitContext ctx) {
 			return AstUtils.Empty();
 		}
 

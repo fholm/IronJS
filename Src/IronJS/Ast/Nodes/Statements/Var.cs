@@ -20,13 +20,13 @@ namespace IronJS.Ast.Nodes {
 					Assign assign = Target as Assign;
 
 					if (assign == null) {
-						throw new AstCompilerError("Var must have Assign or Symbol child");
+						throw new AstError("Var must have Assign or Symbol child");
 					}
 
 					symbol = assign.Target as Symbol;
 				}
 
-				function.Var(symbol.Name, new Local(symbol.Name));
+				function.CreateVar(symbol.Name, new Local(symbol.Name));
 			}
 
 			return base.Analyze(stack);

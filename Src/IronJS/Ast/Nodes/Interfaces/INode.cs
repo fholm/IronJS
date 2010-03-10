@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -14,7 +14,7 @@ namespace IronJS.Ast.Nodes
     {
         Type Type { get; }
 		INode[] Children { get; }
-        Expression Compile(Lambda func);
+        Expression Compile(JitContext func);
         INode Analyze(Stack<Lambda> stack);
     }
 }

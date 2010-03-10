@@ -12,14 +12,17 @@
  *
  * ***************************************************************************************/
 using IronJS.Runtime.Js;
+using IronJS.Runtime.Jit;
 
 namespace IronJS {
     public sealed class Context {
         public Closure GlobalClosure { get; private set; }
         public Obj GlobalScope { get { return GlobalClosure.Globals; } }
+		public Compiler Compiler { get; private set; }
 
         public Context() {
             GlobalClosure = new Closure(this, new Obj());
+			Compiler = new Compiler();
         }
     }
 }

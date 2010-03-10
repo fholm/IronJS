@@ -2,6 +2,7 @@
 using Antlr.Runtime.Tree;
 using IronJS.Ast.Tools;
 using System.Collections.Generic;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -24,7 +25,7 @@ namespace IronJS.Ast.Nodes {
 		}
 
 
-		public override Et Compile(Lambda func) {
+		public override Et Compile(JitContext func) {
 			return CompileTools.Assign(func, Target, Value.Compile(func));
 		}
 

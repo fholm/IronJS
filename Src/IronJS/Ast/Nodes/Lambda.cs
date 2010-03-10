@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
+using IronJS.Runtime.Jit;
 using IronJS.Runtime.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Utils;
@@ -27,7 +28,8 @@ using System.Linq.Expressions;
 namespace IronJS.Ast.Nodes {
 	public class Lambda : Base {
 		public INode Name { get { return Children[0]; } }
-		public string[] ParameterNames { get; private set; }
+		public string[] ParamNames { get; private set; }
+		public int ParamsCount { get { return ParamNames.Length; } }
 		public INode Body { get { return Children[1]; } }
 		public bool IsLambda { get { return Name == null; } }
 		public Type ReturnType { get { return Types.Dynamic; } }
@@ -41,14 +43,13 @@ namespace IronJS.Ast.Nodes {
 			Children[0] = name;
 			Children[Children.Length - 1] = body;
 
-			ParameterNames = ArrayUtils.Insert("~closure", ArrayUtils.MakeArray(parameters));
+			ParamNames = ArrayUtils.Insert("~closure", ArrayUtils.MakeArray(parameters));
 
-			Var(ParameterNames[0], new Parameter(ParameterNames[0]));
-			Var(ParameterNames[0]).ForceType(typeof(Closure));
-			Children[1] = Var(ParameterNames[0]);
+			CreateVar(ParamNames[0], new Parameter(ParamNames[0]));
+			Children[1] = Var(ParamNames[0]);
 
 			for (int i = 0; i < parameters.Count; ++i) {
-				Var(parameters[i], new Parameter(parameters[i]));
+				CreateVar(parameters[i], new Parameter(parameters[i]));
 				Children[i + 2] = Var(parameters[i]);
 			}
 		}
@@ -63,14 +64,14 @@ namespace IronJS.Ast.Nodes {
 		Dictionary<string, Variable> _variables;
 		public Variable Var(string name) { return _variables[name]; }
 		public bool Var(string name, out Variable var) { return _variables.TryGetValue(name, out var); }
-		public void Var(string name, Variable var) {
+		public void CreateVar(string name, Variable var) {
 			if (_variables.ContainsKey(name))
-				throw new ArgumentException("A variable named '" + name + "' already exist");
+				throw new AstError("A variable named '" + name + "' already exist");
 
 			_variables[name] = var;
 		}
 
-		public override Expression Compile(Lambda func) {
+		public override Expression Compile(JitContext func) {
 			return AstTools.New(
 				typeof(Function),
 				AstTools.Constant(this),

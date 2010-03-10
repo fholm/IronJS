@@ -16,16 +16,7 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public Func<Closure, object> Compile(Context context) {
-			Func<bool> guard;
-
-			Function tempFunc = new Function(this, context.GlobalClosure);
-
-			Func<Closure, object> compiled =
-				tempFunc.Compile<Func<Closure, object>, Func<bool>>(
-					ArrayUtils.EmptyObjects, out guard
-				);
-
-			return compiled;
+			return context.Compiler.Compile<Func<Closure, object>>(this);
 		}
 
 		public File Analyze() {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Ast.Tools;
+using IronJS.Runtime.Jit;
 using IronJS.Runtime.Js;
 
 #if CLR2
@@ -42,7 +43,7 @@ namespace IronJS.Ast.Nodes {
 			return this;
 		}
 
-		public override Et Compile(Lambda func) {
+		public override Et Compile(JitContext func) {
 			if (AnalyzeTools.IdenticalTypes(Left, Right)) {
 				Et left = Left.Compile(func);
 				Et right = Right.Compile(func);

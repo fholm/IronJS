@@ -34,7 +34,7 @@ namespace IronJS.Ast.Nodes {
 				if (Op == ExpressionType.Negate)
 					return Types.Double;
 
-				throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
+				throw new AstError("Unrecognized unary operator '{0}'", Op);
 			}
 		}
 	}

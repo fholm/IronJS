@@ -12,11 +12,33 @@
  *
  * ***************************************************************************************/
 using System;
-using System.Collections.Generic;
-using System.Text;
+using IronJS.Ast.Nodes;
+using IronJS.Runtime.Jit.Tools;
+using Microsoft.Scripting.Utils;
+
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
 
 namespace IronJS.Runtime.Jit {
-	public class Compiler {
+	using Et = Expression;
+	using IronJS.Ast.Tools;
 
+	public class Compiler {
+		public TFunc Compile<TFunc>(Lambda lambda) where TFunc : class {
+			return (TFunc)Compile(typeof(TFunc), lambda);
+		}
+
+		public object /*hack*/ Compile(Type funcType, Lambda lambda) {
+			Type[] types = funcType.GetGenericArguments();
+			Type[] paramTypes = ArrayUtils.RemoveLast(types);
+
+			LambdaTools.SetParameterTypes(lambda, paramTypes);
+
+			DisplayTools.Print(lambda);
+			return null;
+		}
 	}
 }

@@ -20,7 +20,7 @@ namespace IronJS.Ast.Tools {
 						variable.MarkAsClosedOver();
 
 						foreach (Lambda traversed in missingStack) {
-							traversed.Var(name, new Closed(traversed, name));
+							traversed.CreateVar(name, new Closed(traversed, name));
 						}
 
 						return current.Var(name);

@@ -1,4 +1,5 @@
 ﻿using System;
+using IronJS.Runtime.Jit;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
@@ -66,7 +67,7 @@ namespace IronJS.Ast.Nodes {
             }
         }
 
-        public override sealed Et Compile(Lambda func) {
+        public override sealed Et Compile(JitContext func) {
 			Et expr = Expr;
 			Expr = null;
 			return expr;

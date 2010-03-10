@@ -4,6 +4,7 @@ using System.Text;
 using Antlr.Runtime.Tree;
 using IronJS.Ast.Tools;
 using IronJS.Runtime.Binders;
+using IronJS.Runtime.Jit;
 using IronJS.Runtime.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
@@ -33,7 +34,7 @@ namespace IronJS.Ast.Nodes {
 			}
 		}
 
-		public override Et Compile(Lambda func) {
+		public override Et Compile(JitContext func) {
 			return AstTools.Constant(Value);
 		}
 

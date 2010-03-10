@@ -8,15 +8,8 @@ namespace IronJS.Ast {
         }
     }
 
-    public class AstCompilerError : CompilerError {
-        internal AstCompilerError(string msg, params object[] parms)
-            : base(msg, parms) {
-
-        }
-    }
-
-    public class EtCompilerError : CompilerError {
-        internal EtCompilerError(string msg, params object[] parms)
+	public class AstError : CompilerError {
+        internal AstError(string msg, params object[] parms)
             : base(msg, parms) {
 
         }

@@ -10,20 +10,18 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime.Js.Proxies {	  
-<#  for(int i = 1; i < 16; ++i) {
+namespace IronJS.Runtime.Js.Proxies {<#  for(int i = 1; i < 16; ++i) {
 	
 		System.Text.StringBuilder sb = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb.Append(", T"+j); } 
 		string str = sb.ToString().Substring(2);
 		
 		#>
-		public class IjsCall<<#= str #>> {
-			public IjsFunc Func;
-			public Func<<#= str #>, bool> Guard;
-			public Func<IjsClosure, <#= str #>, object> Delegate;
+	public class IjsCall<<#= str #>> {
+		public IjsFunc Func;
+		public Func<<#= str #>, bool> Guard;
+		public Func<IjsClosure, <#= str #>, object> Delegate;
 
-			public Type GuardType { get { return Guard.GetType(); } }
-			public Type DelegateType { get { return Delegate.GetType(); } }
-		} 
-		<# } #>
+		public Type GuardType { get { return Guard.GetType(); } }
+		public Type DelegateType { get { return Delegate.GetType(); } }
+	} <# } #>
 }

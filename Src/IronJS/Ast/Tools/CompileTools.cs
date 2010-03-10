@@ -21,8 +21,8 @@ namespace IronJS.Ast.Tools {
 
 	internal static partial class CompileTools {
 		internal static Et Call0(Lambda func, INode target) {
-			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
-			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
+			EtParam tmpObject = Et.Variable(typeof(object), "!tmpObject");
+			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "!tmpFunc");
 
 			/*
 			 * This constructs a block that looks like this
@@ -86,9 +86,9 @@ namespace IronJS.Ast.Tools {
 			Et closureField = Et.Field(funcField, "Closure");
 
 			// Temporary variables
-			EtParam tmpObject = Et.Variable(IjsTypes.Dynamic, "__tmpObject__");
-			EtParam tmpFunc = Et.Variable(funcType, "__tmpFunc__");
-			EtParam tmpGuard = Et.Variable(guardType, "__tmpGuard__");
+			EtParam tmpObject = Et.Variable(IjsTypes.Dynamic, "!tmpObject");
+			EtParam tmpFunc = Et.Variable(funcType, "!tmpFunc");
+			EtParam tmpGuard = Et.Variable(guardType, "!tmpGuard");
 
 			/*
 			 * This constructs a block that looks like this

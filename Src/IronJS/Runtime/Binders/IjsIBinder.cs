@@ -1,6 +1,4 @@
-﻿namespace IronJS.Runtime.Binders
-{
-    interface IjsIBinder
-    {
-    }
+﻿namespace IronJS.Runtime.Binders {
+	interface IjsIBinder {
+	}
 }

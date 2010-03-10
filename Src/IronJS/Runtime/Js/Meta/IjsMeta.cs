@@ -6,20 +6,17 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime.Js.Meta
-{
-    using Et = Expression;
-    using MetaObj = DynamicMetaObject;
+namespace IronJS.Runtime.Js.Meta {
+	using Et = Expression;
+	using MetaObj = DynamicMetaObject;
 
-    public class IjsMeta<T> : MetaObj where T : class
-    {
-        protected T Self { get { return (T)Value; } }
-        protected Et SelfExpr { get { return Et.Convert(Expression, typeof(T)); } }
+	public class IjsMeta<T> : MetaObj where T : class {
+		protected T Self { get { return (T)Value; } }
+		protected Et SelfExpr { get { return Et.Convert(Expression, typeof(T)); } }
 
-        public IjsMeta(Et expr, T value)
-            : base(expr, BindingRestrictions.Empty, value)
-        {
+		public IjsMeta(Et expr, T value)
+			: base(expr, BindingRestrictions.Empty, value) {
 
-        }
-    }
+		}
+	}
 }

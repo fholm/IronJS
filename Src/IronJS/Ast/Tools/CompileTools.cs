@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Tools {
-	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using AstUtils = Utils;
 	using Et = Expression;
 
 	internal static partial class CompileTools {

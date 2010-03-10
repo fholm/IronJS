@@ -8,13 +8,12 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Ast.Nodes
-{
-    public interface INode
-    {
-        Type Type { get; }
+namespace IronJS.Ast.Nodes {
+	public interface INode {
+		string Debug { get; }
+		Type Type { get; }
 		INode[] Children { get; }
-        Expression Compile(JitContext func);
-        INode Analyze(Stack<Lambda> stack);
-    }
+		Expression Compile(JitContext func);
+		INode Analyze(Stack<Lambda> stack);
+	}
 }

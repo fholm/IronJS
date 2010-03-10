@@ -13,6 +13,8 @@
  * ***************************************************************************************/
 using System;
 using IronJS.Ast.Nodes;
+using IronJS.Ast.Tools;
+using IronJS.Tools;
 using IronJS.Runtime.Jit.Tools;
 using Microsoft.Scripting.Utils;
 
@@ -24,7 +26,6 @@ using System.Linq.Expressions;
 
 namespace IronJS.Runtime.Jit {
 	using Et = Expression;
-	using IronJS.Ast.Tools;
 
 	public class Compiler {
 		public TFunc Compile<TFunc>(Lambda lambda) where TFunc : class {
@@ -36,9 +37,25 @@ namespace IronJS.Runtime.Jit {
 			Type[] paramTypes = ArrayUtils.RemoveLast(types);
 
 			LambdaTools.SetParameterTypes(lambda, paramTypes);
+			LambdaTools.SetupVariables(lambda);
+
+			JitContext ctx = new JitContext(lambda);
+			Et body = lambda.Body.Compile(ctx);
+			LambdaExpression lambdaExpr = Et.Lambda(body, "~file", 
+				ArrayTools.Map(
+					ArrayTools.DropFirstAndLast(lambda.Children),
+					delegate(INode node) {
+						return node.Compile(ctx) as ParameterExpression;
+					}
+				)
+			);
+			Delegate compiled = lambdaExpr.Compile();
+
+			LambdaTools.ClearVariables(lambda);
+			LambdaTools.ResetParameterTypes(lambda);
 
 			DisplayTools.Print(lambda);
-			return null;
+			return compiled;
 		}
 	}
 }

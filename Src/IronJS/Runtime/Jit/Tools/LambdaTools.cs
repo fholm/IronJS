@@ -14,5 +14,17 @@ namespace IronJS.Runtime.Jit.Tools {
 				(lambda.Children[i] as Parameter).ForceType(null);
 			}
 		}
+
+		internal static void SetupVariables(Lambda lambda) {
+			foreach (Variable variable in lambda.Variables.Values) {
+				variable.Setup();
+			}
+		}
+
+		internal static void ClearVariables(Lambda lambda) {
+			foreach (Variable variable in lambda.Variables.Values) {
+				variable.Clear();
+			}
+		}
 	}
 }

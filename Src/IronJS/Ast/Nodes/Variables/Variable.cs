@@ -67,10 +67,12 @@ namespace IronJS.Ast.Nodes {
             }
         }
 
-        public override sealed Et Compile(JitContext func) {
-			Et expr = Expr;
+		public virtual void Clear() {
 			Expr = null;
-			return expr;
+		}
+
+        public override sealed Et Compile(JitContext func) {
+			return Expr;
         }
 
 		public override string ToString() {

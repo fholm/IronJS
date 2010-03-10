@@ -30,14 +30,14 @@ namespace IronJS.Ast.Nodes {
 		public INode Name { get { return Children[0]; } }
 		public string[] ParamNames { get; private set; }
 		public int ParamsCount { get { return ParamNames.Length; } }
-		public INode Body { get { return Children[1]; } }
+		public INode Body { get { return Children[Children.Length - 1]; } }
 		public bool IsLambda { get { return Name == null; } }
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
 
 		public Lambda(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Func, node) {
-			_variables = new Dictionary<string, Variable>();
+			Variables = new Dictionary<string, Variable>();
 
 			Children = new INode[parameters.Count + 3];
 			Children[0] = name;
@@ -61,24 +61,24 @@ namespace IronJS.Ast.Nodes {
 			return this;
 		}
 
-		Dictionary<string, Variable> _variables;
-		public Variable Var(string name) { return _variables[name]; }
-		public bool Var(string name, out Variable var) { return _variables.TryGetValue(name, out var); }
+		internal Dictionary<string, Variable> Variables;
+		public Variable Var(string name) { return Variables[name]; }
+		public bool Var(string name, out Variable var) { return Variables.TryGetValue(name, out var); }
 		public void CreateVar(string name, Variable var) {
-			if (_variables.ContainsKey(name))
+			if (Variables.ContainsKey(name))
 				throw new AstError("A variable named '" + name + "' already exist");
 
-			_variables[name] = var;
+			Variables[name] = var;
 		}
 
-		public override Expression Compile(JitContext func) {
+		public override Expression Compile(JitContext ctx) {
 			return AstTools.New(
 				typeof(Function),
 				AstTools.Constant(this),
 				AstTools.New(
-					typeof(Closure)//,
-					//func.Context,
-					//func.Globals
+					typeof(Closure),
+					ctx.Context,
+					ctx.Globals
 				)
 			);
 		}

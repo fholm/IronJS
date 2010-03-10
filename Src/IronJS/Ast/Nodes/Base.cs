@@ -14,6 +14,7 @@ namespace IronJS.Ast.Nodes {
 
 	using AstUtils = Utils;
 	using Et = Expression;
+using IronJS.Ast.Tools;
 
 	public enum NodeType {
 		Assign, Identifier, Double, Null,
@@ -31,6 +32,7 @@ namespace IronJS.Ast.Nodes {
 	}
 
 	abstract public class Base : INode {
+		public string Debug { get { return DisplayTools.AsString(this); } }
 		public NodeType NodeType { get; protected set; }
 		public INode[] Children { get; protected set; }
 		public virtual Type Type { get { return Types.Dynamic; } }

@@ -11,16 +11,13 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
-	using Et = Expression;
 
 	public class Invoke : Base {
 		public INode Target { get { return Children[0]; } }
 
 		public Invoke(INode target, List<INode> args, ITree node)
 			: base(NodeType.Call, node) {
-			Children = new INode[args.Count + 1];
-			Children[0] = target;
-			args.CopyTo(Children, 1);
+			Children = ArrayUtils.Insert(target, args.ToArray());
 		}
 
 		public override INode Analyze(Stack<Lambda> stack) {

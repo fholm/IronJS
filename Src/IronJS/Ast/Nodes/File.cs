@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 using Microsoft.Scripting.Utils;
 
 #if CLR2

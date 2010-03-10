@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections;
 
-namespace IronJS.Runtime2.Js
+namespace IronJS.Runtime.Js
 {
     public class IjsObj
     {

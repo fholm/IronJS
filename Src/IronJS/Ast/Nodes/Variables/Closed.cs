@@ -1,5 +1,5 @@
 ﻿using System;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 
 namespace IronJS.Ast.Nodes {
     public class Closed : Variable {

@@ -1,6 +1,6 @@
 ﻿using System;
 using IronJS.Ast.Nodes;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 using Microsoft.Scripting.Utils;
 using System.Collections.Generic;
 

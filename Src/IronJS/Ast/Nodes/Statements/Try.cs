@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Ast.Tools;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 
 #if CLR2
 using Microsoft.Scripting.Ast;

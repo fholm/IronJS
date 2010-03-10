@@ -1,6 +1,6 @@
 ﻿using System;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 using System.Collections.Generic;
 using IronJS.Ast.Tools;
 

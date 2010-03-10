@@ -4,7 +4,7 @@ using System.Text;
 using IronJS.Ast;
 using IronJS.Ast.Nodes;
 using IronJS.Runtime.Utils;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 using Microsoft.Scripting.Utils;
 
 #if CLR2

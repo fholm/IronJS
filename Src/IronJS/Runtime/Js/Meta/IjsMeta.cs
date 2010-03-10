@@ -6,7 +6,7 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime2.Js.Meta
+namespace IronJS.Runtime.Js.Meta
 {
     using Et = Expression;
     using MetaObj = DynamicMetaObject;

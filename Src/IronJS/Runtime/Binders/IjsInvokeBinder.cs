@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Dynamic;
 using IronJS.Ast.Tools;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 using IronJS.Tools;
 
 #if CLR2
@@ -11,7 +11,7 @@ using Microsoft.Scripting.Utils;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime2.Binders
+namespace IronJS.Runtime.Binders
 {
     using Et = Expression;
     using MetaObj = DynamicMetaObject;

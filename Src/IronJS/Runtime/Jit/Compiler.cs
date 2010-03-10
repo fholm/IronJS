@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IronJS.Runtime2.Jit {
+namespace IronJS.Runtime.Jit {
 	public class Compiler {
+
 	}
 }

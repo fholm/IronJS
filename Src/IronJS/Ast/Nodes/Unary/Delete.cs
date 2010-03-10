@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime2.Binders;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Binders;
+using IronJS.Runtime.Js;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;

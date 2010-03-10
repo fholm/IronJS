@@ -4,8 +4,8 @@ using System.Reflection;
 using System.Collections.Generic;
 using IronJS.Tools;
 using IronJS.Ast.Nodes;
-using IronJS.Runtime2.Js;
-using IronJS.Runtime2.Binders;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Binders;
 using Microsoft.Scripting.Utils;
 
 #if CLR2

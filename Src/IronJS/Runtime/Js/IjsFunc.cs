@@ -10,7 +10,7 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime2.Js {
+namespace IronJS.Runtime.Js {
 	public class IjsFunc : IjsObj {
 		public Lambda Ast { get; protected set; }
 		public IjsClosure Closure { get; protected set; }

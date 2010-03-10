@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime2.Js
+namespace IronJS.Runtime.Js
 {
     using Et = Expression;
 

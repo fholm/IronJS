@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting;
-using IronJS.Runtime2.Js;
+using IronJS.Runtime.Js;
 
 namespace IronJS {
     public sealed class IjsContext {

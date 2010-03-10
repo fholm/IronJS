@@ -3,7 +3,7 @@
  **/
 using System;
 using IronJS.Tools;
-using IronJS.Runtime2.Js.Proxies;
+using IronJS.Runtime.Js.Proxies;
 
 #if CLR2
 using Microsoft.Scripting.Ast;  

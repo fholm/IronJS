@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IronJS.Runtime2.Js
+namespace IronJS.Runtime.Js
 {
     public static class IjsTypes
     {

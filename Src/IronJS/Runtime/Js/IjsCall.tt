@@ -1,5 +1,5 @@
 ﻿<#@ template language="C#v3.5" hostspecific="True" debug="True" #><#@ output extension="cs" #><#@ include file="T4Toolbox.tt" #>/*
- *GENERATED CODE
+ * GENERATED CODE
  **/
 using System;
 using Microsoft.Scripting.Utils;

@@ -1,5 +1,5 @@
 ﻿/*
- *GENERATED CODE
+ * GENERATED CODE
  **/
 using System;
 using Microsoft.Scripting.Utils;

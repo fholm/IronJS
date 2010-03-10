@@ -14,16 +14,13 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Ast.Tools
-{
-    using Et = Expression;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using EtParam = ParameterExpression;
+namespace IronJS.Ast.Tools {
+	using Et = Expression;
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
+	using EtParam = ParameterExpression;
 
-    internal static partial class CompileTools
-    {
-		internal static Et Call0(Lambda func, INode target)
-		{
+	internal static partial class CompileTools {
+		internal static Et Call0(Lambda func, INode target) {
 			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
 			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
 
@@ -67,8 +64,7 @@ namespace IronJS.Ast.Tools
 			);
 		}
 
-		internal static Et CallN(Lambda func, INode target, IEnumerable<INode> argsList)
-		{
+		internal static Et CallN(Lambda func, INode target, IEnumerable<INode> argsList) {
 			// Build the args array
 			Et[] args = IEnumerableTools.Map(argsList, delegate(INode node) {
 				return node.Compile(func);
@@ -83,7 +79,7 @@ namespace IronJS.Ast.Tools
 			Type guardType = proxyType.GetField("Guard").FieldType;
 
 			// All expressions we need through out the building
-            Et callExpr = null;
+			Et callExpr = null;
 			Et funcField = Et.Field(callExpr, "Func");
 			Et delegateField = Et.Field(callExpr, "Delegate");
 			Et guardField = Et.Field(callExpr, "Guard");
@@ -154,14 +150,12 @@ namespace IronJS.Ast.Tools
 			);
 		}
 
-        internal static Et Assign(Lambda func, INode Target, Et value)
-        {
-            return AstUtils.Empty();
+		internal static Et Assign(Lambda func, INode Target, Et value) {
+			return AstUtils.Empty();
 		}
 
 		static Et BuildUpdateExpr(Expression delegateField, Expression funcField, ParameterExpression tmpGuard,
-			Type delegateType, Type guardType, Expression[] args)
-		{
+			Type delegateType, Type guardType, Expression[] args) {
 			return Et.Assign(
 				delegateField,
 				Et.Call(
@@ -172,5 +166,5 @@ namespace IronJS.Ast.Tools
 				)
 			);
 		}
-    }
+	}
 }

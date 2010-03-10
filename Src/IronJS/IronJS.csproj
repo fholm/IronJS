@@ -82,45 +82,45 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compiler\Ast\Block\VarBlock.cs" />
-    <Compile Include="Compiler\Ast\Interfaces\IAssignable.cs" />
-    <Compile Include="Compiler\Ast\Variables\Variable.cs" />
-    <Compile Include="Compiler\Ast\Statements\Var.cs" />
-    <Compile Include="Compiler\Ast\Variables\Closed.cs" />
-    <Compile Include="Compiler\Ast\Variables\Global.cs" />
-    <Compile Include="Compiler\Ast\Variables\Local.cs" />
-    <Compile Include="Compiler\Ast\Variables\Parameter.cs" />
-    <Compile Include="Compiler\Ast\Initializers\Vector.cs" />
-    <Compile Include="Compiler\Ast\Assign.cs" />
-    <Compile Include="Compiler\Ast\Block\Block.cs" />
-    <Compile Include="Compiler\Ast\File.cs" />
-    <Compile Include="Compiler\Generator.cs" />
-    <Compile Include="Compiler\Ast\Statements\Break.cs" />
-    <Compile Include="Compiler\Ast\Binary\Binary.cs" />
-    <Compile Include="Compiler\Ast\Invoke.cs" />
-    <Compile Include="Compiler\Ast\Statements\Continue.cs" />
-    <Compile Include="Compiler\Ast\Symbol.cs" />
-    <Compile Include="Compiler\Ast\Interfaces\INode.cs" />
-    <Compile Include="Compiler\Ast\Statements\If.cs" />
-    <Compile Include="Compiler\Ast\Interfaces\ILabelable.cs" />
-    <Compile Include="Compiler\Ast\Lambda.cs" />
-    <Compile Include="Compiler\Ast\Member.cs" />
-    <Compile Include="Compiler\Ast\Unary\New.cs" />
-    <Compile Include="Compiler\Ast\Node.cs" />
-    <Compile Include="Compiler\Ast\Constants\Null.cs" />
-    <Compile Include="Compiler\Ast\Constants\Number.cs" />
-    <Compile Include="Compiler\Ast\Regex.cs" />
-    <Compile Include="Compiler\Ast\Statements\Return.cs" />
-    <Compile Include="Compiler\Ast\Constants\Str.cs" />
-    <Compile Include="Compiler\Ast\Statements\While.cs" />
-    <Compile Include="Compiler\Ast\Constants\Bool.cs" />
-    <Compile Include="Compiler\Tools\AnalyzeTools.cs" />
-    <Compile Include="Compiler\Tools\CompileTools_Gen.cs">
+    <Compile Include="Ast\Nodes\Block\VarBlock.cs" />
+    <Compile Include="Ast\Nodes\Interfaces\IAssignable.cs" />
+    <Compile Include="Ast\Nodes\Variables\Variable.cs" />
+    <Compile Include="Ast\Nodes\Statements\Var.cs" />
+    <Compile Include="Ast\Nodes\Variables\Closed.cs" />
+    <Compile Include="Ast\Nodes\Variables\Global.cs" />
+    <Compile Include="Ast\Nodes\Variables\Local.cs" />
+    <Compile Include="Ast\Nodes\Variables\Parameter.cs" />
+    <Compile Include="Ast\Nodes\Initializers\Vector.cs" />
+    <Compile Include="Ast\Nodes\Assign.cs" />
+    <Compile Include="Ast\Nodes\Block\Block.cs" />
+    <Compile Include="Ast\Nodes\File.cs" />
+    <Compile Include="Ast\Generator.cs" />
+    <Compile Include="Ast\Nodes\Statements\Break.cs" />
+    <Compile Include="Ast\Nodes\Binary\Binary.cs" />
+    <Compile Include="Ast\Nodes\Invoke.cs" />
+    <Compile Include="Ast\Nodes\Statements\Continue.cs" />
+    <Compile Include="Ast\Nodes\Symbol.cs" />
+    <Compile Include="Ast\Nodes\Interfaces\INode.cs" />
+    <Compile Include="Ast\Nodes\Statements\If.cs" />
+    <Compile Include="Ast\Nodes\Interfaces\ILabelable.cs" />
+    <Compile Include="Ast\Nodes\Lambda.cs" />
+    <Compile Include="Ast\Nodes\Member.cs" />
+    <Compile Include="Ast\Nodes\Unary\New.cs" />
+    <Compile Include="Ast\Nodes\Base.cs" />
+    <Compile Include="Ast\Nodes\Constants\Null.cs" />
+    <Compile Include="Ast\Nodes\Constants\Number.cs" />
+    <Compile Include="Ast\Nodes\Regex.cs" />
+    <Compile Include="Ast\Nodes\Statements\Return.cs" />
+    <Compile Include="Ast\Nodes\Constants\Str.cs" />
+    <Compile Include="Ast\Nodes\Statements\While.cs" />
+    <Compile Include="Ast\Nodes\Constants\Bool.cs" />
+    <Compile Include="Ast\Tools\AnalyzeTools.cs" />
+    <Compile Include="Ast\Tools\CompileTools_Gen.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CompileTools_Gen.tt</DependentUpon>
     </Compile>
-    <Compile Include="Compiler\Tools\DisplayTools.cs" />
+    <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="IjsContext.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
@@ -130,32 +130,32 @@
       <DependentUpon>IjsCall.tt</DependentUpon>
     </Compile>
     <Compile Include="Runtime2\Js\IjsClosure.cs" />
-    <Compile Include="Compiler\Errors\CompilerError.cs" />
-    <Compile Include="Compiler\Ast\Unary\Delete.cs" />
+    <Compile Include="Ast\Errors\CompilerError.cs" />
+    <Compile Include="Ast\Nodes\Unary\Delete.cs" />
     <Compile Include="Runtime2\Js\IjsFunc.cs" />
     <Compile Include="Runtime2\Js\IjsTypes.cs" />
-    <Compile Include="Compiler\Ast\Unary\Unary.cs" />
-    <Compile Include="Compiler\Ast\Binary\Logical.cs" />
-    <Compile Include="Compiler\Ast\Unary\Postfix.cs" />
-    <Compile Include="Compiler\Ast\Unary\TypeOf.cs" />
-    <Compile Include="Compiler\Ast\Unary\Void.cs" />
-    <Compile Include="Compiler\Ast\Binary\StrictCompare.cs" />
-    <Compile Include="Compiler\Ast\Binary\UnsignedRShift.cs" />
-    <Compile Include="Compiler\Ast\Statements\For.cs" />
-    <Compile Include="Compiler\Ast\Statements\ForIn.cs" />
-    <Compile Include="Compiler\Ast\Statements\With.cs" />
-    <Compile Include="Compiler\Ast\Statements\Try.cs" />
-    <Compile Include="Compiler\Ast\Statements\Throw.cs" />
-    <Compile Include="Compiler\Ast\Index.cs" />
-    <Compile Include="Compiler\Ast\Binary\In.cs" />
-    <Compile Include="Compiler\Ast\Binary\InstanceOf.cs" />
-    <Compile Include="Compiler\Ast\Statements\Switch.cs" />
-    <Compile Include="Compiler\Ast\Initializers\Obj.cs" />
-    <Compile Include="Compiler\Tools\CompileTools.cs" />
-    <Compile Include="Compiler\Parser\ES3Lexer.Action.cs" />
-    <Compile Include="Compiler\Parser\ES3Lexer.cs" />
-    <Compile Include="Compiler\Parser\ES3Parser.Action.cs" />
-    <Compile Include="Compiler\Parser\ES3Parser.cs" />
+    <Compile Include="Ast\Nodes\Unary\Unary.cs" />
+    <Compile Include="Ast\Nodes\Binary\Logical.cs" />
+    <Compile Include="Ast\Nodes\Unary\Postfix.cs" />
+    <Compile Include="Ast\Nodes\Unary\TypeOf.cs" />
+    <Compile Include="Ast\Nodes\Unary\Void.cs" />
+    <Compile Include="Ast\Nodes\Binary\StrictCompare.cs" />
+    <Compile Include="Ast\Nodes\Binary\UnsignedRShift.cs" />
+    <Compile Include="Ast\Nodes\Statements\For.cs" />
+    <Compile Include="Ast\Nodes\Statements\ForIn.cs" />
+    <Compile Include="Ast\Nodes\Statements\With.cs" />
+    <Compile Include="Ast\Nodes\Statements\Try.cs" />
+    <Compile Include="Ast\Nodes\Statements\Throw.cs" />
+    <Compile Include="Ast\Nodes\Index.cs" />
+    <Compile Include="Ast\Nodes\Binary\In.cs" />
+    <Compile Include="Ast\Nodes\Binary\InstanceOf.cs" />
+    <Compile Include="Ast\Nodes\Statements\Switch.cs" />
+    <Compile Include="Ast\Nodes\Initializers\Obj.cs" />
+    <Compile Include="Ast\Tools\CompileTools.cs" />
+    <Compile Include="Ast\Parser\ES3Lexer.Action.cs" />
+    <Compile Include="Ast\Parser\ES3Lexer.cs" />
+    <Compile Include="Ast\Parser\ES3Parser.Action.cs" />
+    <Compile Include="Ast\Parser\ES3Parser.cs" />
     <Compile Include="Error.cs" />
     <Compile Include="Runtime\Utils\HelperFunctions.cs">
       <SubType>Code</SubType>
@@ -181,7 +181,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Compiler\Tools\CompileTools_Gen.tt">
+    <None Include="Ast\Tools\CompileTools_Gen.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CompileTools_Gen.cs</LastGenOutput>
     </None>

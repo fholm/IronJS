@@ -1,8 +1,5 @@
-<#@ template language="C#" hostspecific="True" debug="True" #>
-<#@ output extension="cs" #>
-<#@ include file="T4Toolbox.tt" #>
-/*
- *GENERATED CODE
+<#@ template language="C#" hostspecific="True" debug="True" #><#@ output extension="cs" #><#@ include file="T4Toolbox.tt" #>/*
+ * GENERATED CODE
  **/
 using System;
 using IronJS.Tools;
@@ -14,16 +11,9 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
  
-namespace IronJS.Compiler.Tools
-{
-    using Et = Expression;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using EtParam = ParameterExpression;
-
-    internal static partial class CompileTools
-    {
-		static Type BuildCallProxyType(Expression[] args)
-		{
+namespace IronJS.Ast.Tools {
+    internal static partial class CompileTools{
+		static Type BuildCallProxyType(Expression[] args){
 			Type type = null;
 <# for(int i = 1; i < 16; ++i) { #>
 			<#= i > 1 ? "else " : "" #>if(args.Length == <#= i #>) 

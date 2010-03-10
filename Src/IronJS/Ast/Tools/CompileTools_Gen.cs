@@ -1,8 +1,5 @@
-
-
-
 /*
- *GENERATED CODE
+ * GENERATED CODE
  **/
 using System;
 using IronJS.Tools;
@@ -14,16 +11,9 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
  
-namespace IronJS.Compiler.Tools
-{
-    using Et = Expression;
-    using AstUtils = Microsoft.Scripting.Ast.Utils;
-    using EtParam = ParameterExpression;
-
-    internal static partial class CompileTools
-    {
-		static Type BuildCallProxyType(Expression[] args)
-		{
+namespace IronJS.Ast.Tools {
+    internal static partial class CompileTools{
+		static Type BuildCallProxyType(Expression[] args){
 			Type type = null;
 
 			if(args.Length == 1) 

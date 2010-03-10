@@ -41,7 +41,7 @@ namespace IronJS.Ast.Nodes {
 			Children[0] = name;
 			Children[Children.Length - 1] = body;
 
-			ParameterNames = ArrayUtils.Insert("!closure", ArrayUtils.MakeArray(parameters));
+			ParameterNames = ArrayUtils.Insert("~closure", ArrayUtils.MakeArray(parameters));
 
 			Var(ParameterNames[0], new Parameter(ParameterNames[0]));
 			Var(ParameterNames[0]).ForceType(typeof(IjsClosure));

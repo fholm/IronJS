@@ -8,7 +8,7 @@ namespace IronJS.Ast.Tools {
 		}
 
 		public static void Print(INode node, int indent) {
-			var prefix = new String(' ', indent * 4);
+			var prefix = new String(' ', indent * 2);
 
 			if (node.Children == null || node.Children.Length == 0) {
 				Console.WriteLine(prefix + "(" + node + ")");
@@ -20,7 +20,7 @@ namespace IronJS.Ast.Tools {
 					if (child != null) {
 						Print(child, indent + 1);
 					} else {
-						Console.WriteLine(prefix + "    ()");
+						Console.WriteLine(prefix + "  ()");
 					}
 				}
 

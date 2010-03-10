@@ -157,7 +157,7 @@
     <Compile Include="Ast\Parser\ES3Parser.Action.cs" />
     <Compile Include="Ast\Parser\ES3Parser.cs" />
     <Compile Include="Error.cs" />
-    <Compile Include="Runtime\Utils\HelperFunctions.cs">
+    <Compile Include="Runtime2\OLD\HelperFunctions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tools\ITreeTools.cs" />
@@ -169,7 +169,7 @@
     <Compile Include="Runtime2\Js\Undefined.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Runtime\RuntimeError.cs">
+    <Compile Include="Runtime2\OLD\RuntimeError.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tools\HashSetTools.cs" />
@@ -192,9 +192,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Runtime\Js\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

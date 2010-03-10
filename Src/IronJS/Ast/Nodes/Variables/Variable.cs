@@ -73,7 +73,7 @@ namespace IronJS.Ast.Nodes {
         }
 
 		public override string ToString() {
-			return base.ToString() + " " + Name + " [" + TypeTools.ShortName(Type) + "]";
+			return base.ToString() + " " + Name + " <" + TypeTools.ShortName(Type) + ">";
 		}
 
         protected virtual Type EvalType() {

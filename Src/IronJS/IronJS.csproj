@@ -124,6 +124,7 @@
     <Compile Include="IjsContext.cs" />
     <Compile Include="Runtime2\Binders\IjsIBinder.cs" />
     <Compile Include="Runtime2\Binders\IjsInvokeBinder.cs" />
+    <Compile Include="Runtime2\Jit\Compiler.cs" />
     <Compile Include="Runtime2\Js\IjsCall.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

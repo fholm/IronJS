@@ -122,7 +122,6 @@
     </Compile>
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Context.cs" />
-    <Compile Include="Runtime\Binders\IBinder.cs" />
     <Compile Include="Runtime\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
     <Compile Include="Runtime\Js\Call.cs">
@@ -163,7 +162,6 @@
     </Compile>
     <Compile Include="Tools\ITreeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\Js\Meta\Meta.cs" />
     <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>

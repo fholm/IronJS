@@ -115,20 +115,10 @@
     <Compile Include="Ast\Nodes\Statements\While.cs" />
     <Compile Include="Ast\Nodes\Constants\Bool.cs" />
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
-    <Compile Include="Ast\Tools\CompileTools_Gen.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>CompileTools_Gen.tt</DependentUpon>
-    </Compile>
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="Runtime\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
-    <Compile Include="Runtime\Js\Call.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Call.tt</DependentUpon>
-    </Compile>
     <Compile Include="Runtime\Js\Closure.cs" />
     <Compile Include="Ast\Errors\CompilerError.cs" />
     <Compile Include="Ast\Nodes\Unary\Delete.cs" />
@@ -178,16 +168,6 @@
       <Project>{F091B7A6-F1B6-4987-8555-6665BF281ACE}</Project>
       <Name>IronJS.Tools</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Ast\Tools\CompileTools_Gen.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>CompileTools_Gen.cs</LastGenOutput>
-    </None>
-    <None Include="Runtime\Js\Call.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Call.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />

@@ -28,14 +28,5 @@ namespace IronJS.Ast.Nodes {
 			AnalyzeTools.IfIdentiferUsedAs(Target, Types.Object);
 			return this;
 		}
-
-		public override Et Compile(Lambda func) {
-			var args = ArrayUtils.RemoveFirst(Children);
-
-			if (args.Length == 0)
-				return CompileTools.Call0(func, Target);
-
-			return CompileTools.CallN(func, Target, args);
-		}
 	}
 }

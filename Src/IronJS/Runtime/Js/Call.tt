@@ -17,7 +17,7 @@ namespace IronJS.Runtime.Js.Proxies {<#  for(int i = 1; i < 16; ++i) {
 		
 		#>
 	public class IjsCall<<#= str #>> {
-		public IjsFunc Func;
+		public Function Func;
 		public Func<<#= str #>, bool> Guard;
 		public Func<IjsClosure, <#= str #>, object> Delegate;
 

@@ -22,7 +22,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
-			AnalyzeTools.IfIdentiferUsedAs(Source, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Source, Types.Object);
 			return this;
 		}
 	}

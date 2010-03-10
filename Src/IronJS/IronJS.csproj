@@ -121,20 +121,20 @@
       <DependentUpon>CompileTools_Gen.tt</DependentUpon>
     </Compile>
     <Compile Include="Ast\Tools\DisplayTools.cs" />
-    <Compile Include="IjsContext.cs" />
-    <Compile Include="Runtime\Binders\IjsIBinder.cs" />
-    <Compile Include="Runtime\Binders\IjsInvokeBinder.cs" />
+    <Compile Include="Context.cs" />
+    <Compile Include="Runtime\Binders\IBinder.cs" />
+    <Compile Include="Runtime\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
-    <Compile Include="Runtime\Js\IjsCall.cs">
+    <Compile Include="Runtime\Js\Call.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>IjsCall.tt</DependentUpon>
+      <DependentUpon>Call.tt</DependentUpon>
     </Compile>
-    <Compile Include="Runtime\Js\IjsClosure.cs" />
+    <Compile Include="Runtime\Js\Closure.cs" />
     <Compile Include="Ast\Errors\CompilerError.cs" />
     <Compile Include="Ast\Nodes\Unary\Delete.cs" />
-    <Compile Include="Runtime\Js\IjsFunc.cs" />
-    <Compile Include="Runtime\Js\IjsTypes.cs" />
+    <Compile Include="Runtime\Js\Function.cs" />
+    <Compile Include="Runtime\Js\Types.cs" />
     <Compile Include="Ast\Nodes\Unary\Unary.cs" />
     <Compile Include="Ast\Nodes\Binary\Logical.cs" />
     <Compile Include="Ast\Nodes\Unary\Postfix.cs" />
@@ -163,8 +163,8 @@
     </Compile>
     <Compile Include="Tools\ITreeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\Js\Meta\IjsMeta.cs" />
-    <Compile Include="Runtime\Js\IjsObj.cs">
+    <Compile Include="Runtime\Js\Meta\Meta.cs" />
+    <Compile Include="Runtime\Js\Obj.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Runtime\Js\Undefined.cs">
@@ -186,9 +186,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CompileTools_Gen.cs</LastGenOutput>
     </None>
-    <None Include="Runtime\Js\IjsCall.tt">
+    <None Include="Runtime\Js\Call.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>IjsCall.cs</LastGenOutput>
+      <LastGenOutput>Call.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -23,9 +23,9 @@ namespace IronJS.Ast.Nodes {
 		public override Type Type {
 			get {
 				if (this.GetType() == typeof(NumberNode<long>))
-					return IjsTypes.Integer;
+					return Types.Integer;
 
-				return IjsTypes.Double;
+				return Types.Double;
 			}
 		}
 

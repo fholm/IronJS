@@ -15,19 +15,19 @@ namespace IronJS.Runtime.Binders {
 	using Et = Expression;
 	using MetaObj = DynamicMetaObject;
 
-	public class IjsInvokeBinder : InvokeBinder {
-		public IjsInvokeBinder(CallInfo callInfo)
+	public class CallBinder : InvokeBinder {
+		public CallBinder(CallInfo callInfo)
 			: base(callInfo) {
 
 		}
 
 		public override MetaObj FallbackInvoke(MetaObj target, MetaObj[] args, MetaObj errorSuggestion) {
-			if (target.Value is Action<IjsFunc>) {
+			if (target.Value is Action<Function>) {
 				return new MetaObj(
 					AstTools.Box(
 						Et.Invoke(
-						   Et.Convert(target.Expression, typeof(Action<IjsFunc>)),
-						   Et.Convert(args[0].Expression, typeof(IjsFunc))
+						   Et.Convert(target.Expression, typeof(Action<Function>)),
+						   Et.Convert(args[0].Expression, typeof(Function))
 						)
 					),
 					BindingRestrictions.GetTypeRestriction(

@@ -30,8 +30,8 @@ namespace IronJS.Ast.Nodes {
 		public string[] ParameterNames { get; private set; }
 		public INode Body { get { return Children[1]; } }
 		public bool IsLambda { get { return Name == null; } }
-		public Type ReturnType { get { return IjsTypes.Dynamic; } }
-		public override Type Type { get { return IjsTypes.Object; } }
+		public Type ReturnType { get { return Types.Dynamic; } }
+		public override Type Type { get { return Types.Object; } }
 
 		public Lambda(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Func, node) {
@@ -44,7 +44,7 @@ namespace IronJS.Ast.Nodes {
 			ParameterNames = ArrayUtils.Insert("~closure", ArrayUtils.MakeArray(parameters));
 
 			Var(ParameterNames[0], new Parameter(ParameterNames[0]));
-			Var(ParameterNames[0]).ForceType(typeof(IjsClosure));
+			Var(ParameterNames[0]).ForceType(typeof(Closure));
 			Children[1] = Var(ParameterNames[0]);
 
 			for (int i = 0; i < parameters.Count; ++i) {
@@ -72,10 +72,10 @@ namespace IronJS.Ast.Nodes {
 
 		public override Expression Compile(Lambda func) {
 			return AstTools.New(
-				typeof(IjsFunc),
+				typeof(Function),
 				AstTools.Constant(this),
 				AstTools.New(
-					typeof(IjsClosure)//,
+					typeof(Closure)//,
 					//func.Context,
 					//func.Globals
 				)

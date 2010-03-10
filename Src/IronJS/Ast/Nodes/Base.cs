@@ -32,7 +32,7 @@ namespace IronJS.Ast.Nodes {
 	abstract public class Base : INode {
 		public NodeType NodeType { get; protected set; }
 		public INode[] Children { get; protected set; }
-		public virtual Type Type { get { return IjsTypes.Dynamic; } }
+		public virtual Type Type { get { return Types.Dynamic; } }
 
 		public Base(NodeType type, ITree node) {
 			NodeType = type;

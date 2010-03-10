@@ -21,10 +21,10 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				if (Target.Type == IjsTypes.Integer)
-					return IjsTypes.Integer;
+				if (Target.Type == Types.Integer)
+					return Types.Integer;
 
-				return IjsTypes.Double;
+				return Types.Double;
 			}
 		}
 	}

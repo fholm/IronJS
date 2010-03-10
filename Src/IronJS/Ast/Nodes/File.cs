@@ -15,13 +15,13 @@ namespace IronJS.Ast.Nodes {
 
 		}
 
-		public Func<IjsClosure, object> Compile(IjsContext context) {
+		public Func<Closure, object> Compile(Context context) {
 			Func<bool> guard;
 
-			IjsFunc tempFunc = new IjsFunc(this, context.GlobalClosure);
+			Function tempFunc = new Function(this, context.GlobalClosure);
 
-			Func<IjsClosure, object> compiled =
-				tempFunc.Compile<Func<IjsClosure, object>, Func<bool>>(
+			Func<Closure, object> compiled =
+				tempFunc.Compile<Func<Closure, object>, Func<bool>>(
 					ArrayUtils.EmptyObjects, out guard
 				);
 

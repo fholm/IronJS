@@ -21,8 +21,8 @@ namespace IronJS.Ast.Tools {
 
 	internal static partial class CompileTools {
 		internal static Et Call0(Lambda func, INode target) {
-			EtParam tmpObject = Et.Variable(typeof(object), "!tmpObject");
-			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "!tmpFunc");
+			EtParam tmpObject = Et.Variable(typeof(object), "~tmpObject");
+			EtParam tmpFunc = Et.Variable(typeof(Function), "~tmpFunc");
 
 			/*
 			 * This constructs a block that looks like this
@@ -44,20 +44,20 @@ namespace IronJS.Ast.Tools {
 				Et.Assign(tmpObject, target.Compile(func)),
 				Et.Assign(
 					tmpFunc,
-					Et.TypeAs(tmpObject, typeof(IjsFunc))
+					Et.TypeAs(tmpObject, typeof(Function))
 				),
 				Et.Condition(
-					Et.NotEqual(tmpFunc, Et.Default(typeof(IjsFunc))),
+					Et.NotEqual(tmpFunc, Et.Default(typeof(Function))),
 					Et.Block(
 						Et.IfThen(
 							Et.Equal(Et.Field(tmpFunc, "Func0"), Et.Constant(null)),
-							Et.Call(tmpFunc, typeof(IjsFunc).GetMethod("Compile0"))
+							Et.Call(tmpFunc, typeof(Function).GetMethod("Compile0"))
 						),
 						Et.Invoke(Et.Field(tmpFunc, "Func0"), Et.Field(tmpFunc, "Closure"))
 					),
 					Et.Dynamic(
-						new IjsInvokeBinder(new CallInfo(0)),
-						IjsTypes.Dynamic,
+						new CallBinder(new CallInfo(0)),
+						Types.Dynamic,
 						tmpObject
 					)
 				)
@@ -74,7 +74,7 @@ namespace IronJS.Ast.Tools {
 			Type proxyType = BuildCallProxyType(args);
 
 			// All other types we need
-			Type funcType = typeof(IjsFunc);
+			Type funcType = typeof(Function);
 			Type delegateType = proxyType.GetField("Delegate").FieldType;
 			Type guardType = proxyType.GetField("Guard").FieldType;
 
@@ -86,9 +86,9 @@ namespace IronJS.Ast.Tools {
 			Et closureField = Et.Field(funcField, "Closure");
 
 			// Temporary variables
-			EtParam tmpObject = Et.Variable(IjsTypes.Dynamic, "!tmpObject");
-			EtParam tmpFunc = Et.Variable(funcType, "!tmpFunc");
-			EtParam tmpGuard = Et.Variable(guardType, "!tmpGuard");
+			EtParam tmpObject = Et.Variable(Types.Dynamic, "~tmpObject");
+			EtParam tmpFunc = Et.Variable(funcType, "~tmpFunc");
+			EtParam tmpGuard = Et.Variable(guardType, "~tmpGuard");
 
 			/*
 			 * This constructs a block that looks like this
@@ -142,8 +142,8 @@ namespace IronJS.Ast.Tools {
 						)
 					),
 					Et.Dynamic(
-						new IjsInvokeBinder(new CallInfo(args.Length)),
-						IjsTypes.Dynamic,
+						new CallBinder(new CallInfo(args.Length)),
+						Types.Dynamic,
 						ArrayUtils.Insert(tmpObject, args)
 					)
 				)
@@ -160,7 +160,7 @@ namespace IronJS.Ast.Tools {
 				delegateField,
 				Et.Call(
 					funcField,
-					typeof(IjsFunc).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
+					typeof(Function).GetMethod("CompileN").MakeGenericMethod(delegateType, guardType),
 					AstUtils.NewArrayHelper(typeof(object), args),
 					tmpGuard
 				)

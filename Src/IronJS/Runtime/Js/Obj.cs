@@ -2,7 +2,7 @@
 using System.Collections;
 
 namespace IronJS.Runtime.Js {
-	public class IjsObj {
+	public class Obj {
 		public Dictionary<object, object> Properties =
 			new Dictionary<object, object>();
 

@@ -28,14 +28,14 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				return IjsTypes.Object;
+				return Types.Object;
 			}
 		}
 
 		public override INode Analyze(Stack<Lambda> stack) {
 			AnalyzeTools.IfIdentiferUsedAs(
 				Target = Target.Analyze(stack),
-				IjsTypes.Object
+				Types.Object
 			);
 
 			for (int index = 0; index < Args.Count; ++index)

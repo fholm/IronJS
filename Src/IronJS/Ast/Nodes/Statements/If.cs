@@ -28,7 +28,7 @@ namespace IronJS.Ast.Nodes {
 					return TrueBranch.Type;
 				}
 
-				return IjsTypes.Dynamic;
+				return Types.Dynamic;
 			}
 		}
 	}

@@ -17,7 +17,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				return IjsTypes.Dynamic;
+				return Types.Dynamic;
 			}
 		}
 	}

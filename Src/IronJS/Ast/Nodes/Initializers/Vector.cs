@@ -19,7 +19,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				return IjsTypes.Object;
+				return Types.Object;
 			}
 		}
 	}

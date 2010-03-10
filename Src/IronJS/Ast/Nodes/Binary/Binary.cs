@@ -17,7 +17,7 @@ namespace IronJS.Ast.Nodes {
 		public INode Left { get { return Children[0]; } }
 		public INode Right { get { return Children[1]; } }
 		public ExpressionType Op { get; protected set; }
-		public override Type Type { get { return IsComparisonOp ? IjsTypes.Boolean : AnalyzeTools.EvalTypes(Left, Right); } }
+		public override Type Type { get { return IsComparisonOp ? Types.Boolean : AnalyzeTools.EvalTypes(Left, Right); } }
 
 		public bool IsComparisonOp {
 			get {
@@ -47,7 +47,7 @@ namespace IronJS.Ast.Nodes {
 				Et left = Left.Compile(func);
 				Et right = Right.Compile(func);
 
-				if (Left.Type == IjsTypes.Integer) {
+				if (Left.Type == Types.Integer) {
 					if (Op == ExpressionType.LessThan)
 						return Et.LessThan(left, right);
 

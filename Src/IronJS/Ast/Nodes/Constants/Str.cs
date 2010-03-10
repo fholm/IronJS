@@ -24,7 +24,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				return IjsTypes.String;
+				return Types.String;
 			}
 		}
 

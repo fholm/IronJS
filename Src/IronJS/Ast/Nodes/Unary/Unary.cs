@@ -23,16 +23,16 @@ namespace IronJS.Ast.Nodes {
 		public override Type Type {
 			get {
 				if (Op == ExpressionType.Not)
-					return IjsTypes.Boolean;
+					return Types.Boolean;
 
 				if (Op == ExpressionType.OnesComplement)
-					return IjsTypes.Integer;
+					return Types.Integer;
 
 				if (Op == ExpressionType.UnaryPlus)
-					return IjsTypes.Double;
+					return Types.Double;
 
 				if (Op == ExpressionType.Negate)
-					return IjsTypes.Double;
+					return Types.Double;
 
 				throw new AstCompilerError("Unrecognized unary operator '{0}'", Op);
 			}

@@ -11,15 +11,15 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Runtime.Js {
-	public class IjsFunc : IjsObj {
+	public class Function : Obj {
 		public Lambda Ast { get; protected set; }
-		public IjsClosure Closure { get; protected set; }
+		public Closure Closure { get; protected set; }
 		public Type ClosureType { get { return Closure.GetType(); } }
 
-		public Func<IjsClosure, object> Func0;
+		public Func<Closure, object> Func0;
 		public Dictionary<Type, Tuple<Delegate, Delegate>> FuncCache;
 
-		public IjsFunc(Lambda node, IjsClosure closure) {
+		public Function(Lambda node, Closure closure) {
 			Ast = node;
 			Closure = closure;
 			FuncCache = new Dictionary<Type, Tuple<Delegate, Delegate>>();

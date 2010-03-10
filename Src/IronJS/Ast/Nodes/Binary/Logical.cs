@@ -25,7 +25,7 @@ namespace IronJS.Ast.Nodes {
 				if (Left.Type == Right.Type)
 					return Left.Type;
 
-				return IjsTypes.Dynamic;
+				return Types.Dynamic;
 			}
 		}
 	}

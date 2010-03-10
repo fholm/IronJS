@@ -24,7 +24,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
-			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Target, Types.Object);
 			return this;
 		}
 	}

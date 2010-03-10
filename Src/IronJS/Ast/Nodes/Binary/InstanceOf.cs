@@ -23,15 +23,15 @@ namespace IronJS.Ast.Nodes {
 
 		public override Type Type {
 			get {
-				return IjsTypes.Boolean;
+				return Types.Boolean;
 			}
 		}
 
 		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 
-			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
-			AnalyzeTools.IfIdentiferUsedAs(Function, IjsTypes.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Target, Types.Object);
+			AnalyzeTools.IfIdentiferUsedAs(Function, Types.Object);
 
 			return this;
 		}

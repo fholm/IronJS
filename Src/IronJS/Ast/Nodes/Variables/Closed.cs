@@ -11,7 +11,7 @@ namespace IronJS.Ast.Nodes {
         }
 
         protected override Type EvalType() {
-            return IjsTypes.Undefined;
+            return Types.Undefined;
         }
     }
 }

@@ -27,10 +27,10 @@ namespace IronJS.Testing {
 			Console.ReadLine();
 			return;
 
-			IjsContext context = new IjsContext();
-			Func<IjsClosure, object> compiled = globalScope.Compile(context);
+			Context context = new Context();
+			Func<Closure, object> compiled = globalScope.Compile(context);
 
-			context.GlobalScope.Set("time", new Action<IjsFunc>(HelperFunctions.Timer));
+			context.GlobalScope.Set("time", new Action<Function>(HelperFunctions.Timer));
 			context.GlobalScope.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 
 			object result = compiled(context.GlobalClosure);

@@ -3,11 +3,11 @@ using IronJS.Runtime.Js;
 
 namespace IronJS.Ast.Nodes {
     public class Closed : Variable {
-        Lambda _function;
+        Lambda _lambda;
 
-        public Closed(Lambda function, string name)
+        public Closed(Lambda lambda, string name)
             : base(name, NodeType.Closed) {
-            _function = function;
+            _lambda = lambda;
         }
 
         protected override Type EvalType() {

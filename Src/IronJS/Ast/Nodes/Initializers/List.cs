@@ -10,9 +10,8 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
-
-	public class Vector : Base, INode {
-		public Vector(List<INode> values, ITree node)
+	public class List : Base, INode {
+		public List(List<INode> values, ITree node)
 			: base(NodeType.Array, node) {
 			Children = values.ToArray();
 		}

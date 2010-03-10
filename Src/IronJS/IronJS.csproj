@@ -90,7 +90,7 @@
     <Compile Include="Ast\Nodes\Variables\Global.cs" />
     <Compile Include="Ast\Nodes\Variables\Local.cs" />
     <Compile Include="Ast\Nodes\Variables\Parameter.cs" />
-    <Compile Include="Ast\Nodes\Initializers\Vector.cs" />
+    <Compile Include="Ast\Nodes\Initializers\List.cs" />
     <Compile Include="Ast\Nodes\Assign.cs" />
     <Compile Include="Ast\Nodes\Block\Block.cs" />
     <Compile Include="Ast\Nodes\File.cs" />

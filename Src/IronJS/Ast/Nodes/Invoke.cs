@@ -11,7 +11,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
-
 	public class Invoke : Base {
 		public INode Target { get { return Children[0]; } }
 

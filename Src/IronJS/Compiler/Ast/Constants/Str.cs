@@ -28,7 +28,7 @@ namespace IronJS.Compiler.Ast {
 			}
 		}
 
-		public override Et Compile(Function etgen) {
+		public override Et Compile(Lambda etgen) {
 			return AstTools.Constant(Value);
 		}
 

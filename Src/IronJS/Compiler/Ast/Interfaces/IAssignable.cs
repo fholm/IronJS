@@ -6,6 +6,6 @@ using System.Linq.Expressions;
 
 namespace IronJS.Compiler.Ast {
     public interface IAssignable : INode {
-        Expression Assign(Function function, Expression value);
+        Expression Assign(Lambda function, Expression value);
     }
 }

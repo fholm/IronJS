@@ -3,9 +3,9 @@ using IronJS.Runtime2.Js;
 
 namespace IronJS.Compiler.Ast {
     public class Closed : Variable {
-        Function _function;
+        Lambda _function;
 
-        public Closed(Function function, string name)
+        public Closed(Lambda function, string name)
             : base(name, NodeType.Closed) {
             _function = function;
         }

@@ -22,7 +22,7 @@ namespace IronJS.Compiler.Tools
 
     internal static partial class CompileTools
     {
-		internal static Et Call0(Function func, INode target)
+		internal static Et Call0(Lambda func, INode target)
 		{
 			EtParam tmpObject = Et.Variable(typeof(object), "__tmpObject__");
 			EtParam tmpFunc = Et.Variable(typeof(IjsFunc), "__tmpFunc__");
@@ -67,7 +67,7 @@ namespace IronJS.Compiler.Tools
 			);
 		}
 
-		internal static Et CallN(Function func, INode target, IEnumerable<INode> argsList)
+		internal static Et CallN(Lambda func, INode target, IEnumerable<INode> argsList)
 		{
 			// Build the args array
 			Et[] args = IEnumerableTools.Map(argsList, delegate(INode node) {
@@ -154,7 +154,7 @@ namespace IronJS.Compiler.Tools
 			);
 		}
 
-        internal static Et Assign(Function func, INode Target, Et value)
+        internal static Et Assign(Lambda func, INode Target, Et value)
         {
             return AstUtils.Empty();
 		}

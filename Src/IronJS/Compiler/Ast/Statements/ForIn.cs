@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast {
 			Children = new[] { target, source, body };
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 			AnalyzeTools.IfIdentiferUsedAs(Source, IjsTypes.Object);
 			return this;

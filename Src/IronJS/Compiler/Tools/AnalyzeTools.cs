@@ -6,12 +6,12 @@ using Microsoft.Scripting.Utils;
 
 namespace IronJS.Compiler.Tools {
 	internal static class AnalyzeTools {
-		internal static INode GetVariable(Stack<Function> stack, string name) {
-			Function current = stack.Peek();
-			Stack<Function> missingStack = new Stack<Function>();
+		internal static INode GetVariable(Stack<Lambda> stack, string name) {
+			Lambda current = stack.Peek();
+			Stack<Lambda> missingStack = new Stack<Lambda>();
 
 			Variable variable;
-			foreach (Function function in stack) {
+			foreach (Lambda function in stack) {
 				if (function.Var(name, out variable)) {
 					if (function == current)
 						return variable;
@@ -19,7 +19,7 @@ namespace IronJS.Compiler.Tools {
 					if (variable is Local) {
 						variable.MarkAsClosedOver();
 
-						foreach (Function traversed in missingStack) {
+						foreach (Lambda traversed in missingStack) {
 							traversed.Var(name, new Closed(traversed, name));
 						}
 
@@ -33,9 +33,9 @@ namespace IronJS.Compiler.Tools {
 			return new Global(name);
 		}
 
-		internal static void AddClosedType(Stack<Function> stack, string name, Type type) {
+		internal static void AddClosedType(Stack<Lambda> stack, string name, Type type) {
 			Variable variable;
-			foreach (Function function in stack) {
+			foreach (Lambda function in stack) {
 				if (function.Var(name, out variable)) {
 					if (variable is Local) {
 						variable.UsedAs(type);

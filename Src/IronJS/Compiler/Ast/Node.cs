@@ -38,7 +38,7 @@ namespace IronJS.Compiler.Ast {
 			NodeType = type;
 		}
 
-		public virtual INode Analyze(Stack<Function> stack) {
+		public virtual INode Analyze(Stack<Lambda> stack) {
 			if (Children != null) {
 				for (int i = 0; i < Children.Length; ++i) {
 					if (Children[i] != null) {
@@ -50,7 +50,7 @@ namespace IronJS.Compiler.Ast {
 			return this;
 		}
 
-		public virtual Et Compile(Function func) {
+		public virtual Et Compile(Lambda func) {
 			return AstUtils.Empty();
 		}
 

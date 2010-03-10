@@ -9,8 +9,8 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	public sealed class GlobalScope : Function {
-		private GlobalScope(INode body)
+	public sealed class File : Lambda {
+		private File(INode body)
 			: base(null, new List<string>(), body, null) {
 
 		}
@@ -28,12 +28,12 @@ namespace IronJS.Compiler.Ast {
 			return compiled;
 		}
 
-		public GlobalScope Analyze() {
-			return (GlobalScope)Analyze(new Stack<Function>());
+		public File Analyze() {
+			return (File)Analyze(new Stack<Lambda>());
 		}
 
-		public static GlobalScope Create(List<INode> body) {
-			return new GlobalScope(new Block(body, null));
+		public static File Create(List<INode> body) {
+			return new File(new Block(body, null));
 		}
 	}
 }

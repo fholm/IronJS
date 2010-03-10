@@ -10,8 +10,8 @@ namespace IronJS.Compiler.Ast {
 			Children = new[] { target };
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
-			Function function = stack.Peek();
+		public override INode Analyze(Stack<Lambda> stack) {
+			Lambda function = stack.Peek();
 
 			if (stack.Count > 1) {
 				Symbol symbol = Target as Symbol;

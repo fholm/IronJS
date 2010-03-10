@@ -12,14 +12,14 @@ using System.Linq.Expressions;
 
 namespace IronJS.Runtime2.Js {
 	public class IjsFunc : IjsObj {
-		public Function Ast { get; protected set; }
+		public Lambda Ast { get; protected set; }
 		public IjsClosure Closure { get; protected set; }
 		public Type ClosureType { get { return Closure.GetType(); } }
 
 		public Func<IjsClosure, object> Func0;
 		public Dictionary<Type, Tuple<Delegate, Delegate>> FuncCache;
 
-		public IjsFunc(Function node, IjsClosure closure) {
+		public IjsFunc(Lambda node, IjsClosure closure) {
 			Ast = node;
 			Closure = closure;
 			FuncCache = new Dictionary<Type, Tuple<Delegate, Delegate>>();

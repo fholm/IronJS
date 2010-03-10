@@ -26,7 +26,7 @@ namespace IronJS.Compiler.Ast {
 			}
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);

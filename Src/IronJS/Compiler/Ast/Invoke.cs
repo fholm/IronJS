@@ -23,13 +23,13 @@ namespace IronJS.Compiler.Ast {
 			args.CopyTo(Children, 1);
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 			return this;
 		}
 
-		public override Et Compile(Function func) {
+		public override Et Compile(Lambda func) {
 			var args = ArrayUtils.RemoveFirst(Children);
 
 			if (args.Length == 0)

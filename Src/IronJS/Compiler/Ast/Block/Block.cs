@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Tools;
 
@@ -19,7 +17,7 @@ namespace IronJS.Compiler.Ast {
 			Children = nodes.ToArray();
 		}
 
-		public override Et Compile(Function func) {
+		public override Et Compile(Lambda func) {
 			return AstTools.BuildBlock(Children, delegate(INode node) {
 				return node.Compile(func);
 			});

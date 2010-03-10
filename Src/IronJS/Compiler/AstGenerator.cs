@@ -390,7 +390,7 @@ namespace IronJS.Compiler {
 				 * Error handling
 				 */
 				default:
-					throw new Compiler.IjsCompilerError(
+					throw new Compiler.CompilerError(
 						String.Format("Unrecognized token '{0}'", Name(node))
 					);
 			}
@@ -449,7 +449,7 @@ namespace IronJS.Compiler {
 		}
 
 		private INode BuildCommaExpression(ITree node) {
-			return new AssignBlock(
+			return new VarBlock(
 				ITreeTools.Map(node, delegate(ITree child) { return Build(child); }),
 				false,
 				node
@@ -476,7 +476,7 @@ namespace IronJS.Compiler {
 			INode target = Build(ITreeTools.GetChildSafe(node, 1));
 
 			if (!(target is ILabelable))
-				throw new IjsCompilerError("Can only label nodes that implement ILabelableNode");
+				throw new CompilerError("Can only label nodes that implement ILabelableNode");
 
 			(target as ILabelable).SetLabel(label.Text);
 			return target;
@@ -745,7 +745,7 @@ namespace IronJS.Compiler {
 			if (nodes.Count == 1)
 				return nodes[0];
 
-			return new AssignBlock(nodes, true, node);
+			return new VarBlock(nodes, true, node);
 		}
 
 		private INode BuildObject(ITree node) {
@@ -792,7 +792,7 @@ namespace IronJS.Compiler {
 		}
 
 		private INode BuildLambda(ITree args, ITree body, string name, ITree node) {
-			return new Function(
+			return new Lambda(
 				(name == null)
 					? null
 					: new Symbol(name, args),

@@ -24,11 +24,11 @@ namespace IronJS.Compiler.Ast {
 		}
 
 
-		public override Et Compile(Function func) {
+		public override Et Compile(Lambda func) {
 			return CompileTools.Assign(func, Target, Value.Compile(func));
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 
 			Closed closed = Target as Closed;

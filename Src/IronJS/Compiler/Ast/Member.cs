@@ -20,7 +20,7 @@ namespace IronJS.Compiler.Ast {
 			Name = name;
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 			AnalyzeTools.IfIdentiferUsedAs(Target, IjsTypes.Object);
 			return this;

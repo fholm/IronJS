@@ -14,7 +14,7 @@ namespace IronJS.Compiler.Ast
     {
         Type Type { get; }
 		INode[] Children { get; }
-        Expression Compile(Function func);
-        INode Analyze(Stack<Function> stack);
+        Expression Compile(Lambda func);
+        INode Analyze(Stack<Lambda> stack);
     }
 }

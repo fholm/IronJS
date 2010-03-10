@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast {
 			}
 		}
 
-		public override Et Compile(Function func) {
+		public override Et Compile(Lambda func) {
 			return AstTools.Constant(Value);
 		}
 

@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast {
 			Children = new[] { left, right };
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 
 			AnalyzeTools.IfIdentifierAssignedFrom(Left, Right);
@@ -42,7 +42,7 @@ namespace IronJS.Compiler.Ast {
 			return this;
 		}
 
-		public override Et Compile(Function func) {
+		public override Et Compile(Lambda func) {
 			if (AnalyzeTools.IdenticalTypes(Left, Right)) {
 				Et left = Left.Compile(func);
 				Et right = Right.Compile(func);

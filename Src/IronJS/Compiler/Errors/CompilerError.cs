@@ -1,21 +1,21 @@
 ﻿using System;
 
 namespace IronJS.Compiler {
-    public class IjsCompilerError : Error {
-        internal IjsCompilerError(string msg, params object[] parms)
+    public class CompilerError : Error {
+        internal CompilerError(string msg, params object[] parms)
             : base(String.Format(msg, parms)) {
 
         }
     }
 
-    public class AstCompilerError : IjsCompilerError {
+    public class AstCompilerError : CompilerError {
         internal AstCompilerError(string msg, params object[] parms)
             : base(msg, parms) {
 
         }
     }
 
-    public class EtCompilerError : IjsCompilerError {
+    public class EtCompilerError : CompilerError {
         internal EtCompilerError(string msg, params object[] parms)
             : base(msg, parms) {
 

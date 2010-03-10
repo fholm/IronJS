@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 namespace IronJS.Compiler.Ast {
 	public class Return : Node {
 		public INode Value { get { return Children[0]; } }
-		public Function FuncNode { get; protected set; }
+		public Lambda FuncNode { get; protected set; }
 
 		public Return(INode value, ITree node)
 			: base(NodeType.Return, node) {

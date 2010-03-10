@@ -66,7 +66,7 @@ namespace IronJS.Compiler.Ast {
             }
         }
 
-        public override sealed Et Compile(Function func) {
+        public override sealed Et Compile(Lambda func) {
 			Et expr = Expr;
 			Expr = null;
 			return expr;

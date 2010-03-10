@@ -25,7 +25,7 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-	public class Function : Node {
+	public class Lambda : Node {
 		public INode Name { get { return Children[0]; } }
 		public string[] ParameterNames { get; private set; }
 		public INode Body { get { return Children[1]; } }
@@ -33,7 +33,7 @@ namespace IronJS.Compiler.Ast {
 		public Type ReturnType { get { return IjsTypes.Dynamic; } }
 		public override Type Type { get { return IjsTypes.Object; } }
 
-		public Function(INode name, List<string> parameters, INode body, ITree node)
+		public Lambda(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Func, node) {
 			_variables = new Dictionary<string, Variable>();
 
@@ -53,7 +53,7 @@ namespace IronJS.Compiler.Ast {
 			}
 		}
 
-		public override INode Analyze(Stack<Function> stack) {
+		public override INode Analyze(Stack<Lambda> stack) {
 			stack.Push(this);
 			base.Analyze(stack);
 			stack.Pop();
@@ -70,7 +70,7 @@ namespace IronJS.Compiler.Ast {
 			_variables[name] = var;
 		}
 
-		public override Expression Compile(Function func) {
+		public override Expression Compile(Lambda func) {
 			return AstTools.New(
 				typeof(IjsFunc),
 				AstTools.Constant(this),

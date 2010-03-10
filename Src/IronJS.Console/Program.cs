@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using IronJS.Compiler;
-using IronJS.Compiler.Ast;
+using IronJS.Ast;
+using IronJS.Ast.Nodes;
 using IronJS.Runtime.Utils;
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
@@ -15,11 +15,11 @@ using System.Linq.Expressions;
 
 namespace IronJS.Testing {
 
-	using IronJS.Compiler.Tools;
+	using IronJS.Ast.Tools;
 
 	class Program {
 		public static void Main(string[] args) {
-			AstGenerator astGenerator = new AstGenerator();
+			Generator astGenerator = new Generator();
 			List<INode> astNodes = astGenerator.Build("Testing.js", Encoding.UTF8);
 			File globalScope = File.Create(astNodes).Analyze();
 

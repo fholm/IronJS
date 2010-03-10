@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using IronJS.Compiler.Ast;
+using IronJS.Ast.Nodes;
 using IronJS.Tools;
 using Microsoft.Scripting.Utils;
 

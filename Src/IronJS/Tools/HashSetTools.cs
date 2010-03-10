@@ -1,5 +1,5 @@
 ﻿using System;
-using IronJS.Compiler.Ast;
+using IronJS.Ast.Nodes;
 using IronJS.Runtime2.Js;
 using Microsoft.Scripting.Utils;
 using System.Collections.Generic;

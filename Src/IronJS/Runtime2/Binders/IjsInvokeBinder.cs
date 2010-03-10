@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Dynamic;
-using IronJS.Compiler.Tools;
+using IronJS.Ast.Tools;
 using IronJS.Runtime2.Js;
 using IronJS.Tools;
 

@@ -12,10 +12,10 @@ namespace IronJS.Tools
             ITree child = that.GetChild(n);
 
             if (child == null)
-                throw new Compiler.AstCompilerError("Expected child");
+                throw new Ast.AstCompilerError("Expected child");
 
             if (!child.IsNil && child.Type == 0)
-                throw new Compiler.AstCompilerError(String.Format("Unexpected '{0}'", child.Text));
+                throw new Ast.AstCompilerError(String.Format("Unexpected '{0}'", child.Text));
 
             return child;
         }

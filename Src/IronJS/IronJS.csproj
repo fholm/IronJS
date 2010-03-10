@@ -94,7 +94,7 @@
     <Compile Include="Compiler\Ast\Assign.cs" />
     <Compile Include="Compiler\Ast\Block\Block.cs" />
     <Compile Include="Compiler\Ast\File.cs" />
-    <Compile Include="Compiler\AstGenerator.cs" />
+    <Compile Include="Compiler\Generator.cs" />
     <Compile Include="Compiler\Ast\Statements\Break.cs" />
     <Compile Include="Compiler\Ast\Binary\Binary.cs" />
     <Compile Include="Compiler\Ast\Invoke.cs" />
@@ -114,7 +114,6 @@
     <Compile Include="Compiler\Ast\Constants\Str.cs" />
     <Compile Include="Compiler\Ast\Statements\While.cs" />
     <Compile Include="Compiler\Ast\Constants\Bool.cs" />
-    <Compile Include="Compiler\LambdaCompiler.cs" />
     <Compile Include="Compiler\Tools\AnalyzeTools.cs" />
     <Compile Include="Compiler\Tools\CompileTools_Gen.cs">
       <AutoGen>True</AutoGen>

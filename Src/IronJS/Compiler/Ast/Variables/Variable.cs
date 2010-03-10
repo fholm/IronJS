@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using IronJS.Tools;
 using Microsoft.Scripting.Ast;
 using Microsoft.Scripting.Utils;
@@ -9,7 +8,19 @@ namespace IronJS.Compiler.Ast {
 
 	public abstract class Variable : Node {
         public string Name { get; private set; }
-        public ParameterExpression Expr { get; protected set; }
+
+		ParameterExpression _expr;
+        public ParameterExpression Expr {
+			get {
+				if (_expr == null)
+					Setup();
+
+				return _expr;
+			}
+			set {
+				_expr = value;
+			}
+		}
 
         public sealed override Type Type {
             get {
@@ -25,10 +36,6 @@ namespace IronJS.Compiler.Ast {
             Name = name;
             _usedAs = new HashSet<Type>();
             _assignedFrom = new HashSet<INode>();
-        }
-
-        public void ClearExpr() {
-            Expr = null;
         }
 
         HashSet<Type> _usedAs;
@@ -59,12 +66,10 @@ namespace IronJS.Compiler.Ast {
             }
         }
 
-        public virtual Et Value() {
-            return Expr;
-        }
-
-        public override sealed Expression Compile(Function func) {
-            return Value();
+        public override sealed Et Compile(Function func) {
+			Et expr = Expr;
+			Expr = null;
+			return expr;
         }
 
 		public override string ToString() {

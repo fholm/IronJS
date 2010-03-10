@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using IronJS.Compiler.Ast;
 using IronJS.Tools;
 using Microsoft.Scripting.Utils;
@@ -11,34 +10,32 @@ using Microsoft.Scripting.Ast;
 using System.Linq.Expressions;
 #endif
 
-namespace IronJS.Runtime2.Js
-{
-    public class IjsFunc : IjsObj
-    {
-        public readonly Function Ast;
-        public readonly IjsClosure Closure;
+namespace IronJS.Runtime2.Js {
+	public class IjsFunc : IjsObj {
+		public Function Ast { get; protected set; }
+		public IjsClosure Closure { get; protected set; }
+		public Type ClosureType { get { return Closure.GetType(); } }
 
-        public Type ClosureType { get { return Closure.GetType(); } }
+		public Func<IjsClosure, object> Func0;
+		public Dictionary<Type, Tuple<Delegate, Delegate>> FuncCache;
 
-        public Func<IjsClosure, object> Func0;
-        public Dictionary<Type, Delegate> FuncCache;
+		public IjsFunc(Function node, IjsClosure closure) {
+			Ast = node;
+			Closure = closure;
+			FuncCache = new Dictionary<Type, Tuple<Delegate, Delegate>>();
+		}
 
-        public IjsFunc(Function node, IjsClosure closure)
-        {
-            Ast = node;
-            Closure = closure;
-			FuncCache = new Dictionary<Type, Delegate>();
-        }
-
-        public TFunc Compile<TFunc, TGuard>(object[] values, out TGuard guard)
+		public TFunc Compile<TFunc, TGuard>(object[] values, out TGuard guard)
 			where TFunc : class
-			where TGuard : class
-        {
-            Type[] types = typeof(TFunc).GetGenericArguments();
-            Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+			where TGuard : class {
 
-            guard = null;
-            return null;
-        }
-    }
+			Type[] types = typeof(TFunc).GetGenericArguments();
+			Type[] paramTypes = ArrayTools.DropFirstAndLast(types);
+
+
+
+			guard = null;
+			return null;
+		}
+	}
 }

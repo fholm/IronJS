@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime2.Js;
+using IronJS.Tools;
 using Microsoft.Scripting.Utils;
 
 #if CLR2
@@ -24,27 +25,23 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Compiler.Ast {
-
-
 	public class Function : Node {
-
 		public INode Name { get { return Children[0]; } }
-		public INode Body { get { return Children[1]; } }
 		public string[] ParameterNames { get; private set; }
+		public INode Body { get { return Children[1]; } }
 		public bool IsLambda { get { return Name == null; } }
 		public Type ReturnType { get { return IjsTypes.Dynamic; } }
 		public override Type Type { get { return IjsTypes.Object; } }
 
 		public Function(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Func, node) {
-			ContractUtils.RequiresNotNull(parameters, "parameters");
 			_variables = new Dictionary<string, Variable>();
 
 			Children = new INode[parameters.Count + 3];
 			Children[0] = name;
 			Children[Children.Length - 1] = body;
 
-			ParameterNames = ArrayUtils.Insert("@closure", ArrayUtils.MakeArray(parameters));
+			ParameterNames = ArrayUtils.Insert("!closure", ArrayUtils.MakeArray(parameters));
 
 			Var(ParameterNames[0], new Parameter(ParameterNames[0]));
 			Var(ParameterNames[0]).ForceType(typeof(IjsClosure));
@@ -66,9 +63,13 @@ namespace IronJS.Compiler.Ast {
 		Dictionary<string, Variable> _variables;
 		public Variable Var(string name) { return _variables[name]; }
 		public bool Var(string name, out Variable var) { return _variables.TryGetValue(name, out var); }
-		public void Var(string name, Variable var) { _variables[name] = var; }
+		public void Var(string name, Variable var) {
+			if (_variables.ContainsKey(name))
+				throw new ArgumentException("A variable named '" + name + "' already exist");
 
-		/*
+			_variables[name] = var;
+		}
+
 		public override Expression Compile(Function func) {
 			return AstTools.New(
 				typeof(IjsFunc),
@@ -80,6 +81,5 @@ namespace IronJS.Compiler.Ast {
 				)
 			);
 		}
-		*/
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using IronJS.Runtime.Js;
-using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;

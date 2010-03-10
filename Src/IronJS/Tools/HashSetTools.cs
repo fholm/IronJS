@@ -6,8 +6,6 @@ using Microsoft.Scripting.Utils;
 namespace IronJS.Tools {
 	static class HashSetTools {
 		public static Type EvalType(HashSet<Type> set) {
-			set.Remove(IjsTypes.Self);
-
 			if (set.Count == 1)
 				foreach (Type type in set)
 					return type;

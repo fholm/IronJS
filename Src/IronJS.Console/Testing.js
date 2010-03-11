@@ -1,5 +1,5 @@
 ﻿var b = function(c) {
-    print(c);
+    print(2);
     var d = 1;
     var x = c;
 };

@@ -28,7 +28,7 @@ namespace IronJS.Runtime.Binders {
 					Et.Call(
 						Et.Convert(target.Expression, target.LimitType),
 						typeof(Func<object, object>).GetMethod("Invoke"),
-						AstTools.Box(args[0].Expression)
+						AstTools.Box(args[1].Expression)
 					),
 					BindingRestrictions.GetInstanceRestriction(
 						target.Expression,

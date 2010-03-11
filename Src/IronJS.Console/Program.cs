@@ -25,11 +25,11 @@ namespace IronJS.Testing {
 			DisplayTools.Print(file);
 
 			Context context = new Context();
-			Func<Closure, object> compiled = file.Compile(context);
+			Func<Closure, Obj, object> compiled = file.Compile(context);
 
 			context.GlobalScope.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 
-			object result = compiled(context.GlobalClosure);
+			object result = compiled(context.GlobalClosure, context.GlobalClosure.Globals);
 		}
 	}
 }

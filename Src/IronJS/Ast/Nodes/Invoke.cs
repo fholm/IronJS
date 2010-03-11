@@ -31,12 +31,18 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public override Et Compile(Lambda func) {
+			Et[] args = ArrayUtils.InsertAt(
+				ArrayTools.Map(Children, delegate(INode node) {
+					return node.Compile(func);
+				}),
+				1,
+				CompileTools.Globals(func)
+			);
+
 			return Et.Dynamic(
 				new IronJS.Runtime.Binders.InvokeBinder(new CallInfo(Children.Length - 1)),
 				typeof(object),
-				ArrayTools.Map(Children, delegate(INode node) {
-					return node.Compile(func);
-				})
+				args
 			);
 		}
 	}

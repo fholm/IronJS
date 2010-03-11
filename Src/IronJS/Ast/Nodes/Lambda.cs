@@ -43,18 +43,23 @@ namespace IronJS.Ast.Nodes {
 			Variables = new Dictionary<string, Variable>();
 			Locals = new List<Local>();
 
-			Children = new INode[parameters.Count + 3];
+			Children = new INode[parameters.Count + 4];
 			Children[0] = name;
 			Children[Children.Length - 1] = body;
 
-			ParamNames = ArrayUtils.Insert("~closure", ArrayUtils.MakeArray(parameters));
+			ParamNames = ArrayUtils.Insert("~closure", "~this", ArrayUtils.MakeArray(parameters));
 
+			// Setup ~closure
 			CreateVar(ParamNames[0], new Parameter(ParamNames[0]));
 			Children[1] = Var(ParamNames[0]);
 
+			// Setup ~this
+			CreateVar(ParamNames[1], new Parameter(ParamNames[1]));
+			Children[2] = Var(ParamNames[1]);
+
 			for (int i = 0; i < parameters.Count; ++i) {
 				CreateVar(parameters[i], new Parameter(parameters[i]));
-				Children[i + 2] = Var(parameters[i]);
+				Children[i + 3] = Var(parameters[i]);
 			}
 		}
 

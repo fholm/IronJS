@@ -30,7 +30,7 @@ namespace IronJS.Ast.Nodes {
 			}
 		}
 
-		public override Et Compile(JitContext func) {
+		public override Et Compile(Lambda func) {
 			return AstTools.Constant(Value);
 		}
 

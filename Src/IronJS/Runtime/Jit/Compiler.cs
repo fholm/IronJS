@@ -39,13 +39,12 @@ namespace IronJS.Runtime.Jit {
 			LambdaTools.SetParameterTypes(lambda, paramTypes);
 			LambdaTools.SetupVariables(lambda);
 
-			JitContext ctx = new JitContext(lambda);
-			Et body = lambda.Body.Compile(ctx);
-			LambdaExpression lambdaExpr = Et.Lambda(body, "~file", 
+			LambdaExpression lambdaExpr = Et.Lambda(
+				funcType, lambda.Body.Compile(lambda), "~file",
 				ArrayTools.Map(
-					ArrayTools.DropFirstAndLast(lambda.Children),
+					ArrayTools.DropFirstAndLast(lambda.Children) /*remove name and body nodes*/,
 					delegate(INode node) {
-						return node.Compile(ctx) as ParameterExpression;
+						return node.Compile(lambda) as ParameterExpression;
 					}
 				)
 			);

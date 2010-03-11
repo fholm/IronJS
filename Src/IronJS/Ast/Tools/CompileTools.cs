@@ -14,5 +14,13 @@ namespace IronJS.Ast.Tools {
 		internal static Et Assign(Lambda func, INode Target, Et value) {
 			return AstUtils.Empty();
 		}
+
+		internal static Et Globals(Lambda func) {
+			return Et.Field(func.Children[1].Compile(func), "Globals");
+		}
+
+		internal static Et Context(Lambda func) {
+			return Et.Field(func.Children[1].Compile(func), "Context");
+		}
 	}
 }

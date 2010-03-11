@@ -71,7 +71,7 @@ namespace IronJS.Ast.Nodes {
 			Expr = null;
 		}
 
-        public override sealed Et Compile(JitContext func) {
+        public override sealed Et Compile(Lambda func) {
 			return Expr;
         }
 

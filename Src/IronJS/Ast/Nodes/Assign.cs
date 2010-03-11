@@ -25,8 +25,8 @@ namespace IronJS.Ast.Nodes {
 		}
 
 
-		public override Et Compile(JitContext func) {
-			return CompileTools.Assign(func.Lambda, Target, Value.Compile(func));
+		public override Et Compile(Lambda func) {
+			return CompileTools.Assign(func, Target, Value.Compile(func));
 		}
 
 		public override INode Analyze(Stack<Lambda> stack) {

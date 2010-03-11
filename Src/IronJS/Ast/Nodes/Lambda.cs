@@ -21,6 +21,7 @@ using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
+using IronJS.Ast.Tools;
 #else
 using System.Linq.Expressions;
 #endif
@@ -71,14 +72,14 @@ namespace IronJS.Ast.Nodes {
 			Variables[name] = var;
 		}
 
-		public override Expression Compile(JitContext ctx) {
+		public override Expression Compile(Lambda func) {
 			return AstTools.New(
 				typeof(Function),
 				AstTools.Constant(this),
 				AstTools.New(
 					typeof(Closure),
-					ctx.Context,
-					ctx.Globals
+					CompileTools.Context(func),
+					CompileTools.Globals(func)
 				)
 			);
 		}

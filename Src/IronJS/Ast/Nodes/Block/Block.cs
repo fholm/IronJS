@@ -18,7 +18,7 @@ namespace IronJS.Ast.Nodes {
 			Children = nodes.ToArray();
 		}
 
-		public override Et Compile(JitContext func) {
+		public override Et Compile(Lambda func) {
 			return AstTools.BuildBlock(Children, delegate(INode node) {
 				return node.Compile(func);
 			});

@@ -53,7 +53,7 @@ using IronJS.Ast.Tools;
 			return this;
 		}
 
-		public virtual Et Compile(JitContext ctx) {
+		public virtual Et Compile(Lambda ctx) {
 			return AstUtils.Empty();
 		}
 

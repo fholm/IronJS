@@ -13,7 +13,7 @@ namespace IronJS.Ast.Nodes {
 		string Debug { get; }
 		Type Type { get; }
 		INode[] Children { get; }
-		Expression Compile(JitContext func);
+		Expression Compile(Lambda func);
 		INode Analyze(Stack<Lambda> stack);
 	}
 }

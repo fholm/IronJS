@@ -119,7 +119,6 @@
     <Compile Include="Runtime\Context.cs" />
     <Compile Include="Runtime\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
-    <Compile Include="Runtime\Jit\JitContext.cs" />
     <Compile Include="Runtime\Jit\Tools\LambdaTools.cs" />
     <Compile Include="Runtime\Js\Closure.cs" />
     <Compile Include="Ast\Errors\CompilerError.cs" />

@@ -13,7 +13,6 @@
  * ***************************************************************************************/
 using System;
 using IronJS.Ast.Nodes;
-using IronJS.Ast.Tools;
 using IronJS.Tools;
 using IronJS.Runtime.Jit.Tools;
 using Microsoft.Scripting.Utils;
@@ -32,36 +31,35 @@ namespace IronJS.Runtime.Jit {
 			return (TFunc)Compile(typeof(TFunc), lambda);
 		}
 
-		public object /*hack*/ Compile(Type funcType, Lambda lambda) {
+		public object /*hack*/ Compile(Type funcType, Lambda func) {
 			Type[] types = funcType.GetGenericArguments();
 			Type[] paramTypes = ArrayUtils.RemoveLast(types);
 
-			LambdaTools.SetupParameterTypes(lambda, paramTypes);
-			LambdaTools.SetupVariables(lambda);
-			LambdaTools.SetupReturnLabel(lambda);
+			LambdaTools.SetupParameterTypes(func, paramTypes);
+			LambdaTools.SetupVariables(func);
+			LambdaTools.SetupReturnLabel(func);
 
-			LambdaExpression lambdaExpr = Et.Lambda(
-				funcType, 
+			LambdaExpression lambda = Et.Lambda(
+				funcType,
 				Et.Block(
-					lambda.Body.Compile(lambda),
+					func.Body.Compile(func),
 					Et.Label(
-						lambda.ReturnLabel, Et.Default(lambda.ReturnType)
+						func.ReturnLabel, Et.Default(func.ReturnType)
 					)
 				),
-				"~file",
 				ArrayTools.Map(
-					ArrayTools.DropFirstAndLast(lambda.Children) /*remove name and body nodes*/,
+					ArrayTools.DropFirstAndLast(func.Children) /*remove name and body nodes*/,
 					delegate(INode node) {
-						return node.Compile(lambda) as ParameterExpression;
+						return node.Compile(func) as ParameterExpression;
 					}
 				)
 			);
 
-			Delegate compiled = lambdaExpr.Compile();
+			Delegate compiled = lambda.Compile();
 
-			LambdaTools.ResetReturnLabel(lambda);
-			LambdaTools.ResetVariables(lambda);
-			LambdaTools.ResetParameterTypes(lambda);
+			LambdaTools.ResetReturnLabel(func);
+			LambdaTools.ResetVariables(func);
+			LambdaTools.ResetParameterTypes(func);
 
 			return compiled;
 		}

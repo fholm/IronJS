@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Antlr.Runtime.Tree;
 using IronJS.Runtime.Js;
 using IronJS.Runtime.Jit;
+using IronJS.Ast.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -14,12 +15,11 @@ namespace IronJS.Ast.Nodes {
 
 	using AstUtils = Utils;
 	using Et = Expression;
-using IronJS.Ast.Tools;
 
 	public enum NodeType {
 		Assign, Identifier, Double, Null,
 		MemberAccess, Call, If, Eq, Block,
-		String, Func, While, BinaryOp,
+		String, Lambda, While, BinaryOp,
 		Object, New, AutoProperty, Return,
 		UnaryOp, Logical, PostfixOperator,
 		TypeOf, Boolean, Void, StrictCompare,
@@ -53,8 +53,8 @@ using IronJS.Ast.Tools;
 			return this;
 		}
 
-		public virtual Et Compile(Lambda ctx) {
-			return AstUtils.Empty();
+		public virtual Et Compile(Lambda func) {
+			return AstUtils.Default(typeof(object));
 		}
 
 		public override string ToString() {

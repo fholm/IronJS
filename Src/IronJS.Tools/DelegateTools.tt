@@ -1,0 +1,26 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #><#@ output extension="cs" #><#@ include file="T4Toolbox.tt" #>/*
+ * GENERATED CODE
+ **/
+using System;
+ 
+#if CLR2
+using Microsoft.Scripting.Ast;  
+using Microsoft.Scripting.Utils;
+#else
+using System.Linq.Expressions;
+#endif
+ 
+namespace IronJS.Tools {
+    public static partial class DelegateTools {
+		public static Type BuildFuncType(Type[] args) {
+			Type type = null;
+<# for(int i = 0; i < 16; ++i) { #> 
+			<#= i > 0 ? "else " : "" #>if(args.Length == <#= i #>) 
+				type = typeof(Func<<#= new String(',', i)#>>);<# } #> 
+			else
+				throw new NotImplementedException("Currently you can't call function with more then 15 arguments");
+ 
+			return type.MakeGenericType(ArrayUtils.Append(args, typeof(object)));
+		}
+    }
+}

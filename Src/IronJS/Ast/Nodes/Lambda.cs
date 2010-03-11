@@ -38,7 +38,7 @@ namespace IronJS.Ast.Nodes {
 		public LabelTarget ReturnLabel { get; internal set; }
 
 		public Lambda(INode name, List<string> parameters, INode body, ITree node)
-			: base(NodeType.Func, node) {
+			: base(NodeType.Lambda, node) {
 			Variables = new Dictionary<string, Variable>();
 
 			Children = new INode[parameters.Count + 3];

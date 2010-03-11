@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using IronJS.Ast.Nodes;
-using IronJS.Tools;
-using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js.Meta;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -11,16 +11,26 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Runtime.Js {
+	using MetaObj = DynamicMetaObject;
+
 	public class Function : Obj {
-		public Lambda Lambda { get; protected set; }
+		public Lambda Ast { get; protected set; }
 		public Closure Closure { get; protected set; }
 		public Type ClosureType { get { return Closure.GetType(); } }
-		public Dictionary<Type, Tuple<Delegate, Delegate>> FuncCache;
+		public Dictionary<Type, Delegate> Cache { get; protected set; }
 
-		public Function(Lambda node, Closure closure) {
-			Lambda = node;
+		public Function(Lambda ast, Closure closure) {
+			Ast = ast;
 			Closure = closure;
-			FuncCache = new Dictionary<Type, Tuple<Delegate, Delegate>>();
+			Cache = new Dictionary<Type, Delegate>();
+		}
+
+		public override MetaObj GetMetaObject(Expression expr) {
+			return new FunctionMeta(expr, this);
+		}
+
+		internal Delegate CompileAs(Type funcType) {
+			return Cache[funcType] = (Delegate) Closure.Context.Compiler.Compile(funcType, Ast);
 		}
 	}
 }

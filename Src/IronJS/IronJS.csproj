@@ -117,13 +117,15 @@
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Runtime\Context.cs" />
-    <Compile Include="Runtime\Binders\CallBinder.cs" />
+    <Compile Include="Runtime\Js\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
     <Compile Include="Runtime\Jit\Tools\LambdaTools.cs" />
     <Compile Include="Runtime\Js\Closure.cs" />
     <Compile Include="Ast\Errors\CompilerError.cs" />
     <Compile Include="Ast\Nodes\Unary\Delete.cs" />
     <Compile Include="Runtime\Js\Function.cs" />
+    <Compile Include="Runtime\Js\Meta\FunctionMeta.cs" />
+    <Compile Include="Runtime\Js\Meta\ObjMeta.cs" />
     <Compile Include="Runtime\Js\Types.cs" />
     <Compile Include="Ast\Nodes\Unary\Unary.cs" />
     <Compile Include="Ast\Nodes\Binary\Logical.cs" />

@@ -3,6 +3,9 @@ using Antlr.Runtime.Tree;
 using IronJS.Ast.Tools;
 using IronJS.Runtime.Js;
 using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Binders;
+using System.Dynamic;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -28,7 +31,13 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public override Et Compile(Lambda func) {
-
+			return Et.Dynamic(
+				new IronJS.Runtime.Binders.InvokeBinder(new CallInfo(Children.Length - 1)),
+				typeof(object),
+				ArrayTools.Map(Children, delegate(INode node) {
+					return node.Compile(func);
+				})
+			);
 		}
 	}
 }

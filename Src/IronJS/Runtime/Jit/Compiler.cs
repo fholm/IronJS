@@ -36,11 +36,17 @@ namespace IronJS.Runtime.Jit {
 			Type[] types = funcType.GetGenericArguments();
 			Type[] paramTypes = ArrayUtils.RemoveLast(types);
 
-			LambdaTools.SetParameterTypes(lambda, paramTypes);
+			LambdaTools.SetupParameterTypes(lambda, paramTypes);
 			LambdaTools.SetupVariables(lambda);
+			LambdaTools.SetupReturnLabel(lambda);
 
 			LambdaExpression lambdaExpr = Et.Lambda(
-				funcType, lambda.Body.Compile(lambda), "~file",
+				funcType, 
+				Et.Block(
+					lambda.Body.Compile(lambda),
+					Et.Label(lambda.ReturnLabel, Et.Default(lambda.ReturnType))
+				),
+				"~file",
 				ArrayTools.Map(
 					ArrayTools.DropFirstAndLast(lambda.Children) /*remove name and body nodes*/,
 					delegate(INode node) {
@@ -48,9 +54,11 @@ namespace IronJS.Runtime.Jit {
 					}
 				)
 			);
+
 			Delegate compiled = lambdaExpr.Compile();
 
-			LambdaTools.ClearVariables(lambda);
+			LambdaTools.ResetReturnLabel(lambda);
+			LambdaTools.ResetVariables(lambda);
 			LambdaTools.ResetParameterTypes(lambda);
 
 			DisplayTools.Print(lambda);

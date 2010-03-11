@@ -35,6 +35,7 @@ namespace IronJS.Ast.Nodes {
 		public bool IsLambda { get { return Name == null; } }
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
+		public LabelTarget ReturnLabel { get; internal set; }
 
 		public Lambda(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Func, node) {

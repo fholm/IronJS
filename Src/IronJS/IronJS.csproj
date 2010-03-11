@@ -90,7 +90,7 @@
     <Compile Include="Ast\Nodes\Variables\Global.cs" />
     <Compile Include="Ast\Nodes\Variables\Local.cs" />
     <Compile Include="Ast\Nodes\Variables\Parameter.cs" />
-    <Compile Include="Ast\Nodes\Initializers\List.cs" />
+    <Compile Include="Ast\Nodes\Initializers\ListInit.cs" />
     <Compile Include="Ast\Nodes\Assign.cs" />
     <Compile Include="Ast\Nodes\Block\Block.cs" />
     <Compile Include="Ast\Nodes\File.cs" />
@@ -141,7 +141,7 @@
     <Compile Include="Ast\Nodes\Binary\In.cs" />
     <Compile Include="Ast\Nodes\Binary\InstanceOf.cs" />
     <Compile Include="Ast\Nodes\Statements\Switch.cs" />
-    <Compile Include="Ast\Nodes\Initializers\Obj.cs" />
+    <Compile Include="Ast\Nodes\Initializers\ObjInit.cs" />
     <Compile Include="Ast\Tools\CompileTools.cs" />
     <Compile Include="Ast\Parser\ES3Lexer.Action.cs" />
     <Compile Include="Ast\Parser\ES3Lexer.cs" />

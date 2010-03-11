@@ -44,7 +44,7 @@ namespace IronJS.Ast.Tools {
 			}
 		}
 
-		internal static bool IdenticalTypes(params INode[] nodes) {
+		internal static bool TypesAreIdentical(params INode[] nodes) {
 			if (nodes.Length > 0) {
 				Type type = nodes[0].Type;
 

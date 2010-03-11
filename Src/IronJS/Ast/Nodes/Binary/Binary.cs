@@ -44,7 +44,7 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public override Et Compile(Lambda func) {
-			if (AnalyzeTools.IdenticalTypes(Left, Right)) {
+			if (AnalyzeTools.TypesAreIdentical(Left, Right)) {
 				Et left = Left.Compile(func);
 				Et right = Right.Compile(func);
 

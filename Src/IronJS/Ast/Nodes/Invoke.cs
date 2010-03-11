@@ -11,6 +11,8 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
+	using Et = Expression;
+
 	public class Invoke : Base {
 		public INode Target { get { return Children[0]; } }
 
@@ -23,6 +25,10 @@ namespace IronJS.Ast.Nodes {
 			base.Analyze(stack);
 			AnalyzeTools.IfIdentiferUsedAs(Target, Types.Object);
 			return this;
+		}
+
+		public override Et Compile(Lambda func) {
+
 		}
 	}
 }

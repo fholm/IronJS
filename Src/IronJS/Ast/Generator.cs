@@ -401,7 +401,7 @@ namespace IronJS.Ast {
 		}
 
 		private INode BuildArray(ITree node) {
-			return new List(
+			return new ListInit(
 				ITreeTools.Map<INode>(node, delegate(ITree child) {
 				return Build(ITreeTools.GetChildSafe(child, 0));
 			}),
@@ -758,7 +758,7 @@ namespace IronJS.Ast {
 				);
 			});
 
-			return new Obj(propertyDict, node);
+			return new ObjInit(propertyDict, node);
 		}
 
 		private INode BuildWhile(ITree node) {

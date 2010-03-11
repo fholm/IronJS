@@ -10,10 +10,10 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
-	public class Obj : Base {
+	public class ObjInit : Base {
 		public string[] PropertyNames { get; protected set; }
 
-		public Obj(Dictionary<string, INode> properties, ITree node)
+		public ObjInit(Dictionary<string, INode> properties, ITree node)
 			: base(NodeType.Object, node) {
 			Children = new INode[properties.Count];
 			properties.Values.CopyTo(Children, 0);

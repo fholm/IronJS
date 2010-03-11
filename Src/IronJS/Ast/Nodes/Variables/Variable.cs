@@ -61,9 +61,9 @@ namespace IronJS.Ast.Nodes {
 
         public virtual void Setup() {
             if (_isClosedOver) {
-                Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(Type), "__" + Name + "__");
+                Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(Type), Name);
             } else {
-                Expr = Et.Parameter(Type, "__" + Name + "__");
+                Expr = Et.Parameter(Type, Name);
             }
         }
 

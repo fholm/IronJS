@@ -1,7 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using IronJS.Ast.Tools;
 using Antlr.Runtime.Tree;
 
+#if CLR2
+using Microsoft.Scripting.Ast;
+#else
+using System.Linq.Expressions;
+#endif
+
 namespace IronJS.Ast.Nodes {
+	using Et = Expression;
+
 	public class Var : Base {
 		public INode Target { get { return Children[0]; } }
 
@@ -30,6 +40,10 @@ namespace IronJS.Ast.Nodes {
 			}
 
 			return base.Analyze(stack);
+		}
+
+		public override Et Compile(Lambda func) {
+			return Target.Compile(func);
 		}
 	}
 }

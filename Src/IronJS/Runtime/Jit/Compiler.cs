@@ -44,7 +44,9 @@ namespace IronJS.Runtime.Jit {
 				funcType, 
 				Et.Block(
 					lambda.Body.Compile(lambda),
-					Et.Label(lambda.ReturnLabel, Et.Default(lambda.ReturnType))
+					Et.Label(
+						lambda.ReturnLabel, Et.Default(lambda.ReturnType)
+					)
 				),
 				"~file",
 				ArrayTools.Map(
@@ -61,7 +63,6 @@ namespace IronJS.Runtime.Jit {
 			LambdaTools.ResetVariables(lambda);
 			LambdaTools.ResetParameterTypes(lambda);
 
-			DisplayTools.Print(lambda);
 			return compiled;
 		}
 	}

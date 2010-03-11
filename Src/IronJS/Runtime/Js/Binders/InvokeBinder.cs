@@ -22,6 +22,21 @@ namespace IronJS.Runtime.Binders {
 		}
 
 		public override MetaObj FallbackInvoke(MetaObj target, MetaObj[] args, MetaObj error) {
+
+			if (target.LimitType == typeof(Func<object, object>)) {
+				return new MetaObj(
+					Et.Call(
+						Et.Convert(target.Expression, target.LimitType),
+						typeof(Func<object, object>).GetMethod("Invoke"),
+						AstTools.Box(args[0].Expression)
+					),
+					BindingRestrictions.GetInstanceRestriction(
+						target.Expression,
+						target.Value
+					)
+				);
+			}
+
 			throw new NotImplementedException();
 		}
 	}

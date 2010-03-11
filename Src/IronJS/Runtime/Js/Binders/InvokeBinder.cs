@@ -3,10 +3,10 @@ using System.Dynamic;
 using IronJS.Ast.Tools;
 using IronJS.Runtime.Js;
 using IronJS.Tools;
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using Microsoft.Scripting.Utils;
 #else
 using System.Linq.Expressions;
 #endif

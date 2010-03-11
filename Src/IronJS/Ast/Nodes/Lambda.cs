@@ -36,10 +36,12 @@ namespace IronJS.Ast.Nodes {
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
 		public LabelTarget ReturnLabel { get; internal set; }
+		public List<Local> Locals { get; protected set; }
 
 		public Lambda(INode name, List<string> parameters, INode body, ITree node)
 			: base(NodeType.Lambda, node) {
 			Variables = new Dictionary<string, Variable>();
+			Locals = new List<Local>();
 
 			Children = new INode[parameters.Count + 3];
 			Children[0] = name;
@@ -69,6 +71,9 @@ namespace IronJS.Ast.Nodes {
 		public void CreateVar(string name, Variable var) {
 			if (Variables.ContainsKey(name))
 				throw new AstError("A variable named '" + name + "' already exist");
+
+			if (var is Local)
+				Locals.Add((Local)var);
 
 			Variables[name] = var;
 		}

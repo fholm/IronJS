@@ -117,7 +117,7 @@
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Runtime\Context.cs" />
-    <Compile Include="Runtime\Js\Binders\CallBinder.cs" />
+    <Compile Include="Runtime\Js\Binders\InvokeBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
     <Compile Include="Runtime\Jit\Tools\LambdaTools.cs" />
     <Compile Include="Runtime\Js\Closure.cs" />

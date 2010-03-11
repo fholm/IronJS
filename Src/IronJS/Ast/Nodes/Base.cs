@@ -12,7 +12,6 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Ast.Nodes {
-
 	using AstUtils = Utils;
 	using Et = Expression;
 

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************************/
 using System;
+using System.Collections.Generic;
 using IronJS.Ast.Nodes;
 using IronJS.Tools;
 using IronJS.Runtime.Jit.Tools;
@@ -25,12 +26,14 @@ using System.Linq.Expressions;
 
 namespace IronJS.Runtime.Jit {
 	using Et = Expression;
+	using EtParam = ParameterExpression;
+	using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 	public class Compiler {
 		public TFunc Compile<TFunc>(Lambda lambda) where TFunc : class {
 			return (TFunc)Compile(typeof(TFunc), lambda);
 		}
-
+							
 		public object /*hack*/ Compile(Type funcType, Lambda func) {
 			Type[] types = funcType.GetGenericArguments();
 			Type[] paramTypes = ArrayUtils.RemoveLast(types);
@@ -39,9 +42,14 @@ namespace IronJS.Runtime.Jit {
 			LambdaTools.SetupVariables(func);
 			LambdaTools.SetupReturnLabel(func);
 
+			List<EtParam> localsExprs;
+			Et initBlock = BuildLocalsInitBlock(func, out localsExprs);
+
 			LambdaExpression lambda = Et.Lambda(
 				funcType,
 				Et.Block(
+					localsExprs,
+					initBlock,
 					func.Body.Compile(func),
 					Et.Label(
 						func.ReturnLabel, Et.Default(func.ReturnType)
@@ -63,5 +71,27 @@ namespace IronJS.Runtime.Jit {
 
 			return compiled;
 		}
+
+		Et BuildLocalsInitBlock(Lambda func, out List<EtParam> localsExprs) {
+			localsExprs = new List<EtParam>();
+
+			EtParam param;
+			List<Et> initExprs = new List<Expression>();
+			foreach (Local variable in func.Locals) {
+				param = (EtParam) variable.Compile(func);
+
+				if(!variable.Type.IsValueType)
+					initExprs.Add(Et.Assign(param, AstTools.New(variable.Type)));
+
+				localsExprs.Add(param);
+			}
+
+			if (initExprs.Count == 0)
+				return AstUtils.Empty();
+
+			return Et.Block(initExprs);
+		}
+
+
 	}
 }

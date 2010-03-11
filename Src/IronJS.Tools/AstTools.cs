@@ -96,10 +96,14 @@ namespace IronJS.Tools {
 		}
 
 		public static Et New(Type type, params Et[] parameters) {
+			if (type.IsValueType) {
+				return Et.Default(type);
+			}
+
 			ConstructorInfo ctor = type.GetConstructor(
 				ArrayTools.Map(parameters, delegate(Et expr) {
-				return expr.Type;
-			})
+					return expr.Type;
+				})
 			);
 
 			if (ctor == null)

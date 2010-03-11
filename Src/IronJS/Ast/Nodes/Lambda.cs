@@ -14,14 +14,13 @@
 using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Jit;
 using IronJS.Runtime.Js;
 using IronJS.Tools;
+using IronJS.Ast.Tools;
 using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using IronJS.Ast.Tools;
 #else
 using System.Linq.Expressions;
 #endif

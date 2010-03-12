@@ -6,21 +6,6 @@
 
 b(2);
 
-<<<<<<< HEAD
-
-
-var foo = function(x) {
-
-    var bar = function(y) {
-        return y * x;
-    };
-
-    return bar(x);
-
-};
-
-var zaz = foo(2);
-=======
 var foo = function(clos, this, a, b) {
 
     var _1 = "1";
@@ -79,4 +64,3 @@ var foo = function(clos, this, a, b) {
     };
 
 };
->>>>>>> f161d678da85d31a33984a791e3a6b9200b07559

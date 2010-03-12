@@ -16,7 +16,7 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public Func<Closure, Obj, object> Compile(Context context) {
-			return context.Compiler.Compile<Func<Closure, Obj, object>>(this);
+			return context.Jit.Compile<Func<Closure, Obj, object>>(this);
 		}
 
 		public File Analyze() {

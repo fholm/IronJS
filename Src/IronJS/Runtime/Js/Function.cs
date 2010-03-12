@@ -30,7 +30,7 @@ namespace IronJS.Runtime.Js {
 		}
 
 		internal Delegate CompileAs(Type funcType) {
-			return Cache[funcType] = (Delegate) Closure.Context.Compiler.Compile(funcType, Ast);
+			return Cache[funcType] = (Delegate) Closure.Context.Jit.Compile(funcType, Ast);
 		}
 	}
 }

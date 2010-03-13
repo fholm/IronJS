@@ -89,15 +89,15 @@ namespace IronJS.Runtime.Jit {
 		Et BuildLocalsInitBlock(Lambda func, out List<EtParam> localsExprs) {
 			localsExprs = new List<EtParam>();
 
-			EtParam param;
+			EtParam paramExpr;
 			List<Et> initExprs = new List<Expression>();
 			foreach (Local variable in func.Scope.Locals) {
-				param = (EtParam) variable.Compile(func);
+				paramExpr = (EtParam) variable.Compile(func);
 
 				if(!variable.Type.IsValueType)
-					initExprs.Add(Et.Assign(param, AstTools.New(variable.Type)));
+					initExprs.Add(Et.Assign(paramExpr, AstTools.New(variable.Type)));
 
-				localsExprs.Add(param);
+				localsExprs.Add(paramExpr);
 			}
 
 			if (initExprs.Count == 0)

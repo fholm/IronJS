@@ -24,13 +24,14 @@ namespace IronJS.Runtime.Js {
         public override MetaObj BindInvoke(InvokeBinder binder, MetaObj[] args) {
             if (!_obj.IsCallable) {
                 return new MetaObj(
-                    Et.Throw(
-                        AstTools.New(
-                            typeof(RuntimeError),
-                            AstTools.Constant("Object is not callable")
+                    AstTools.Box(
+                        Et.Throw(
+                            AstTools.New(
+                                typeof(RuntimeError),
+                                AstTools.Constant("Object is not callable")
+                            )
                         )
                     ),
-
                     BindingRestrictions.GetTypeRestriction(
                         Expression, typeof(Obj)
                     ).Merge(
@@ -42,7 +43,7 @@ namespace IronJS.Runtime.Js {
             }
 
             Type funcType = DelegateTools.BuildFuncType(
-                ArrayUtils.Insert(_obj.Call.ClosureType, MetaObjTools.GetTypes(args))
+                ArrayUtils.Insert(_obj.Call.ContextType, MetaObjTools.GetTypes(args))
             );
 
             Delegate compiled;
@@ -54,7 +55,7 @@ namespace IronJS.Runtime.Js {
                 Et.Invoke(
                     Et.Constant(compiled, funcType),
                     ArrayUtils.Insert(
-                        Et.Constant(_obj.Call.Context, _obj.Call.ClosureType),
+                        Et.Constant(_obj.Call.Context, _obj.Call.ContextType),
                         DynamicUtils.GetExpressions(args)
                     )
                 ),

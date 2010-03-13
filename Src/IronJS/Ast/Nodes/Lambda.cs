@@ -14,14 +14,13 @@
 using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
 using IronJS.Tools;
 using IronJS.Ast.Tools;
-using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
-using IronJS.Runtime.Jit;
 #else
 using System.Linq.Expressions;
 #endif
@@ -31,34 +30,28 @@ namespace IronJS.Ast.Nodes {
         public INode Name { get { return Children[0]; } }
         public INode Body { get { return Children[Children.Length - 1]; } }
 
-		public string[] ParamNames { get; private set; }
-        public int ParamsCount { get { return ParamNames.Length; } }
-        public bool IsNamed { get { return Name == null; } }
-
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
-
         public LabelTarget ReturnLabel { get; set; }
 
         public Cache JitCache { get; private set; }
-        public VarMap Vars { get; private set; }
+        public Scope Scope { get; private set; }
 
 		public Lambda(INode name, List<string> paramNames, INode body, ITree node)
 			: base(NodeType.Lambda, node) {
 
-            Vars = new VarMap();
+            Scope = new Scope();
             JitCache = new Cache();
 
-			Children = new INode[paramNames.Count + 4];
+            // +4 for name, ~closure ,~this and body
+			Children = new INode[paramNames.Count + 4]; 
 			Children[0] = name;
+            Children[1] = Scope.Add(Node.Parameter("~closure"));
+            Children[2] = Scope.Add(Node.Parameter("~this"));
 			Children[Children.Length - 1] = body;
 
-			ParamNames = ArrayUtils.Insert(
-                "~closure", "~this", ArrayUtils.MakeArray(paramNames)
-            );
-
-            for (int i = 0; i < ParamsCount; ++i) {
-                Children[i + 1] = Vars.Add(Node.Parameter(ParamNames[i]));
+            for (int i = 0; i < paramNames.Count; ++i) {
+                Children[i + 3] = Scope.Add(Node.Parameter(paramNames[i]));
 			}
 		}
 

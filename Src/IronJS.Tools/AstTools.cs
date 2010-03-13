@@ -16,18 +16,9 @@ namespace IronJS.Tools {
 	using EtParam = ParameterExpression;
 
 	public static class AstTools {
-
-        public static Et FieldIsTrue(Et target, string fieldName) {
-            return FieldEq(target, fieldName, true);
-        }
-
-        public static Et FieldIsFalse(Et target, string fieldName) {
-            return FieldEq(target, fieldName, false);
-        }
-
         public static Et FieldEq<T>(Et target, string fieldName, T value) {
             return Et.Equal(
-                Et.Field(target, fieldName),
+                Et.PropertyOrField(target, fieldName),
                 Et.Constant(value, typeof(T))
             );
         }

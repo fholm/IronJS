@@ -21,9 +21,19 @@ namespace IronJS.Ast.Tools {
 					CompileTools.Constant(global.Name), 
 					value
 				);
-			} else {
-				return AstUtils.Empty();
 			}
+
+            Local local = target as Local;
+            if (local != null) {
+                if (local.NodeType == NodeType.Local) {
+                    return Et.Assign(
+                        local.Compile(func),
+                        value
+                    );
+                }
+            }
+            
+		    return AstUtils.Empty();
 		}
 
 		internal static Et Constant(object obj) {
@@ -35,7 +45,7 @@ namespace IronJS.Ast.Tools {
 		}
 
 		internal static Et Context(Lambda func) {
-			return Et.Field(func.Children[1].Compile(func), "Context");
+			return Et.Field(func.Children[1].Compile(func), "Runtime");
 		}
 	}
 }

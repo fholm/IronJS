@@ -36,10 +36,10 @@ namespace IronJS.Ast.Nodes {
 					symbol = assign.Target as Symbol;
 				}
 
-                function.Vars.Add(Node.Variable(symbol.Name));
+                function.Scope.Add(Node.Variable(symbol.Name));
 			}
 
-			return base.Analyze(stack);
+            return Target.Analyze(stack);
 		}
 
 		public override Et Compile(Lambda func) {

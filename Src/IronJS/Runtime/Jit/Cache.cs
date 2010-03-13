@@ -11,7 +11,7 @@ namespace IronJS.Runtime.Jit {
         }
 
         public bool TryGet(Type funcType, Closure closure, out Delegate func) {
-            return TryGet(funcType, closure.ClosureType, out func);
+            return TryGet(funcType, closure.ContextType, out func);
         }
 
         public bool TryGet(Type funcType, Type closureType, out Delegate func) {

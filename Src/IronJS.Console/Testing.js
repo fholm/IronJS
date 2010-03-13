@@ -1,10 +1,14 @@
 ﻿var b = function(c) {
-    print(2);
+    print(c);
+
     var d = 1;
     var x = c;
-    var _ = function() {
-        return x;
+
+    var y = function(_1) {
+        print(_1);
     };
+
+    y(4);
 };
 
 b(2);

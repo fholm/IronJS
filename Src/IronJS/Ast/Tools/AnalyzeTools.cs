@@ -12,7 +12,7 @@ namespace IronJS.Ast.Tools {
 
 			Variable variable;
 			foreach (Lambda function in stack) {
-				if (function.Vars.Get(name, out variable)) {
+				if (function.Scope.Get(name, out variable)) {
 					if (function == current)
 						return variable;
 
@@ -21,10 +21,10 @@ namespace IronJS.Ast.Tools {
                         local.MarkAsClosedOver();
 
 						foreach (Lambda traversed in missingStack) {
-							traversed.Vars.Add(Node.Enclosed(current, name));
+							traversed.Scope.Add(Node.Enclosed(current, name));
 						}
 
-						return current.Vars.Get(name);
+						return current.Scope.Get(name);
 					}
 				} else {
 					missingStack.Push(function);
@@ -37,7 +37,7 @@ namespace IronJS.Ast.Tools {
 		internal static void AddClosedType(Stack<Lambda> stack, string name, Type type) {
 			Variable variable;
 			foreach (Lambda function in stack) {
-				if (function.Vars.Get(name, out variable)) {
+				if (function.Scope.Get(name, out variable)) {
 					if (variable is Local) {
 						variable.UsedAs(type);
 					}

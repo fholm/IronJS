@@ -13,15 +13,16 @@ namespace IronJS.Runtime.Js {
 	public class Closure {
         public readonly Lambda Ast;
         public readonly ClosureCtx Context;
-        public Type ClosureType { get { return Context.GetType(); } }
+        public readonly Type ContextType;
 
-		public Closure(Lambda ast, ClosureCtx closure) {
+		public Closure(Lambda ast, ClosureCtx ctx) {
 			Ast = ast;
-			Context = closure;
+			Context = ctx;
+            ContextType = ctx.GetType();
 		}
 
 		internal Delegate CompileAs(Type funcType) {
-            return Ast.JitCache.Save(funcType, ClosureType, Context.Context.Jit.Compile(funcType, Ast));
+            return Ast.JitCache.Save(funcType, ContextType, Context.Runtime.Jit.Compile(funcType, Ast));
 		}
 	}
 }

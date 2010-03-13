@@ -1,11 +1,15 @@
-﻿namespace IronJS.Runtime.Js {
+﻿using System.Collections.Generic;
+
+namespace IronJS.Runtime.Js {
 	public class ClosureCtx {
 		public readonly Obj Globals;
-		public readonly RuntimeCtx Context;
+		public readonly RuntimeCtx Runtime;
+        public readonly List<Obj> DynamicScopes;
 
         public ClosureCtx(RuntimeCtx context, Obj globals) {
 			Globals = globals;
-			Context = context;
+			Runtime = context;
+            DynamicScopes = new List<Obj>();
 		}
 	}
 }

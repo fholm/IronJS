@@ -73,6 +73,7 @@
     <Compile Include="DoubleTools.cs" />
     <Compile Include="IEnumerableTools.cs" />
     <Compile Include="MetaObjTools.cs" />
+    <Compile Include="RestrictUtils.cs" />
     <Compile Include="StringTools.cs" />
     <Compile Include="TypeTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -11,18 +11,20 @@ namespace IronJS.Runtime.Js {
 	using Et = Expression;
 	using MetaObj = DynamicMetaObject;
 
-	public class Obj : IDynamicMetaObjectProvider {
-		public Dictionary<object, object> Properties =
-			new Dictionary<object, object>();
+    public class Obj : IDynamicMetaObjectProvider {
+        public readonly Closure Call;
+        public readonly Dictionary<object, object> Properties;
 
-        public Closure Call { get; private set; }
-        public bool IsCallable { get { return Call != null; } }
-
-        public Obj() {
-
+        public bool IsCallable {
+            get { return Call != null; }
         }
 
-        public Obj(Closure call) {
+        public Obj() {
+            Properties = new Dictionary<object, object>();
+        }
+
+        public Obj(Closure call)
+            : this() {
             Call = call;
         }
 

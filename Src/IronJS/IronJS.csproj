@@ -118,7 +118,7 @@
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Ast\Scope.cs" />
-    <Compile Include="Runtime\Jit\Cache.cs" />
+    <Compile Include="Runtime\Jit\DelegateCache.cs" />
     <Compile Include="Runtime\RuntimeCtx.cs" />
     <Compile Include="Runtime\Js\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Dynamic;
 using IronJS.Tools;
+using IronJS.Runtime.Jit.Tools;
 using Microsoft.Scripting.Utils;
 
 #if CLR2
@@ -12,6 +13,7 @@ using System.Linq.Expressions;
 namespace IronJS.Runtime.Js {
 	using Et = Expression;
 	using MetaObj = DynamicMetaObject;
+    using Restrict = BindingRestrictions;
 
 	public class ObjMeta : MetaObj {
 		Obj _obj;
@@ -22,6 +24,8 @@ namespace IronJS.Runtime.Js {
 		}
 
         public override MetaObj BindInvoke(InvokeBinder binder, MetaObj[] args) {
+            // This handles the rule for 
+            // objects that are not callable
             if (!_obj.IsCallable) {
                 return new MetaObj(
                     AstTools.Box(
@@ -42,25 +46,61 @@ namespace IronJS.Runtime.Js {
                 );
             }
 
-            Type funcType = DelegateTools.BuildFuncType(
-                ArrayUtils.Insert(_obj.Call.ContextType, MetaObjTools.GetTypes(args))
+            // Build function type
+            Type funcType = LambdaTools.BuildDelegateType(
+                _obj.Call.Ast, 
+                ArrayUtils.Insert(
+                    _obj.Call.ContextType, MetaObjTools.GetTypes(args)
+                )
             );
 
+            // Get compiled delegate , from cache if  
+            // possible or jit-compile it as funcType
             Delegate compiled;
             if (!_obj.Call.Ast.JitCache.TryGet(funcType, _obj.Call, out compiled)) {
                 compiled = _obj.Call.CompileAs(funcType);
             }
 
-            return new MetaObj(
-                Et.Invoke(
-                    Et.Constant(compiled, funcType),
-                    ArrayUtils.Insert(
-                        Et.Constant(_obj.Call.Context, _obj.Call.ContextType),
-                        DynamicUtils.GetExpressions(args)
-                    )
-                ),
-                BindingRestrictions.GetInstanceRestriction(Expression, _obj)
+            // DLR Expressions
+            // compiled.Invoke(closure, this, <args>)
+            Et expression = Et.Invoke(
+                Et.Constant(compiled, funcType),
+                ArrayUtils.Insert(
+                    Et.Field(
+                        Et.Field(
+                            AstTools.Cast<Obj>(Expression), "Call"
+                        ), 
+                        "Context"
+                    ),
+                    DynamicUtils.GetExpressions(args)
+                )
             );
+
+            // Restrictions
+            Restrict restrictions = Restrict.GetInstanceRestriction(
+                Et.Field(
+                    Et.Field(
+                        AstTools.Cast<Obj>(Expression), "Call"
+                    ),
+                    "Ast"
+                ),
+                _obj.Call.Ast
+            ).Merge(
+                Restrict.GetTypeRestriction(
+                    Et.Field(
+                        Et.Field(
+                            AstTools.Cast<Obj>(Expression), "Call"
+                        ),
+                        "Context"
+                    ),
+                    _obj.Call.ContextType
+                )
+            ).Merge(
+                RestrictUtils.GetTypeRestrictions(args)
+            );
+
+            // 
+            return new MetaObj(expression, restrictions);
         }
 	}
 }

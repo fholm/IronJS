@@ -23,6 +23,13 @@ namespace IronJS.Tools {
             );
         }
 
+        public static Et Cast<T>(Et value) {
+            if (value.Type == typeof(void))
+                return Et.Block(value, Et.Default(typeof(T)));
+
+            return Et.Convert(value, typeof(T));
+        }
+
 		public static bool IsStrongBox(Et target) {
 			return target.Type.IsGenericType && target.Type.GetGenericTypeDefinition() == typeof(StrongBox<>);
 		}

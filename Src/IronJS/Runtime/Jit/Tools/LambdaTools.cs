@@ -1,5 +1,7 @@
 ﻿using System;
+using IronJS.Ast;
 using IronJS.Ast.Nodes;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -36,5 +38,16 @@ namespace IronJS.Runtime.Jit.Tools {
 		internal static void ResetReturnLabel(Lambda lambda) {
 			lambda.ReturnLabel = null;
 		}
+
+        internal static Type BuildDelegateType(Lambda lambda, Type[] paramTypes) {
+            Type[] evaledTypes = new Type[paramTypes.Length];
+
+            for (int i = 0; i < paramTypes.Length; ++i) {
+                lambda.Scope.Parameters[i].InType = paramTypes[i];
+                evaledTypes[i] = lambda.Scope.Parameters[i].Type;
+            }
+
+            return DelegateTools.BuildFuncType(evaledTypes);
+        }
 	}
 }

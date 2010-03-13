@@ -34,14 +34,14 @@ namespace IronJS.Ast.Nodes {
 		public override Type Type { get { return Types.Object; } }
         public LabelTarget ReturnLabel { get; set; }
 
-        public Cache JitCache { get; private set; }
+        public DelegateCache JitCache { get; private set; }
         public Scope Scope { get; private set; }
 
 		public Lambda(INode name, List<string> paramNames, INode body, ITree node)
 			: base(NodeType.Lambda, node) {
 
             Scope = new Scope();
-            JitCache = new Cache();
+            JitCache = new DelegateCache();
 
             // +4 for name, ~closure ,~this and body
 			Children = new INode[paramNames.Count + 4]; 

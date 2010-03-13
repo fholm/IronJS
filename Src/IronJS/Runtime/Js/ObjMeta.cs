@@ -46,25 +46,13 @@ namespace IronJS.Runtime.Js {
                 );
             }
 
-            // Build function type
-            Type funcType = LambdaTools.BuildDelegateType(
-                _obj.Call.Ast, 
-                ArrayUtils.Insert(
-                    _obj.Call.ContextType, MetaObjTools.GetTypes(args)
-                )
-            );
-
-            // Get compiled delegate , from cache if  
-            // possible or jit-compile it as funcType
-            Delegate compiled;
-            if (!_obj.Call.Ast.JitCache.TryGet(funcType, _obj.Call, out compiled)) {
-                compiled = _obj.Call.CompileAs(funcType);
-            }
+            // Get compiled deleegate from Closure
+            Delegate compiled = _obj.Call.GetDelegate(args);
 
             // DLR Expressions
             // compiled.Invoke(closure, this, <args>)
             Et expression = Et.Invoke(
-                Et.Constant(compiled, funcType),
+                Et.Constant(compiled, compiled.GetType()),
                 ArrayUtils.Insert(
                     Et.Field(
                         Et.Field(

@@ -30,43 +30,58 @@ namespace IronJS.Runtime.Jit {
 	using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 	public class Compiler {
-		public TFunc Compile<TFunc>(Lambda func) where TFunc : class {
-			return (TFunc)Compile(typeof(TFunc), func);
-		}
-							
-		public object /*hack*/ Compile(Type funcType, Lambda func) {
-			Type[] types = funcType.GetGenericArguments();
-			Type[] paramTypes = ArrayUtils.RemoveLast(types);
+		public Delegate Compile(Lambda func, Type[] paramTypes) {
+            // Setup parameter types
+            for (int i = 0; i < paramTypes.Length; ++i) {
+                func.Scope.Parameters[i].InType = paramTypes[i];
+            }
 
-			LambdaTools.SetupParameterTypes(func, paramTypes);
-			LambdaTools.SetupVariables(func);
-			LambdaTools.SetupReturnLabel(func);
+            // Construct delegate type
+            Type funcType = LambdaTools.BuildDelegateType(func);
 
-			List<EtParam> localsExprs;
-			Et initBlock = BuildLocalsInitBlock(func, out localsExprs);
+            Delegate compiled;
+            if (!func.JitCache.TryGet(funcType, out compiled)) {
+                // Initialize variables
+                foreach (IVariable variable in func.Scope) {
+                    variable.Setup();
+                }
 
-			LambdaExpression lambda = Et.Lambda(
-				funcType,
-				Et.Block(
-					localsExprs,
-					initBlock,
-					func.Body.Compile(func),
-					Et.Label(
-						func.ReturnLabel, Et.Default(func.ReturnType)
-					)
-				),
-				ArrayTools.Map(
-					ArrayTools.DropFirstAndLast(func.Children) /*remove name and body nodes*/,
-					delegate(INode node) {
-						return node.Compile(func) as ParameterExpression;
-					}
-				)
-			);
+                // Setup return label
+                func.ReturnLabel = Et.Label(func.ReturnType, "~return");
 
-			Delegate compiled = lambda.Compile();
+                // Build locals init block
+                List<EtParam> localsExprs;
+                Et initBlock = BuildLocalsInitBlock(func, out localsExprs);
 
-			LambdaTools.ResetReturnLabel(func);
-			LambdaTools.ResetVariables(func);
+                // DLR Lambda expression
+                LambdaExpression lambda = Et.Lambda(
+                    funcType,
+                    Et.Block(
+                        localsExprs,
+                        initBlock,
+                        func.Body.Compile(func),
+                        Et.Label(
+                            func.ReturnLabel, Et.Default(func.ReturnType)
+                        )
+                    ),
+                    IEnumerableTools.Map(func.Scope.Parameters, delegate(Param param) {
+                        return (EtParam) param.Compile(func);
+                    })
+                );
+
+                // Compile and store in cache
+                compiled = func.JitCache.Save(
+                    funcType, lambda.Compile()
+                );
+
+                // Setup return label
+                func.ReturnLabel = null;
+
+                // Reset variable expressions
+                foreach (IVariable variable in func.Scope) {
+                    variable.Clear();
+                }
+            }
 
 			return compiled;
 		}

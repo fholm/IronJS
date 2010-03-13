@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Dynamic;
 using IronJS.Ast.Nodes;
+using IronJS.Runtime.Jit.Tools;
+using IronJS.Tools;
+using Microsoft.Scripting.Utils;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -10,6 +12,8 @@ using System.Linq.Expressions;
 #endif
 
 namespace IronJS.Runtime.Js {
+    using MetaObj = DynamicMetaObject;
+
 	public class Closure {
         public readonly Lambda Ast;
         public readonly ClosureCtx Context;
@@ -21,8 +25,12 @@ namespace IronJS.Runtime.Js {
             ContextType = ctx.GetType();
 		}
 
-		internal Delegate CompileAs(Type funcType) {
-            return Ast.JitCache.Save(funcType, ContextType, Context.Runtime.Jit.Compile(funcType, Ast));
-		}
-	}
+        public Delegate GetDelegate(MetaObj[] args) {
+            return Context.Runtime.Jit.Compile(
+                Ast, ArrayUtils.Insert(
+                    ContextType, MetaObjTools.GetTypes(args)
+                )
+            );
+        }
+    }
 }

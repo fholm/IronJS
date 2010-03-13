@@ -74,7 +74,7 @@ namespace IronJS.Ast.Tools {
 			Variable variable = node as Variable;
 
 			if (variable != null) {
-				variable.AssignedFrom(value);
+				variable.UsedWith(value);
 			}
 		}
 

@@ -85,6 +85,7 @@
     <Compile Include="Ast\Node.cs" />
     <Compile Include="Ast\Nodes\Block\VarBlock.cs" />
     <Compile Include="Ast\Nodes\Interfaces\IAssignable.cs" />
+    <Compile Include="Ast\Nodes\Interfaces\IVariable.cs" />
     <Compile Include="Ast\Nodes\Variables\Variable.cs" />
     <Compile Include="Ast\Nodes\Statements\Var.cs" />
     <Compile Include="Ast\Nodes\Variables\Enclosed.cs" />

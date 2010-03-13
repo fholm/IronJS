@@ -13,7 +13,7 @@ namespace IronJS.Runtime.Jit.Tools {
 	static class LambdaTools {
 		static internal void SetupParameterTypes(Lambda lambda, Type[] types) {
 			for (int i = 1; i <= lambda.Scope.ParameterCount; ++i) {
-				(lambda.Children[i] as Local).ForceType(types[i - 1]);
+				(lambda.Children[i] as Local).UsedAs(types[i - 1]);
 			}
 		}
 

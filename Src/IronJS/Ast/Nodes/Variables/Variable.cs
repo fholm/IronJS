@@ -23,7 +23,7 @@ namespace IronJS.Ast.Nodes {
 			}
 		}
 
-        public sealed override Type Type {
+        public override Type Type {
             get {
                 if (_forcedType != null)
                     return _forcedType;
@@ -31,7 +31,7 @@ namespace IronJS.Ast.Nodes {
                 HashSet<Type> set = new HashSet<Type>();
 
                 set.UnionWith(_usedAs);
-                set.Add(HashSetTools.EvalType(_assignedFrom));
+                set.Add(HashSetTools.EvalType(_usedWith));
 
                 return HashSetTools.EvalType(set);
             }
@@ -41,7 +41,7 @@ namespace IronJS.Ast.Nodes {
             : base(nodeType, null) {
             Name = name;
             _usedAs = new HashSet<Type>();
-            _assignedFrom = new HashSet<INode>();
+            _usedWith = new HashSet<INode>();
         }
 
         HashSet<Type> _usedAs;
@@ -49,9 +49,9 @@ namespace IronJS.Ast.Nodes {
             _usedAs.Add(type);
         }
 
-        HashSet<INode> _assignedFrom;
-        public void AssignedFrom(INode node) {
-            _assignedFrom.Add(node);
+        HashSet<INode> _usedWith;
+        public void UsedWith(INode node) {
+            _usedWith.Add(node);
         }
 
         Type _forcedType;

@@ -40,6 +40,10 @@ namespace IronJS.Ast.Nodes {
 			NodeType = type;
 		}
 
+        public Base(NodeType type)
+            : this(type, null) {
+        }
+
 		public virtual INode Analyze(Stack<Lambda> stack) {
 			if (Children != null) {
 				for (int i = 0; i < Children.Length; ++i) {

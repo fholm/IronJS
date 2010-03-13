@@ -5,7 +5,7 @@ using Microsoft.Scripting.Utils;
 
 namespace IronJS.Tools {
 	static class HashSetTools {
-		public static Type EvalType(HashSet<Type> set) {
+        internal static Type EvalType(HashSet<Type> set) {
 			if (set.Count == 1)
 				foreach (Type type in set)
 					return type;
@@ -13,12 +13,21 @@ namespace IronJS.Tools {
 			return typeof(object);
 		}
 
-		public static Type EvalType(HashSet<INode> set) {
+        internal static Type EvalType(HashSet<INode> set) {
 			return HashSetTools.EvalType(
 				new HashSet<Type>(
 					IEnumerableTools.Map(set, delegate(INode node) { return node.Type; })
 				)
 			);
 		}
-	}
+
+        internal static Type EvalType(HashSet<Type> usedAs, HashSet<INode> usedWith) {
+            HashSet<Type> set = new HashSet<Type>();
+
+            set.UnionWith(usedAs);
+            set.Add(HashSetTools.EvalType(usedWith));
+
+            return HashSetTools.EvalType(set);
+        }
+    }
 }

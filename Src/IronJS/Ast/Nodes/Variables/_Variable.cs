@@ -7,7 +7,7 @@ using Microsoft.Scripting.Utils;
 namespace IronJS.Ast.Nodes {
     using Et = Expression;
 
-	public abstract class Variable : Base {
+	public abstract class IVariable : Base {
         public string Name { get; private set; }
 
 		ParameterExpression _expr;
@@ -37,7 +37,7 @@ namespace IronJS.Ast.Nodes {
             }
         }
 
-        public Variable(string name, NodeType nodeType)
+        public IVariable(string name, NodeType nodeType)
             : base(nodeType, null) {
             Name = name;
             _usedAs = new HashSet<Type>();

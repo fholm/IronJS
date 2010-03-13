@@ -30,8 +30,8 @@ namespace IronJS.Runtime.Jit {
 	using AstUtils = Microsoft.Scripting.Ast.Utils;
 
 	public class Compiler {
-		public TFunc Compile<TFunc>(Lambda lambda) where TFunc : class {
-			return (TFunc)Compile(typeof(TFunc), lambda);
+		public TFunc Compile<TFunc>(Lambda func) where TFunc : class {
+			return (TFunc)Compile(typeof(TFunc), func);
 		}
 							
 		public object /*hack*/ Compile(Type funcType, Lambda func) {
@@ -67,7 +67,6 @@ namespace IronJS.Runtime.Jit {
 
 			LambdaTools.ResetReturnLabel(func);
 			LambdaTools.ResetVariables(func);
-			LambdaTools.ResetParameterTypes(func);
 
 			return compiled;
 		}

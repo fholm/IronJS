@@ -6,8 +6,8 @@ using System.Collections;
 
 namespace IronJS.Ast {
     public class Scope : IEnumerable {
-        public Dictionary<string, Variable>.ValueCollection All {
-            get { return _variables.Values; }
+        public Dictionary<string, IVariable>.ValueCollection All {
+            get { return Variables.Values; }
         }
 
         public int ParameterCount {
@@ -15,47 +15,50 @@ namespace IronJS.Ast {
         }
 
         public List<Local> Locals { get; protected set; }
-        public List<Local> Parameters { get; protected set; }
+        public List<Param> Parameters { get; protected set; }
         public List<Enclosed> Enclosed { get; protected set; }
 
-        Dictionary<string, Variable> _variables;
+        protected Dictionary<string, IVariable> Variables;
 
         public Scope() {
             Locals = new List<Local>();
-            Parameters = new List<Local>();
+            Parameters = new List<Param>();
             Enclosed = new List<Enclosed>();
-            _variables = new Dictionary<string, Variable>();
+            Variables = new Dictionary<string, IVariable>();
         }
 
-        public Variable Get(string name) {
-            return _variables[name];
+        public IVariable Get(string name) {
+            return Variables[name];
         }
 
-        public bool Get(string name, out Variable var) {
-            return _variables.TryGetValue(name, out var);
+        public bool Get(string name, out IVariable var) {
+            return Variables.TryGetValue(name, out var);
         }
 
-        public INode Add(Variable variable) {
-            if (_variables.ContainsKey(variable.Name))
+        public INode Add(IVariable variable) {
+            if (Variables.ContainsKey(variable.Name))
                 throw new AstError("A variable named '" + variable.Name + "' already exist");
 
-            if (variable.NodeType == NodeType.Local) {
+            if (variable is Param) {
+                Parameters.Add((Param)variable);
+
+            } else if (variable is Local) {
                 Locals.Add((Local)variable);
-            } else if (variable.NodeType == NodeType.Param) {
-                Parameters.Add((Local)variable);
-            } else if (variable.NodeType == NodeType.Closed) {
+
+            } else if (variable is Enclosed) {
                 Enclosed.Add((Enclosed)variable);
+
             } else {
                 throw new AstError("Unkown variable type");
             }
 
-            return (INode) (_variables[variable.Name] = variable);
+            return (INode) (Variables[variable.Name] = variable);
         }
 
         #region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return _variables.Values.GetEnumerator();
+            return Variables.Values.GetEnumerator();
         }
 
         #endregion

@@ -3,7 +3,7 @@
 namespace IronJS.Ast {
     public static class Node {
         public static Local Parameter(string name) {
-            return new Local(name, NodeType.Param);
+            return new Param(name);
         }
 
         public static Local Variable(string name) {

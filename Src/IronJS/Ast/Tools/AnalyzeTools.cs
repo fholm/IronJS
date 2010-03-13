@@ -10,7 +10,7 @@ namespace IronJS.Ast.Tools {
 			Lambda current = stack.Peek();
 			Stack<Lambda> missingStack = new Stack<Lambda>();
 
-			Variable variable;
+			IVariable variable;
 			foreach (Lambda function in stack) {
 				if (function.Scope.Get(name, out variable)) {
 					if (function == current)
@@ -35,7 +35,7 @@ namespace IronJS.Ast.Tools {
 		}
 
 		internal static void AddClosedType(Stack<Lambda> stack, string name, Type type) {
-			Variable variable;
+			IVariable variable;
 			foreach (Lambda function in stack) {
 				if (function.Scope.Get(name, out variable)) {
 					if (variable is Local) {
@@ -71,7 +71,7 @@ namespace IronJS.Ast.Tools {
 		}
 
 		internal static void IfIdentifierAssignedFrom(INode node, INode value) {
-			Variable variable = node as Variable;
+			IVariable variable = node as IVariable;
 
 			if (variable != null) {
 				variable.UsedWith(value);
@@ -79,7 +79,7 @@ namespace IronJS.Ast.Tools {
 		}
 
 		internal static void IfIdentiferUsedAs(INode node, Type type) {
-			Variable variable = node as Variable;
+			IVariable variable = node as IVariable;
 
 			if (variable != null) {
 				variable.UsedAs(type);

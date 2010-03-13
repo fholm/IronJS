@@ -77,7 +77,7 @@ namespace IronJS.Runtime.Jit {
                 // Setup return label
                 func.ReturnLabel = null;
 
-                // Reset variable expressions
+                // Reset variables
                 foreach (IVariable variable in func.Scope) {
                     variable.Clear();
                 }

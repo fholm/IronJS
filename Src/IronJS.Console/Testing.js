@@ -4,6 +4,8 @@
     var d = 1;
     var x = c;
 
+    print(x);
+
     var y = function(_1) {
         print(_1);
     };

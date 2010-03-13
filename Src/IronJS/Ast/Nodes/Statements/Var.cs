@@ -36,7 +36,7 @@ namespace IronJS.Ast.Nodes {
 					symbol = assign.Target as Symbol;
 				}
 
-				function.CreateVar(symbol.Name, new Local(symbol.Name));
+                function.Vars.Add(Node.Variable(symbol.Name));
 			}
 
 			return base.Analyze(stack);

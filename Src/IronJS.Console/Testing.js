@@ -2,10 +2,14 @@
     print(2);
     var d = 1;
     var x = c;
+    var _ = function() {
+        return x;
+    };
 };
 
 b(2);
 
+/*
 var foo = function(clos, this, a, b) {
 
     var _1 = "1";
@@ -64,3 +68,4 @@ var foo = function(clos, this, a, b) {
     };
 
 };
+*/

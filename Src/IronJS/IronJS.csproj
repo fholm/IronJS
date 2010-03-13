@@ -82,14 +82,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ast\Node.cs" />
     <Compile Include="Ast\Nodes\Block\VarBlock.cs" />
     <Compile Include="Ast\Nodes\Interfaces\IAssignable.cs" />
     <Compile Include="Ast\Nodes\Variables\Variable.cs" />
     <Compile Include="Ast\Nodes\Statements\Var.cs" />
-    <Compile Include="Ast\Nodes\Variables\Closed.cs" />
+    <Compile Include="Ast\Nodes\Variables\Enclosed.cs" />
     <Compile Include="Ast\Nodes\Variables\Global.cs" />
     <Compile Include="Ast\Nodes\Variables\Local.cs" />
-    <Compile Include="Ast\Nodes\Variables\Parameter.cs" />
     <Compile Include="Ast\Nodes\Initializers\ListInit.cs" />
     <Compile Include="Ast\Nodes\Assign.cs" />
     <Compile Include="Ast\Nodes\Block\Block.cs" />
@@ -116,16 +116,17 @@
     <Compile Include="Ast\Nodes\Constants\Bool.cs" />
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
     <Compile Include="Ast\Tools\DisplayTools.cs" />
-    <Compile Include="Runtime\Context.cs" />
-    <Compile Include="Runtime\Js\Binders\InvokeBinder.cs" />
+    <Compile Include="Ast\VarMap.cs" />
+    <Compile Include="Runtime\Jit\Cache.cs" />
+    <Compile Include="Runtime\RuntimeCtx.cs" />
+    <Compile Include="Runtime\Js\Binders\CallBinder.cs" />
     <Compile Include="Runtime\Jit\Compiler.cs" />
     <Compile Include="Runtime\Jit\Tools\LambdaTools.cs" />
-    <Compile Include="Runtime\Js\Closure.cs" />
+    <Compile Include="Runtime\Js\ClosureCtx.cs" />
     <Compile Include="Ast\Errors\CompilerError.cs" />
     <Compile Include="Ast\Nodes\Unary\Delete.cs" />
-    <Compile Include="Runtime\Js\Function.cs" />
-    <Compile Include="Runtime\Js\Meta\FunctionMeta.cs" />
-    <Compile Include="Runtime\Js\Meta\ObjMeta.cs" />
+    <Compile Include="Runtime\Js\Closure.cs" />
+    <Compile Include="Runtime\Js\ObjMeta.cs" />
     <Compile Include="Runtime\Js\Types.cs" />
     <Compile Include="Ast\Nodes\Unary\Unary.cs" />
     <Compile Include="Ast\Nodes\Binary\Logical.cs" />

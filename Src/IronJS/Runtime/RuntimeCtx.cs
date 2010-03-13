@@ -15,14 +15,14 @@ using IronJS.Runtime.Js;
 using IronJS.Runtime.Jit;
 
 namespace IronJS {
-    public sealed class Context {
-        public Closure GlobalClosure { get; private set; }
+    public sealed class RuntimeCtx {
+        public ClosureCtx GlobalClosure { get; private set; }
         public Obj GlobalScope { get { return GlobalClosure.Globals; } }
 		public Compiler Jit { get; private set; }
 
-        public Context() {
-            GlobalClosure = new Closure(this, new Obj());
-			Jit = new Compiler();
+        public RuntimeCtx() {
+            Jit = new Compiler();
+            GlobalClosure = new ClosureCtx(this, new Obj());
         }
     }
 }

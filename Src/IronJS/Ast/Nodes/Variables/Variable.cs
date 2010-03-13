@@ -28,7 +28,12 @@ namespace IronJS.Ast.Nodes {
                 if (_forcedType != null)
                     return _forcedType;
 
-                return EvalType();
+                HashSet<Type> set = new HashSet<Type>();
+
+                set.UnionWith(_usedAs);
+                set.Add(HashSetTools.EvalType(_assignedFrom));
+
+                return HashSetTools.EvalType(set);
             }
         }
 
@@ -54,17 +59,8 @@ namespace IronJS.Ast.Nodes {
             _forcedType = type;
         }
 
-        bool _isClosedOver;
-        public void MarkAsClosedOver() {
-            _isClosedOver = true;
-        }
-
         public virtual void Setup() {
-            if (_isClosedOver) {
-                Expr = Et.Parameter(TypeTools.StrongBoxType.MakeGenericType(Type), Name);
-            } else {
-                Expr = Et.Parameter(Type, Name);
-            }
+            Expr = Et.Parameter(Type, Name);
         }
 
 		public virtual void Clear() {
@@ -78,14 +74,5 @@ namespace IronJS.Ast.Nodes {
 		public override string ToString() {
 			return base.ToString() + " " + Name + " <" + TypeTools.ShortName(Type) + ">";
 		}
-
-        protected virtual Type EvalType() {
-            HashSet<Type> set = new HashSet<Type>();
-
-            set.UnionWith(_usedAs);
-            set.Add(HashSetTools.EvalType(_assignedFrom));
-
-            return HashSetTools.EvalType(set);
-        }
     }
 }

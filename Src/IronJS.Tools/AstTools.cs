@@ -17,6 +17,21 @@ namespace IronJS.Tools {
 
 	public static class AstTools {
 
+        public static Et FieldIsTrue(Et target, string fieldName) {
+            return FieldEq(target, fieldName, true);
+        }
+
+        public static Et FieldIsFalse(Et target, string fieldName) {
+            return FieldEq(target, fieldName, false);
+        }
+
+        public static Et FieldEq<T>(Et target, string fieldName, T value) {
+            return Et.Equal(
+                Et.Field(target, fieldName),
+                Et.Constant(value, typeof(T))
+            );
+        }
+
 		public static bool IsStrongBox(Et target) {
 			return target.Type.IsGenericType && target.Type.GetGenericTypeDefinition() == typeof(StrongBox<>);
 		}

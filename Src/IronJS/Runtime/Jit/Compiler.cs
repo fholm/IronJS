@@ -77,7 +77,7 @@ namespace IronJS.Runtime.Jit {
 
 			EtParam param;
 			List<Et> initExprs = new List<Expression>();
-			foreach (Local variable in func.Locals) {
+			foreach (Local variable in func.Vars.Locals) {
 				param = (EtParam) variable.Compile(func);
 
 				if(!variable.Type.IsValueType)

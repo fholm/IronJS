@@ -70,7 +70,7 @@ namespace IronJS.Ast.Nodes {
                     AstTools.Constant(this),
                     AstTools.New(
                         typeof(ClosureCtx),
-                        CompileTools.Context(func),
+                        CompileTools.Runtime(func),
                         CompileTools.Globals(func)
                     )
                 )

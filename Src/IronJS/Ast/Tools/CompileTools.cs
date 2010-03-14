@@ -27,8 +27,7 @@ namespace IronJS.Ast.Tools {
             if (local != null) {
                 if (local.NodeType == NodeType.Local) {
                     return Et.Assign(
-                        local.Compile(func),
-                        value
+                        local.Compile(func), value
                     );
                 }
             }
@@ -44,7 +43,7 @@ namespace IronJS.Ast.Tools {
 			return Et.Field(func.Children[1].Compile(func), "Globals");
 		}
 
-		internal static Et Context(Lambda func) {
+		internal static Et Runtime(Lambda func) {
 			return Et.Field(func.Children[1].Compile(func), "Runtime");
 		}
 	}

@@ -1,19 +1,14 @@
-﻿var b = function(c) {
-    print(c);
+﻿var foo = function(foo_arg) {
+    var x = foo_arg;
 
-    var d = 1;
-    var x = c;
-
-    print(x);
-
-    var y = function(_1) {
-        print(_1);
+    var bar = function(bar_arg) {
+        return 5;
     };
 
-    y(4);
+    print(bar("test"));
 };
 
-b(2);
+foo(5);
 
 /*
 var foo = function(clos, this, a, b) {

@@ -16,7 +16,7 @@ namespace IronJS.Tools {
         internal static Type EvalType(HashSet<INode> set) {
 			return HashSetTools.EvalType(
 				new HashSet<Type>(
-					IEnumerableTools.Map(set, delegate(INode node) { return node.Type; })
+                    IEnumerableTools.Map(set, delegate(INode node) { return node.Type ?? typeof(object); })
 				)
 			);
 		}

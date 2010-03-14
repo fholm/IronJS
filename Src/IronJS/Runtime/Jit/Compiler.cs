@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using IronJS.Ast.Nodes;
+using IronJS.Ast.Tools;
 using IronJS.Tools;
 using IronJS.Runtime.Jit.Tools;
 using Microsoft.Scripting.Utils;

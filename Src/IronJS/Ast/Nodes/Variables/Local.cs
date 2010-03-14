@@ -28,6 +28,10 @@ namespace IronJS.Ast.Nodes {
             IsClosedOver = true;
         }
 
+        public override string ToString() {
+            return base.ToString() + " " + Name + " <" + TypeTools.ShortName(Type) + ">";
+        }
+
         #region Base Overrides
 
         public override Type Type {

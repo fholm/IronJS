@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Dynamic;
+using System.Runtime.CompilerServices;
 using IronJS.Ast.Nodes;
-using IronJS.Runtime.Jit.Tools;
 using IronJS.Tools;
 using Microsoft.Scripting.Utils;
 
@@ -19,7 +20,14 @@ namespace IronJS.Runtime.Js {
         public readonly ClosureCtx Context;
         public readonly Type ContextType;
 
-		public Closure(Lambda ast, ClosureCtx ctx) {
+        public readonly StrongBox<Obj>[] ObjVars;
+        public readonly StrongBox<bool>[] BoolVars;
+        public readonly StrongBox<long>[] LongVars;
+        public readonly StrongBox<double>[] DoubleVars;
+        public readonly StrongBox<string>[] StringVars;
+        public readonly StrongBox<object>[] DynamicVars;
+
+		public Closure(Lambda ast, ClosureCtx ctx, Dictionary<string, Type> varTypes) {
 			Ast = ast;
 			Context = ctx;
             ContextType = ctx.GetType();

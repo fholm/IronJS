@@ -13,7 +13,7 @@ namespace IronJS.Ast.Nodes {
 
         }
 
-        #region Local Overrides
+        #region Local Members
 
         public override Type Type {
             get {

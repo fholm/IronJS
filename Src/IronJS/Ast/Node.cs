@@ -11,7 +11,7 @@ namespace IronJS.Ast {
         }
 
         public static Enclosed Enclosed(Lambda lambda, string name) {
-            return new Enclosed(lambda, name);
+            return new Enclosed(name);
         }
     }
 }

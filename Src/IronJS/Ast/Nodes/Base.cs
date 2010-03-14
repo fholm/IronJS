@@ -27,7 +27,7 @@ namespace IronJS.Ast.Nodes {
 		Throw, IndexAccess, Delete, In,
 		Switch, InstanceOf, Regex, Array,
 		Integer, Var, Param, Local,
-		Global, Closed
+		Global, Enclosed
 	}
 
 	abstract public class Base : INode {

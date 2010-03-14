@@ -2,7 +2,7 @@
     var x = foo_arg;
 
     var bar = function(bar_arg) {
-        return 5;
+        return x;
     };
 
     print(bar("test"));

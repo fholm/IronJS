@@ -6,6 +6,6 @@ namespace IronJS.Ast.Nodes {
         void UsedAs(Type type);
         void UsedWith(INode node);
         void Setup();
-        void Clear();
+        void Reset();
     }
 }

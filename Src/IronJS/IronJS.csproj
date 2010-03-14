@@ -115,6 +115,7 @@
     <Compile Include="Ast\Nodes\Statements\While.cs" />
     <Compile Include="Ast\Nodes\Constants\Bool.cs" />
     <Compile Include="Ast\Nodes\Variables\Param.cs" />
+    <Compile Include="Ast\Nodes\Variables\Variable.cs" />
     <Compile Include="Ast\Tools\AnalyzeTools.cs" />
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Ast\Scope.cs" />

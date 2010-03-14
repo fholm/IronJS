@@ -1,34 +1,29 @@
 ﻿using System;
+using IronJS.Tools;
 using IronJS.Runtime.Js;
+using Microsoft.Scripting.Ast;
 
 namespace IronJS.Ast.Nodes {
-    public class Enclosed : Base, IVariable {
+    using Et = Expression;
+    using EtParam = ParameterExpression;
 
-        public Enclosed(Lambda lambda, string name)
-            : base(NodeType.Closed) {
-
+    public class Enclosed : Variable {
+        public Enclosed(string name)
+            : base(name, NodeType.Enclosed) {
         }
 
-        #region IVariable Members
+        #region Variable Members
 
-        public string Name {
-            get { throw new NotImplementedException(); }
-        }
-
-        public void UsedAs(Type type) {
+        public override void Setup() {
             throw new NotImplementedException();
         }
 
-        public void UsedWith(INode node) {
-            throw new NotImplementedException();
-        }
+        #endregion
 
-        public void Setup() {
-            throw new NotImplementedException();
-        }
+        #region Object Members
 
-        public void Clear() {
-            throw new NotImplementedException();
+        public override string ToString() {
+            return base.ToString() + " " + Name + " <" + TypeTools.ShortName(Type) + ">";
         }
 
         #endregion

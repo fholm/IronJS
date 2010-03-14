@@ -40,6 +40,8 @@ namespace IronJS.Runtime.Jit {
             // Construct delegate type
             Type funcType = LambdaTools.BuildDelegateType(func);
 
+            DisplayTools.Print(func);
+
             Delegate compiled;
             if (!func.JitCache.TryGet(funcType, out compiled)) {
                 // Initialize variables
@@ -50,16 +52,24 @@ namespace IronJS.Runtime.Jit {
                 // Setup return label
                 func.ReturnLabel = Et.Label(func.ReturnType, "~return");
 
-                // Build locals init block
-                List<EtParam> localsExprs;
-                Et initBlock = BuildLocalsInitBlock(func, out localsExprs);
+                // 
+                List<Et> initExprs = new List<Et>();
+                List<EtParam> localsExprs = new List<EtParam>();
+
+                // 
+                AddLocals(func, initExprs, localsExprs);
+
+                // 
+                Et initBlock = initExprs.Count == 0
+                               ? (Et) AstUtils.Empty()
+                               : (Et) Et.Block(initExprs);
 
                 // DLR Lambda expression
                 LambdaExpression lambda = Et.Lambda(
                     funcType,
                     Et.Block(
                         localsExprs,
-                        initBlock,
+                        initBlock, //hack :(
                         func.Body.Compile(func),
                         Et.Label(
                             func.ReturnLabel, Et.Default(func.ReturnType)
@@ -80,33 +90,23 @@ namespace IronJS.Runtime.Jit {
 
                 // Reset variables
                 foreach (IVariable variable in func.Scope) {
-                    variable.Clear();
+                    variable.Reset();
                 }
             }
 
 			return compiled;
 		}
 
-		Et BuildLocalsInitBlock(Lambda func, out List<EtParam> localsExprs) {
-			localsExprs = new List<EtParam>();
+        void AddLocals(Lambda func, List<Et> initExprs, List<EtParam> localsExprs) {
+            EtParam localExpr;
+            foreach (Local variable in func.Scope.Locals) {
+                localExpr = (EtParam)variable.Compile(func);
 
-			EtParam paramExpr;
-			List<Et> initExprs = new List<Expression>();
-			foreach (Local variable in func.Scope.Locals) {
-				paramExpr = (EtParam) variable.Compile(func);
+                if (variable.IsClosedOver)
+                    initExprs.Add(Et.Assign(localExpr, AstTools.New(localExpr.Type)));
 
-				if(!variable.Type.IsValueType)
-					initExprs.Add(Et.Assign(paramExpr, AstTools.New(variable.Type)));
-
-				localsExprs.Add(paramExpr);
-			}
-
-			if (initExprs.Count == 0)
-				return AstUtils.Empty();
-
-			return Et.Block(initExprs);
-		}
-
-
+                localsExprs.Add(localExpr);
+            }
+        }
 	}
 }

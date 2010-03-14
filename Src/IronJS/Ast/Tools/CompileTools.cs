@@ -1,5 +1,6 @@
 ﻿using IronJS.Ast.Nodes;
 using IronJS.Runtime.Js;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -26,14 +27,22 @@ namespace IronJS.Ast.Tools {
             Local local = target as Local;
             if (local != null) {
                 if (local.NodeType == NodeType.Local) {
-                    return Et.Assign(
-                        local.Compile(func), value
-                    );
+                    return AssignLocal(local.Compile(func), value);
                 }
             }
             
 		    return AstUtils.Empty();
 		}
+
+        internal static Et AssignLocal(Et local, Et value) {
+            if (AstTools.IsStrongBox(local)) {
+                return Et.Assign(
+                    Et.Field(local, "Value"), value
+                );
+            }
+
+            return Et.Assign(local, value);
+        }
 
 		internal static Et Constant(object obj) {
 			return Et.Constant(obj);

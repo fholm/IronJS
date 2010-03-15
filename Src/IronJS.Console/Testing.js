@@ -22,7 +22,6 @@ var foo = function(clos, this, a, b) {
         });
         
         with(i) {
-        
             clos.withStack.Push(i);
             
             var _2.Value = "_2"; // closed over
@@ -37,24 +36,27 @@ var foo = function(clos, this, a, b) {
                 } else if(clos.withStack[0].has("_3")) {
                     return clos.withStack[0]._3;
                 }
-                return _1;
+                return globals._3;
             });
             
-            var bar = new Func(new Clos(clos.withStack, clos.context, clos.globals), function(clos, this, y, z) {
-                with(y) {
-                    clos.withStack.Push(y)
-                    
-                    //print(_2);
-                    print({
-                        if(clos.withStack[2].has("_2")) {
-                            return clos.withStack[2]._2;
-                        }
-                        return clos._2.Value;
-                    });
-                    
-                    clos.withStack.Pop();
-                };
-            });
+            var bar = new Func(
+                new Closure(clos.withStack, clos.context, clos.globals), 
+                function(clos, this, y, z) {
+                    with(y) {
+                        clos.withStack.Push(y);
+                        
+                        //print(_2);
+                        print({
+                            if(clos.withStack[2].has("_2")) {
+                                return clos.withStack[2]._2;
+                            }
+                            return clos._2.Value;
+                        });
+                        
+                        clos.withStack.Pop();
+                    };
+                }
+            );
             
             
             clos.withStack.Pop(if);

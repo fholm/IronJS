@@ -1,0 +1,18 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #><#@ output extension="cs" #><#@ include file="T4Toolbox.tt" #>/**
+ * GENERATED CODE
+ **/
+using IronJS.Ast.Nodes;
+ 
+namespace IronJS.Runtime.Js {<# for(int i = 1; i <= 16; ++i) { #> 
+	<# 
+		string typeArgs = ""; 
+		for(int j = 0; j < i; ++j) {
+			typeArgs += ",T" + j;
+		}
+	#>public class ClosureCtx<<#= typeArgs.Substring(1) #>> : ClosureCtx {
+	<# for(int k = 0; k < i; ++k) { #>	public T<#= k #> Item<#= k #>;
+	<# } #>
+		public ClosureCtx(RuntimeCtx runtime, Obj globals)
+				: base(runtime, globals) { }
+	}
+<# } #>}

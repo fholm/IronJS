@@ -120,10 +120,10 @@
     <Compile Include="Ast\Tools\DisplayTools.cs" />
     <Compile Include="Ast\Scope.cs" />
     <Compile Include="Runtime\Jit\DelegateCache.cs" />
-    <Compile Include="Runtime\Js\Closure_Gen.cs">
+    <Compile Include="Runtime\Js\ClosureCtx_Gen.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>Closure_Gen.tt</DependentUpon>
+      <DependentUpon>ClosureCtx_Gen.tt</DependentUpon>
     </Compile>
     <Compile Include="Runtime\RuntimeCtx.cs" />
     <Compile Include="Runtime\Js\Binders\CallBinder.cs" />
@@ -184,9 +184,9 @@
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Runtime\Js\Closure_Gen.tt">
+    <None Include="Runtime\Js\ClosureCtx_Gen.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Closure_Gen.cs</LastGenOutput>
+      <LastGenOutput>ClosureCtx_Gen.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

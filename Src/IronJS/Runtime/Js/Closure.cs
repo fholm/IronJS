@@ -28,7 +28,8 @@ namespace IronJS.Runtime.Js {
 
         public Delegate GetDelegate(MetaObj[] args) {
             return Context.Runtime.Jit.Compile(
-                Ast, ArrayUtils.Insert(
+                Ast, 
+                ArrayUtils.Insert(
                     ContextType, MetaObjTools.GetTypes(args)
                 )
             );

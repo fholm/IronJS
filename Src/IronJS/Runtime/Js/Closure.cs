@@ -20,14 +20,7 @@ namespace IronJS.Runtime.Js {
         public readonly ClosureCtx Context;
         public readonly Type ContextType;
 
-        public readonly StrongBox<Obj>[] ObjVars;
-        public readonly StrongBox<bool>[] BoolVars;
-        public readonly StrongBox<long>[] LongVars;
-        public readonly StrongBox<double>[] DoubleVars;
-        public readonly StrongBox<string>[] StringVars;
-        public readonly StrongBox<object>[] DynamicVars;
-
-		public Closure(Lambda ast, ClosureCtx ctx, Dictionary<string, Type> varTypes) {
+		public Closure(Lambda ast, ClosureCtx ctx) {
 			Ast = ast;
 			Context = ctx;
             ContextType = ctx.GetType();

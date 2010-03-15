@@ -14,10 +14,10 @@
 using System;
 using System.Collections.Generic;
 using Antlr.Runtime.Tree;
-using IronJS.Runtime.Js;
 using IronJS.Tools;
 using IronJS.Ast.Tools;
-using Microsoft.Scripting.Utils;
+using IronJS.Runtime.Js;
+using IronJS.Runtime.Jit;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -27,38 +27,31 @@ using System.Linq.Expressions;
 
 namespace IronJS.Ast.Nodes {
 	public class Lambda : Base {
-		public INode Name { get { return Children[0]; } }
-		public string[] ParamNames { get; private set; }
-		public int ParamsCount { get { return ParamNames.Length; } }
-		public INode Body { get { return Children[Children.Length - 1]; } }
-		public bool IsLambda { get { return Name == null; } }
+        public INode Name { get { return Children[0]; } }
+        public INode Body { get { return Children[Children.Length - 1]; } }
+
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
-		public LabelTarget ReturnLabel { get; internal set; }
-		public List<Local> Locals { get; protected set; }
+        public LabelTarget ReturnLabel { get; set; }
 
-		public Lambda(INode name, List<string> parameters, INode body, ITree node)
+        public DelegateCache JitCache { get; private set; }
+        public Scope Scope { get; private set; }
+
+		public Lambda(INode name, List<string> paramNames, INode body, ITree node)
 			: base(NodeType.Lambda, node) {
-			Variables = new Dictionary<string, Variable>();
-			Locals = new List<Local>();
 
-			Children = new INode[parameters.Count + 4];
+            Scope = new Scope();
+            JitCache = new DelegateCache();
+
+            // +4 for name, ~closure ,~this and body
+			Children = new INode[paramNames.Count + 4]; 
 			Children[0] = name;
+            Children[1] = Scope.Add(Node.Parameter("~closure"));
+            Children[2] = Scope.Add(Node.Parameter("~this"));
 			Children[Children.Length - 1] = body;
 
-			ParamNames = ArrayUtils.Insert("~closure", "~this", ArrayUtils.MakeArray(parameters));
-
-			// Setup ~closure
-			CreateVar(ParamNames[0], new Parameter(ParamNames[0]));
-			Children[1] = Var(ParamNames[0]);
-
-			// Setup ~this
-			CreateVar(ParamNames[1], new Parameter(ParamNames[1]));
-			Children[2] = Var(ParamNames[1]);
-
-			for (int i = 0; i < parameters.Count; ++i) {
-				CreateVar(parameters[i], new Parameter(parameters[i]));
-				Children[i + 3] = Var(parameters[i]);
+            for (int i = 0; i < paramNames.Count; ++i) {
+                Children[i + 3] = Scope.Add(Node.Parameter(paramNames[i]));
 			}
 		}
 
@@ -69,29 +62,19 @@ namespace IronJS.Ast.Nodes {
 			return this;
 		}
 
-		internal Dictionary<string, Variable> Variables;
-		public Variable Var(string name) { return Variables[name]; }
-		public bool Var(string name, out Variable var) { return Variables.TryGetValue(name, out var); }
-		public void CreateVar(string name, Variable var) {
-			if (Variables.ContainsKey(name))
-				throw new AstError("A variable named '" + name + "' already exist");
-
-			if (var is Local)
-				Locals.Add((Local)var);
-
-			Variables[name] = var;
-		}
-
 		public override Expression Compile(Lambda func) {
-			return AstTools.New(
-				typeof(Function),
-				AstTools.Constant(this),
-				AstTools.New(
-					typeof(Closure),
-					CompileTools.Context(func),
-					CompileTools.Globals(func)
-				)
-			);
+            return AstTools.New(
+                typeof(Obj),
+                AstTools.New(
+                    typeof(Closure),
+                    AstTools.Constant(this),
+                    AstTools.New(
+                        typeof(ClosureCtx),
+                        CompileTools.Runtime(func),
+                        CompileTools.Globals(func)
+                    )
+                )
+            );
 		}
 	}
 }

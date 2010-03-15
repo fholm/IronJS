@@ -15,8 +15,8 @@ namespace IronJS.Runtime.Binders {
 	using Et = Expression;
 	using MetaObj = DynamicMetaObject;
 
-	public class InvokeBinder : System.Dynamic.InvokeBinder {
-		public InvokeBinder(CallInfo callInfo)
+	public class CallBinder : InvokeBinder {
+		public CallBinder(CallInfo callInfo)
 			: base(callInfo) {
 
 		}

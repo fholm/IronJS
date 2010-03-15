@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
-using IronJS.Runtime.Js.Meta;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -12,9 +11,22 @@ namespace IronJS.Runtime.Js {
 	using Et = Expression;
 	using MetaObj = DynamicMetaObject;
 
-	public class Obj : IDynamicMetaObjectProvider {
-		public Dictionary<object, object> Properties =
-			new Dictionary<object, object>();
+    public class Obj : IDynamicMetaObjectProvider {
+        public readonly Closure Call;
+        public readonly Dictionary<object, object> Properties;
+
+        public bool IsCallable {
+            get { return Call != null; }
+        }
+
+        public Obj() {
+            Properties = new Dictionary<object, object>();
+        }
+
+        public Obj(Closure call)
+            : this() {
+            Call = call;
+        }
 
 		public void Set(object name, object value) {
 			Properties[name] = value;

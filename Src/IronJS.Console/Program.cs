@@ -24,8 +24,8 @@ namespace IronJS.Testing {
 
 			DisplayTools.Print(file);
 
-			Context context = new Context();
-			Func<Closure, Obj, object> compiled = file.Compile(context);
+			RuntimeCtx context = new RuntimeCtx();
+			Func<ClosureCtx, Obj, object> compiled = file.Compile(context);
 
 			context.GlobalScope.Set("print", new Func<object, object>(HelperFunctions.PrintLine));
 

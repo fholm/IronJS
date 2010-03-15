@@ -27,7 +27,7 @@ namespace IronJS.Ast.Nodes {
 		Throw, IndexAccess, Delete, In,
 		Switch, InstanceOf, Regex, Array,
 		Integer, Var, Param, Local,
-		Global, Closed
+		Global, Enclosed
 	}
 
 	abstract public class Base : INode {
@@ -39,6 +39,10 @@ namespace IronJS.Ast.Nodes {
 		public Base(NodeType type, ITree node) {
 			NodeType = type;
 		}
+
+        public Base(NodeType type)
+            : this(type, null) {
+        }
 
 		public virtual INode Analyze(Stack<Lambda> stack) {
 			if (Children != null) {

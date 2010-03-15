@@ -16,6 +16,19 @@ namespace IronJS.Tools {
 	using EtParam = ParameterExpression;
 
 	public static class AstTools {
+        public static Et FieldEq<T>(Et target, string fieldName, T value) {
+            return Et.Equal(
+                Et.PropertyOrField(target, fieldName),
+                Et.Constant(value, typeof(T))
+            );
+        }
+
+        public static Et Cast<T>(Et value) {
+            if (value.Type == typeof(void))
+                return Et.Block(value, Et.Default(typeof(T)));
+
+            return Et.Convert(value, typeof(T));
+        }
 
 		public static bool IsStrongBox(Et target) {
 			return target.Type.IsGenericType && target.Type.GetGenericTypeDefinition() == typeof(StrongBox<>);

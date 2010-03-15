@@ -6,6 +6,9 @@ namespace IronJS.Tools {
 		public static Type StrongBoxType = typeof(StrongBox<>);
 
 		public static string ShortName(Type that) {
+            if (that == null)
+                return "NULL";
+
 			string typeName = ArrayTools.First(
 				ArrayTools.Last(
 					that.Name.Split('.')
@@ -32,5 +35,12 @@ namespace IronJS.Tools {
 
 			return typeName;
 		}
+
+        public static Type EvalType(Type type1, Type type2) {
+            if (type1 == type2)
+                return type1;
+
+            return typeof(object);
+        }
 	}
 }

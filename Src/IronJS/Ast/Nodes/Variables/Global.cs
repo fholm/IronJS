@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using IronJS.Tools;
-using IronJS.Ast.Tools;
+﻿using IronJS.Ast.Tools;
 using IronJS.Runtime.Js;
 
 #if CLR2

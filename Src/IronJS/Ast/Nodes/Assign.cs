@@ -32,7 +32,7 @@ namespace IronJS.Ast.Nodes {
 		public override INode Analyze(Stack<Lambda> stack) {
 			base.Analyze(stack);
 
-			Closed closed = Target as Closed;
+			Enclosed closed = Target as Enclosed;
 			if (closed != null)
 				AnalyzeTools.AddClosedType(stack, closed.Name, Value.Type);
 

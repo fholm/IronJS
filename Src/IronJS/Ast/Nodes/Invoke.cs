@@ -32,7 +32,7 @@ namespace IronJS.Ast.Nodes {
 
 		public override Et Compile(Lambda func) {
 			return Et.Dynamic(
-				new IronJS.Runtime.Binders.InvokeBinder(new CallInfo(Children.Length - 1)),
+				new IronJS.Runtime.Binders.CallBinder(new CallInfo(Children.Length - 1)),
 				typeof(object),
 				ArrayUtils.InsertAt(
 					ArrayTools.Map(Children, delegate(INode node) {

@@ -1,5 +1,6 @@
 ﻿using IronJS.Ast.Nodes;
 using IronJS.Runtime.Js;
+using IronJS.Tools;
 
 #if CLR2
 using Microsoft.Scripting.Ast;
@@ -13,7 +14,6 @@ namespace IronJS.Ast.Tools {
 
 	internal static partial class CompileTools {
 		internal static Et Assign(Lambda func, INode target, Et value) {
-
 			Global global = target as Global;
 			if (global != null) {
 				return Et.Call(
@@ -22,10 +22,27 @@ namespace IronJS.Ast.Tools {
 					CompileTools.Constant(global.Name), 
 					value
 				);
-			} else {
-				return AstUtils.Empty();
 			}
+
+            Local local = target as Local;
+            if (local != null) {
+                if (local.NodeType == NodeType.Local) {
+                    return AssignLocal(local.Compile(func), value);
+                }
+            }
+            
+		    return AstUtils.Empty();
 		}
+
+        internal static Et AssignLocal(Et local, Et value) {
+            if (AstTools.IsStrongBox(local)) {
+                return Et.Assign(
+                    Et.Field(local, "Value"), value
+                );
+            }
+
+            return Et.Assign(local, value);
+        }
 
 		internal static Et Constant(object obj) {
 			return Et.Constant(obj);
@@ -35,23 +52,8 @@ namespace IronJS.Ast.Tools {
 			return Et.Field(func.Children[1].Compile(func), "Globals");
 		}
 
-		internal static Et Context(Lambda func) {
-			return Et.Field(func.Children[1].Compile(func), "Context");
-		}
-
-		internal static bool IsGlobal(INode node) {
-			Assign asn = node as Assign;
-
-			if (asn != null) {
-				return (asn.Target as Global) != null;
-			}
-
-			return (node as Global) != null;
-		}
-
-		internal static bool As<T>(INode node, out T casted) where T : class {
-			casted = node as T;
-			return casted != null;
+		internal static Et Runtime(Lambda func) {
+			return Et.Field(func.Children[1].Compile(func), "Runtime");
 		}
 	}
 }

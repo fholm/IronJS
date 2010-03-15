@@ -1,11 +1,16 @@
-﻿var b = function(c) {
-    print(2);
-    var d = 1;
-    var x = c;
+﻿var foo = function(foo_arg) {
+    var x = foo_arg;
+
+    var bar = function(bar_arg) {
+        return x;
+    };
+
+    print(bar("test"));
 };
 
-b(2);
+foo(5);
 
+/*
 var foo = function(clos, this, a, b) {
 
     var _1 = "1";
@@ -66,3 +71,4 @@ var foo = function(clos, this, a, b) {
     };
 
 };
+*/

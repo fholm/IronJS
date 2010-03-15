@@ -14,7 +14,7 @@ namespace IronJS.Runtime.Utils {
 			return obj;
 		}
 
-		static public void Timer(Function proxy) {
+		static public void Timer(RuntimeCtx proxy) {
 		}
 	}
 }

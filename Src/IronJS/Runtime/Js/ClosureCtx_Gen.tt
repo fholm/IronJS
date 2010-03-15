@@ -1,9 +1,26 @@
 ﻿<#@ template language="C#" hostspecific="True" debug="True" #><#@ output extension="cs" #><#@ include file="T4Toolbox.tt" #>/**
  * GENERATED CODE
  **/
+using System;
 using IronJS.Ast.Nodes;
  
-namespace IronJS.Runtime.Js {<# for(int i = 1; i <= 16; ++i) { #> 
+namespace IronJS.Runtime.Js {
+	public partial class ClosureCtx {
+        public static Type GetType(Lambda func, Lambda target) {
+			int count = target.Scope.Enclosed.Count;
+			
+            if (count == 0) {
+                return typeof(ClosureCtx);
+            }<# for(int n = 1; n <= 16; ++n) { #> else if(count == <#= n #>) {
+				return typeof(ClosureCtx<<#= new String(',', n - 1) #>>).MakeGenericType(<# for(int m = 0; m < n; ++m) { #> 
+					func.Scope.Get(target.Scope.Enclosed[<#= m #>].Name).Type<#= m < n-1 ? "," : "" #> <# } #> 
+				);
+			}<# } #> else {
+                return typeof(ClosureCtxN);
+            }
+		}
+	}
+<# for(int i = 1; i <= 16; ++i) { #> 
 	<# 
 		string typeArgs = ""; 
 		for(int j = 0; j < i; ++j) {

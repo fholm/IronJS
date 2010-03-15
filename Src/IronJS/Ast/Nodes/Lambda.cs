@@ -63,13 +63,15 @@ namespace IronJS.Ast.Nodes {
 		}
 
 		public override Expression Compile(Lambda func) {
+            var type = ClosureCtx.GetType(func, this);
+
             return AstTools.New(
                 typeof(Obj),
                 AstTools.New(
                     typeof(Closure),
                     AstTools.Constant(this),
                     AstTools.New(
-                        typeof(ClosureCtx),
+                        type,
                         CompileTools.Runtime(func),
                         CompileTools.Globals(func)
                     )

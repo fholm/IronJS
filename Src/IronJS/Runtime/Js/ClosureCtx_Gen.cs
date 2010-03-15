@@ -1,9 +1,206 @@
 ﻿/**
  * GENERATED CODE
  **/
+using System;
 using IronJS.Ast.Nodes;
  
-namespace IronJS.Runtime.Js { 
+namespace IronJS.Runtime.Js {
+	public partial class ClosureCtx {
+        public static Type GetType(Lambda func, Lambda target) {
+			int count = target.Scope.Enclosed.Count;
+			
+            if (count == 0) {
+                return typeof(ClosureCtx);
+            } else if(count == 1) {
+				return typeof(ClosureCtx<>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type  
+				);
+			} else if(count == 2) {
+				return typeof(ClosureCtx<,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type  
+				);
+			} else if(count == 3) {
+				return typeof(ClosureCtx<,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type  
+				);
+			} else if(count == 4) {
+				return typeof(ClosureCtx<,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type  
+				);
+			} else if(count == 5) {
+				return typeof(ClosureCtx<,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type  
+				);
+			} else if(count == 6) {
+				return typeof(ClosureCtx<,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type  
+				);
+			} else if(count == 7) {
+				return typeof(ClosureCtx<,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type  
+				);
+			} else if(count == 8) {
+				return typeof(ClosureCtx<,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type  
+				);
+			} else if(count == 9) {
+				return typeof(ClosureCtx<,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type  
+				);
+			} else if(count == 10) {
+				return typeof(ClosureCtx<,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type  
+				);
+			} else if(count == 11) {
+				return typeof(ClosureCtx<,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type  
+				);
+			} else if(count == 12) {
+				return typeof(ClosureCtx<,,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[11].Name).Type  
+				);
+			} else if(count == 13) {
+				return typeof(ClosureCtx<,,,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[11].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[12].Name).Type  
+				);
+			} else if(count == 14) {
+				return typeof(ClosureCtx<,,,,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[11].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[12].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[13].Name).Type  
+				);
+			} else if(count == 15) {
+				return typeof(ClosureCtx<,,,,,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[11].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[12].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[13].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[14].Name).Type  
+				);
+			} else if(count == 16) {
+				return typeof(ClosureCtx<,,,,,,,,,,,,,,,>).MakeGenericType( 
+					func.Scope.Get(target.Scope.Enclosed[0].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[1].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[2].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[3].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[4].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[5].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[6].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[7].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[8].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[9].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[10].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[11].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[12].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[13].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[14].Name).Type,  
+					func.Scope.Get(target.Scope.Enclosed[15].Name).Type  
+				);
+			} else {
+                return typeof(ClosureCtxN);
+            }
+		}
+	}
+ 
 	public class ClosureCtx<T0> : ClosureCtx {
 		public T0 Item0;
 	

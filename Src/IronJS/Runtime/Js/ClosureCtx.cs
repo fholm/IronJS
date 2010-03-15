@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using IronJS.Ast.Nodes;
 
 namespace IronJS.Runtime.Js {
-	public class ClosureCtx {
+	public partial class ClosureCtx {
 		public readonly Obj Globals;
 		public readonly RuntimeCtx Runtime;
         public readonly LinkedList<Obj> DynamicScopes;

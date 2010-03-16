@@ -40,6 +40,9 @@ namespace IronJS.Runtime.Jit {
             // Construct delegate type
             Type funcType = LambdaTools.BuildDelegateType(func);
 
+			// CLosure type
+			func.ContextType = paramTypes[0];
+
             DisplayTools.Print(func);
 
             Delegate compiled;
@@ -69,7 +72,7 @@ namespace IronJS.Runtime.Jit {
                     funcType,
                     Et.Block(
                         localsExprs,
-                        initBlock, //hack :(
+                        initBlock,
                         func.Body.Compile(func),
                         Et.Label(
                             func.ReturnLabel, Et.Default(func.ReturnType)

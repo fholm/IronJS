@@ -8,8 +8,13 @@ namespace IronJS.Ast.Nodes {
     using EtParam = ParameterExpression;
 
     public class Enclosed : Variable {
-        public Enclosed(string name)
+		readonly int _localId;
+		readonly Lambda _func;
+
+        public Enclosed(Lambda func, string name)
             : base(name, NodeType.Enclosed) {
+			_func = func;
+			_localId = func.Scope.Enclosed.Count;
         }
 
         #region Variable Members

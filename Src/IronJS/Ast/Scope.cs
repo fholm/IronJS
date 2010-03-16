@@ -46,7 +46,7 @@ namespace IronJS.Ast {
                 Locals.Add((Local)variable);
 
             } else if (variable is Enclosed) {
-                Enclosed.Add((Enclosed)variable);
+				Enclosed.Add((Enclosed)variable);
 
             } else {
                 throw new AstError("Unkown variable type");

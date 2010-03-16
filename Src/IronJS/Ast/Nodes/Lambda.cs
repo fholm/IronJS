@@ -33,6 +33,7 @@ namespace IronJS.Ast.Nodes {
 		public Type ReturnType { get { return Types.Dynamic; } }
 		public override Type Type { get { return Types.Object; } }
         public LabelTarget ReturnLabel { get; set; }
+		public Type ContextType { get; set; }
 
         public DelegateCache JitCache { get; private set; }
         public Scope Scope { get; private set; }
@@ -47,7 +48,7 @@ namespace IronJS.Ast.Nodes {
 			Children = new INode[paramNames.Count + 4]; 
 			Children[0] = name;
             Children[1] = Scope.Add(Node.Parameter("~closure"));
-            Children[2] = Scope.Add(Node.Parameter("~this"));
+            Children[2] = Scope.Add(Node.Parameter("this"));
 			Children[Children.Length - 1] = body;
 
             for (int i = 0; i < paramNames.Count; ++i) {

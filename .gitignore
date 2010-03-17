@@ -1,2 +1,3 @@
 Src/IronJS/bin/**/*
 Src/IronJS/obj/**/*
+*.suo

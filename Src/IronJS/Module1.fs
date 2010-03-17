@@ -2,3 +2,6 @@
 
 module Module1
 
+type Node =
+  | Symbol of string
+  | String of string

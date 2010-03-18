@@ -39,7 +39,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Module1.fs" />
+    <Compile Include="Ast.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>

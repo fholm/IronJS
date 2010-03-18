@@ -1,3 +1,5 @@
 Src/IronJS/bin/**/*
 Src/IronJS/obj/**/*
+Src/IronJS.CSharp/bin/**/*
+Src/IronJS.CSharp/obj/**/*
 *.suo

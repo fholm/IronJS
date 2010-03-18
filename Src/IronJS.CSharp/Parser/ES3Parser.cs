@@ -14,7 +14,7 @@ using Stack = Antlr.Runtime.Collections.StackList;
 
 namespace IronJS.CSharp.Parser
 {
-    partial class ES3Parser : Antlr.Runtime.Parser
+    public partial class ES3Parser : Antlr.Runtime.Parser
     {
         public static readonly string[] tokenNames = new string[] 
 	    {

@@ -13,7 +13,7 @@ using Stack = Antlr.Runtime.Collections.StackList;
 
 namespace IronJS.CSharp.Parser
 {
-    partial class ES3Lexer : Lexer
+    public partial class ES3Lexer : Lexer
     {
         public const int PACKAGE = 52;
         public const int FUNCTION = 17;

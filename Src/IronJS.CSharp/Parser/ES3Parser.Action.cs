@@ -14,7 +14,7 @@ namespace IronJS.CSharp.Parser
 	/// This partial class is complementary to the parser generated with ANTLR from the JavaScript.g grammar.
 	/// It implements the actions used in the parser.
 	/// </summary>
-	partial class ES3Parser
+    public partial class ES3Parser
 	{
 		/// <summary>
 		/// Is a RuleReturnScope node candidate for the left-hand-side of an assignment expression?

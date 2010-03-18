@@ -13,7 +13,7 @@ namespace IronJS.CSharp.Parser
 	/// This partial class is complementary to the lexer generated with ANTLR from the JavaScript.g grammar.
 	/// It implements the actions used in the lexer.
 	/// </summary>
-	partial class ES3Lexer
+    public partial class ES3Lexer
 	{
 		/// <summary>
 		/// Containts the last on channel token.

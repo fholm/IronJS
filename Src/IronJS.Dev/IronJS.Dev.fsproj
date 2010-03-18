@@ -2,17 +2,18 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{fa738790-5b9b-4977-8c6b-ef487f24e435}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>IronJS</RootNamespace>
-    <AssemblyName>IronJS</AssemblyName>
+    <ProjectGuid>{40105097-fe8e-4b39-a52a-8f8ddfa16b91}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>IronJS.Dev</RootNamespace>
+    <AssemblyName>IronJS.Dev</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>IronJS</Name>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <Name>IronJS.Dev</Name>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -20,33 +21,41 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\IronJS.XML</DocumentationFile>
+    <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile>bin\Debug\IronJS.Dev.XML</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
+    <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile>bin\Release\IronJS.Dev.XML</DocumentationFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
-    <Compile Include="Ast.fs" />
-    <None Include="Script.fsx" />
-    <Content Include="Testing.js" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
+      <Name>IronJS.CSharp</Name>
+      <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
-      <Name>IronJS.CSharp</Name>
-      <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>
+    <ProjectReference Include="..\IronJS\IronJS.fsproj">
+      <Name>IronJS</Name>
+      <Project>{fa738790-5b9b-4977-8c6b-ef487f24e435}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

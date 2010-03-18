@@ -1,15 +1,27 @@
-﻿// Learn more about F# at http://fsharp.net
-
+﻿
 module Ast
+
+type LocalVar = {
+  IsClosedOver: bool
+}
+
+type FuncInfo = {
+  Locals: Map<string, LocalVar>
+  Parameters: string list;
+  ClosedOver: string list
+  Parent: Option<FuncInfo ref>
+}
+
+let createFunc parent = { 
+  Locals = Map.empty; 
+  Parameters = [];
+  ClosedOver = []; 
+  Parent = parent
+}
 
 type Number =
   | Double of double
   | Integer of int64
-
-type VarType =
-  | Enclosed of string
-  | Local of string
-  | Parameter of string
 
 type BinaryOp =
   | Add = 0
@@ -26,10 +38,16 @@ type Node =
   | Symbol of string
   | String of string
   | Number of Number
-  | Variable of VarType
+  | Block of Node list
+  | Variable of string
+  | Enclosed of string
+  | Global of string
   | If of Node * Node * Node
-  | Function of Node * Node list * Node
+  | Function of FuncInfo * Node * Node list * Node
   | Binary of BinaryOp * Node * Node
   | Unary of UnaryOp * Node
   | Invoke of Node * Node list
-  | Null 
+  | Var of Node
+  | Assign of Node * Node
+  | Return of Node
+  | Null

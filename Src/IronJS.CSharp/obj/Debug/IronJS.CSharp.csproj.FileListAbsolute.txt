@@ -1,0 +1,5 @@
+C:\Users\Fredrik\Projects\IronJS\Src\IronJS.CSharp\bin\Debug\IronJS.CSharp.dll
+C:\Users\Fredrik\Projects\IronJS\Src\IronJS.CSharp\bin\Debug\IronJS.CSharp.pdb
+C:\Users\Fredrik\Projects\IronJS\Src\IronJS.CSharp\obj\Debug\ResolveAssemblyReference.cache
+C:\Users\Fredrik\Projects\IronJS\Src\IronJS.CSharp\obj\Debug\IronJS.CSharp.dll
+C:\Users\Fredrik\Projects\IronJS\Src\IronJS.CSharp\obj\Debug\IronJS.CSharp.pdb

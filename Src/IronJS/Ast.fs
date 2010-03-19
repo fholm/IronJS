@@ -19,6 +19,12 @@ let createFunc parent = {
   Parent = parent
 }
 
+let addParameter (f:FuncInfo) name =
+  { f with 
+      Parameters = name :: f.Parameters; 
+      Locals = Map.add name { IsClosedOver = false } f.Locals 
+  }
+
 type Number =
   | Double of double
   | Integer of int64

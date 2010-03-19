@@ -48,13 +48,13 @@ let rec getVar (f:FuncInfo ref) (n:string) =
     Global(n)
 
 let handlersArray = [|
-  (0, fun (x:CommonTree, f:FuncInfo ref, p) -> Block([for c in x.Children -> p (ct c) f]) );
-  (ES3Parser.ASSIGN, fun (x, f, p) -> Assign(p (child x 0) f, p (child x 1) f) );
-  (ES3Parser.RETURN, fun (x, f, p) -> Return(p (child x 0) f) )
-  (ES3Parser.Identifier, fun (x, f, p) -> getVar f x.Text );
-  (ES3Parser.StringLiteral, fun (x, f, p) -> String(x.Text.Trim('"')) );
-  (ES3Parser.DecimalLiteral, fun (x, f, p) -> Number(Integer(int64 x.Text)) );
-  (ES3Parser.BLOCK, fun (x, f, p) -> Block([for c in x.Children -> p (ct c) f]) );
+  (0, fun (x:CommonTree, f:FuncInfo ref, p) -> Block([for c in x.Children -> p (ct c) f]));
+  (ES3Parser.ASSIGN, fun (x, f, p) -> Assign(p (child x 0) f, p (child x 1) f));
+  (ES3Parser.RETURN, fun (x, f, p) -> Return(p (child x 0) f))
+  (ES3Parser.Identifier, fun (x, f, p) -> getVar f x.Text);
+  (ES3Parser.StringLiteral, fun (x, f, p) -> String(x.Text.Trim('"')));
+  (ES3Parser.DecimalLiteral, fun (x, f, p) -> Number(Integer(int64 x.Text)));
+  (ES3Parser.BLOCK, fun (x, f, p) -> Block([for c in x.Children -> p (ct c) f]));
 
   (ES3Parser.VAR,
     fun (x, f, p) -> 

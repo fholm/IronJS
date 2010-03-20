@@ -6,6 +6,10 @@ open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
+//Errors
+let private EmptyScopeChain = "Empty scope-chain"
+let private NoHandlerForType = new Printf.StringFormat<string -> int -> unit>("No handler for %s (%i)")
+
 //Types
 type Type = 
   | None = 0
@@ -60,48 +64,48 @@ type Node =
   | Null
   
 //Type Aliases
-type Scopes = Scope list
-type ParserFunc = CommonTree -> Scopes -> Node * Scopes
-type HandlerMap = Map<int, CommonTree -> Scopes -> ParserFunc -> Node * Scopes>
+type internal Scopes = Scope list
+type internal ParserFunc = CommonTree -> Scopes -> Node * Scopes
+type internal HandlerMap = Map<int, CommonTree -> Scopes -> ParserFunc -> Node * Scopes>
 
 //Constants
-let emptyScope = { 
+let internal emptyScope = { 
   Locals = Map.empty;
   Closure = [];
 }
 
-let emptyLocal = {
+let internal emptyLocal = {
   UsedWith = Set.empty;
   UsedAs = Type.None;
   ForcedType = None;
 }
 
-let globalScope = 
+let internal globalScope = 
   [emptyScope]
 
 //Functions
-let ct (o:obj) =
+let internal ct (o:obj) =
   o :?> CommonTree
 
-let child o n =
+let internal child o n =
   (ct (ct o).Children.[n])
 
-let typeToClr x =
+let internal typeToClr x =
   match x with
   | Type.Integer -> typeof<int64>
   | Type.Double -> typeof<double>
   | Type.String -> typeof<string>
   | _ -> typeof<obj>
 
-let addLocal (s:Scopes) (n:string) =
+let internal addLocal (s:Scopes) (n:string) =
   match s with
-  | [] -> failwith "Empty scope"
+  | [] -> failwith EmptyScopeChain
   | x::[] -> s
   | x::xs -> {x with Locals = (Map.add n emptyLocal x.Locals)} :: xs
 
-let addLocals (s:Scopes) (ns:string list) =
+let internal addLocals (s:Scopes) (ns:string list) =
   match s with 
-  | [] -> failwith "Empty scope"
+  | [] -> failwith EmptyScopeChain
   | x::[] -> s
   | x::xs ->
     let mutable locals = x.Locals
@@ -109,13 +113,13 @@ let addLocals (s:Scopes) (ns:string list) =
       locals <- Map.add n emptyLocal locals
     { x with Locals = locals } :: xs
 
-let getAst scope pr =
+let internal getAst scope pr =
   scope := (snd pr)
   (fst pr)
 
-let getIdentifier (s:Scopes) (n:string) =
+let internal getIdentifier (s:Scopes) (n:string) =
   match s with
-  | [] -> failwith "Empty scope"
+  | [] -> failwith EmptyScopeChain
   | x::[] -> Global(n), s
   | x::xs ->
     if x.Locals.ContainsKey(n) then
@@ -137,27 +141,33 @@ let getIdentifier (s:Scopes) (n:string) =
 let makeGenerator (handlers:HandlerMap) =
   let rec p (x:CommonTree) (s:Scopes) = 
     if not (handlers.ContainsKey(x.Type)) then
-      failwithf "No handler for %A (%A)" ES3Parser.tokenNames.[x.Type] x.Type
+      failwithf NoHandlerForType ES3Parser.tokenNames.[x.Type] x.Type
     handlers.[x.Type] x s p
   p
 
-let makeBlock ts s p =
+let internal makeBlock ts s p =
   let scopes = ref s
   Block([for c in ts -> getAst scopes (p (ct c) !scopes)]), !scopes
 
-let cleanString (s:string) =
-  if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
+let internal cleanString (s:string) =
+  if s.Length = 0 then 
+    s
+  else
+    if s.[0] = '"' then 
+      s.Trim('"') 
+    else 
+      s.Trim('\'')
 
-let exprType expr =
+let internal exprType expr =
   match expr with
   | Number(Integer(_)) -> Type.Integer
   | Number(Double(_)) -> Type.Double
   | String(_) -> Type.String
   | _ -> Type.Dynamic
 
-let addMetaData (s:Scopes) a b =
+let internal addMetaData (s:Scopes) a b =
   match s with
-  | [] -> failwith "Empty scope"
+  | [] -> failwith EmptyScopeChain
   | x::[] -> s
   | x::xs ->
     match a with
@@ -172,7 +182,7 @@ let addMetaData (s:Scopes) a b =
       { x with Locals = Map.add a_name modified x.Locals } :: xs
     | _ -> s
 
-let defaultGenerators = 
+let internal defaultGenerators = 
   Map.ofArray [|
     // NIL
     (0, fun (t:CommonTree) (s:Scopes) (p:ParserFunc) -> 
@@ -220,11 +230,11 @@ let defaultGenerators =
 
     (ES3Parser.FUNCTION, fun t s p -> 
       if t.ChildCount = 2 then
-        let paramNames = "~closure" :: "this" :: [for c in (child t 0).Children -> (ct c).Text ]
+        let paramNames = "~closure" :: "this" :: [for c in (child t 0).Children -> (ct c).Text]
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
         Function(paramNames, scopes.Head, Null, body), scopes.Tail
       else
-        failwith "Not supporting named functions"
+        failwith "No support for named functions"
     );
 |]
 

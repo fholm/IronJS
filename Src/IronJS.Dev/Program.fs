@@ -1,4 +1,5 @@
-﻿open IronJS.CSharp.Parser
+﻿open IronJS
+open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
@@ -10,3 +11,4 @@ let ast = Ast.generator program.Tree
 printf "%A" (Compiler.compile ast [ClrTypes.Dynamic] :?> System.Func<obj, obj>)
 
 System.Console.ReadLine() |> ignore
+

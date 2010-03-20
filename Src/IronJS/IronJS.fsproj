@@ -36,12 +36,20 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="Ast.fs" />
+    <Compile Include="Compiler.fs" />
+    <Compile Include="Runtime.fs" />
     <None Include="Script.fsx" />
     <Content Include="Testing.js" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamic">
+      <HintPath>..\Dependencies\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting">
+      <HintPath>..\Dependencies\Microsoft.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />

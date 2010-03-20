@@ -22,7 +22,7 @@ type Type =
 type Local = {
   UsedWith: string Set
   UsedAs: Type
-  ForcedType: Type Option
+  ForcedType: System.Type Option
 }
 
 type Scope = {
@@ -165,7 +165,7 @@ let internal exprType expr =
   | String(_) -> Type.String
   | _ -> Type.Dynamic
 
-let internal addMetaData (s:Scopes) a b =
+let internal addTypeData (s:Scopes) a b =
   match s with
   | [] -> failwith EmptyScopeChain
   | x::[] -> s
@@ -211,8 +211,8 @@ let internal defaultGenerators =
       let c0 = getAst scopes (p (child t 0) !scopes)
       let c1 = getAst scopes (p (child t 1) !scopes)
 
-      scopes := addMetaData !scopes c0 c1
-      scopes := addMetaData !scopes c1 c0
+      scopes := addTypeData !scopes c0 c1
+      scopes := addTypeData !scopes c1 c0
 
       Assign(c0, c1), !scopes
     );
@@ -241,4 +241,5 @@ let internal defaultGenerators =
 let generator tree = 
   let generator = makeGenerator defaultGenerators
   let body, scopes = generator (ct tree) globalScope
-  Function(["~closure"], scopes.Head, Null, body)
+  let scope = { scopes.Head with Locals = scopes.Head.Locals.Add("~closure", emptyLocal) }
+  Function(["~closure"], scope, Null, body)

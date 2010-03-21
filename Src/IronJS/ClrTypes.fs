@@ -1,4 +1,4 @@
-﻿module ClrTypes
+﻿module IronJS.ClrTypes
 
 let Dynamic = typeof<obj>
 let Integer = typeof<int64>

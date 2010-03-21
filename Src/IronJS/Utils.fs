@@ -1,4 +1,4 @@
-﻿module Utils
+﻿module IronJS.Utils
 
 let toList<'a> (ilst:System.Collections.IList) =
   let mutable lst = []

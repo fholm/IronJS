@@ -1,7 +1,7 @@
-﻿module Ast
+﻿module IronJS.Ast
 
 //Import
-open Utils
+open IronJS
 open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
@@ -64,9 +64,9 @@ type Node =
   | Null
   
 //Type Aliases
-type internal Scopes = Scope list
-type internal ParserFunc = CommonTree -> Scopes -> Node * Scopes
-type internal HandlerMap = Map<int, CommonTree -> Scopes -> ParserFunc -> Node * Scopes>
+type private Scopes = Scope list
+type private ParserFunc = CommonTree -> Scopes -> Node * Scopes
+type private HandlerMap = Map<int, CommonTree -> Scopes -> ParserFunc -> Node * Scopes>
 
 //Constants
 let internal emptyScope = { 
@@ -97,13 +97,13 @@ let internal typeToClr x =
   | Type.String -> typeof<string>
   | _ -> typeof<obj>
 
-let internal addLocal (s:Scopes) (n:string) =
+let private addLocal (s:Scopes) (n:string) =
   match s with
   | [] -> failwith EmptyScopeChain
   | x::[] -> s
   | x::xs -> {x with Locals = (Map.add n emptyLocal x.Locals)} :: xs
 
-let internal addLocals (s:Scopes) (ns:string list) =
+let private addLocals (s:Scopes) (ns:string list) =
   match s with 
   | [] -> failwith EmptyScopeChain
   | x::[] -> s
@@ -113,11 +113,11 @@ let internal addLocals (s:Scopes) (ns:string list) =
       locals <- Map.add n emptyLocal locals
     { x with Locals = locals } :: xs
 
-let internal getAst scope pr =
+let private getAst scope pr =
   scope := (snd pr)
   (fst pr)
 
-let internal getIdentifier (s:Scopes) (n:string) =
+let private getIdentifier (s:Scopes) (n:string) =
   match s with
   | [] -> failwith EmptyScopeChain
   | x::[] -> Global(n), s
@@ -138,18 +138,11 @@ let internal getIdentifier (s:Scopes) (n:string) =
       let found, scopes = findLocal s
       (if found then Closure(n) else Global(n)), scopes
 
-let makeGenerator (handlers:HandlerMap) =
-  let rec p (x:CommonTree) (s:Scopes) = 
-    if not (handlers.ContainsKey(x.Type)) then
-      failwithf NoHandlerForType ES3Parser.tokenNames.[x.Type] x.Type
-    handlers.[x.Type] x s p
-  p
-
-let internal makeBlock ts s p =
+let private makeBlock ts s p =
   let scopes = ref s
   Block([for c in ts -> getAst scopes (p (ct c) !scopes)]), !scopes
 
-let internal cleanString (s:string) =
+let private cleanString (s:string) =
   if s.Length = 0 then 
     s
   else
@@ -158,14 +151,14 @@ let internal cleanString (s:string) =
     else 
       s.Trim('\'')
 
-let internal exprType expr =
+let private exprType expr =
   match expr with
   | Number(Integer(_)) -> Type.Integer
   | Number(Double(_)) -> Type.Double
   | String(_) -> Type.String
   | _ -> Type.Dynamic
 
-let internal addTypeData (s:Scopes) a b =
+let private addTypeData (s:Scopes) a b =
   match s with
   | [] -> failwith EmptyScopeChain
   | x::[] -> s
@@ -182,7 +175,7 @@ let internal addTypeData (s:Scopes) a b =
       { x with Locals = Map.add a_name modified x.Locals } :: xs
     | _ -> s
 
-let internal defaultGenerators = 
+let defaultGenerators = 
   Map.ofArray [|
     // NIL
     (0, fun (t:CommonTree) (s:Scopes) (p:ParserFunc) -> 
@@ -237,6 +230,13 @@ let internal defaultGenerators =
         failwith "No support for named functions"
     );
 |]
+
+let makeGenerator (handlers:HandlerMap) =
+  let rec p (x:CommonTree) (s:Scopes) = 
+    if not (handlers.ContainsKey(x.Type)) then
+      failwithf NoHandlerForType ES3Parser.tokenNames.[x.Type] x.Type
+    handlers.[x.Type] x s p
+  p
 
 let generator tree = 
   let generator = makeGenerator defaultGenerators

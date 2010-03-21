@@ -1,0 +1,19 @@
+﻿﻿<#@ template language="C#" hostspecific="True" debug="True" #><#@ output extension="cs" #>/**
+ * GENERATED CODE
+ **/
+using System;
+ 
+namespace IronJS.CSharp {
+	public sealed class Closure {
+		public readonly object[] Items;
+	}
+<# for(int i = 1; i <= 16; ++i) { #> 
+	<# 
+		string typeArgs = ""; 
+		for(int j = 0; j < i; ++j) {
+			typeArgs += ",T" + j;
+		}
+	#>public sealed class Closure<<#= typeArgs.Substring(1) #>> {
+	<# for(int k = 0; k < i; ++k) { #>	public readonly T<#= k #> Item<#= k #>;
+	<# } #>}
+<# } #>}

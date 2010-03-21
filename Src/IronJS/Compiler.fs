@@ -1,18 +1,19 @@
 ﻿module IronJS.Compiler
 
 //Imports
+open IronJS
 open Ast
 open System
 open EtTools
 open System.Linq.Expressions
 
 //Type Aliases
-type internal Et = System.Linq.Expressions.Expression
-type internal EtParam = System.Linq.Expressions.ParameterExpression
-type internal AstUtils = Microsoft.Scripting.Ast.Utils
+type private Et = System.Linq.Expressions.Expression
+type private EtParam = System.Linq.Expressions.ParameterExpression
+type private AstUtils = Microsoft.Scripting.Ast.Utils
 
 //Functions
-let internal clrToJsType x = 
+let private clrToJsType x = 
   if x = ClrTypes.Integer then Type.Integer
   elif x = ClrTypes.Double then Type.Double
   elif x = ClrTypes.String then Type.String
@@ -57,24 +58,41 @@ let rec private createTypedScope (parms: string list) (inTypes:System.Type list)
     let local = { scope.Locals.[x] with ForcedType = Some(typ) }
     createTypedScope xs types { scope with Locals = scope.Locals.Add(x, local) }
 
-type internal Context = {
+type private Context = {
   Locals: Map<string, EtParam>
   Return: LabelTarget
-}
+  Closure: EtParam
+} with
+  member self.Globals with get() = field self.Closure "Globals"
 
-let internal createContext (s:Scope) = {
-  Context.Locals =  Map.map (fun k v -> Et.Parameter(v.ForcedType.Value, k)) s.Locals;
-  Return = label "~return";
-}
+let private createContext (s:Scope) = 
+  let locals = Map.map (fun k v -> Et.Parameter(v.ForcedType.Value, k)) s.Locals
+  {
+    Locals = locals;
+    Return = label "~return";
+    Closure = locals.["~closure"];
+  }
 
-let rec internal etgen node ctx =
+
+let rec private genEt node ctx =
   match node with
-  | Var(n) -> etgen n ctx 
+  | Var(n) -> genEt n ctx 
   | Block(n) -> genBlock n ctx
-  | _ -> AstUtils.Empty() :> Et
+  | Assign(left, right) -> genAssign left right ctx
+  | Ast.Number(value) -> constant value
+  | Ast.String(value) -> constant value
+  | _ -> EtTools.empty
 
-and internal genBlock nodes ctx =
-  block [for n in nodes -> etgen n ctx]
+and private genBlock nodes ctx =
+  block [for n in nodes -> genEt n ctx]
+
+and private genAssign left right ctx =
+  match left with
+  | Global(name) -> genAssign_Global name right ctx
+  | _ -> EtTools.empty
+
+and private genAssign_Global name value (ctx:Context) =
+  call ctx.Globals "Set" [constant name; jsBox (genEt value ctx)]
 
 let compile func (types:System.Type list) =
   match func with 
@@ -86,7 +104,7 @@ let compile func (types:System.Type list) =
 
     let funcType = createDelegateType types
     let parms = [for p in parms -> context.Locals.[p]]
-    let body = block [etgen body context; labelExpr context.Return]
+    let body = block [genEt body context; labelExpr context.Return]
 
     let lambda = EtTools.lambda funcType parms body
 

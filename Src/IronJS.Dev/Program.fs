@@ -1,14 +1,15 @@
 ﻿open IronJS
-open IronJS.CSharp.Parser
+open System
 open Antlr.Runtime
-open Antlr.Runtime.Tree
+open IronJS.CSharp.Parser
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
+
 let ast = Ast.generator program.Tree
 
-printf "%A" (Compiler.compile ast [ClrTypes.Dynamic] :?> System.Func<obj, obj>)
+let globals = Runtime.globalClosure()
+let compiled = (IronJS.Compiler.compile ast [typeof<Runtime.Closure>]) :?> Func<Runtime.Closure, System.Object>
 
-System.Console.ReadLine() |> ignore
-
+compiled.Invoke(globals)

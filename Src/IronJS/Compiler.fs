@@ -10,6 +10,15 @@ open IronJS.EtTools
 open IronJS.Utils
 open IronJS.Runtime
 
+//Types
+type private Context = {
+  Locals: Map<string, EtParam>
+  Return: LabelTarget
+  Closure: EtParam
+} with
+  member self.Globals with get() = field self.Closure "Globals"
+  member self.Compiler with get() = field self.Closure "Compiler"
+
 //Functions
 let private clrToJsType x = 
   if x = ClrTypes.Integer then Type.Integer
@@ -42,30 +51,31 @@ let rec private getVarType (name:string) (scope:Scope) (evaling:string Set) =
 
       | _ -> Type.Dynamic
 
+//
 let private createDelegateType (types:System.Type list) =
   Et.GetFuncType(List.toArray (List.append types [ClrTypes.Dynamic]))
 
-let rec private createTypedScope (parms: string list) (inTypes:System.Type list) (scope: Scope) = 
+//
+let private forceType name (scope:Scope) typ =
+  let local = { scope.Locals.[name] with ForcedType = Some(typ) }
+  { scope with Locals = scope.Locals.Add(name, local) }
+
+//
+let rec private injectParameterTypes (parms: string list) (types:System.Type list) (scope: Scope) = 
   match parms with
   | [] -> scope
-  | x::xs -> 
-    let typ, types = match inTypes with 
-                     | [] -> typeToClr(Type.Dynamic), [] 
-                     | x::xs -> x, xs
+  | name::parms -> 
 
-    let local = { scope.Locals.[x] with ForcedType = Some(typ) }
-    createTypedScope xs types { scope with Locals = scope.Locals.Add(x, local) }
+    let typ, types = 
+      match types with 
+      | [] -> typeToClr(Type.Dynamic), []  
+      | x::xs -> x, xs
 
-type private Context = {
-  Locals: Map<string, EtParam>
-  Return: LabelTarget
-  Closure: EtParam
-} with
-  member self.Globals with get() = field self.Closure "Globals"
-  member self.Compiler with get() = field self.Closure "Compiler"
+    injectParameterTypes parms types (forceType name scope typ)
 
+//
 let private createContext (s:Scope) = 
-  let locals = Map.map (fun k v -> Et.Parameter(v.ForcedType.Value, k)) s.Locals
+  let locals = Map.map (fun k v -> Et.Parameter(v.ForcedType.Value, k)) s.Locals 
   {
     Locals = locals;
     Return = label "~return";
@@ -98,8 +108,8 @@ let private genFunc node (ctx:Context) gen =
   ]
 
 //
-let private genInvoke target args ctx gen =
-  Binders.dynamicInvoke (gen target ctx) (genEtList args ctx gen)
+let private genInvoke target args (ctx:Context) gen =
+  Binders.dynamicInvoke (gen target ctx) ((ctx.Closure :> Et):: ctx.Globals :: (genEtList args ctx gen))
 
 //
 let private genGlobal name (ctx:Context) gen =
@@ -127,16 +137,19 @@ let compile func (types:System.Type list) =
     let found, cached = cache.TryGetValue(funcType)
 
     if found then 
-      cached, funcType
+      cached
     else
-      let typedScope = createTypedScope parms types genericScope
-      let untypedLocals = typedScope.Locals |> Map.filter (fun k v -> v.ForcedType = None)
-      let context = createContext typedScope
-      
-      let parms = [for p in parms -> context.Locals.[p]]
-      let body = block [genEt body context; labelExpr context.Return]
-      let lambda = EtTools.lambda funcType parms body
+      try
+        let paramTypedScope = injectParameterTypes parms types genericScope
+        let untypedLocals = paramTypedScope.Locals |> Map.filter (fun k v -> v.ForcedType = None)
 
-      cache.GetOrAdd(funcType, lambda.Compile()), funcType
+        let context = createContext paramTypedScope
+        let parms = [for p in parms -> context.Locals.[p]]
+        let body = block [genEt body context; labelExpr context.Return]
+        let lambda = EtTools.lambda funcType parms body
+
+        cache.GetOrAdd(funcType, lambda.Compile())
+      with
+      | x -> failwith "%A" x
 
   | _ -> failwith "Can only compile Function nodes"

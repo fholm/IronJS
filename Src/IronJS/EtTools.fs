@@ -31,7 +31,7 @@ let lambda (typ:System.Type) (parms:EtParam list) (body:Et) =
   Et.Lambda(typ, body, parms)
 
 let field expr name =
-  Et.PropertyOrField(expr, name)
+  Et.PropertyOrField(expr, name) :> Et
 
 let jsBox (expr:Et) =
   if expr.Type = IronJS.CSharp.EtTools.VoidType 
@@ -53,7 +53,7 @@ let create (typ:System.Type) (args:Et seq) =
   let ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
   AstUtils.SimpleNewHelper(ctor, Seq.toArray args) :> Et
 
-let createOption (typ:System.Type) (args:Et seq) =
+let createOpt (typ:System.Type) (args:Et seq) =
   let opt_ctor = optionType.MakeGenericType(typ).GetConstructors().[0]
   let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
   AstUtils.SimpleNewHelper(opt_ctor, (AstUtils.SimpleNewHelper(typ_ctor, Seq.toArray args) :> Et)) :> Et
@@ -61,6 +61,12 @@ let createOption (typ:System.Type) (args:Et seq) =
 let throw (typ:System.Type) (args:Et seq) =
   Et.Throw(create typ args) :> Et
 
+let refEq left right =
+  Et.ReferenceEqual(left, right) :> Et
+
+(*
+  Restrict Tools
+*)
 let restrict expr =
   Restrict.GetExpressionRestriction(expr)
 
@@ -69,3 +75,12 @@ let restrictType expr typ =
 
 let restrictInst expr instance =
   Restrict.GetInstanceRestriction(expr, instance)
+
+let rec restrictArgs (args:MetaObj list) =
+  match args with
+  | [] -> Restrict.Empty
+  | x::xs -> 
+    (if x.HasValue && x.Value = null 
+        then Restrict.GetInstanceRestriction(x.Expression, Et.Default(typeof<obj>))
+        else Restrict.GetTypeRestriction(x.Expression, x.LimitType)
+    ).Merge(restrictArgs xs)

@@ -9,7 +9,7 @@ open System.Runtime.CompilerServices
 open System.Collections.Generic
 
 //Aliases
-type CompilerFunc = Ast.Node -> System.Type list -> System.Delegate * System.Type
+type CompilerFunc = Ast.Node -> System.Type list -> System.Delegate
 
 //Types
 type JsObj() =
@@ -22,10 +22,8 @@ and JsObjMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
 
-let mutable private jsFuncId = 0L
-let private getNextJsFuncId() =
-  jsFuncId <- (jsFuncId + 1L)
-  jsFuncId
+let private (<++>) (left:Restrict) (right:Restrict) =
+  left.Merge(right)
 
 //
 type JsFunc =
@@ -34,14 +32,12 @@ type JsFunc =
   val mutable Closure : Closure
   val mutable ClosureType : System.Type
   val mutable Ast : Ast.Node
-  val mutable Id : int64
 
   new(closure, ast) = { 
     inherit JsObj();
     Closure = closure; 
     ClosureType = closure.GetType(); 
     Ast = ast; 
-    Id = getNextJsFuncId();
   }
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
@@ -53,8 +49,13 @@ and JsFuncMeta(expr, jsFunc) =
 
   override self.BindInvoke (binder, args) =
     let compiled = jsFunc.Closure.Compiler jsFunc.Ast [for arg in args -> arg.LimitType]
-    failwith "..."
 
+    let restrictions = 
+      (restrictType self.Expression typeof<JsFunc>) 
+      <++> (restrict (refEq (field self.Expression "Ast") (constant jsFunc.Ast)))
+      <++> (restrictArgs (List.ofArray args))
+
+    failwith "..."
 //
 and Closure(globals:JsObj, ast:Ast.Node, compiler:CompilerFunc) =
   member self.Globals with get() = globals

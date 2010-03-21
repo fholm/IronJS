@@ -1,4 +1,4 @@
-﻿module Binders
+﻿module IronJS.Binders
 
 //Imports
 open IronJS

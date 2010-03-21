@@ -64,9 +64,10 @@ let throw (typ:System.Type) (args:Et seq) =
 let refEq left right =
   Et.ReferenceEqual(left, right) :> Et
 
-(*
-  Restrict Tools
-*)
+let cast<'a> expr =
+  Et.Convert(expr, typeof<'a>) :> Et
+
+//Restrict Tools
 let restrict expr =
   Restrict.GetExpressionRestriction(expr)
 

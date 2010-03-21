@@ -26,20 +26,18 @@ let private clrToJsType x =
   elif x = ClrTypes.String then Type.String
   else Type.Dynamic
 
-let rec private getVarType (name:string) (scope:Scope) (evaling:string Set) =
-  if evaling.Contains(name) then
-    Type.None
-  else
-    let local = scope.Locals.[name]
-    
-    match local.ForcedType with
-    | Some(t) -> clrToJsType(t)
-    | None -> 
-      match local.UsedAs with
-      | Type.Integer 
-      | Type.Double  
-      | Type.String  
-      | Type.Object -> 
+let private evalVarType (name:string) (scope:Scope) =
+
+  let rec getVarType (name:string) (scope:Scope) (evaling:string Set) =
+    if evaling.Contains(name) then
+      Type.None
+    else
+      let local = scope.Locals.[name]
+      
+      match local.ForcedType with
+      | Some(t) -> clrToJsType(t)
+      | None -> 
+      
         let evalingSet = evaling.Add(name)
 
         let rec evalUsedWith vars =
@@ -47,9 +45,15 @@ let rec private getVarType (name:string) (scope:Scope) (evaling:string Set) =
           | [] -> Type.None
           | x::xs -> (getVarType x scope evalingSet) ||| (evalUsedWith xs)
 
-        local.UsedWith |> List.ofSeq |> evalUsedWith
+        let usedAs = (local.UsedWith |> List.ofSeq |> evalUsedWith) ||| local.UsedAs
 
-      | _ -> Type.Dynamic
+        match usedAs with
+        | Type.Integer 
+        | Type.Double  
+        | Type.String -> usedAs
+        | _ -> Type.Dynamic
+
+  getVarType name scope Set.empty
 
 //
 let private createDelegateType (types:System.Type list) =
@@ -118,15 +122,39 @@ let private genGlobal name (ctx:Context) gen =
 //
 let rec private genEt node ctx =
   match node with
-  | Var(n) -> genEt n ctx 
-  | Block(n) -> genBlock n ctx genEt
-  | Global(name) -> genGlobal name ctx genEt
-  | Assign(left, right) -> genAssign left right ctx genEt
-  | Ast.Number(value) -> constant value 
-  | Ast.String(value) -> constant value
-  | Function(_) -> genFunc node ctx genEt
-  | Invoke(target, args) -> genInvoke target args ctx genEt
+  | Var(n) -> // var x; var x = <expr>;
+    genEt n ctx 
+
+  | Block(n) ->  // { <exprs> }
+    genBlock n ctx genEt
+
+  | Global(name) -> // foo
+    genGlobal name ctx genEt
+
+  | Assign(left, right) -> 
+    genAssign left right ctx genEt
+
+  | Ast.Number(Integer(value)) -> // 1
+    constant value 
+
+  | Ast.Number(Double(value)) -> // 1.0
+    constant value 
+
+  | Ast.String(value) -> // "foo"
+    constant value
+
+  | Function(_) -> 
+    genFunc node ctx genEt
+
+  | Invoke(target, args) -> 
+    genInvoke target args ctx genEt
+
   | _ -> EtTools.empty
+
+let typeLocals (scope:Scope) =
+  scope.Locals 
+    |> Map.filter (fun k v -> v.ForcedType = None) 
+    |> Map.fold (fun scope name v -> forceType name scope (typeToClr (evalVarType name scope))) scope
 
 //
 let compile func (types:System.Type list) =
@@ -141,12 +169,18 @@ let compile func (types:System.Type list) =
     else
       try
         let paramTypedScope = injectParameterTypes parms types genericScope
-        let untypedLocals = paramTypedScope.Locals |> Map.filter (fun k v -> v.ForcedType = None)
+        let strongTypedScope = typeLocals paramTypedScope 
 
-        let context = createContext paramTypedScope
-        let parms = [for p in parms -> context.Locals.[p]]
+        let context = createContext strongTypedScope
+        let parameters = [for p in parms -> context.Locals.[p]]
+
+        let locals = 
+          context.Locals
+          |> Map.filter (fun k v -> not (List.exists (fun p -> p = k) parms)) 
+          |> Map.fold (fun s k v -> v :: s) []
+
         let body = block [genEt body context; labelExpr context.Return]
-        let lambda = EtTools.lambda funcType parms body
+        let lambda = EtTools.lambda funcType parameters (blockParms locals [body])
 
         cache.GetOrAdd(funcType, lambda.Compile())
       with

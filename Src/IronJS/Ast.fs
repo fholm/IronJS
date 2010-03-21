@@ -2,7 +2,9 @@
 
 //Import
 open IronJS
+open IronJS.Utils
 open IronJS.CSharp.Parser
+
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
@@ -10,9 +12,6 @@ open Antlr.Runtime.Tree
 let private EmptyScopeChain = "Empty scope-chain"
 let private NoHandlerForType = new Printf.StringFormat<string -> int -> unit>("No generator function available for %s (%i)")
   
-//Public Type Aliases
-type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
-
 //Types
 type Type = 
   | None = 0
@@ -60,16 +59,16 @@ type Node =
   | Function of string list * Scope * Node * Node * JitCache
   | Binary of BinaryOp * Node * Node
   | Unary of UnaryOp * Node
-  | Invoke of Node * Node list
   | Var of Node
   | Assign of Node * Node
   | Return of Node
+  | Invoke of Node * Node list
   | Null
 
 //Type Aliases
 type private Scopes = Scope list
-type private ParserFunc = CommonTree -> Scopes -> Node * Scopes
-type private HandlerMap = Map<int, CommonTree -> Scopes -> ParserFunc -> Node * Scopes>
+type private Generator = CommonTree -> Scopes -> Node * Scopes
+type private GeneratorMap = Map<int, CommonTree -> Scopes -> Generator -> Node * Scopes>
 
 //Constants
 let internal emptyScope = { 
@@ -87,8 +86,7 @@ let internal globalScope =
   [emptyScope]
   
 //Functions
-let internal typeToClr x =
-  match x with
+let internal typeToClr = function
   | Type.Integer -> typeof<int64>
   | Type.Double -> typeof<double>
   | Type.String -> typeof<string>
@@ -145,17 +143,11 @@ let private makeBlock ts s p =
   let scopes = ref s
   Block([for c in ts -> getAst scopes (p (ct c) !scopes)]), !scopes
 
-let private cleanString (s:string) =
-  if s.Length = 0 then 
-    s
-  else
-    if s.[0] = '"' then 
-      s.Trim('"') 
-    else 
-      s.Trim('\'')
+let private cleanString = function
+  | "" -> ""
+  | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
 
-let private exprType expr =
-  match expr with
+let private exprType = function
   | Number(Integer(_)) -> Type.Integer
   | Number(Double(_)) -> Type.Double
   | String(_) -> Type.String
@@ -178,10 +170,13 @@ let private addTypeData (s:Scopes) a b =
       { x with Locals = Map.add a_name modified x.Locals } :: xs
     | _ -> s
 
+let private genChildren gen (tree:CommonTree) (scopes:Scopes ref) =
+  [for child in tree.Children -> getAst scopes (gen (ct child) !scopes)]
+
 let defaultGenerators = 
   Map.ofArray [|
     // NIL
-    (0, fun (t:CommonTree) (s:Scopes) (p:ParserFunc) -> 
+    (0, fun (t:CommonTree) (s:Scopes) (p:Generator) -> 
       makeBlock (Utils.toList<CommonTree> t.Children) s p
     );
 
@@ -232,14 +227,21 @@ let defaultGenerators =
       else
         failwith "No support for named functions"
     );
+
+    (ES3Parser.CALL, fun tree s gen -> 
+      let scopes = ref s
+      let target = getAst scopes (gen (child tree 0) !scopes)
+      let args = genChildren gen (child tree 1) scopes
+      Invoke(target, args), !scopes
+    );
 |]
 
-let makeGenerator (handlers:HandlerMap) =
-  let rec g (t:CommonTree) (s:Scopes) = 
-    if not (handlers.ContainsKey(t.Type)) then
-      failwithf NoHandlerForType ES3Parser.tokenNames.[t.Type] t.Type
-    handlers.[t.Type] t s g
-  g
+let makeGenerator (handlers:GeneratorMap) =
+  let rec gen (tree:CommonTree) (scopes:Scopes) = 
+    if not (handlers.ContainsKey(tree.Type)) then
+      failwithf NoHandlerForType ES3Parser.tokenNames.[tree.Type] tree.Type
+    handlers.[tree.Type] tree scopes gen
+  gen
 
 let generator tree = 
   let generator = makeGenerator defaultGenerators

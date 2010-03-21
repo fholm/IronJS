@@ -1,11 +1,16 @@
 ﻿module IronJS.Utils
 
 open System
+
 //Public Type Aliases
 type MetaObj = System.Dynamic.DynamicMetaObject
 type Et = System.Linq.Expressions.Expression
 type EtParam = System.Linq.Expressions.ParameterExpression
 type Restrict = System.Dynamic.BindingRestrictions
+type AstUtils = Microsoft.Scripting.Ast.Utils
+type DebuggerBrowsable = System.Diagnostics.DebuggerBrowsableAttribute
+type DebuggerBrowsableState = System.Diagnostics.DebuggerBrowsableState
+type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
 
 //Private Type Aliases
 type private CtorInfo = System.Reflection.ConstructorInfo

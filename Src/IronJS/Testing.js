@@ -5,3 +5,5 @@ var x = function(foo) {
     x = "str"
     var q = x;
 };
+
+x(2);

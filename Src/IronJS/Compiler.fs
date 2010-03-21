@@ -1,17 +1,14 @@
 ﻿module IronJS.Compiler
 
 //Imports
-open IronJS
-open Ast
 open System
-open EtTools
 open System.Linq.Expressions
 
-//Type Aliases
-type private Et = System.Linq.Expressions.Expression
-type private EtParam = System.Linq.Expressions.ParameterExpression
-type private AstUtils = Microsoft.Scripting.Ast.Utils
-type private JsObj = IronJS.Runtime.JsObj
+open IronJS
+open IronJS.Ast
+open IronJS.EtTools
+open IronJS.Utils
+open IronJS.Runtime
 
 //Functions
 let private clrToJsType x = 
@@ -74,29 +71,36 @@ let private createContext (s:Scope) =
     Closure = locals.["~closure"];
   }
 
+let private genEtList (nodes:Node list) (ctx:Context) gen =
+  [for node in nodes -> gen node ctx]
+
+let private genBlock nodes ctx gen =
+  block [for n in nodes -> gen n ctx]
+
+let private genAssignGlobal name value (ctx:Context) gen =
+  call ctx.Globals "Set" [constant name; jsBox (gen value ctx)]
+
+let private genAssign left right ctx gen =
+  match left with
+  | Global(name) -> genAssignGlobal name right ctx gen
+  | _ -> EtTools.empty
+
+let private genFunc node (ctx:Context) gen =
+  create (typeof<JsObj>) [(createOption typeof<IronJS.Runtime.Closure> [ctx.Globals; constant node]);]
+
+let private genInvoke target args ctx gen =
+  Binders.dynamicInvoke (gen target ctx) (genEtList args ctx gen)
+
 let rec private genEt node ctx =
   match node with
   | Var(n) -> genEt n ctx 
-  | Block(n) -> genBlock n ctx
-  | Assign(left, right) -> genAssign left right ctx
-  | Ast.Number(value) -> constant value
+  | Block(n) -> genBlock n ctx genEt
+  | Assign(left, right) -> genAssign left right ctx genEt
+  | Ast.Number(value) -> constant value 
   | Ast.String(value) -> constant value
-  | Function(_) -> genFunc node ctx
+  | Function(_) -> genFunc node ctx genEt
+  | Invoke(target, args) -> genInvoke target args ctx genEt
   | _ -> EtTools.empty
-
-and private genBlock nodes ctx =
-  block [for n in nodes -> genEt n ctx]
-
-and private genAssign left right ctx =
-  match left with
-  | Global(name) -> genAssign_Global name right ctx
-  | _ -> EtTools.empty
-
-and private genAssign_Global name value (ctx:Context) =
-  call ctx.Globals "Set" [constant name; jsBox (genEt value ctx)]
-
-and private genFunc node ctx =
-  create (typeof<JsObj>) [(createOption typeof<IronJS.Runtime.Closure> [ctx.Globals; constant node]);]
 
 let compile func (types:System.Type list) =
   match func with 

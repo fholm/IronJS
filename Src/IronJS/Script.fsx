@@ -9,6 +9,7 @@
 #load "ClrTypes.fs"
 #load "Ast.fs"
 #load "Runtime.fs"
+#load "Binders.fs"
 #load "Compiler.fs"
 
 System.IO.Directory.SetCurrentDirectory("C:\\Users\\Fredrik\\Projects\\IronJS\\Src\\IronJS")
@@ -20,8 +21,8 @@ open IronJS.CSharp.Parser
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
-let program = jsParser.program()
 
+let program = jsParser.program()
 let ast = Ast.generator program.Tree
 
 let globals = Runtime.globalClosure()

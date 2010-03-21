@@ -10,6 +10,7 @@ open System.Collections.Generic
 type JsObj(closure:Option<Closure>) =
 
   let properties = new Dictionary<string, obj>();
+
   let closureType = match closure with 
                     | None -> null
                     | Some(closure) -> closure.GetType()

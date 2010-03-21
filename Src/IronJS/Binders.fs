@@ -1,6 +1,8 @@
 ﻿module Binders
 
 //Imports
+open IronJS
+open IronJS.Utils
 open System.Dynamic
 
 //Aliases
@@ -11,3 +13,10 @@ type Invoke(ci) =
 
   override self.FallbackInvoke(target, args, error) = 
     failwith "Not implemented"
+
+let dynamicInvoke target (args:Et list) =
+  Et.Dynamic(
+    new Invoke(new CallInfo(args.Length)),
+    ClrTypes.Dynamic,
+    target :: args
+  ) :> Et

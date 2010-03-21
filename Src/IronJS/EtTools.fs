@@ -1,13 +1,8 @@
 ﻿module IronJS.EtTools
 
 //Imports
-open IronJS
+open IronJS.Utils
 open System.Linq.Expressions
-
-//Aliases
-type Et = System.Linq.Expressions.Expression
-type EtParam = System.Linq.Expressions.ParameterExpression
-type AstUtils = Microsoft.Scripting.Ast.Utils
 
 //Constants
 let private optionType = 
@@ -59,7 +54,6 @@ let create (typ:System.Type) (args:Et seq) =
   AstUtils.SimpleNewHelper(ctor, Seq.toArray args) :> Et
 
 let createOption (typ:System.Type) (args:Et seq) =
-  let cnc = optionType.MakeGenericType(typ)
-  let opt_ctor = cnc.GetConstructors().[0]
-  let ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
-  AstUtils.SimpleNewHelper(opt_ctor, (AstUtils.SimpleNewHelper(ctor, Seq.toArray args) :> Et)) :> Et
+  let opt_ctor = optionType.MakeGenericType(typ).GetConstructors().[0]
+  let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
+  AstUtils.SimpleNewHelper(opt_ctor, (AstUtils.SimpleNewHelper(typ_ctor, Seq.toArray args) :> Et)) :> Et

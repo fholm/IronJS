@@ -30,16 +30,20 @@
 					</Category>
 					<Category GUID="{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}" FontName="Consolas" FontSize="9" CharSet="0" FontIsDefault="No">
 						<Items>
-							<Item Name="Plain Text" Foreground="0x00FFFFFF" Background="0x00000000" BoldFont="No"/>
+							<Item Name="Plain Text" Foreground="0x005AA3C5" Background="0x00000000" BoldFont="No"/>
+							<Item Name="Indicator Margin" Foreground="0x02000000" Background="0x00000000" BoldFont="No"/>
 							<Item Name="Line Numbers" Foreground="0x006D6D6D" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Brace Matching (Rectangle)" Foreground="0x02000000" Background="0x00666666" BoldFont="No"/>
 							<Item Name="Breakpoint (Enabled)" Foreground="0x00000000" Background="0x00536BF2" BoldFont="No"/>
 							<Item Name="Comment" Foreground="0x00676767" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Identifier" Foreground="0x00F5F5F5" Background="0x02000000" BoldFont="No"/>
 							<Item Name="Keyword" Foreground="0x005CC2A5" Background="0x02000000" BoldFont="No"/>
 							<Item Name="Number" Foreground="0x0092EBE9" Background="0x02000000" BoldFont="No"/>
-							<Item Name="Operator" Foreground="0x00C5C5C5" Background="0x02000000" BoldFont="No"/>
+							<Item Name="Operator" Foreground="0x00676767" Background="0x02000000" BoldFont="No"/>
 							<Item Name="Preprocessor Keyword" Foreground="0x000F81FF" Background="0x02000000" BoldFont="No"/>
-							<Item Name="String" Foreground="0x00E7D9A9" Background="0x02000000" BoldFont="No"/>
-							<Item Name="String(C# @ Verbatim)" Foreground="0x00E7D9A9" Background="0x02000000" BoldFont="No"/>
+							<Item Name="String" Foreground="0x005858C7" Background="0x02000000" BoldFont="No"/>
+							<Item Name="String(C# @ Verbatim)" Foreground="0x005858C7" Background="0x02000000" BoldFont="No"/>
+							<Item Name="SymbolDefinitionClassificationFormat" Foreground="0x00374FF4" Background="0x02000000" BoldFont="No"/>
 							<Item Name="urlformat" Foreground="0x00676767" Background="0x02000000" BoldFont="No"/>
 							<Item Name="User Types" Foreground="0x00374FF4" Background="0x02000000" BoldFont="No"/>
 							<Item Name="User Types(Delegates)" Foreground="0x00D0702F" Background="0x02000000" BoldFont="No"/>

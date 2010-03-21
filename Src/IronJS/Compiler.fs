@@ -96,7 +96,7 @@ let private genBlock nodes ctx gen =
 
 //
 let private genAssignGlobal name value (ctx:Context) gen =
-  call ctx.Globals "Set" [constant name; jsBox (gen value ctx)]
+  call ctx.Globals "Set" [(*1*) constant name; (*2*) jsBox (gen value ctx)]
 
 //
 let private genAssign left right ctx gen =
@@ -107,13 +107,15 @@ let private genAssign left right ctx gen =
 //
 let private genFunc node (ctx:Context) gen =
   create (typeof<JsFunc>) [
-    create typeof<IronJS.Runtime.Closure> [ctx.Globals; constant node; ctx.Compiler]; 
-    constant node
+    (*1*) create typeof<IronJS.Runtime.Closure> [(*1*) ctx.Globals; (*2*) constant node; (*3*) ctx.Compiler]; 
+    (*2*) constant node
   ]
 
 //
 let private genInvoke target args (ctx:Context) gen =
-  Binders.dynamicInvoke (gen target ctx) ((ctx.Closure :> Et):: ctx.Globals :: (genEtList args ctx gen))
+  Binders.dynamicInvoke 
+    (*target*) (gen target ctx) 
+    (*params*) ((ctx.Closure :> Et) :: ctx.Globals :: (genEtList args ctx gen))
 
 //
 let private genGlobal name (ctx:Context) gen =
@@ -151,10 +153,13 @@ let rec private genEt node ctx =
 
   | _ -> EtTools.empty
 
-let typeLocals (scope:Scope) =
+// 
+let private resolveLocalTypes (scope:Scope) =
   scope.Locals 
     |> Map.filter (fun k v -> v.ForcedType = None) 
-    |> Map.fold (fun scope name v -> forceType name scope (typeToClr (evalVarType name scope))) scope
+    |> Map.fold 
+      (*funct*) (fun scope name v -> forceType name scope (typeToClr (evalVarType name scope))) 
+      (*state*) scope
 
 //
 let compile func (types:System.Type list) =
@@ -169,7 +174,7 @@ let compile func (types:System.Type list) =
     else
       try
         let paramTypedScope = injectParameterTypes parms types genericScope
-        let strongTypedScope = typeLocals paramTypedScope 
+        let strongTypedScope = resolveLocalTypes paramTypedScope 
 
         let context = createContext strongTypedScope
         let parameters = [for p in parms -> context.Locals.[p]]
@@ -179,8 +184,9 @@ let compile func (types:System.Type list) =
           |> Map.filter (fun k v -> not (List.exists (fun p -> p = k) parms)) 
           |> Map.fold (fun s k v -> v :: s) []
 
-        let body = block [genEt body context; labelExpr context.Return]
-        let lambda = EtTools.lambda funcType parameters (blockParms locals [body])
+        let body = block [(*1*) genEt body context; (*2*) labelExpr context.Return]
+
+        let lambda = EtTools.lambda (**) funcType (**) parameters (*body*) (blockParms locals [body])
 
         cache.GetOrAdd(funcType, lambda.Compile())
       with

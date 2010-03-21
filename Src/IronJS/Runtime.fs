@@ -21,7 +21,7 @@ type JsObj() =
 and JsObjMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
-
+//
 let private (<++>) (left:Restrict) (right:Restrict) =
   left.Merge(right)
 
@@ -51,12 +51,17 @@ and JsFuncMeta(expr, jsFunc) =
     let compiled = jsFunc.Closure.Compiler jsFunc.Ast [for arg in args -> arg.LimitType]
 
     let restrictions = 
-      (restrictType self.Expression typeof<JsFunc>) 
-      <++> (restrict (refEq (field (cast<JsFunc> self.Expression) "Ast") (constant jsFunc.Ast)))
-      <++> (restrictArgs (List.ofArray args))
+      (*must be funcType*) (restrictType self.Expression typeof<JsFunc>) 
+      (*must be this ast*) <++> (restrict (refEq (field (cast<JsFunc> self.Expression) "Ast") (constant jsFunc.Ast)))
+      (*argument types*)   <++> (restrictArgs (List.ofArray args))
 
-
-    failwith "..."
+    new MetaObj(
+      Et.Invoke(
+        (*delegate*) Et.Constant(compiled, compiled.GetType()),
+        (*arguments*) seq { for arg in args -> arg.Expression }
+      ),
+      restrictions
+    );
 //
 and Closure(globals:JsObj, ast:Ast.Node, compiler:CompilerFunc) =
   member self.Globals with get() = globals

@@ -3,42 +3,52 @@
 //Imports
 open IronJS
 open IronJS.Utils
+open IronJS.EtTools
+open System.Dynamic
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 
 //Types
-type JsObj(closure:Option<Closure>) =
-
+type JsObj() =
   let properties = new Dictionary<string, obj>();
+  member self.Get name = properties.[name]
+  member self.Set name (value:obj) = properties.[name] <- value
 
-  let closureType = match closure with 
-                    | None -> null
-                    | Some(closure) -> closure.GetType()
+//
+and JsObjMeta(expr, jsObj) =
+  inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
+
+//
+type JsFunc(closure:Closure, ast:Ast.Node) =
+  inherit JsObj()
+
+  member self.Closure with get() = closure
+  member self.ClosureType with get() = closure.GetType()
+  member self.Ast with get() = ast
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
-    member self.GetMetaObject expr = new Meta(expr, self) :> MetaObj
+    member self.GetMetaObject expr = new JsFuncMeta(expr, self) :> MetaObj
 
-  new() = JsObj(None)
+//
+and JsFuncMeta(expr, jsFunc) =
+  inherit JsObjMeta(expr, jsFunc)
 
-  member self.Get k = properties.[k]
-  member self.Set k (v:obj) = properties.[k] <- v
-  member self.Closure with get() = closure
-  member self.ClosureType with get() = closureType
+  override self.BindInvoke (binder, args) =
+    let compiled = jsFunc.Closure.Compiler jsFunc.Ast [for arg in args -> arg.LimitType]
 
-and Meta(expr, value) =
-  inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, value)
-
-and Closure(globals:JsObj, ast:Ast.Node) =
+//
+and Closure(globals:JsObj, ast:Ast.Node, compiler:(Ast.Node -> System.Type list -> System.Delegate * System.Type)) =
   member self.Globals with get() = globals
+  member self.Compiler with get() = compiler
 
 type Closure<'t0> =
   inherit Closure
 
   val mutable v0 : StrongBox<'t0>
 
-  new(globals, ast, _v0) = { 
+  new(globals, ast, compiler, _v0) = { 
     //Base
-    inherit Closure(globals, ast);
+    inherit Closure(globals, ast, compiler);
 
     //Fields
     v0 = new StrongBox<'t0>(_v0)
@@ -50,9 +60,9 @@ type Closure<'t0, 't1> =
   val mutable v0 : StrongBox<'t0>
   val mutable v1 : StrongBox<'t1>
 
-  new(globals, ast, _v0, _v1) = { 
+  new(globals, ast, compiler, _v0, _v1) = { 
     //Base
-    inherit Closure(globals, ast); 
+    inherit Closure(globals, ast, compiler); 
 
     //Fields
     v0 = new StrongBox<'t0>(_v0)
@@ -66,15 +76,15 @@ type Closure<'t0, 't1, 't2> =
   val mutable v1 : StrongBox<'t1>
   val mutable v2 : StrongBox<'t2>
 
-  new(globals, ast) = { 
+  new(globals, ast, compiler, _v0, _v1, _v2) = { 
     //Base
-    inherit Closure(globals, ast); 
+    inherit Closure(globals, ast, compiler); 
 
     //Fields
-    v0 = new StrongBox<'t0>()
-    v1 = new StrongBox<'t1>()
-    v2 = new StrongBox<'t2>()
+    v0 = new StrongBox<'t0>(_v0)
+    v1 = new StrongBox<'t1>(_v1)
+    v2 = new StrongBox<'t2>(_v2)
   }
 
-let globalClosure() =
-  Closure(new JsObj(), Ast.Null)
+let globalClosure compiler =
+  Closure(new JsObj(), Ast.Null, compiler)

@@ -57,3 +57,15 @@ let createOption (typ:System.Type) (args:Et seq) =
   let opt_ctor = optionType.MakeGenericType(typ).GetConstructors().[0]
   let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
   AstUtils.SimpleNewHelper(opt_ctor, (AstUtils.SimpleNewHelper(typ_ctor, Seq.toArray args) :> Et)) :> Et
+
+let throw (typ:System.Type) (args:Et seq) =
+  Et.Throw(create typ args) :> Et
+
+let restrict expr =
+  Restrict.GetExpressionRestriction(expr)
+
+let restrictType expr typ =
+  Restrict.GetTypeRestriction(expr, typ)
+
+let restrictInst expr instance =
+  Restrict.GetInstanceRestriction(expr, instance)

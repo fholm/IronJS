@@ -2,17 +2,20 @@
 
 //Imports
 open IronJS
+open IronJS.Utils
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 
 //Types
 type JsObj(closure:Option<Closure>) =
 
-  let closureType = match closure with 
-                    | None -> None
-                    | Some(c) -> Some(c.GetType())
-
   let properties = new Dictionary<string, obj>();
+  let closureType = match closure with 
+                    | None -> null
+                    | Some(closure) -> closure.GetType()
+
+  interface System.Dynamic.IDynamicMetaObjectProvider with
+    member self.GetMetaObject expr = new Meta(expr, self) :> MetaObj
 
   new() = JsObj(None)
 
@@ -20,6 +23,9 @@ type JsObj(closure:Option<Closure>) =
   member self.Set k (v:obj) = properties.[k] <- v
   member self.Closure with get() = closure
   member self.ClosureType with get() = closureType
+
+and Meta(expr, value) =
+  inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, value)
 
 and Closure(globals:JsObj, ast:Ast.Node) =
   member self.Globals with get() = globals

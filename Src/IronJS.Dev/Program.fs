@@ -1,4 +1,5 @@
-﻿open IronJS
+﻿
+open IronJS
 open System
 open Antlr.Runtime
 open IronJS.CSharp.Parser
@@ -10,6 +11,9 @@ let program = jsParser.program()
 let ast = Ast.generator program.Tree
 
 let globals = Runtime.globalClosure()
-let compiled = (IronJS.Compiler.compile ast [typeof<Runtime.Closure>]) :?> Func<Runtime.Closure, System.Object>
+let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
 
-compiled.Invoke(globals)
+compiled.DynamicInvoke(globals, globals.Globals) :> ignore
+
+
+

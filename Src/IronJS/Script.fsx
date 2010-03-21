@@ -4,12 +4,12 @@
 #r "../Dependencies/Microsoft.Scripting.dll"
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
+#load "Utils.fs"
 #load "EtTools.fs"
 #load "ClrTypes.fs"
-#load "Utils.fs"
 #load "Ast.fs"
-#load "Compiler.fs"
 #load "Runtime.fs"
+#load "Compiler.fs"
 
 System.IO.Directory.SetCurrentDirectory("C:\\Users\\Fredrik\\Projects\\IronJS\\Src\\IronJS")
 
@@ -25,8 +25,9 @@ let program = jsParser.program()
 let ast = Ast.generator program.Tree
 
 let globals = Runtime.globalClosure()
-let compiled = (IronJS.Compiler.compile ast [typeof<Runtime.Closure>]) :?> Func<Runtime.Closure, System.Object>
+let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
 
-compiled.Invoke(globals)
+compiled.DynamicInvoke(globals, globals.Globals)
 
-globals.Globals.Get("z")
+(globals.Globals.Get("x") :?> Runtime.JsObj)
+

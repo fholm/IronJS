@@ -11,6 +11,7 @@ open System.Linq.Expressions
 type private Et = System.Linq.Expressions.Expression
 type private EtParam = System.Linq.Expressions.ParameterExpression
 type private AstUtils = Microsoft.Scripting.Ast.Utils
+type private JsObj = IronJS.Runtime.JsObj
 
 //Functions
 let private clrToJsType x = 
@@ -73,7 +74,6 @@ let private createContext (s:Scope) =
     Closure = locals.["~closure"];
   }
 
-
 let rec private genEt node ctx =
   match node with
   | Var(n) -> genEt n ctx 
@@ -81,6 +81,7 @@ let rec private genEt node ctx =
   | Assign(left, right) -> genAssign left right ctx
   | Ast.Number(value) -> constant value
   | Ast.String(value) -> constant value
+  | Function(_) -> genFunc node ctx
   | _ -> EtTools.empty
 
 and private genBlock nodes ctx =
@@ -94,20 +95,27 @@ and private genAssign left right ctx =
 and private genAssign_Global name value (ctx:Context) =
   call ctx.Globals "Set" [constant name; jsBox (genEt value ctx)]
 
+and private genFunc node ctx =
+  create (typeof<JsObj>) [(createOption typeof<IronJS.Runtime.Closure> [ctx.Globals; constant node]);]
+
 let compile func (types:System.Type list) =
   match func with 
-  | Function(parms, genericScope, name, body) ->
-
-    let typedScope = createTypedScope parms types genericScope
-    let untypedLocals = typedScope.Locals |> Map.filter (fun k v -> v.ForcedType = None)
-    let context = createContext typedScope
+  | Function(parms, genericScope, name, body, cache) ->
 
     let funcType = createDelegateType types
-    let parms = [for p in parms -> context.Locals.[p]]
-    let body = block [genEt body context; labelExpr context.Return]
+    let found, cached = cache.TryGetValue(funcType)
 
-    let lambda = EtTools.lambda funcType parms body
+    if found then 
+      cached
+    else
+      let typedScope = createTypedScope parms types genericScope
+      let untypedLocals = typedScope.Locals |> Map.filter (fun k v -> v.ForcedType = None)
+      let context = createContext typedScope
+      
+      let parms = [for p in parms -> context.Locals.[p]]
+      let body = block [genEt body context; labelExpr context.Return]
+      let lambda = EtTools.lambda funcType parms body
 
-    lambda.Compile()
+      cache.GetOrAdd(funcType, lambda.Compile())
 
   | _ -> failwith "Can only compile Function nodes"

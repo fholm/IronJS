@@ -8,7 +8,10 @@ open Antlr.Runtime.Tree
 
 //Errors
 let private EmptyScopeChain = "Empty scope-chain"
-let private NoHandlerForType = new Printf.StringFormat<string -> int -> unit>("No handler for %s (%i)")
+let private NoHandlerForType = new Printf.StringFormat<string -> int -> unit>("No generator function available for %s (%i)")
+  
+//Public Type Aliases
+type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
 
 //Types
 type Type = 
@@ -54,7 +57,7 @@ type Node =
   | Closure of string
   | Global of string
   | If of Node * Node * Node
-  | Function of string list * Scope * Node * Node
+  | Function of string list * Scope * Node * Node * JitCache
   | Binary of BinaryOp * Node * Node
   | Unary of UnaryOp * Node
   | Invoke of Node * Node list
@@ -62,7 +65,7 @@ type Node =
   | Assign of Node * Node
   | Return of Node
   | Null
-  
+
 //Type Aliases
 type private Scopes = Scope list
 type private ParserFunc = CommonTree -> Scopes -> Node * Scopes
@@ -82,20 +85,20 @@ let internal emptyLocal = {
 
 let internal globalScope = 
   [emptyScope]
-
+  
 //Functions
-let internal ct (o:obj) =
-  o :?> CommonTree
-
-let internal child o n =
-  (ct (ct o).Children.[n])
-
 let internal typeToClr x =
   match x with
   | Type.Integer -> typeof<int64>
   | Type.Double -> typeof<double>
   | Type.String -> typeof<string>
   | _ -> typeof<obj>
+
+let internal ct (o:obj) =
+  o :?> CommonTree
+
+let private child o n =
+  (ct (ct o).Children.[n])
 
 let private addLocal (s:Scopes) (n:string) =
   match s with
@@ -225,21 +228,28 @@ let defaultGenerators =
       if t.ChildCount = 2 then
         let paramNames = "~closure" :: "this" :: [for c in (child t 0).Children -> (ct c).Text]
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
-        Function(paramNames, scopes.Head, Null, body), scopes.Tail
+        Function(paramNames, scopes.Head, Null, body, new JitCache()), scopes.Tail
       else
         failwith "No support for named functions"
     );
 |]
 
 let makeGenerator (handlers:HandlerMap) =
-  let rec p (x:CommonTree) (s:Scopes) = 
-    if not (handlers.ContainsKey(x.Type)) then
-      failwithf NoHandlerForType ES3Parser.tokenNames.[x.Type] x.Type
-    handlers.[x.Type] x s p
-  p
+  let rec g (t:CommonTree) (s:Scopes) = 
+    if not (handlers.ContainsKey(t.Type)) then
+      failwithf NoHandlerForType ES3Parser.tokenNames.[t.Type] t.Type
+    handlers.[t.Type] t s g
+  g
 
 let generator tree = 
   let generator = makeGenerator defaultGenerators
   let body, scopes = generator (ct tree) globalScope
-  let scope = { scopes.Head with Locals = scopes.Head.Locals.Add("~closure", emptyLocal) }
-  Function(["~closure"], scope, Null, body)
+  let scope = { 
+    scopes.Head 
+    with 
+      Locals = scopes.Head.Locals
+        .Add("~closure", emptyLocal)
+        .Add("this", emptyLocal) 
+  }
+
+  Function(["~closure"; "this"], scope, Null, body, new JitCache())

@@ -12,6 +12,7 @@ let ast = Ast.generator program.Tree
 let globals = Runtime.globalClosure IronJS.Compiler.compile
 let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
 
-compiled.DynamicInvoke(globals, globals.Globals)
+compiled.DynamicInvoke(globals, globals.Globals) |> ignore
+globals.Globals.Get("__fooval") |> ignore
 
-globals.Globals.Get("__fooval")
+let mrBreakPoint = 1

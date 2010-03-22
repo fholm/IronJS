@@ -155,6 +155,11 @@ let private addTypeData (s:Scopes) a b =
       { x with Locals = Map.add a_name modified x.Locals } :: xs
     | _ -> s
 
+let private forEachChild (func:CommonTree -> 'a) (tree:CommonTree) =
+  match tree with
+  | null -> []
+  | _    -> [for child in tree.Children -> func (ct child)]
+
 let private genChildren gen (tree:CommonTree) (scopes:Scopes ref) =
   [for child in tree.Children -> getAst scopes (gen (ct child) !scopes)]
 
@@ -207,7 +212,7 @@ let defaultGenerators =
 
     (ES3Parser.FUNCTION, fun t s p -> 
       if t.ChildCount = 2 then
-        let paramNames = "~closure" :: "this" :: [for c in (child t 0).Children -> (ct c).Text]
+        let paramNames = "~closure" :: "this" :: forEachChild (fun c -> c.Text) t
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
         Function(paramNames, scopes.Head, Null, body, new JitCache()), scopes.Tail
       else

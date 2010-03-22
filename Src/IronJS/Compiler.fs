@@ -137,13 +137,13 @@ let rec private genEt node ctx =
   | Block(node) ->  // { <exprs> }
     genBlock node ctx genEt
 
-  | Local(name) ->
+  | Local(name) -> // foo
     genLocal name ctx
 
   | Global(name) -> // foo
     genGlobal name ctx
 
-  | Assign(left, right) -> 
+  | Assign(left, right) -> // foo = <expr>
     genAssign left right ctx genEt
 
   | Ast.Number(Integer(value)) -> // 1
@@ -155,13 +155,13 @@ let rec private genEt node ctx =
   | Ast.String(value) -> // "foo"
     constant value
 
-  | Function(_) -> 
+  | Function(_) -> // function foo([<exprs>]) { [<exprs>] }
     genFunc node ctx genEt
 
-  | Invoke(target, args) -> 
+  | Invoke(target, args) -> // foo([<exprs>])
     genInvoke target args ctx genEt
 
-  | Return(node) ->
+  | Return(node) -> // return <expr>
     genReturn node ctx genEt
 
   | _ -> EtTools.empty

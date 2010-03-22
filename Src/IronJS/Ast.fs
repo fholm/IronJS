@@ -1,29 +1,30 @@
 ﻿
 module Ast
 
-type LocalVar = {
-  IsClosedOver: bool
-}
+type VarInfo() = 
+  let mutable _isClosedOver = false
 
-type FuncInfo = {
-  Locals: Map<string, LocalVar>
+  member self.IsClosedOver
+    with get() = _isClosedOver
+    and set(value) = _isClosedOver <- value
+
+type Scope = {
+  Variables: Map<string, VarInfo>
   Parameters: string list;
   ClosedOver: string list
-  Parent: Option<FuncInfo ref>
+  Parent: Option<Scope>
 }
 
 let createFunc parent = { 
-  Locals = Map.empty; 
+  Variables = Map.empty; 
   Parameters = [];
   ClosedOver = []; 
   Parent = parent
 }
 
 let addParameter (f:FuncInfo) name =
-  { f with 
-      Parameters = name :: f.Parameters; 
-      Locals = Map.add name { IsClosedOver = false } f.Locals 
-  }
+    f.Parameters <- name :: f.Parameters
+    f.Variables <- Map.add name (VarInfo()) f.Variables
 
 type Number =
   | Double of double
@@ -49,7 +50,7 @@ type Node =
   | Enclosed of string
   | Global of string
   | If of Node * Node * Node
-  | Function of FuncInfo * Node * Node list * Node
+  | Function of Scope * Node * Node list * Node
   | Binary of BinaryOp * Node * Node
   | Unary of UnaryOp * Node
   | Invoke of Node * Node list

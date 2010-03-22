@@ -18,11 +18,14 @@ type private ParmInfo = System.Reflection.ParameterInfo
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =
-  let mutable lst = []
-  let cnt = ilst.Count - 1
-  for n in 0 .. cnt do 
-    lst <- ilst.[cnt - n] :: lst
-  lst
+  match ilst with
+  | null -> []
+  | _ ->
+    let mutable lst = [] // for efficiency
+    let cnt = ilst.Count - 1
+    for n in 0 .. cnt do 
+      lst <- ilst.[cnt - n] :: lst
+    lst
 
 let getCtor (typ:Type) (args:Type list) =
   Array.find (fun (ctor:CtorInfo) ->

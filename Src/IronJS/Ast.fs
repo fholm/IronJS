@@ -45,7 +45,7 @@ type Node =
   | Number of Number
   | Block of Node list
   | Local of string
-  | Closure of string
+  | Closure of string * int
   | Global of string
   | If of Node * Node * Node
   | Function of string list * Scope * Node * Node * JitCache
@@ -109,27 +109,48 @@ let private getAst scope pr =
   scope := (snd pr)
   (fst pr)
 
+let indexOf lst itm =
+
+  let rec index lst n =
+    match lst with
+    | [] -> failwith "Couldn't find %A" n
+    | x::xs ->
+      if x = itm then n else index xs (n + 1)
+
+  index lst 0
+
 //
 let private getIdentifier (s:Scopes) (n:string) =
   match s with
   | [] -> failwith EmptyScopeChain
-  | x::[] -> Global(n), s
+  | x::[] -> Global n, s
   | x::xs ->
-    if x.Locals.ContainsKey(n) then
-      Local(n), s
+    if x.Locals.ContainsKey n then Local n, s
     else
+      //
       let rec findLocal (s:Scopes) =
         match s with 
         | [] -> false, [] 
         | x::xs -> 
           if x.Locals.ContainsKey(n) then
-            true, s
+            //Create new local that is closed over
+            let closedOver = { x.Locals.[n] with ClosedOver = true }
+            // Return with modified scope
+            true, { x with Locals = x.Locals.Add(n, closedOver) } :: xs
           else
             let found, lst = findLocal xs
-            found, if found then { x with Closure = n :: x.Closure } :: lst else s
+            let scope =
+              if found 
+                then 
+                  if List.exists (fun y -> y = n) x.Closure 
+                    then x
+                    else { x with Closure = n :: x.Closure } 
+                else
+                  x
+            found, scope :: lst
 
       let found, scopes = findLocal s
-      (if found then Closure(n) else Global(n)), scopes
+      (if found then Closure(n, (indexOf scopes.Head.Closure n)) else Global n), scopes
 
 //
 let private makeBlock ts s p =

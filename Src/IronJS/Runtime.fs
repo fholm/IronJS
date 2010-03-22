@@ -44,7 +44,7 @@ and JsFuncMeta(expr, jsFunc) =
   inherit JsObjMeta(expr, jsFunc)
 
   override self.BindInvoke (binder, args) =
-    let compiled = jsFunc.Closure.Compiler jsFunc.Ast [for arg in args -> arg.LimitType]
+    let compiled = jsFunc.Closure.Compiler jsFunc.Ast (jsFunc.ClosureType :: [for arg in args -> arg.LimitType])
 
     let restrictions = 
       (*must be funcType*) (restrictType self.Expression typeof<JsFunc>) 
@@ -54,7 +54,7 @@ and JsFuncMeta(expr, jsFunc) =
     new MetaObj(
       Et.Invoke(
         (*delegate*) Et.Constant(compiled, compiled.GetType()),
-        (*arguments*) seq { for arg in args -> arg.Expression }
+        (*arguments*) (cast2 jsFunc.ClosureType (field (cast<JsFunc> self.Expression) "Closure")) :: [for arg in args -> arg.Expression]
       ),
       restrictions
     );

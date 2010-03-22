@@ -133,7 +133,7 @@ let private genFunc node (ctx:Context) gen =
 let private genInvoke target args (ctx:Context) gen =
   Binders.dynamicInvoke 
     (*target*) (gen target ctx) 
-    (*params*) ((ctx.Closure :> Et) :: ctx.Globals :: (genEtList args ctx gen))
+    (*params*) (ctx.Globals :: (genEtList args ctx gen))
 
 //
 let private genGlobal name (ctx:Context) =
@@ -144,8 +144,8 @@ let private genLocal name (ctx:Context) =
   ctx.Locals.[name] :> Et
 
 // 
-let private genClosure name (ctx:Context) =
-  empty
+let private genClosure name pos (ctx:Context) =
+  field ctx.Closure (sprintf "Item%i" pos)
 
 //
 let private genReturn node (ctx:Context) gen =
@@ -163,8 +163,8 @@ let rec private genEt node ctx =
   | Local(name) -> // foo
     genLocal name ctx
 
-  | Closure(name) -> // foo
-    genClosure name ctx
+  | Closure(name, pos) -> // foo
+    genClosure name pos ctx
 
   | Global(name) -> // foo
     genGlobal name ctx

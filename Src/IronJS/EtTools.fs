@@ -66,8 +66,10 @@ let throw (typ:System.Type) (args:Et seq) =
 let refEq left right =
   Et.ReferenceEqual(left, right) :> Et
 
-let cast<'a> expr =
-  Et.Convert(expr, typeof<'a>) :> Et
+let cast2 typ expr =
+  Et.Convert(expr, typ) :> Et
+
+let cast<'a> = cast2 typeof<'a>
 
 let gotoReturn label (value:Et) =
   Et.Return(label, value) :> Et

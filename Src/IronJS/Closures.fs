@@ -10,46 +10,46 @@ type StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
 type Closure<'t0> =
   inherit Closure
 
-  val mutable v0 : StrongBox<'t0>
+  val mutable Item0 : StrongBox<'t0>
 
-  new(globals, ast, compiler, _v0) = { 
+  new(globals, ast, compiler, item0) = { 
     //Base
     inherit Closure(globals, ast, compiler);
 
     //Fields
-    v0 = new StrongBox<'t0>(_v0)
+    Item0 = new StrongBox<'t0>(item0)
   }
 
 type Closure<'t0, 't1> =
   inherit Closure
 
-  val mutable v0 : StrongBox<'t0>
-  val mutable v1 : StrongBox<'t1>
+  val mutable Item0 : StrongBox<'t0>
+  val mutable Item1 : StrongBox<'t1>
 
-  new(globals, ast, compiler, _v0, _v1) = { 
+  new(globals, ast, compiler, item0, item1) = { 
     //Base
     inherit Closure(globals, ast, compiler); 
 
     //Fields
-    v0 = new StrongBox<'t0>(_v0)
-    v1 = new StrongBox<'t1>(_v1)
+    Item0 = new StrongBox<'t0>(item0)
+    Item1 = new StrongBox<'t1>(item1)
   }
 
 type Closure<'t0, 't1, 't2> =
   inherit Closure
 
-  val mutable v0 : StrongBox<'t0>
-  val mutable v1 : StrongBox<'t1>
-  val mutable v2 : StrongBox<'t2>
+  val mutable Item0 : StrongBox<'t0>
+  val mutable Item1 : StrongBox<'t1>
+  val mutable Item2 : StrongBox<'t2>
 
-  new(globals, ast, compiler, _v0, _v1, _v2) = { 
+  new(globals, ast, compiler, item0, item1, item2) = { 
     //Base
     inherit Closure(globals, ast, compiler); 
 
     //Fields
-    v0 = new StrongBox<'t0>(_v0)
-    v1 = new StrongBox<'t1>(_v1)
-    v2 = new StrongBox<'t2>(_v2)
+    Item0 = new StrongBox<'t0>(item0)
+    Item1 = new StrongBox<'t1>(item1)
+    Item2 = new StrongBox<'t2>(item2)
   }
 
 //Functions

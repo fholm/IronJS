@@ -27,6 +27,7 @@ let toList<'a> (ilst:System.Collections.IList) =
       lst <- ilst.[cnt - n] :: lst
     lst
 
+//This is a ugly hack, needs to be reworked
 let getCtor (typ:Type) (args:Type list) =
   Array.find (fun (ctor:CtorInfo) ->
     let parms = ctor.GetParameters()
@@ -43,3 +44,7 @@ let getCtor (typ:Type) (args:Type list) =
     else  
       false
   ) (typ.GetConstructors())
+
+
+//Y-comb
+let rec fix f = f (fun x -> fix f x)

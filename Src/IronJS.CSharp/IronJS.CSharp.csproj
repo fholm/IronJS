@@ -49,11 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Closure.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Closure.tt</DependentUpon>
-    </Compile>
     <Compile Include="EtTools.cs" />
     <Compile Include="Parser\ES3Lexer.Action.cs" />
     <Compile Include="Parser\ES3Lexer.cs" />
@@ -66,12 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Closure.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Closure.cs</LastGenOutput>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

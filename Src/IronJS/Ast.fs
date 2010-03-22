@@ -16,6 +16,7 @@ type Local = {
   UsedWith: string Set
   UsedAs: Types.JsTypes
   ForcedType: System.Type Option
+  ClosedOver: bool
 }
 
 type Scope = {
@@ -71,6 +72,7 @@ let internal emptyLocal = {
   UsedWith = Set.empty;
   UsedAs = Types.JsTypes.None;
   ForcedType = None;
+  ClosedOver = false;
 }
 
 let internal globalScope = 
@@ -172,7 +174,7 @@ let private forEachChild (func:CommonTree -> 'a) (tree:CommonTree) =
 
 //
 let private genChildren gen (tree:CommonTree) (scopes:Scopes ref) =
-  [for child in tree.Children -> getAst scopes (gen (ct child) !scopes)]
+  forEachChild (fun child -> getAst scopes (gen child !scopes)) tree
 
 //Default Generators
 let defaultGenerators = 

@@ -13,6 +13,6 @@ let globals = Runtime.globalClosure IronJS.Compiler.compile
 let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
 
 compiled.DynamicInvoke(globals, globals.Globals) |> ignore
-globals.Globals.Get("__fooval") |> ignore
+let __fooval = globals.Globals.Get("__fooval")
 
 let mrBreakPoint = 1

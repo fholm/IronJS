@@ -103,12 +103,31 @@ let private genAssign left right ctx gen =
 let private genBlock nodes ctx gen =
   block [for n in nodes -> gen n ctx]
 
+let private getClosureType (vars:string list) (ctx:Context) =
+
+  let getVarType name =
+    if ctx.Locals.ContainsKey name 
+      then ctx.Locals.[name].Type
+      else failwith "fuuuuck"
+
+  let closureType = 
+    Closures.getClosureType (fix (fun f vars -> match vars with | [] -> [] | x::xs -> getVarType x :: f xs) vars)
+
+  closureType, [for var in vars -> ctx.Locals.[var] :> Et]
+
 //
 let private genFunc node (ctx:Context) gen =
-  create (typeof<JsFunc>) [
-    (*1*) create typeof<IronJS.Runtime.Closure> [(*1*) ctx.Globals; (*2*) constant node; (*3*) ctx.Compiler]; 
-    (*2*) constant node
-  ]
+  match node with
+  | Function(parms, scope, name, body, cache) ->
+    
+    let closureType, closureParams = getClosureType scope.Closure ctx
+
+    create (typeof<JsFunc>) [
+      (*1*) create closureType (ctx.Globals :: constant node :: ctx.Compiler :: closureParams);
+      (*2*) constant node
+    ]
+
+  | _ -> failwith "Can only compile Function nodes"
 
 //
 let private genInvoke target args (ctx:Context) gen =
@@ -123,6 +142,10 @@ let private genGlobal name (ctx:Context) =
 //
 let private genLocal name (ctx:Context) =
   ctx.Locals.[name] :> Et
+
+// 
+let private genClosure name (ctx:Context) =
+  empty
 
 //
 let private genReturn node (ctx:Context) gen =
@@ -139,6 +162,9 @@ let rec private genEt node ctx =
 
   | Local(name) -> // foo
     genLocal name ctx
+
+  | Closure(name) -> // foo
+    genClosure name ctx
 
   | Global(name) -> // foo
     genGlobal name ctx

@@ -32,4 +32,3 @@ let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>
 compiled.DynamicInvoke(globals, globals.Globals)
 
 globals.Globals.Get("glob")
->>>>>>> d67d9549e50ee9c8f654c4b5ea1869433be03508

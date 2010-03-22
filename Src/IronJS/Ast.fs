@@ -31,7 +31,6 @@ type Scope = {
   Locals: Map<string, Local>
   Closure: string list
 }
->>>>>>> d67d9549e50ee9c8f654c4b5ea1869433be03508
 
 type Number =
   | Double of double
@@ -57,11 +56,7 @@ type Node =
   | Closure of string
   | Global of string
   | If of Node * Node * Node
-<<<<<<< HEAD
-  | Function of Scope * Node * Node list * Node
-=======
   | Function of string list * Scope * Node * Node * JitCache
->>>>>>> d67d9549e50ee9c8f654c4b5ea1869433be03508
   | Binary of BinaryOp * Node * Node
   | Unary of UnaryOp * Node
   | Var of Node

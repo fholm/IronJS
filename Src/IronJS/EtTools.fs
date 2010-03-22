@@ -4,6 +4,8 @@
 open IronJS.Utils
 open System.Linq.Expressions
 
+(*Expression Tools*)
+
 //Constants
 let private optionType = 
   typedefof<option<_>>
@@ -67,16 +69,24 @@ let refEq left right =
 let cast<'a> expr =
   Et.Convert(expr, typeof<'a>) :> Et
 
-//Restrict Tools
+let gotoReturn label (value:Et) =
+  Et.Return(label, value) :> Et
+
+(*Restrict Tools*)
+
+//Functions
 let restrict expr =
   Restrict.GetExpressionRestriction(expr)
 
+//
 let restrictType expr typ =
   Restrict.GetTypeRestriction(expr, typ)
 
+//
 let restrictInst expr instance =
   Restrict.GetInstanceRestriction(expr, instance)
 
+//
 let rec restrictArgs (args:MetaObj list) =
   match args with
   | [] -> Restrict.Empty
@@ -85,3 +95,7 @@ let rec restrictArgs (args:MetaObj list) =
         then Restrict.GetInstanceRestriction(x.Expression, Et.Default(typeof<obj>))
         else Restrict.GetTypeRestriction(x.Expression, x.LimitType)
     ).Merge(restrictArgs xs)
+
+//
+let (<++>) (left:Restrict) (right:Restrict) =
+  left.Merge(right)

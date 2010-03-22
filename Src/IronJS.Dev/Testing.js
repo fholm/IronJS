@@ -1,7 +1,7 @@
 ﻿var y = "foo";
 var z = 2;
 var x = function(foo) {
-    glob = "hello global world";
+    return foo;
 };
 
-x(2);
+var __fooval = x(2);

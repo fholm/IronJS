@@ -19,35 +19,6 @@ type private Context = {
   member self.Globals with get() = field self.Closure "Globals"
   member self.Compiler with get() = field self.Closure "Compiler"
 
-let private evalVarType (name:string) (scope:Scope) =
-
-  let rec getVarType (name:string) (scope:Scope) (evaling:string Set) =
-    if evaling.Contains(name) then
-      Types.JsTypes.None
-    else
-      let local = scope.Locals.[name]
-      
-      match local.ForcedType with
-      | Some(t) -> IronJS.Types.ToJs(t)
-      | None -> 
-      
-        let evalingSet = evaling.Add(name)
-
-        let rec evalUsedWith vars =
-          match vars with
-          | [] -> Types.JsTypes.None
-          | x::xs -> (getVarType x scope evalingSet) ||| (evalUsedWith xs)
-
-        let usedAs = (local.UsedWith |> List.ofSeq |> evalUsedWith) ||| local.UsedAs
-
-        match usedAs with
-        | Types.JsTypes.Integer 
-        | Types.JsTypes.Double  
-        | Types.JsTypes.String -> usedAs
-        | _ -> Types.JsTypes.Dynamic
-
-  getVarType name scope Set.empty
-
 //
 let private createDelegateType (types:System.Type list) =
   Et.GetFuncType(List.toArray (List.append types [Types.ClrDynamic]))
@@ -56,19 +27,6 @@ let private createDelegateType (types:System.Type list) =
 let private forceType name (scope:Scope) typ =
   let local = { scope.Locals.[name] with ForcedType = Some(typ) }
   { scope with Locals = scope.Locals.Add(name, local) }
-
-//
-let rec private injectParameterTypes (parms: string list) (types:System.Type list) (scope: Scope) = 
-  match parms with
-  | [] -> scope
-  | name::parms -> 
-
-    let typ, types = 
-      match types with 
-      | [] -> Types.ClrDynamic, []  
-      | x::xs -> x, xs
-
-    injectParameterTypes parms types (forceType name scope typ)
 
 //
 let private createContext (s:Scope) = 
@@ -80,12 +38,56 @@ let private createContext (s:Scope) =
   }
 
 //
-let private genEtList (nodes:Node list) (ctx:Context) gen =
-  [for node in nodes -> gen node ctx]
+let private evalLocalType (name:string) (scope:Scope) =
+
+  let rec evalType name (scope:Scope) (evaling:string Set) =
+    if evaling.Contains name then Types.JsTypes.None
+    else
+      let local = scope.Locals.[name]
+      
+      match local.ForcedType with
+      | Some(t) -> IronJS.Types.ToJs t
+      | None -> 
+      
+        let rec evalUsedWith = function
+          | [] -> Types.JsTypes.None
+          | x::xs -> evalType x scope (evaling.Add name) ||| evalUsedWith xs
+
+        let usedAs = (local.UsedWith |> List.ofSeq |> evalUsedWith) ||| local.UsedAs
+
+        match usedAs with
+        | Types.JsTypes.Integer 
+        | Types.JsTypes.Double  
+        | Types.JsTypes.String -> usedAs
+        | _ -> Types.JsTypes.Dynamic
+
+  evalType name scope Set.empty
+
+// 
+let private resolveLocalTypes (scope:Scope) =
+  scope.Locals 
+    |> Map.filter (fun k v -> v.ForcedType = None) 
+    |> Map.fold 
+      (*funct*) (fun scope name v -> forceType name scope (Types.ToClr (evalLocalType name scope))) 
+      (*state*) scope
 
 //
-let private genBlock nodes ctx gen =
-  block [for n in nodes -> gen n ctx]
+let rec private injectParameterTypes (parms: string list) (types:System.Type list) (scope: Scope) = 
+  match parms with
+  | [] -> scope
+  | name::parms -> 
+    let typ, types = match types with 
+                     | []    -> Types.ClrDynamic, []  
+                     | x::xs -> x, xs
+
+    injectParameterTypes parms types (forceType name scope typ)
+
+(*
+  Expression Tree Generation
+*)
+//
+let private genEtList (nodes:Node list) (ctx:Context) gen =
+  [for node in nodes -> gen node ctx]
 
 //
 let private genAssignGlobal name value (ctx:Context) gen =
@@ -96,6 +98,10 @@ let private genAssign left right ctx gen =
   match left with
   | Global(name) -> genAssignGlobal name right ctx gen
   | _ -> EtTools.empty
+
+//
+let private genBlock nodes ctx gen =
+  block [for n in nodes -> gen n ctx]
 
 //
 let private genFunc node (ctx:Context) gen =
@@ -111,20 +117,31 @@ let private genInvoke target args (ctx:Context) gen =
     (*params*) ((ctx.Closure :> Et) :: ctx.Globals :: (genEtList args ctx gen))
 
 //
-let private genGlobal name (ctx:Context) gen =
+let private genGlobal name (ctx:Context) =
   call ctx.Globals "Get" [constant name]
+
+//
+let private genLocal name (ctx:Context) =
+  ctx.Locals.[name] :> Et
+
+//
+let private genReturn node (ctx:Context) gen =
+  gotoReturn ctx.Return (jsBox (gen node ctx))
 
 //
 let rec private genEt node ctx =
   match node with
-  | Var(n) -> // var x; var x = <expr>;
-    genEt n ctx 
+  | Var(node) -> // var x; var x = <expr>;
+    genEt node ctx 
 
-  | Block(n) ->  // { <exprs> }
-    genBlock n ctx genEt
+  | Block(node) ->  // { <exprs> }
+    genBlock node ctx genEt
+
+  | Local(name) ->
+    genLocal name ctx
 
   | Global(name) -> // foo
-    genGlobal name ctx genEt
+    genGlobal name ctx
 
   | Assign(left, right) -> 
     genAssign left right ctx genEt
@@ -144,15 +161,10 @@ let rec private genEt node ctx =
   | Invoke(target, args) -> 
     genInvoke target args ctx genEt
 
-  | _ -> EtTools.empty
+  | Return(node) ->
+    genReturn node ctx genEt
 
-// 
-let private resolveLocalTypes (scope:Scope) =
-  scope.Locals 
-    |> Map.filter (fun k v -> v.ForcedType = None) 
-    |> Map.fold 
-      (*funct*) (fun scope name v -> forceType name scope (Types.ToClr (evalVarType name scope))) 
-      (*state*) scope
+  | _ -> EtTools.empty
 
 //
 let compile func (types:System.Type list) =
@@ -162,8 +174,7 @@ let compile func (types:System.Type list) =
     let funcType = createDelegateType types
     let found, cached = cache.TryGetValue(funcType)
 
-    if found then 
-      cached
+    if found then cached
     else
       try
         let paramTypedScope = injectParameterTypes parms types genericScope
@@ -182,6 +193,6 @@ let compile func (types:System.Type list) =
 
         cache.GetOrAdd(funcType, lambda.Compile())
       with
-      | x -> failwith "%A" x
+      | x -> reraise()
 
   | _ -> failwith "Can only compile Function nodes"

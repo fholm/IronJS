@@ -22,10 +22,6 @@ and JsObjMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
 //
-let private (<++>) (left:Restrict) (right:Restrict) =
-  left.Merge(right)
-
-//
 type JsFunc =
   inherit JsObj
 
@@ -62,6 +58,7 @@ and JsFuncMeta(expr, jsFunc) =
       ),
       restrictions
     );
+
 //
 and Closure(globals:JsObj, ast:Ast.Node, compiler:CompilerFunc) =
   member self.Globals with get() = globals

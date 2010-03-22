@@ -12,4 +12,6 @@ let ast = Ast.generator program.Tree
 let globals = Runtime.globalClosure IronJS.Compiler.compile
 let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
 
-compiled.DynamicInvoke(globals, globals.Globals) |> ignore
+compiled.DynamicInvoke(globals, globals.Globals)
+
+globals.Globals.Get("__fooval")

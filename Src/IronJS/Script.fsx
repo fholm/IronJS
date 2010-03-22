@@ -13,7 +13,7 @@
 #load "Compiler.fs"
 #load "Closures.fs"
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 open IronJS
 open System
@@ -31,4 +31,4 @@ let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>
 
 compiled.DynamicInvoke(globals, globals.Globals)
 
-globals.Globals.Get("glob")
+globals.Globals.Get("__fooval")

@@ -1,4 +1,4 @@
-﻿module Closures
+﻿module IronJS.Closures
 
 open System.Runtime.CompilerServices
 

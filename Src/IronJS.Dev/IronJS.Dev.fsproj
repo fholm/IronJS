@@ -43,11 +43,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
-      <Name>IronJS.CSharp</Name>
-      <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
     </Reference>
@@ -56,6 +51,13 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
+      <Name>IronJS.CSharp</Name>
+      <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\IronJS\IronJS.fsproj">
       <Name>IronJS</Name>
       <Project>{fa738790-5b9b-4977-8c6b-ef487f24e435}</Project>

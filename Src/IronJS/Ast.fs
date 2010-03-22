@@ -80,15 +80,18 @@ let internal globalScope =
 let internal ct (o:obj) =
   o :?> CommonTree
 
+//
 let private child o n =
   (ct (ct o).Children.[n])
 
+//
 let private addLocal (s:Scopes) (n:string) =
   match s with
   | [] -> failwith EmptyScopeChain
   | x::[] -> s
   | x::xs -> {x with Locals = (Map.add n emptyLocal x.Locals)} :: xs
 
+//
 let private addLocals (s:Scopes) (ns:string list) =
   match s with 
   | [] -> failwith EmptyScopeChain
@@ -99,10 +102,12 @@ let private addLocals (s:Scopes) (ns:string list) =
       locals <- Map.add n emptyLocal locals
     { x with Locals = locals } :: xs
 
+//
 let private getAst scope pr =
   scope := (snd pr)
   (fst pr)
 
+//
 let private getIdentifier (s:Scopes) (n:string) =
   match s with
   | [] -> failwith EmptyScopeChain
@@ -124,20 +129,24 @@ let private getIdentifier (s:Scopes) (n:string) =
       let found, scopes = findLocal s
       (if found then Closure(n) else Global(n)), scopes
 
+//
 let private makeBlock ts s p =
   let scopes = ref s
   Block([for c in ts -> getAst scopes (p (ct c) !scopes)]), !scopes
 
+//
 let private cleanString = function
   | "" -> ""
   | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
 
+//
 let private exprType = function
   | Number(Integer(_)) -> Types.JsTypes.Integer
   | Number(Double(_)) -> Types.JsTypes.Double
   | String(_) -> Types.JsTypes.String
   | _ -> Types.JsTypes.Dynamic
 
+//
 let private addTypeData (s:Scopes) a b =
   match s with
   | [] -> failwith EmptyScopeChain
@@ -155,11 +164,13 @@ let private addTypeData (s:Scopes) a b =
       { x with Locals = Map.add a_name modified x.Locals } :: xs
     | _ -> s
 
+//
 let private forEachChild (func:CommonTree -> 'a) (tree:CommonTree) =
-  match tree with
+  match tree.Children with
   | null -> []
   | _    -> [for child in tree.Children -> func (ct child)]
 
+//
 let private genChildren gen (tree:CommonTree) (scopes:Scopes ref) =
   [for child in tree.Children -> getAst scopes (gen (ct child) !scopes)]
 
@@ -212,7 +223,7 @@ let defaultGenerators =
 
     (ES3Parser.FUNCTION, fun t s p -> 
       if t.ChildCount = 2 then
-        let paramNames = "~closure" :: "this" :: forEachChild (fun c -> c.Text) t
+        let paramNames = "~closure" :: "this" :: forEachChild (fun c -> c.Text) (child t 0)
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
         Function(paramNames, scopes.Head, Null, body, new JitCache()), scopes.Tail
       else

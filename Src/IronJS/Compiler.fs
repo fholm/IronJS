@@ -214,8 +214,12 @@ let compile func (types:System.Type list) =
           |> Map.filter (fun k v -> not (List.exists (fun p -> p = k) parms)) 
           |> Map.fold (fun s k v -> v :: s) []
 
-        let body = block [(*1*) genEt body context; (*2*) labelExpr context.Return]
-        let lambda = EtTools.lambda (**) funcType (**) parameters (*body*) (blockParms locals [body])
+        let closedOver =
+          strongTypedScope.Locals
+          |> Map.filter (fun k v -> v.ClosedOver)
+
+        let body = [(*1*)genEt body context; (*2*) labelExpr context.Return]
+        let lambda = EtTools.lambda (**) funcType (**) parameters (*body*) (blockParms locals body)
 
         cache.GetOrAdd(funcType, lambda.Compile())
       with

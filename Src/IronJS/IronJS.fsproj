@@ -43,7 +43,6 @@
     <Compile Include="Binders.fs" />
     <Compile Include="Closures.fs" />
     <Compile Include="Compiler.fs" />
-    <Compile Include="Tools.fs" />
     <None Include="Script.fsx" />
     <Content Include="Testing.js" />
   </ItemGroup>

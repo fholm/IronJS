@@ -4,14 +4,14 @@
 #r "../Dependencies/Microsoft.Scripting.dll"
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
-#load "Types.fs"
 #load "Utils.fs"
 #load "EtTools.fs"
+#load "Types.fs"
 #load "Ast.fs"
 #load "Runtime.fs"
 #load "Binders.fs"
-#load "Compiler.fs"
 #load "Closures.fs"
+#load "Compiler.fs"
 
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 

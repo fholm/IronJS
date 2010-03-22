@@ -145,7 +145,7 @@ let private genLocal name (ctx:Context) =
 
 // 
 let private genClosure name pos (ctx:Context) =
-  field ctx.Closure (sprintf "Item%i" pos)
+  field (field ctx.Closure (sprintf "Item%i" pos)) "Value"
 
 //
 let private genReturn node (ctx:Context) gen =

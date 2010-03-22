@@ -19,45 +19,38 @@ type private Context = {
   member self.Globals with get() = field self.Closure "Globals"
   member self.Compiler with get() = field self.Closure "Compiler"
 
-//Functions
-let private clrToJsType x = 
-  if x = ClrTypes.Integer then Type.Integer
-  elif x = ClrTypes.Double then Type.Double
-  elif x = ClrTypes.String then Type.String
-  else Type.Dynamic
-
 let private evalVarType (name:string) (scope:Scope) =
 
   let rec getVarType (name:string) (scope:Scope) (evaling:string Set) =
     if evaling.Contains(name) then
-      Type.None
+      Types.JsTypes.None
     else
       let local = scope.Locals.[name]
       
       match local.ForcedType with
-      | Some(t) -> clrToJsType(t)
+      | Some(t) -> IronJS.Types.ToJs(t)
       | None -> 
       
         let evalingSet = evaling.Add(name)
 
         let rec evalUsedWith vars =
           match vars with
-          | [] -> Type.None
+          | [] -> Types.JsTypes.None
           | x::xs -> (getVarType x scope evalingSet) ||| (evalUsedWith xs)
 
         let usedAs = (local.UsedWith |> List.ofSeq |> evalUsedWith) ||| local.UsedAs
 
         match usedAs with
-        | Type.Integer 
-        | Type.Double  
-        | Type.String -> usedAs
-        | _ -> Type.Dynamic
+        | Types.JsTypes.Integer 
+        | Types.JsTypes.Double  
+        | Types.JsTypes.String -> usedAs
+        | _ -> Types.JsTypes.Dynamic
 
   getVarType name scope Set.empty
 
 //
 let private createDelegateType (types:System.Type list) =
-  Et.GetFuncType(List.toArray (List.append types [ClrTypes.Dynamic]))
+  Et.GetFuncType(List.toArray (List.append types [Types.ClrDynamic]))
 
 //
 let private forceType name (scope:Scope) typ =
@@ -72,7 +65,7 @@ let rec private injectParameterTypes (parms: string list) (types:System.Type lis
 
     let typ, types = 
       match types with 
-      | [] -> typeToClr(Type.Dynamic), []  
+      | [] -> Types.ClrDynamic, []  
       | x::xs -> x, xs
 
     injectParameterTypes parms types (forceType name scope typ)
@@ -158,7 +151,7 @@ let private resolveLocalTypes (scope:Scope) =
   scope.Locals 
     |> Map.filter (fun k v -> v.ForcedType = None) 
     |> Map.fold 
-      (*funct*) (fun scope name v -> forceType name scope (typeToClr (evalVarType name scope))) 
+      (*funct*) (fun scope name v -> forceType name scope (Types.ToClr (evalVarType name scope))) 
       (*state*) scope
 
 //
@@ -185,7 +178,6 @@ let compile func (types:System.Type list) =
           |> Map.fold (fun s k v -> v :: s) []
 
         let body = block [(*1*) genEt body context; (*2*) labelExpr context.Return]
-
         let lambda = EtTools.lambda (**) funcType (**) parameters (*body*) (blockParms locals [body])
 
         cache.GetOrAdd(funcType, lambda.Compile())

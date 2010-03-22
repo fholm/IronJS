@@ -12,18 +12,9 @@ open Antlr.Runtime.Tree
 let private EmptyScopeChain = "Empty scope-chain"
 let private NoHandlerForType = new Printf.StringFormat<string -> int -> unit>("No generator function available for %s (%i)")
   
-//Types
-type Type = 
-  | None = 0
-  | Integer = 1
-  | Double = 2
-  | String = 4
-  | Object = 8
-  | Dynamic = 16
-
 type Local = {
   UsedWith: string Set
-  UsedAs: Type
+  UsedAs: Types.JsTypes
   ForcedType: System.Type Option
 }
 
@@ -78,20 +69,14 @@ let internal emptyScope = {
 
 let internal emptyLocal = {
   UsedWith = Set.empty;
-  UsedAs = Type.None;
+  UsedAs = Types.JsTypes.None;
   ForcedType = None;
 }
 
 let internal globalScope = 
   [emptyScope]
-  
-//Functions
-let internal typeToClr = function
-  | Type.Integer -> typeof<int64>
-  | Type.Double -> typeof<double>
-  | Type.String -> typeof<string>
-  | _ -> typeof<obj>
 
+//Functions
 let internal ct (o:obj) =
   o :?> CommonTree
 
@@ -148,10 +133,10 @@ let private cleanString = function
   | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
 
 let private exprType = function
-  | Number(Integer(_)) -> Type.Integer
-  | Number(Double(_)) -> Type.Double
-  | String(_) -> Type.String
-  | _ -> Type.Dynamic
+  | Number(Integer(_)) -> Types.JsTypes.Integer
+  | Number(Double(_)) -> Types.JsTypes.Double
+  | String(_) -> Types.JsTypes.String
+  | _ -> Types.JsTypes.Dynamic
 
 let private addTypeData (s:Scopes) a b =
   match s with
@@ -173,6 +158,7 @@ let private addTypeData (s:Scopes) a b =
 let private genChildren gen (tree:CommonTree) (scopes:Scopes ref) =
   [for child in tree.Children -> getAst scopes (gen (ct child) !scopes)]
 
+//Default Generators
 let defaultGenerators = 
   Map.ofArray [|
     // NIL

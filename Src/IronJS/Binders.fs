@@ -17,6 +17,6 @@ type Invoke(ci) =
 let dynamicInvoke target (args:Et list) =
   Et.Dynamic(
     (*binder*) new Invoke(new CallInfo(args.Length)),
-    (*return type*) ClrTypes.Dynamic,
+    (*return type*) Types.ClrDynamic,
     (*target+args*) target :: args
   ) :> Et

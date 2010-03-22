@@ -37,7 +37,7 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="EtTools.fs" />
-    <Compile Include="ClrTypes.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Binders.fs" />

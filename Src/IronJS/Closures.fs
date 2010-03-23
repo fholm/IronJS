@@ -53,7 +53,6 @@ type Closure<'t0, 't1, 't2> =
   }
 
 //Functions
-
 let getClosureType (types:System.Type seq) =
   let types = Seq.toArray types
   match types.Length with

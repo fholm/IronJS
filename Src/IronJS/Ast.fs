@@ -133,20 +133,22 @@ let private getIdentifier (s:Scopes) (n:string) =
         | [] -> false, [] 
         | x::xs -> 
           if x.Locals.ContainsKey(n) then
-            //Create new local that is closed over
-            let closedOver = { x.Locals.[n] with ClosedOver = true }
-            // Return with modified scope
-            true, { x with Locals = x.Locals.Add(n, closedOver) } :: xs
+            if x.Locals.[n].ClosedOver then true, s
+            else
+              //Create new local that is closed over
+              let closedOver = { x.Locals.[n] with ClosedOver = true }
+              // Return with modified scope
+              true, { x with Locals = x.Locals.Add(n, closedOver) } :: xs
           else
             let found, lst = findLocal xs
-            let scope =
-              if found 
-                then 
-                  if List.exists (fun y -> y = n) x.Closure 
-                    then x
-                    else { x with Closure = n :: x.Closure } 
-                else
-                  x
+            let scope = if found 
+                          then 
+                            if List.exists (fun y -> y = n) x.Closure 
+                              then x
+                              else { x with Closure = n :: x.Closure } 
+                          else
+                            x
+
             found, scope :: lst
 
       let found, scopes = findLocal s

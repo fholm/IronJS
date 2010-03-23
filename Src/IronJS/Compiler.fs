@@ -8,6 +8,7 @@ open IronJS
 open IronJS.Ast
 open IronJS.EtTools
 open IronJS.Utils
+open IronJS.Tools
 open IronJS.Runtime
 
 //Types
@@ -93,10 +94,14 @@ let private genEtList (nodes:Node list) (ctx:Context) gen =
 let private genAssignGlobal name value (ctx:Context) gen =
   call ctx.Globals "Set" [(*1*) constant name; (*2*) jsBox (gen value ctx)]
 
+let private genAssignClosure name num right (ctx:Context) gen =
+  assign (closureVal ctx.Closure num) (gen right ctx)
+
 //
 let private genAssign left right ctx gen =
   match left with
   | Global(name) -> genAssignGlobal name right ctx gen
+  | Closure(name, num) -> genAssignClosure name num right ctx gen
   | _ -> EtTools.empty
 
 //
@@ -145,7 +150,7 @@ let private genLocal name (ctx:Context) =
 
 // 
 let private genClosure name pos (ctx:Context) =
-  field (field ctx.Closure (sprintf "Item%i" pos)) "Value"
+  closureVal ctx.Closure pos
 
 //
 let private genReturn node (ctx:Context) gen =

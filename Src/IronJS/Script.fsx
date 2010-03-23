@@ -6,6 +6,7 @@
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Utils.fs"
 #load "EtTools.fs"
+#load "Tools.fs"
 #load "Types.fs"
 #load "Ast.fs"
 #load "Runtime.fs"
@@ -13,7 +14,7 @@
 #load "Closures.fs"
 #load "Compiler.fs"
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
 
 open IronJS
 open System

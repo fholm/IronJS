@@ -43,18 +43,24 @@ type JsFunc =
 and JsFuncMeta(expr, jsFunc) =
   inherit JsObjMeta(expr, jsFunc)
 
+  member self.FuncExpr with get() = cast<JsFunc> self.Expression
+  member self.ClosureExpr with get() = field self.FuncExpr "Closure"
+  member self.AstExpr with get() = field self.FuncExpr "Ast"
+
   override self.BindInvoke (binder, args) =
     let compiled = jsFunc.Closure.Compiler jsFunc.Ast (jsFunc.ClosureType :: [for arg in args -> arg.LimitType])
+    let closureType = compiled.GetType().GetGenericArguments().[0]
 
     let restrictions = 
-      (*must be funcType*) (restrictType self.Expression typeof<JsFunc>) 
-      (*must be this ast*) <++> (restrict (refEq (field (cast<JsFunc> self.Expression) "Ast") (constant jsFunc.Ast)))
-      (*argument types*)   <++> (restrictArgs (List.ofArray args))
+      (*must be funcType*)         (restrictType self.Expression typeof<JsFunc>) 
+      (*closre must be type*) <++> (restrictType self.ClosureExpr closureType)
+      (*must be this ast*)    <++> (restrict (refEq self.AstExpr (constant jsFunc.Ast)))
+      (*argument types*)      <++> (restrictArgs (List.ofArray args))
 
     new MetaObj(
       Et.Invoke(
         (*delegate*) Et.Constant(compiled, compiled.GetType()),
-        (*arguments*) (cast2 jsFunc.ClosureType (field (cast<JsFunc> self.Expression) "Closure")) :: [for arg in args -> arg.Expression]
+        (*arguments*) (cast2 jsFunc.ClosureType self.ClosureExpr) :: [for arg in args -> arg.Expression]
       ),
       restrictions
     );

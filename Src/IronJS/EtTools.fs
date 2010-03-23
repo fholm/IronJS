@@ -74,6 +74,9 @@ let cast<'a> = cast2 typeof<'a>
 let gotoReturn label (value:Et) =
   Et.Return(label, value) :> Et
 
+let assign (left:Et) (right:Et) =
+  Et.Assign(left, right) :> Et
+
 (*Restrict Tools*)
 
 //Functions

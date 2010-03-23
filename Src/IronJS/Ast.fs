@@ -166,6 +166,7 @@ let private cleanString = function
 let private exprType = function
   | Number(Integer(_)) -> Types.JsTypes.Integer
   | Number(Double(_)) -> Types.JsTypes.Double
+  | Invoke(_) -> Types.JsTypes.Dynamic
   | String(_) -> Types.JsTypes.String
   | _ -> Types.JsTypes.Dynamic
 
@@ -188,7 +189,7 @@ let private addTypeData (s:Scopes) a b =
     | _ -> s
 
 //
-let private forEachChild (func:CommonTree -> 'a) (tree:CommonTree) =
+let private forEachChild func (tree:CommonTree) =
   match tree.Children with
   | null -> []
   | _    -> [for child in tree.Children -> func (ct child)]

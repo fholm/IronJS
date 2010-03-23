@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="EtTools.fs" />
+    <Compile Include="Tools.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />

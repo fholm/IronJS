@@ -69,7 +69,8 @@ let refEq left right =
 let cast2 typ expr =
   Et.Convert(expr, typ) :> Et
 
-let cast<'a> = cast2 typeof<'a>
+let cast<'a> = 
+  cast2 typeof<'a>
 
 let gotoReturn label (value:Et) =
   Et.Return(label, value) :> Et

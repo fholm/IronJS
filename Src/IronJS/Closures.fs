@@ -4,7 +4,7 @@
 open IronJS.Runtime
 
 //Aliases
-type StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
+type private StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
 
 //Constant
 let private strongBoxType = typedefof<StrongBox<_>>
@@ -94,7 +94,6 @@ type Closure<'t0, 't1, 't2, 't3, 't4> =
     Item3 = item3
     Item4 = item4
   }
-
 
 type ClosureN =
   inherit Closure

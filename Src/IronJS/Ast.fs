@@ -109,6 +109,7 @@ let private getAst scope pr =
   scope := (snd pr)
   (fst pr)
 
+//
 let indexOf lst itm =
 
   let rec index lst n =
@@ -119,16 +120,27 @@ let indexOf lst itm =
 
   index lst 0
 
+//
 let private localAsClosedOver (s:Scope) name =
   { s.Locals.[name] with ClosedOver = true }
 
+//
 let private replaceLocal (s:Scope) (name:string) (var:Local) =
   { s with Locals = s.Locals.Add(name, var) }
 
+//
 let private addClosure (scope:Scope) (name:string) =
     if List.exists (fun var -> var = name) scope.Closure 
       then scope
       else { scope with Closure = name :: scope.Closure } 
+
+//
+let private hasLocal (scope:Scope) (name:string) =
+  scope.Locals.ContainsKey(name)
+
+//
+let private closureIndex (scope:Scope) (name:string) =
+  indexOf scope.Closure name
 
 //
 let private getIdentifier (scopes:Scopes) (name:string) =
@@ -136,23 +148,21 @@ let private getIdentifier (scopes:Scopes) (name:string) =
   | [] -> failwith EmptyScopeChain
   | x::[] -> Global name, scopes
   | scope::_ ->
-
-    if scope.Locals.ContainsKey name then Local name, scopes
+    if hasLocal scope name then Local(name), scopes
     else
       //
       let rec findLocal (scopes:Scopes) =
         match scopes with 
         | [] -> false, [] 
         | scope::scopes -> 
-          if scope.Locals.ContainsKey(name) then
+          if hasLocal scope name then
             true, replaceLocal scope name (localAsClosedOver scope name ) :: scopes
           else
             let found, lst = findLocal scopes
-            let scope = if found then addClosure scope name else scope
-            found, scope :: lst
+            found, (if found then addClosure scope name else scope) :: lst
 
       let found, scopes = findLocal scopes
-      (if found then Closure(name, (indexOf scopes.Head.Closure name)) else Global name), scopes
+      (if found then Closure(name, closureIndex scopes.Head name) else Global(name)), scopes
 
 //
 let private makeBlock ts s p =
@@ -168,6 +178,7 @@ let private cleanString = function
 let private exprType = function
   | Number(Integer(_)) -> Types.JsTypes.Integer
   | Number(Double(_)) -> Types.JsTypes.Double
+  | Invoke(_) -> Types.JsTypes.Dynamic
   | String(_) -> Types.JsTypes.String
   | _ -> Types.JsTypes.Dynamic
 
@@ -190,7 +201,7 @@ let private addTypeData (s:Scopes) a b =
     | _ -> s
 
 //
-let private forEachChild (func:CommonTree -> 'a) (tree:CommonTree) =
+let private forEachChild func (tree:CommonTree) =
   match tree.Children with
   | null -> []
   | _    -> [for child in tree.Children -> func (ct child)]

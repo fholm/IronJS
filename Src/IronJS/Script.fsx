@@ -6,6 +6,7 @@
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Utils.fs"
 #load "EtTools.fs"
+#load "Tools.fs"
 #load "Types.fs"
 #load "Ast.fs"
 #load "Runtime.fs"

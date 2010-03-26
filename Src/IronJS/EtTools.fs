@@ -69,10 +69,20 @@ let refEq left right =
 let cast2 typ expr =
   Et.Convert(expr, typ) :> Et
 
-let cast<'a> = cast2 typeof<'a>
+let cast<'a> = 
+  cast2 typeof<'a>
 
 let gotoReturn label (value:Et) =
   Et.Return(label, value) :> Et
+
+let assign (left:Et) (right:Et) =
+  Et.Assign(left, right) :> Et
+
+let assignStrongBox (left:Et) (right:Et) =
+  assign (field left "Value") right
+
+let index (left:Et) (i:int64) =
+  Et.ArrayIndex(left, constant i) :> Et
 
 (*Restrict Tools*)
 

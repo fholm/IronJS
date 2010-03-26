@@ -4,4 +4,6 @@ Src/IronJS.CSharp/bin/**/*
 Src/IronJS.CSharp/obj/**/*
 Src/IronJS.Dev/bin/**/*
 Src/IronJS.Dev/obj/**/*
+Src/IronJS.CSharp.Dev/bin/**/*
+Src/IronJS.CSharp.Dev/obj/**/*
 *.suo

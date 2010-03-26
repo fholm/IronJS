@@ -80,6 +80,9 @@ let assign (left:Et) (right:Et) =
 let assignStrongBox (left:Et) (right:Et) =
   assign (field left "Value") right
 
+let index (left:Et) (i:int64) =
+  Et.ArrayIndex(left, constant i) :> Et
+
 (*Restrict Tools*)
 
 //Functions

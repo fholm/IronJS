@@ -95,6 +95,12 @@ let private genAssignGlobal name value (ctx:Context) gen =
   call ctx.Globals "Set" [(*1*) constant name; (*2*) jsBox (gen value ctx)]
 
 //
+let private closureVal (parm:EtParam) (num:int) =
+  if parm.Type = typeof<Closures.ClosureN> 
+    then field (index (field parm "Items") (int64 num)) "Value"
+    else field (field parm (sprintf "Item%i" num)) "Value"
+
+//
 let private genAssignClosure name num right (ctx:Context) gen =
   assign (closureVal ctx.Closure num) (gen right ctx)
 
@@ -127,6 +133,7 @@ let private getClosureType (vars:string list) (ctx:Context) =
 
   Closures.getClosureType (fix (fun f vars -> match vars with | [] -> [] | x::xs -> getVarType x :: f xs) vars)
 
+//
 let private getClosureParamValues (names:string list) ctx =
   [for name in names -> ctx.Locals.[name] :> Et]
 

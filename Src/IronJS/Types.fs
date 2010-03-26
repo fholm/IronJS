@@ -1,9 +1,11 @@
 ﻿module IronJS.Types
 
+//Constants
 let ClrDynamic = typeof<obj>
 let ClrInteger = typeof<int64>
 let ClrDouble = typeof<double>
 let ClrString = typeof<string>
+let StrongBoxType = typedefof<System.Runtime.CompilerServices.StrongBox<_>>
 
 //Types
 type JsTypes = 

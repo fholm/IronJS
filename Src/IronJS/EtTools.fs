@@ -77,6 +77,9 @@ let gotoReturn label (value:Et) =
 let assign (left:Et) (right:Et) =
   Et.Assign(left, right) :> Et
 
+let assignStrongBox (left:Et) (right:Et) =
+  assign (field left "Value") right
+
 (*Restrict Tools*)
 
 //Functions

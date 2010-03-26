@@ -94,14 +94,24 @@ let private genEtList (nodes:Node list) (ctx:Context) gen =
 let private genAssignGlobal name value (ctx:Context) gen =
   call ctx.Globals "Set" [(*1*) constant name; (*2*) jsBox (gen value ctx)]
 
+//
 let private genAssignClosure name num right (ctx:Context) gen =
   assign (closureVal ctx.Closure num) (gen right ctx)
+
+//
+let private genAssignLocal name right (ctx:Context) gen =
+  let local = ctx.Locals.[name]
+
+  if local.Type.IsGenericType && local.Type.GetGenericTypeDefinition() = Types.StrongBoxType 
+    then assignStrongBox local (gen right ctx)
+    else assign local (gen right ctx)
 
 //
 let private genAssign left right ctx gen =
   match left with
   | Global(name) -> genAssignGlobal name right ctx gen
   | Closure(name, num) -> genAssignClosure name num right ctx gen
+  | Local(name) -> genAssignLocal name right ctx gen
   | _ -> EtTools.empty
 
 //
@@ -115,17 +125,18 @@ let private getClosureType (vars:string list) (ctx:Context) =
       then ctx.Locals.[name].Type
       else failwith "fuuuuck"
 
-  let closureType = 
-    Closures.getClosureType (fix (fun f vars -> match vars with | [] -> [] | x::xs -> getVarType x :: f xs) vars)
+  Closures.getClosureType (fix (fun f vars -> match vars with | [] -> [] | x::xs -> getVarType x :: f xs) vars)
 
-  closureType, [for var in vars -> ctx.Locals.[var] :> Et]
+let private getClosureParamValues (names:string list) ctx =
+  [for name in names -> ctx.Locals.[name] :> Et]
 
 //
 let private genFunc node (ctx:Context) gen =
   match node with
   | Function(parms, scope, name, body, cache) ->
     
-    let closureType, closureParams = getClosureType scope.Closure ctx
+    let closureType = getClosureType scope.Closure ctx
+    let closureParams = getClosureParamValues scope.Closure ctx
 
     create (typeof<JsFunc>) [
       (*1*) create closureType (ctx.Globals :: constant node :: ctx.Compiler :: closureParams);

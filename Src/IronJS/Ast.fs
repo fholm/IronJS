@@ -155,9 +155,9 @@ let private getIdentifier (scopes:Scopes) (name:string) =
         match scopes with 
         | [] -> false, [] 
         | scope::scopes -> 
-          if hasLocal scope name then
-            true, replaceLocal scope name (localAsClosedOver scope name ) :: scopes
-          else
+          if hasLocal scope name then 
+            true, replaceLocal scope name (localAsClosedOver scope name) :: scopes
+          else 
             let found, lst = findLocal scopes
             found, (if found then addClosure scope name else scope) :: lst
 
@@ -183,22 +183,28 @@ let private exprType = function
   | _ -> Types.JsTypes.Dynamic
 
 //
-let private addTypeData (s:Scopes) a b =
-  match s with
+let private addUsedWith (loc:Local) (name:string) =
+  { loc with UsedWith = Set.add name loc.UsedWith }
+
+//
+let private addUsedAs (loc:Local) (typ:Types.JsTypes) =
+  { loc with UsedAs = typ ||| loc.UsedAs }
+
+//
+let private addTypeData (scopeChain:Scopes) a b =
+  match scopeChain with
   | [] -> failwith EmptyScopeChain
-  | x::[] -> s
-  | x::xs ->
+  | scope::[] -> scopeChain
+  | scope::scopes ->
     match a with
-    | Local(a_name) ->
-      let local = x.Locals.[a_name]
+    | Local(name) ->
+      let local = scope.Locals.[name]
+      let modified = match b with
+                     | Local(bName) -> addUsedWith local bName
+                     | _ -> addUsedAs local (exprType b)
 
-      let modified = 
-        match b with
-        | Local(b_name) -> { local with UsedWith = Set.add b_name local.UsedWith }
-        | _ -> { local with UsedAs = (exprType b) ||| local.UsedAs }
-
-      { x with Locals = Map.add a_name modified x.Locals } :: xs
-    | _ -> s
+      replaceLocal scope name modified :: scopes
+    | _ -> scopeChain
 
 //
 let private forEachChild func (tree:CommonTree) =

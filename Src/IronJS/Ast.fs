@@ -119,38 +119,40 @@ let indexOf lst itm =
 
   index lst 0
 
+let private localAsClosedOver (s:Scope) name =
+  { s.Locals.[name] with ClosedOver = true }
+
+let private replaceLocal (s:Scope) (name:string) (var:Local) =
+  { s with Locals = s.Locals.Add(name, var) }
+
+let private addClosure (scope:Scope) (name:string) =
+    if List.exists (fun var -> var = name) scope.Closure 
+      then scope
+      else { scope with Closure = name :: scope.Closure } 
+
 //
-let private getIdentifier (s:Scopes) (n:string) =
-  match s with
+let private getIdentifier (scopes:Scopes) (name:string) =
+  match scopes with
   | [] -> failwith EmptyScopeChain
-  | x::[] -> Global n, s
-  | x::xs ->
-    if x.Locals.ContainsKey n then Local n, s
+  | x::[] -> Global name, scopes
+  | scope::_ ->
+
+    if scope.Locals.ContainsKey name then Local name, scopes
     else
       //
-      let rec findLocal (s:Scopes) =
-        match s with 
+      let rec findLocal (scopes:Scopes) =
+        match scopes with 
         | [] -> false, [] 
-        | x::xs -> 
-          if x.Locals.ContainsKey(n) then
-            //Create new local that is closed over
-            let closedOver = { x.Locals.[n] with ClosedOver = true }
-            // Return with modified scope
-            true, { x with Locals = x.Locals.Add(n, closedOver) } :: xs
+        | scope::scopes -> 
+          if scope.Locals.ContainsKey(name) then
+            true, replaceLocal scope name (localAsClosedOver scope name ) :: scopes
           else
-            let found, lst = findLocal xs
-            let scope =
-              if found 
-                then 
-                  if List.exists (fun y -> y = n) x.Closure 
-                    then x
-                    else { x with Closure = n :: x.Closure } 
-                else
-                  x
+            let found, lst = findLocal scopes
+            let scope = if found then addClosure scope name else scope
             found, scope :: lst
 
-      let found, scopes = findLocal s
-      (if found then Closure(n, (indexOf scopes.Head.Closure n)) else Global n), scopes
+      let found, scopes = findLocal scopes
+      (if found then Closure(name, (indexOf scopes.Head.Closure name)) else Global name), scopes
 
 //
 let private makeBlock ts s p =

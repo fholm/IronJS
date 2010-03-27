@@ -5,14 +5,8 @@
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Utils.fs"
-#load "EtTools.fs"
-#load "Tools.fs"
 #load "Types.fs"
 #load "Ast.fs"
-#load "Runtime.fs"
-#load "Binders.fs"
-#load "Closures.fs"
-#load "Compiler.fs"
 
 open IronJS
 open System
@@ -26,10 +20,3 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
 let ast = Ast.generator program.Tree
-
-let globals = Runtime.globalClosure IronJS.Compiler.compile
-let compiled = IronJS.Compiler.compile ast [typeof<Runtime.Closure>; typeof<obj>]
-
-compiled.DynamicInvoke(globals, globals.Globals) |> ignore
-
-globals.Globals.Get("__fooval")

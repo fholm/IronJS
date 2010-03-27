@@ -25,33 +25,21 @@ type Scope = {
   Closure: string list
 }
 
-type Number =
-  | Double of double
-  | Integer of int64
-
-type BinaryOp =
-  | Add = 0
-  | Sub = 1
-  | Div = 2
-  | Mul = 3
-  | Mod = 4
-
-type UnaryOp =
-  | Void = 0
-  | Delete = 1
-
 type Node =
+  // Constants
   | String of string
-  | Number of Number
-  | Block of Node list
+  | Number of double
+
+  // Variables
   | Local of string
   | Closure of string * int
   | Global of string
+  
+  | Block of Node list
   | If of Node * Node * Node
+
   | Function of string list * Scope * Node * Node * JitCache
-  | Binary of BinaryOp * Node * Node
-  | Unary of UnaryOp * Node
-  | Var of Node
+
   | Assign of Node * Node
   | Return of Node
   | Invoke of Node * Node list
@@ -177,8 +165,7 @@ let private cleanString = function
 
 //
 let private exprType = function
-  | Number(Integer(_)) -> Types.JsTypes.Integer
-  | Number(Double(_)) -> Types.JsTypes.Double
+  | Number(_) -> Types.JsTypes.Double
   | Invoke(_) -> Types.JsTypes.Dynamic
   | String(_) -> Types.JsTypes.String
   | _ -> Types.JsTypes.Dynamic
@@ -234,7 +221,7 @@ let defaultGenerators =
     );
 
     (ES3Parser.DecimalLiteral, fun t s p -> 
-      Number(Integer(int64 t.Text)), s
+      Number(double t.Text), s
     );
 
     (ES3Parser.BLOCK, fun t s p -> 

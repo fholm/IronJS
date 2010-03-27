@@ -17,6 +17,7 @@ type Local = {
   UsedAs: Types.JsTypes
   ForcedType: System.Type Option
   ClosedOver: bool
+  ParamIndex: int
 }
 
 type Scope = {
@@ -72,6 +73,7 @@ let internal emptyLocal = {
   UsedAs = Types.JsTypes.None;
   ForcedType = None;
   ClosedOver = false;
+  ParamIndex = -1;
 }
 
 let internal globalScope = 
@@ -264,7 +266,7 @@ let defaultGenerators =
 
     (ES3Parser.FUNCTION, fun t s p -> 
       if t.ChildCount = 2 then
-        let paramNames = "~closure" :: "this" :: forEachChild (fun c -> c.Text) (child t 0)
+        let paramNames = "~closure" :: "arguments" :: "this" :: forEachChild (fun c -> c.Text) (child t 0)
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
         Function(paramNames, scopes.Head, Null, body, new JitCache()), scopes.Tail
       else

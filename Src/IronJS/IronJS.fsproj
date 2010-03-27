@@ -46,6 +46,7 @@
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
     <Content Include="Testing.js" />
+    <Content Include="CallTypes.js" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

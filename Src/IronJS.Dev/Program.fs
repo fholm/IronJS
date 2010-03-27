@@ -7,7 +7,7 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.generator program.Tree
+let ast = Ast.defaultGenerator program.Tree
 
 (*
 let globals = Runtime.globalClosure IronJS.Compiler.compile

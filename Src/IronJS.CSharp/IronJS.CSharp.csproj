@@ -55,6 +55,7 @@
     <Compile Include="Parser\ES3Parser.Action.cs" />
     <Compile Include="Parser\ES3Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeTools.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Parser\LICENSE.txt" />

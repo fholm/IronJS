@@ -72,8 +72,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
       <Name>IronJS.CSharp</Name>
       <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>

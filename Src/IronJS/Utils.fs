@@ -13,6 +13,7 @@ type DebuggerBrowsableState = System.Diagnostics.DebuggerBrowsableState
 type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
 type CtorInfo = System.Reflection.ConstructorInfo
 type ParmInfo = System.Reflection.ParameterInfo
+type AstTree = Antlr.Runtime.Tree.CommonTree
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =
@@ -22,7 +23,7 @@ let toList<'a> (ilst:System.Collections.IList) =
     let mutable lst = [] // for efficiency
     let cnt = ilst.Count - 1
     for n in 0 .. cnt do 
-      lst <- ilst.[cnt - n] :: lst
+      lst <- (ilst.[cnt - n] :?> 'a) :: lst
     lst
 
 //This is a ugly hack, needs to be reworked
@@ -42,6 +43,16 @@ let getCtor (typ:Type) (args:Type list) =
     else  
       false
   ) (typ.GetConstructors())
+
+//IndexOf
+let indexOf lst itm =
+ 
+  let rec index lst n =
+    match lst with
+    | [] -> failwith "Couldn't find %A" n
+    | x::xs -> if x = itm then n else index xs (n + 1)
+ 
+  index lst 0
 
 
 //Y-comb

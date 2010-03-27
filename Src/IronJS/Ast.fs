@@ -40,7 +40,6 @@ type UnaryOp =
   | Delete = 1
 
 type Node =
-  | Symbol of string
   | String of string
   | Number of Number
   | Block of Node list

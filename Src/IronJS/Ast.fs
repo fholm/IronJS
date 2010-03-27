@@ -266,7 +266,7 @@ let defaultGenerators =
 
     (ES3Parser.FUNCTION, fun t s p -> 
       if t.ChildCount = 2 then
-        let paramNames = "~closure" :: "arguments" :: "this" :: forEachChild (fun c -> c.Text) (child t 0)
+        let paramNames = forEachChild (fun c -> c.Text) (child t 0)
         let body, scopes = p (child t 1) (addLocals (emptyScope :: s) paramNames)
         Function(paramNames, scopes.Head, Null, body, new JitCache()), scopes.Tail
       else

@@ -11,10 +11,8 @@ type AstUtils = Microsoft.Scripting.Ast.Utils
 type DebuggerBrowsable = System.Diagnostics.DebuggerBrowsableAttribute
 type DebuggerBrowsableState = System.Diagnostics.DebuggerBrowsableState
 type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
-
-//Private Type Aliases
-type private CtorInfo = System.Reflection.ConstructorInfo
-type private ParmInfo = System.Reflection.ParameterInfo
+type CtorInfo = System.Reflection.ConstructorInfo
+type ParmInfo = System.Reflection.ParameterInfo
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =

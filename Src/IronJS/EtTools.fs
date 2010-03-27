@@ -29,8 +29,8 @@ let blockParms (parms:EtParam list) (exprs:Et list) =
 let block = 
   blockParms []
 
-let lambda (typ:System.Type) (parms:EtParam list) (body:Et) = 
-  Et.Lambda(typ, body, parms)
+let lambda (parms:EtParam list) (body:Et) = 
+  Et.Lambda(body, parms)
 
 let field expr name =
   Et.PropertyOrField(expr, name) :> Et

@@ -7,6 +7,7 @@ open IronJS.EtTools
 open System.Dynamic
 open System.Runtime.CompilerServices
 open System.Collections.Generic
+open Microsoft.Scripting.Utils
 
 //Aliases
 type CompilerFunc = Ast.Node -> System.Type list -> System.Delegate
@@ -20,6 +21,15 @@ type JsObj() =
 //
 and JsObjMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
+
+//
+let private castArgs (parms:ParmInfo array) (args:MetaObj array) =
+  let rec caster acc n =
+    if n = args.Length 
+      then acc
+      else (cast2 parms.[n+2].ParameterType args.[n].Expression) :: caster acc (n + 1)
+
+  caster [] 0
 
 //
 type JsFunc =
@@ -48,19 +58,21 @@ and JsFuncMeta(expr, jsFunc) =
   member self.AstExpr with get() = field self.FuncExpr "Ast"
 
   override self.BindInvoke (binder, args) =
-    let compiled = jsFunc.Closure.Compiler jsFunc.Ast (jsFunc.ClosureType :: [for arg in args -> arg.LimitType])
+    let compiled = (jsFunc.Closure.Compiler jsFunc.Ast (jsFunc.ClosureType :: [for arg in args -> arg.LimitType])) :> System.Delegate
     let closureType = compiled.GetType().GetGenericArguments().[0]
 
     let restrictions = 
       (*must be funcType*)         (restrictType self.Expression typeof<JsFunc>) 
-      (*closre must be type*) <++> (restrictType self.ClosureExpr closureType)
+      (*closure must be type*)<++> (restrictType self.ClosureExpr closureType)
       (*must be this ast*)    <++> (restrict (refEq self.AstExpr (constant jsFunc.Ast)))
       (*argument types*)      <++> (restrictArgs (List.ofArray args))
+
+    let parms = compiled.Method.GetParameters()
 
     new MetaObj(
       Et.Invoke(
         (*delegate*) Et.Constant(compiled, compiled.GetType()),
-        (*arguments*) (cast2 jsFunc.ClosureType self.ClosureExpr) :: [for arg in args -> arg.Expression]
+        (*arguments*) (cast2 jsFunc.ClosureType self.ClosureExpr) :: castArgs parms args
       ),
       restrictions
     );

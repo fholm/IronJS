@@ -1,10 +1,5 @@
-﻿var y = "foo";
-var z = 2;
-var x = function (foo) {
-    return function () {
-        foo = "lol";
-        return foo;
-    }
+﻿var x = function (a0, a1, a2) {
+    return a0;
 };
 
-var __fooval = x(2)();
+var __fooval = x(2, 3, 4);

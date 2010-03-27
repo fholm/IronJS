@@ -25,11 +25,6 @@ let private createDelegateType (types:System.Type list) =
   Et.GetFuncType(List.toArray (List.append types [Types.ClrDynamic]))
 
 //
-let private forceType name (scope:Scope) typ =
-  let local = { scope.Locals.[name] with ForcedType = Some(typ) }
-  { scope with Locals = scope.Locals.Add(name, local) }
-
-//
 let private createContext (s:Scope) = 
   let locals = Map.map (fun k v -> Et.Parameter(v.ForcedType.Value, k)) s.Locals 
   {
@@ -64,6 +59,17 @@ let private evalLocalType (name:string) (scope:Scope) =
 
   evalType name scope Set.empty
 
+//
+let private forceType name (scope:Scope) typ =
+  let local = { scope.Locals.[name] with ForcedType = Some(typ) }
+  { scope with Locals = scope.Locals.Add(name, local) }
+
+//
+let private addUsedAs name (scope:Scope) usedAs =
+  let local = scope.Locals.[name]
+  let modified = { local with UsedAs = local.UsedAs ||| usedAs }
+  { scope with Locals = scope.Locals.Add(name, modified) }
+
 // 
 let private resolveLocalTypes (scope:Scope) =
   scope.Locals 
@@ -78,10 +84,10 @@ let rec private injectParameterTypes (parms: string list) (types:System.Type lis
   | [] -> scope
   | name::parms -> 
     let typ, types = match types with 
-                     | []    -> Types.ClrDynamic, []  
-                     | x::xs -> x, xs
+                     | []    -> Types.JsTypes.Dynamic , []  
+                     | x::xs -> Types.ToJs x, xs
 
-    injectParameterTypes parms types (forceType name scope typ)
+    injectParameterTypes parms types (addUsedAs name scope typ)
 
 (*
   Expression Tree Generation
@@ -216,6 +222,10 @@ let rec private genEt node ctx =
   | _ -> EtTools.empty
 
 //
+let private forceClosureAndThisType (scope:Scope) (types:System.Type list) =
+  forceType "this" (forceType "~closure" scope types.[0]) types.[1]
+
+//
 let compile func (types:System.Type list) =
   match func with 
   | Function(parms, genericScope, name, body, cache) ->
@@ -226,9 +236,7 @@ let compile func (types:System.Type list) =
     if found then cached
     else
       try
-        let paramTypedScope = injectParameterTypes parms types genericScope
-        let strongTypedScope = resolveLocalTypes paramTypedScope 
-
+        let strongTypedScope = resolveLocalTypes (injectParameterTypes parms types (forceClosureAndThisType genericScope types)) 
         let context = createContext strongTypedScope
         let parameters = [for p in parms -> context.Locals.[p]]
 
@@ -242,9 +250,11 @@ let compile func (types:System.Type list) =
           |> Map.filter (fun k v -> v.ClosedOver)
 
         let body = [(*1*)genEt body context; (*2*) labelExpr context.Return]
-        let lambda = EtTools.lambda (**) funcType (**) parameters (*body*) (blockParms locals body)
+        let lambda = EtTools.lambda (**) parameters (*body*) (blockParms locals body)
+        let compiled = lambda.Compile()
+        let lambdaType = compiled.GetType()
 
-        cache.GetOrAdd(funcType, lambda.Compile())
+        cache.GetOrAdd(funcType, compiled)
       with
       | x -> reraise()
 

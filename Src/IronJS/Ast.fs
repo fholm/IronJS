@@ -6,7 +6,6 @@ open IronJS.Utils
 open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
-open System.Diagnostics
   
 //Types
 type ClosureAccess =
@@ -14,7 +13,6 @@ type ClosureAccess =
   | Read
   | Write
 
-[<DebuggerDisplay("Debug: {ParamIndex}")>]
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int

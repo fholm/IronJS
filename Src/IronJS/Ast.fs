@@ -9,12 +9,14 @@ open Antlr.Runtime.Tree
 open System.Diagnostics
   
 //Types
+type ClosureAccess =
+  | None
+  | Read
+  | Write
+
 [<DebuggerDisplay("Debug: {ParamIndex}")>]
 type Local = {
-  UsedWith: string Set
-  UsedAs: Types.JsTypes
-  ForcedType: System.Type Option
-  ClosedOver: bool
+  ClosureAccess: ClosureAccess
   ParamIndex: int
 }
 
@@ -25,6 +27,7 @@ type Closure = {
 type Scope = {
   Locals: Map<string, Local>
   Closure: Map<string, Closure>
+  Arguments: bool
 }
 
 type Node =
@@ -36,8 +39,12 @@ type Node =
 
   //Variables
   | Local of string
-  | Closure of string * int
+  | Closure of string
   | Global of string
+
+  //Magic
+  | Arguments
+  | This
   
   //
   | Block of Node list
@@ -55,13 +62,11 @@ type private GeneratorMap = Map<int, CommonTree -> Scopes -> Generator -> Node>
 let private newScope = { 
   Locals  = Map.empty;
   Closure = Map.empty;
+  Arguments = false;
 }
 
 let private newLocal = {
-  UsedWith = Set.empty;
-  UsedAs = Types.JsTypes.None;
-  ForcedType = None;
-  ClosedOver = false;
+  ClosureAccess = None;
   ParamIndex = -1;
 }
 
@@ -73,31 +78,60 @@ let private isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
 let private isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
 let private hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
 let private setLocal (scope:Scope) (name:string) (loc:Local) = { scope with Locals = scope.Locals.Add(name, loc) }
-let private addUsedWith (loc:Local) (name:string) = { loc with UsedWith = Set.add name loc.UsedWith }
-let private addUsedAs (loc:Local) (typ:Types.JsTypes) = { loc with UsedAs = typ ||| loc.UsedAs }
 let private setClosure (scope:Scope) (name:string) (clos:Closure) = { scope with Closure = scope.Closure.Add(name, clos) }
 let private cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
+let private hasClosure (scope:Scope) name = scope.Closure.ContainsKey name
 
-let private exprType = function
-  | Number(_) -> Types.JsTypes.Double
-  | String(_) -> Types.JsTypes.String
-  | _ -> Types.JsTypes.Dynamic
+let private setAccessRead (scope:Scope) name = 
+  let local = scope.Locals.[name]
+  setLocal scope name (match local.ClosureAccess with
+                       | Read | Write -> local
+                       | None -> { local with ClosureAccess = Read })
+
+let private setAccessWrite (scope:Scope) name =
+  let local = scope.Locals.[name]
+  setLocal scope name (match local.ClosureAccess with
+                       | Write -> local
+                       | None | Read -> { local with ClosureAccess = Write })
+
+let private setNeedsArguments (scope:Scope) =
+  if scope.Arguments 
+    then scope
+    else { scope with Arguments = true }
 
 let private createClosure (scope:Scope) name = 
   if scope.Closure.ContainsKey name 
     then scope 
     else setClosure scope name { Index = scope.Closure.Count }
 
-let private createLocal (scopes:Scopes) (name:string) =
+let private createLocal (scopes:Scopes) name =
   match !scopes with
   | [] -> ()
   | scope::xs -> scopes := setLocal scope name newLocal :: xs
 
-let private getVariable (scopes:Scopes) (name:string) =
+let private getVariable (scopes:Scopes) name =
   match !scopes with
   | [] -> Global(name)
+  | scope::xs when name = "arguments" -> 
+    scopes := (setNeedsArguments scope) :: xs
+    Arguments
+
   | scope::xs when hasLocal scope name -> Local(name)
-  | _ -> Pass
+  | scope::xs when hasClosure scope name -> Closure(name)
+  | _ -> 
+    if List.exists (fun scope -> hasLocal scope name) !scopes then
+      scopes := mapState false (fun scope state -> 
+        if state 
+          then (scope, state)
+          else 
+            if hasLocal scope name 
+              then (setAccessRead scope name, true) 
+              else (createClosure scope name, false)
+        ) !scopes
+
+      Closure(name)
+    else
+      Global(name)
 
 let private createScope (tree:AstTree) =
   let parms = [for c in (children (child tree 0)) -> c.Text]
@@ -108,19 +142,6 @@ let private createScope (tree:AstTree) =
     | name::xs -> (doAdd xs locals (n+1)).Add(name, { newLocal with ParamIndex = n });
 
   { newScope with Locals = (doAdd parms Map.empty 0) }
-
-let private addLocalTypeData (loc:Local) (node:Node) =
-  match node with
-  | Local(name) -> addUsedWith loc name
-  | _ -> addUsedAs loc (exprType node)
-
-let private addTypeData (left:Node) (right:Node) (scopes:Scopes) =
-  match !scopes with 
-  | [] -> ()
-  | scope::xs ->
-    match left with
-    | Local(name) -> scopes := setLocal scope name (addLocalTypeData scope.Locals.[name] right) :: xs 
-    | _ -> ()
 
 //Default Generators
 let defaultGenerators = 
@@ -133,6 +154,22 @@ let defaultGenerators =
     (ES3Parser.DecimalLiteral, fun tree _ _  -> Number(double tree.Text));
     (ES3Parser.RETURN, fun tree scopes gen -> Return(gen (child tree 0) scopes));
 
+    (ES3Parser.ASSIGN, fun tree scopes gen ->
+      let left  = gen (child tree 0) scopes
+      let right = gen (child tree 1) scopes
+
+      match left with
+      | Closure(name) -> 
+        scopes := List.map (fun scope -> 
+          if hasLocal scope name 
+            then setAccessWrite scope name
+            else scope
+        ) !scopes
+      | _ -> ()
+
+      Assign(left, right)
+    );
+
     (ES3Parser.VAR, fun tree scopes gen -> 
       let child0 = child tree 0
 
@@ -142,16 +179,6 @@ let defaultGenerators =
       else 
         createLocal scopes child0.Text
         Pass
-    );
-
-    (ES3Parser.ASSIGN, fun tree scopes gen ->
-      let left  = gen (child tree 0) scopes
-      let right = gen (child tree 1) scopes
-
-      addTypeData left right scopes
-      addTypeData right left scopes
-
-      Assign(left, right)
     );
 
     (ES3Parser.FUNCTION, fun tree scopes gen ->

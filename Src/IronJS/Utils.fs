@@ -26,6 +26,15 @@ let toList<'a> (ilst:System.Collections.IList) =
       lst <- (ilst.[cnt - n] :?> 'a) :: lst
     lst
 
+let mapState state func lst =
+  let rec mapState lst state =
+    match lst with
+    | [] -> []
+    | x::xs ->
+      let x, state = func x state
+      x :: mapState xs state
+  mapState lst state
+
 //This is a ugly hack, needs to be reworked
 let getCtor (typ:Type) (args:Type list) =
   Array.find (fun (ctor:CtorInfo) ->

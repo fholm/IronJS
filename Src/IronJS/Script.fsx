@@ -13,7 +13,8 @@ open System
 open Antlr.Runtime
 open IronJS.CSharp.Parser
 
-fsi.AddPrinter(fun (x:Ast.Local) -> sprintf "\"cls: %b, used: %A && %A, index: %i\"" x.ClosedOver x.UsedAs x.UsedWith x.ParamIndex)
+fsi.AddPrinter(fun (x:Ast.Local) -> sprintf "%A/%i" x.ClosureAccess x.ParamIndex)
+fsi.AddPrinter(fun (x:Ast.Closure) -> sprintf "%i" x.Index)
 
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 

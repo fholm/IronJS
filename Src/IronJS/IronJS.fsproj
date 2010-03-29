@@ -38,6 +38,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Ast.fs" />
+    <Compile Include="Jit.fs" />
     <None Include="Script.fsx" />
     <Content Include="Testing.js" />
     <Content Include="CallTypes.js" />

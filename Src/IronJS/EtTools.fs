@@ -17,6 +17,12 @@ let objDefault =
   Et.Default(typeof<obj>) :> Et
 
 //Functions
+let param name typ =
+  Et.Parameter(typ, name)
+
+let paramT<'a> name = 
+  param name typeof<'a>
+
 let label name =
   Et.Label(typeof<obj>, name)
 
@@ -66,11 +72,11 @@ let throw (typ:System.Type) (args:Et seq) =
 let refEq left right =
   Et.ReferenceEqual(left, right) :> Et
 
-let cast2 typ expr =
+let cast typ expr =
   Et.Convert(expr, typ) :> Et
 
-let cast<'a> = 
-  cast2 typeof<'a>
+let castT<'a> = 
+  cast typeof<'a>
 
 let gotoReturn label (value:Et) =
   Et.Return(label, value) :> Et

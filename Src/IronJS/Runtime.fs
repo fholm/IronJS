@@ -27,7 +27,7 @@ let private castArgs (parms:ParmInfo array) (args:MetaObj array) =
   let rec caster acc n =
     if n = args.Length 
       then acc
-      else (cast2 parms.[n+2].ParameterType args.[n].Expression) :: caster acc (n + 1)
+      else (cast parms.[n+2].ParameterType args.[n].Expression) :: caster acc (n + 1)
 
   caster [] 0
 
@@ -53,7 +53,7 @@ type JsFunc =
 and JsFuncMeta(expr, jsFunc) =
   inherit JsObjMeta(expr, jsFunc)
 
-  member self.FuncExpr with get() = cast<JsFunc> self.Expression
+  member self.FuncExpr with get() = castT<JsFunc> self.Expression
   member self.ClosureExpr with get() = field self.FuncExpr "Closure"
   member self.AstExpr with get() = field self.FuncExpr "Ast"
 
@@ -72,7 +72,7 @@ and JsFuncMeta(expr, jsFunc) =
     new MetaObj(
       Et.Invoke(
         (*delegate*) Et.Constant(compiled, compiled.GetType()),
-        (*arguments*) (cast2 jsFunc.ClosureType self.ClosureExpr) :: castArgs parms args
+        (*arguments*) (cast jsFunc.ClosureType self.ClosureExpr) :: castArgs parms args
       ),
       restrictions
     );

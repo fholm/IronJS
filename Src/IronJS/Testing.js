@@ -13,3 +13,5 @@ var foo = function(a1, a2) {
         return bar;
     };
 };
+
+foo(1, 2);

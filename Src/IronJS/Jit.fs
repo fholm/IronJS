@@ -1,15 +1,17 @@
 ﻿module IronJS.Jit
 
-//Imports
+(* Imports *)
 open IronJS.Ast
 open IronJS.Utils
 open IronJS.EtTools
 open System.Linq.Expressions
 
-//Aliases
+(* Aliases *)
 type ClrType = System.Type
 
-//Types
+(* Types *)
+
+//Represents a local variable
 type Local = {
   Expr: EtParam
   Type: ClrType
@@ -23,6 +25,7 @@ type Local = {
   member self.IsParameter
     with get() = self.ParamIndex > -1
 
+//Compilation context
 type Context = {
   Closure: EtParam
   This: EtParam
@@ -49,15 +52,17 @@ let defaultContext = {
   Return = label "~return"
 }
 
-//Functions
+(* Globals *)
 
-//Gets a global variable
+//Get a global variable
 let private getGlobal name (ctx:Context) =
   call ctx.Globals "Get" [constant name]
 
-//Sets a global variable
+//Set a global variable
 let private setGlobal name value (ctx:Context) =
   call ctx.Globals "Set" [constant name; jsBox value]
+
+(* Assignment *)
 
 //Handles assignment for Global/Closure/Local
 let private assign left right (ctx:Context) builder =

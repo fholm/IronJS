@@ -151,6 +151,7 @@ let defaultGenerators =
     (ES3Parser.StringLiteral,  fun tree _ _  -> String(cleanString tree.Text));
     (ES3Parser.DecimalLiteral, fun tree _ _  -> Number(double tree.Text));
     (ES3Parser.RETURN, fun tree scopes gen -> Return(gen (child tree 0) scopes));
+    (ES3Parser.CALL, fun tree scopes gen -> Invoke(gen (child tree 0) scopes, [for arg in children (child tree 1) -> gen arg scopes]));
 
     (ES3Parser.ASSIGN, fun tree scopes gen ->
       let left  = gen (child tree 0) scopes

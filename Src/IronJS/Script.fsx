@@ -20,7 +20,6 @@
 open System
 open IronJS
 open IronJS.Ast
-open IronJS.Ast.Types
 open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
@@ -41,7 +40,7 @@ let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator program.Tree
 
 match ast with
-| Assign(_, func) -> IronJS.Compiler.Analyzer.analyze func []
+| Types.Assign(_, func) -> IronJS.Compiler.Analyzer.analyze func [IronJS.Types.ClrString; IronJS.Types.ClrString; IronJS.Types.ClrString]
 | _ -> ()
 
 let env = new Runtime.Environment()

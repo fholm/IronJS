@@ -1,5 +1,7 @@
 ﻿open System
 open IronJS
+open IronJS.Ast
+open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
 open Antlr.Runtime
@@ -10,4 +12,8 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator program.Tree
 
-IronJS.Compiler.Core.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty |> ignore
+let paramTypes = [IronJS.Types.ClrString; IronJS.Types.ClrString]
+
+match ast with
+| Types.Assign(_, func) -> IronJS.Compiler.Analyzer.analyze func paramTypes
+| _ -> ()

@@ -4,20 +4,26 @@
 open IronJS
 open IronJS.Utils
 open Antlr.Runtime.Tree
+open System.Diagnostics
 
 (*Types*)
+[<DebuggerDisplay("{GetType()}")>]
 type ClosureAccess =
   | None
   | Read
   | Write
 
+[<DebuggerDisplay("{ClosureAccess.Tag}/{ParamIndex}/{UsedAs}/{UsedWith}")>]
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int
   UsedAs: Types.JsTypes
   UsedWith: string Set
-}
-
+} with
+  member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.None)
+  member self.IsParameter  with get() = self.ParamIndex > -1
+  
+[<DebuggerDisplay("Closure:{Index}")>]
 type Closure = {
   Index: int
 }

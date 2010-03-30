@@ -43,25 +43,29 @@ let defaultLocal = {
 
 let defaultContext = {
   Closure = null
-  This = param "this" typeof<IronJS.Runtime.JsObj>
-  Arguments = param "arguments" typeof<IronJS.Runtime.JsObj>
+  This = param "this" typeof<IronJS.Runtime.Object>
+  Arguments = param "arguments" typeof<IronJS.Runtime.Object>
   Locals = Map.empty
   Return = label "~return"
 }
 
 //Functions
+
+//Gets a global variable
 let private getGlobal name (ctx:Context) =
   call ctx.Globals "Get" [constant name]
 
+//Sets a global variable
 let private setGlobal name value (ctx:Context) =
   call ctx.Globals "Set" [constant name; jsBox value]
 
+//Handles assignment for Global/Closure/Local
 let private assign left right (ctx:Context) builder =
   match left with
   | Global(name) -> setGlobal name (builder right ctx) ctx
   | _ -> empty
 
-//
+//Builder function for expression generation
 let rec private builder (ast:Node) (ctx:Context) =
   match ast with
   | Assign(left, right) -> assign left right ctx builder
@@ -71,7 +75,7 @@ let rec private builder (ast:Node) (ctx:Context) =
   | Number(value) -> constant value
   | _ -> empty
 
-//
+//Compiles the Ast.Node tree into a DLR Expression-tree
 let compileAst (ast:Node) (closType:ClrType) (locals:Map<string, Local>) =
   let context = 
     { defaultContext with 

@@ -2,6 +2,7 @@
 
 (* Imports *)
 open IronJS.Ast
+open IronJS.Ast.Types
 open IronJS.Utils
 open IronJS.EtTools
 open System.Linq.Expressions

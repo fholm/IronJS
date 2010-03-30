@@ -1,4 +1,4 @@
-﻿module IronJS.Ast
+﻿module IronJS.Ast.Core
 
 (*Imports*)
 open IronJS

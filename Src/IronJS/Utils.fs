@@ -14,6 +14,7 @@ type CtorInfo = System.Reflection.ConstructorInfo
 type ParmInfo = System.Reflection.ParameterInfo
 type AstTree = Antlr.Runtime.Tree.CommonTree
 type StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
+type ClrType = System.Type
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =

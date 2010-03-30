@@ -7,15 +7,12 @@ open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 
 (*Analyzer Functions*)
-let analyzeAssign (left:Node) (right:Node) (scopes:Scopes) =
+let private analyzeAssign (left:Node) (right:Node) (scopes:Scopes) =
   match left with
   //Assign to local variable
   | Local(name) -> 
     match right with
-    | Local(rightName) -> 
-      addUsedWith name rightName scopes
-      addUsedWith rightName name scopes
-
+    | Local(rightName) -> addUsedWith name rightName scopes
     | Global(_) -> addUsedAs name Types.JsTypes.Dynamic scopes
     | Number(_) -> addUsedAs name Types.JsTypes.Double  scopes
     | String(_) -> addUsedAs name Types.JsTypes.String  scopes

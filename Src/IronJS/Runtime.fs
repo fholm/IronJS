@@ -25,7 +25,7 @@ and ObjectMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
 //Closure base class
-type Closure(globals:Object, ast:Ast.Node, env:Environment) =
+type Closure(globals:Object, ast:Ast.Types.Node, env:Environment) =
   member self.Globals  with get() = globals
 
 //Javascript object that is a function
@@ -34,7 +34,7 @@ type Function =
 
   val mutable Closure : Closure
   val mutable ClosureType : System.Type
-  val mutable Ast : Ast.Node
+  val mutable Ast : Ast.Types.Node
 
   new(closure, ast, env) = { 
     inherit Object(env);

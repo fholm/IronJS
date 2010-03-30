@@ -13,16 +13,20 @@
 #load "Ast.fs"
 #load "EtTools.fs"
 #load "Runtime.fs"
-#load "Jit.fs"
+#load "Compiler.Types.fs"
+#load "Compiler.Analyzer.fs"
+#load "Compiler.fs"
 
 open System
 open IronJS
+open IronJS.Ast
+open IronJS.Ast.Types
 open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
 open Antlr.Runtime
 
-fsi.AddPrinter(fun (x:Ast.Types.Local) -> sprintf "%A/%i/%A" x.ClosureAccess x.ParamIndex x.UsedAs)
+fsi.AddPrinter(fun (x:Ast.Types.Local) -> sprintf "%A/%i/%A/%A" x.ClosureAccess x.ParamIndex x.UsedAs x.UsedWith)
 fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i" x.Index)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "Param:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
@@ -34,12 +38,16 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.defaultGenerator program.Tree
+let ast = Ast.Core.defaultGenerator program.Tree
+
+match ast with
+| Assign(_, func) -> IronJS.Compiler.Analyzer.analyze func []
+| _ -> ()
 
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)
 let clos = new Runtime.Closure(globals, Ast.Types.Null, env)
 
-(IronJS.Jit.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
+(IronJS.Compiler.Core.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
 
 globals.Get("foo")

@@ -6,12 +6,14 @@ open System
 type MetaObj = System.Dynamic.DynamicMetaObject
 type Et = System.Linq.Expressions.Expression
 type EtParam = System.Linq.Expressions.ParameterExpression
+type EtLambda = System.Linq.Expressions.LambdaExpression
 type Restrict = System.Dynamic.BindingRestrictions
 type AstUtils = Microsoft.Scripting.Ast.Utils
 type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
 type CtorInfo = System.Reflection.ConstructorInfo
 type ParmInfo = System.Reflection.ParameterInfo
 type AstTree = Antlr.Runtime.Tree.CommonTree
+type StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =

@@ -5,6 +5,7 @@ let ClrDynamic = typeof<obj>
 let ClrInteger = typeof<int64>
 let ClrDouble = typeof<double>
 let ClrString = typeof<string>
+let ClrVoid = typeof<System.Void>
 let StrongBoxType = typedefof<System.Runtime.CompilerServices.StrongBox<_>>
 
 //Types

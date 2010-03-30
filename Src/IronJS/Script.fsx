@@ -8,6 +8,7 @@
 #load "Types.fs"
 #load "Ast.fs"
 #load "EtTools.fs"
+#load "Runtime.fs"
 #load "Jit.fs"
 
 open System
@@ -28,4 +29,4 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.defaultGenerator program.Tree
 
-IronJS.Jit.compileAst ast typeof<obj> (Map.ofList [("test", typeof<obj>)])
+IronJS.Jit.compileAst ast typeof<obj> (Map.ofList [("test", typeof<obj>)]) []

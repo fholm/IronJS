@@ -1,6 +1,7 @@
 ﻿module IronJS.EtTools
 
 //Imports
+open IronJS
 open IronJS.Utils
 open System.Linq.Expressions
 

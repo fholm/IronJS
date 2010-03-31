@@ -5,8 +5,8 @@
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Fsi.fs"
-#load "Utils.fs"
 #load "Types.fs"
+#load "Utils.fs"
 #load "Ast.Types.fs"
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
@@ -23,6 +23,8 @@ open IronJS.Ast
 open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
+open IronJS.Types
+open IronJS.Ast.Types
 open Antlr.Runtime
 
 fsi.AddPrinter(fun (x:Ast.Types.Local) -> sprintf "%A/%i/%A/%A" x.ClosureAccess x.ParamIndex x.UsedAs x.UsedWith)
@@ -39,9 +41,26 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator program.Tree
 
-match ast with
-| Types.Assign(_, func) -> IronJS.Compiler.Analyzer.analyze func [IronJS.Types.ClrString; IronJS.Types.ClrString; IronJS.Types.ClrString]
-| _ -> ()
+let types = [IronJS.Types.ClrString; IronJS.Types.ClrString; IronJS.Types.ClrDouble]
+
+let vals = match ast with
+| Types.Assign(_, func) -> 
+  match func with
+  | Function(scope, body) ->
+
+    let locals = 
+      scope.Locals
+        |> Map.map (
+          fun k (v:Local) -> 
+            if v.IsParameter then
+              if v.ParamIndex < types.Length 
+                then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] }
+                else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1 }
+            else v
+          )
+
+    locals
+
 
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)

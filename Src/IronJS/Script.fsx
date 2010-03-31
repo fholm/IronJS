@@ -35,8 +35,6 @@ let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)
 let clos = new Runtime.Closure(globals, Ast.Null, env)
 
-
-
 (IronJS.Jit.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
 
 globals.Get("foo")

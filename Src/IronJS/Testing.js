@@ -2,4 +2,5 @@
     var bar = 2;
     bar = a1;
     bar = arguments
+    a2 = 2;
 };

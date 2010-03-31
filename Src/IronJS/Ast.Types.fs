@@ -13,12 +13,14 @@ type ClosureAccess =
   | Read
   | Write
 
-[<DebuggerDisplay("{ClosureAccess.Tag}/{ParamIndex}/{UsedAs}/{UsedWith}")>]
+[<DebuggerDisplay("clos:{ClosureAccess.Tag}/{ParamIndex}/as:{UsedAs}/{UsedWith}/def:{InitDefault}")>]
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int
   UsedAs: Types.JsTypes
   UsedWith: string Set
+  InitUndefined: bool
+  Expr: EtParam
 } with
   member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.None)
   member self.IsParameter  with get() = self.ParamIndex > -1
@@ -74,4 +76,6 @@ let internal newLocal = {
   ParamIndex = -1
   UsedAs = Types.JsTypes.None
   UsedWith = Set.empty
+  InitUndefined = false
+  Expr = null
 }

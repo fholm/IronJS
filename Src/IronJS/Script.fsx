@@ -43,6 +43,13 @@ let ast = Ast.Core.defaultGenerator program.Tree
 
 let types = [IronJS.Types.ClrString; IronJS.Types.ClrString; ]
 
+let willBeDynamic (loc:Local) =
+  match loc.UsedAs with
+  | JsTypes.Double 
+  | JsTypes.String
+  | JsTypes.Object -> true && loc.InitUndefined
+  | _ -> true
+
 let vals = 
   match ast with
   | Types.Assign(_, func) -> 
@@ -55,12 +62,12 @@ let vals =
             fun k (v:Local) -> 
               if v.IsParameter then
                 if v.ParamIndex < types.Length 
-                  then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] }
-                  else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1; InitUndefined = true }
+                  then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] } // We got argument for this parameter
+                  else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1; InitUndefined = true } // We didn't, means make it dynamic and initialize it to undefined
               else 
-                if v.InitUndefined 
-                  then { v with UsedAs = JsTypes.Dynamic }
-                  else v
+                if willBeDynamic v
+                  then { v with UsedAs = JsTypes.Dynamic } // No need to resovle type, force it here
+                  else v  // Else we need to resolve type
             )
 
       locals

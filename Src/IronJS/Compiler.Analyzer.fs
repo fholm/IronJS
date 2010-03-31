@@ -5,29 +5,29 @@ open IronJS.Utils
 open IronJS.Types
 open IronJS.Ast.Types
 
-let willBeDynamic (loc:Local) =
+let private willBeDynamic (loc:Local) =
   match loc.UsedAs with
   | JsTypes.Double 
   | JsTypes.String
   | JsTypes.Object -> true && loc.InitUndefined
   | _ -> true
 
-let makeWithExpr (name:string) (loc:Local) (typ:JsTypes) =
+let private makeWithExpr (name:string) (loc:Local) (typ:JsTypes) =
   let expr = EtTools.param name (match loc.ClosureAccess with
                                  | Read | Write -> StrongBoxType.MakeGenericType(ToClr typ)
                                  | None -> ToClr typ)
   { loc with UsedAs = typ; Expr = expr }
   
 
-let demoteParameter name (loc:Local) =
+let private demoteParameter name (loc:Local) =
   { makeWithExpr name loc JsTypes.Dynamic with ParamIndex = -1; InitUndefined = true; }
 
-let rec resolveType name (exclude:string Set) (locals:Map<string,Local> ref) =
+let rec private resolveType name (exclude:string Set) (locals:Map<string,Local> ref) =
   (!locals).[name].UsedWith
     |> Set.map (fun var -> getType var exclude locals)
     |> Set.fold (fun typ state -> typ ||| state) (!locals).[name].UsedAs
 
-and getType name (exclude:string Set) (locals:Map<string,Local> ref) =
+and private getType name (exclude:string Set) (locals:Map<string,Local> ref) =
   let local = (!locals).[name]
   if exclude.Contains name then JsTypes.None
   else

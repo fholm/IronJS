@@ -42,7 +42,7 @@ let field expr name =
   Et.PropertyOrField(expr, name) :> Et
 
 let jsBox (expr:Et) =
-  if expr.Type = IronJS.CSharp.EtTools.VoidType 
+  if expr.Type = Types.ClrVoid
     then Et.Block(expr, objDefault) :> Et 
     else Et.Convert(expr, typeof<obj>) :> Et
 

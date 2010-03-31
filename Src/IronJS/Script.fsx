@@ -62,15 +62,17 @@ let vals =
             fun k (v:Local) -> 
               if v.IsParameter then
                 if v.ParamIndex < types.Length 
-                  then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] } // We got argument for this parameter
-                  else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1; InitUndefined = true } // We didn't, means make it dynamic and initialize it to undefined
+                  then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] } // We got an argument for this parameter
+                  else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1; InitUndefined = true; UsedWith = Set.empty } // We didn't, means make it dynamic and initialize it to undefined
               else 
                 if willBeDynamic v
-                  then { v with UsedAs = JsTypes.Dynamic } // No need to resovle type, force it here
+                  then { v with UsedAs = JsTypes.Dynamic; UsedWith = Set.empty } // No need to resovle type, force it here
                   else v  // Else we need to resolve type
             )
 
       locals
+        |> Map.filter (fun k v -> not(v.UsedAs = JsTypes.Dynamic) && v.UsedWith.Count > 0)
+
     | _ -> Map.empty
   | _ -> Map.empty
 

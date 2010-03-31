@@ -4,37 +4,68 @@
 #r "../Dependencies/Microsoft.Scripting.dll"
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
-#load "Utils.fs"
+#load "Fsi.fs"
 #load "Types.fs"
+#load "Utils.fs"
+#load "Ast.Types.fs"
+#load "Ast.Helpers.fs"
+#load "Ast.Analyzer.fs"
 #load "Ast.fs"
 #load "EtTools.fs"
 #load "Runtime.fs"
-#load "Jit.fs"
+#load "Compiler.Types.fs"
+#load "Compiler.Analyzer.fs"
+#load "Compiler.fs"
 
 open System
 open IronJS
+open IronJS.Ast
+open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
+open IronJS.Types
+open IronJS.Ast.Types
 open Antlr.Runtime
 
-let dbgViewProp = typeof<Et>.GetProperty("DebugView", System.Reflection.BindingFlags.NonPublic ||| System.Reflection.BindingFlags.Instance)
-fsi.AddPrinter(fun (x:Ast.Local) -> sprintf "%A/%i" x.ClosureAccess x.ParamIndex)
-fsi.AddPrinter(fun (x:Ast.Closure) -> sprintf "%i" x.Index)
+fsi.AddPrinter(fun (x:Ast.Types.Local) -> sprintf "%A/%i/%A/%A" x.ClosureAccess x.ParamIndex x.UsedAs x.UsedWith)
+fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i" x.Index)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "Param:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.defaultGenerator program.Tree
+let ast = Ast.Core.defaultGenerator program.Tree
+
+let types = [IronJS.Types.ClrString; IronJS.Types.ClrString; IronJS.Types.ClrDouble]
+
+let vals = match ast with
+| Types.Assign(_, func) -> 
+  match func with
+  | Function(scope, body) ->
+
+    let locals = 
+      scope.Locals
+        |> Map.map (
+          fun k (v:Local) -> 
+            if v.IsParameter then
+              if v.ParamIndex < types.Length 
+                then { v with UsedAs = v.UsedAs ||| ToJs types.[v.ParamIndex] }
+                else { v with UsedAs = JsTypes.Dynamic; ParamIndex = -1 }
+            else v
+          )
+
+    locals
+
 
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)
-let clos = new Runtime.Closure(globals, Ast.Null, env)
+let clos = new Runtime.Closure(globals, Ast.Types.Null, env)
 
-(IronJS.Jit.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
+(IronJS.Compiler.Core.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
 
 globals.Get("foo")

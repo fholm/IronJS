@@ -66,4 +66,5 @@ let indexOf lst itm =
 
 
 //Y-comb
+let rec fix0 f = f (fun () -> fix0 f)
 let rec fix f = f (fun x -> fix f x)

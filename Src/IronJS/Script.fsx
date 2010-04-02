@@ -47,7 +47,7 @@ let scope =
     match func with
     | Function(scope, body) -> scope
 
-Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrString; ]
+Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble; ]
 
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)

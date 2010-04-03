@@ -5,6 +5,7 @@
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Fsi.fs"
+#load "Constants.fs"
 #load "Types.fs"
 #load "Utils.fs"
 #load "Ast.Types.fs"
@@ -49,9 +50,13 @@ let scope, body =
     match func with
     | Function(scope, body) -> scope, body
     
+#load "Utils.fs"
+#load "Compiler.Types.fs"    
+#load "Compiler.Analyzer.fs"
 #load "Compiler.fs"
 let analyzedScope = Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble]
-let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope.Locals)
+let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope)
+
 (*
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)

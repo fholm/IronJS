@@ -30,10 +30,15 @@ type Closure = {
   Index: int
 }
 
+type CallingConvention =
+  | Dynamic = 0
+  | Static = 1
+
 type Scope = {
   Locals: Map<string, Local>
   Closure: Map<string, Closure>
   Arguments: bool
+  CallingConvention: CallingConvention
 }
 
 type Node =
@@ -70,6 +75,7 @@ let internal newScope = {
   Locals = Map.empty
   Closure = Map.empty
   Arguments = false
+  CallingConvention = CallingConvention.Static
 }
 
 let internal newLocal = {

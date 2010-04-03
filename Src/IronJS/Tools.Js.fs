@@ -5,7 +5,7 @@ open IronJS.Utils
 open IronJS.Tools
 
 let assign (left:Et) (right:Et) =
-  Expr.assign left (Expr.cast left.Type right)
+  Expr.assign left (if left.Type = right.Type then right else Expr.cast left.Type right)
 
 let box (expr:Et) =
   if expr.Type = Constants.clrVoid

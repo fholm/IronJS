@@ -1,6 +1,6 @@
 ﻿module IronJS.Constants
 
-let maxTypedArgs  = 1
+let maxTypedArgs  = 10
 let clrDynamic    = typeof<obj>
 let clrDouble     = typeof<double>
 let clrString     = typeof<string>

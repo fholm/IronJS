@@ -39,20 +39,30 @@ let makeDynamicInitExpr (p:Local) (args:Et) =
   let test = Et.LessThan(Expr.constant p.ParamIndex, Expr.field args "Length")
   Js.assign p.Expr (Et.Condition(test, Expr.index args p.ParamIndex, Expr.castT<obj> Undefined.InstanceExpr) :> Et)
 
+let addUndefinedInitExprs (variables:LocalMap) (body:Et list) =
+  variables
+    |> Map.filter (fun _ (var:Local) -> var.InitUndefined)
+    |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Undefined.InstanceExpr) :: state) body
+
 let compileDynamicAst (scope:Scope) (body:Et list) (ctx:Context) = 
-  Expr.empty
+  let argsArray = Expr.paramT<obj array> "~args"
+  let innerParameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter)
+  let outerParameters = [ctx.Closure; ctx.This; ctx.Arguments; argsArray]
+
+  let localVariableExprs = [for kvp in scope.Locals -> kvp.Value.Expr]
+  let innerParamsInitExprs = innerParameters |> Map.fold (fun state _ (var:Local) -> makeDynamicInitExpr var argsArray :: state) body
+  let completeBodyExpr = addUndefinedInitExprs variables innerParamsInitExprs
+
+  Expr.lambda outerParameters (Expr.blockParms localVariableExprs completeBodyExpr) :> Et
 
 let compileStaticAst (scope:Scope) (body:Et list) (ctx:Context) = 
   let parameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter && not var.InitUndefined)
   let parameters = ctx.Closure :: ctx.This :: ctx.Arguments :: [for kvp in parameters -> kvp.Value.Expr]
 
   let localVariableExprs = [for kvp in variables -> kvp.Value.Expr]
-  let undefinedInitExprs = 
-    variables
-      |> Map.filter (fun _ (var:Local) -> var.InitUndefined)
-      |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Undefined.InstanceExpr) :: state) []
+  let completeBodyExpr = addUndefinedInitExprs variables body
 
-  Expr.lambda parameters (Expr.blockParms localVariableExprs (List.append undefinedInitExprs body)) :> Et
+  Expr.lambda parameters (Expr.blockParms localVariableExprs completeBodyExpr) :> Et
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (ast:Node) (closType:ClrType) (scope:Scope) =

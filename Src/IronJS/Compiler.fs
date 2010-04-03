@@ -5,6 +5,7 @@ open IronJS.Ast
 open IronJS.Ast.Types
 open IronJS.Utils
 open IronJS.EtTools
+open IronJS.Runtime
 open IronJS.Compiler.Types
 open System.Linq.Expressions
 
@@ -15,8 +16,6 @@ let private getGlobal name (ctx:Context) =
 //Set a global variable
 let private setGlobal name value (ctx:Context) =
   call ctx.Globals "Set" [constant name; jsBox value]
-
-(* Assignment *)
 
 //Handles assignment for Global/Closure/Local
 let private assign left right (ctx:Context) builder =
@@ -34,15 +33,15 @@ let rec private builder (ast:Node) (ctx:Context) =
   | Number(value) -> constant value
   | _ -> empty
 
-//Compiles the Ast.Node tree into a DLR Expression-tree
+(*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (ast:Node) (closType:ClrType) (locals:Map<string, Local>) =
-  let context = 
-    { defaultContext with 
-        Closure = param "~closure" closType;
-        Locals = locals |> Map.map (fun name var -> { var with Expr = (param name var.Type) })
-    }
+  let context = { defaultContext with Closure = param "~closure" closType; Locals = locals }
 
-  let body = (block [(builder ast context); labelExpr context.Return])
-  let arguments = context.Closure :: context.This :: context.Arguments :: []
+  let bodyExpr = [(builder ast context); labelExpr context.Return]
+  let parms, variables = mapBisect (fun _ (var:Local) -> var.IsParameter) locals
+  let defaultVars, assignedVars = mapBisect (fun _ (var:Local) -> var.InitUndefined) variables
 
-  lambda arguments body
+  let arguments = context.Closure :: context.This :: context.Arguments :: [for kvp in parms -> kvp.Value.Expr]
+  let initExprs = [for kvp in defaultVars -> Et.Assign(kvp.Value.Expr, jsBox Undefined.InstanceExpr) :> Et]
+
+  lambda arguments (blockParms [for var in variables -> var.Value.Expr] (List.append initExprs bodyExpr))

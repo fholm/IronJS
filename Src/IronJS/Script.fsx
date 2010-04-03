@@ -41,13 +41,15 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator program.Tree
 
-let scope = 
+let scope, body = 
   match ast with
   | Types.Assign(_, func) -> 
     match func with
-    | Function(scope, body) -> scope
-
-Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble; ]
+    | Function(scope, body) -> scope, body
+    
+#load "Compiler.fs"
+let analyzedScope = Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble]
+let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope.Locals)
 
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)

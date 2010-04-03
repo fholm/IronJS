@@ -2,25 +2,10 @@
 
 (* Imports *)
 open IronJS.Ast
-open IronJS.Ast.Types
 open IronJS.Utils
 open IronJS.EtTools
+open IronJS.Ast.Types
 open System.Linq.Expressions
-
-(* Types *)
-//Represents a local variable
-type Local = {
-  Expr: EtParam
-  Type: ClrType
-  ParamIndex: int
-  SetUndefined: bool
-} with
-  member self.IsClosedOver 
-    with get() = self.Type.IsGenericType 
-              && self.Type.GetGenericTypeDefinition() = typedefof<StrongBox<_>>
-
-  member self.IsParameter
-    with get() = self.ParamIndex > -1
 
 //Compilation context
 type Context = {
@@ -32,14 +17,6 @@ type Context = {
 } with
   member self.Globals
     with get() = field self.Closure "Globals"
-
-//Constants
-let defaultLocal = {
-  Expr = null
-  Type = null
-  ParamIndex = -1
-  SetUndefined = false
-}
 
 let defaultContext = {
   Closure = null

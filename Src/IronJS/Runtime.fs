@@ -14,6 +14,11 @@ open Microsoft.Scripting.Utils
 type Environment() =
   class end
 
+type Undefined() =
+  static let instance = Undefined()
+  static member Instance with get() = instance
+  static member InstanceExpr with get() = constant instance
+
 //Main javascript object type
 type Object(env:Environment) =
   let properties = new Dictionary<string, obj>();

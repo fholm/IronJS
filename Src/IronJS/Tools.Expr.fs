@@ -86,6 +86,9 @@ let assignStrongBox (left:Et) (right:Et) =
 let index (left:Et) (i:int) =
   Et.ArrayIndex(left, constant i) :> Et
 
+let createInstance (typ:System.Type) =
+  Et.New(typ) :> Et
+
 (*Restrict Tools*)
 
 //Functions

@@ -6,6 +6,7 @@ open IronJS.Utils
 open IronJS.Tools
 open IronJS.Runtime
 open IronJS.Compiler.Types
+open IronJS.Compiler.Helpers
 open System.Linq.Expressions
 
 //Get a global variable
@@ -39,28 +40,54 @@ let makeDynamicInitExpr (p:Local) (args:Et) =
   let test = Et.LessThan(Expr.constant p.ParamIndex, Expr.field args "Length")
   Js.assign p.Expr (Et.Condition(test, Expr.index args p.ParamIndex, Expr.castT<obj> Undefined.InstanceExpr) :> Et)
 
+(*Adds initilization expressions for variables that should be Undefined*)
 let addUndefinedInitExprs (variables:LocalMap) (body:Et list) =
   variables
     |> Map.filter (fun _ (var:Local) -> var.InitUndefined)
     |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Undefined.InstanceExpr) :: state) body
 
+(*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
+let addStrongBoxInitExprs (variables:LocalMap) (body:Et list) =
+  variables
+    |> Map.filter (fun _ (var:Local) -> var.IsClosedOver)
+    |> Map.fold (fun state _ (var:Local) -> (Expr.assign var.Expr (Expr.createInstance var.Expr.Type)) :: state) body
+
+(*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
+let addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) (body:Et list) =
+  parms |> Map.fold (fun state name (var:Local) -> Js.assign var.Expr proxies.[name] :: state) body
+
+(*Does the final DLR compilation for dynamicly typed functions*)
 let compileDynamicAst (scope:Scope) (body:Et list) (ctx:Context) = 
   let argsArray = Expr.paramT<obj array> "~args"
   let innerParameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter)
   let outerParameters = [ctx.Closure; ctx.This; ctx.Arguments; argsArray]
 
   let localVariableExprs = [for kvp in scope.Locals -> kvp.Value.Expr]
-  let innerParamsInitExprs = innerParameters |> Map.fold (fun state _ (var:Local) -> makeDynamicInitExpr var argsArray :: state) body
-  let completeBodyExpr = addUndefinedInitExprs variables innerParamsInitExprs
+  let completeBodyExpr = 
+    innerParameters 
+      |> Map.fold (fun state _ (var:Local) -> makeDynamicInitExpr var argsArray :: state) body
+      |> addUndefinedInitExprs variables
+      |> addStrongBoxInitExprs scope.Locals
 
   Expr.lambda outerParameters (Expr.blockParms localVariableExprs completeBodyExpr) :> Et
 
+(*Does the final DLR compilation for staticly typed functions*)
 let compileStaticAst (scope:Scope) (body:Et list) (ctx:Context) = 
   let parameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter && not var.InitUndefined)
-  let parameters = ctx.Closure :: ctx.This :: ctx.Arguments :: [for kvp in parameters -> kvp.Value.Expr]
+  let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
+  let proxyParameters = closedOverParameters |> Map.map (fun name var -> Expr.param ("~" + name + "_proxy") (ToClr var.UsedAs))
+  let parameters = ctx.Closure :: ctx.This :: ctx.Arguments :: [for kvp in parameters -> if kvp.Value.IsClosedOver then proxyParameters.[kvp.Key] else kvp.Value.Expr]
 
-  let localVariableExprs = [for kvp in variables -> kvp.Value.Expr]
-  let completeBodyExpr = addUndefinedInitExprs variables body
+  let localVariableExprs = 
+    List.append 
+      [for kvp in closedOverParameters -> kvp.Value.Expr] 
+      [for kvp in variables -> kvp.Value.Expr]
+
+  let completeBodyExpr = 
+    body 
+      |> addUndefinedInitExprs variables
+      |> addProxyParamInitExprs closedOverParameters proxyParameters
+      |> addStrongBoxInitExprs scope.Locals
 
   Expr.lambda parameters (Expr.blockParms localVariableExprs completeBodyExpr) :> Et
 
@@ -72,17 +99,3 @@ let compileAst (ast:Node) (closType:ClrType) (scope:Scope) =
   if scope.CallingConvention = CallingConvention.Dynamic 
     then compileDynamicAst scope body context
     else compileStaticAst  scope body context
-
-  (*
-  let paramsArray = Expr.paramT<obj array> "~args"
-  let bodyExpr = [(builder ast context); Expr.labelExpr context.Return]
-  let parms, variables = mapBisect (fun _ (var:Local) -> var.IsParameter && (not var.InitUndefined || isDynamic)) locals
-  let defaultVars = Map.filter (fun _ (var:Local) -> var.InitUndefined) variables
-
-  let arguments = context.Closure :: context.This :: context.Arguments :: if isDynamic then [paramsArray] else [for kvp in parms -> kvp.Value.Expr]
-
-  let dynamicInitExprs =  if isDynamic then [for kvp in parms -> makeDynamicInitExpr kvp.Value paramsArray] else []
-  let initExprs = List.append dynamicInitExprs [for kvp in defaultVars -> Js.assign kvp.Value.Expr Undefined.InstanceExpr]
-
-  Expr.lambda arguments (Expr.blockParms [for var in variables -> var.Value.Expr] (List.append initExprs bodyExpr))
-  *)

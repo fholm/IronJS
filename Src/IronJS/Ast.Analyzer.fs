@@ -13,9 +13,9 @@ let private analyzeAssign (left:Node) (right:Node) (scopes:Scopes) =
   | Local(name) -> 
     match right with
     | Local(rightName) -> addUsedWith name rightName scopes
-    | Global(_) -> addUsedAs name Types.JsTypes.Dynamic scopes
-    | Number(_) -> addUsedAs name Types.JsTypes.Double  scopes
-    | String(_) -> addUsedAs name Types.JsTypes.String  scopes
+    | Global(_) -> addUsedAs name JsTypes.Dynamic scopes
+    | Number(_) -> addUsedAs name JsTypes.Double  scopes
+    | String(_) -> addUsedAs name JsTypes.String  scopes
 
     //Ignore
     | _ -> ()

@@ -7,6 +7,15 @@ open Antlr.Runtime.Tree
 open System.Diagnostics
 
 (*Types*)
+(*Types*)
+type JsTypes = 
+  | None    = 0
+  //| Integer = 1
+  | Double  = 2
+  | String  = 4
+  | Object  = 8
+  | Dynamic = 16
+
 [<DebuggerDisplay("{GetType()}")>]
 type ClosureAccess =
   | None
@@ -17,7 +26,7 @@ type ClosureAccess =
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int
-  UsedAs: Types.JsTypes
+  UsedAs: JsTypes
   UsedWith: string Set
   InitUndefined: bool
   Expr: EtParam
@@ -81,7 +90,7 @@ let internal newScope = {
 let internal newLocal = {
   ClosureAccess = None
   ParamIndex = -1
-  UsedAs = Types.JsTypes.None
+  UsedAs = JsTypes.None
   UsedWith = Set.empty
   InitUndefined = false
   Expr = null

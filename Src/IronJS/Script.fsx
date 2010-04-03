@@ -6,7 +6,6 @@
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Fsi.fs"
 #load "Constants.fs"
-#load "Types.fs"
 #load "Utils.fs"
 #load "Ast.Types.fs"
 #load "Ast.Helpers.fs"
@@ -17,6 +16,7 @@
 #load "Tools.Js.fs"
 #load "Runtime.fs"
 #load "Compiler.Types.fs"
+#load "Compiler.Helpers.fs"
 #load "Compiler.Analyzer.fs"
 #load "Compiler.fs"
 
@@ -26,7 +26,6 @@ open IronJS.Ast
 open IronJS.Fsi
 open IronJS.Utils
 open IronJS.CSharp.Parser
-open IronJS.Types
 open IronJS.Ast.Types
 open Antlr.Runtime
 
@@ -54,7 +53,7 @@ let scope, body =
 #load "Compiler.Types.fs"    
 #load "Compiler.Analyzer.fs"
 #load "Compiler.fs"
-let analyzedScope = Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble]
+let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString; Constants.clrDouble]
 let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope)
 
 (*

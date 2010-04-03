@@ -74,7 +74,7 @@ let cast typ expr =
 let castT<'a> = 
   cast typeof<'a>
 
-let gotoReturn label (value:Et) =
+let makeReturn label (value:Et) =
   Et.Return(label, value) :> Et
 
 let assign (left:Et) (right:Et) =

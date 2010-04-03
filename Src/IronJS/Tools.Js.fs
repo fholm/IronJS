@@ -8,12 +8,15 @@ let assign (left:Et) (right:Et) =
   Expr.assign left (Expr.cast left.Type right)
 
 let box (expr:Et) =
-  if expr.Type = Types.ClrVoid
+  if expr.Type = Constants.clrVoid
     then Et.Block(expr, Expr.objDefault) :> Et 
     else Et.Convert(expr, typeof<obj>) :> Et
 
-let doReturn label (value:Et) =
-  Expr.gotoReturn label (box value)
+let makeReturn label (value:Et) =
+  Expr.makeReturn label (box value)
 
 let index (left:Et) (i:int64) =
   Et.ArrayIndex(left, Expr.constant i) :> Et
+  
+module Op = 
+  ()

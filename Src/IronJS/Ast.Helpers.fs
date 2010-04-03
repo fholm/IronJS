@@ -39,7 +39,7 @@ let internal addUsedWith (leftName:string) (rightName:string) (scopes:Scopes) =
       let local = scope.Locals.[leftName]
       setLocal scope leftName { local with UsedWith = local.UsedWith.Add(rightName) } :: xs
 
-let internal addUsedAs (name:string) (typ:Types.JsTypes) (scopes:Scopes) =
+let internal addUsedAs (name:string) (typ:JsTypes) (scopes:Scopes) =
   scopes := 
     match !scopes with
     | [] -> []

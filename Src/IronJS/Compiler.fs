@@ -32,7 +32,7 @@ let rec private builder (ast:Node) (ctx:Context) =
   | Block(nodes) -> Expr.block [for node in nodes -> builder node ctx]
   | String(value) -> Expr.constant value
   | Number(value) -> Expr.constant value
-  | Return(value) -> Js.doReturn ctx.Return (builder value ctx)
+  | Return(value) -> Js.makeReturn ctx.Return (builder value ctx)
   | _ -> Expr.objDefault
 
 let makeDynamicInitExpr (p:Local) (args:Et) =

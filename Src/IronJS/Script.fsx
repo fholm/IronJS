@@ -53,7 +53,7 @@ let scope, body =
 #load "Compiler.Types.fs"    
 #load "Compiler.Analyzer.fs"
 #load "Compiler.fs"
-let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString; Constants.clrDouble]
+let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString]
 let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope)
 
 (*

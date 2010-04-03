@@ -2,4 +2,8 @@
     var bar = 2;
     bar = a1;
     a2 = 2;
+    var foo = function() {
+        var x = bar;
+        var y = a2;
+    }
 };

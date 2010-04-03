@@ -40,8 +40,9 @@ type Closure = {
 }
 
 type CallingConvention =
-  | Dynamic = 0
-  | Static = 1
+  | Unknown
+  | Dynamic
+  | Static
 
 type Scope = {
   Locals: Map<string, Local>
@@ -84,11 +85,11 @@ let internal newScope = {
   Locals = Map.empty
   Closure = Map.empty
   Arguments = false
-  CallingConvention = CallingConvention.Static
+  CallingConvention = Unknown
 }
 
 let internal newLocal = {
-  ClosureAccess = None
+  ClosureAccess = ClosureAccess.None
   ParamIndex = -1
   UsedAs = JsTypes.None
   UsedWith = Set.empty

@@ -50,8 +50,8 @@
     <Compile Include="Compiler.Helpers.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.fs" />
-    <Content Include="Testing.js" />
     <None Include="Script.fsx" />
+    <Content Include="Testing.js" />
     <Content Include="CallTypes.js" />
   </ItemGroup>
   <ItemGroup>

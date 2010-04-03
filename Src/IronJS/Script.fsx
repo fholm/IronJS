@@ -11,7 +11,9 @@
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
-#load "EtTools.fs"
+#load "Tools.fs"
+#load "Tools.Expr.fs"
+#load "Tools.Js.fs"
 #load "Runtime.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Analyzer.fs"
@@ -50,7 +52,7 @@ let scope, body =
 #load "Compiler.fs"
 let analyzedScope = Compiler.Analyzer.analyze scope [IronJS.Types.ClrString; IronJS.Types.ClrDouble]
 let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope.Locals)
-
+(*
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)
 let clos = new Runtime.Closure(globals, Ast.Types.Null, env)
@@ -58,3 +60,4 @@ let clos = new Runtime.Closure(globals, Ast.Types.Null, env)
 (IronJS.Compiler.Core.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
 
 globals.Get("foo")
+*)

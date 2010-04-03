@@ -63,6 +63,7 @@ type Node =
 type internal Scopes = Scope list ref
 type internal Generator = CommonTree -> Scopes -> Node
 type internal GeneratorMap = Map<int, CommonTree -> Scopes -> Generator -> Node>
+type internal LocalMap = Map<string, Local>
 
 //Constants
 let internal newScope = { 

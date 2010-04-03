@@ -42,7 +42,9 @@
     <Compile Include="Ast.Helpers.fs" />
     <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
-    <Compile Include="EtTools.fs" />
+    <Compile Include="Tools.fs" />
+    <Compile Include="Tools.Expr.fs" />
+    <Compile Include="Tools.Js.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Analyzer.fs" />

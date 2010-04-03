@@ -3,7 +3,7 @@
 (* Imports *)
 open IronJS
 open IronJS.Utils
-open IronJS.EtTools
+open IronJS.Tools.Expr
 open System.Dynamic
 open System.Runtime.CompilerServices
 open System.Collections.Generic

@@ -1,4 +1,4 @@
-﻿module IronJS.EtTools
+﻿module IronJS.Tools.Expr
 
 //Imports
 open IronJS
@@ -42,11 +42,6 @@ let lambda (parms:EtParam list) (body:Et) =
 let field expr name =
   Et.PropertyOrField(expr, name) :> Et
 
-let jsBox (expr:Et) =
-  if expr.Type = Types.ClrVoid
-    then Et.Block(expr, objDefault) :> Et 
-    else Et.Convert(expr, typeof<obj>) :> Et
-
 let call (expr:Et) name (args:Et list) =
   let mutable mi = expr.Type.GetMethod(name)
   
@@ -88,7 +83,7 @@ let assign (left:Et) (right:Et) =
 let assignStrongBox (left:Et) (right:Et) =
   assign (field left "Value") right
 
-let index (left:Et) (i:int64) =
+let index (left:Et) (i:int) =
   Et.ArrayIndex(left, constant i) :> Et
 
 (*Restrict Tools*)

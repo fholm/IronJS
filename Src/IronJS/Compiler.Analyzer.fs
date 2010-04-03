@@ -3,9 +3,8 @@
 open IronJS
 open IronJS.Utils
 open IronJS.Types
+open IronJS.Tools
 open IronJS.Ast.Types
-
-type private LocalMap = Map<string,Local>
 
 (*Checks if a local always will result in a Dynamic type*)
 let private isDynamic (loc:Local) =
@@ -21,7 +20,7 @@ let private isNotAssignedTo (var:Local) =
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType (name:string) (var:Local) (typ:JsTypes) =
-  let expr = EtTools.param name (match var.ClosureAccess with
+  let expr = Expr.param name (match var.ClosureAccess with
                                  | Read | Write -> StrongBoxType.MakeGenericType(ToClr typ)
                                  | None -> ToClr typ)
   { var with UsedAs = typ; Expr = expr }

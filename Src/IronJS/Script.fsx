@@ -18,6 +18,7 @@
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
 #load "Compiler.Analyzer.fs"
+#load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 
 open System
@@ -49,12 +50,10 @@ let scope, body =
     match func with
     | Function(scope, body) -> scope, body
     
-#load "Utils.fs"
-#load "Compiler.Types.fs"    
-#load "Compiler.Analyzer.fs"
-#load "Compiler.fs"
-let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString]
+let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString; Constants.clrDouble]
 let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope)
+
+(compiled :?> EtLambda).Compile().DynamicInvoke(null, null, null, "test", 2);
 
 (*
 let env = new Runtime.Environment()

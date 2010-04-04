@@ -1,39 +1,36 @@
 ﻿module IronJS.Runtime
 
-(* Imports *)
 open IronJS
 open IronJS.Utils
 open IronJS.Tools.Expr
 open System.Dynamic
-open System.Runtime.CompilerServices
 open System.Collections.Generic
-open Microsoft.Scripting.Utils
 
-(* Types *)
-
+(**)
 type Environment() =
   class end
 
+(*Class representing the javascript Undefined type*)
 type Undefined() =
   static let instance = Undefined()
   static member Instance with get() = instance
   static member InstanceExpr with get() = constant instance
 
-//Main javascript object type
+(*Class representing a Javascript native object*)
 type Object(env:Environment) =
   let properties = new Dictionary<string, obj>();
   member self.Get name = properties.[name]
   member self.Set name (value:obj) = properties.[name] <- value
 
-//DLR meta object for Object
+(*DLR meta object for the above Object class*)
 and ObjectMeta(expr, jsObj) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
-//Closure base class
+(*Closure base class, representing a closure environment*)
 type Closure(globals:Object, ast:Ast.Types.Node, env:Environment) =
   member self.Globals  with get() = globals
 
-//Javascript object that is a function
+(*Javascript object that also is a function*)
 type Function =
   inherit Object
 
@@ -51,7 +48,7 @@ type Function =
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new FunctionMeta(expr, self) :> MetaObj
 
-//DLR meta object for Function
+(*DLR meta object for the above Function class*)
 and FunctionMeta(expr, jsFunc) =
   inherit ObjectMeta(expr, jsFunc)
 

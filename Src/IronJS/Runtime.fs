@@ -79,7 +79,10 @@ type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenera
     //Do the insert
     let success, cell = jitCache.TryGetValue(ast)
     jitCache.[ast] <- if success then insert types cell else insert types emptyCacheCell
-    jitCache.[ast]
+    jitCache.[ast].Func
+
+  member self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
+    jitCache.[ast].Func
 
 (*Class representing a Javascript native object*)
 and Object(env:Environment) =

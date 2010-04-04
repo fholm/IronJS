@@ -28,15 +28,15 @@ let private setType (name:string) (var:Local) (typ:JsTypes) =
 (*Get the type of a variable, evaluating it if necessary*)
 let private getType name (vars:LocalMap) =
 
-  let rec getType name (vars:LocalMap) (exclude:string Set) =
+  let rec getType name (exclude:string Set) =
     let var = vars.[name]
     if exclude.Contains name then JsTypes.Nothing
     elif not(var.Expr = null) then var.UsedAs 
     else var.UsedWith
-          |> Set.map  (fun var -> getType var vars (exclude.Add name))
+          |> Set.map  (fun var -> getType var (exclude.Add name))
           |> Set.fold (fun typ state -> typ ||| state) var.UsedAs
 
-  getType name vars Set.empty
+  getType name Set.empty
 
 (*Resolves the type of a variable and updates the map with it*)
 let inline private resolveType name (vars:LocalMap) =

@@ -12,18 +12,18 @@ open IronJS.Compiler.Helpers
 let private addUndefinedInitExprs (variables:LocalMap) (body:Et list) =
   variables
     |> Map.filter (fun _ (var:Local) -> var.InitUndefined)
-    |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Undefined.InstanceExpr) :: state) body
+    |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Runtime.Core.Undefined.InstanceExpr) :: state) body
 
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
 let private addStrongBoxInitExprs (variables:LocalMap) (body:Et list) =
   variables
     |> Map.filter (fun _ (var:Local) -> var.IsClosedOver)
-    |> Map.fold (fun state _ (var:Local) -> (Expr.assign var.Expr (Expr.createInstance var.Expr.Type)) :: state) body
+    |> Map.fold (fun state _ (var:Local) -> (Expr.assign var.Expr (Expr.newInstance var.Expr.Type)) :: state) body
 
 (*Creates an expression that initializes a dynamic parameter to its passed in value if possible, otherwise undefined*)
 let private makeDynamicInitExpr (p:Local) (args:Et) =
   let test = Et.LessThan(Expr.constant p.ParamIndex, Expr.field args "Length")
-  Js.assign p.Expr (Et.Condition(test, Expr.index args p.ParamIndex, Expr.castT<obj> Undefined.InstanceExpr) :> Et)
+  Js.assign p.Expr (Et.Condition(test, Expr.index args p.ParamIndex, Expr.castT<obj> Runtime.Core.Undefined.InstanceExpr) :> Et)
 
 (*Does the final DLR compilation for dynamicly typed functions*)
 let private compileDynamicAst (ctx:Context) (body:Et list) = 
@@ -77,4 +77,4 @@ let compileAst (closureType:ClrType) (scope:Scope) (ast:Node) =
     else compileStaticAst  context body
 
 (*Convenience function for compiling global ast*)
-let compileGlobalAst = compileAst typeof<Runtime.Closure> globalScope
+let compileGlobalAst = compileAst typeof<Runtime.Function.Closure> globalScope

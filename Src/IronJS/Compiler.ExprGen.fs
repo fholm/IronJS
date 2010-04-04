@@ -4,6 +4,7 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Ast.Types
+open IronJS.Compiler
 open IronJS.Compiler.Types
 open IronJS.Compiler.Helpers
 
@@ -16,18 +17,27 @@ let private assign left right (ctx:Context) builder =
   | Local(name)  -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
-let private func (scope:Scope) (body:Ast.Types.Node) (ctx:Context) (builder:Builder) =
-  Expr.constant 1
+let private resolveClosureType (scope:Scope) (ctx:Context) =
+  Runtime.Function.closureTypeDef
+
+let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Builder) =
+  let closureType = resolveClosureType scope ctx
+  let closureExpr = Expr.newArgs closureType [ctx.Globals; ctx.Environment]
+  Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
+
+let private invoke (target:Node) (args:Node list) (ctx:Context) (builder:Builder) =
+  Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) [for arg in args -> builder arg ctx]
 
 //Builder function for expression generation
 let rec internal builder (ast:Node) (ctx:Context) =
   match ast with
   | Assign(left, right) -> assign left right ctx builder
-  | Global(name)  -> Js.Object.get ctx.Globals name
-  | Local(name)   -> ctx.Scope.Locals.[name].Expr :> Et
-  | Block(nodes)  -> Expr.block [for node in nodes -> builder node ctx]
+  | Global(name) -> Js.Object.get ctx.Globals name
+  | Local(name) -> ctx.Scope.Locals.[name].Expr :> Et
+  | Block(nodes) -> Expr.block [for node in nodes -> builder node ctx]
   | String(value) -> Expr.constant value
   | Number(value) -> Expr.constant value
   | Return(value) -> Js.makeReturn ctx.Return (builder value ctx)
-  | Function(scope, body) -> func scope body ctx builder
+  | Function(scope, _) -> func scope ast ctx builder
+  | Invoke(target, args) -> invoke target args ctx builder
   | _ -> Expr.objDefault

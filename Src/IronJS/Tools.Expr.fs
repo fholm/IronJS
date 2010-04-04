@@ -85,8 +85,18 @@ let assignStrongBox (left:Et) (right:Et) =
 let index (left:Et) (i:int) =
   Et.ArrayIndex(left, constant i) :> Et
 
-let createInstance (typ:System.Type) =
+let newInstance (typ:System.Type) =
   Et.New(typ) :> Et
+
+let newGeneric (typ:System.Type) (types:ClrType seq) =
+  newInstance (typ.MakeGenericType(Seq.toArray types))
+
+let newArgs (typ:System.Type) (args:Et list) =
+  let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
+  Et.New(typ_ctor, args) :> Et
+
+let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et list) =
+  newArgs (typ.MakeGenericType(Seq.toArray types)) args
 
 (*Restrict Tools*)
 

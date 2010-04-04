@@ -14,5 +14,6 @@ let ToClr typ =
   match typ with
   | JsTypes.Double -> Constants.clrDouble
   | JsTypes.String -> Constants.clrString
-  | JsTypes.Object -> typeof<Runtime.Object>
+  | JsTypes.Object -> typeof<Runtime.Core.Object>
   | _ -> Constants.clrDynamic
+

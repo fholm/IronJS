@@ -15,9 +15,12 @@
 #load "Tools.Expr.fs"
 #load "Tools.Js.fs"
 #load "Runtime.fs"
+#load "Runtime.Function.fs"
+#load "Runtime.Binders.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
 #load "Compiler.Analyzer.fs"
+#load "Compiler.ExprGen.Helpers.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 
@@ -46,9 +49,9 @@ let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
 let exprTree = (Compiler.Core.compileGlobalAst ast)
 let compiledFunc = exprTree.Compile()
 
-let env = new Runtime.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
-let globals = new Runtime.Object(env)
-let closure = new Runtime.Closure(globals, env)
+let env = new Runtime.Core.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
+let globals = new Runtime.Core.Object(env)
+let closure = new Runtime.Function.Closure(globals, env)
 
 compiledFunc.DynamicInvoke(closure, closure.Globals, null);
 

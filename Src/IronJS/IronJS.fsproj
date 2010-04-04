@@ -46,9 +46,12 @@
     <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />
+    <Compile Include="Runtime.Function.fs" />
+    <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Helpers.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
+    <Compile Include="Compiler.ExprGen.Helpers.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />

@@ -98,6 +98,9 @@ let newArgs (typ:System.Type) (args:Et list) =
 let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et list) =
   newArgs (typ.MakeGenericType(Seq.toArray types)) args
 
+let delegateType (types:ClrType seq) =
+  Et.GetDelegateType(Seq.toArray types)
+
 (*Restrict Tools*)
 
 //Functions

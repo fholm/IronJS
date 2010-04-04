@@ -12,7 +12,7 @@ let prettyPrintTypeName (typ:System.Type) =
     name <- name + "<"
 
     for genTyp in typs do
-      name <- name + genTyp.Name + ","
+      name <- name + genTyp.Namespace + "." + (if genTyp.DeclaringType = null then "" else genTyp.DeclaringType.Name + ".") + genTyp.Name + ","
 
     name <- name.Substring(0, name.Length - 1) + ">"
 

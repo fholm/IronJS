@@ -10,7 +10,7 @@ open IronJS.Compiler.Helpers
 let private assign left right (ctx:Context) builder =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (builder right ctx)
-  | Local(name)  -> Js.assign (ctx.Locals.[name].Expr) (builder right ctx)
+  | Local(name)  -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
 //Builder function for expression generation
@@ -18,7 +18,7 @@ let rec internal builder (ast:Node) (ctx:Context) =
   match ast with
   | Assign(left, right) -> assign left right ctx builder
   | Global(name)  -> Js.Object.get ctx.Globals name
-  | Local(name)   -> ctx.Locals.[name].Expr :> Et
+  | Local(name)   -> ctx.Scope.Locals.[name].Expr :> Et
   | Block(nodes)  -> Expr.block [for node in nodes -> builder node ctx]
   | String(value) -> Expr.constant value
   | Number(value) -> Expr.constant value

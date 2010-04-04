@@ -1,7 +1,6 @@
 ﻿module IronJS.Tools.Expr
 
 //Imports
-open IronJS
 open IronJS.Utils
 open System.Linq.Expressions
 
@@ -68,11 +67,11 @@ let throw (typ:System.Type) (args:Et seq) =
 let refEq left right =
   Et.ReferenceEqual(left, right) :> Et
 
-let cast typ expr =
+let cast expr typ =
   Et.Convert(expr, typ) :> Et
 
-let castT<'a> = 
-  cast typeof<'a>
+let castT<'a> expr = 
+  cast expr typeof<'a> 
 
 let makeReturn label (value:Et) =
   Et.Return(label, value) :> Et

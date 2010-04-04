@@ -26,18 +26,18 @@ let private makeDynamicInitExpr (p:Local) (args:Et) =
   Js.assign p.Expr (Et.Condition(test, Expr.index args p.ParamIndex, Expr.castT<obj> Undefined.InstanceExpr) :> Et)
 
 (*Does the final DLR compilation for dynamicly typed functions*)
-let private compileDynamicAst (scope:Scope) (body:Et list) (ctx:Context) = 
+let private compileDynamicAst (ctx:Context) (body:Et list) = 
   let argsArray = Expr.paramT<obj array> "~args"
-  let innerParameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter)
+  let innerParameters, variables = ctx.Scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter)
   let outerParameters = [ctx.Closure; ctx.This; ctx.Arguments; argsArray]
 
   let completeBodyExpr = 
     innerParameters 
       |> Map.fold (fun state _ (var:Local) -> makeDynamicInitExpr var argsArray :: state) body
       |> addUndefinedInitExprs variables
-      |> addStrongBoxInitExprs scope.Locals
+      |> addStrongBoxInitExprs ctx.Scope.Locals
 
-  Expr.lambda outerParameters (Expr.blockParms [for kvp in scope.Locals -> kvp.Value.Expr] completeBodyExpr)
+  Expr.lambda outerParameters (Expr.blockParms [for kvp in ctx.Scope.Locals -> kvp.Value.Expr] completeBodyExpr)
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) (body:Et list) =
@@ -48,8 +48,8 @@ let private getParameterListExprs (parameters:LocalMap) (proxies:Map<string, EtP
   [for kvp in parameters -> if kvp.Value.IsClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
 
 (*Does the final DLR compilation for staticly typed functions*)
-let private compileStaticAst (scope:Scope) (body:Et list) (ctx:Context) = 
-  let parameters, variables = scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter && not var.InitUndefined)
+let private compileStaticAst (ctx:Context) (body:Et list) = 
+  let parameters, variables = ctx.Scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter && not var.InitUndefined)
 
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
   let proxyParameters = closedOverParameters |> Map.map (fun name var -> Expr.param ("~" + name + "_proxy") (ToClr var.UsedAs))
@@ -63,18 +63,18 @@ let private compileStaticAst (scope:Scope) (body:Et list) (ctx:Context) =
     body 
       |> addUndefinedInitExprs variables
       |> addProxyParamInitExprs closedOverParameters proxyParameters
-      |> addStrongBoxInitExprs scope.Locals
+      |> addStrongBoxInitExprs ctx.Scope.Locals
 
   Expr.lambda parameters (Expr.blockParms localVariableExprs completeBodyExpr)
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Scope) (ast:Node) =
-  let context = { defaultContext with Closure = Expr.param "~closure" closureType; Locals = scope.Locals }
+  let context = { defaultContext with Closure = Expr.param "~closure" closureType; Scope = scope }
   let body    = [(Compiler.ExprGen.builder ast context); Expr.labelExpr context.Return]
 
   if scope.CallingConvention = CallingConvention.Dynamic 
-    then compileDynamicAst scope body context
-    else compileStaticAst  scope body context
+    then compileDynamicAst context body 
+    else compileStaticAst  context body
 
 (*Convenience function for compiling global ast*)
 let compileGlobalAst = compileAst typeof<Runtime.Closure> globalScope

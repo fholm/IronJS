@@ -12,7 +12,7 @@ type Context = {
   Closure: EtParam
   This: EtParam
   Arguments: EtParam
-  Locals: Map<string, Local>
+  Scope: Scope
   Return: LabelTarget
 } with
   member self.Globals
@@ -22,6 +22,6 @@ let defaultContext = {
   Closure = null
   This = param "this" typeof<IronJS.Runtime.Object>
   Arguments = param "arguments" typeof<IronJS.Runtime.Object>
-  Locals = Map.empty
+  Scope = newScope
   Return = label "~return"
 }

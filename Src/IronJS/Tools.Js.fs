@@ -9,14 +9,14 @@ let isStrongBox (typ:System.Type) =
 
 let assign (left:Et) (right:Et) =
   let assign (left:Et) (right:Et) =
-    Expr.assign left (if left.Type = right.Type then right else Expr.cast left.Type right)
+    Expr.assign left (if left.Type = right.Type then right else Expr.cast right left.Type)
 
   if isStrongBox left.Type then assign (Expr.field left "Value") right else assign left right
 
 let box (expr:Et) =
   if expr.Type = Constants.clrVoid
-    then Et.Block(expr, Expr.objDefault) :> Et 
-    else Et.Convert(expr, typeof<obj>) :> Et
+    then Expr.block [expr; Expr.objDefault]
+    else Expr.castT<obj> expr
 
 let makeReturn label (value:Et) =
   Expr.makeReturn label (box value)

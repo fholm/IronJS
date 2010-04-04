@@ -23,3 +23,13 @@ let makeReturn label (value:Et) =
 
 let index (left:Et) (i:int64) =
   Et.ArrayIndex(left, Expr.constant i) :> Et
+
+module Object =
+
+  //Get a global variable
+  let get (expr:Et) name =
+    Expr.call expr "Get" [Expr.constant name]
+
+  //Set a global variable
+  let set (expr:Et) name value =
+    Expr.call expr "Set" [Expr.constant name; box value]

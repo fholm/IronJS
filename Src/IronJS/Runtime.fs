@@ -82,7 +82,9 @@ type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenera
     jitCache.[ast].Func
 
   member self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
-    jitCache.[ast].Func
+    match ast with
+    | Ast.Types.Node.Function(scope, body) ->
+      
 
 (*Class representing a Javascript native object*)
 and Object(env:Environment) =

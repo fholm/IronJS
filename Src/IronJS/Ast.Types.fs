@@ -10,7 +10,6 @@ open System.Diagnostics
 (*Types*)
 type JsTypes = 
   | Nothing = 0
-  //| Integer = 1
   | Double  = 2
   | String  = 4
   | Object  = 8

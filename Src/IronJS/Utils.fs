@@ -27,7 +27,7 @@ let toList<'a> (ilst:System.Collections.IList) =
       lst <- (ilst.[cnt - n] :?> 'a) :: lst
     lst
 
-let mapState state func lst =
+let listMapState state func lst =
   let rec mapState lst state =
     match lst with
     | [] -> []
@@ -53,16 +53,6 @@ let getCtor (typ:Type) (args:Type list) =
     else  
       false
   ) (typ.GetConstructors())
-
-//IndexOf
-let indexOf lst itm =
- 
-  let rec index lst n =
-    match lst with
-    | [] -> failwith "Couldn't find %A" n
-    | x::xs -> if x = itm then n else index xs (n + 1)
- 
-  index lst 0
 
 //Map.bisect
 let mapBisect (filter:'a -> 'b -> bool) (map:Map<'a,'b>) =

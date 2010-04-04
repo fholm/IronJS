@@ -42,14 +42,15 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.Core.defaultGenerator program.Tree
-let compiledAst = (Compiler.Core.compileGlobalAst ast).Compile()
+let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
+let exprTree = (Compiler.Core.compileGlobalAst ast)
+let compiledFunc = exprTree.Compile()
 
-let env = new Runtime.Environment()
+let env = new Runtime.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Object(env)
-let closure = new Runtime.Closure(globals, Ast.Types.Null, env)
+let closure = new Runtime.Closure(globals, env)
 
-compiledAst.DynamicInvoke(closure, closure.Globals, null);
+compiledFunc.DynamicInvoke(closure, closure.Globals, null);
 
 let foo = closure.Globals.Get("foo");
 let bar = closure.Globals.Get("bar");

@@ -62,5 +62,5 @@ let makeGenerator (generators:GeneratorMap) =
     generators.[tree.Type] tree scopes gen
   gen
 
-let defaultGenerator tree = 
-  (makeGenerator defaultGenerators) (ct tree) (ref [])
+let defaultGenerator tree scopes = 
+  (makeGenerator defaultGenerators) tree scopes

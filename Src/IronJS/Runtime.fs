@@ -6,8 +6,12 @@ open IronJS.Tools.Expr
 open System.Dynamic
 open System.Collections.Generic
 
-(**)
-type Environment() =
+type private AstGenFunc = AstTree -> Ast.Types.Scopes -> Ast.Types.Node
+type private AnalyzeFunc = Ast.Types.Scope -> ClrType list -> Ast.Types.Scope
+type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> EtLambda
+
+(*The currently executing environment*)
+type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
   class end
 
 (*Class representing the javascript Undefined type*)
@@ -27,8 +31,9 @@ and ObjectMeta(expr, jsObj:Object) =
   inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
 
 (*Closure base class, representing a closure environment*)
-type Closure(globals:Object, ast:Ast.Types.Node, env:Environment) =
+type Closure(globals:Object, env:Environment) =
   member self.Globals with get() = globals
+  member self.Environment with get() = env
 
 (*Javascript object that also is a function*)
 type Function<'a> when 'a :> Closure =
@@ -39,6 +44,7 @@ type Function<'a> when 'a :> Closure =
 
   new(closure, ast, env) = { 
     inherit Object(env);
+
     Closure = closure; 
     Ast = ast; 
   }

@@ -73,7 +73,7 @@ let internal getVariable (scopes:Scopes) name =
   | scope::xs when hasClosure scope name -> Closure(name)
   | _ -> 
     if List.exists (fun scope -> hasLocal scope name) !scopes then
-      scopes := mapState false (fun scope state -> 
+      scopes := listMapState false (fun scope state -> 
         if state 
           then (scope, state)
           else 

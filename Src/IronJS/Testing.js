@@ -7,3 +7,4 @@
         var y = a2;
     }
 };
+var bar = "lol";

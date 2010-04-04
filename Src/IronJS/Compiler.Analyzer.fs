@@ -22,7 +22,7 @@ let private isNotAssignedTo (var:Local) =
 let private setType (name:string) (var:Local) (typ:JsTypes) =
   let expr = Expr.param name (match var.ClosureAccess with
                                  | Read | Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
-                                 | None -> ToClr typ)
+                                 | Nothing -> ToClr typ)
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
@@ -30,7 +30,7 @@ let private getType name (vars:LocalMap) =
 
   let rec getType name (vars:LocalMap) (exclude:string Set) =
     let var = vars.[name]
-    if exclude.Contains name then JsTypes.None
+    if exclude.Contains name then JsTypes.Nothing
     elif not(var.Expr = null) then var.UsedAs 
     else var.UsedWith
           |> Set.map  (fun var -> getType var vars (exclude.Add name))

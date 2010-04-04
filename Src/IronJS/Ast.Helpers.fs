@@ -23,13 +23,13 @@ let internal setAccessRead (scope:Scope) name =
   let local = scope.Locals.[name]
   setLocal scope name (match local.ClosureAccess with
                        | Read | Write -> local
-                       | None -> { local with ClosureAccess = Read })
+                       | Nothing -> { local with ClosureAccess = Read })
 
 let internal setAccessWrite (scope:Scope) name =
   let local = scope.Locals.[name]
   setLocal scope name (match local.ClosureAccess with
                        | Write -> local
-                       | None | Read -> { local with ClosureAccess = Write })
+                       | Nothing | Read -> { local with ClosureAccess = Write })
 
 let internal addUsedWith (leftName:string) (rightName:string) (scopes:Scopes) =
   scopes := 

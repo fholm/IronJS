@@ -43,24 +43,13 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator program.Tree
+let compiledAst = (Compiler.Core.compileGlobalAst ast).Compile()
 
-let scope, body = 
-  match ast with
-  | Types.Assign(_, func) -> 
-    match func with
-    | Function(scope, body) -> scope, body
-    
-let analyzedScope = Compiler.Analyzer.analyze scope [Constants.clrString; Constants.clrDouble]
-let compiled = (IronJS.Compiler.Core.compileAst body typeof<IronJS.Runtime.Closure> analyzedScope)
-
-(compiled :?> EtLambda).Compile().DynamicInvoke(null, null, null, "test", 2);
-
-(*
 let env = new Runtime.Environment()
 let globals = new Runtime.Object(env)
-let clos = new Runtime.Closure(globals, Ast.Types.Null, env)
+let closure = new Runtime.Closure(globals, Ast.Types.Null, env)
 
-(IronJS.Compiler.Core.compileAst ast typeof<IronJS.Runtime.Closure> Map.empty).Compile().DynamicInvoke(clos, clos.Globals, null)
+compiledAst.DynamicInvoke(closure, closure.Globals, null);
 
-globals.Get("foo")
-*)
+let foo = closure.Globals.Get("foo");
+let bar = closure.Globals.Get("bar");

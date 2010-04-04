@@ -9,7 +9,7 @@ open System.Diagnostics
 (*Types*)
 (*Types*)
 type JsTypes = 
-  | None    = 0
+  | Nothing = 0
   //| Integer = 1
   | Double  = 2
   | String  = 4
@@ -18,7 +18,7 @@ type JsTypes =
 
 [<DebuggerDisplay("{GetType()}")>]
 type ClosureAccess =
-  | None
+  | Nothing
   | Read
   | Write
 
@@ -31,7 +31,7 @@ type Local = {
   InitUndefined: bool
   Expr: EtParam
 } with
-  member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.None)
+  member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.Nothing)
   member self.IsParameter  with get() = self.ParamIndex > -1
   
 [<DebuggerDisplay("Closure:{Index}")>]
@@ -76,8 +76,6 @@ type Node =
 
 //Type Aliases
 type internal Scopes = Scope list ref
-type internal Generator = CommonTree -> Scopes -> Node
-type internal GeneratorMap = Map<int, CommonTree -> Scopes -> Generator -> Node>
 type internal LocalMap = Map<string, Local>
 
 //Constants
@@ -88,10 +86,14 @@ let internal newScope = {
   CallingConvention = Unknown
 }
 
+let internal globalScope = { 
+  newScope with CallingConvention = CallingConvention.Static 
+}
+
 let internal newLocal = {
-  ClosureAccess = ClosureAccess.None
+  ClosureAccess = ClosureAccess.Nothing
   ParamIndex = -1
-  UsedAs = JsTypes.None
+  UsedAs = JsTypes.Nothing
   UsedWith = Set.empty
   InitUndefined = false
   Expr = null

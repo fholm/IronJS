@@ -9,6 +9,8 @@ open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
+type private GeneratorMap = Map<int, CommonTree -> Scopes -> (CommonTree -> Scopes -> Node) -> Node>
+
 (*Functions*)
 let defaultGenerators = 
   Map.ofArray [|

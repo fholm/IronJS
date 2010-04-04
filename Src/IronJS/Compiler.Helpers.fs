@@ -3,14 +3,13 @@
 open IronJS
 open IronJS.Ast.Types
 
-(*Functions*)
-//Converts a ClrType to JsType
+(*Converts a ClrType to JsType*)
 let ToJs typ = 
   if typ = Constants.clrDouble then JsTypes.Double
   elif typ = Constants.clrString then JsTypes.String
   else JsTypes.Dynamic
 
-//Converts a JsType to ClrType
+(*Converts a JsType to ClrType*)
 let ToClr typ =
   match typ with
   | JsTypes.Double -> Constants.clrDouble

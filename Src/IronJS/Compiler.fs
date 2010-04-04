@@ -37,7 +37,7 @@ let private compileDynamicAst (scope:Scope) (body:Et list) (ctx:Context) =
       |> addUndefinedInitExprs variables
       |> addStrongBoxInitExprs scope.Locals
 
-  Expr.lambda outerParameters (Expr.blockParms [for kvp in scope.Locals -> kvp.Value.Expr] completeBodyExpr) :> Et
+  Expr.lambda outerParameters (Expr.blockParms [for kvp in scope.Locals -> kvp.Value.Expr] completeBodyExpr)
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) (body:Et list) =
@@ -65,13 +65,16 @@ let private compileStaticAst (scope:Scope) (body:Et list) (ctx:Context) =
       |> addProxyParamInitExprs closedOverParameters proxyParameters
       |> addStrongBoxInitExprs scope.Locals
 
-  Expr.lambda parameters (Expr.blockParms localVariableExprs completeBodyExpr) :> Et
+  Expr.lambda parameters (Expr.blockParms localVariableExprs completeBodyExpr)
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (ast:Node) (closType:ClrType) (scope:Scope) =
-  let context = { defaultContext with Closure = Expr.param "~closure" closType; Locals = scope.Locals }
+let compileAst (closureType:ClrType) (scope:Scope) (ast:Node) =
+  let context = { defaultContext with Closure = Expr.param "~closure" closureType; Locals = scope.Locals }
   let body    = [(Compiler.ExprGen.builder ast context); Expr.labelExpr context.Return]
 
   if scope.CallingConvention = CallingConvention.Dynamic 
     then compileDynamicAst scope body context
     else compileStaticAst  scope body context
+
+(*Convenience function for compiling global ast*)
+let compileGlobalAst = compileAst typeof<Runtime.Closure> globalScope

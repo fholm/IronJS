@@ -18,4 +18,3 @@ and DelegateMeta<'a> when 'a :> System.Delegate (expr, jsDelegate:Delegate<'a>) 
 
 let delegateTypeDef = typedefof<Delegate<_>>
 let delegateTypeDefHashCode = delegateTypeDef.GetHashCode()
-  

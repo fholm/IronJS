@@ -64,8 +64,8 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
       )
 
     let restrict = (Tools.Expr.restrictType self.Expression typeof<Function<'a>>).
-                      Merge(Tools.Expr.restrictInst self.AstExpr jsFunc.Ast).
-                      Merge(Tools.Expr.restrictArgs (List.tail (Array.toList args)))
+                    Merge(Tools.Expr.restrictInst self.AstExpr jsFunc.Ast).
+                    Merge(Tools.Expr.restrictArgs (List.tail (Array.toList args)))
 
     new MetaObj(expr, restrict)
 

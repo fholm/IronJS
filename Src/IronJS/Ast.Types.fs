@@ -72,6 +72,7 @@ type Node =
   | Invoke of Node * Node list
   | Assign of Node * Node
   | Return of Node
+  | Object of Map<string, Node> option
 
 //Type Aliases
 type internal Scopes = Scope list ref

@@ -54,7 +54,7 @@ let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compile
 let globals = new Runtime.Core.Object(env)
 let closure = new Runtime.Function.Closure(globals, env)
 
-compiledFunc.DynamicInvoke(closure, closure.Globals, null)
+compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let foo = closure.Globals.Get("foo")
 let bar = closure.Globals.Get("bar")

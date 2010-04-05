@@ -29,6 +29,13 @@ let defaultGenerators =
       analyze (Assign(left, right)) scopes
     );
 
+    (ES3Parser.OBJECT, fun tree scopes gen ->
+      if tree.Children = null then
+        Object(None)
+      else
+        failwith "Init properties on objects not supported"
+    );
+
     (ES3Parser.VAR, fun tree scopes gen -> 
       let child0 = child tree 0
 

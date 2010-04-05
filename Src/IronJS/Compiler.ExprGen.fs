@@ -28,6 +28,11 @@ let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Build
 let private invoke (target:Node) (args:Node list) (ctx:Context) (builder:Builder) =
   Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
 
+let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
+  match properties with
+  | Some(_) -> failwith "Not supported"
+  | None -> Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
+
 //Builder function for expression generation
 let rec internal builder (ast:Node) (ctx:Context) =
   match ast with
@@ -40,4 +45,5 @@ let rec internal builder (ast:Node) (ctx:Context) =
   | Return(value) -> Js.makeReturn ctx.Return (builder value ctx)
   | Function(scope, _) -> func scope ast ctx builder
   | Invoke(target, args) -> invoke target args ctx builder
+  | Object(properties) -> objectShorthand properties ctx builder
   | _ -> Expr.objDefault

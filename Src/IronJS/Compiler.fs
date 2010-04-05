@@ -29,7 +29,7 @@ let private makeDynamicInitExpr (p:Local) (args:Et) =
 let private compileDynamicAst (ctx:Context) (body:Et list) = 
   let argsArray = Expr.paramT<obj array> "~args"
   let innerParameters, variables = ctx.Scope.Locals |> mapBisect (fun _ (var:Local) -> var.IsParameter)
-  let outerParameters = [ctx.Closure; ctx.This; ctx.Arguments; argsArray]
+  let outerParameters = [ctx.Closure; ctx.Arguments; ctx.This; argsArray]
 
   let completeBodyExpr = 
     innerParameters 
@@ -54,7 +54,7 @@ let private compileStaticAst (ctx:Context) (body:Et list) =
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
   let proxyParameters = closedOverParameters |> Map.map (fun name var -> Expr.param ("~" + name + "_proxy") (ToClr var.UsedAs))
   let inputParameters = (getParameterListExprs parameters proxyParameters)
-  let parameters = ctx.Closure :: ctx.This :: ctx.Arguments :: inputParameters
+  let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters
 
   let localVariableExprs = 
     closedOverParameters 

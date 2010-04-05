@@ -47,6 +47,7 @@
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Function.fs" />
+    <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Compiler.Types.fs" />

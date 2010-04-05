@@ -47,12 +47,16 @@ let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) 
   | Some(_) -> failwith "Not supported"
   | None -> Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
 
+let private closureValue name (ctx:Context) =
+  Expr.field (Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
+
 //Builder function for expression generation
 let rec internal builder (ast:Node) (ctx:Context) =
   match ast with
   | Assign(left, right) -> assign left right ctx builder
   | Global(name) -> Js.Object.get ctx.Globals name
   | Local(name) -> ctx.Scope.Locals.[name].Expr :> Et
+  | Closure(name) -> closureValue name ctx
   | Block(nodes) -> Expr.block [for node in nodes -> builder node ctx]
   | String(value) -> Expr.constant value
   | Number(value) -> Expr.constant value

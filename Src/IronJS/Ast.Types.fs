@@ -36,6 +36,7 @@ type Local = {
 [<DebuggerDisplay("Closure:{Index}")>]
 type Closure = {
   Index: int
+  IsLocalInParent: bool
 }
 
 type CallingConvention =
@@ -97,4 +98,9 @@ let internal newLocal = {
   UsedWith = Set.empty
   InitUndefined = false
   Expr = null
+}
+
+let internal newClosure = {
+  Index = -1
+  IsLocalInParent = false
 }

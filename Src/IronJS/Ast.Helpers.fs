@@ -52,10 +52,10 @@ let internal setNeedsArguments (scope:Scope) =
     then scope
     else { scope with Arguments = true }
 
-let internal createClosure (scope:Scope) name = 
+let internal createClosure (scope:Scope) name (isLocalInParent) = 
   if scope.Closure.ContainsKey name 
     then scope 
-    else setClosure scope name { Index = scope.Closure.Count }
+    else setClosure scope name { Index = scope.Closure.Count; IsLocalInParent = isLocalInParent }
 
 let internal createLocal (scopes:Scopes) name =
   match !scopes with
@@ -73,15 +73,16 @@ let internal getVariable (scopes:Scopes) name =
   | scope::xs when hasClosure scope name -> Closure(name)
   | _ -> 
     if List.exists (fun scope -> hasLocal scope name) !scopes then
-      scopes := listMapState false (fun scope state -> 
-        if state 
-          then (scope, state)
-          else 
-            if hasLocal scope name 
-              then (setAccessRead scope name, true) 
-              else (createClosure scope name, false)
-        ) !scopes
 
+      let rec updateScopes scopes =
+        match scopes with
+        | [] -> scopes
+        | x::xsScopes ->
+          if hasLocal x name 
+            then setAccessRead x name :: xsScopes
+            else createClosure x name (hasLocal xsScopes.Head name) :: updateScopes xsScopes
+
+      scopes := updateScopes !scopes
       Closure(name)
     else
       Global(name)

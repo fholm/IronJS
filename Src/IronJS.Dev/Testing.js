@@ -12,7 +12,7 @@ var foo = function(a1, a2, a3) {
 
     foo2 = function() {
         var x = bar;
-        var y = a2;
+        return a2;
     }
 
     foo2();

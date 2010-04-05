@@ -14,4 +14,7 @@ let clrStringHashCode = clrString.GetHashCode()
 let clrVoid = typeof<System.Void>
 let clrVoidHashCode = clrVoid.GetHashCode()
 
+let clrDelegate = typeof<System.Delegate>
+let clrDelegateHashCode = clrDelegate.GetHashCode()
+
 let strongBoxTypeDef = typedefof<System.Runtime.CompilerServices.StrongBox<_>>

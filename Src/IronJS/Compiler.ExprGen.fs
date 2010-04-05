@@ -22,14 +22,26 @@ let private getLocalClrType name (ctx:Context) =
     then ToClr ctx.Scope.Locals.[name].UsedAs
     else failwithf "No local named '%s'" name
 
+let private getClosureClrType name (ctx:Context) =
+  if ctx.Scope.Closure.ContainsKey name 
+    then ctx.Closure.Type.GetField(sprintf "Item%i" ctx.Scope.Closure.[name].Index).FieldType
+    else failwithf "No closure named '%s'" name
+
 let private resolveClosureItems (scope:Scope) (ctx:Context ) =
-    Map.fold (fun state key closure -> (key, closure.Index) :: state ) [] scope.Closure
-    |> List.sortWith (fun a b -> (snd a) - (snd b))
-    |> List.map (fun pair -> ctx.Scope.Locals.[(fst pair)].Expr :> Et)
+  Map.fold (fun state key closure -> (key, closure.Index) :: state ) [] scope.Closure
+  |> List.sortWith (fun a b -> (snd a) - (snd b))
+  |> List.map (fun pair -> ctx.Scope.Locals.[(fst pair)].Expr :> Et)
 
 let private resolveClosureType (scope:Scope) (ctx:Context) =
   Runtime.Closures.getClosureType (
-    Map.fold (fun state key closure -> (getLocalClrType key ctx, closure.Index) :: state ) [] scope.Closure
+    Map.fold (fun state key closure -> 
+      let typ = if closure.IsLocalInParent 
+                  then getLocalClrType key ctx 
+                  else getClosureClrType key ctx
+
+      (typ, closure.Index) :: state
+    ) [] scope.Closure
+
     |> List.sortWith (fun a b -> (snd a) - (snd b))
     |> List.map (fun pair -> fst pair)
   )

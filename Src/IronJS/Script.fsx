@@ -18,6 +18,7 @@
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
 #load "Runtime.Binders.fs"
+#load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
 #load "Compiler.Analyzer.fs"

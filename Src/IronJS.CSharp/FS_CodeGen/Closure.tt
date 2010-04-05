@@ -1,10 +1,21 @@
-﻿<#  for(int i = 1; i <= 16; ++i) {
+﻿module IronJS.Runtime.Closures
+
+open IronJS
+open IronJS.Utils
+
+
+<# int gen = 16; 
+  for(int i = 1; i <= gen; ++i) {
 	System.Text.StringBuilder sb = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb.Append(",'t"+j); } 
 	String str = sb.ToString().Substring(1);	
 
 	System.Text.StringBuilder sb2 = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb2.Append(", item"+j); } 
 	String str2 = sb2.ToString();
+
+	System.Text.StringBuilder sb3 = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb3.Append(",_"); } 
+	String str3 = sb3.ToString().Substring(1);	
 #>
+(*Closure<#=i#>*)
 type Closure<<#= str #>> =
   inherit Runtime.Function.Closure 
 
@@ -21,5 +32,17 @@ val mutable Item<#=k#> : StrongBox<'t<#=k#>>
   Item<#=k#> = item<#=k#>
   <# } #>
 }
+let closure<#=i#>TypeDef = typedefof<Closure<<#=str3#>>>
+
 
 <# } #>
+let getClosureType (types:ClrType seq) =
+  let types = Array.ofSeq types
+
+  match types.Length with
+  | 0 -> Runtime.Function.closureTypeDef
+  <# for(int n = 1; n <= gen; ++n) { 
+  #>
+| <#=n#> -> closure<#=n#>TypeDef.MakeGenericType(types)
+  <# } #>
+| _ -> failwith "Not currently supported"

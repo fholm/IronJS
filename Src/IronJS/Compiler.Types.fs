@@ -20,8 +20,8 @@ type Context = {
 
 let defaultContext = {
   Closure = null
-  This = param "this" typeof<IronJS.Runtime.Core.Object>
-  Arguments = param "arguments" typeof<IronJS.Runtime.Core.Object>
+  This = param "~this" typeof<IronJS.Runtime.Core.Object>
+  Arguments = param "~arguments" typeof<IronJS.Runtime.Core.Object>
   Scope = newScope
   Return = label "~return"
 }

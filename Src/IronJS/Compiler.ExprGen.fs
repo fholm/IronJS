@@ -17,8 +17,28 @@ let private assign left right (ctx:Context) builder =
   | Local(name)  -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
+
+let private getVariableType name (ctx:Context) =
+
+  if ctx.Scope.Locals.ContainsKey name then
+    let local = ctx.Scope.Locals.[name]
+    if local.IsClosedOver 
+      then local.Expr.Type.GetGenericArguments().[0]
+      else local.Expr.Type
+  else
+    failwith "Not supported"
+
 let private resolveClosureType (scope:Scope) (ctx:Context) =
-  Runtime.Function.closureTypeDef
+
+  if scope.Closure.Count = 0 then
+    Runtime.Function.closureTypeDef
+  else
+    let types = 
+      Map.fold (fun state key closure -> (getVariableType key ctx, closure.Index) :: state ) [] scope.Closure
+      |> List.sortWith (fun a b -> (snd a) - (snd b))
+      |> List.map (fun pair -> fst pair)
+
+    Runtime.Closures.getClosureType types
 
 let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Builder) =
   let closureType = resolveClosureType scope ctx

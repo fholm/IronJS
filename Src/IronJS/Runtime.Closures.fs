@@ -3,8 +3,8 @@
 open IronJS
 open IronJS.Utils
 
-(*Generated Code*)
 
+(*Closure1*)
 type Closure<'t0> =
   inherit Runtime.Function.Closure 
 
@@ -17,7 +17,10 @@ type Closure<'t0> =
     //Fields
     Item0 = item0
   }
+let closure1TypeDef = typedefof<Closure<_>>
 
+
+(*Closure2*)
 type Closure<'t0,'t1> =
   inherit Runtime.Function.Closure 
 
@@ -32,7 +35,10 @@ type Closure<'t0,'t1> =
     Item0 = item0
     Item1 = item1
   }
+let closure2TypeDef = typedefof<Closure<_,_>>
 
+
+(*Closure3*)
 type Closure<'t0,'t1,'t2> =
   inherit Runtime.Function.Closure 
 
@@ -49,7 +55,10 @@ type Closure<'t0,'t1,'t2> =
     Item1 = item1
     Item2 = item2
   }
+let closure3TypeDef = typedefof<Closure<_,_,_>>
 
+
+(*Closure4*)
 type Closure<'t0,'t1,'t2,'t3> =
   inherit Runtime.Function.Closure 
 
@@ -68,7 +77,10 @@ type Closure<'t0,'t1,'t2,'t3> =
     Item2 = item2
     Item3 = item3
   }
+let closure4TypeDef = typedefof<Closure<_,_,_,_>>
 
+
+(*Closure5*)
 type Closure<'t0,'t1,'t2,'t3,'t4> =
   inherit Runtime.Function.Closure 
 
@@ -89,7 +101,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4> =
     Item3 = item3
     Item4 = item4
   }
+let closure5TypeDef = typedefof<Closure<_,_,_,_,_>>
 
+
+(*Closure6*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5> =
   inherit Runtime.Function.Closure 
 
@@ -112,7 +127,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5> =
     Item4 = item4
     Item5 = item5
   }
+let closure6TypeDef = typedefof<Closure<_,_,_,_,_,_>>
 
+
+(*Closure7*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6> =
   inherit Runtime.Function.Closure 
 
@@ -137,7 +155,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6> =
     Item5 = item5
     Item6 = item6
   }
+let closure7TypeDef = typedefof<Closure<_,_,_,_,_,_,_>>
 
+
+(*Closure8*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7> =
   inherit Runtime.Function.Closure 
 
@@ -164,7 +185,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7> =
     Item6 = item6
     Item7 = item7
   }
+let closure8TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_>>
 
+
+(*Closure9*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8> =
   inherit Runtime.Function.Closure 
 
@@ -193,7 +217,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8> =
     Item7 = item7
     Item8 = item8
   }
+let closure9TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure10*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9> =
   inherit Runtime.Function.Closure 
 
@@ -224,7 +251,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9> =
     Item8 = item8
     Item9 = item9
   }
+let closure10TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure11*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10> =
   inherit Runtime.Function.Closure 
 
@@ -257,7 +287,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10> =
     Item9 = item9
     Item10 = item10
   }
+let closure11TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure12*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11> =
   inherit Runtime.Function.Closure 
 
@@ -292,7 +325,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11> =
     Item10 = item10
     Item11 = item11
   }
+let closure12TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure13*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12> =
   inherit Runtime.Function.Closure 
 
@@ -329,7 +365,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12> =
     Item11 = item11
     Item12 = item12
   }
+let closure13TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure14*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13> =
   inherit Runtime.Function.Closure 
 
@@ -368,7 +407,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13> =
     Item12 = item12
     Item13 = item13
   }
+let closure14TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure15*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14> =
   inherit Runtime.Function.Closure 
 
@@ -409,7 +451,10 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14> =
     Item13 = item13
     Item14 = item14
   }
+let closure15TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
+
+(*Closure16*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t15> =
   inherit Runtime.Function.Closure 
 
@@ -452,3 +497,28 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t
     Item14 = item14
     Item15 = item15
   }
+let closure16TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
+
+
+let getClosureType (types:ClrType seq) =
+  let types = Array.ofSeq types
+
+  match types.Length with
+  | 0 -> Runtime.Function.closureTypeDef
+  | 1 -> closure1TypeDef.MakeGenericType(types)
+  | 2 -> closure2TypeDef.MakeGenericType(types)
+  | 3 -> closure3TypeDef.MakeGenericType(types)
+  | 4 -> closure4TypeDef.MakeGenericType(types)
+  | 5 -> closure5TypeDef.MakeGenericType(types)
+  | 6 -> closure6TypeDef.MakeGenericType(types)
+  | 7 -> closure7TypeDef.MakeGenericType(types)
+  | 8 -> closure8TypeDef.MakeGenericType(types)
+  | 9 -> closure9TypeDef.MakeGenericType(types)
+  | 10 -> closure10TypeDef.MakeGenericType(types)
+  | 11 -> closure11TypeDef.MakeGenericType(types)
+  | 12 -> closure12TypeDef.MakeGenericType(types)
+  | 13 -> closure13TypeDef.MakeGenericType(types)
+  | 14 -> closure14TypeDef.MakeGenericType(types)
+  | 15 -> closure15TypeDef.MakeGenericType(types)
+  | 16 -> closure16TypeDef.MakeGenericType(types)
+  | _ -> failwith "Not currently supported"

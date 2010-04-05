@@ -1,0 +1,25 @@
+﻿<#  for(int i = 1; i <= 16; ++i) {
+	System.Text.StringBuilder sb = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb.Append(",'t"+j); } 
+	String str = sb.ToString().Substring(1);	
+
+	System.Text.StringBuilder sb2 = new System.Text.StringBuilder(); for(int j = 0; j < i; ++j) { sb2.Append(", item"+j); } 
+	String str2 = sb2.ToString();
+#>
+type Closure<<#= str #>> =
+  inherit Runtime.Function.Closure 
+
+  //Fields
+  <# for(int k = 0; k < i; ++k) { #>
+val mutable Item<#=k#> : StrongBox<'t<#=k#>>
+  <# } #>
+
+  new(globals, env<#=str2#>) = {
+    inherit Runtime.Function.Closure(globals, env)
+
+    //Fields
+  <# for(int k = 0; k < i; ++k) { #>
+  Item<#=k#> = item<#=k#>
+  <# } #>
+}
+
+<# } #>

@@ -50,6 +50,7 @@
     <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Binders.fs" />
+    <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Helpers.fs" />
     <Compile Include="Compiler.Analyzer.fs" />

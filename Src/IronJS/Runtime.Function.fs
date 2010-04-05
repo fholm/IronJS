@@ -19,14 +19,6 @@ type Closure =
 (*Typedef*)
 let closureTypeDef = typedefof<Closure>
 
-let makeParamTypeList (args:MetaObj array) =
-  let len = args.Length
-
-  closureTypeDef 
-  :: Runtime.Core.objectTypeDef 
-  :: Runtime.Core.objectTypeDef 
-  :: Array.fold (fun state (arg:MetaObj) -> arg.LimitType :: state) [Constants.clrDynamic] args
-
 (*Javascript object that also is a function*)
 type Function<'a> when 'a :> Closure =
   inherit Core.Object

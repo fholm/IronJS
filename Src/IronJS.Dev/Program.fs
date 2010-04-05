@@ -13,7 +13,7 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
 let exprTree = (Compiler.Core.compileGlobalAst ast)
-let compiledFunc = exprTree.Compile()
+let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)

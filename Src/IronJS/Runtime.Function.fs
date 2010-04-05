@@ -32,13 +32,11 @@ type Function<'a> when 'a :> Closure =
   inherit Core.Object
 
   val mutable Closure : 'a
-  val mutable ClosureType : ClrType
   val mutable Ast : Ast.Types.Node
 
   new(ast, closure, env) = { 
     inherit Core.Object(env)
     Closure = closure
-    ClosureType = typeof<'a>
     Ast = ast
   }
 
@@ -55,9 +53,21 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
 
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
-    let func = jsFunc.Environment.GetDelegate jsFunc.Ast jsFunc.ClosureType types
+    let func, paramTypes = jsFunc.Environment.GetDelegate jsFunc.Ast typeof<'a> types
+    let paramTypes = Runtime.Core.objectTypeDef :: paramTypes
 
-    failwith "lol"
+    let expr = 
+      Tools.Expr.invoke (Tools.Expr.constant func) (
+        self.ClosureExpr 
+        :: Tools.Expr.typeDefault<Runtime.Core.Object> 
+        :: List.rev (Array.fold (fun lst (arg:MetaObj) -> Tools.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args)
+      )
+
+    let restrict = (Tools.Expr.restrictType self.Expression typeof<Function<'a>>).
+                      Merge(Tools.Expr.restrictInst self.AstExpr jsFunc.Ast).
+                      Merge(Tools.Expr.restrictArgs (List.tail (Array.toList args)))
+
+    new MetaObj(expr, restrict)
 
 let functionTypeDef = typedefof<Function<_>>
 let functionTypeDefHashCode = functionTypeDef.GetHashCode()

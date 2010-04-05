@@ -8,7 +8,7 @@ open System.Collections.Generic
 
 type private AstGenFunc = AstTree -> Ast.Types.Scopes -> Ast.Types.Node
 type private AnalyzeFunc = Ast.Types.Scope -> ClrType list -> Ast.Types.Scope
-type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> EtLambda
+type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> (EtLambda * ClrType list)
 
 (**)
 let rec private calculateHashAndTypes types (hash:int ref) = 
@@ -67,7 +67,7 @@ type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
 
 (*The currently executing environment*)
 and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
-  let jitCache = new Dictionary<DelegateCell, System.Delegate>()
+  let jitCache = new Dictionary<DelegateCell, System.Delegate * ClrType list>()
 
   //Implementation of IEnvironment interface
   interface Runtime.Core.IEnvironment with
@@ -82,11 +82,14 @@ and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerat
     let success, func = jitCache.TryGetValue(cell)
     if success then Some(func) else None
 
-  member private self.CacheCompiledDelegate cell (func:System.Delegate) =
+  member private self.CacheCompiledDelegate cell (func) =
     jitCache.[cell] <- func
     func
 
   member private self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
     match ast with
-    | Ast.Types.Node.Function(scope, body) -> (exprGenerator closureType (scopeAnalyzer scope types) body).Compile()
+    | Ast.Types.Node.Function(scope, body) -> 
+      let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope types) body)
+      lambda.Compile(), paramTypes
+
     | _ -> failwith "Can only compile Ast.Types.Node.Function"

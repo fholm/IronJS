@@ -16,6 +16,9 @@ let empty =
 let objDefault =
   Et.Default(typeof<obj>) :> Et
 
+let typeDefault<'a> =
+  Et.Default(typeof<'a>) :> Et
+
 //Functions
 let param name typ =
   Et.Parameter(typ, name)
@@ -101,30 +104,28 @@ let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et list) =
 let delegateType (types:ClrType seq) =
   Et.GetDelegateType(Seq.toArray types)
 
+let invoke (func:Et) (args:Et list) =
+  Et.Invoke(func, args)
+
 (*Restrict Tools*)
 
-//Functions
-let restrict expr =
+let restrictNone = 
+  System.Dynamic.BindingRestrictions.Empty
+
+let restrictExpr expr =
   Restrict.GetExpressionRestriction(expr)
 
-//
 let restrictType expr typ =
   Restrict.GetTypeRestriction(expr, typ)
 
-//
 let restrictInst expr instance =
   Restrict.GetInstanceRestriction(expr, instance)
 
-//
 let rec restrictArgs (args:MetaObj list) =
   match args with
   | [] -> Restrict.Empty
   | x::xs -> 
     (if x.HasValue && x.Value = null 
-        then Restrict.GetInstanceRestriction(x.Expression, Et.Default(typeof<obj>))
+        then Restrict.GetInstanceRestriction(x.Expression, objDefault)
         else Restrict.GetTypeRestriction(x.Expression, x.LimitType)
-    ).Merge(restrictArgs xs)
-
-//
-let (<++>) (left:Restrict) (right:Restrict) =
-  left.Merge(right)
+    ).Merge(x.Restrictions).Merge(restrictArgs xs)

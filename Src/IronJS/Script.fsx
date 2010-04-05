@@ -16,6 +16,7 @@
 #load "Tools.Js.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
+#load "Runtime.Environment.fs"
 #load "Runtime.Binders.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
@@ -47,9 +48,9 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
 let exprTree = (Compiler.Core.compileGlobalAst ast)
-let compiledFunc = exprTree.Compile()
+let compiledFunc = (fst exprTree).Compile()
 
-let env = new Runtime.Core.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
+let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)
 let closure = new Runtime.Function.Closure(globals, env)
 

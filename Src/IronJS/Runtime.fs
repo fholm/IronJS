@@ -9,7 +9,7 @@ open System.Collections.Generic
 (*Environment interface*)
 type IEnvironment =
   interface
-    abstract GetDelegate : Ast.Types.Node -> ClrType -> ClrType list -> System.Delegate
+    abstract GetDelegate : Ast.Types.Node -> ClrType -> ClrType list -> System.Delegate * ClrType list
   end
 
 (*Class representing the javascript Undefined type*)

@@ -33,35 +33,6 @@ type Undefined() =
   static member Instance with get() = instance
   static member InstanceExpr with get() = constant instance
 
-(**)
-type DelegateCell(closureType:ClrType, types:ClrType list) =
-  let hashCode = (
-      List.fold (fun state typ -> 
-        37 * state + (if   typ = Constants.clrDouble then Constants.clrDoubleHashCode
-                      elif typ = Constants.clrString then Constants.clrStringHashCode
-                      elif typ = typeof<Object>      then typeof<Object>.GetHashCode()
-                      else                                Constants.clrDynamicHashCode)
-      ) (closureType.GetHashCode()) types
-    )
-
-  member self.Types = types
-  member self.ClosureType = closureType
-
-  override self.GetHashCode() = 
-    hashCode
-
-  override self.Equals obj = 
-    match obj with
-    | :? DelegateCell as cell ->  
-      if cell.Types.Length = self.Types.Length then
-        if cell.ClosureType = self.ClosureType then
-          true
-        else
-          false
-      else
-        false
-    | _ -> false
-
 (*The currently executing environment*)
 and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
   let jitCache = new Dictionary<int, CacheCell>()

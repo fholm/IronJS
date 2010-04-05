@@ -12,7 +12,9 @@ var foo = function(a1, a2, a3) {
 
     foo2 = function() {
         var x = bar;
-        return a2;
+        foo3 = function() {
+            return a3;
+        }
     }
 
     foo2();
@@ -24,4 +26,4 @@ foo(1, 2);
 foo(1, 2);
 foo(1, "lol");
 
-bar = foo2();
+bar = foo3();

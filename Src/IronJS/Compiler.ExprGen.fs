@@ -24,13 +24,18 @@ let private getLocalClrType name (ctx:Context) =
 
 let private getClosureClrType name (ctx:Context) =
   if ctx.Scope.Closure.ContainsKey name 
-    then ctx.Closure.Type.GetField(sprintf "Item%i" ctx.Scope.Closure.[name].Index).FieldType
+    then ctx.Closure.Type.GetField(sprintf "Item%i" ctx.Scope.Closure.[name].Index).FieldType.GetGenericArguments().[0]
     else failwithf "No closure named '%s'" name
 
 let private resolveClosureItems (scope:Scope) (ctx:Context ) =
   Map.fold (fun state key closure -> (key, closure.Index) :: state ) [] scope.Closure
   |> List.sortWith (fun a b -> (snd a) - (snd b))
-  |> List.map (fun pair -> ctx.Scope.Locals.[(fst pair)].Expr :> Et)
+  |> List.map (fun pair -> 
+    let name = (fst pair)
+    if scope.Closure.[name].IsLocalInParent
+      then ctx.Scope.Locals.[name].Expr :> Et
+      else Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
+  )
 
 let private resolveClosureType (scope:Scope) (ctx:Context) =
   Runtime.Closures.getClosureType (

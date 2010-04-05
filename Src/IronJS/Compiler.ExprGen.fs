@@ -17,32 +17,26 @@ let private assign left right (ctx:Context) builder =
   | Local(name)  -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
+let private getLocalClrType name (ctx:Context) =
+  if ctx.Scope.Locals.ContainsKey name 
+    then ToClr ctx.Scope.Locals.[name].UsedAs
+    else failwithf "No local named '%s'" name
 
-let private getVariableType name (ctx:Context) =
-
-  if ctx.Scope.Locals.ContainsKey name then
-    let local = ctx.Scope.Locals.[name]
-    if local.IsClosedOver 
-      then local.Expr.Type.GetGenericArguments().[0]
-      else local.Expr.Type
-  else
-    failwith "Not supported"
+let private resolveClosureItems (scope:Scope) (ctx:Context ) =
+    Map.fold (fun state key closure -> (key, closure.Index) :: state ) [] scope.Closure
+    |> List.sortWith (fun a b -> (snd a) - (snd b))
+    |> List.map (fun pair -> ctx.Scope.Locals.[(fst pair)].Expr :> Et)
 
 let private resolveClosureType (scope:Scope) (ctx:Context) =
-
-  if scope.Closure.Count = 0 then
-    Runtime.Function.closureTypeDef
-  else
-    let types = 
-      Map.fold (fun state key closure -> (getVariableType key ctx, closure.Index) :: state ) [] scope.Closure
-      |> List.sortWith (fun a b -> (snd a) - (snd b))
-      |> List.map (fun pair -> fst pair)
-
-    Runtime.Closures.getClosureType types
+  Runtime.Closures.getClosureType (
+    Map.fold (fun state key closure -> (getLocalClrType key ctx, closure.Index) :: state ) [] scope.Closure
+    |> List.sortWith (fun a b -> (snd a) - (snd b))
+    |> List.map (fun pair -> fst pair)
+  )
 
 let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Builder) =
   let closureType = resolveClosureType scope ctx
-  let closureExpr = Expr.newArgs closureType [ctx.Globals; ctx.Environment]
+  let closureExpr = Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveClosureItems scope ctx)
   Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
 
 let private invoke (target:Node) (args:Node list) (ctx:Context) (builder:Builder) =

@@ -9,9 +9,9 @@ open System.Collections.Generic
 (*Closure base class, representing a closure environment*)
 type Closure =
   val mutable Globals : Core.Object
-  val mutable Environment : Core.Environment
+  val mutable Environment : Core.IEnvironment
 
-  new(globals:Core.Object, env:Core.Environment) = {
+  new(globals:Core.Object, env:Core.IEnvironment) = {
     Globals = globals
     Environment = env
   }
@@ -55,15 +55,9 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
 
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
-    let cached = jsFunc.Environment.GetCachedDelegate jsFunc.Ast jsFunc.ClosureType types
-    let func = match cached with
-               | Some(func) -> func
-               | None -> 
-                 let compiled = jsFunc.Environment.Compile jsFunc.Ast jsFunc.ClosureType types
-                 jsFunc.Environment.CacheCompiledDelegate jsFunc.Ast jsFunc.ClosureType types compiled
-
-    
+    let func = jsFunc.Environment.GetDelegate jsFunc.Ast jsFunc.ClosureType types
 
     failwith "lol"
 
 let functionTypeDef = typedefof<Function<_>>
+let functionTypeDefHashCode = functionTypeDef.GetHashCode()

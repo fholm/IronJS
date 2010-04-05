@@ -15,7 +15,7 @@ let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
 let exprTree = (Compiler.Core.compileGlobalAst ast)
 let compiledFunc = exprTree.Compile()
 
-let env = new Runtime.Core.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
+let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)
 let closure = new Runtime.Function.Closure(globals, env)
 

@@ -55,16 +55,15 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
 
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
-    let cached = jsFunc.Environment.GetCachedDelegate jsFunc.Ast (jsFunc.ClosureType :: types)
+    let cached = jsFunc.Environment.GetCachedDelegate jsFunc.Ast jsFunc.ClosureType types
     let func = match cached with
                | Some(func) -> func
                | None -> 
                  let compiled = jsFunc.Environment.Compile jsFunc.Ast jsFunc.ClosureType types
-                 jsFunc.Environment.StoreCachedDelegate jsFunc.Ast (jsFunc.ClosureType :: types) compiled
+                 jsFunc.Environment.CacheCompiledDelegate jsFunc.Ast jsFunc.ClosureType types compiled
 
-    let delegateType = Tools.Expr.delegateType (makeParamTypeList args)
+    
 
-    let test = jsFunc.Ast
     failwith "lol"
 
 let functionTypeDef = typedefof<Function<_>>

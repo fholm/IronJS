@@ -33,66 +33,76 @@ type Undefined() =
   static member Instance with get() = instance
   static member InstanceExpr with get() = constant instance
 
+(**)
+type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
+  
+  let rec calculateHashAndTypes types (hash:int ref) = 
+    match types with
+    | [] -> []
+    | x::xsTypes ->
+      if x = Constants.clrDouble then
+        hash := (37 * !hash + Constants.clrDoubleHashCode)
+        Constants.clrDouble :: calculateHashAndTypes xsTypes hash
+        
+      elif x = Constants.clrString then
+        hash := (37 * !hash + Constants.clrStringHashCode)
+        Constants.clrString :: calculateHashAndTypes xsTypes hash
+        
+      elif x = typeof<Object> then
+        hash := (37 * !hash + ((typeof<Object>).GetHashCode()))
+        typeof<Object> :: calculateHashAndTypes xsTypes hash
+
+      else
+        hash := (37 * !hash + Constants.clrDynamicHashCode)
+        Constants.clrDynamic :: calculateHashAndTypes xsTypes hash
+
+  let rec compareTypes a b =
+    match a with
+    | [] -> true
+    | xA::xsA ->
+      match b with
+      | xB::xsB -> if xA = xB then compareTypes xsA xsB else false
+      | _ -> failwith "Should never happen"
+  
+  let hashRef = ref (37 * closureType.GetHashCode() + ast.GetHashCode())
+  let uniformTypes = calculateHashAndTypes types hashRef
+  let hashCode = !hashRef
+
+  member self.Types = uniformTypes
+  member self.ClosureType = closureType
+
+  override self.GetHashCode() = 
+    hashCode
+
+  override self.Equals obj = 
+    match obj with
+    | :? DelegateCell as cell ->  
+      if cell.Types.Length = self.Types.Length then
+        if cell.ClosureType = self.ClosureType then
+          compareTypes self.Types cell.Types
+        else
+          false
+      else
+        false
+    | _ -> false
+
 (*The currently executing environment*)
 and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
-  let jitCache = new Dictionary<int, CacheCell>()
+  let jitCache = new Dictionary<DelegateCell, System.Delegate>()
 
-  member self.GetCachedDelegate (ast:Ast.Types.Node) (types:ClrType list) =
-    //Helper function
-    let rec scan types (cell:CacheCell) =
-      match types with
-      | [] -> 
-        if cell.Func = null 
-          then None 
-          else Some(cell.Func)
-      | typ::xsTypes -> 
-        let next =
-          if   typ = Constants.clrDouble then cell.NextDouble
-          elif typ = Constants.clrString then cell.NextString
-          elif typ = typedefof<Object>   then cell.NextObject
-          else cell.NextDynamic
-        match next with
-        | None -> None
-        | Some(cell) -> scan xsTypes cell
+  member self.GetCachedDelegate (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
+    let cell = new DelegateCell(ast, closureType, types)
+    let success, func = jitCache.TryGetValue(cell)
+    if success then Some(func) else None
 
-    //Do the scan
-    let success, cell = jitCache.TryGetValue(ast.GetHashCode())
-    if success then scan types cell else None
-
-  member self.StoreCachedDelegate (ast:Ast.Types.Node) (types:ClrType list) (func:System.Delegate) =
-    //Helper function
-    let rec insert types (cell:CacheCell) =
-      match types with
-      | [] -> { cell with Func = func }
-      | typ::xsTypes ->
-          if typ = Constants.clrDouble then 
-            match cell.NextDouble with
-            | None -> { cell with NextDouble = Some(insert xsTypes emptyCacheCell) }
-            | Some(next) -> { cell with NextDouble = Some(insert xsTypes next) }
-          elif typ = Constants.clrString then
-            match cell.NextString with
-            | None -> { cell with NextString = Some(insert xsTypes emptyCacheCell) }
-            | Some(next) -> { cell with NextString = Some(insert xsTypes next) }
-          elif typ = typedefof<Object> then
-            match cell.NextObject with
-            | None -> { cell with NextObject = Some(insert xsTypes emptyCacheCell) }
-            | Some(next) -> { cell with NextObject = Some(insert xsTypes next) }
-          else
-            match cell.NextDynamic with
-            | None -> { cell with NextDynamic = Some(insert xsTypes emptyCacheCell) }
-            | Some(next) -> { cell with NextDynamic = Some(insert xsTypes next) }
-    
-    //Do the insert
-    let hashCode = ast.GetHashCode()
-    let success, cell = jitCache.TryGetValue(hashCode)
-    jitCache.[hashCode] <- if success then insert types cell else insert types emptyCacheCell
+  member self.CacheCompiledDelegate (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) (func:System.Delegate) =
+    let cell = new DelegateCell(ast, closureType, types)
+    jitCache.[cell] <- func
     func
 
   member self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
     match ast with
-    | Ast.Types.Node.Function(scope, body) ->
-      let analyzedSope = scopeAnalyzer scope types
-      (exprGenerator closureType analyzedSope body).Compile()
+    | Ast.Types.Node.Function(scope, body) -> (exprGenerator closureType (scopeAnalyzer scope types) body).Compile()
     | _ -> failwith "Can only compile Ast.Types.Node.Function"
 
 (*Class representing a Javascript native object*)

@@ -14,49 +14,45 @@ type private Builder = Node -> Context -> Et
 let private assign left right (ctx:Context) builder =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (builder right ctx)
-  | Local(name)  -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
+  | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
-let private getLocalClrType name (ctx:Context) =
+let private getLocalClrType name ctx =
   if ctx.Scope.Locals.ContainsKey name 
     then ToClr ctx.Scope.Locals.[name].UsedAs
-    else failwithf "No local named '%s'" name
+    else failwithf "No local variable named '%s' exist" name
 
-let private getClosureClrType name (ctx:Context) =
+let private getClosureClrType name ctx =
   if ctx.Scope.Closure.ContainsKey name 
     then ctx.Closure.Type.GetField(sprintf "Item%i" ctx.Scope.Closure.[name].Index).FieldType.GetGenericArguments().[0]
-    else failwithf "No closure named '%s'" name
+    else failwithf "No closure variable named '%s' exist" name
 
-let private resolveClosureItems (scope:Scope) (ctx:Context ) =
-  Map.fold (fun state key closure -> (key, closure.Index) :: state ) [] scope.Closure
-  |> List.sortWith (fun a b -> (snd a) - (snd b))
-  |> List.map (fun pair -> 
-    let name = (fst pair)
-    if scope.Closure.[name].IsLocalInParent
-      then ctx.Scope.Locals.[name].Expr :> Et
-      else Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
-  )
+let private getVariableType name local ctx =
+  if local then getLocalClrType name ctx else getClosureClrType name ctx
 
-let private resolveClosureType (scope:Scope) (ctx:Context) =
+let private getVariableExpr name closure ctx =
+  if closure.IsLocalInParent
+    then ctx.Scope.Locals.[name].Expr :> Et
+    else Expr.field ctx.Closure (sprintf "Item%i" closure.Index) 
+
+let private resolveClosureItems (scope:Scope) ctx =
+  Map.toList scope.Closure
+  |> List.sortWith (fun a b -> (snd a).Index - (snd b).Index)
+  |> List.map (fun pair -> getVariableExpr (fst pair) (snd pair) ctx)
+
+let private resolveClosureType (scope:Scope) ctx =
   Runtime.Closures.getClosureType (
-    Map.fold (fun state key closure -> 
-      let typ = if closure.IsLocalInParent 
-                  then getLocalClrType key ctx 
-                  else getClosureClrType key ctx
-
-      (typ, closure.Index) :: state
-    ) [] scope.Closure
-
+    Map.fold (fun state key closure -> (getVariableType key closure.IsLocalInParent ctx, closure.Index) :: state) [] scope.Closure
     |> List.sortWith (fun a b -> (snd a) - (snd b))
     |> List.map (fun pair -> fst pair)
   )
 
-let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Builder) =
+let private func scope (ast:Ast.Types.Node) ctx =
   let closureType = resolveClosureType scope ctx
   let closureExpr = Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveClosureItems scope ctx)
   Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
 
-let private invoke (target:Node) (args:Node list) (ctx:Context) (builder:Builder) =
+let private invoke target args ctx (builder:Builder) =
   Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
 
 let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
@@ -78,7 +74,7 @@ let rec internal builder (ast:Node) (ctx:Context) =
   | String(value) -> Expr.constant value
   | Number(value) -> Expr.constant value
   | Return(value) -> Js.makeReturn ctx.Return (builder value ctx)
-  | Function(scope, _) -> func scope ast ctx builder
+  | Function(scope, _) -> func scope ast ctx
   | Invoke(target, args) -> invoke target args ctx builder
   | Object(properties) -> objectShorthand properties ctx builder
   | _ -> Expr.objDefault

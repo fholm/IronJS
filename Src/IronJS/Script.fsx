@@ -36,7 +36,7 @@ open IronJS.Ast.Types
 open Antlr.Runtime
 
 fsi.AddPrinter(fun (x:Ast.Types.Local) -> sprintf "%A/%i/%A/%A/%A/%A" x.ClosureAccess x.ParamIndex x.UsedAs x.UsedWith x.InitUndefined (if x.Expr = null then "" else prettyPrintTypeName x.Expr.Type))
-fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i" x.Index)
+fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i/%A" x.Index x.IsLocalInParent)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "Param:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 

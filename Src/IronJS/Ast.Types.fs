@@ -21,7 +21,7 @@ type ClosureAccess =
   | Read
   | Write
 
-[<DebuggerDisplay("clos:{ClosureAccess.Tag}/{ParamIndex}/as:{UsedAs}/{UsedWith}/def:{InitDefault}")>]
+[<DebuggerDisplay("clos:{ClosureAccess.Tag}/pi:{ParamIndex}/as:{UsedAs}/with:{UsedWith}/def:{InitUndefined}")>]
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int

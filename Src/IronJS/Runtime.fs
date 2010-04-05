@@ -29,7 +29,7 @@ let emptyCacheCell = {
 
 (*The currently executing environment*)
 type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
-  let jitCache = new Dictionary<Ast.Types.Node, CacheCell>()
+  let jitCache = new Dictionary<int, CacheCell>()
 
   member self.GetCachedDelegate (ast:Ast.Types.Node) (types:ClrType list) =
     //Helper function
@@ -50,7 +50,7 @@ type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenera
         | Some(cell) -> scan xsTypes cell
 
     //Do the scan
-    let success, cell = jitCache.TryGetValue(ast)
+    let success, cell = jitCache.TryGetValue(ast.GetHashCode())
     if success then scan types cell else None
 
   member self.StoreCachedDelegate (ast:Ast.Types.Node) (types:ClrType list) (func:System.Delegate) =
@@ -77,14 +77,17 @@ type Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenera
             | Some(next) -> { cell with NextDynamic = Some(insert xsTypes next) }
     
     //Do the insert
-    let success, cell = jitCache.TryGetValue(ast)
-    jitCache.[ast] <- if success then insert types cell else insert types emptyCacheCell
-    jitCache.[ast].Func
+    let hashCode = ast.GetHashCode()
+    let success, cell = jitCache.TryGetValue(hashCode)
+    jitCache.[hashCode] <- if success then insert types cell else insert types emptyCacheCell
+    func
 
   member self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
     match ast with
     | Ast.Types.Node.Function(scope, body) ->
-      
+      let analyzedSope = scopeAnalyzer scope types
+      (exprGenerator closureType analyzedSope body).Compile()
+    | _ -> failwith "Can only compile Ast.Types.Node.Function"
 
 (*Class representing a Javascript native object*)
 and Object(env:Environment) =

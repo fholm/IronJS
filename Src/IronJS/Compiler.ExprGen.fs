@@ -26,7 +26,7 @@ let private func (scope:Scope) (ast:Ast.Types.Node) (ctx:Context) (builder:Build
   Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
 
 let private invoke (target:Node) (args:Node list) (ctx:Context) (builder:Builder) =
-  Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) [for arg in args -> builder arg ctx]
+  Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
 
 //Builder function for expression generation
 let rec internal builder (ast:Node) (ctx:Context) =

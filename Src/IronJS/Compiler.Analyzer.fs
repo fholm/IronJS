@@ -58,8 +58,8 @@ let analyze (scope:Scope) (types:ClrType list) =
                 then { var with UsedAs = var.UsedAs ||| ToJs types.[var.ParamIndex] } // We got an argument for this parameter
                 else { setType name var JsTypes.Dynamic with InitUndefined = true; }  // We didn't, means make it dynamic and demote to a normal local
             else 
-              if   isDynamic var then setType name var JsTypes.Dynamic  // No need to resolve type, force it here
-              elif isNotAssignedTo var then setType name var var.UsedAs // If it's not assigned from any variables
+              if   isDynamic var       then setType name var JsTypes.Dynamic // No need to resolve type, force it here
+              elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned from any variables
               else var // Needs to be resolved
             )
           |> fix (fun next locals -> 

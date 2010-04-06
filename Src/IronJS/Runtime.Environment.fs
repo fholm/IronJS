@@ -38,11 +38,11 @@ let rec private calculateHashAndTypes types (hash:int ref) =
 (**)
 let rec private compareTypes a b =
   match a with
-  | [] -> true
+  | []      -> true
   | xA::xsA ->
     match b with
     | xB::xsB -> if xA = xB then compareTypes xsA xsB else false
-    | _ -> failwith "Should never happen"
+    | _       -> failwith "Should never happen"
 
 (**)
 type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
@@ -71,7 +71,7 @@ and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerat
 
   //Implementation of IEnvironment interface
   interface Runtime.Core.IEnvironment with
-    member self.GetDelegate (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
+    member self.GetDelegate ast closureType types =
       let cell = new DelegateCell(ast, closureType, types)
       match self.GetCachedDelegate cell with
       | Some(func) -> func
@@ -82,11 +82,11 @@ and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerat
     let success, func = jitCache.TryGetValue(cell)
     if success then Some(func) else None
 
-  member private self.CacheCompiledDelegate cell (func) =
+  member private self.CacheCompiledDelegate cell func =
     jitCache.[cell] <- func
     func
 
-  member private self.Compile (ast:Ast.Types.Node) (closureType:ClrType) (types:ClrType list) =
+  member private self.Compile ast closureType types =
     match ast with
     | Ast.Types.Node.Function(scope, body) -> 
       let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope types) body)

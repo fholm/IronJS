@@ -1,6 +1,5 @@
 ﻿module IronJS.Ast.Helpers
 
-(*Imports*)
 open IronJS
 open IronJS.Utils
 open IronJS.Ast.Types

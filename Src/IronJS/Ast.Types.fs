@@ -1,12 +1,10 @@
 ﻿module IronJS.Ast.Types
 
-(*Imports*)
 open IronJS
 open IronJS.Utils
 open Antlr.Runtime.Tree
 open System.Diagnostics
 
-(*Types*)
 (*Types*)
 type JsTypes = 
   | Nothing = 0
@@ -98,9 +96,4 @@ let internal newLocal = {
   UsedWith = Set.empty
   InitUndefined = false
   Expr = null
-}
-
-let internal newClosure = {
-  Index = -1
-  IsLocalInParent = false
 }

@@ -1,10 +1,7 @@
 ﻿module IronJS.Tools.Expr
 
-//Imports
 open IronJS.Utils
 open System.Linq.Expressions
-
-(*Expression Tools*)
 
 //Constants
 let private optionType = 

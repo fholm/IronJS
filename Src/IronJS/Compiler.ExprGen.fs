@@ -17,15 +17,28 @@ let private assign left right (ctx:Context) builder =
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
+let private typeIsGeneric (typ:ClrType) = typ.IsGenericType && not typ.IsGenericTypeDefinition 
+
+let private getGenericArgument n (typ:ClrType) = 
+  if typeIsGeneric typ 
+    then typ.GetGenericArguments().[n] 
+    else failwith "%A is not a generic type" typ
+
+let private getStrongBoxType = getGenericArgument 0
+let private closureFieldName name ctx = sprintf "Item%i" ctx.Scope.Closure.[name].Index
+let private getFieldType name (typ:ClrType) = (typ.GetField name).FieldType
+
 let private getLocalClrType name ctx =
-  if ctx.Scope.Locals.ContainsKey name 
+  if ctx.Scope.Locals.ContainsKey name
     then ToClr ctx.Scope.Locals.[name].UsedAs
     else failwithf "No local variable named '%s' exist" name
 
 let private getClosureClrType name ctx =
   if ctx.Scope.Closure.ContainsKey name 
-    then ctx.Closure.Type.GetField(sprintf "Item%i" ctx.Scope.Closure.[name].Index).FieldType.GetGenericArguments().[0]
+    then getStrongBoxType (getFieldType (closureFieldName name ctx) ctx.Closure.Type)
     else failwithf "No closure variable named '%s' exist" name
+
+let private getClosureJsType = (IronJS.Operators.pair getClosureClrType) >> ToJs
 
 let private getVariableType name local ctx =
   if local then getLocalClrType name ctx else getClosureClrType name ctx

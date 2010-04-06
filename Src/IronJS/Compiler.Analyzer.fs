@@ -4,7 +4,7 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Ast.Types
-open IronJS.Compiler.Helpers
+open IronJS.Compiler.Helpers.Core
 
 (*Checks if a local always will result in a Dynamic type*)
 let private isDynamic (loc:Local) =

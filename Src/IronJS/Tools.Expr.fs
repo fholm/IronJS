@@ -1,5 +1,7 @@
 ﻿module IronJS.Tools.Expr
 
+(*Tools for working with DLR expressions*)
+
 open IronJS.Utils
 open System.Linq.Expressions
 
@@ -103,26 +105,3 @@ let delegateType (types:ClrType seq) =
 
 let invoke (func:Et) (args:Et list) =
   Et.Invoke(func, args)
-
-(*Restrict Tools*)
-
-let restrictNone = 
-  System.Dynamic.BindingRestrictions.Empty
-
-let restrictExpr expr =
-  Restrict.GetExpressionRestriction(expr)
-
-let restrictType expr typ =
-  Restrict.GetTypeRestriction(expr, typ)
-
-let restrictInst expr instance =
-  Restrict.GetInstanceRestriction(expr, instance)
-
-let rec restrictArgs (args:MetaObj list) =
-  match args with
-  | [] -> Restrict.Empty
-  | x::xs -> 
-    (if x.HasValue && x.Value = null 
-        then Restrict.GetInstanceRestriction(x.Expression, objDefault)
-        else Restrict.GetTypeRestriction(x.Expression, x.LimitType)
-    ).Merge(x.Restrictions).Merge(restrictArgs xs)

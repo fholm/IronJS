@@ -1,5 +1,7 @@
 ﻿module IronJS.Tools.Js
 
+(*Tools for working with DLR expressions related to IronJS specific stuff*)
+
 open IronJS
 open IronJS.Utils
 open IronJS.Tools

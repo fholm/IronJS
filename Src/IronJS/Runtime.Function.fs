@@ -55,9 +55,9 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
         :: List.rev (Array.fold (fun lst (arg:MetaObj) -> Tools.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args)
       )
 
-    let restrict = (Tools.Expr.restrictType self.Expression typeof<Function<'a>>).
-                    Merge(Tools.Expr.restrictInst self.AstExpr jsFunc.Ast).
-                    Merge(Tools.Expr.restrictArgs (List.tail (Array.toList args)))
+    let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).
+                    Merge(Tools.Dlr.Restrict.byInstance self.AstExpr jsFunc.Ast).
+                    Merge(Tools.Dlr.Restrict.byArgs (List.tail (Array.toList args)))
 
     new MetaObj(expr, restrict)
 

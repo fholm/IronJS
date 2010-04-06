@@ -1,9 +1,9 @@
-﻿module IronJS.Compiler.Helpers
+﻿module IronJS.Compiler.Helpers.Core
 
 open IronJS
-open IronJS.Ast.Types
-open IronJS
 open IronJS.Utils
+open IronJS.Tools
+open IronJS.Ast.Types
 open IronJS.Compiler.Types
 open IronJS.Runtime.Binders
 open System.Dynamic
@@ -22,12 +22,5 @@ let ToClr typ =
   | JsTypes.Object -> typeof<Runtime.Core.Object>
   | _ -> Constants.clrDynamic
 
-let closureFieldName name ctx = 
-  sprintf "Item%i" ctx.Scope.Closure.[name].Index
-
-let dynamicInvoke target (args:Et list) =
-  Et.Dynamic(
-    (*binder*) new Invoke(new CallInfo(args.Length)),
-    (*return type*) Constants.clrDynamic,
-    (*target+args*) target :: args
-  ) :> Et
+(*Gets the inner type of a strongbox Type object*)
+let strongBoxInnerType typ = Type.genericArgumentN typ 0

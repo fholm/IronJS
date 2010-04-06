@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Ast.Types
 open IronJS.Compiler
 open IronJS.Compiler.Types
-open IronJS.Compiler.Helpers
+open IronJS.Compiler.Helpers.Core
 
 type private Builder = Node -> Context -> Et
 
@@ -16,16 +16,6 @@ let private assign left right (ctx:Context) builder =
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Expr.objDefault
 
-let private typeIsGeneric (typ:ClrType) = typ.IsGenericType && not typ.IsGenericTypeDefinition 
-
-let private getGenericArgument n (typ:ClrType) = 
-  if typeIsGeneric typ 
-    then typ.GetGenericArguments().[n] 
-    else failwith "%A is not a generic type" typ
-
-let private getStrongBoxType = getGenericArgument 0
-let private getFieldType name (typ:ClrType) = (typ.GetField name).FieldType
-
 let private getLocalClrType name ctx =
   if ctx.Scope.Locals.ContainsKey name
     then ToClr ctx.Scope.Locals.[name].UsedAs
@@ -33,10 +23,8 @@ let private getLocalClrType name ctx =
 
 let private getClosureClrType name ctx =
   if ctx.Scope.Closure.ContainsKey name 
-    then getStrongBoxType (getFieldType (closureFieldName name ctx) ctx.Closure.Type)
+    then strongBoxInnerType (Type.fieldType ctx.Closure.Type (Helpers.Closure.fieldName ctx name))
     else failwithf "No closure variable named '%s' exist" name
-
-let private getClosureJsType = (IronJS.Operators.pair getClosureClrType) >> ToJs
 
 let private getVariableType name local ctx =
   if local then getLocalClrType name ctx else getClosureClrType name ctx
@@ -61,10 +49,16 @@ let private resolveClosureType (scope:Scope) ctx =
 let private func scope (ast:Ast.Types.Node) ctx =
   let closureType = resolveClosureType scope ctx
   let closureExpr = Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveClosureItems scope ctx)
-  Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
+  Helpers.ExprGen.newFunction closureType [Expr.constant ast; closureExpr; ctx.Environment]
 
-let private invoke target args ctx (builder:Builder) =
-  dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
+(*TODO: This is ugly atm, refactor into own function*)
+let private invoke target args (ctx:Context) (builder:Builder) =
+  let args = ctx.Globals :: [for arg in args -> builder arg ctx]
+  Et.Dynamic(
+    new Runtime.Binders.Invoke(new System.Dynamic.CallInfo(args.Length)),
+    Constants.clrDynamic,
+    (builder target ctx) :: args
+  ) :> Et
 
 let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
   match properties with

@@ -500,7 +500,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t
 let closure16TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
 
-let getClosureType (types:ClrType seq) =
+let createClosureType (types:ClrType seq) =
   let types = Array.ofSeq types
 
   match types.Length with

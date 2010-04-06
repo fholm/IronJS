@@ -2,6 +2,11 @@
 
 open IronJS
 open IronJS.Ast.Types
+open IronJS
+open IronJS.Utils
+open IronJS.Compiler.Types
+open IronJS.Runtime.Binders
+open System.Dynamic
 
 (*Converts a ClrType to JsType*)
 let ToJs typ = 
@@ -17,3 +22,12 @@ let ToClr typ =
   | JsTypes.Object -> typeof<Runtime.Core.Object>
   | _ -> Constants.clrDynamic
 
+let closureFieldName name ctx = 
+  sprintf "Item%i" ctx.Scope.Closure.[name].Index
+
+let dynamicInvoke target (args:Et list) =
+  Et.Dynamic(
+    (*binder*) new Invoke(new CallInfo(args.Length)),
+    (*return type*) Constants.clrDynamic,
+    (*target+args*) target :: args
+  ) :> Et

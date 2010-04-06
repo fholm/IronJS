@@ -42,6 +42,7 @@
     <Compile Include="Tools.fs" />
     <Compile Include="Tools.Expr.fs" />
     <Compile Include="Tools.Js.fs" />
+    <Compile Include="Tools.Type.fs" />
     <Compile Include="Ast.Types.fs" />
     <Compile Include="Ast.Helpers.fs" />
     <Compile Include="Ast.Analyzer.fs" />
@@ -55,7 +56,6 @@
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Helpers.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
-    <Compile Include="Compiler.ExprGen.Helpers.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />

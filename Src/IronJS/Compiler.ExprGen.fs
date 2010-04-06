@@ -10,7 +10,6 @@ open IronJS.Compiler.Helpers
 
 type private Builder = Node -> Context -> Et
 
-//Handles assignment for Global/Closure/Local
 let private assign left right (ctx:Context) builder =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (builder right ctx)
@@ -25,7 +24,6 @@ let private getGenericArgument n (typ:ClrType) =
     else failwith "%A is not a generic type" typ
 
 let private getStrongBoxType = getGenericArgument 0
-let private closureFieldName name ctx = sprintf "Item%i" ctx.Scope.Closure.[name].Index
 let private getFieldType name (typ:ClrType) = (typ.GetField name).FieldType
 
 let private getLocalClrType name ctx =
@@ -54,7 +52,7 @@ let private resolveClosureItems (scope:Scope) ctx =
   |> List.map (fun pair -> getVariableExpr (fst pair) ((snd pair).IsLocalInParent) ctx)
 
 let private resolveClosureType (scope:Scope) ctx =
-  Runtime.Closures.getClosureType (
+  Runtime.Closures.createClosureType (
     Map.fold (fun state key closure -> (getVariableType key closure.IsLocalInParent ctx, closure.Index) :: state) [] scope.Closure
     |> List.sortWith (fun a b -> (snd a) - (snd b))
     |> List.map (fun pair -> fst pair)
@@ -66,7 +64,7 @@ let private func scope (ast:Ast.Types.Node) ctx =
   Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] [Expr.constant ast; closureExpr; ctx.Environment]
 
 let private invoke target args ctx (builder:Builder) =
-  Compiler.ExprGen.Helpers.dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
+  dynamicInvoke (builder target ctx) (ctx.Globals :: [for arg in args -> builder arg ctx])
 
 let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
   match properties with

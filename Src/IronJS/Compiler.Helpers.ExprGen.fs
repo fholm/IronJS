@@ -1,9 +1,11 @@
-﻿module IronJS.Compiler.Helpers.ExprGen
+﻿namespace IronJS.Compiler.Helpers
 
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
 
-(**)
-let newFunction closureType args =
-  Dlr.Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] args
+(*ExprGen helper module containing common funcitons*)
+
+module ExprGen =
+  let newFunction closureType args =
+    Dlr.Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] args

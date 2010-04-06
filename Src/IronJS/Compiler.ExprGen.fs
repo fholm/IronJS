@@ -17,8 +17,8 @@ let private assign left right (ctx:Context) builder =
   | _ -> Dlr.Expr.objDefault
 
 let private func scope (ast:Ast.Types.Node) ctx =
-  let typ, expr = Helpers.Closure.newClosure ctx scope
-  Helpers.ExprGen.newFunction typ [Dlr.Expr.constant ast; expr; ctx.Environment]
+  let closureType, closureExpr = Helpers.Closure.newClosure ctx scope
+  Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
 
 (*TODO: This is ugly atm, refactor into own function*)
 let private invoke target args (ctx:Context) (builder:Builder) =

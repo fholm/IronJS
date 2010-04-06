@@ -12,8 +12,10 @@
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
 #load "Tools.fs"
-#load "Tools.Expr.fs"
+#load "Tools.Dlr.Expr.fs"
+#load "Tools.Dlr.Restrict.fs"
 #load "Tools.Js.fs"
+#load "Tools.Type.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -22,7 +24,9 @@
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
 #load "Compiler.Analyzer.fs"
-#load "Compiler.ExprGen.Helpers.fs"
+#load "Compiler.Helpers.Variables.fs"
+#load "Compiler.Helpers.ExprGen.fs"
+#load "Compiler.Helpers.Closure.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 
@@ -40,8 +44,8 @@ fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i/%A" x.Index x.IsLocalInP
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "Param:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))

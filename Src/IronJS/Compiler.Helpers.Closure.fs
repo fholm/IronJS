@@ -8,7 +8,6 @@ open IronJS.Compiler
 open IronJS.Compiler.Types
 
 (*Module for working with closures*)
-
 module Closure =
 
   let private resolveItems ctx (scope:Scope)  =

@@ -6,4 +6,4 @@ open IronJS.Tools
 
 (**)
 let newFunction closureType args =
-  Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] args
+  Dlr.Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] args

@@ -2,7 +2,7 @@
 
 open IronJS
 open IronJS.Utils
-open IronJS.Tools.Expr
+open IronJS.Tools
 open System.Dynamic
 open System.Collections.Generic
 

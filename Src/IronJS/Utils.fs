@@ -7,7 +7,6 @@ type MetaObj = System.Dynamic.DynamicMetaObject
 type Et = System.Linq.Expressions.Expression
 type EtParam = System.Linq.Expressions.ParameterExpression
 type EtLambda = System.Linq.Expressions.LambdaExpression
-type Restrict = System.Dynamic.BindingRestrictions
 type AstUtils = Microsoft.Scripting.Ast.Utils
 type JitCache = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
 type CtorInfo = System.Reflection.ConstructorInfo

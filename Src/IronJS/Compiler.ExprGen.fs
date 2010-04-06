@@ -14,7 +14,7 @@ let private assign left right (ctx:Context) builder =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (builder right ctx)
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
-  | _ -> Expr.objDefault
+  | _ -> Dlr.Expr.objDefault
 
 let private getLocalClrType name ctx =
   if ctx.Scope.Locals.ContainsKey name
@@ -32,7 +32,7 @@ let private getVariableType name local ctx =
 let private getVariableExpr name local ctx =
   if local
     then ctx.Scope.Locals.[name].Expr :> Et
-    else Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
+    else Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
 
 let private resolveClosureItems (scope:Scope) ctx =
   Map.toList scope.Closure
@@ -48,8 +48,8 @@ let private resolveClosureType (scope:Scope) ctx =
 
 let private func scope (ast:Ast.Types.Node) ctx =
   let closureType = resolveClosureType scope ctx
-  let closureExpr = Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveClosureItems scope ctx)
-  Helpers.ExprGen.newFunction closureType [Expr.constant ast; closureExpr; ctx.Environment]
+  let closureExpr = Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveClosureItems scope ctx)
+  Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
 
 (*TODO: This is ugly atm, refactor into own function*)
 let private invoke target args (ctx:Context) (builder:Builder) =
@@ -63,10 +63,10 @@ let private invoke target args (ctx:Context) (builder:Builder) =
 let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
   match properties with
   | Some(_) -> failwith "Not supported"
-  | None -> Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
+  | None -> Dlr.Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
 
 let private closureValue name (ctx:Context) =
-  Expr.field (Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
+  Dlr.Expr.field (Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
 
 //Builder function for expression generation
 let rec internal builder (ast:Node) (ctx:Context) =
@@ -75,11 +75,11 @@ let rec internal builder (ast:Node) (ctx:Context) =
   | Global(name) -> Js.Object.get ctx.Globals name
   | Local(name) -> ctx.Scope.Locals.[name].Expr :> Et
   | Closure(name) -> closureValue name ctx
-  | Block(nodes) -> Expr.block [for node in nodes -> builder node ctx]
-  | String(value) -> Expr.constant value
-  | Number(value) -> Expr.constant value
+  | Block(nodes) -> Dlr.Expr.block [for node in nodes -> builder node ctx]
+  | String(value) -> Dlr.Expr.constant value
+  | Number(value) -> Dlr.Expr.constant value
   | Return(value) -> Js.makeReturn ctx.Return (builder value ctx)
   | Function(scope, _) -> func scope ast ctx
   | Invoke(target, args) -> invoke target args ctx builder
   | Object(properties) -> objectShorthand properties ctx builder
-  | _ -> Expr.objDefault
+  | _ -> Dlr.Expr.objDefault

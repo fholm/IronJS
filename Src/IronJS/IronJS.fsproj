@@ -40,8 +40,8 @@
     <Compile Include="Constants.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Tools.fs" />
-    <Compile Include="Tools.Expr.fs" />
-    <Compile Include="Tools.Dlr.fs" />
+    <Compile Include="Tools.Dlr.Expr.fs" />
+    <Compile Include="Tools.Dlr.Restrict.fs" />
     <Compile Include="Tools.Js.fs" />
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Ast.Types.fs" />

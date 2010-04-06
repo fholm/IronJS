@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Utils
+open IronJS.Tools
 open IronJS.Runtime
 open System.Dynamic
 open System.Collections.Generic
@@ -39,9 +40,9 @@ type Function<'a> when 'a :> Closure =
 and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
   inherit Core.ObjectMeta(expr, jsFunc)
 
-  member self.FuncExpr with get() = Tools.Expr.castT<Function<'a>> self.Expression
-  member self.ClosureExpr with get() = Tools.Expr.field self.FuncExpr "Closure"
-  member self.AstExpr with get() = Tools.Expr.field self.FuncExpr "Ast"
+  member self.FuncExpr with get() = Dlr.Expr.castT<Function<'a>> self.Expression
+  member self.ClosureExpr with get() = Dlr.Expr.field self.FuncExpr "Closure"
+  member self.AstExpr with get() = Dlr.Expr.field self.FuncExpr "Ast"
 
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
@@ -49,10 +50,10 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let paramTypes = Runtime.Core.objectTypeDef :: paramTypes
 
     let expr = 
-      Tools.Expr.invoke (Tools.Expr.constant func) (
+      Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) (
         self.ClosureExpr 
-        :: Tools.Expr.typeDefault<Runtime.Core.Object> 
-        :: List.rev (Array.fold (fun lst (arg:MetaObj) -> Tools.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args)
+        :: Dlr.Expr.typeDefault<Runtime.Core.Object> 
+        :: List.rev (Array.fold (fun lst (arg:MetaObj) -> Dlr.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args)
       )
 
     let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).

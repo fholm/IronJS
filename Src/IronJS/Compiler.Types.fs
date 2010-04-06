@@ -3,7 +3,7 @@
 (* Imports *)
 open IronJS.Ast
 open IronJS.Utils
-open IronJS.Tools.Expr
+open IronJS.Tools
 open IronJS.Ast.Types
 open System.Linq.Expressions
 
@@ -15,13 +15,13 @@ type Context = {
   Scope: Scope
   Return: LabelTarget
 } with
-  member self.Globals     with get() = field self.Closure "Globals"
-  member self.Environment with get() = field self.Closure "Environment"
+  member self.Globals     with get() = Dlr.Expr.field self.Closure "Globals"
+  member self.Environment with get() = Dlr.Expr.field self.Closure "Environment"
 
 let defaultContext = {
   Closure = null
-  This = param "~this" typeof<IronJS.Runtime.Core.Object>
-  Arguments = param "~arguments" typeof<IronJS.Runtime.Core.Object>
+  This = Dlr.Expr.param "~this" typeof<IronJS.Runtime.Core.Object>
+  Arguments = Dlr.Expr.param "~arguments" typeof<IronJS.Runtime.Core.Object>
   Scope = newScope
-  Return = label "~return"
+  Return = Dlr.Expr.label "~return"
 }

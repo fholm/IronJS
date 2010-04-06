@@ -2,7 +2,7 @@
 
 open IronJS
 open IronJS.Utils
-open IronJS.Tools.Expr
+open IronJS.Tools
 open System.Dynamic
 open System.Collections.Generic
 
@@ -16,7 +16,7 @@ type IEnvironment =
 type Undefined() =
   static let instance = Undefined()
   static member Instance with get() = instance
-  static member InstanceExpr with get() = constant instance
+  static member InstanceExpr with get() = Dlr.Expr.constant instance
 
 (*Class representing a Javascript native object*)
 and Object(env:IEnvironment) =
@@ -31,7 +31,7 @@ and Object(env:IEnvironment) =
 
 (*DLR meta object for the above Object class*)
 and ObjectMeta(expr, jsObj:Object) =
-  inherit System.Dynamic.DynamicMetaObject(expr, Restrict.Empty, jsObj)
+  inherit System.Dynamic.DynamicMetaObject(expr, Dlr.Restrict.notAtAll, jsObj)
 
 let objectTypeDef = typedefof<Object>
 let objectTypeDefHashCode = objectTypeDef.GetHashCode()

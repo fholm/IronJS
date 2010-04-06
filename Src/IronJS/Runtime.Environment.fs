@@ -7,7 +7,7 @@ open System.Dynamic
 open System.Collections.Generic
 
 type private AstGenFunc = AstTree -> Ast.Types.Scopes -> Ast.Types.Node
-type private AnalyzeFunc = Ast.Types.Scope -> ClrType list -> Ast.Types.Scope
+type private AnalyzeFunc = Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope
 type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> (EtLambda * ClrType list)
 
 (**)
@@ -89,7 +89,7 @@ and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerat
   member private self.Compile ast closureType types =
     match ast with
     | Ast.Types.Node.Function(scope, body) -> 
-      let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope types) body)
+      let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope closureType types) body)
       lambda.Compile(), paramTypes
 
     | _ -> failwith "Can only compile Ast.Types.Node.Function"

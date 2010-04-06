@@ -4,6 +4,7 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Ast.Types
+open IronJS.Compiler
 open IronJS.Compiler.Helpers.Core
 
 (*Checks if a local always will result in a Dynamic type*)
@@ -16,7 +17,7 @@ let private isDynamic (loc:Local) =
 
 (*Checks if a local variable never is assigned to from another variable*)
 let private isNotAssignedTo (var:Local) =
-  var.UsedWith.Count = 0
+  var.UsedWith.Count = 0 && var.UsedWithClosure.Count = 0
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType (name:string) (var:Local) (typ:JsTypes) =
@@ -26,7 +27,14 @@ let private setType (name:string) (var:Local) (typ:JsTypes) =
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
-let private getType name (vars:LocalMap) =
+let private getType name (scope:Scope) closureType (vars:LocalMap) =
+
+  //TODO: Bad name for this function
+  let getClosureTypes (vars:string Set) =
+    vars |> Set.fold (
+      fun state var -> 
+        state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType scope.Closure.[var].Index)
+      ) JsTypes.Nothing
 
   let rec getType name (exclude:string Set) =
     let var = vars.[name]
@@ -34,16 +42,16 @@ let private getType name (vars:LocalMap) =
     elif not(var.Expr = null) then var.UsedAs 
     else var.UsedWith
           |> Set.map  (fun var -> getType var (exclude.Add name))
-          |> Set.fold (fun typ state -> typ ||| state) var.UsedAs
+          |> Set.fold (fun typ state -> typ ||| state) (var.UsedAs ||| getClosureTypes var.UsedWithClosure)
 
   getType name Set.empty
 
 (*Resolves the type of a variable and updates the map with it*)
-let inline private resolveType name (vars:LocalMap) =
-  Map.add name (setType name vars.[name] (getType name vars)) vars
+let inline private resolveType name scope closureType (vars:LocalMap) =
+  Map.add name (setType name vars.[name] (getType name scope closureType vars)) vars
 
 (*Analyzes a scope *)
-let analyze (scope:Scope) (types:ClrType list) = 
+let analyze (scope:Scope) (closureType:ClrType) (types:ClrType list) = 
   { scope with 
       CallingConvention = 
         if types.Length > IronJS.Constants.maxTypedArgs 
@@ -65,6 +73,6 @@ let analyze (scope:Scope) (types:ClrType list) =
           |> fix (fun next locals -> 
               match Map.tryFindKey (fun _ var -> var.Expr = null) locals with
               | Option.None       -> locals // All variables have Exprs
-              | Option.Some(name) -> next (resolveType name locals) // Key found, resolve its type
+              | Option.Some(name) -> next (resolveType name scope closureType locals) // Key found, resolve its type
             )
   }

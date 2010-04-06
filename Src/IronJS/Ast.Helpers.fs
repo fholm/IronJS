@@ -30,7 +30,15 @@ let internal setAccessWrite (scope:Scope) name =
                        | Write -> local
                        | Nothing | Read -> { local with ClosureAccess = Write })
 
-let internal addUsedWith (leftName:string) (rightName:string) (scopes:Scopes) =
+let internal addUsedWithClosure leftName rightName (scopes:Scopes) =
+  scopes := 
+    match !scopes with
+    | [] -> []
+    | scope::xs ->
+      let local = scope.Locals.[leftName]
+      setLocal scope leftName { local with UsedWithClosure = local.UsedWithClosure.Add(rightName) } :: xs
+
+let internal addUsedWith leftName rightName (scopes:Scopes) =
   scopes := 
     match !scopes with
     | [] -> []
@@ -38,7 +46,7 @@ let internal addUsedWith (leftName:string) (rightName:string) (scopes:Scopes) =
       let local = scope.Locals.[leftName]
       setLocal scope leftName { local with UsedWith = local.UsedWith.Add(rightName) } :: xs
 
-let internal addUsedAs (name:string) (typ:JsTypes) (scopes:Scopes) =
+let internal addUsedAs name typ (scopes:Scopes) =
   scopes := 
     match !scopes with
     | [] -> []
@@ -51,7 +59,7 @@ let internal setNeedsArguments (scope:Scope) =
     then scope
     else { scope with Arguments = true }
 
-let internal createClosure (scope:Scope) name (isLocalInParent) = 
+let internal createClosure (scope:Scope) name isLocalInParent = 
   if scope.Closure.ContainsKey name 
     then scope 
     else setClosure scope name { Index = scope.Closure.Count; IsLocalInParent = isLocalInParent }

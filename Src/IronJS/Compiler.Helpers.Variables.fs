@@ -13,12 +13,18 @@ module Variable =
   (*Helper functions for dealing with closure variables*)
   module Closure = 
 
+    let fieldNameN n =
+      sprintf "Item%i" n
+
     let fieldName ctx name = 
-      sprintf "Item%i" ctx.Scope.Closure.[name].Index
+      fieldNameN ctx.Scope.Closure.[name].Index
+
+    let clrTypeN typ n =
+      strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
       if ctx.Scope.Closure.ContainsKey name 
-        then strongBoxInnerType (Type.fieldType ctx.Closure.Type (fieldName ctx name))
+        then strongBoxInnerType (Type.fieldType ctx.Closure.Type (fieldName ctx name)) //TODO: <- duplicate of the clrTypeN function, refactor
         else failwithf "No closure variable named '%s' exist" name
 
     let value (ctx:Context) name =

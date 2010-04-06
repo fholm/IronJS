@@ -62,5 +62,6 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
 
     new MetaObj(expr, restrict)
 
+(*Typedef*)
 let functionTypeDef = typedefof<Function<_>>
 let functionTypeDefHashCode = functionTypeDef.GetHashCode()

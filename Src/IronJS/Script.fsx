@@ -5,17 +5,18 @@
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Fsi.fs"
+#load "Operators.fs"
 #load "Constants.fs"
 #load "Utils.fs"
-#load "Ast.Types.fs"
-#load "Ast.Helpers.fs"
-#load "Ast.Analyzer.fs"
-#load "Ast.fs"
 #load "Tools.fs"
 #load "Tools.Dlr.Expr.fs"
 #load "Tools.Dlr.Restrict.fs"
 #load "Tools.Js.fs"
 #load "Tools.Type.fs"
+#load "Ast.Types.fs"
+#load "Ast.Helpers.fs"
+#load "Ast.Analyzer.fs"
+#load "Ast.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -23,10 +24,10 @@
 #load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
-#load "Compiler.Analyzer.fs"
 #load "Compiler.Helpers.Variables.fs"
 #load "Compiler.Helpers.ExprGen.fs"
 #load "Compiler.Helpers.Closure.fs"
+#load "Compiler.Analyzer.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 
@@ -61,5 +62,6 @@ let closure = new Runtime.Function.Closure(globals, env)
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-let foo = closure.Globals.Get("foo")
+closure.Globals.Get("bar")
+
 let bar = closure.Globals.Get("bar")

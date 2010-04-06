@@ -19,12 +19,13 @@ type ClosureAccess =
   | Read
   | Write
 
-[<DebuggerDisplay("clos:{ClosureAccess.Tag}/pi:{ParamIndex}/as:{UsedAs}/with:{UsedWith}/def:{InitUndefined}")>]
+[<DebuggerDisplay("clos:{ClosureAccess.Tag}/pi:{ParamIndex}/as:{UsedAs}/with:{UsedWith}/def:{InitUndefined}/withClos:{UsedWithClosure}")>]
 type Local = {
   ClosureAccess: ClosureAccess
   ParamIndex: int
   UsedAs: JsTypes
   UsedWith: string Set
+  UsedWithClosure: string Set
   InitUndefined: bool
   Expr: EtParam
 } with
@@ -94,6 +95,7 @@ let internal newLocal = {
   ParamIndex = -1
   UsedAs = JsTypes.Nothing
   UsedWith = Set.empty
+  UsedWithClosure = Set.empty
   InitUndefined = false
   Expr = null
 }

@@ -1,0 +1,4 @@
+﻿module IronJS.Tools.Type
+
+
+

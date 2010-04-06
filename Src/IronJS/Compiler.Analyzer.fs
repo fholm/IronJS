@@ -29,25 +29,22 @@ let private setType (name:string) (var:Local) (typ:JsTypes) =
 (*Get the type of a variable, evaluating it if necessary*)
 let private getType name (scope:Scope) closureType (vars:LocalMap) =
 
-  //TODO: Bad name for this function
-  let getClosureTypes (vars:string Set) =
-    vars |> Set.fold (
-      fun state var -> 
-        state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType scope.Closure.[var].Index)
-      ) JsTypes.Nothing
-
   let rec getType name (exclude:string Set) =
     let var = vars.[name]
     if exclude.Contains name then JsTypes.Nothing
     elif not(var.Expr = null) then var.UsedAs 
     else var.UsedWith
           |> Set.map  (fun var -> getType var (exclude.Add name))
-          |> Set.fold (fun typ state -> typ ||| state) (var.UsedAs ||| getClosureTypes var.UsedWithClosure)
+          |> Set.fold (fun state typ -> state ||| typ) var.UsedAs
+          |> (fun typ -> Set.fold (fun state var -> 
+                                    state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType scope.Closure.[var].Index)
+                                  ) typ var.UsedWithClosure
+             ) //TODO: this is awfully indented, needs to be redone
 
   getType name Set.empty
 
 (*Resolves the type of a variable and updates the map with it*)
-let inline private resolveType name scope closureType (vars:LocalMap) =
+let private resolveType name scope closureType (vars:LocalMap) =
   Map.add name (setType name vars.[name] (getType name scope closureType vars)) vars
 
 (*Analyzes a scope *)

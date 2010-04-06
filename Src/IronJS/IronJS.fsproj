@@ -56,7 +56,7 @@
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Helpers.fs" />
-    <Compile Include="Compiler.Helpers.Closure.fs" />
+    <Compile Include="Compiler.Helpers.Variables.fs" />
     <Compile Include="Compiler.Helpers.ExprGen.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.ExprGen.fs" />

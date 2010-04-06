@@ -30,15 +30,15 @@ let private getClosureClrType name ctx =
 let private getVariableType name local ctx =
   if local then getLocalClrType name ctx else getClosureClrType name ctx
 
-let private getVariableExpr name closure ctx =
-  if closure.IsLocalInParent
+let private getVariableExpr name local ctx =
+  if local
     then ctx.Scope.Locals.[name].Expr :> Et
-    else Expr.field ctx.Closure (sprintf "Item%i" closure.Index) 
+    else Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
 
 let private resolveClosureItems (scope:Scope) ctx =
   Map.toList scope.Closure
   |> List.sortWith (fun a b -> (snd a).Index - (snd b).Index)
-  |> List.map (fun pair -> getVariableExpr (fst pair) (snd pair) ctx)
+  |> List.map (fun pair -> getVariableExpr (fst pair) ((snd pair).IsLocalInParent) ctx)
 
 let private resolveClosureType (scope:Scope) ctx =
   Runtime.Closures.getClosureType (

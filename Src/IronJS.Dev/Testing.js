@@ -1,18 +1,18 @@
 ﻿var obj = {};
 
-var tst = function() {
+var tst = function () {
     return "hey";
 };
 
-var foo = function(a1, a2, a3) {
+var foo = function (a1, a2, a3) {
     var bar = 2;
     bar = a1;
     a2 = 2;
     zoo = "hello global world";
 
-    foo2 = function() {
+    foo2 = function () {
         var x = bar;
-        foo3 = function() {
+        foo3 = function () {
             return a3;
         }
     }

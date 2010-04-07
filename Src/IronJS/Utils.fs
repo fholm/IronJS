@@ -82,7 +82,3 @@ let mapTrisect (filter:'a -> 'b -> int) (map:Map<'a,'b>) =
 //Map.count
 let mapCount (filter:'a -> 'b -> bool) (map:Map<'a,'b>) =
   Map.fold (fun count k v ->  if filter k v then count + 1 else count) 0 map
-
-//Y-comb
-let rec fix0 f = f (fun () -> fix0 f)
-let rec fix f = f (fun x -> fix f x)

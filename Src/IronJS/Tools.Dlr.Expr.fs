@@ -12,7 +12,7 @@ module Expr =
   let objDefault = typeDefault<obj>
 
   let param name typ = Et.Parameter(typ, name)
-  let paramT<'a> name =  param name typeof<'a>
+  let paramT<'a> name = param name typeof<'a>
 
   let label name = Et.Label(typeof<obj>, name)
   let labelExpr label = Et.Label(label, Et.Default(typeof<obj>)) :> Et
@@ -31,7 +31,7 @@ module Expr =
     Et.Call(expr, mi, args) :> Et
 
   let cast expr typ = Et.Convert(expr, typ) :> Et
-  let castT<'a> expr =  cast expr typeof<'a> 
+  let castT<'a> expr = cast expr typeof<'a> 
   
   let constant value = Et.Constant(value, value.GetType()) :> Et
   let refEq left right = Et.ReferenceEqual(left, right) :> Et

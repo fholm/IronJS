@@ -16,11 +16,10 @@ let private isDynamic (loc:Local) =
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
-let private isNotAssignedTo (var:Local) =
-  var.UsedWith.Count = 0 && var.UsedWithClosure.Count = 0
+let private isNotAssignedTo var = var.UsedWith.Count = 0 && var.UsedWithClosure.Count = 0
 
 (*Sets the Expr and UsedAs attributes of a variable*)
-let private setType (name:string) (var:Local) (typ:JsTypes) =
+let private setType name var typ =
   let expr = Dlr.Expr.param name (match var.ClosureAccess with
                                  | Read | Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
                                  | Nothing -> ToClr typ)
@@ -48,7 +47,13 @@ let private resolveType name scope closureType (vars:LocalMap) =
   Map.add name (setType name vars.[name] (getType name scope closureType vars)) vars
 
 (*Analyzes a scope *)
-let analyze (scope:Scope) (closureType:ClrType) (types:ClrType list) = 
+let analyze scope closureType (types:ClrType list) = 
+
+  let rec resolveTypes locals = 
+    match Map.tryFindKey (fun _ var -> var.Expr = null) locals with
+    | None       -> locals // All variables have Exprs
+    | Some(name) -> resolveTypes (resolveType name scope closureType locals) // Key found, resolve its type
+
   { scope with 
       CallingConvention = 
         if types.Length > IronJS.Constants.maxTypedArgs 
@@ -67,9 +72,6 @@ let analyze (scope:Scope) (closureType:ClrType) (types:ClrType list) =
               elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned from any variables
               else var // Needs to be resolved
             )
-          |> fix (fun next locals -> 
-              match Map.tryFindKey (fun _ var -> var.Expr = null) locals with
-              | Option.None       -> locals // All variables have Exprs
-              | Option.Some(name) -> next (resolveType name scope closureType locals) // Key found, resolve its type
-            )
+
+          |> resolveTypes
   }

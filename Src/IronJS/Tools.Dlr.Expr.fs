@@ -33,11 +33,11 @@ module Expr =
   let labelExpr label =
     Et.Label(label, Et.Default(typeof<obj>)) :> Et
 
-  let blockParms (parms:EtParam list) (exprs:Et list) =
+  let blockWithLocals (parms:EtParam list) (exprs:Et list) =
     Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
 
   let block = 
-    blockParms []
+    blockWithLocals []
 
   let lambda (parms:EtParam list) (body:Et) = 
     Et.Lambda(body, parms)

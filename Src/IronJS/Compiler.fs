@@ -37,7 +37,7 @@ let private compileDynamicAst (ctx:Context) (body:Et list) =
       |> addUndefinedInitExprs variables
       |> addStrongBoxInitExprs ctx.Scope.Locals
 
-  Dlr.Expr.lambda outerParameters (Dlr.Expr.blockParms [for kvp in ctx.Scope.Locals -> kvp.Value.Expr] completeBodyExpr), [argsArray.Type]
+  Dlr.Expr.lambda outerParameters (Dlr.Expr.blockWithLocals [for kvp in ctx.Scope.Locals -> kvp.Value.Expr] completeBodyExpr), [argsArray.Type]
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) (body:Et list) =
@@ -66,7 +66,7 @@ let private compileStaticAst (ctx:Context) (body:Et list) =
       |> addProxyParamInitExprs closedOverParameters proxyParameters
       |> addStrongBoxInitExprs ctx.Scope.Locals
 
-  Dlr.Expr.lambda parameters (Dlr.Expr.blockParms localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
+  Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Scope) (ast:Node) =

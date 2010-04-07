@@ -27,7 +27,7 @@ let private invoke target args (ctx:Context) (builder:Builder) =
 
   | _ -> failwith "Only direct function calls are supported"
 
-let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
+let private objectShorthand properties (ctx:Context) builder =
   match properties with
   | Some(_) -> failwith "Not supported"
   | None -> Dlr.Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]

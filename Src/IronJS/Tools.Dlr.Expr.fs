@@ -35,8 +35,11 @@ module Expr =
   let lambda (parms:EtParam list) (body:Et) = 
     Et.Lambda(body, parms)
 
-  let field expr name =
-    Et.PropertyOrField(expr, name) :> Et
+  let field expr (name:string) =
+    Et.Field(expr, name) :> Et
+
+  let property expr (name:string) =
+    Et.Property(expr, name) :> Et
 
   let call (expr:Et) name (args:Et list) =
     let mutable mi = expr.Type.GetMethod(name)

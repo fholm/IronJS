@@ -5,7 +5,6 @@ open IronJS.Utils
 open IronJS.Tools
 
 (*Tools for working with the System.Dynamic.BindingRestrictions class*)
-
 module Restrict =
 
   type private BindingRestrictions = System.Dynamic.BindingRestrictions

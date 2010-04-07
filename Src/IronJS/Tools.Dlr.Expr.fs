@@ -4,12 +4,7 @@ open IronJS.Utils
 open System.Linq.Expressions
 
 (*Tools for working with DLR expressions*)
-
 module Expr =
-
-  //Constants
-  let private optionType = 
-    typedefof<option<_>>
 
   let empty = 
     AstUtils.Empty() :> Et
@@ -19,7 +14,6 @@ module Expr =
 
   let objDefault = typeDefault<obj>
 
-  //Functions
   let param name typ =
     Et.Parameter(typ, name)
 

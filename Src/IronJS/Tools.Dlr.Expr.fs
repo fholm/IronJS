@@ -78,9 +78,6 @@ module Expr =
   let assign (left:Et) (right:Et) =
     Et.Assign(left, right) :> Et
 
-  let assignStrongBox (left:Et) (right:Et) =
-    assign (field left "Value") right
-
   let index (left:Et) (i:int) =
     Et.ArrayIndex(left, constant i) :> Et
 

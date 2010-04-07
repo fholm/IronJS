@@ -21,11 +21,7 @@ let private func scope ast ctx =
   Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
 
 let private invoke target args (ctx:Context) (builder:Builder) =
-  match target with
-  | Local(_) ->
-    Helpers.ExprGen.callFunction (builder target ctx)  (ctx.Globals :: [for arg in args -> builder arg ctx])
-
-  | _ -> failwith "Only direct function calls are supported"
+  Helpers.ExprGen.callFunction (builder target ctx)  (ctx.Globals :: [for arg in args -> builder arg ctx])
 
 let private objectShorthand properties (ctx:Context) builder =
   match properties with

@@ -62,6 +62,6 @@ let closure = new Runtime.Function.Closure(globals, env)
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-closure.Globals.Get("bar")
+closure.Globals.Get("foo")
 
 let bar = closure.Globals.Get("bar")

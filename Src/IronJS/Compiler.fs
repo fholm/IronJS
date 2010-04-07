@@ -23,7 +23,9 @@ let private addStrongBoxInitExprs (variables:LocalMap) (body:Et list) =
 (*Creates an expression that initializes a dynamic parameter to its passed in value if possible, otherwise undefined*)
 let private makeDynamicInitExpr (p:Local) (args:Et) =
   let test = Et.LessThan(Dlr.Expr.constant p.ParamIndex, Dlr.Expr.field args "Length")
-  Js.assign p.Expr (Et.Condition(test, Dlr.Expr.index args p.ParamIndex, Dlr.Expr.castT<obj> Runtime.Core.Undefined.InstanceExpr) :> Et)
+  let ifTrue = Dlr.Expr.index args p.ParamIndex
+  let ifFalse = Dlr.Expr.castT<obj> Runtime.Core.Undefined.InstanceExpr
+  Js.assign p.Expr (Et.Condition(test, ifTrue, ifFalse) :> Et)
 
 (*Does the final DLR compilation for dynamicly typed functions*)
 let private compileDynamicAst (ctx:Context) (body:Et list) = 
@@ -37,10 +39,11 @@ let private compileDynamicAst (ctx:Context) (body:Et list) =
       |> addUndefinedInitExprs variables
       |> addStrongBoxInitExprs ctx.Scope.Locals
 
-  Dlr.Expr.lambda outerParameters (Dlr.Expr.blockWithLocals [for kvp in ctx.Scope.Locals -> kvp.Value.Expr] completeBodyExpr), [argsArray.Type]
+  let locals = [for kvp in ctx.Scope.Locals -> kvp.Value.Expr]
+  Dlr.Expr.lambda outerParameters (Dlr.Expr.blockWithLocals locals completeBodyExpr), [argsArray.Type]
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
-let private addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) (body:Et list) =
+let private addProxyParamInitExprs (parms:LocalMap) (proxies:Map<string, EtParam>) body =
   parms |> Map.fold (fun state name (var:Local) -> Js.assign var.Expr proxies.[name] :: state) body
 
 (*Gets the proper parameter list with the correct proxy replacements*)

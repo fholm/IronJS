@@ -23,6 +23,7 @@ let private setType name var typ =
   let expr = Dlr.Expr.param name (match var.ClosureAccess with
                                   | Read | Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
                                   | Nothing -> ToClr typ)
+
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
@@ -73,7 +74,7 @@ let analyze scope closureType (types:ClrType list) =
                 else { setType name var JsTypes.Dynamic with InitUndefined = true; }  // We didn't, means make it dynamic and demote to a normal local
             else 
               if   isDynamic var       then setType name var JsTypes.Dynamic // No need to resolve type, force it here
-              elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned from any variables
+              elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned to from any variables
               else var // Needs to be resolved
             )
 

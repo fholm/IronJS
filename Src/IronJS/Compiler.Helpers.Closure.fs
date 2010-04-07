@@ -11,15 +11,19 @@ open IronJS.Compiler.Types
 module Closure =
 
   let private resolveItems ctx (scope:Scope) =
-    Map.toList scope.Closure
-    |> List.sortWith (fun a b -> (snd a).Index - (snd b).Index)
-    |> List.map (fun pair -> Helpers.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
+    scope.Closure
+      |> Map.toSeq
+      |> Seq.sortBy (fun pair -> (snd pair).Index)
+      |> Seq.map (fun pair -> Helpers.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
+      |> List.ofSeq
 
   let private resolveType ctx (scope:Scope) =
     Runtime.Closures.createClosureType (
-      Map.fold (fun state key closure -> (Helpers.Variable.clrType ctx key closure.IsLocalInParent, closure.Index) :: state) [] scope.Closure
-      |> List.sortWith (fun a b -> (snd a) - (snd b))
-      |> List.map (fun pair -> fst pair)
+      scope.Closure
+        |> Map.toSeq
+        |> Seq.fold (fun state pair -> (Helpers.Variable.clrType ctx (fst pair) (snd pair).IsLocalInParent, (snd pair).Index) :: state) [] 
+        |> Seq.sortBy (fun pair -> snd pair)
+        |> Seq.map (fun pair -> fst pair)
     )
 
   let newClosure (ctx:Context) scope =

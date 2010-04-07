@@ -11,14 +11,16 @@ open IronJS.Compiler.Helpers.Core
 (*Adds initilization expressions for variables that should be Undefined*)
 let private addUndefinedInitExprs (variables:LocalMap) (body:Et list) =
   variables
-    |> Map.filter (fun _ (var:Local) -> var.InitUndefined)
-    |> Map.fold (fun state _ (var:Local) -> (Js.assign var.Expr Runtime.Core.Undefined.InstanceExpr) :: state) body
+    |> Map.toSeq
+    |> Seq.filter (fun pair -> (snd pair).InitUndefined)
+    |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Core.Undefined.InstanceExpr) :: state) body
 
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
 let private addStrongBoxInitExprs (variables:LocalMap) (body:Et list) =
   variables
-    |> Map.filter (fun _ (var:Local) -> var.IsClosedOver)
-    |> Map.fold (fun state _ (var:Local) -> (Dlr.Expr.assign var.Expr (Dlr.Expr.newInstance var.Expr.Type)) :: state) body
+    |> Map.toSeq
+    |> Seq.filter (fun pair -> (snd pair).IsClosedOver)
+    |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.newInstance (snd pair).Expr.Type)) :: state) body
 
 (*Creates an expression that initializes a dynamic parameter to its passed in value if possible, otherwise undefined*)
 let private makeDynamicInitExpr (p:Local) (args:Et) =

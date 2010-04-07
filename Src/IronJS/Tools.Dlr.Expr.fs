@@ -60,11 +60,6 @@ module Expr =
     let ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
     AstUtils.SimpleNewHelper(ctor, Seq.toArray args) :> Et
 
-  let createOpt (typ:System.Type) (args:Et seq) =
-    let opt_ctor = optionType.MakeGenericType(typ).GetConstructors().[0]
-    let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
-    AstUtils.SimpleNewHelper(opt_ctor, (AstUtils.SimpleNewHelper(typ_ctor, Seq.toArray args) :> Et)) :> Et
-
   let throw (typ:System.Type) (args:Et seq) =
     Et.Throw(create typ args) :> Et
 

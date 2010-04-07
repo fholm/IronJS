@@ -32,13 +32,16 @@ let private getType name closureType (closure:ClosureMap) (vars:LocalMap) =
     let var = vars.[name]
     if exclude.Contains name then JsTypes.Nothing
     elif not(var.Expr = null) then var.UsedAs 
-    else var.UsedWith
-          |> Set.map  (fun var -> getType var (exclude.Add name))
-          |> Set.fold (fun state typ -> state ||| typ) var.UsedAs
-          |> (fun typ -> Set.fold (fun state var -> 
-                                    state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType closure.[var].Index)
-                                  ) typ var.UsedWithClosure
-             ) //TODO: this is awfully indented, needs to be redone
+    else 
+      let evaledWithClosures =
+        Set.fold (fun state var -> 
+                   state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType closure.[var].Index)
+                 ) var.UsedAs var.UsedWithClosure
+
+      // Combine UsedAs + UsedWithClosure types with UsedWith types
+      var.UsedWith
+        |> Set.map  (fun var -> getType var (exclude.Add name))
+        |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
 
   getType name Set.empty
 

@@ -21,8 +21,8 @@ let private isNotAssignedTo var = var.UsedWith.Count = 0 && var.UsedWithClosure.
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name var typ =
   let expr = Dlr.Expr.param name (match var.ClosureAccess with
-                                 | Read | Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
-                                 | Nothing -> ToClr typ)
+                                  | Read | Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
+                                  | Nothing -> ToClr typ)
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
@@ -45,7 +45,7 @@ let private getType name closureType (closure:ClosureMap) (vars:LocalMap) =
 
   getType name Set.empty
 
-(*Analyzes a scope *)
+(*Analyzes a scope*)
 let analyze scope closureType (types:ClrType list) = 
 
   (*Resolves the type of a variable and updates the map with it*)

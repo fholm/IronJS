@@ -64,21 +64,3 @@ let mapBisect (filter:'a -> 'b -> bool) (map:Map<'a,'b>) =
       else map2 <- map2.Add(kvp.Key, kvp.Value)
 
   map1, map2
-
-//Map.trisect
-let mapTrisect (filter:'a -> 'b -> int) (map:Map<'a,'b>) =
-  let mutable map1 = Map.empty
-  let mutable map2 = Map.empty
-  let mutable map3 = Map.empty
-
-  for kvp in map do
-    match filter kvp.Key kvp.Value with
-    | 0 -> map2 <- map2.Add(kvp.Key, kvp.Value)
-    | 1 -> map3 <- map3.Add(kvp.Key, kvp.Value)
-    | _ -> map1 <- map1.Add(kvp.Key, kvp.Value)
-
-  map1, map2, map3
-
-//Map.count
-let mapCount (filter:'a -> 'b -> bool) (map:Map<'a,'b>) =
-  Map.fold (fun count k v ->  if filter k v then count + 1 else count) 0 map

@@ -26,7 +26,7 @@ let private setType name var typ =
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
-let private getType name (scope:Scope) closureType (vars:LocalMap) =
+let private getType name closureType (closure:ClosureMap) (vars:LocalMap) =
 
   let rec getType name (exclude:string Set) =
     let var = vars.[name]
@@ -36,23 +36,24 @@ let private getType name (scope:Scope) closureType (vars:LocalMap) =
           |> Set.map  (fun var -> getType var (exclude.Add name))
           |> Set.fold (fun state typ -> state ||| typ) var.UsedAs
           |> (fun typ -> Set.fold (fun state var -> 
-                                    state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType scope.Closure.[var].Index)
+                                    state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType closure.[var].Index)
                                   ) typ var.UsedWithClosure
              ) //TODO: this is awfully indented, needs to be redone
 
   getType name Set.empty
 
-(*Resolves the type of a variable and updates the map with it*)
-let private resolveType name scope closureType (vars:LocalMap) =
-  Map.add name (setType name vars.[name] (getType name scope closureType vars)) vars
-
 (*Analyzes a scope *)
 let analyze scope closureType (types:ClrType list) = 
 
+  (*Resolves the type of a variable and updates the map with it*)
+  let resolveType name (vars:LocalMap) =
+    Map.add name (setType name vars.[name] (getType name closureType scope.Closure vars)) vars
+
+  (*Resolves types of all local variables*)
   let rec resolveTypes locals = 
     match Map.tryFindKey (fun _ var -> var.Expr = null) locals with
     | None       -> locals // All variables have Exprs
-    | Some(name) -> resolveTypes (resolveType name scope closureType locals) // Key found, resolve its type
+    | Some(name) -> resolveTypes (resolveType name locals) // Key found, resolve its type
 
   { scope with 
       CallingConvention = 

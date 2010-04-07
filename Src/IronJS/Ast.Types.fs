@@ -32,7 +32,7 @@ type Local = {
   member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.Nothing)
   member self.IsParameter  with get() = self.ParamIndex > -1
   
-[<DebuggerDisplay("Closure:{Index}")>]
+[<DebuggerDisplay("Closure:{Index}:LocalInParent:{IsLocalInParent}")>]
 type Closure = {
   Index: int
   IsLocalInParent: bool
@@ -77,6 +77,7 @@ type Node =
 //Type Aliases
 type internal Scopes = Scope list ref
 type internal LocalMap = Map<string, Local>
+type internal ClosureMap = Map<string, Closure>
 
 //Constants
 let internal newScope = { 

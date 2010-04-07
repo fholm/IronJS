@@ -9,17 +9,10 @@ module Restrict =
 
   type private BindingRestrictions = System.Dynamic.BindingRestrictions
   
-  let notAtAll = 
-    System.Dynamic.BindingRestrictions.Empty
-
-  let byExpr expr =
-    BindingRestrictions.GetExpressionRestriction(expr)
-
-  let byType expr typ =
-    BindingRestrictions.GetTypeRestriction(expr, typ)
-
-  let byInstance expr instance =
-    BindingRestrictions.GetInstanceRestriction(expr, instance)
+  let notAtAll = System.Dynamic.BindingRestrictions.Empty
+  let byExpr expr = BindingRestrictions.GetExpressionRestriction(expr)
+  let byType expr typ = BindingRestrictions.GetTypeRestriction(expr, typ)
+  let byInstance expr instance = BindingRestrictions.GetInstanceRestriction(expr, instance)
 
   let rec byArgs (args:MetaObj list) =
     match args with

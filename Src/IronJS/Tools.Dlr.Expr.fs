@@ -14,11 +14,10 @@ module Expr =
   let empty = 
     AstUtils.Empty() :> Et
 
-  let objDefault =
-    Et.Default(typeof<obj>) :> Et
-
   let typeDefault<'a> =
     Et.Default(typeof<'a>) :> Et
+
+  let objDefault = typeDefault<obj>
 
   //Functions
   let param name typ =

@@ -56,13 +56,6 @@ module Expr =
   let constant value =
     Et.Constant(value, value.GetType()) :> Et
 
-  let create (typ:System.Type) (args:Et seq) =
-    let ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
-    AstUtils.SimpleNewHelper(ctor, Seq.toArray args) :> Et
-
-  let throw (typ:System.Type) (args:Et seq) =
-    Et.Throw(create typ args) :> Et
-
   let refEq left right =
     Et.ReferenceEqual(left, right) :> Et
 
@@ -87,12 +80,15 @@ module Expr =
   let newGeneric (typ:System.Type) (types:ClrType seq) =
     newInstance (typ.MakeGenericType(Seq.toArray types))
 
-  let newArgs (typ:System.Type) (args:Et list) =
+  let newArgs (typ:System.Type) (args:Et seq) =
     let typ_ctor = IronJS.Utils.getCtor typ [for arg in args -> arg.Type]
     Et.New(typ_ctor, args) :> Et
 
-  let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et list) =
+  let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) =
     newArgs (typ.MakeGenericType(Seq.toArray types)) args
+
+  let throw (typ:System.Type) (args:Et seq) =
+    Et.Throw(newArgs typ args) :> Et
 
   let delegateType (types:ClrType seq) =
     Et.GetDelegateType(Seq.toArray types)

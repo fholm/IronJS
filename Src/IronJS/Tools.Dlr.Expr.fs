@@ -17,13 +17,11 @@ module Expr =
   let label name = Et.Label(typeof<obj>, name)
   let labelExpr label = Et.Label(label, Et.Default(typeof<obj>)) :> Et
 
-  let blockWithLocals (parms:EtParam list) (exprs:Et list) = 
-    Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
+  let blockWithLocals (parms:EtParam list) (exprs:Et list) = Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
   let block = blockWithLocals []
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
-
   let call (expr:Et) name (args:Et list) =
     let mutable mi = expr.Type.GetMethod(name)
     

@@ -45,8 +45,8 @@ fsi.AddPrinter(fun (x:Ast.Types.Closure) -> sprintf "%i/%A" x.Index x.IsLocalInP
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "Param:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))

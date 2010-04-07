@@ -16,18 +16,16 @@ let private assign left right (ctx:Context) builder =
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (builder right ctx)
   | _ -> Dlr.Expr.objDefault
 
-let private func scope (ast:Ast.Types.Node) ctx =
+let private func scope ast ctx =
   let closureType, closureExpr = Helpers.Closure.newClosure ctx scope
   Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
 
-(*TODO: This is ugly atm, refactor into own function*)
 let private invoke target args (ctx:Context) (builder:Builder) =
-  let args = ctx.Globals :: [for arg in args -> builder arg ctx]
-  Et.Dynamic(
-    new Runtime.Binders.Invoke(new System.Dynamic.CallInfo(args.Length)),
-    Constants.clrDynamic,
-    (builder target ctx) :: args
-  ) :> Et
+  match target with
+  | Local(_) ->
+    Helpers.ExprGen.callFunction (builder target ctx)  (ctx.Globals :: [for arg in args -> builder arg ctx])
+
+  | _ -> failwith "Only direct function calls are supported"
 
 let private objectShorthand (properties:Map<string, Node> option) (ctx:Context) (builder:Builder) =
   match properties with
@@ -40,7 +38,7 @@ let rec internal builder (ast:Node) (ctx:Context) =
   | Assign(left, right) -> assign left right ctx builder
   | Global(name) -> Js.Object.get ctx.Globals name
   | Local(name) -> ctx.Scope.Locals.[name].Expr :> Et
-  | Closure(name) -> Helpers.Variable.Closure.value ctx name
+  | Closure(name) -> Helpers.Variable.Closure.dlrValueExpr ctx name
   | Block(nodes) -> Dlr.Expr.block [for node in nodes -> builder node ctx]
   | String(value) -> Dlr.Expr.constant value
   | Number(value) -> Dlr.Expr.constant value

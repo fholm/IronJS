@@ -7,7 +7,6 @@ open IronJS.Compiler
 open IronJS.Compiler.Types
 open IronJS.Compiler.Helpers.Core
 
-(*Generic functions for dealing with variables no matter if they're closures or locals*)
 module Variable =
 
   (*Helper functions for dealing with closure variables*)
@@ -23,26 +22,32 @@ module Variable =
       strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
-      if ctx.Scope.Closure.ContainsKey name 
-        then strongBoxInnerType (Type.fieldType ctx.Closure.Type (fieldName ctx name)) //TODO: <- duplicate of the clrTypeN function, refactor
+      if Ast.Helpers.hasClosure ctx.Scope name 
+        then clrTypeN ctx.Closure.Type ctx.Scope.Closure.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
-    let value (ctx:Context) name =
+    let dlrValueExpr (ctx:Context) name =
       Dlr.Expr.field (Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
+
+    let dlrExpr (ctx:Context) (name:string) =
+      Dlr.Expr.field ctx.Closure (fieldName ctx name)
 
   (*Helper functions for dealing with local variables*)
   module Locals = 
     
     let clrType ctx name =
-      if ctx.Scope.Locals.ContainsKey name
+      if Ast.Helpers.hasLocal ctx.Scope name
         then ToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
-  (**)
-  let clrType ctx name local =
-    if local then Locals.clrType ctx name else Closure.clrType ctx name
+    let dlrExpr ctx name =
+      ctx.Scope.Locals.[name].Expr :> Et
+
+    let dlrValueExpr = dlrExpr
+
+  (*Generic functions for dealing with variables no matter if they're closures or locals*)
+  let clrType ctx name isLocal =
+    (if isLocal then Locals.clrType else Closure.clrType) ctx name
     
-  let dlrExpr ctx name local =
-    if local
-      then ctx.Scope.Locals.[name].Expr :> Et
-      else Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index) 
+  let dlrExpr ctx name isLocal =
+    (if isLocal then Locals.dlrExpr else Closure.dlrExpr) ctx name

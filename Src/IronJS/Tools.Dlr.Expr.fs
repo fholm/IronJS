@@ -107,3 +107,6 @@ module Expr =
 
   let invoke (func:Et) (args:Et list) =
     Et.Invoke(func, args)
+
+  let dynamic binder typ (args:Et seq) =
+    Et.Dynamic(binder, typ, args) :> Et

@@ -1,104 +1,109 @@
-﻿module IronJS.Ast.Types
+﻿namespace IronJS.Ast
 
 open IronJS
 open IronJS.Utils
 open Antlr.Runtime.Tree
 open System.Diagnostics
 
-(*Types*)
-type JsTypes = 
-  | Nothing   = 0
-  | Undefined = 1
-  | Double    = 2
-//| Integer   = 4
-  | String    = 8
-  | Object    = 16
-  | Dynamic   = 32
+module Types = 
 
-[<DebuggerDisplay("{GetType()}")>]
-type ClosureAccess =
-  | Nothing
-  | Read
-  | Write
+  type JsTypes = 
+    | Nothing   = 0
+    | Undefined = 1
+    | Double    = 2
+    | Integer   = 4 // Not used
+    | String    = 8
+    | Object    = 16
+    | Dynamic   = 32
 
-[<DebuggerDisplay("clos:{ClosureAccess.Tag}/pi:{ParamIndex}/as:{UsedAs}/with:{UsedWith}/def:{InitUndefined}/withClos:{UsedWithClosure}")>]
-type Local = {
-  ClosureAccess: ClosureAccess
-  ParamIndex: int
-  UsedAs: JsTypes
-  UsedWith: string Set
-  UsedWithClosure: string Set
-  InitUndefined: bool
-  Expr: EtParam
-} with
-  member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.Nothing)
-  member self.IsParameter  with get() = self.ParamIndex > -1
-  
-[<DebuggerDisplay("Closure:{Index}:LocalInParent:{IsLocalInParent}")>]
-type Closure = {
-  Index: int
-  IsLocalInParent: bool
-}
+  type ClosureAccess =
+    | Nothing
+    | Read
+    | Write
 
-type CallingConvention =
-  | Unknown
-  | Dynamic
-  | Static
+  type CallingConvention =
+    | Unknown
+    | Dynamic
+    | Static
 
-type Scope = {
-  Locals: Map<string, Local>
-  Closure: Map<string, Closure>
-  Arguments: bool
-  CallingConvention: CallingConvention
-}
+  [<DebuggerDisplay("access:{ClosureAccess.Tag}/index:{ParamIndex}/undefined:{InitUndefined}/as:{UsedAs}/with:{UsedWith}, {UsedWithClosure}")>]
+  type Local = {
+    ClosureAccess: ClosureAccess
+    ParamIndex: int
+    UsedAs: JsTypes
+    UsedWith: string Set
+    UsedWithClosure: string Set
+    InitUndefined: bool
+    Expr: EtParam
+  } with
+    member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.Nothing)
+    member self.IsParameter  with get() = self.ParamIndex > -1
+    
+  [<DebuggerDisplay("index:{Index}/local:{IsLocalInParent}")>]
+  type Closure = {
+    Index: int
+    IsLocalInParent: bool
+  }
 
-type Node =
+  type LocalMap = Map<string, Local>
+  type ClosureMap = Map<string, Closure>
+
+  type Scope = {
+    Locals: LocalMap
+    Closure: ClosureMap
+    Arguments: bool
+    CallingConvention: CallingConvention
+  }
+
+  type Scopes = Scope list ref
+
+  type Node =
+    //Constants
+    | String of string
+    | Number of double
+    | Pass
+    | Null
+
+    //Variables
+    | Local of string
+    | Closure of string
+    | Global of string
+
+    //Magic
+    | Arguments
+    | This
+    
+    //
+    | Block of Node list
+    | Function of Scope * Node
+    | Invoke of Node * Node list
+    | Assign of Node * Node
+    | Return of Node
+    | Object of Map<string, Node> option
+
   //Constants
-  | String of string
-  | Number of double
-  | Pass
-  | Null
+  let newScope = { 
+    Locals = Map.empty
+    Closure = Map.empty
+    Arguments = false
+    CallingConvention = Unknown
+  }
 
-  //Variables
-  | Local of string
-  | Closure of string
-  | Global of string
+  let globalScope = { 
+    newScope with CallingConvention = CallingConvention.Static 
+  }
 
-  //Magic
-  | Arguments
-  | This
-  
-  //
-  | Block of Node list
-  | Function of Scope * Node
-  | Invoke of Node * Node list
-  | Assign of Node * Node
-  | Return of Node
-  | Object of Map<string, Node> option
+  let newLocal = {
+    ClosureAccess = ClosureAccess.Nothing
+    ParamIndex = -1
+    UsedAs = JsTypes.Nothing
+    UsedWith = Set.empty
+    UsedWithClosure = Set.empty
+    InitUndefined = false
+    Expr = null
+  }
 
-//Type Aliases
-type internal Scopes = Scope list ref
-type internal LocalMap = Map<string, Local>
-type internal ClosureMap = Map<string, Closure>
-
-//Constants
-let internal newScope = { 
-  Locals = Map.empty
-  Closure = Map.empty
-  Arguments = false
-  CallingConvention = Unknown
-}
-
-let internal globalScope = { 
-  newScope with CallingConvention = CallingConvention.Static 
-}
-
-let internal newLocal = {
-  ClosureAccess = ClosureAccess.Nothing
-  ParamIndex = -1
-  UsedAs = JsTypes.Nothing
-  UsedWith = Set.empty
-  UsedWithClosure = Set.empty
-  InitUndefined = false
-  Expr = null
-}
+  let newClosure = {
+    Index = -1
+    IsLocalInParent = false
+  }

@@ -51,30 +51,62 @@ type LoggingBuilder() =
 
 let logWrite s = Log((), [s])
 
-
-
-type State<'state, 'a> = State of ('state -> 'a * 'state)
+type State<'a, 'state> = State of ('state -> 'a * 'state)
+ 
+type Tree<'a> =
+| Leaf of 'a
+| Branch of Tree<'a> * Tree<'a> 
+ 
+let tree =
+  Branch(
+    Leaf "Max",
+    Branch(
+      Leaf "Bernd",
+      Branch(
+        Branch(
+          Leaf "Holger",
+          Leaf "Ralf"),
+        Branch(
+          Leaf "Kerstin",
+          Leaf "Steffen"))))
 
 type StateMonad() =
-  member self.Bind (s0, f) = 
-    State(fun s1 -> 
-      let r = match s0 with 
-              | State f -> f s1
+  member x.Return a = State(fun s -> a, s)
+  member x.Bind(m, f) = State (fun s -> let v, s' = let (State f_) = m in f_ s
+                                        let (State f') = f v in f' s')  
+  
+let state = new StateMonad()
+let getState = State(fun s -> s, s)
+let setState s = State(fun _ -> (), s) 
+let execute m s = let (State f) = m in
+                  let (x,_) = f s in x
 
-      match r with 
-      | (v, s2) -> 
-        match f v with
-        | State f -> f s2
-    )
-
-  member self.Return x = State(fun s -> x, s)
-
-let state = StateMonad()
-
-let GetState = State (fun s -> s, s)
-let SetState s = State (fun _ -> (), s)  
-
-let Execute m s = match m with
-                  | State f -> let r = f s
-                               match r with
-                               |(x,_) -> x
+/// prints a binary tree
+let printTree t =
+  let rec print t level  =
+    let indent = new System.String(' ', level * 2)
+    match t with
+    | Leaf l -> printfn "%sLeaf: %A" indent l
+    | Branch (left,right) ->
+        printfn "%sBranch:" indent
+        print left (level+1)
+        print right (level+1)
+  print t 0
+ 
+/// labels a tree by using the state monad
+/// (uses F#’s sugared syntax)
+let rec labelTree t = state {
+   match t with
+   | Leaf l ->
+      let! s = getState
+      do! setState (s+1)  // changing the state
+      return Leaf(l, s)
+   | Branch(oldL,oldR) ->
+      let! newL = labelTree oldL
+      let! newR = labelTree oldR
+      return Branch(newL,newR)}
+ 
+ 
+printfn "Labeled (monadic):"
+let treeM = execute (labelTree tree) 0
+printTree treeM

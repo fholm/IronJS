@@ -62,6 +62,9 @@ module Types =
   type Scopes = Scope list ref
 
   type Node =
+    //Error
+    | Error of string
+
     //Constants
     | String of string
     | Number of double

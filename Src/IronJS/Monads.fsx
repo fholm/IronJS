@@ -22,11 +22,26 @@ type Ast =
   | Function of Ast
   | BinaryOp of Ast * Ast
   | UnaryOp of Ast
-  | Block of Ast seq
+  | Block of Ast list
 
 type Scope = { Locals: Map<string, int> }
 type ParseState = { Scopes:Scope list; Parser:Ast -> State<Ast, ParseState> }
 let newScope = { Locals = Map.empty }
+
+let parseList lst =
+    let rec parseList' lst result =
+        match lst with
+          []    -> result
+        | x::xs -> parseList' xs (state {
+              let! s   = getState
+              let! x'  = s.Parser x
+              let! xs' = result
+              return x' :: xs'
+          }) in
+    state {
+        let! xs = parseList' lst (state { return [] })
+        return List.rev xs
+    }
 
 let parsers = 
   Map.ofArray [|
@@ -53,9 +68,7 @@ let parsers =
                     return Variable(name)})
     ("Block", fun ast -> state {
       match ast with
-      | Block(nodes) ->
-        let! s = getState
-        return Block(seq { for n in nodes do let s = s.Parser n in yield s }) (* <- here ¤%&/()/&%¤# *)
+      | Block(nodes) -> let! lst = parseList nodes in return Block(lst)
     })
   |]
 
@@ -65,7 +78,7 @@ let rec parse ast = state {
   | Block(_) -> return! (parsers.["Block"]) ast
   | BinaryOp(_) -> return! (parsers.["BinaryOp"]) ast}
 
-let ast = Block([Variable("foo"); Variable("bar"); Variable("foo")])
+let ast = BinaryOp(Block([Variable("foo"); Variable("bar"); Variable("foo")]), Block([Variable("foo"); Variable("bar"); Variable("foo")]))
 let x = executeState (parse ast) { Scopes = [newScope]; Parser = parse }
 
 

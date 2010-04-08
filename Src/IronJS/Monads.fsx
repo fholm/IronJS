@@ -1,112 +1,48 @@
 ﻿#light
+#load "Monads.fs"
 
-type TheValue<'a> =
-  | Value of 'a
+open IronJS.Monads
 
-type TheValueBuilder() =
-  member x.Bind(Value(v), f) = f(v)
-  member x.Return(v) = Value(v)
+type Ast =
+  | Variable of string
+  | Function of Ast
+  | BinaryOp of Ast * Ast
+  | UnaryOp of Ast
+  | Block of Ast list
 
-let value = new TheValueBuilder()
+type Scope = { Locals: Map<string, int> }
+type ParseState = { Scopes:Scope list; Parser:Ast -> State<Ast, ParseState> }
+let newScope = { Locals = Map.empty }
 
-let readInt1() = value {
-  let n = 1
-  return n
-}
+let parsers = 
+  Map.ofArray [|
+    ("BinaryOp", fun ast -> state {
+                  match ast with
+                  | BinaryOp(l, r) -> let! s  = getState
+                                      let! l' = s.Parser l
+                                      let! r' = s.Parser r
+                                      return BinaryOp(l', r')})
 
-let readInt2() = value {
-  let n = 2
-  return n
-}
+    ("Variable", fun ast -> state {
+                  match ast with
+                  | Variable(name) ->
+                    let! s = getState
 
-value {
-  let! n1 = readInt1()
-  let! n2 = readInt2()
+                    let scopes = match s.Scopes with
+                                 | [] -> s.Scopes
+                                 | x::xs -> let x' = if x.Locals.ContainsKey name 
+                                                        then { x with Locals = x.Locals.Add(name, x.Locals.[name] + 1) }
+                                                        else { x with Locals = x.Locals.Add(name, 1)}
+                                            x' :: xs
 
-  let add = n1 + n2
-  let sub = n1 - n2
+                    do! setState { s with Scopes = scopes }
+                    return Variable(name)})
+  |]
 
-  return add * sub
-}
+let rec parse ast = state {
+  match ast with
+  | Variable(_) -> return! (parsers.["Variable"]) ast
+  | BinaryOp(_) -> return! (parsers.["BinaryOp"]) ast}
 
-
-type OptionBuilder() =
-  member x.Bind(v, f) = 
-    match v with
-    | Some(value) -> f(value)
-    | None -> None
-
-  member x.Return(v) = Some(v)
-
-type Logging<'a> = 
-  | Log of 'a * string list
-
-type LoggingBuilder() =
-  member x.Bind(Log(v, logs1), f) =
-    let (Log(nv, logs2)) = f(v)
-    Log(nv, logs1 @ logs2)  
-
-  member x.Return(v) = Log(v, [])
-  member x.Zero() = Log((), [])
-
-let logWrite s = Log((), [s])
-
-type State<'a, 'state> = State of ('state -> 'a * 'state)
- 
-type Tree<'a> =
-| Leaf of 'a
-| Branch of Tree<'a> * Tree<'a> 
- 
-let tree =
-  Branch(
-    Leaf "Max",
-    Branch(
-      Leaf "Bernd",
-      Branch(
-        Branch(
-          Leaf "Holger",
-          Leaf "Ralf"),
-        Branch(
-          Leaf "Kerstin",
-          Leaf "Steffen"))))
-
-type StateMonad() =
-  member x.Return a = State(fun s -> a, s)
-  member x.Bind(m, f) = State (fun s -> let v, s' = let (State f_) = m in f_ s
-                                        let (State f') = f v in f' s')  
-  
-let state = new StateMonad()
-let getState = State(fun s -> s, s)
-let setState s = State(fun _ -> (), s) 
-let execute m s = let (State f) = m in
-                  let (x,_) = f s in x
-
-/// prints a binary tree
-let printTree t =
-  let rec print t level  =
-    let indent = new System.String(' ', level * 2)
-    match t with
-    | Leaf l -> printfn "%sLeaf: %A" indent l
-    | Branch (left,right) ->
-        printfn "%sBranch:" indent
-        print left (level+1)
-        print right (level+1)
-  print t 0
- 
-/// labels a tree by using the state monad
-/// (uses F#’s sugared syntax)
-let rec labelTree t = state {
-   match t with
-   | Leaf l ->
-      let! s = getState
-      do! setState (s+1)  // changing the state
-      return Leaf(l, s)
-   | Branch(oldL,oldR) ->
-      let! newL = labelTree oldL
-      let! newR = labelTree oldR
-      return Branch(newL,newR)}
- 
- 
-printfn "Labeled (monadic):"
-let treeM = execute (labelTree tree) 0
-printTree treeM
+let ast = BinaryOp(BinaryOp(Variable("foo"), Variable("bar")), Variable("foo"))
+let x = executeState (parse ast) { Scopes = [newScope]; Parser = parse }

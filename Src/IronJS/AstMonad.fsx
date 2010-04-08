@@ -5,6 +5,7 @@
 #r "../Dependencies/Antlr3.Runtime.dll"
 #r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
 #load "Fsi.fs"
+#load "Monads.fs"
 #load "Operators.fs"
 #load "Constants.fs"
 #load "Utils.fs"
@@ -40,4 +41,12 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
+
+
+let generators =
+  Map.ofList [
+    (ES3Parser.BLOCK)
+  ]
+
+
 let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])

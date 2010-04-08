@@ -7,11 +7,13 @@ open System.Diagnostics
 
 (*Types*)
 type JsTypes = 
-  | Nothing = 0
-  | Double  = 2
-  | String  = 4
-  | Object  = 8
-  | Dynamic = 16
+  | Nothing   = 0
+  | Undefined = 1
+  | Double    = 2
+//| Integer   = 4
+  | String    = 8
+  | Object    = 16
+  | Dynamic   = 32
 
 [<DebuggerDisplay("{GetType()}")>]
 type ClosureAccess =

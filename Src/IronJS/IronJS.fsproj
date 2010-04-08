@@ -64,6 +64,7 @@
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
     <Content Include="Testing.js" />
+    <None Include="Monads.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

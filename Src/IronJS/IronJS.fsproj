@@ -63,6 +63,7 @@
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
+    <None Include="StateMonad.fsx" />
     <Content Include="Testing.js" />
   </ItemGroup>
   <ItemGroup>

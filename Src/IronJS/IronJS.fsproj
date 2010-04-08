@@ -49,6 +49,7 @@
     <Compile Include="Ast.Helpers.fs" />
     <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
+    <Compile Include="AstMonad.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Function.fs" />
     <Compile Include="Runtime.Delegate.fs" />
@@ -65,6 +66,7 @@
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
     <None Include="Monads.fsx" />
+    <None Include="AstMonad.fsx" />
     <Content Include="Testing.js" />
   </ItemGroup>
   <ItemGroup>

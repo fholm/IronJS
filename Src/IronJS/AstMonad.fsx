@@ -17,19 +17,7 @@
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
-#load "Runtime.fs"
-#load "Runtime.Function.fs"
-#load "Runtime.Environment.fs"
-#load "Runtime.Binders.fs"
-#load "Runtime.Closures.fs"
-#load "Compiler.Types.fs"
-#load "Compiler.Helpers.fs"
-#load "Compiler.Helpers.Variables.fs"
-#load "Compiler.Helpers.ExprGen.fs"
-#load "Compiler.Helpers.Closure.fs"
-#load "Compiler.Analyzer.fs"
-#load "Compiler.ExprGen.fs"
-#load "Compiler.fs"
+#load "AstMonad.fs"
 
 open System
 open IronJS
@@ -53,15 +41,3 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
 let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
-let exprTree = (Compiler.Core.compileGlobalAst ast)
-let compiledFunc = (fst exprTree).Compile()
-
-let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
-let globals = new Runtime.Core.Object(env)
-let closure = new Runtime.Function.Closure(globals, env)
-
-compiledFunc.DynamicInvoke(closure, null, closure.Globals)
-
-closure.Globals.Get("foo")
-
-let bar = closure.Globals.Get("bar")

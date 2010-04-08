@@ -26,7 +26,7 @@ module Types =
     | Dynamic
     | Static
 
-  [<DebuggerDisplay("access:{ClosureAccess.Tag}/index:{ParamIndex}/undefined:{InitUndefined}/as:{UsedAs}/with:{UsedWith}, {UsedWithClosure}")>]
+  [<DebuggerDisplay("{DebugView}")>]
   type Local = {
     ClosureAccess: ClosureAccess
     ParamIndex: int
@@ -36,14 +36,18 @@ module Types =
     InitUndefined: bool
     Expr: EtParam
   } with
-    member self.IsClosedOver with get() = not (self.ClosureAccess = ClosureAccess.Nothing)
-    member self.IsParameter  with get() = self.ParamIndex > -1
+    member self.IsClosedOver = not (self.ClosureAccess = ClosureAccess.Nothing)
+    member self.IsParameter  = self.ParamIndex > -1
+    member self.DebugView = (sprintf 
+      @"access:%A/index:%i/undefined:%b/as:%A/with:%A, %A" 
+      self.ClosureAccess self.ParamIndex self.InitUndefined self.UsedAs self.UsedWith self.UsedWithClosure)
     
-  [<DebuggerDisplay("index:{Index}/local:{IsLocalInParent}")>]
+  [<DebuggerDisplay("{DebugView}")>]
   type Closure = {
     Index: int
     IsLocalInParent: bool
-  }
+  } with
+    member self.DebugView = sprintf "index:%i/local:%b" self.Index self.IsLocalInParent
 
   type LocalMap = Map<string, Local>
   type ClosureMap = Map<string, Closure>

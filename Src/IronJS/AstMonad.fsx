@@ -34,8 +34,8 @@ fsi.AddPrinter(fun (x:Ast.Types.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
@@ -51,11 +51,13 @@ open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 
 type private Node = Ast.Types.Node
-type private ParsersMap = Map<int, (AstTree -> State<Ast.Types.Node, Scope list>)>
+type private Parser = AstTree -> State<Ast.Types.Node, Scope list>
 
-let getVariable s name =
-  match s with
-  | [] -> s, Global(name)
+let getVariable name = state {
+    let! s = getState
+    match s with
+    | [] -> return Global(name)
+  }
 
 let createLocal s name =
   match s with
@@ -78,39 +80,35 @@ let rec parseList lst =
   }
 
 and parse (t:AstTree) = state {
-  if parsers.ContainsKey t.Type 
-    then return! parsers.[t.Type] t 
-    else return  Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)
+    match t.Type with
+    | 0 | ES3Parser.BLOCK -> return! parseBlock t
+    | ES3Parser.VAR -> return! parseVar t
+    | ES3Parser.ASSIGN -> return! parseAssign t
+    | ES3Parser.Identifier -> return! getVariable t.Text
+    | ES3Parser.OBJECT -> return! parseObject t
+    | ES3Parser.StringLiteral -> return! parseString t
+    | ES3Parser.DecimalLiteral -> return! parseNumber t
+    | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)
   }
 
-and parsers:ParsersMap = 
-  Map.ofList [
-    (0, fun (t:AstTree) -> state { let! lst = parseList (children t) in return Block(lst) } )
+and parseVar t = state { 
+    let c = child t 0
+    let! s = getState
 
-    (ES3Parser.VAR, fun t -> state { 
-      let c = child t 0
-      let! s = getState
+    if isAssign c 
+      then do! setState (createLocal s (child c 0).Text)
+           return! parse c
 
-      if isAssign c then 
-        do! setState (createLocal s (child c 0).Text)
-        return! parse c
+      else do! setState (createLocal s c.Text)
+           return Pass
+  }
 
-      else
-        do! setState (createLocal s c.Text)
-        return Pass
-    })
+and parseAssign t = state { let! l = parse (child t 0) in let! r = parse (child t 1) in return Assign(l, r) }
+and parseBlock  t = state { let! lst = parseList (children t) in return Block(lst) }
+and parseObject t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
+and parseString t = state { return String(cleanString t.Text) }
+and parseNumber t = state { return Number(double t.Text) }
 
-    (ES3Parser.ASSIGN, fun t -> state {
-      let! l = parse (child t 0)
-      let! r = parse (child t 1)
-      return Assign(l, r)
-    })
-
-    (*(ES3Parser.Identifier, fun t -> state {
-      
-    });*)
-  ]
-
-let parsed = executeState (parse astTree) []
+let parsed : Node * Scope list = executeState (parse astTree) []
 
 //let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])

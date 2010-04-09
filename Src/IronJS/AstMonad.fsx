@@ -70,23 +70,22 @@ let getVariable name = state {
                       else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
 
       do! setState (updateScopes s)
+
       return Closure(name)
     else
-      return Global(name)
-
-  | _     -> return failwith "not supported"}
+      return Global(name)}
 
 let createLocal name = state {
   let! s = getState
   match s with
-  | []    ->  ()
-  | x::xs ->  do! setState (setLocal x name newLocal :: xs) }  
+  | []    -> ()
+  | x::xs -> do! setState (setLocal x name newLocal :: xs) }  
 
 let enterScope t = state {
   let! s = getState
   do! setState (createScope t :: s)}
 
-let exitScope = state {
+let exitScope() = state {
   let! s = getState
   match s with
   | x::xs -> do! setState xs
@@ -115,7 +114,7 @@ and parseList lst = state {
   | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs' }
 
 and parseVar t = state { 
-  let c = child t 0
+  let c = child t 0 in
 
   if isAssign c 
     then do! createLocal (child c 0).Text
@@ -126,7 +125,7 @@ and parseVar t = state {
 
 and parseCall t = state {
   let! target = parse (child t 0) 
-  let! args = parseList (children (child t 1))
+  let! args   = parseList (childrenOf t 1)
   return Invoke(target, args)}
 
 and parseAssign t = state { 
@@ -138,8 +137,8 @@ and parseFunction t = state {
   if isAnonymous t then
     do! enterScope t
 
-    let! body = parse (child t 1)
-    let! scope = exitScope
+    let! body  = parse (child t 1)
+    let! scope = exitScope()
 
     return Function(scope, body)
   else

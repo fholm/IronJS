@@ -10,6 +10,7 @@ open Antlr.Runtime.Tree
 let ct (tree:obj) = tree :?> AstTree
 let child (tree:AstTree) index = (ct tree.Children.[index])
 let children (tree:AstTree) = toList<AstTree> tree.Children
+let childrenOf (tree:AstTree) n = children (child tree n)
 let isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
 let isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
 let setClosure (scope:Scope) (name:string) (clos:Closure) = { scope with Closure = scope.Closure.Add(name, clos) }
@@ -95,11 +96,9 @@ let getVariable (scopes:Scopes) name =
       Global(name)
 
 let createScope (tree:AstTree) =
-  let parms = [for c in (children (child tree 0)) -> c.Text]
-
-  let rec doAdd (parms:string list) (locals:Map<string, Local>) (n:int) =
+  let rec createLocals parms index =
     match parms with
-    | [] -> locals
-    | name::xs -> (doAdd xs locals (n+1)).Add(name, { newLocal with ParamIndex = n });
+    | []       -> Map.empty
+    | name::xs -> Map.add name { newLocal with ParamIndex = index } (createLocals xs (index+1))
 
-  { newScope with Locals = (doAdd parms Map.empty 0) }
+  { newScope with Locals = createLocals [for c in (childrenOf tree 0) -> c.Text] 0 }

@@ -75,8 +75,8 @@ let private compileStaticAst (ctx:Context) (body:Et list) =
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Scope) (ast:Node) =
-  let context = { defaultContext with Closure = Dlr.Expr.param "~closure" closureType; Scope = scope }
-  let body    = [(Compiler.ExprGen.builder ast context); Dlr.Expr.labelExpr context.Return]
+  let context = { defaultContext with Closure = Dlr.Expr.param "~closure" closureType; Scope = scope; Builder = Compiler.ExprGen.builder }
+  let body    = [(Compiler.ExprGen.builder context ast); Dlr.Expr.labelExpr context.Return]
 
   if scope.CallingConvention = CallingConvention.Dynamic 
     then compileDynamicAst context body 

@@ -45,6 +45,16 @@ module Variable =
 
     let dlrValueExpr = dlrExpr
 
+  module Globals =
+    
+    let clrType ctx name =
+      Constants.clrDynamic
+
+    let dlrExpr (ctx:Context) name =
+      Js.Object.get ctx.Globals name
+
+    let dlrValueExpr = dlrExpr
+
   (*Generic functions for dealing with variables no matter if they're closures or locals*)
   let clrType ctx name isLocal =
     (if isLocal then Locals.clrType else Closure.clrType) ctx name

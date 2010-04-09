@@ -54,56 +54,98 @@ type private Node = Ast.Types.Node
 type private Parser = AstTree -> State<Ast.Types.Node, Scope list>
 
 let getVariable name = state {
-    let! s = getState
-    match s with
-    | [] -> return Global(name)
-  }
-
-let createLocal s name =
+  let! s = getState
   match s with
-  | [] -> s
-  | _  -> failwith "not supported"
+  | [] -> return Global(name)
+  | x::xs when hasLocal x name -> return Local(name)
+  | x::xs when hasClosure x name -> return Closure(name)
+  | _ -> 
+    if List.exists (fun s -> hasLocal s name) s then
 
-let rec parseList lst =
+      let rec updateScopes s =
+        match s with
+        | []    ->  s
+        | x::xs ->  if hasLocal x name 
+                      then setAccessRead x name :: xs
+                      else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
 
-  let rec parseList' lst result =
-      match lst with
-      | []    -> result
-      | x::xs -> parseList' xs (state {
-            let! x'  = parse x
-            let! xs' = result
-            return x' :: xs'
-        })
-  in state {
-      let! xs = parseList' lst (state { return [] }) 
-      return List.rev xs
-  }
+      do! setState (updateScopes s)
+      return Closure(name)
+    else
+      return Global(name)
 
-and parse (t:AstTree) = state {
-    match t.Type with
-    | 0 | ES3Parser.BLOCK -> return! parseBlock t
-    | ES3Parser.VAR -> return! parseVar t
-    | ES3Parser.ASSIGN -> return! parseAssign t
-    | ES3Parser.Identifier -> return! getVariable t.Text
-    | ES3Parser.OBJECT -> return! parseObject t
-    | ES3Parser.StringLiteral -> return! parseString t
-    | ES3Parser.DecimalLiteral -> return! parseNumber t
-    | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)
-  }
+  | _     -> return failwith "not supported"}
+
+let createLocal name = state {
+  let! s = getState
+  match s with
+  | []    ->  ()
+  | x::xs ->  do! setState (setLocal x name newLocal :: xs) }  
+
+let enterScope t = state {
+  let! s = getState
+  do! setState (createScope t :: s)}
+
+let exitScope = state {
+  let! s = getState
+  match s with
+  | x::xs -> do! setState xs
+             return x
+  | _     -> return (failwith "Couldn't exit scope")}
+
+let rec parse (t:AstTree) = state {
+  match t.Type with
+  | 0 | ES3Parser.BLOCK       -> return! parseBlock t
+  | ES3Parser.VAR             -> return! parseVar t
+  | ES3Parser.ASSIGN          -> return! parseAssign t
+  | ES3Parser.Identifier      -> return! getVariable t.Text
+  | ES3Parser.OBJECT          -> return! parseObject t
+  | ES3Parser.StringLiteral   -> return! parseString t
+  | ES3Parser.DecimalLiteral  -> return! parseNumber t
+  | ES3Parser.CALL            -> return! parseCall t
+  | ES3Parser.FUNCTION        -> return! parseFunction t
+  | ES3Parser.RETURN          -> return! parseReturn t
+
+  //Error handling
+  | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)}
+
+and parseList lst = state { 
+  match lst with
+  | []    -> return [] 
+  | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs' }
 
 and parseVar t = state { 
-    let c = child t 0
-    let! s = getState
+  let c = child t 0
 
-    if isAssign c 
-      then do! setState (createLocal s (child c 0).Text)
-           return! parse c
+  if isAssign c 
+    then do! createLocal (child c 0).Text
+         return! parse c
 
-      else do! setState (createLocal s c.Text)
-           return Pass
-  }
+    else do! createLocal c.Text
+         return  Pass}
 
-and parseAssign t = state { let! l = parse (child t 0) in let! r = parse (child t 1) in return Assign(l, r) }
+and parseCall t = state {
+  let! target = parse (child t 0) 
+  let! args = parseList (children (child t 1))
+  return Invoke(target, args)}
+
+and parseAssign t = state { 
+  let! l = parse (child t 0)
+  let! r = parse (child t 1)
+  return Assign(l, r)}
+
+and parseFunction t = state {
+  if isAnonymous t then
+    do! enterScope t
+
+    let! body = parse (child t 1)
+    let! scope = exitScope
+
+    return Function(scope, body)
+  else
+    return Error("Only support anonymous functions atm")}
+
+and parseReturn t = state { let! value = parse (child t 0) in return Return(value)}
 and parseBlock  t = state { let! lst = parseList (children t) in return Block(lst) }
 and parseObject t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
 and parseString t = state { return String(cleanString t.Text) }

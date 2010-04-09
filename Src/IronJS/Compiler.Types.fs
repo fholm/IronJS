@@ -14,6 +14,7 @@ type Context = {
   Arguments: EtParam
   Scope: Scope
   Return: LabelTarget
+  Builder: Context -> Node -> Et
 } with
   member self.Globals     with get() = Dlr.Expr.field self.Closure "Globals"
   member self.Environment with get() = Dlr.Expr.field self.Closure "Environment"
@@ -24,4 +25,5 @@ let defaultContext = {
   Arguments = Dlr.Expr.param "~arguments" typeof<IronJS.Runtime.Core.Object>
   Scope = newScope
   Return = Dlr.Expr.label "~return"
+  Builder = fun x a -> Dlr.Expr.objDefault
 }

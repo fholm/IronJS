@@ -7,6 +7,7 @@ open IronJS.Monads
 open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 
+(*
 module AstMonad =
 
   type private Node = Ast.Types.Node
@@ -34,3 +35,4 @@ module AstMonad =
 
   let makeParser (parsers:ParsersMap<_>) (t:AstTree) = state { return! parsers.[t.Type] t }
 
+  *)

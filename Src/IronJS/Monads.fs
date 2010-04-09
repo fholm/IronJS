@@ -9,6 +9,8 @@ type StateBuilder() =
   member x.Return a = State(fun s -> a, s)
   member x.Bind(m, f) = State (fun s -> let v, s' = let (State f_) = m in f_ s
                                         let (State f') = f v in f' s')
+  member x.Zero() = x.Return(())
+
 let state = new StateBuilder()
 let getState = State(fun s -> s, s)
 let setState s = State(fun _ -> (), s) 

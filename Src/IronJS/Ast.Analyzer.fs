@@ -8,7 +8,7 @@ open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 
 module Analyzer =
-  let analyzeAssign left right = state {
+  let assign left right = state {
     match left with
     | Local(name) ->
       match right with

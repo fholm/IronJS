@@ -4,13 +4,13 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Monads
+open IronJS.Ast
 open IronJS.Ast.Types
 open IronJS.Ast.Helpers
-open IronJS.Ast.Analyzer
 open IronJS.CSharp.Parser
 
 module Core = 
-  let rec parse (t:AstTree) = state {
+  let rec private parse (t:AstTree) = state {
     match t.Type with
     | 0 | ES3Parser.BLOCK       -> return! parseBlock t
     | ES3Parser.VAR             -> return! parseVar t
@@ -26,12 +26,12 @@ module Core =
     //Error handling
     | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)}
 
-  and parseList lst = state { 
+  and private parseList lst = state { 
     match lst with
     | []    -> return [] 
     | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs' }
 
-  and parseVar t = state { 
+  and private parseVar t = state { 
     let c = child t 0 in
 
     if isAssign c 
@@ -41,18 +41,18 @@ module Core =
       else do! createLocal c.Text
            return  Pass}
 
-  and parseCall t = state {
+  and private parseCall t = state {
     let! target = parse (child t 0) 
     let! args   = parseList (childrenOf t 1)
     return Invoke(target, args)}
 
-  and parseAssign t = state { 
+  and private parseAssign t = state { 
     let! l = parse (child t 0)
     let! r = parse (child t 1)
-    do! analyzeAssign l r
+    do! Analyzer.assign l r
     return Assign(l, r)}
 
-  and parseFunction t = state {
+  and private parseFunction t = state {
     if isAnonymous t then
       do! enterScope t
 
@@ -63,11 +63,11 @@ module Core =
     else
       return Error("Only support anonymous functions atm")}
 
-  and parseReturn t = state { let! value = parse (child t 0) in return Return(value)}
-  and parseBlock  t = state { let! lst = parseList (children t) in return Block(lst) }
-  and parseObject t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
-  and parseString t = state { return String(cleanString t.Text) }
-  and parseNumber t = state { return Number(double t.Text) }
+  and private parseReturn t = state { let! value = parse (child t 0) in return Return(value)}
+  and private parseBlock  t = state { let! lst = parseList (children t) in return Block(lst) }
+  and private parseObject t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
+  and private parseString t = state { return String(cleanString t.Text) }
+  and private parseNumber t = state { return Number(double t.Text) }
 
   let parseAst (ast:AstTree) (scopes:Scope list) = 
      executeState (parse ast) scopes

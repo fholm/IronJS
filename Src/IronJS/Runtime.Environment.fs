@@ -6,7 +6,6 @@ open IronJS.Tools
 open System.Dynamic
 open System.Collections.Generic
 
-type private AstGenFunc = AstTree -> Ast.Types.Scopes -> Ast.Types.Node
 type private AnalyzeFunc = Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope
 type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> (EtLambda * ClrType list)
 
@@ -66,7 +65,7 @@ type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
     | _ -> false
 
 (*The currently executing environment*)
-and Environment (astGenerator:AstGenFunc, scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
+and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
   let jitCache = new Dictionary<DelegateCell, System.Delegate * ClrType list>()
 
   //Implementation of IEnvironment interface

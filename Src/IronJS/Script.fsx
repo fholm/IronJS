@@ -18,7 +18,6 @@
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
-#load "AstMonad.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -54,13 +53,12 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
-let newAst = fst (AstMonad.parseAst (program.Tree :?> AstTree))
+let ast = fst(Ast.Core.parseAst (program.Tree :?> AstTree) [])
 
-let exprTree = (Compiler.Core.compileGlobalAst newAst)
+let exprTree = (Compiler.Core.compileGlobalAst ast)
 let compiledFunc = (fst exprTree).Compile()
 
-let env = new Runtime.Environment.Environment(Ast.Core.defaultGenerator, Compiler.Analyzer.analyze, Compiler.Core.compileAst)
+let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)
 let closure = new Runtime.Function.Closure(globals, env)
 

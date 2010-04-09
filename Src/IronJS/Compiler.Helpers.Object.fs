@@ -6,13 +6,11 @@ open IronJS.Tools
 open IronJS.Compiler
 
 module Object =
-  
+
   //Get a global variable
   let getProperty (expr:Et) name =
-    Dlr.Expr.call expr "Get" [Dlr.Expr.constant name]
+    Dlr.Expr.call (Helpers.ExprGen.convertToObject expr) "Get" [Dlr.Expr.constant name]
 
   //Set a global variable
   let setProperty (expr:Et) name value =
-    let args = [Dlr.Expr.constant name; Js.box value]
-    let expr = if Runtime.Helpers.Core.isObject expr.Type then expr else Helpers.ExprGen.convertToObject expr
-    Dlr.Expr.call expr "Set" args
+    Dlr.Expr.call (Helpers.ExprGen.convertToObject expr) "Set" [Dlr.Expr.constant name; Js.box value]

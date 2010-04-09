@@ -16,5 +16,7 @@ module ExprGen =
     Dlr.Expr.dynamic binder Constants.clrDynamic (func :: args)
 
   let convertToObject (expr:Et) =
-    let binder = new Runtime.Binders.Convert(Runtime.Core.objectTypeDef, false)
-    Dlr.Expr.dynamic binder Runtime.Core.objectTypeDef [expr]
+    if Runtime.Helpers.Core.isObject expr.Type 
+      then expr
+      else let binder = new Runtime.Binders.Convert(Runtime.Core.objectTypeDef, false) 
+           Dlr.Expr.dynamic binder Runtime.Core.objectTypeDef [expr]

@@ -14,9 +14,11 @@ module Analyzer =
       match right with
       | Local(rightName) -> return! usedWith name rightName
       | Closure(rightName) -> return! usedWithClosure name rightName
-      | Global(_) -> return! usedAs name JsTypes.Dynamic
       | Number(_) -> return! usedAs name JsTypes.Double
       | String(_) -> return! usedAs name JsTypes.String 
+
+      | Property(_, _)
+      | Global(_) -> return! usedAs name JsTypes.Dynamic
       | _ -> return ()
     | Closure(name) ->
 

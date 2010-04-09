@@ -1,7 +1,9 @@
 ﻿
 var obj = {};
 
-obj.a = "lol";
+obj.a = "lol22";
+
+var obj_a = obj.a
 
 var foo = function (a1, a2, a3) {
     return function () {

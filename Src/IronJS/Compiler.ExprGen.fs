@@ -36,6 +36,7 @@ let internal builder (ctx:Context) (ast:Node) =
   | Global(name) -> Helpers.Variable.Globals.dlrValueExpr ctx name
   | Local(name) -> Helpers.Variable.Locals.dlrValueExpr ctx name
   | Closure(name) -> Helpers.Variable.Closure.dlrValueExpr ctx name
+  | Property(target, name) -> Helpers.Object.getProperty (ctx.Builder ctx target) name
   | Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
   | String(value) -> Dlr.Expr.constant value
   | Number(value) -> Dlr.Expr.constant value

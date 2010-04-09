@@ -18,7 +18,20 @@ module Analyzer =
       | Number(_) -> return! usedAs name JsTypes.Double
       | String(_) -> return! usedAs name JsTypes.String 
       | _ -> return ()
-    | Closure(name) -> return ()
+    | Closure(name) ->
+
+      let! s = getState
+
+      let rec updateScopes s =
+        match s with
+        | [] -> []
+        | x::xs ->
+          if hasLocal x name
+            then setAccessWrite x name :: xs
+            else x :: updateScopes xs
+
+      do! setState (updateScopes s)
+
     | _ -> return ()}
 
 

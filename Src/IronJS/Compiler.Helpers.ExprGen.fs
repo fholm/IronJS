@@ -14,3 +14,7 @@ module ExprGen =
   let callFunction func (args:Et list) =
     let binder = new Runtime.Binders.Invoke(new System.Dynamic.CallInfo(args.Length + 1))
     Dlr.Expr.dynamic binder Constants.clrDynamic (func :: args)
+
+  let convertToObject (expr:Et) =
+    let binder = new Runtime.Binders.Convert(Runtime.Core.objectTypeDef, false)
+    Dlr.Expr.dynamic binder Runtime.Core.objectTypeDef [expr]

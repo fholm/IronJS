@@ -33,5 +33,13 @@ and Object(env:IEnvironment) =
 and ObjectMeta(expr, jsObj:Object) =
   inherit System.Dynamic.DynamicMetaObject(expr, Dlr.Restrict.notAtAll, jsObj)
 
+  override x.BindConvert(binder) =
+    if binder.Type = typedefof<Object> then
+      let expr = Dlr.Expr.castT<Object> x.Expression
+      let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
+      new MetaObj(expr, restrict)
+    else
+      failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"  
+
 let objectTypeDef = typedefof<Object>
 let objectTypeDefHashCode = objectTypeDef.GetHashCode()

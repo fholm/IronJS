@@ -71,10 +71,11 @@ module Types =
     | Pass
     | Null
 
-    //Variables
+    //Identifiers
     | Local of string
     | Closure of string
     | Global of string
+    | Property of Node * string
 
     //Magic
     | Arguments

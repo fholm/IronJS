@@ -14,6 +14,7 @@ let private assign (ctx:Context) left right =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (ctx.Builder ctx right)
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (ctx.Builder ctx right)
+  | Property(target, name) -> Helpers.Object.setProperty (ctx.Builder ctx target) name (ctx.Builder ctx right)
   | _ -> Dlr.Expr.objDefault
 
 let private func ctx scope ast =

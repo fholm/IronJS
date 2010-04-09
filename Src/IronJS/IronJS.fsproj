@@ -53,12 +53,14 @@
     <Compile Include="Runtime.Function.fs" />
     <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Environment.fs" />
+    <Compile Include="Runtime.Helpers.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Helpers.fs" />
     <Compile Include="Compiler.Helpers.Variables.fs" />
     <Compile Include="Compiler.Helpers.ExprGen.fs" />
+    <Compile Include="Compiler.Helpers.Object.fs" />
     <Compile Include="Compiler.Helpers.Closure.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.ExprGen.fs" />

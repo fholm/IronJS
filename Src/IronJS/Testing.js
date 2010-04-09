@@ -1,4 +1,7 @@
-﻿var obj = {};
+﻿
+var obj = {};
+
+obj.a = "lol";
 
 var foo = function (a1, a2, a3) {
     return function () {

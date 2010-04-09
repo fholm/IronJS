@@ -21,12 +21,14 @@
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
+#load "Runtime.Helpers.fs"
 #load "Runtime.Binders.fs"
 #load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"
 #load "Compiler.Helpers.fs"
 #load "Compiler.Helpers.Variables.fs"
 #load "Compiler.Helpers.ExprGen.fs"
+#load "Compiler.Helpers.Object.fs"
 #load "Compiler.Helpers.Closure.fs"
 #load "Compiler.Analyzer.fs"
 #load "Compiler.ExprGen.fs"
@@ -64,6 +66,4 @@ let closure = new Runtime.Function.Closure(globals, env)
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-closure.Globals.Get("foo")
-
-let bar = closure.Globals.Get("bar")
+let bar = (closure.Globals.Get("obj") :?> Runtime.Core.Object).Get("a")

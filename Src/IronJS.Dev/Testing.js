@@ -1,11 +1,15 @@
-﻿var obj = {};
+﻿
+var obj = {};
+
+obj.a = "lol";
 
 var foo = function (a1, a2, a3) {
     return function () {
         var x = "this is a string";
         x = a1; // will fail
+        a3 = "fuuuu!"
+        return a2;
     };
 };
 
-
-foo(1, 2, "lol")();
+var bar = foo(1, 2, "lol")();

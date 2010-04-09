@@ -14,7 +14,7 @@ let private assign (ctx:Context) left right =
   match left with
   | Global(name) -> Js.Object.set ctx.Globals name (ctx.Builder ctx right)
   | Local(name) -> Js.assign (ctx.Scope.Locals.[name].Expr) (ctx.Builder ctx right)
-  | Property(target, name) -> Helpers.Object.setProperty (ctx.Builder ctx target) name (ctx.Builder ctx right)
+  | Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name (ctx.Builder ctx right)
   | _ -> Dlr.Expr.objDefault
 
 let private func ctx scope ast =
@@ -36,7 +36,7 @@ let internal builder (ctx:Context) (ast:Node) =
   | Global(name) -> Helpers.Variable.Globals.dlrValueExpr ctx name
   | Local(name) -> Helpers.Variable.Locals.dlrValueExpr ctx name
   | Closure(name) -> Helpers.Variable.Closure.dlrValueExpr ctx name
-  | Property(target, name) -> Helpers.Object.getProperty (ctx.Builder ctx target) name
+  | Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name
   | Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
   | String(value) -> Dlr.Expr.constant value
   | Number(value) -> Dlr.Expr.constant value

@@ -41,5 +41,15 @@ and ObjectMeta(expr, jsObj:Object) =
     else
       failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"  
 
+  override x.BindSetMember(binder, value) =
+    let expr = Js.box (Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Set" [Dlr.Expr.constant binder.Name; Js.box value.Expression])
+    let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
+    new MetaObj(expr, restrict)
+
+  override x.BindGetMember(binder) =
+    let expr = Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Get" [Dlr.Expr.constant binder.Name]
+    let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
+    new MetaObj(expr, restrict)
+
 let objectTypeDef = typedefof<Object>
 let objectTypeDefHashCode = objectTypeDef.GetHashCode()

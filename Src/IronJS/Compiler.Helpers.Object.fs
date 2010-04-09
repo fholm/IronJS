@@ -9,8 +9,8 @@ module Object =
 
   //Get a global variable
   let getProperty (expr:Et) name =
-    Dlr.Expr.call (Helpers.ExprGen.convertToObject expr) "Get" [Dlr.Expr.constant name]
+    Dlr.Expr.call expr "Get" [Dlr.Expr.constant name]
 
   //Set a global variable
   let setProperty (expr:Et) name value =
-    Dlr.Expr.call (Helpers.ExprGen.convertToObject expr) "Set" [Dlr.Expr.constant name; Js.box value]
+    Dlr.Expr.call expr "Set" [Dlr.Expr.constant name; Js.box value]

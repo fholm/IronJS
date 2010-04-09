@@ -66,4 +66,4 @@ compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 closure.Globals.Get("foo")
 
-let bar = closure.Globals.Get("foo")
+let bar = closure.Globals.Get("bar")

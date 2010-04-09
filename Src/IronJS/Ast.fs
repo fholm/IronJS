@@ -1,98 +1,15 @@
 ﻿namespace IronJS.Ast
 
-open System
-open IronJS
-open IronJS.Ast
-open IronJS.Fsi
-open IronJS.Utils
-open IronJS.CSharp.Parser
-open IronJS.Ast.Types
-open Antlr.Runtime
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Monads
 open IronJS.Ast.Types
 open IronJS.Ast.Helpers
-open Antlr.Runtime
+open IronJS.Ast.Analyzer
+open IronJS.CSharp.Parser
 
 module Core = 
-  let getVariable name = state {
-    let! s = getState
-    match s with
-    | [] -> return Global(name)
-    | x::xs when hasLocal x name -> return Local(name)
-    | x::xs when hasClosure x name -> return Closure(name)
-    | _ -> 
-      if List.exists (fun s -> hasLocal s name) s then
-
-        let rec updateScopes s =
-          match s with
-          | []    ->  s
-          | x::xs ->  if hasLocal x name 
-                        then setAccessRead x name :: xs
-                        else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
-
-        do! setState (updateScopes s)
-
-        return Closure(name)
-      else
-        return Global(name)}
-
-  let createLocal name = state {
-    let! s = getState
-    match s with
-    | []    -> ()
-    | x::xs -> do! setState (setLocal x name newLocal :: xs) }  
-
-  let enterScope t = state {
-    let! s = getState
-    do! setState (createScope t :: s)}
-
-  let exitScope() = state {
-    let! s = getState
-    match s with
-    | x::xs -> do! setState xs
-               return x
-    | _     -> return failwith "Couldn't exit scope"}
-
-  let usedAs name typ = state {
-    let! s = getState
-    match s with
-    | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
-               do! setState(x'::xs)}
-
-  let usedWith name rname = state {
-    let! s = getState
-    match s with
-    | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
-               do! setState(x'::xs)}
-
-  let usedWithClosure name rname = state {
-    let! s = getState
-    match s with
-    | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
-               do! setState(x'::xs)}
-
-  let analyzeAssign left right = state {
-    match left with
-    | Local(name) ->
-      match right with
-      | Local(rightName) -> return! usedWith name rightName
-      | Closure(rightName) -> return! usedWithClosure name rightName
-      | Global(_) -> return! usedAs name JsTypes.Dynamic
-      | Number(_) -> return! usedAs name JsTypes.Double
-      | String(_) -> return! usedAs name JsTypes.String 
-      | _ -> return ()
-    | Closure(name) -> return ()
-    | _ -> return ()}
-
   let rec parse (t:AstTree) = state {
     match t.Type with
     | 0 | ES3Parser.BLOCK       -> return! parseBlock t

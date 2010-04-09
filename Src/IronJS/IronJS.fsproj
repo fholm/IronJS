@@ -47,6 +47,7 @@
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Ast.Types.fs" />
     <Compile Include="Ast.Helpers.fs" />
+    <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Function.fs" />
@@ -63,8 +64,6 @@
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
-    <None Include="Monads.fsx" />
-    <None Include="AstMonad.fsx" />
     <Content Include="Testing.js" />
   </ItemGroup>
   <ItemGroup>

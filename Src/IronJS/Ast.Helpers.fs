@@ -1,7 +1,9 @@
 ﻿module IronJS.Ast.Helpers
 
 open IronJS
+open IronJS.Tools
 open IronJS.Utils
+open IronJS.Monads
 open IronJS.Ast.Types
 open IronJS.CSharp.Parser
 open Antlr.Runtime
@@ -19,6 +21,19 @@ let hasClosure (scope:Scope) name = scope.Closure.ContainsKey name
 let hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
 let setLocal (scope:Scope) (name:string) (loc:Local) = { scope with Locals = scope.Locals.Add(name, loc) }
 
+let createClosure (scope:Scope) name isLocalInParent = 
+  if scope.Closure.ContainsKey name 
+    then scope 
+    else setClosure scope name { Index = scope.Closure.Count; IsLocalInParent = isLocalInParent }
+
+let createScope (tree:AstTree) =
+  let rec createLocals parms index =
+    match parms with
+    | []       -> Map.empty
+    | name::xs -> Map.add name { newLocal with ParamIndex = index } (createLocals xs (index+1))
+
+  { newScope with Locals = createLocals [for c in (childrenOf tree 0) -> c.Text] 0 }
+
 let setAccessRead (scope:Scope) name = 
   let local = scope.Locals.[name]
   setLocal scope name (match local.ClosureAccess with
@@ -30,75 +45,70 @@ let setAccessWrite (scope:Scope) name =
   setLocal scope name (match local.ClosureAccess with
                        | Write -> local
                        | Nothing | Read -> { local with ClosureAccess = Write })
-
-let addUsedWithClosure leftName rightName (scopes:Scopes) =
-  scopes := 
-    match !scopes with
-    | [] -> []
-    | scope::xs ->
-      let local = scope.Locals.[leftName]
-      setLocal scope leftName { local with UsedWithClosure = local.UsedWithClosure.Add(rightName) } :: xs
-
-let addUsedWith leftName rightName (scopes:Scopes) =
-  scopes := 
-    match !scopes with
-    | [] -> []
-    | scope::xs ->
-      let local = scope.Locals.[leftName]
-      setLocal scope leftName { local with UsedWith = local.UsedWith.Add(rightName) } :: xs
-
-let addUsedAs name typ (scopes:Scopes) =
-  scopes := 
-    match !scopes with
-    | [] -> []
-    | scope::xs ->
-      let local = scope.Locals.[name]
-      setLocal scope name { local with UsedAs = local.UsedAs ||| typ } :: xs
-
 let setNeedsArguments (scope:Scope) =
   if scope.Arguments 
     then scope
     else { scope with Arguments = true }
 
-let createClosure (scope:Scope) name isLocalInParent = 
-  if scope.Closure.ContainsKey name 
-    then scope 
-    else setClosure scope name { Index = scope.Closure.Count; IsLocalInParent = isLocalInParent }
-
-let createLocal (scopes:Scopes) name =
-  match !scopes with
-  | [] -> ()
-  | scope::xs -> scopes := setLocal scope name newLocal :: xs
-
-let getVariable (scopes:Scopes) name =
-  match !scopes with
-  | [] -> Global(name)
-  | scope::xs when name = "arguments" -> 
-    scopes := (setNeedsArguments scope) :: xs
-    Arguments
-
-  | scope::xs when hasLocal scope name -> Local(name)
-  | scope::xs when hasClosure scope name -> Closure(name)
+let getVariable name = state {
+  let! s = getState
+  match s with
+  | [] -> return Global(name)
+  | x::xs when hasLocal x name -> return Local(name)
+  | x::xs when hasClosure x name -> return Closure(name)
   | _ -> 
-    if List.exists (fun scope -> hasLocal scope name) !scopes then
+    if List.exists (fun s -> hasLocal s name) s then
 
-      let rec updateScopes scopes =
-        match scopes with
-        | [] -> scopes
-        | x::xsScopes ->
-          if hasLocal x name 
-            then setAccessRead x name :: xsScopes
-            else createClosure x name (hasLocal xsScopes.Head name) :: updateScopes xsScopes
+      let rec updateScopes s =
+        match s with
+        | []    ->  s
+        | x::xs ->  if hasLocal x name 
+                      then setAccessRead x name :: xs
+                      else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
 
-      scopes := updateScopes !scopes
-      Closure(name)
+      do! setState (updateScopes s)
+
+      return Closure(name)
     else
-      Global(name)
+      return Global(name)}
 
-let createScope (tree:AstTree) =
-  let rec createLocals parms index =
-    match parms with
-    | []       -> Map.empty
-    | name::xs -> Map.add name { newLocal with ParamIndex = index } (createLocals xs (index+1))
+let createLocal name = state {
+  let! s = getState
+  match s with
+  | []    -> ()
+  | x::xs -> do! setState (setLocal x name newLocal :: xs) }  
 
-  { newScope with Locals = createLocals [for c in (childrenOf tree 0) -> c.Text] 0 }
+let enterScope t = state {
+  let! s = getState
+  do! setState (createScope t :: s)}
+
+let exitScope() = state {
+  let! s = getState
+  match s with
+  | x::xs -> do! setState xs
+             return x
+  | _     -> return failwith "Couldn't exit scope"}
+
+let usedAs name typ = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
+             do! setState(x'::xs)}
+
+let usedWith name rname = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
+             do! setState(x'::xs)}
+
+let usedWithClosure name rname = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
+             do! setState(x'::xs)}

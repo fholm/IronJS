@@ -34,8 +34,8 @@ fsi.AddPrinter(fun (x:Ast.Types.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
@@ -90,7 +90,44 @@ let exitScope() = state {
   match s with
   | x::xs -> do! setState xs
              return x
-  | _     -> return (failwith "Couldn't exit scope")}
+  | _     -> return failwith "Couldn't exit scope"}
+
+let usedAs name typ = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
+             do! setState(x'::xs)}
+
+let usedWith name rname = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
+             do! setState(x'::xs)}
+
+let usedWithClosure name rname = state {
+  let! s = getState
+  match s with
+  | []    -> failwith "Global scope"
+  | x::xs -> let l  = x.Locals.[name]
+             let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
+             do! setState(x'::xs)}
+
+let analyzeAssign left right = state {
+  match left with
+  | Local(name) ->
+    match right with
+    | Local(rightName) -> return! usedWith name rightName
+    | Closure(rightName) -> return! usedWithClosure name rightName
+    | Global(_) -> return! usedAs name JsTypes.Dynamic
+    | Number(_) -> return! usedAs name JsTypes.Double
+    | String(_) -> return! usedAs name JsTypes.String 
+    | _ -> return ()
+  | Closure(name) -> return ()
+  | _ -> return ()}
 
 let rec parse (t:AstTree) = state {
   match t.Type with
@@ -131,6 +168,7 @@ and parseCall t = state {
 and parseAssign t = state { 
   let! l = parse (child t 0)
   let! r = parse (child t 1)
+  do! analyzeAssign l r
   return Assign(l, r)}
 
 and parseFunction t = state {
@@ -150,6 +188,5 @@ and parseObject t = state { return (if t.Children = null then Object(None) else 
 and parseString t = state { return String(cleanString t.Text) }
 and parseNumber t = state { return Number(double t.Text) }
 
-let parsed : Node * Scope list = executeState (parse astTree) []
-
-//let ast = Ast.Core.defaultGenerator (program.Tree :?> AstTree) (ref [])
+let parseAst(ast) : Node * Scope list = 
+   executeState (parse ast) []

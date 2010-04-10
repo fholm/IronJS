@@ -9,12 +9,11 @@ module Types =
 
   type JsTypes = 
     | Nothing   = 0
-    | Undefined = 1
-    | Double    = 2
-    | Integer   = 4 // Not used
-    | String    = 8
-    | Object    = 16
-    | Dynamic   = 32
+    | Double    = 1
+    | Integer   = 2 // Not used
+    | String    = 4
+    | Object    = 8
+    | Dynamic   = 16
 
   type ClosureAccess =
     | Nothing
@@ -57,12 +56,13 @@ module Types =
     Closure: ClosureMap
     Arguments: bool
     CallingConvention: CallingConvention
+    ScopeLevel: int
   }
 
   type ParserScope = { 
+    ScopeLevel: int
     ScopeChain: Scope list
     DefinedGlobals: Map<int, string>
-    ScopeLevel: int
   } with
     member x.InDynamicScope = x.ScopeLevel > 0
 
@@ -88,7 +88,6 @@ module Types =
     | Arguments
     | This
 
-    
     //
     | DynamicScope of Node * Node
     | Function of Scope * Node
@@ -105,6 +104,7 @@ module Types =
     Locals = Map.empty
     Closure = Map.empty
     Arguments = false
+    ScopeLevel = 0
     CallingConvention = Unknown
   }
 

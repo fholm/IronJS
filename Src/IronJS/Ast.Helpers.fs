@@ -81,8 +81,8 @@ module Helpers =
       | []       -> Map.empty
       | name::xs -> Map.add name {newLocal with ParamIndex = index;} (createLocals xs (index+1))
 
-    let scope = {newScope with Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
-    do! setState {s with ScopeChain = (scope :: s.ScopeChain)}}
+    let scope = {newScope with ScopeLevel = s.ScopeLevel; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
+    do! setState {s with ScopeChain = (scope :: s.ScopeChain) }}
 
   let internal exitScope() = state {
     let! s = getState

@@ -41,12 +41,14 @@ open System.Collections.Generic
 type VarDict = Dictionary<string, int>
 
 type Class =
+  val mutable Id : int64
   val mutable Vars : VarDict
   val mutable SubClasses : Dictionary<string, Class>
 
-  new(vars:VarDict) = { 
+  new(vars:VarDict) as self = { 
     Vars = vars
     SubClasses = new Dictionary<string, Class>()
+    Id = int64 (self.GetHashCode())
   }
 
   member x.SubClass propertyName = 
@@ -58,6 +60,8 @@ type Class =
            let newClass = new Class(newVars)
            x.SubClasses.Add(propertyName, newClass)
            newClass
+
+let baseClass = new Class(new VarDict())
 
 type Obj =
   val mutable Class : Class
@@ -91,5 +95,3 @@ type Obj =
   member x.Has name = x.Class.Vars.ContainsKey name
 
   member x.HasClass cls = x.Class = cls
-
-let baseClass = new Class(new VarDict())

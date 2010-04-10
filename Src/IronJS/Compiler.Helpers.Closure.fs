@@ -28,4 +28,5 @@ module Closure =
 
   let newClosure (ctx:Context) scope =
     let closureType = resolveType ctx scope
-    closureType, Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: resolveItems ctx scope)
+    let dynScopesExpr = Dlr.Expr.newArgs typeof<ResizeArray<Runtime.Core.Object>> [ctx.DynamicScopes]
+    closureType, Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: dynScopesExpr :: resolveItems ctx scope)

@@ -1,14 +1,35 @@
 ﻿
 var obj = {};
 obj.a = "lol-obj";
-a = "lol";
+
+var bar = function () {
+    
+}
 
 with(obj) {
 
-    
-    var b = a;
-    a = 2;
+    var foo = function () {   
+
+        return function() {
+            
+        }
+
+
+    }
 
 }
 
-var obj_a = obj.a;
+
+trace_unit = { bar: 0, i: 0 }
+
+var bar = {}
+
+for(var i = 0; i < 10; ++i) {
+    
+    if(i == 5) {
+        bar.[i] = "lol"
+    } else {
+        bar = "bajs";
+    }
+
+}

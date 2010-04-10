@@ -65,8 +65,9 @@
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
-    <None Include="Script.fsx" />
     <Content Include="Testing.js" />
+    <None Include="Script.fsx" />
+    <None Include="HiddenClasses.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

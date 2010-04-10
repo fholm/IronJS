@@ -57,16 +57,18 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = fst(Ast.Core.parseAst (program.Tree :?> AstTree) [])
-let exprTree = (Compiler.Core.compileGlobalAst ast)
+let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [])
 
+(*
+let exprTree = (Compiler.Core.compileGlobalAst ast)
 
 let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)
-let closure = new Runtime.Function.Closure(globals, env, 0)
+let closure = new Runtime.Function.Closure(globals, env, new ResizeArray<Runtime.Core.Object>())
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let bar = closure.Globals.Get("b")
+*)

@@ -36,11 +36,9 @@ module Core =
 
   and private parseVar t = state { 
     let c = child t 0 
-
     if isAssign c 
       then do! createVar (child c 0).Text
            return! parse c
-
       else do! createVar c.Text
            return  Pass}
 
@@ -58,10 +56,8 @@ module Core =
   and private parseFunction t = state {
     if isAnonymous t then
       do! enterScope t
-
       let! body  = parse (child t 1)
       let! scope = exitScope()
-
       return Function(scope, body)
     else
       return Error("Only support anonymous functions atm")}

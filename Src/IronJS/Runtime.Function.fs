@@ -12,11 +12,13 @@ type Closure =
   val mutable Globals : Core.Object
   val mutable Environment : Core.IEnvironment
   val mutable DynamicScopes : Runtime.Core.Object ResizeArray
+  val mutable EvalScope : Runtime.Core.Object
 
   new(globals:Core.Object, env:Core.IEnvironment, dynamicScopes:ResizeArray<Runtime.Core.Object>) = {
     Globals = globals
     Environment = env
     DynamicScopes = dynamicScopes
+    EvalScope = new Runtime.Core.Object(env)
   }
 
 (*Typedef*)

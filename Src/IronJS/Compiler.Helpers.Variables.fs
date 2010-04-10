@@ -51,7 +51,11 @@ module Variable =
       Constants.clrDynamic
 
     let dlrExpr (ctx:Context) name =
-      Js.Object.get ctx.Globals name
+      if ctx.ScopeLevel > 0 
+        then let getGlobalFunc = new System.Func<System.String, ResizeArray<Runtime.Core.Object>, Runtime.Core.Object, obj>(Runtime.Helpers.Core.getGlobal)
+             Dlr.Expr.invoke (Dlr.Expr.constant getGlobalFunc) [Dlr.Expr.constant name; ctx.DynamicScopes; ctx.Globals]
+
+        else Js.Object.get ctx.Globals name
 
     let dlrValueExpr = dlrExpr
 

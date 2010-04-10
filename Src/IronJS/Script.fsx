@@ -58,6 +58,7 @@ let program = jsParser.program()
 let ast = fst(Ast.Core.parseAst (program.Tree :?> AstTree) [])
 let exprTree = (Compiler.Core.compileGlobalAst ast)
 
+
 let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)

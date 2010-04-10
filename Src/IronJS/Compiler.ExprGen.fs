@@ -11,10 +11,19 @@ open IronJS.Compiler.Helpers.Core
 type private Builder = Node -> Context -> Et
 
 let private assign (ctx:Context) left right =
+  let value = (ctx.Builder ctx right)
+
   match left with
-  | Global(name) -> Js.Object.set ctx.Globals name (ctx.Builder ctx right)
-  | Local(name) -> Js.assign (ctx.TopScope.Locals.[name].Expr) (ctx.Builder ctx right)
-  | Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name (ctx.Builder ctx right)
+  | Global(name) -> 
+    
+    if ctx.ScopeLevel > 0 then
+      let setGlobalFunc = new System.Func<System.String, obj, ResizeArray<Runtime.Core.Object>, Runtime.Core.Object, obj>(Runtime.Helpers.Core.setGlobal)
+      Dlr.Expr.invoke (Dlr.Expr.constant setGlobalFunc) [Dlr.Expr.constant name; Js.box value; ctx.DynamicScopes; ctx.Globals]
+    else
+      Js.Object.set ctx.Globals name value
+
+  | Local(name) -> Js.assign (ctx.TopScope.Locals.[name].Expr) value
+  | Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
   | _ -> Dlr.Expr.objDefault
 
 let private func ctx scope ast =

@@ -1,5 +1,6 @@
 ﻿namespace IronJS.Tools.Dlr
 
+open IronJS
 open IronJS.Utils
 open System.Linq.Expressions
 
@@ -13,6 +14,9 @@ module Expr =
 
   let param name typ = Et.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>
+  
+  let labelBreak() = Et.Label(Constants.clrVoid, "~break")
+  let labelContinue() = Et.Label(Constants.clrVoid, "~continue")
 
   let label name = Et.Label(typeof<obj>, name)
   let labelExpr label = Et.Label(label, Et.Default(typeof<obj>)) :> Et
@@ -48,9 +52,18 @@ module Expr =
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
   let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    
-  let invoke (func:Et) (args:Et list) = Et.Invoke(func, args)
+  let invoke (func:Et) (args:Et list) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 
   module Math =
     let sub left right = Et.Subtract(left, right) :> Et
+    let add left right = Et.Add(left, right) :> Et
+    let int0 = constant 0
     let int1 = constant 1
+
+  module ControlFlow =
+    let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse)
+
+  module Logical =
+    let lt left right = Et.LessThan(left, right)
+    let gtEq left right = Et.GreaterThanOrEqual(left, right)

@@ -23,6 +23,7 @@ and Object(env:IEnvironment) =
   let properties = new Dictionary<string, obj>();
 
   member self.Get name = properties.[name]
+  member self.TryGet name = properties.TryGetValue name
   member self.Has name = properties.ContainsKey name
   member self.Set name (value:obj) = properties.[name] <- value
   member self.Environment = env

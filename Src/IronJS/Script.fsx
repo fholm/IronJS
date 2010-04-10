@@ -68,3 +68,4 @@ let closure = new Runtime.Function.Closure(globals, env, 0)
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let bar = closure.Globals.Get("b")
+

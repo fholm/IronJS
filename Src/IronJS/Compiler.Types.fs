@@ -17,10 +17,10 @@ type Context = {
   Return: LabelTarget
   Builder: Context -> Node -> Et
 } with
-  member x.Globals       = Dlr.Expr.field x.Closure "Globals"
-  member x.Environment   = Dlr.Expr.field x.Closure "Environment"
-  member x.DynamicScopes = Dlr.Expr.field x.Closure "DynamicScopes"
-  member x.TopScope      = x.Scope
+  member x.Globals        = Dlr.Expr.field x.Closure "Globals"
+  member x.Environment    = Dlr.Expr.field x.Closure "Environment"
+  member x.DynamicScopes  = Dlr.Expr.field x.Closure "DynamicScopes"
+  member x.InDynamicSCope = x.ScopeLevel > 0
 
 let defaultContext = {
   Closure = null

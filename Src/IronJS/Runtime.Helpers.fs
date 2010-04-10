@@ -27,15 +27,15 @@ module Core =
   (**)
   let setGlobal name (value:obj) (dynScopes:ResizeArray<Runtime.Core.Object>) (globals:Runtime.Core.Object) =
     let mutable i = dynScopes.Count - 1
-    let mutable ok = false
+    let mutable found = false
 
-    while ok = false && i >= 0 do
+    while found = false && i >= 0 do
       if dynScopes.[i].Has name 
         then dynScopes.[i].Set name value
-             ok <- true
+             found <- true
         else i <- i - 1
 
-    if ok = false then globals.Set name value
+    if found = false then globals.Set name value
     value
 
   let setGlobalDelegate = new System.Func<System.String, obj, ResizeArray<Runtime.Core.Object>, Runtime.Core.Object, obj>(setGlobal)

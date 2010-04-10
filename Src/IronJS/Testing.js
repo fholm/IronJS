@@ -5,8 +5,8 @@ a = "lol";
 
 with(obj) {
 
-    var b = a;
     
+    var b = a;
     a = 2;
 
 }

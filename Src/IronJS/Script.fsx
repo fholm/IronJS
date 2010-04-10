@@ -36,6 +36,7 @@
 
 open System
 open IronJS
+open IronJS.Tools
 open IronJS.Ast
 open IronJS.Fsi
 open IronJS.Utils
@@ -46,6 +47,7 @@ open Antlr.Runtime
 fsi.AddPrinter(fun (x:Ast.Types.Local) -> x.DebugView)
 fsi.AddPrinter(fun (x:Ast.Types.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
+fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS")
@@ -68,4 +70,45 @@ let closure = new Runtime.Function.Closure(globals, env, 0)
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let bar = closure.Globals.Get("b")
+
+let time (fnc:System.Delegate) =
+  let before = System.DateTime.Now
+  fnc.DynamicInvoke() |> ignore
+  let after  = System.DateTime.Now
+  after - before
+  
+(fun () -> 
+  let tar = Dlr.Expr.paramT<int32> "~elem"
+  let arr = Dlr.Expr.paramT<int32 array> "~arr"
+  let xpr = IronJS.Tools.Js.forIterRev 100000000 (fun _ _ _ ->
+    Dlr.Expr.assign tar (Dlr.Expr.arrayIndex arr 0)
+  )
+
+  let blk = Dlr.Expr.blockWithLocals [arr; tar] [Dlr.Expr.assign arr (Dlr.Expr.constant [|0; 1; 3|]); xpr]
+  let lmb = Dlr.Expr.lambda [] blk
+  let fnc = lmb.Compile()
+
+  time fnc)()
+
+type Foo = 
+  val mutable x : int array
+  new() = { x = [|1|] }
+
+type Bar = 
+  val mutable y : Foo array
+  new() = { y = [|new Foo()|] }
+
+(fun () -> 
+  let foo = Bar()
+  let tar = Dlr.Expr.paramT<int32> "~int"
+  let arr = Dlr.Expr.paramT<Bar> "~bar"
+  let xpr = IronJS.Tools.Js.forIterRev 100000000 (fun _ _ _ ->
+    Dlr.Expr.assign tar (Dlr.Expr.arrayIndex (Dlr.Expr.field (Dlr.Expr.arrayIndex (Dlr.Expr.field arr "y") 0) "x") 0)
+  )
+
+  let blk = Dlr.Expr.blockWithLocals [arr; tar] [Dlr.Expr.assign arr (Dlr.Expr.constant foo); xpr]
+  let lmb = Dlr.Expr.lambda [] blk
+  let fnc = lmb.Compile()
+
+  time fnc)()
 

@@ -29,7 +29,6 @@ module Types =
   [<DebuggerDisplay("{DebugView}")>]
   type Local = {
     ClosureAccess: ClosureAccess
-    DynamicScope: int
     ParamIndex: int
     UsedAs: JsTypes
     UsedWith: string Set
@@ -40,16 +39,15 @@ module Types =
     member x.IsClosedOver = not (x.ClosureAccess = ClosureAccess.Nothing)
     member x.IsParameter  = x.ParamIndex > -1
     member x.DebugView = (sprintf 
-      @"access:%A/index:%i/dyn:%i/undefined:%b/as:%A/with:%A, %A" 
-      x.ClosureAccess x.ParamIndex x.DynamicScope x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
+      @"access:%A/index:%i/undefined:%b/as:%A/with:%A, %A" 
+      x.ClosureAccess x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
     
   [<DebuggerDisplay("{DebugView}")>]
   type Closure = {
     Index: int
-    DynamicScope: int
     IsLocalInParent: bool
   } with
-    member x.DebugView = sprintf "index:%i/dyn:%i/local:%b" x.Index x.DynamicScope x.IsLocalInParent
+    member x.DebugView = sprintf "index:%i/local:%b" x.Index x.IsLocalInParent
 
   type LocalMap = Map<string, Local>
   type ClosureMap = Map<string, Closure>
@@ -58,10 +56,14 @@ module Types =
     Locals: LocalMap
     Closure: ClosureMap
     Arguments: bool
+    IsDynamic: bool
     CallingConvention: CallingConvention
   }
 
-  type ParserScope = { ScopeChain: Scope list; DynamicScopes: int }
+  type ParserScope = { 
+    ScopeChain: Scope list
+    DefinedGlobals: Map<int, string>
+  }
 
   type Node =
     //Error
@@ -74,19 +76,22 @@ module Types =
     | Null
 
     //Identifiers
-    | Local of string * int
-    | Closure of string * int
-    | Global of string * int
+    | Local of string
+    | Closure of string
+    | Global of string
     | Property of Node * string
 
     //Magic
     | Arguments
     | This
-    | DynamicScope of int * Node * Node
+
+    
+    //
+    | DynamicScope of Scope * Node * Node
+    | Function of Scope * Node
     
     //
     | Block of Node list
-    | Function of Scope * Node
     | Invoke of Node * Node list
     | Assign of Node * Node
     | Return of Node
@@ -97,6 +102,7 @@ module Types =
     Locals = Map.empty
     Closure = Map.empty
     Arguments = false
+    IsDynamic = false
     CallingConvention = Unknown
   }
 
@@ -107,7 +113,6 @@ module Types =
   let newLocal = {
     ClosureAccess = ClosureAccess.Nothing
     ParamIndex = -1
-    DynamicScope = 0
     UsedAs = JsTypes.Nothing
     UsedWith = Set.empty
     UsedWithClosure = Set.empty
@@ -117,6 +122,5 @@ module Types =
 
   let newClosure = {
     Index = -1
-    DynamicScope = 0
     IsLocalInParent = false
   }

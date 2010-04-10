@@ -38,10 +38,10 @@ module Core =
     let c = child t 0 in
 
     if isAssign c 
-      then do! createLocal (child c 0).Text
+      then do! createVar (child c 0).Text
            return! parse c
 
-      else do! createLocal c.Text
+      else do! createVar c.Text
            return  Pass}
 
   and private parseCall t = state {
@@ -67,13 +67,17 @@ module Core =
       return Error("Only support anonymous functions atm")}
 
   and private enterDynamicScope = state {
-    let! s = getState
-    do! setState {s with DynamicScopes = s.DynamicScopes+1}}
+      let! s = getState
+      do! setState {s with ScopeChain = newScope :: s.ScopeChain}}
 
   and private exitDynamicScope = state {
-    let! s = getState
-    do! setState {s with DynamicScopes = s.DynamicScopes-1}
-    return s.DynamicScopes}
+      let! s = getState
+      match s.ScopeChain with
+      | [] -> return failwith "Missing scope"
+      | x::xs ->
+        do! setState {s with ScopeChain = xs}
+        return x
+    }
 
   and private parseWith t = state {
     let! obj = parse (child t 0)
@@ -92,4 +96,4 @@ module Core =
   and private parseNumber  t = state { return Number(double t.Text) }
 
   let parseAst (ast:AstTree) (scopes:Scope list) = 
-     executeState (parse ast) {ScopeChain = scopes; DynamicScopes = 0}
+     executeState (parse ast) {ScopeChain = scopes; DefinedGlobals = Map.empty }

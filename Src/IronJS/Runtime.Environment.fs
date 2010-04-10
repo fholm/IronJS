@@ -35,13 +35,20 @@ let rec private calculateHashAndTypes types (hash:int ref) =
       Constants.clrDynamic :: calculateHashAndTypes xsTypes hash
 
 (**)
-let rec private compareTypes a b =
-  match a with
-  | []      -> true
-  | xA::xsA ->
-    match b with
-    | xB::xsB -> if xA = xB then compareTypes xsA xsB else false
-    | _       -> failwith "Should never happen"
+let private compareTypes (a:'a list) (b:'a list) =
+
+  if not (a.Length = b.Length) then
+    false
+  else
+    let rec compareTypes' a b =
+      match a with
+      | []      -> true
+      | xA::xsA ->
+        match b with
+        | xB::xsB -> if xA = xB then compareTypes' xsA xsB else false
+        | _       -> failwith "Should never happen"
+
+    compareTypes' a b
 
 (**)
 type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
@@ -57,12 +64,9 @@ type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
   override self.Equals obj = 
     match obj with
     | :? DelegateCell as cell ->  
-      if cell.Ast = self.Ast && cell.Types.Length = self.Types.Length then
-        if cell.ClosureType = self.ClosureType 
-          then compareTypes self.Types cell.Types
-          else false
-      else
-        false
+      if cell.Ast = self.Ast && cell.ClosureType = self.ClosureType
+        then compareTypes cell.Types self.Types
+        else false
     | _ -> false
 
 (*The currently executing environment*)

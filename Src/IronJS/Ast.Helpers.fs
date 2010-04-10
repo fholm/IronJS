@@ -17,7 +17,6 @@ module Helpers =
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
-  let internal isInDynamicScope s = s.DynamicScopes > 0
   let internal setClosure (scope:Scope) (name:string) (clos:Closure) = {scope with Closure = scope.Closure.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
   let internal hasClosure (scope:Scope) name = scope.Closure.ContainsKey name
@@ -49,9 +48,9 @@ module Helpers =
   let internal getVariable name = state {
     let! s = getState
     match s.ScopeChain with
-    | [] -> return Global(name, s.DynamicScopes)
-    | x::xs when hasLocal x name -> return Local(name, s.DynamicScopes)
-    | x::xs when hasClosure x name -> return Closure(name, s.DynamicScopes)
+    | [] -> return Global(name)
+    | x::xs when hasLocal x name -> return Local(name)
+    | x::xs when hasClosure x name -> return Closure(name)
     | _ -> 
       if List.exists (fun s -> hasLocal s name) s.ScopeChain then
 
@@ -64,11 +63,11 @@ module Helpers =
 
         do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
 
-        return Closure(name, s.DynamicScopes)
+        return Closure(name)
       else
-        return Global(name, s.DynamicScopes)}
+        return Global(name)}
 
-  let internal createLocal name = state {
+  let internal createVar name = state {
     let! s = getState
     match s.ScopeChain with
     | []    -> ()
@@ -80,7 +79,7 @@ module Helpers =
     let rec createLocals parms index =
       match parms with
       | []       -> Map.empty
-      | name::xs -> Map.add name {newLocal with ParamIndex = index; DynamicScope = s.DynamicScopes} (createLocals xs (index+1))
+      | name::xs -> Map.add name {newLocal with ParamIndex = index;} (createLocals xs (index+1))
 
     let scope = {newScope with Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
     do! setState {s with ScopeChain = (scope :: s.ScopeChain)}}

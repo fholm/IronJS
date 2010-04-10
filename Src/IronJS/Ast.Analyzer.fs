@@ -12,14 +12,10 @@ module Analyzer =
     let! s = getState
 
     match left with
-    | Local(name, _) ->
-      if isInDynamicScope s then
-        return! usedAs name JsTypes.Dynamic
-
-      else
+    | Local(name) ->
         match right with
-        | Local(rightName, _) -> return! usedWith name rightName
-        | Closure(rightName, _) -> return! usedWithClosure name rightName
+        | Local(rightName) -> return! usedWith name rightName
+        | Closure(rightName) -> return! usedWithClosure name rightName
         | Number(_) -> return! usedAs name JsTypes.Double
         | String(_) -> return! usedAs name JsTypes.String 
 
@@ -27,7 +23,7 @@ module Analyzer =
         | Global(_) -> return! usedAs name JsTypes.Dynamic
         | _ -> return ()
 
-    | Closure(name, _) ->
+    | Closure(name) ->
 
       let rec updateScopes s =
         match s with

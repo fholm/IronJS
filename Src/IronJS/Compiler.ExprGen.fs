@@ -12,8 +12,8 @@ type private Builder = Node -> Context -> Et
 
 let private assign (ctx:Context) left right =
   match left with
-  | Global(name, _) -> Js.Object.set ctx.Globals name (ctx.Builder ctx right)
-  | Local(name, _) -> Js.assign (ctx.Scope.Locals.[name].Expr) (ctx.Builder ctx right)
+  | Global(name) -> Js.Object.set ctx.Globals name (ctx.Builder ctx right)
+  | Local(name) -> Js.assign (ctx.TopScope.Locals.[name].Expr) (ctx.Builder ctx right)
   | Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name (ctx.Builder ctx right)
   | _ -> Dlr.Expr.objDefault
 
@@ -33,9 +33,9 @@ let private objectShorthand (ctx:Context) properties =
 let internal builder (ctx:Context) (ast:Node) =
   match ast with
   | Assign(left, right) -> assign ctx left right
-  | Global(name, _) -> Helpers.Variable.Globals.dlrValueExpr ctx name
-  | Local(name, _) -> Helpers.Variable.Locals.dlrValueExpr ctx name
-  | Closure(name, _) -> Helpers.Variable.Closure.dlrValueExpr ctx name
+  | Global(name) -> Helpers.Variable.Globals.dlrValueExpr ctx name
+  | Local(name) -> Helpers.Variable.Locals.dlrValueExpr ctx name
+  | Closure(name) -> Helpers.Variable.Closure.dlrValueExpr ctx name
   | Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name
   | Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
   | String(value) -> Dlr.Expr.constant value

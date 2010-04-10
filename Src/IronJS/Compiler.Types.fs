@@ -12,19 +12,19 @@ type Context = {
   Closure: EtParam
   This: EtParam
   Arguments: EtParam
-  Scope: Scope
+  ScopeChain: Scope list
   Return: LabelTarget
   Builder: Context -> Node -> Et
 } with
-  member self.Globals       = Dlr.Expr.field self.Closure "Globals"
-  member self.Environment   = Dlr.Expr.field self.Closure "Environment"
-  member self.DynamicScopes = Dlr.Expr.field self.Closure "DynamicScopes"
+  member x.Globals       = Dlr.Expr.field x.Closure "Globals"
+  member x.Environment   = Dlr.Expr.field x.Closure "Environment"
+  member x.TopScope      = List.head x.ScopeChain
 
 let defaultContext = {
   Closure = null
   This = Dlr.Expr.param "~this" typeof<IronJS.Runtime.Core.Object>
   Arguments = Dlr.Expr.param "~arguments" typeof<IronJS.Runtime.Core.Object>
-  Scope = newScope
+  ScopeChain = List.empty
   Return = Dlr.Expr.label "~return"
   Builder = fun x a -> Dlr.Expr.objDefault
 }

@@ -91,6 +91,14 @@ module Helpers =
                return x
     | _     -> return failwith "Couldn't exit scope"}
 
+  let internal enterDynamicScope = state {
+      let! s = getState
+      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel+1}}
+
+  let internal exitDynamicScope = state {
+      let! s = getState
+      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel-1}}
+
   let internal usedAs name typ = state {
     let! s = getState
     match s.ScopeChain with

@@ -66,14 +66,6 @@ module Core =
     else
       return Error("Only support anonymous functions atm")}
 
-  and private enterDynamicScope = state {
-      let! s = getState
-      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel+1}}
-
-  and private exitDynamicScope = state {
-      let! s = getState
-      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel-1}}
-
   and private parseWith t = state {
     do! enterDynamicScope
     let! obj = parse (child t 0)

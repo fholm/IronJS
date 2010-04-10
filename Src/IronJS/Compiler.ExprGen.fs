@@ -19,16 +19,16 @@ let private assign (ctx:Context) left right =
   | Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
   | _ -> Dlr.Expr.objDefault
 
-let private func ctx scope ast =
+let private functionDefine ctx scope ast =
   let closureType, closureExpr = Helpers.Closure.newClosure ctx scope
   Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
 
-let private invoke (ctx:Context) target args =
+let private functionInvoke (ctx:Context) target args =
   Helpers.ExprGen.callFunction (ctx.Builder ctx target)  (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])
 
 let private objectShorthand (ctx:Context) properties =
   match properties with
-  | Some(_) -> failwith "Not supported"
+  | Some(_) -> failwith "Objects with auto-properties not supported"
   | None -> Dlr.Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
 
 let private dynamicScope (ctx:Context) target body =
@@ -52,8 +52,8 @@ let internal builder (ctx:Context) (ast:Node) =
   | String(value) -> Dlr.Expr.constant value
   | Number(value) -> Dlr.Expr.constant value
   | Return(value) -> Js.makeReturn ctx.Return (ctx.Builder ctx value)
-  | Function(scope, _) -> func ctx scope ast
+  | Function(scope, _) -> functionDefine ctx scope ast
   | DynamicScope(target, body) -> dynamicScope ctx target body
-  | Invoke(target, args) -> invoke ctx target args
+  | Invoke(target, args) -> functionInvoke ctx target args
   | Object(properties) -> objectShorthand ctx properties
   | _ -> Dlr.Expr.objDefault

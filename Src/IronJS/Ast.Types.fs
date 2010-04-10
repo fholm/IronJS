@@ -63,7 +63,8 @@ module Types =
     ScopeChain: Scope list
     DefinedGlobals: Map<int, string>
     ScopeLevel: int
-  }
+  } with
+    member x.InDynamicScope = x.ScopeLevel > 0
 
   type Node =
     //Error

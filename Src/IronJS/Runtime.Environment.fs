@@ -49,6 +49,7 @@ type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
   let uniformTypes = calculateHashAndTypes types hashRef
   let hashCode = !hashRef
 
+  member self.Ast = ast
   member self.Types = uniformTypes
   member self.ClosureType = closureType
 
@@ -56,7 +57,7 @@ type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
   override self.Equals obj = 
     match obj with
     | :? DelegateCell as cell ->  
-      if cell.Types.Length = self.Types.Length then
+      if cell.Ast = self.Ast && cell.Types.Length = self.Types.Length then
         if cell.ClosureType = self.ClosureType 
           then compareTypes self.Types cell.Types
           else false

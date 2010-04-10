@@ -29,6 +29,7 @@ module Types =
   [<DebuggerDisplay("{DebugView}")>]
   type Local = {
     ClosureAccess: ClosureAccess
+    DynamicScope: int
     ParamIndex: int
     UsedAs: JsTypes
     UsedWith: string Set
@@ -36,18 +37,19 @@ module Types =
     InitUndefined: bool
     Expr: EtParam
   } with
-    member self.IsClosedOver = not (self.ClosureAccess = ClosureAccess.Nothing)
-    member self.IsParameter  = self.ParamIndex > -1
-    member self.DebugView = (sprintf 
-      @"access:%A/index:%i/undefined:%b/as:%A/with:%A, %A" 
-      self.ClosureAccess self.ParamIndex self.InitUndefined self.UsedAs self.UsedWith self.UsedWithClosure)
+    member x.IsClosedOver = not (x.ClosureAccess = ClosureAccess.Nothing)
+    member x.IsParameter  = x.ParamIndex > -1
+    member x.DebugView = (sprintf 
+      @"access:%A/index:%i/dyn:%i/undefined:%b/as:%A/with:%A, %A" 
+      x.ClosureAccess x.ParamIndex x.DynamicScope x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
     
   [<DebuggerDisplay("{DebugView}")>]
   type Closure = {
     Index: int
+    DynamicScope: int
     IsLocalInParent: bool
   } with
-    member self.DebugView = sprintf "index:%i/local:%b" self.Index self.IsLocalInParent
+    member x.DebugView = sprintf "index:%i/dyn:%i/local:%b" x.Index x.DynamicScope x.IsLocalInParent
 
   type LocalMap = Map<string, Local>
   type ClosureMap = Map<string, Closure>
@@ -59,7 +61,7 @@ module Types =
     CallingConvention: CallingConvention
   }
 
-  type Scopes = Scope list ref
+  type ParserScope = { ScopeChain: Scope list; DynamicScopes: int }
 
   type Node =
     //Error
@@ -72,14 +74,15 @@ module Types =
     | Null
 
     //Identifiers
-    | Local of string
-    | Closure of string
-    | Global of string
+    | Local of string * int
+    | Closure of string * int
+    | Global of string * int
     | Property of Node * string
 
     //Magic
     | Arguments
     | This
+    | DynamicScope of int * Node * Node
     
     //
     | Block of Node list
@@ -104,6 +107,7 @@ module Types =
   let newLocal = {
     ClosureAccess = ClosureAccess.Nothing
     ParamIndex = -1
+    DynamicScope = 0
     UsedAs = JsTypes.Nothing
     UsedWith = Set.empty
     UsedWithClosure = Set.empty
@@ -113,5 +117,6 @@ module Types =
 
   let newClosure = {
     Index = -1
+    DynamicScope = 0
     IsLocalInParent = false
   }

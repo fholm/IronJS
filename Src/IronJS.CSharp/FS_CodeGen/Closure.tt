@@ -20,29 +20,26 @@ type Closure<<#= str #>> =
   inherit Runtime.Function.Closure 
 
   //Fields
-  <# for(int k = 0; k < i; ++k) { #>
-val mutable Item<#=k#> : StrongBox<'t<#=k#>>
+  <# for(int k = 0; k < i; ++k) { #>val mutable Item<#=k#> : StrongBox<'t<#=k#>>
   <# } #>
 
-  new(globals, env<#=str2#>) = {
-    inherit Runtime.Function.Closure(globals, env)
+  new(globals, env, maxDynamicScopes<#=str2#>) = {
+    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
 
     //Fields
-  <# for(int k = 0; k < i; ++k) { #>
-  Item<#=k#> = item<#=k#>
+  <# for(int k = 0; k < i; ++k) { #>  Item<#=k#> = item<#=k#>
   <# } #>
 }
 let closure<#=i#>TypeDef = typedefof<Closure<<#=str3#>>>
 
 
 <# } #>
-let getClosureType (types:ClrType seq) =
+let createClosureType (types:ClrType seq) =
   let types = Array.ofSeq types
 
   match types.Length with
   | 0 -> Runtime.Function.closureTypeDef
   <# for(int n = 1; n <= gen; ++n) { 
-  #>
-| <#=n#> -> closure<#=n#>TypeDef.MakeGenericType(types)
+  #>| <#=n#> -> closure<#=n#>TypeDef.MakeGenericType(types)
   <# } #>
 | _ -> failwith "Not currently supported"

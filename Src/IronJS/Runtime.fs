@@ -36,7 +36,7 @@ and ObjectMeta(expr, jsObj:Object) =
   override x.BindConvert(binder) =
     if binder.Type = typedefof<Object> then
       let expr = Dlr.Expr.castT<Object> x.Expression
-      let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
+      let restrict = Dlr.Restrict.byType x.Expression x.LimitType
       new MetaObj(expr, restrict)
     else
       failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"  

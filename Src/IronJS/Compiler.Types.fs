@@ -16,8 +16,9 @@ type Context = {
   Return: LabelTarget
   Builder: Context -> Node -> Et
 } with
-  member self.Globals     with get() = Dlr.Expr.field self.Closure "Globals"
-  member self.Environment with get() = Dlr.Expr.field self.Closure "Environment"
+  member self.Globals       = Dlr.Expr.field self.Closure "Globals"
+  member self.Environment   = Dlr.Expr.field self.Closure "Environment"
+  member self.DynamicScopes = Dlr.Expr.field self.Closure "DynamicScopes"
 
 let defaultContext = {
   Closure = null

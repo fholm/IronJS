@@ -9,20 +9,25 @@ open IronJS.Ast.Helpers
 
 module Analyzer =
   let assign left right = state {
+    let! s = getState
+
     match left with
-    | Local(name) ->
-      match right with
-      | Local(rightName) -> return! usedWith name rightName
-      | Closure(rightName) -> return! usedWithClosure name rightName
-      | Number(_) -> return! usedAs name JsTypes.Double
-      | String(_) -> return! usedAs name JsTypes.String 
+    | Local(name, _) ->
+      if isInDynamicScope s then
+        return! usedAs name JsTypes.Dynamic
 
-      | Property(_, _)
-      | Global(_) -> return! usedAs name JsTypes.Dynamic
-      | _ -> return ()
-    | Closure(name) ->
+      else
+        match right with
+        | Local(rightName, _) -> return! usedWith name rightName
+        | Closure(rightName, _) -> return! usedWithClosure name rightName
+        | Number(_) -> return! usedAs name JsTypes.Double
+        | String(_) -> return! usedAs name JsTypes.String 
 
-      let! s = getState
+        | Property(_, _)
+        | Global(_) -> return! usedAs name JsTypes.Dynamic
+        | _ -> return ()
+
+    | Closure(name, _) ->
 
       let rec updateScopes s =
         match s with
@@ -32,7 +37,7 @@ module Analyzer =
             then setAccessWrite x name :: xs
             else x :: updateScopes xs
 
-      do! setState (updateScopes s)
+      do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
 
     | _ -> return ()}
 

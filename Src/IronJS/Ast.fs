@@ -10,6 +10,7 @@ open IronJS.Ast.Helpers
 open IronJS.CSharp.Parser
 
 module Core = 
+
   let rec private parse (t:AstTree) = state {
     match t.Type with
     | 0 | ES3Parser.BLOCK       -> return! parseBlock t
@@ -23,6 +24,7 @@ module Core =
     | ES3Parser.FUNCTION        -> return! parseFunction t
     | ES3Parser.RETURN          -> return! parseReturn t
     | ES3Parser.BYFIELD         -> return! parseByField t
+    | ES3Parser.WITH            -> return! parseWith t
 
     //Error handling
     | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)}
@@ -63,6 +65,24 @@ module Core =
       return Function(scope, body)
     else
       return Error("Only support anonymous functions atm")}
+
+  and private enterDynamicScope = state {
+    let! s = getState
+    do! setState {s with DynamicScopes = s.DynamicScopes+1}}
+
+  and private exitDynamicScope = state {
+    let! s = getState
+    do! setState {s with DynamicScopes = s.DynamicScopes-1}
+    return s.DynamicScopes}
+
+  and private parseWith t = state {
+    let! obj = parse (child t 0)
+    
+    do! enterDynamicScope
+    let! block = parse (child t 1)
+    let! scope = exitDynamicScope
+
+    return DynamicScope(scope, obj, block) }
       
   and private parseByField t = state { let! target = parse (child t 0) in return Property(target, (child t 1).Text) }
   and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
@@ -72,4 +92,4 @@ module Core =
   and private parseNumber  t = state { return Number(double t.Text) }
 
   let parseAst (ast:AstTree) (scopes:Scope list) = 
-     executeState (parse ast) scopes
+     executeState (parse ast) {ScopeChain = scopes; DynamicScopes = 0}

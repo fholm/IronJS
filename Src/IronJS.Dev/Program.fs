@@ -20,7 +20,7 @@ let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Core.Object(env)
-let closure = new Runtime.Function.Closure(globals, env)
+let closure = new Runtime.Function.Closure(globals, env, 0)
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 

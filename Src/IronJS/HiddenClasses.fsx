@@ -79,7 +79,8 @@ type Obj =
               then  let newProps = Array.zeroCreate (x.Properties.Length * 2)
                     Array.Copy(x.Properties, newProps, x.Properties.Length)
                     x.Properties <- newProps
-            x.Set name value
+
+            x.Set name value //Set it again
 
   member x.Get name =
     let success, index = x.Class.Vars.TryGetValue name
@@ -88,5 +89,7 @@ type Obj =
       else Runtime.Core.Undefined.Instance :> obj, -1
 
   member x.Has name = x.Class.Vars.ContainsKey name
+
+  member x.HasClass cls = x.Class = cls
 
 let baseClass = new Class(new VarDict())

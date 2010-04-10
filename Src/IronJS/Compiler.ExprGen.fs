@@ -29,6 +29,15 @@ let private objectShorthand (ctx:Context) properties =
   | Some(_) -> failwith "Not supported"
   | None -> Dlr.Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
 
+let private dynamicScope (ctx:Context) target body =
+  let push = Helpers.ExprGen.pushDynamicScope ctx (ctx.Builder ctx target)
+  
+  let ctx' = {ctx with ScopeLevel = ctx.ScopeLevel+1}
+  let body = ctx.Builder ctx' body
+
+  let pop = Helpers.ExprGen.popDynamicScope ctx'
+  Dlr.Expr.block [push; body; pop]
+
 //Builder function for expression generation
 let internal builder (ctx:Context) (ast:Node) =
   match ast with
@@ -42,6 +51,7 @@ let internal builder (ctx:Context) (ast:Node) =
   | Number(value) -> Dlr.Expr.constant value
   | Return(value) -> Js.makeReturn ctx.Return (ctx.Builder ctx value)
   | Function(scope, _) -> func ctx scope ast
+  | DynamicScope(target, body) -> dynamicScope ctx target body
   | Invoke(target, args) -> invoke ctx target args
   | Object(properties) -> objectShorthand ctx properties
   | _ -> Dlr.Expr.objDefault

@@ -1,6 +1,7 @@
 ﻿
 var obj = {};
-obj.a = "lol22";
+obj.a = "lol-obj";
+a = "lol";
 
 with(obj) {
 

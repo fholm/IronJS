@@ -35,7 +35,7 @@ module Core =
     | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs' }
 
   and private parseVar t = state { 
-    let c = child t 0 in
+    let c = child t 0 
 
     if isAssign c 
       then do! createVar (child c 0).Text
@@ -68,25 +68,18 @@ module Core =
 
   and private enterDynamicScope = state {
       let! s = getState
-      do! setState {s with ScopeChain = newScope :: s.ScopeChain}}
+      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel+1}}
 
   and private exitDynamicScope = state {
       let! s = getState
-      match s.ScopeChain with
-      | [] -> return failwith "Missing scope"
-      | x::xs ->
-        do! setState {s with ScopeChain = xs}
-        return x
-    }
+      do! setState {s with ParserScope.ScopeLevel = s.ScopeLevel-1}}
 
   and private parseWith t = state {
-    let! obj = parse (child t 0)
-    
     do! enterDynamicScope
+    let! obj = parse (child t 0)
     let! block = parse (child t 1)
-    let! scope = exitDynamicScope
-
-    return DynamicScope(scope, obj, block) }
+    do! exitDynamicScope
+    return DynamicScope(obj, block)}
       
   and private parseByField t = state { let! target = parse (child t 0) in return Property(target, (child t 1).Text) }
   and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
@@ -96,4 +89,4 @@ module Core =
   and private parseNumber  t = state { return Number(double t.Text) }
 
   let parseAst (ast:AstTree) (scopes:Scope list) = 
-     executeState (parse ast) {ScopeChain = scopes; DefinedGlobals = Map.empty }
+     executeState (parse ast) {ScopeChain = scopes; DefinedGlobals = Map.empty; ScopeLevel = 0 }

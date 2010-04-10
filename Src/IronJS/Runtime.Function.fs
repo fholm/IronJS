@@ -11,12 +11,12 @@ open System.Collections.Generic
 type Closure =
   val mutable Globals : Core.Object
   val mutable Environment : Core.IEnvironment
-  val mutable DynamicScopes : Closure ResizeArray
+  val mutable DynamicScopes : Runtime.Core.Object ResizeArray
 
   new(globals:Core.Object, env:Core.IEnvironment, maxDynamicScopes:int) = {
     Globals = globals
     Environment = env
-    DynamicScopes = new ResizeArray<Closure>(maxDynamicScopes)
+    DynamicScopes = new ResizeArray<Runtime.Core.Object>(maxDynamicScopes)
   }
 
 (*Typedef*)

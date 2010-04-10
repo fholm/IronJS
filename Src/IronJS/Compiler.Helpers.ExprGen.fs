@@ -32,3 +32,9 @@ module ExprGen =
       then Helpers.Object.getProperty expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic [expr]
+
+  let pushDynamicScope (ctx:Context) (expr:Et) =
+    Dlr.Expr.call ctx.DynamicScopes "Add" [convertToObject expr]
+
+  let popDynamicScope (ctx:Context) =
+    Dlr.Expr.call ctx.DynamicScopes "RemoveAt" [Dlr.Expr.Math.sub (Dlr.Expr.property ctx.DynamicScopes "Count") Dlr.Expr.Math.int1]

@@ -56,13 +56,13 @@ module Types =
     Locals: LocalMap
     Closure: ClosureMap
     Arguments: bool
-    IsDynamic: bool
     CallingConvention: CallingConvention
   }
 
   type ParserScope = { 
     ScopeChain: Scope list
     DefinedGlobals: Map<int, string>
+    ScopeLevel: int
   }
 
   type Node =
@@ -74,11 +74,13 @@ module Types =
     | Number of double
     | Pass
     | Null
+    | Undefined
 
     //Identifiers
     | Local of string
     | Closure of string
     | Global of string
+    | Dynamic of string
     | Property of Node * string
 
     //Magic
@@ -87,7 +89,7 @@ module Types =
 
     
     //
-    | DynamicScope of Scope * Node * Node
+    | DynamicScope of Node * Node
     | Function of Scope * Node
     
     //
@@ -102,7 +104,6 @@ module Types =
     Locals = Map.empty
     Closure = Map.empty
     Arguments = false
-    IsDynamic = false
     CallingConvention = Unknown
   }
 

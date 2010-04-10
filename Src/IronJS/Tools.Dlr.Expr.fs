@@ -37,7 +37,8 @@ module Expr =
   let refEq left right = Et.ReferenceEqual(left, right) :> Et
   let makeReturn label (value:Et) = Et.Return(label, value) :> Et
   let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
-  let index (left:Et) (i:int) = Et.ArrayIndex(left, constant i) :> Et
+  let arrayIndex (left:Et) (i) = Et.ArrayIndex(left, constant i) :> Et
+  let objIndex (target:Et) (index:Et) = Et.MakeIndex(target, target.Type.GetProperty("Item"), [index])
 
   let newInstance (typ:System.Type) = Et.New(typ) :> Et
   let newGeneric (typ:System.Type) (types:ClrType seq) = newInstance (typ.MakeGenericType(Seq.toArray types))
@@ -49,3 +50,7 @@ module Expr =
   let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    
   let invoke (func:Et) (args:Et list) = Et.Invoke(func, args)
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
+
+  module Math =
+    let sub left right = Et.Subtract(left, right) :> Et
+    let int1 = constant 1

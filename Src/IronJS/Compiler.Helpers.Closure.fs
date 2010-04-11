@@ -3,21 +3,19 @@
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
-open IronJS.Ast.Types
 open IronJS.Compiler
-open IronJS.Compiler.Types
 
 (*Module for working with closures*)
 module Closure =
 
-  let private resolveItems ctx (scope:Scope) =
+  let private resolveItems ctx (scope:Ast.Scope) =
     scope.Closure
       |> Map.toSeq
       |> Seq.sortBy (fun pair -> (snd pair).Index)
       |> Seq.map (fun pair -> Helpers.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
       |> List.ofSeq
 
-  let private resolveType ctx (scope:Scope) =
+  let private resolveType ctx (scope:Ast.Scope) =
     Runtime.Closures.createClosureType (
       scope.Closure
         |> Map.toSeq
@@ -26,7 +24,7 @@ module Closure =
         |> Seq.map (fun pair -> fst pair)
     )
 
-  let newClosure (ctx:Context) scope =
+  let newClosure (ctx:Context) (scope:Ast.Scope) =
     let closureType = resolveType ctx scope
     let dynScopesExpr = Dlr.Expr.newArgs typeof<ResizeArray<Runtime.Core.Object>> [ctx.DynamicScopes]
     closureType, Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: dynScopesExpr :: resolveItems ctx scope)

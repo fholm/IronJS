@@ -6,8 +6,8 @@ open IronJS.Tools
 open System.Dynamic
 open System.Collections.Generic
 
-type private AnalyzeFunc = Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope
-type private ExprGenFunc = ClrType -> Ast.Types.Scope -> Ast.Types.Node -> (EtLambda * ClrType list)
+type private AnalyzeFunc = Ast.Scope -> ClrType -> ClrType list -> Ast.Scope
+type private ExprGenFunc = ClrType -> Ast.Scope -> Ast.Node -> (EtLambda * ClrType list)
 
 (**)
 let rec private calculateHashAndTypes types (hash:int ref) = 
@@ -51,7 +51,7 @@ let private compareTypes (a:'a list) (b:'a list) =
     compareTypes' a b
 
 (**)
-type DelegateCell(ast:Ast.Types.Node, closureType:ClrType, types:ClrType list) =
+type DelegateCell(ast:Ast.Node, closureType:ClrType, types:ClrType list) =
   let hashRef = ref (37 * closureType.GetHashCode() + ast.GetHashCode())
   let uniformTypes = calculateHashAndTypes types hashRef
   let hashCode = !hashRef
@@ -92,7 +92,7 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
 
   member private self.Compile ast closureType types =
     match ast with
-    | Ast.Types.Node.Function(scope, body) -> 
+    | Ast.Node.Function(scope, body) -> 
       let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope closureType types) body)
       lambda.Compile(), paramTypes
 

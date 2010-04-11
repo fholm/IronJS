@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Tools
 open IronJS.Utils
 open IronJS.Monads
-open IronJS.Ast.Types
 open IronJS.CSharp.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
@@ -26,7 +25,7 @@ module Helpers =
   let internal createClosure (scope:Scope) name isLocalInParent = 
     if scope.Closure.ContainsKey name 
       then scope 
-      else setClosure scope name {newClosure with Index = scope.Closure.Count; IsLocalInParent = isLocalInParent}
+      else setClosure scope name {Closure.New with Index = scope.Closure.Count; IsLocalInParent = isLocalInParent}
 
   let internal setAccessRead (scope:Scope) name = 
     let local = scope.Locals.[name]
@@ -71,7 +70,7 @@ module Helpers =
     let! s = getState
     match s.ScopeChain with
     | []    -> ()
-    | x::xs -> do! setState {s with ScopeChain = (setLocal x name newLocal :: xs)}}  
+    | x::xs -> do! setState {s with ScopeChain = (setLocal x name Local.New :: xs)}}  
 
   let internal enterScope t = state {
     let! s = getState
@@ -79,9 +78,9 @@ module Helpers =
     let rec createLocals parms index =
       match parms with
       | []       -> Map.empty
-      | name::xs -> Map.add name {newLocal with ParamIndex = index;} (createLocals xs (index+1))
+      | name::xs -> Map.add name {Local.New with ParamIndex = index;} (createLocals xs (index+1))
 
-    let scope = {newScope with ScopeLevel = s.ScopeLevel; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
+    let scope = {Scope.New with ScopeLevel = s.ScopeLevel; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
     do! setState {s with ScopeChain = (scope :: s.ScopeChain) }}
 
   let internal exitScope() = state {

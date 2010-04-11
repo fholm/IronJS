@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Monads
-open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 
 module Analyzer =

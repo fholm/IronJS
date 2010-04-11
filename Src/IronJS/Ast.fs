@@ -5,7 +5,6 @@ open IronJS.Utils
 open IronJS.Tools
 open IronJS.Monads
 open IronJS.Ast
-open IronJS.Ast.Types
 open IronJS.Ast.Helpers
 open IronJS.CSharp.Parser
 

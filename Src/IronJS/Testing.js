@@ -7,16 +7,11 @@ var bar = function () {
 }
 
 with(obj) {
-
     var foo = function () {   
-
         return function() {
             
         }
-
-
     }
-
 }
 
 

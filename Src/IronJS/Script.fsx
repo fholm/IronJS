@@ -59,7 +59,6 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [])
 
-(*
 let exprTree = (Compiler.Core.compileGlobalAst ast)
 
 let compiledFunc = (fst exprTree).Compile()
@@ -71,4 +70,3 @@ let closure = new Runtime.Function.Closure(globals, env, new ResizeArray<Runtime
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let bar = closure.Globals.Get("b")
-*)

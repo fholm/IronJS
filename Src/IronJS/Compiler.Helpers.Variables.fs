@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Types
 open IronJS.Compiler.Helpers.Core
 
 module Variable =

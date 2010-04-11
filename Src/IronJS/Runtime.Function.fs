@@ -7,18 +7,20 @@ open IronJS.Runtime
 open System.Dynamic
 open System.Collections.Generic
 
+type Scope = 
+  val mutable DynamicScopes : Runtime.Core.Object array
+  val mutable EvalScope : Runtime.Core.Object
+
 (*Closure base class, representing a closure environment*)
 type Closure =
   val mutable Globals : Core.Object
   val mutable Environment : Core.IEnvironment
   val mutable DynamicScopes : Runtime.Core.Object ResizeArray
-  val mutable EvalScope : Runtime.Core.Object
 
   new(globals:Core.Object, env:Core.IEnvironment, dynamicScopes:ResizeArray<Runtime.Core.Object>) = {
     Globals = globals
     Environment = env
     DynamicScopes = dynamicScopes
-    EvalScope = new Runtime.Core.Object(env)
   }
 
 (*Typedef*)
@@ -29,7 +31,7 @@ type Function<'a> when 'a :> Closure =
   inherit Core.Object
 
   val mutable Closure : 'a
-  val mutable Ast : Ast.Types.Node
+  val mutable Ast : Ast.Node
 
   new(ast, closure, env) = { 
     inherit Core.Object(env)

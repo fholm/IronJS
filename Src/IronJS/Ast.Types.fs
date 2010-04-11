@@ -18,11 +18,6 @@ type ClosureAccess =
   | Read
   | Write
 
-type CallingConvention =
-  | Unknown
-  | Dynamic
-  | Static
-
 [<DebuggerDisplay("{DebugView}")>]
 type Local = {
   ClosureAccess: ClosureAccess
@@ -66,7 +61,6 @@ type Scope = {
   Locals: LocalMap
   Closure: ClosureMap
   Arguments: bool
-  CallingConvention: CallingConvention
   ScopeLevel: int
 } with
   static member New = { 
@@ -74,10 +68,8 @@ type Scope = {
     Closure = Map.empty
     Arguments = false
     ScopeLevel = 0
-    CallingConvention = Unknown
   }
-  static member Global = 
-    { Scope.New with CallingConvention = CallingConvention.Static }
+  static member Global = Scope.New
   
 
 type ParserScope = { 

@@ -59,11 +59,6 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
     | Some(name) -> resolveTypes (resolveType name locals) // Key found, resolve its type
 
   { scope with 
-      CallingConvention = 
-        if types.Length > IronJS.Constants.maxTypedArgs 
-          then Ast.CallingConvention.Dynamic 
-          else Ast.CallingConvention.Static
-
       Locals =
         scope.Locals 
           |> Map.map (fun name var -> 

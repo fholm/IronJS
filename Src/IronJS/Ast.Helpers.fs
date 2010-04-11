@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Ast
 
 open IronJS
+open IronJS.Ast
 open IronJS.Tools
 open IronJS.Utils
 open IronJS.Monads

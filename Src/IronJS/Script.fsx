@@ -34,18 +34,17 @@
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 
-open System
 open IronJS
-open IronJS.Tools
-open IronJS.Ast
 open IronJS.Fsi
+open IronJS.Tools
 open IronJS.Utils
 open IronJS.CSharp.Parser
-open IronJS.Ast.Types
+
+open System
 open Antlr.Runtime
 
-fsi.AddPrinter(fun (x:Ast.Types.Local) -> x.DebugView)
-fsi.AddPrinter(fun (x:Ast.Types.Closure) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.Local) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
@@ -60,13 +59,12 @@ let program = jsParser.program()
 let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [])
 
 let exprTree = (Compiler.Core.compileGlobalAst ast)
-
 let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
-let globals = new Runtime.Core.Object(env)
-let closure = new Runtime.Function.Closure(globals, env, new ResizeArray<Runtime.Core.Object>())
+let globals = new Runtime.Object(env)
+let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Object>())
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-let bar = closure.Globals.Get("b")
+let bar = closure.Globals.Get("obj")

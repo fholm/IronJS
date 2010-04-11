@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
+open IronJS.Runtime
 
 module Core =
   
@@ -10,7 +11,7 @@ module Core =
     typ = Runtime.Core.objectTypeDef || typ.IsSubclassOf(Runtime.Core.objectTypeDef)
 
   (**)
-  let getGlobal name (dynScopes:ResizeArray<Runtime.Core.Object>) (globals:Runtime.Core.Object) =
+  let getGlobal name (dynScopes:ResizeArray<Object>) (globals:Object) =
     let mutable i = dynScopes.Count - 1
     let mutable result = null
 
@@ -22,10 +23,10 @@ module Core =
 
     if result = null then globals.Get name else result
 
-  let getGlobalDelegate = new System.Func<System.String, ResizeArray<Runtime.Core.Object>, Runtime.Core.Object, obj>(getGlobal)
+  let getGlobalDelegate = new System.Func<System.String, ResizeArray<Object>, Object, Dynamic>(getGlobal)
 
   (**)
-  let setGlobal name (value:obj) (dynScopes:ResizeArray<Runtime.Core.Object>) (globals:Runtime.Core.Object) =
+  let setGlobal name (value:obj) (dynScopes:ResizeArray<Object>) (globals:Object) =
     let mutable i = dynScopes.Count - 1
     let mutable found = false
 
@@ -38,4 +39,4 @@ module Core =
     if found = false then globals.Set name value
     value
 
-  let setGlobalDelegate = new System.Func<System.String, obj, ResizeArray<Runtime.Core.Object>, Runtime.Core.Object, obj>(setGlobal)
+  let setGlobalDelegate = new System.Func<System.String, obj, ResizeArray<Object>, Object, Dynamic>(setGlobal)

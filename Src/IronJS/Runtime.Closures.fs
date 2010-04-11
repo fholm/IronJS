@@ -7,14 +7,14 @@ open IronJS.Utils
 
 (*Closure1*)
 type Closure<'t0> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
   
 
   new(globals, env, maxDynamicScopes, item0) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -26,7 +26,7 @@ let closure1TypeDef = typedefof<Closure<_>>
 
 (*Closure2*)
 type Closure<'t0,'t1> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -34,7 +34,7 @@ type Closure<'t0,'t1> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -47,7 +47,7 @@ let closure2TypeDef = typedefof<Closure<_,_>>
 
 (*Closure3*)
 type Closure<'t0,'t1,'t2> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -56,7 +56,7 @@ type Closure<'t0,'t1,'t2> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -70,7 +70,7 @@ let closure3TypeDef = typedefof<Closure<_,_,_>>
 
 (*Closure4*)
 type Closure<'t0,'t1,'t2,'t3> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -80,7 +80,7 @@ type Closure<'t0,'t1,'t2,'t3> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -95,7 +95,7 @@ let closure4TypeDef = typedefof<Closure<_,_,_,_>>
 
 (*Closure5*)
 type Closure<'t0,'t1,'t2,'t3,'t4> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -106,7 +106,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -122,7 +122,7 @@ let closure5TypeDef = typedefof<Closure<_,_,_,_,_>>
 
 (*Closure6*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -134,7 +134,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -151,7 +151,7 @@ let closure6TypeDef = typedefof<Closure<_,_,_,_,_,_>>
 
 (*Closure7*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -164,7 +164,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -182,7 +182,7 @@ let closure7TypeDef = typedefof<Closure<_,_,_,_,_,_,_>>
 
 (*Closure8*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -196,7 +196,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -215,7 +215,7 @@ let closure8TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_>>
 
 (*Closure9*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -230,7 +230,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -250,7 +250,7 @@ let closure9TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_>>
 
 (*Closure10*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -266,7 +266,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -287,7 +287,7 @@ let closure10TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure11*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -304,7 +304,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -326,7 +326,7 @@ let closure11TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure12*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -344,7 +344,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -367,7 +367,7 @@ let closure12TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure13*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -386,7 +386,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -410,7 +410,7 @@ let closure13TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure14*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -430,7 +430,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -455,7 +455,7 @@ let closure14TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure15*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -476,7 +476,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14> =
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -502,7 +502,7 @@ let closure15TypeDef = typedefof<Closure<_,_,_,_,_,_,_,_,_,_,_,_,_,_,_>>
 
 (*Closure16*)
 type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t15> =
-  inherit Runtime.Function.Closure 
+  inherit Runtime.Closure 
 
   //Fields
   val mutable Item0 : StrongBox<'t0>
@@ -524,7 +524,7 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t
   
 
   new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14, item15) = {
-    inherit Runtime.Function.Closure(globals, env, maxDynamicScopes)
+    inherit Runtime.Closure (globals, env, maxDynamicScopes)
 
     //Fields
     Item0 = item0
@@ -553,7 +553,7 @@ let createClosureType (types:ClrType seq) =
   let types = Array.ofSeq types
 
   match types.Length with
-  | 0 -> Runtime.Function.closureTypeDef
+  | 0 -> IronJS.Runtime.Closure.TypeDef
   | 1 -> closure1TypeDef.MakeGenericType(types)
   | 2 -> closure2TypeDef.MakeGenericType(types)
   | 3 -> closure3TypeDef.MakeGenericType(types)

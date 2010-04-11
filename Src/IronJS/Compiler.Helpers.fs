@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Utils
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Runtime.Binders
 open System.Dynamic
 
 (*Converts a ClrType to JsType*)
@@ -18,7 +17,7 @@ let ToClr typ =
   match typ with
   | Ast.JsTypes.Double -> Constants.clrDouble
   | Ast.JsTypes.String -> Constants.clrString
-  | Ast.JsTypes.Object -> typeof<Runtime.Core.Object>
+  | Ast.JsTypes.Object -> typeof<Runtime.Object>
   | _ -> Constants.clrDynamic
 
 (*Gets the inner type of a strongbox Type object*)

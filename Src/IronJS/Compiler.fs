@@ -3,7 +3,6 @@
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
-open IronJS.Runtime
 open IronJS.Compiler
 open IronJS.Compiler.Helpers.Core
 
@@ -12,7 +11,7 @@ let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
   variables
     |> Map.toSeq
     |> Seq.filter (fun pair -> (snd pair).InitUndefined)
-    |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Core.Undefined.InstanceExpr) :: state) body
+    |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Undefined.InstanceExpr) :: state) body
 
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
 let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
@@ -25,13 +24,13 @@ let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
 let private makeDynamicInitExpr (p:Ast.Local) (args:Et) =
   let test = Et.LessThan(Dlr.Expr.constant p.ParamIndex, Dlr.Expr.field args "Length")
   let ifTrue = Dlr.Expr.arrayIndex args p.ParamIndex
-  let ifFalse = Dlr.Expr.castT<obj> Runtime.Core.Undefined.InstanceExpr
+  let ifFalse = Dlr.Expr.castT<obj> Runtime.Undefined.InstanceExpr
   Js.assign p.Expr (Et.Condition(test, ifTrue, ifFalse) :> Et)
 
 (*Does the final DLR compilation for dynamicly typed functions*)
 let private compileDynamicAst (ctx:Context) (body:Et list) = 
   let argsArray = Dlr.Expr.paramT<obj array> "~args"
-  let innerParameters, variables = ctx.Scope.Locals |> mapBisect (fun _ (var:Ast.Local) -> var.IsParameter)
+  let innerParameters, variables = ctx.Scope.Locals |> Map.partition  (fun _ (var:Ast.Local) -> var.IsParameter)
   let outerParameters = [ctx.Closure; ctx.Arguments; ctx.This; argsArray]
 
   let completeBodyExpr = 
@@ -53,7 +52,7 @@ let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string,
 
 (*Does the final DLR compilation for staticly typed functions*)
 let private compileStaticAst (ctx:Context) (body:Et list) = 
-  let parameters, variables = ctx.Scope.Locals |> mapBisect (fun _ (var:Ast.Local) -> var.IsParameter && not var.InitUndefined)
+  let parameters, variables = ctx.Scope.Locals |> Map.partition (fun _ (var:Ast.Local) -> var.IsParameter && not var.InitUndefined)
 
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
   let proxyParameters = closedOverParameters |> Map.map (fun name var -> Dlr.Expr.param ("~" + name + "_proxy") (ToClr var.UsedAs))
@@ -82,4 +81,4 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
     else compileStaticAst  context body
 
 (*Convenience function for compiling global ast*)
-let compileGlobalAst = compileAst typeof<Runtime.Function.Closure> Ast.Scope.Global
+let compileGlobalAst = compileAst typeof<Runtime.Closure> Ast.Scope.Global

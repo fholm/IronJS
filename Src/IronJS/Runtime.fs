@@ -1,4 +1,4 @@
-﻿module IronJS.Runtime.Core
+﻿namespace IronJS.Runtime
 
 open IronJS
 open IronJS.Utils
@@ -53,5 +53,6 @@ and ObjectMeta(expr, jsObj:Object) =
     let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
     new MetaObj(expr, restrict)
 
-let objectTypeDef = typedefof<Object>
-let objectTypeDefHashCode = objectTypeDef.GetHashCode()
+module Core =
+  let objectTypeDef = typedefof<Object>
+  let objectTypeDefHashCode = objectTypeDef.GetHashCode()

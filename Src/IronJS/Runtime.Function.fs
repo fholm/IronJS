@@ -1,4 +1,4 @@
-﻿module IronJS.Runtime.Function
+﻿namespace IronJS.Runtime
 
 open IronJS
 open IronJS.Utils
@@ -8,33 +8,35 @@ open System.Dynamic
 open System.Collections.Generic
 
 type Scope = 
-  val mutable DynamicScopes : Runtime.Core.Object array
-  val mutable EvalScope : Runtime.Core.Object
+  val mutable DynamicScopes : Object array
+  val mutable EvalScope : Object
 
 (*Closure base class, representing a closure environment*)
 type Closure =
-  val mutable Globals : Core.Object
-  val mutable Environment : Core.IEnvironment
-  val mutable DynamicScopes : Runtime.Core.Object ResizeArray
+  val mutable Globals : Object
+  val mutable Environment : IEnvironment
+  val mutable DynamicScopes : Object ResizeArray
 
-  new(globals:Core.Object, env:Core.IEnvironment, dynamicScopes:ResizeArray<Runtime.Core.Object>) = {
+  static member TypeDef = typedefof<Closure>
+
+  new(globals:Object, env:IEnvironment, dynamicScopes:ResizeArray<Object>) = {
     Globals = globals
     Environment = env
     DynamicScopes = dynamicScopes
   }
 
-(*Typedef*)
-let closureTypeDef = typedefof<Closure>
-
 (*Javascript object that also is a function*)
 type Function<'a> when 'a :> Closure =
-  inherit Core.Object
+  inherit Object
 
   val mutable Closure : 'a
   val mutable Ast : Ast.Node
 
+  static member TypeDef = typedefof<Function<_>>
+  static member TypeDefHashCode = typedefof<Function<_>>.GetHashCode()
+
   new(ast, closure, env) = { 
-    inherit Core.Object(env)
+    inherit Object(env)
     Closure = closure
     Ast = ast
   }
@@ -44,7 +46,7 @@ type Function<'a> when 'a :> Closure =
 
 (*DLR meta object for the above Function class*)
 and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
-  inherit Core.ObjectMeta(expr, jsFunc)
+  inherit ObjectMeta(expr, jsFunc)
 
   member self.FuncExpr with get() = Dlr.Expr.castT<Function<'a>> self.Expression
   member self.ClosureExpr with get() = Dlr.Expr.field self.FuncExpr "Closure"
@@ -58,7 +60,7 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let expr = 
       Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) (
         self.ClosureExpr 
-        :: Dlr.Expr.typeDefault<Runtime.Core.Object> 
+        :: Dlr.Expr.typeDefault<Object> 
         :: List.rev (Array.fold (fun lst (arg:MetaObj) -> Dlr.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args)
       )
 
@@ -67,7 +69,3 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
                     Merge(Tools.Dlr.Restrict.byArgs (List.tail (Array.toList args)))
 
     new MetaObj(expr, restrict)
-
-(*Typedef*)
-let functionTypeDef = typedefof<Function<_>>
-let functionTypeDefHashCode = functionTypeDef.GetHashCode()

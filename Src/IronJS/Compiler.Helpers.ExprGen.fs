@@ -8,7 +8,7 @@ open IronJS.Compiler
 module ExprGen =
 
   let newFunction closureType args =
-    Dlr.Expr.newGenericArgs Runtime.Function.functionTypeDef [closureType] args
+    Dlr.Expr.newGenericArgs Runtime.Function<_>.TypeDef [closureType] args
 
   let callFunction func (args:Et list) =
     let binder = new Runtime.Binders.Invoke(new System.Dynamic.CallInfo(args.Length + 1))

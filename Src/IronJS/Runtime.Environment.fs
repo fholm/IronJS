@@ -3,6 +3,8 @@
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
+open IronJS.Runtime
+
 open System.Dynamic
 open System.Collections.Generic
 
@@ -26,9 +28,9 @@ let rec private calculateHashAndTypes types (hash:int ref) =
       hash := (37 * !hash + Runtime.Core.objectTypeDefHashCode)
       Runtime.Core.objectTypeDef :: calculateHashAndTypes xsTypes hash
 
-    elif x = Runtime.Function.functionTypeDef then
-      hash := (37 * !hash + Runtime.Function.functionTypeDefHashCode)
-      Runtime.Function.functionTypeDef :: calculateHashAndTypes xsTypes hash
+    elif x = Runtime.Function<_>.TypeDef then
+      hash := (37 * !hash + Runtime.Function<_>.TypeDefHashCode)
+      Runtime.Function<_>.TypeDef :: calculateHashAndTypes xsTypes hash
 
     else
       hash := (37 * !hash + Constants.clrDynamicHashCode)
@@ -74,7 +76,7 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
   let jitCache = new Dictionary<DelegateCell, System.Delegate * ClrType list>()
 
   //Implementation of IEnvironment interface
-  interface Runtime.Core.IEnvironment with
+  interface IEnvironment with
     member self.GetDelegate ast closureType types =
       let cell = new DelegateCell(ast, closureType, types)
       match self.GetCachedDelegate cell with

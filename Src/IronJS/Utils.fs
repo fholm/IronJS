@@ -14,6 +14,7 @@ type ParmInfo = System.Reflection.ParameterInfo
 type AstTree = Antlr.Runtime.Tree.CommonTree
 type StrongBox<'a> = System.Runtime.CompilerServices.StrongBox<'a>
 type ClrType = System.Type
+type Dynamic = obj
 
 //Functions
 let toList<'a> (ilst:System.Collections.IList) =
@@ -52,15 +53,3 @@ let getCtor (typ:Type) (args:Type list) =
     else  
       false
   ) (typ.GetConstructors())
-
-//Map.bisect
-let mapBisect (filter:'a -> 'b -> bool) (map:Map<'a,'b>) =
-  let mutable map1 = Map.empty
-  let mutable map2 = Map.empty
-
-  for kvp in map do
-    if filter kvp.Key kvp.Value 
-      then map1 <- map1.Add(kvp.Key, kvp.Value)
-      else map2 <- map2.Add(kvp.Key, kvp.Value)
-
-  map1, map2

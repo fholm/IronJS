@@ -15,8 +15,9 @@ type IEnvironment =
 (*Class representing the javascript Undefined type*)
 type Undefined() =
   static let instance = Undefined()
-  static member Instance with get() = instance
-  static member InstanceExpr with get() = Dlr.Expr.constant instance
+  static member Instance = instance
+  static member InstanceExpr = Dlr.Expr.constant instance
+  static member InstanceExprAsDynamic = Dlr.Expr.castT<Dynamic> Undefined.InstanceExpr
 
 (*Class representing a Javascript native object*)
 and Object(env:IEnvironment) =

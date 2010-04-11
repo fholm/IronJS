@@ -65,7 +65,7 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
             if var.IsParameter then
               if var.ParamIndex < types.Length && types.Length < IronJS.Constants.maxTypedArgs
                 then { var with UsedAs = var.UsedAs ||| ToJs types.[var.ParamIndex] } // We got an argument for this parameter
-                else { setType name var Ast.JsTypes.Dynamic with InitUndefined = true; }  // We didn't, means make it dynamic and demote to a normal local
+                else setType name var Ast.JsTypes.Dynamic // We didn't, means make it dynamic
             else 
               if   isDynamic var       then setType name var Ast.JsTypes.Dynamic // No need to resolve type, force it here
               elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned to from any variables

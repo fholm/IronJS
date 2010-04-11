@@ -67,4 +67,4 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Object>(
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-let bar = closure.Globals.Get("obj")
+(closure.Globals.Get("obj") :?> Runtime.Object).Get("b")

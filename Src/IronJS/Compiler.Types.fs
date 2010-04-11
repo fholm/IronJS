@@ -26,5 +26,5 @@ type Context = {
     Scope = Ast.Scope.New
     ScopeLevel = 0
     Return = Dlr.Expr.label "~return"
-    Builder = fun x a -> Dlr.Expr.objDefault
+    Builder = fun x a -> Dlr.Expr.dynamicDefault
   }

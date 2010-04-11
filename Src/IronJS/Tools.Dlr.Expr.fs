@@ -10,7 +10,7 @@ module Expr =
   let empty = AstUtils.Empty() :> Et
   let makeDefault typ = Et.Default(typ) :> Et
   let typeDefault<'a> = makeDefault typeof<'a>
-  let objDefault = typeDefault<Dynamic>
+  let dynamicDefault = typeDefault<Dynamic>
 
   let param name typ = Et.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>

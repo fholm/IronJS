@@ -19,6 +19,6 @@ module Restrict =
     | [] -> BindingRestrictions.Empty
     | x::xs -> 
       (if x.HasValue && x.Value = null 
-          then BindingRestrictions.GetInstanceRestriction(x.Expression, Dlr.Expr.objDefault)
+          then BindingRestrictions.GetInstanceRestriction(x.Expression, Dlr.Expr.dynamicDefault)
           else BindingRestrictions.GetTypeRestriction(x.Expression, x.LimitType)
       ).Merge(x.Restrictions).Merge(byArgs xs)

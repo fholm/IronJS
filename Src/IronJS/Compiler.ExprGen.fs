@@ -15,7 +15,7 @@ let private assign (ctx:Context) left right =
   | Ast.Global(name) -> Helpers.Variable.Globals.assign ctx name value
   | Ast.Local(name) -> Helpers.Variable.Locals.assign ctx name value
   | Ast.Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
-  | _ -> Dlr.Expr.objDefault
+  | _ -> Dlr.Expr.dynamicDefault
 
 let private functionDefine ctx (scope:Ast.Scope) ast =
   let closureType, closureExpr = Helpers.Closure.newClosure ctx scope
@@ -54,4 +54,4 @@ let internal builder (ctx:Context) (ast:Ast.Node) =
   | Ast.DynamicScope(target, body) -> dynamicScope ctx target body
   | Ast.Invoke(target, args) -> functionInvoke ctx target args
   | Ast.Object(properties) -> objectShorthand ctx properties
-  | _ -> Dlr.Expr.objDefault
+  | _ -> Dlr.Expr.dynamicDefault

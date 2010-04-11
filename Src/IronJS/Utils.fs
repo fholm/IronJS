@@ -20,12 +20,12 @@ type Dynamic = obj
 let toList<'a> (ilst:System.Collections.IList) =
   match ilst with
   | null -> []
-  | _ ->
-    let mutable lst = [] // for efficiency
-    let cnt = ilst.Count - 1
-    for n in 0 .. cnt do 
-      lst <- (ilst.[cnt - n] :?> 'a) :: lst
-    lst
+  | _    -> let rec convert (lst:System.Collections.IList) n =
+              if n = lst.Count 
+                then []
+                else (lst.[n] :?> 'a) :: convert lst (n+1)
+
+            convert ilst 0
 
 let getCtor (typ:Type) (args:Type list) =
   let rec matchArgs args (parms:ParmInfo list) = 

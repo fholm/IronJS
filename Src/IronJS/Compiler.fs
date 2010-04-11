@@ -31,7 +31,7 @@ let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string,
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   let ctx = {Context.New with Closure = Dlr.Expr.param "~closure" closureType; Scope = scope; Builder = Compiler.ExprGen.builder}
-  let body    = [(Compiler.ExprGen.builder ctx ast); Dlr.Expr.labelExpr ctx.Return]
+  let body = [(Compiler.ExprGen.builder ctx ast); Dlr.Expr.labelExpr ctx.Return]
 
   let parameters, variables = ctx.Scope.Locals |> Map.partition (fun _ (var:Ast.Local) -> var.IsParameter && not var.InitUndefined)
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
@@ -49,7 +49,13 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
       |> addProxyParamInitExprs closedOverParameters proxyParameters
       |> addStrongBoxInitExprs ctx.Scope.Locals
 
+  #if INTERACTIVE
+  let lmb = Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
+  printf "%A" (Fsi.dbgViewProp.GetValue((fst lmb) :> Et, null))
+  lmb
+  #else
   Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
+  #endif
 
 (*Convenience function for compiling global ast*)
 let compileGlobalAst = compileAst typeof<Runtime.Closure> Ast.Scope.Global

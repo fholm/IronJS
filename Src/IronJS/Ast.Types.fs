@@ -70,7 +70,6 @@ type Scope = {
     ScopeLevel = 0
   }
   static member Global = Scope.New
-  
 
 type ParserScope = { 
   ScopeLevel: int

@@ -61,13 +61,15 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let argsDiff = paramTypes.Length - args.Length
     let extraArgs = if argsDiff > 0 
                       then [for _ in 0..(argsDiff-1) -> Undefined.InstanceExprAsDynamic] 
-                      else []
+                      else
+                        if argsDiff < 0 
+                          then []
+                          else []
 
+    let paramArgs = (List.rev (Array.fold (fun lst (arg:MetaObj) -> Dlr.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args))
     let argExprs = self.ClosureExpr 
-                   :: Dlr.Expr.typeDefault<Object> 
-                   :: (List.append
-                        (List.rev (Array.fold (fun lst (arg:MetaObj) -> Dlr.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args))
-                        extraArgs)
+                   :: Dlr.Expr.typeDefault<Dynamic array> 
+                   :: (List.append paramArgs extraArgs)
 
     let expr = Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) argExprs     
     let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).

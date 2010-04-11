@@ -27,20 +27,19 @@ let toList<'a> (ilst:System.Collections.IList) =
       lst <- (ilst.[cnt - n] :?> 'a) :: lst
     lst
 
-//This is a ugly hack, needs to be reworked
 let getCtor (typ:Type) (args:Type list) =
+  let rec matchArgs args (parms:ParmInfo list) = 
+    match args with
+    | []      -> true
+    | xA::xsA -> match parms with
+                 | []      -> failwith "Should never happen"
+                 | xP::xsP -> if xP.ParameterType.IsAssignableFrom(xA)
+                                then matchArgs xsA xsP
+                                else false
+
   Array.find (fun (ctor:CtorInfo) ->
-    let parms = ctor.GetParameters()
-    if args.Length = parms.Length then
-      try
-        Array.iteri ( fun i (p:ParmInfo) -> 
-          if p.ParameterType.IsAssignableFrom(args.[i])
-            then ()
-            else failwith ""
-        ) parms
-        true
-      with
-        | _ -> false
-    else  
-      false
+    let parms = List.ofArray (ctor.GetParameters())
+    if args.Length = parms.Length 
+      then matchArgs args parms 
+      else false
   ) (typ.GetConstructors())

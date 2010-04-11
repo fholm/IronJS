@@ -72,6 +72,9 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="IronJS.Parser">
+      <HintPath>..\IronJS.Parser\bin\Debug\IronJS.Parser.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Dynamic">
       <HintPath>..\Dependencies\Microsoft.Dynamic.dll</HintPath>
     </Reference>
@@ -83,11 +86,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\IronJS.CSharp\IronJS.CSharp.csproj">
-      <Name>IronJS.CSharp</Name>
-      <Project>{73642733-70a9-4838-adb3-29481d72bfef}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{73642733-70A9-4838-ADB3-29481D72BFEF}</ProjectGuid>
+    <ProjectGuid>{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IronJS.CSharp</RootNamespace>
-    <AssemblyName>IronJS.CSharp</AssemblyName>
+    <RootNamespace>IronJS.Parser</RootNamespace>
+    <AssemblyName>IronJS.Parser</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -34,12 +34,6 @@
     <Reference Include="Antlr3.Runtime">
       <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\Dependencies\Microsoft.Dynamic.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Scripting">
-      <HintPath>..\Dependencies\Microsoft.Scripting.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,17 +43,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Parser\ES3Lexer.Action.cs" />
-    <Compile Include="Parser\ES3Lexer.cs" />
-    <Compile Include="Parser\ES3Parser.Action.cs" />
-    <Compile Include="Parser\ES3Parser.cs" />
+    <Compile Include="ES3Lexer.Action.cs" />
+    <Compile Include="ES3Lexer.cs" />
+    <Compile Include="ES3Parser.Action.cs" />
+    <Compile Include="ES3Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Parser\LICENSE.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

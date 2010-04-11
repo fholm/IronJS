@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS", "IronJS\IronJS.fsproj", "{FA738790-5B9B-4977-8C6B-EF487F24E435}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.CSharp", "IronJS.CSharp\IronJS.CSharp.csproj", "{73642733-70A9-4838-ADB3-29481D72BFEF}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Dev", "IronJS.Dev\IronJS.Dev.fsproj", "{40105097-FE8E-4B39-A52A-8F8DDFA16B91}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{C0A32756-56FB-4C5A-9324-A006E99980DF}"
 	ProjectSection(SolutionItems) = preProject
 		..\LICENSE.txt = ..\LICENSE.txt
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Parser", "IronJS.Parser\IronJS.Parser.csproj", "{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,16 +32,6 @@ Global
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.ActiveCfg = Release|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{73642733-70A9-4838-ADB3-29481D72BFEF}.Release|x86.ActiveCfg = Release|Any CPU
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
@@ -53,6 +43,16 @@ Global
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Release|Mixed Platforms.Build.0 = Release|x86
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Release|x86.ActiveCfg = Release|x86
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Release|x86.Build.0 = Release|x86
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

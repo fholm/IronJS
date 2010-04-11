@@ -5,7 +5,7 @@ using System.Text;
 
 using Antlr.Runtime;
 
-namespace IronJS.CSharp.Parser
+namespace IronJS.Parser
 {
 	using IToken = Antlr.Runtime.IToken;
 

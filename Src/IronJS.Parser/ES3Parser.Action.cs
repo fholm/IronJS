@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Antlr.Runtime;
 using Antlr.Runtime.Tree;
 
-namespace IronJS.CSharp.Parser
+namespace IronJS.Parser
 {
 	using IToken = Antlr.Runtime.IToken;
 

@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Monads
 open IronJS.Ast
 open IronJS.Ast.Helpers
-open IronJS.CSharp.Parser
+open IronJS.Parser
 
 module Core = 
 

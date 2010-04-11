@@ -11,7 +11,7 @@ using IList = System.Collections.IList;
 using ArrayList = System.Collections.ArrayList;
 using Stack = Antlr.Runtime.Collections.StackList;
 
-namespace IronJS.CSharp.Parser
+namespace IronJS.Parser
 {
     public partial class ES3Lexer : Lexer
     {

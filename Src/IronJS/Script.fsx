@@ -3,7 +3,7 @@
 #r "../Dependencies/Microsoft.Dynamic.dll"
 #r "../Dependencies/Microsoft.Scripting.dll"
 #r "../Dependencies/Antlr3.Runtime.dll"
-#r "../IronJS.CSharp/bin/Debug/IronJS.CSharp.dll"
+#r "../IronJS.Parser/bin/Debug/IronJS.Parser.dll"
 #load "Fsi.fs"
 #load "Monads.fs"
 #load "Operators.fs"
@@ -38,7 +38,7 @@ open IronJS
 open IronJS.Fsi
 open IronJS.Tools
 open IronJS.Utils
-open IronJS.CSharp.Parser
+open IronJS.Parser
 
 open System
 open Antlr.Runtime

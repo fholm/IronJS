@@ -3,7 +3,7 @@ open IronJS
 open IronJS.Fsi
 open IronJS.Tools
 open IronJS.Utils
-open IronJS.CSharp.Parser
+open IronJS.Parser
 
 open System
 open Antlr.Runtime

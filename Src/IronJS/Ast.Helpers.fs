@@ -5,7 +5,7 @@ open IronJS.Ast
 open IronJS.Tools
 open IronJS.Utils
 open IronJS.Monads
-open IronJS.CSharp.Parser
+open IronJS.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 

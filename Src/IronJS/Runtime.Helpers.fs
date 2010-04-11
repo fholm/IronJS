@@ -26,7 +26,7 @@ module Core =
   let getGlobalDelegate = new System.Func<System.String, ResizeArray<Object>, Object, Dynamic>(getGlobal)
 
   (**)
-  let setGlobal name (value:obj) (dynScopes:ResizeArray<Object>) (globals:Object) =
+  let setGlobal name (value:Dynamic) (dynScopes:ResizeArray<Object>) (globals:Object) =
     let mutable i = dynScopes.Count - 1
     let mutable found = false
 
@@ -39,4 +39,4 @@ module Core =
     if found = false then globals.Set name value
     value
 
-  let setGlobalDelegate = new System.Func<System.String, obj, ResizeArray<Object>, Object, Dynamic>(setGlobal)
+  let setGlobalDelegate = new System.Func<System.String, Dynamic, ResizeArray<Object>, Object, Dynamic>(setGlobal)

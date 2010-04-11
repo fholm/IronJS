@@ -18,7 +18,7 @@ let assign (left:Et) (right:Et) =
 let box (expr:Et) =
   if expr.Type = Constants.clrVoid
     then Dlr.Expr.block [expr; Dlr.Expr.objDefault]
-    else Dlr.Expr.castT<obj> expr
+    else Dlr.Expr.castT<Dynamic> expr
 
 let makeReturn label (value:Et) =
   Dlr.Expr.makeReturn label (box value)

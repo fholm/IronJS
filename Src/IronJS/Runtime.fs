@@ -21,12 +21,12 @@ type Undefined() =
 
 (*Class representing a Javascript native object*)
 and Object(env:IEnvironment) =
-  let properties = new Dictionary<string, obj>();
+  let properties = new Dictionary<string, Dynamic>();
 
   member self.Get name = properties.[name]
   member self.TryGet name = properties.TryGetValue name
   member self.Has name = properties.ContainsKey name
-  member self.Set name (value:obj) = properties.[name] <- value
+  member self.Set name (value:Dynamic) = properties.[name] <- value
   member self.Environment = env
 
   interface System.Dynamic.IDynamicMetaObjectProvider with

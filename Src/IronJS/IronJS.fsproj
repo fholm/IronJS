@@ -67,7 +67,6 @@
     <Compile Include="Compiler.fs" />
     <Content Include="Testing.js" />
     <None Include="Script.fsx" />
-    <None Include="HiddenClasses.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

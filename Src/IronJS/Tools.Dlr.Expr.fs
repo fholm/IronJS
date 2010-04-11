@@ -10,7 +10,7 @@ module Expr =
   let empty = AstUtils.Empty() :> Et
   let makeDefault typ = Et.Default(typ) :> Et
   let typeDefault<'a> = makeDefault typeof<'a>
-  let objDefault = typeDefault<obj>
+  let objDefault = typeDefault<Dynamic>
 
   let param name typ = Et.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>
@@ -18,8 +18,8 @@ module Expr =
   let labelBreak() = Et.Label(Constants.clrVoid, "~break")
   let labelContinue() = Et.Label(Constants.clrVoid, "~continue")
 
-  let label name = Et.Label(typeof<obj>, name)
-  let labelExpr label = Et.Label(label, Et.Default(typeof<obj>)) :> Et
+  let label name = Et.Label(typeof<Dynamic>, name)
+  let labelExpr label = Et.Label(label, Et.Default(typeof<Dynamic>)) :> Et
 
   let blockWithLocals (parms:EtParam list) (exprs:Et list) = Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
   let block = blockWithLocals []

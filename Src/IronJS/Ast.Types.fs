@@ -34,13 +34,13 @@ type Local = {
     @"access:%A/index:%i/undefined:%b/as:%A/with:%A, %A" 
     x.ClosureAccess x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
   static member New = {
-    ClosureAccess = ClosureAccess.Nothing
-    ParamIndex = -1
-    UsedAs = JsTypes.Nothing
-    UsedWith = Set.empty
+    Expr            = null
+    UsedAs          = JsTypes.Nothing
+    UsedWith        = Set.empty
+    ParamIndex      = -1
+    InitUndefined   = false
+    ClosureAccess   = ClosureAccess.Nothing
     UsedWithClosure = Set.empty
-    InitUndefined = false
-    Expr = null
   }
   
 [<DebuggerDisplay("{DebugView}")>]
@@ -51,12 +51,12 @@ type Closure = {
 } with
   member x.DebugView = sprintf "index:%i/local:%b/level:%i" x.Index x.IsLocalInParent x.DefinedInScopeLevel
   static member New = {
-    Index = -1
-    IsLocalInParent = false
+    Index               = -1
+    IsLocalInParent     = false
     DefinedInScopeLevel = -1
   }
 
-type LocalMap = Map<string, Local>
+type LocalMap   = Map<string, Local>
 type ClosureMap = Map<string, Closure>
 
 type Scope = {
@@ -68,23 +68,25 @@ type Scope = {
   HasDynamicScopes: bool
 } with
   static member New = { 
-    Locals = Map.empty
-    Closure = Map.empty
-    Arguments = false
+    Locals            = Map.empty
+    Closure           = Map.empty
+    Arguments         = false
+    ScopeLevel        = 0
+    HasDynamicScopes  = false
     DynamicScopeLevel = 0
-    HasDynamicScopes = false
-    ScopeLevel = 0
   }
   static member Global = Scope.New
 
 type ParserState = { 
-  GlobalDynamicScopeLevel: int
   ScopeChain: Scope list
+  GlobalDynamicScopeLevel: int
+  LocalDynamicSCopeLevels: int list
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
+    ScopeChain              = []
     GlobalDynamicScopeLevel = 0
-    ScopeChain = []
+    LocalDynamicSCopeLevels = []
   }
 
 type Node =

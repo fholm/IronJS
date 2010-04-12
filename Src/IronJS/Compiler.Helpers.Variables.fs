@@ -53,7 +53,7 @@ module Variable =
       Constants.clrDynamic
 
     let dlrExpr (ctx:Context) name =
-      if ctx.InDynamicSCope
+      if ctx.InDynamicScope
         then let args = [Dlr.Expr.constant name; ctx.DynamicScopes; ctx.Globals]
              Dlr.Expr.invoke (Dlr.Expr.constant Runtime.Helpers.Core.getGlobalDelegate) args
 
@@ -62,7 +62,7 @@ module Variable =
     let dlrValueExpr = dlrExpr
 
     let assign (ctx:Context) name value = 
-      if ctx.InDynamicSCope 
+      if ctx.InDynamicScope 
         then let args = [Dlr.Expr.constant name; Js.box value; ctx.DynamicScopes; ctx.Globals]
              Dlr.Expr.invoke (Dlr.Expr.constant Runtime.Helpers.Core.setGlobalDelegate) args
 

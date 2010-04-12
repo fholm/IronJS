@@ -24,9 +24,9 @@ let rec private calculateHashAndTypes types (hash:int ref) =
       hash := (37 * !hash + Constants.clrStringHashCode)
       Constants.clrString :: calculateHashAndTypes xsTypes hash
       
-    elif x = Runtime.Core.objectTypeDef then
-      hash := (37 * !hash + Runtime.Core.objectTypeDefHashCode)
-      Runtime.Core.objectTypeDef :: calculateHashAndTypes xsTypes hash
+    elif x = Runtime.Object.TypeDef then
+      hash := (37 * !hash + Runtime.Object.TypeDefHashCode)
+      Runtime.Object.TypeDef :: calculateHashAndTypes xsTypes hash
 
     elif x = Runtime.Function<_>.TypeDef then
       hash := (37 * !hash + Runtime.Function<_>.TypeDefHashCode)

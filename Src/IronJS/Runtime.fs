@@ -23,6 +23,9 @@ type Undefined() =
 and Object(env:IEnvironment) =
   let properties = new Dictionary<string, Dynamic>();
 
+  static member TypeDef = typedefof<Object>
+  static member TypeDefHashCode = typedefof<Object>.GetHashCode()
+
   member self.Get name = properties.[name]
   member self.TryGet name = properties.TryGetValue name
   member self.Has name = properties.ContainsKey name
@@ -53,7 +56,3 @@ and ObjectMeta(expr, jsObj:Object) =
     let expr = Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Get" [Dlr.Expr.constant binder.Name]
     let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
     new MetaObj(expr, restrict)
-
-module Core =
-  let objectTypeDef = typedefof<Object>
-  let objectTypeDefHashCode = objectTypeDef.GetHashCode()

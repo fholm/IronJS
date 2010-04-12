@@ -71,7 +71,7 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
     let func, paramTypes = jsFunc.Environment.GetDelegate jsFunc.Ast typeof<'a> types
-    let paramTypes = Runtime.Core.objectTypeDef :: paramTypes
+    let paramTypes = Runtime.Object.TypeDef :: paramTypes
     let argsDiff = paramTypes.Length - args.Length
     
     let suppliedArgs = getSuppliedArgs paramTypes args

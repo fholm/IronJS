@@ -27,7 +27,7 @@ let private functionInvoke (ctx:Context) target args =
 let private objectShorthand (ctx:Context) properties =
   match properties with
   | Some(_) -> failwith "Objects with auto-properties not supported"
-  | None -> Dlr.Expr.newArgs Runtime.Core.objectTypeDef [ctx.Environment]
+  | None -> Dlr.Expr.newArgs Runtime.Object.TypeDef [ctx.Environment]
 
 let private dynamicScope (ctx:Context) target body =
   let push = Helpers.ExprGen.pushDynamicScope ctx (ctx.Builder ctx target)

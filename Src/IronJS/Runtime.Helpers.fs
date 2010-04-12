@@ -8,7 +8,7 @@ open IronJS.Runtime
 module Core =
   
   let isObject (typ:ClrType) = 
-    typ = Runtime.Core.objectTypeDef || typ.IsSubclassOf(Runtime.Core.objectTypeDef)
+    typ = Runtime.Object.TypeDef || typ.IsSubclassOf(Runtime.Object.TypeDef)
 
   (**)
   let getGlobal name (dynScopes:ResizeArray<Object>) (globals:Object) =

@@ -17,8 +17,8 @@ module ExprGen =
   let convertToObject (expr:Et) =
     if Runtime.Helpers.Core.isObject expr.Type 
       then expr
-      else let binder = new Runtime.Binders.Convert(Runtime.Core.objectTypeDef, false) 
-           Dlr.Expr.dynamic binder Runtime.Core.objectTypeDef [expr]
+      else let binder = new Runtime.Binders.Convert(Runtime.Object.TypeDef, false) 
+           Dlr.Expr.dynamic binder Runtime.Object.TypeDef [expr]
 
   let setProperty (expr:Et) name value = 
     if Runtime.Helpers.Core.isObject expr.Type 

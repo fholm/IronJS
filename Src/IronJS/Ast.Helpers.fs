@@ -74,14 +74,14 @@ module Helpers =
     | x::xs -> do! setState {s with ScopeChain = (setLocal x name Local.New :: xs)}}  
 
   let internal enterScope t = state {
-    let! s = getState
+    let! (s:ParserState) = getState
     
     let rec createLocals parms index =
       match parms with
       | []       -> Map.empty
       | name::xs -> Map.add name {Local.New with ParamIndex = index;} (createLocals xs (index+1))
 
-    let scope = {Scope.New with ScopeLevel = s.ScopeLevel; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
+    let scope = {Scope.New with ScopeLevel = s.ScopeChain.Length; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
     do! setState {s with ScopeChain = (scope :: s.ScopeChain) }}
 
   let internal exitScope() = state {
@@ -92,12 +92,16 @@ module Helpers =
     | _     -> return failwith "Couldn't exit scope"}
 
   let internal enterDynamicScope = state {
-      let! s = getState
-      do! setState {s with ParserState.ScopeLevel = s.ScopeLevel+1}}
+      let! (s:ParserState) = getState
+      let sc = {s.ScopeChain.Head with HasDynamicScope = true}
+      do! setState {
+        s with 
+          ScopeChain = (sc :: s.ScopeChain.Tail); 
+          DynamicScopeLevel = s.DynamicScopeLevel + 1}}
 
   let internal exitDynamicScope = state {
       let! s = getState
-      do! setState {s with ParserState.ScopeLevel = s.ScopeLevel-1}}
+      do! setState {s with DynamicScopeLevel = s.DynamicScopeLevel-1}}
 
   let internal usedAs name typ = state {
     let! s = getState

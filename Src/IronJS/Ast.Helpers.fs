@@ -51,21 +51,18 @@ module Helpers =
     | [] -> return Global(name)
     | x::xs when hasLocal x name -> return Local(name)
     | x::xs when hasClosure x name -> return Closure(name)
-    | _ -> 
-      if List.exists (fun s -> hasLocal s name) s.ScopeChain then
+    | _ ->  if List.exists (fun s -> hasLocal s name) s.ScopeChain then
+              let rec updateScopes s =
+                match s with
+                | []    ->  s
+                | x::xs ->  if hasLocal x name 
+                              then setAccessRead x name :: xs
+                              else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
 
-        let rec updateScopes s =
-          match s with
-          | []    ->  s
-          | x::xs ->  if hasLocal x name 
-                        then setAccessRead x name :: xs
-                        else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
-
-        do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
-
-        return Closure(name)
-      else
-        return Global(name)}
+              do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
+              return Closure(name)
+            else
+              return Global(name)}
 
   let internal createVar name = state {
     let! s = getState
@@ -97,7 +94,8 @@ module Helpers =
       do! setState {
         s with 
           ScopeChain = (sc :: s.ScopeChain.Tail); 
-          DynamicScopeLevel = s.DynamicScopeLevel + 1}}
+          DynamicScopeLevel = s.DynamicScopeLevel+1
+      }}
 
   let internal exitDynamicScope = state {
       let! s = getState

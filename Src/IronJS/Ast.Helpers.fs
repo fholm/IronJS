@@ -52,7 +52,7 @@ module Helpers =
 
   let internal scopeLevels = state {
     let! s = getState
-    return (s.GlobalDynamicScopeLevel, s.ScopeChain.Head.DynamicScopeLevel)
+    return (s.GlobalDynamicScopeLevel, s.LocalDynamicScopeLevels.Head)
   }
 
   let internal getVariable name = state {
@@ -92,39 +92,44 @@ module Helpers =
       | name::xs -> Map.add name {Local.New with ParamIndex = index;} (createLocals xs (index+1))
 
     let scope = {Scope.New with ScopeLevel = s.ScopeChain.Length; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
-    do! setState {s with ScopeChain = (scope :: s.ScopeChain) }}
+    do! setState {
+      s with 
+        ScopeChain = (scope :: s.ScopeChain)
+        LocalDynamicScopeLevels = (0 :: s.LocalDynamicScopeLevels)
+    }}
 
   let internal exitScope() = state {
     let!  s = getState
     match s.ScopeChain with
-    | x::xs -> do! setState {s with ScopeChain = xs}
+    | x::xs -> do! setState {
+                s with
+                  ScopeChain = xs; 
+                  LocalDynamicScopeLevels = s.LocalDynamicScopeLevels.Tail
+               }
                return x
+
     | _     -> return failwith "Couldn't exit scope"}
 
   let internal enterDynamicScope = state {
       let! s  = getState
-      let sc  = s.ScopeChain.Head
-      let sc' = {
-        sc with 
-          HasDynamicScopes = true
-          DynamicScopeLevel = sc.DynamicScopeLevel+1
-      }
+      let sc  = {s.ScopeChain.Head with HasDynamicScopes = true}
+      let lsc = s.LocalDynamicScopeLevels
 
       do! setState {
         s with 
-          ScopeChain = (sc' :: s.ScopeChain.Tail)
+          ScopeChain = sc :: s.ScopeChain.Tail
           GlobalDynamicScopeLevel = s.GlobalDynamicScopeLevel+1
+          LocalDynamicScopeLevels = lsc.Head+1 :: lsc.Tail
       }}
 
   let internal exitDynamicScope = state {
       let! s  = getState
-      let sc  = s.ScopeChain.Head
-      let sc' = {sc with DynamicScopeLevel = sc.DynamicScopeLevel-1}
+      let lsc = s.LocalDynamicScopeLevels
 
       do! setState {
         s with 
-          ScopeChain = (sc' :: s.ScopeChain.Tail)
           GlobalDynamicScopeLevel = s.GlobalDynamicScopeLevel-1
+          LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
       }}
 
   let internal usedAs name typ = state {
@@ -133,7 +138,7 @@ module Helpers =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
-               do! setState({s with ScopeChain =  x'::xs})}
+               do! setState({s with ScopeChain = x'::xs})}
 
   let internal usedWith name rname = state {
     let!  s = getState
@@ -141,7 +146,7 @@ module Helpers =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
-               do! setState({s with ScopeChain =  x'::xs})}
+               do! setState({s with ScopeChain = x'::xs})}
 
   let internal usedWithClosure name rname = state {
     let!  s = getState
@@ -149,4 +154,4 @@ module Helpers =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
-               do! setState({s with ScopeChain =  x'::xs})}
+               do! setState({s with ScopeChain = x'::xs})}

@@ -65,7 +65,6 @@ type Scope = {
   Arguments:          bool
   ScopeLevel:         int
   HasDynamicScopes:   bool
-  DynamicScopeLevel:  int
 } with
   static member New = { 
     Locals            = Map.empty
@@ -73,20 +72,19 @@ type Scope = {
     Arguments         = false
     ScopeLevel        = 0
     HasDynamicScopes  = false
-    DynamicScopeLevel = 0
   }
   static member Global = Scope.New
 
 type ParserState = { 
   ScopeChain:               Scope list
   GlobalDynamicScopeLevel:  int
-  LocalDynamicSCopeLevels:  int list
+  LocalDynamicScopeLevels:  int list
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
     ScopeChain              = []
     GlobalDynamicScopeLevel = 0
-    LocalDynamicSCopeLevels = []
+    LocalDynamicScopeLevels = [0]
   }
 
 type Node =

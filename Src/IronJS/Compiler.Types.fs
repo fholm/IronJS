@@ -17,7 +17,7 @@ type Context = {
 } with
   member x.Globals        = Dlr.Expr.field x.Closure "Globals"
   member x.Environment    = Dlr.Expr.field x.Closure "Environment"
-  member x.DynamicScopes  = Dlr.Expr.field x.Closure "DynamicScopes"
+  member x.DynamicScopes  = Dlr.Expr.field x.Closure "Scopes"
   member x.InDynamicSCope = x.ScopeLevel > 0
   static member New = {
     Closure = null

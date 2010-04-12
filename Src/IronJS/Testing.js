@@ -10,4 +10,4 @@ var foo = function(a, b) {
     }
 }
 
-obj.b = foo(1)();
+obj.b = foo(1, "foooooo", {})();

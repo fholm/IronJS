@@ -15,14 +15,14 @@ type Scope =
 type Closure =
   val mutable Globals : Object
   val mutable Environment : IEnvironment
-  val mutable DynamicScopes : Object ResizeArray
+  val mutable Scopes : Object ResizeArray
 
   static member TypeDef = typedefof<Closure>
 
-  new(globals:Object, env:IEnvironment, dynamicScopes:ResizeArray<Object>) = {
+  new(globals:Object, env:IEnvironment, scopes:ResizeArray<Object>) = {
     Globals = globals
     Environment = env
-    DynamicScopes = dynamicScopes
+    Scopes = scopes
   }
 
 (*Javascript object that also is a function*)
@@ -48,6 +48,22 @@ type Function<'a> when 'a :> Closure =
 and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
   inherit ObjectMeta(expr, jsFunc)
 
+  let GetXArgsArray argsDiff (args:MetaObj array) =
+    if argsDiff >= 0 
+      then Dlr.Expr.typeDefault<Dynamic array> 
+      else let exprs = [for i in 1..(abs argsDiff) -> Dlr.Expr.castT<Dynamic> args.[args.Length-i].Expression]
+           AstUtils.NewArrayHelper(Constants.clrDynamic, exprs) :> Et
+
+  let GetUArgs argsDiff =
+    if argsDiff > 0 
+      then [for _ in 0..(argsDiff-1) -> Undefined.InstanceExprAsDynamic] 
+      else []
+
+  let GetPArgs (paramTypes:ClrType list) (args:MetaObj array) =
+    let argsDiff = paramTypes.Length - args.Length
+    let max = (if argsDiff < 0 then paramTypes.Length else args.Length) - 1
+    [for i in 0..max -> Dlr.Expr.cast args.[i].Expression paramTypes.[i]]
+
   member self.FuncExpr with get() = Dlr.Expr.castT<Function<'a>> self.Expression
   member self.ClosureExpr with get() = Dlr.Expr.field self.FuncExpr "Closure"
   member self.AstExpr with get() = Dlr.Expr.field self.FuncExpr "Ast"
@@ -56,20 +72,13 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let types = List.tail [for arg in args -> arg.LimitType]
     let func, paramTypes = jsFunc.Environment.GetDelegate jsFunc.Ast typeof<'a> types
     let paramTypes = Runtime.Core.objectTypeDef :: paramTypes
-
-    (*This handles the cases when we're called with to few parameters*)
     let argsDiff = paramTypes.Length - args.Length
-    let extraArgs = if argsDiff > 0 
-                      then [for _ in 0..(argsDiff-1) -> Undefined.InstanceExprAsDynamic] 
-                      else
-                        if argsDiff < 0 
-                          then []
-                          else []
+    
+    let xargs = GetXArgsArray argsDiff args // Extra arguments array
+    let pargs = GetPArgs paramTypes args // Parameter arguments
+    let uargs = GetUArgs argsDiff // Undefined arguments
 
-    let paramArgs = (List.rev (Array.fold (fun lst (arg:MetaObj) -> Dlr.Expr.cast arg.Expression paramTypes.[lst.Length] :: lst) [] args))
-    let argExprs = self.ClosureExpr 
-                   :: Dlr.Expr.typeDefault<Dynamic array> 
-                   :: (List.append paramArgs extraArgs)
+    let argExprs = self.ClosureExpr :: xargs :: (pargs @ uargs)
 
     let expr = Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) argExprs     
     let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).

@@ -71,7 +71,7 @@ type Scope = {
   }
   static member Global = Scope.New
 
-type ParserScope = { 
+type ParserState = { 
   ScopeLevel: int
   ScopeChain: Scope list
   DefinedGlobals: Map<int, string>

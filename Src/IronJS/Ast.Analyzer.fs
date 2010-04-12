@@ -9,7 +9,7 @@ open IronJS.Ast.Helpers
 
 module Analyzer =
   let assign left right = state {
-    let! (s:ParserScope) = getState 
+    let! (s:ParserState) = getState 
 
     match left with
     | Local(name) ->

@@ -1,16 +1,18 @@
 ﻿
-var obj = {};
-obj.a = "lol22";
 
+with({}){
+    var obj = {};
+    obj.a = "lol22";
 
-var foo = function(a, b) {
-    var x = 1;
-    var y;
-    with({}) {
-        y = 2;
-        return function() {
-            a = "foo";
-            return a;
+    var foo = function(a, b) {
+        var x = 1;
+        var y;
+        with({}) {
+            y = 2;
+            return function() {
+                a = "foo";
+                return a;
+            }
         }
     }
 }

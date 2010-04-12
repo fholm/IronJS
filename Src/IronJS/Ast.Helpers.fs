@@ -91,7 +91,12 @@ module Helpers =
       | []       -> Map.empty
       | name::xs -> Map.add name {Local.New with ParamIndex = index;} (createLocals xs (index+1))
 
-    let scope = {Scope.New with ScopeLevel = s.ScopeChain.Length; Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0}
+    let scope = {
+      Scope.New with 
+        ScopeLevel  = s.ScopeChain.Length;
+        Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0
+    }
+
     do! setState {
       s with 
         ScopeChain = (scope :: s.ScopeChain)
@@ -107,7 +112,6 @@ module Helpers =
                   LocalDynamicScopeLevels = s.LocalDynamicScopeLevels.Tail
                }
                return x
-
     | _     -> return failwith "Couldn't exit scope"}
 
   let internal enterDynamicScope = state {

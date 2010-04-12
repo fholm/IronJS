@@ -22,6 +22,7 @@ let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
+  //TODO: Merge this into addStrongBoxInitExprs
   parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body
 
 let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
@@ -29,7 +30,7 @@ let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
     then body
     else Dlr.Expr.assign ctx.LocalDynScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
 
-let private addDynamicScopesVarExpr (ctx:Context) (vars:EtParam list) =
+let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
   if not ctx.Scope.HasDynamicScopes
     then vars
     else ctx.LocalDynScopes :: vars
@@ -52,7 +53,7 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   let localVariableExprs = 
     closedOverParameters 
       |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
-      |> addDynamicScopesVarExpr ctx
+      |> addDynamicScopesLocal ctx
 
   let completeBodyExpr = 
     body 

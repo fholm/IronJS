@@ -65,7 +65,6 @@
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
-    <Content Include="Testing.js" />
     <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>

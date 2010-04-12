@@ -48,18 +48,18 @@ type Function<'a> when 'a :> Closure =
 and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
   inherit ObjectMeta(expr, jsFunc)
 
-  let GetXArgsArray argsDiff (args:MetaObj array) =
+  let getExtraArgs argsDiff (args:MetaObj array) =
     if argsDiff >= 0 
       then Dlr.Expr.typeDefault<Dynamic array> 
       else let exprs = [for i in 1..(abs argsDiff) -> Dlr.Expr.castT<Dynamic> args.[args.Length-i].Expression]
            AstUtils.NewArrayHelper(Constants.clrDynamic, exprs) :> Et
 
-  let GetUArgs argsDiff =
+  let getMissingArgs argsDiff =
     if argsDiff > 0 
       then [for _ in 0..(argsDiff-1) -> Undefined.InstanceExprAsDynamic] 
       else []
 
-  let GetPArgs (paramTypes:ClrType list) (args:MetaObj array) =
+  let getSuppliedArgs (paramTypes:ClrType list) (args:MetaObj array) =
     let argsDiff = paramTypes.Length - args.Length
     let max = (if argsDiff < 0 then paramTypes.Length else args.Length) - 1
     [for i in 0..max -> Dlr.Expr.cast args.[i].Expression paramTypes.[i]]
@@ -74,11 +74,11 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let paramTypes = Runtime.Core.objectTypeDef :: paramTypes
     let argsDiff = paramTypes.Length - args.Length
     
-    let xargs = GetXArgsArray argsDiff args // Extra arguments array
-    let pargs = GetPArgs paramTypes args // Parameter arguments
-    let uargs = GetUArgs argsDiff // Undefined arguments
+    let suppliedArgs = getSuppliedArgs paramTypes args
+    let extraArgs = getExtraArgs argsDiff args
+    let missingArgs = getMissingArgs argsDiff
 
-    let argExprs = self.ClosureExpr :: xargs :: (pargs @ uargs)
+    let argExprs = self.ClosureExpr :: extraArgs :: (suppliedArgs @ missingArgs)
 
     let expr = Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) argExprs     
     let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).

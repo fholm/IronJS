@@ -76,4 +76,4 @@ module Core =
   and private parseNumber  t = state { return Number(double t.Text) }
 
   let parseAst (ast:AstTree) (scopes:Scope list) = 
-     executeState (parse ast) {ScopeChain = scopes; DefinedGlobals = Map.empty; ScopeLevel = 0 }
+     executeState (parse ast) {ScopeChain = scopes; ScopeLevel = 0 }

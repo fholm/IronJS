@@ -74,7 +74,6 @@ type Scope = {
 type ParserState = { 
   ScopeLevel: int
   ScopeChain: Scope list
-  DefinedGlobals: Map<int, string>
 } with
   member x.InDynamicScope = x.ScopeLevel > 0
 

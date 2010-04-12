@@ -76,6 +76,10 @@ type ParserState = {
   ScopeChain: Scope list
 } with
   member x.InDynamicScope = x.ScopeLevel > 0
+  static member New = {
+    ScopeLevel = 0
+    ScopeChain = []
+  }
 
 type Node =
   //Error

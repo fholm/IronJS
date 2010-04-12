@@ -12,8 +12,8 @@ let private assign (ctx:Context) left right =
   let value = (ctx.Builder ctx right)
 
   match left with
-  | Ast.Global(name) -> Helpers.Variable.Globals.assign ctx name value
-  | Ast.Local(name) -> Helpers.Variable.Locals.assign ctx name value
+  | Ast.Global(name, ds) -> Helpers.Variable.Globals.assign ctx name value
+  | Ast.Local(name, ds) -> Helpers.Variable.Locals.assign ctx name value
   | Ast.Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
   | _ -> Dlr.Expr.dynamicDefault
 
@@ -42,9 +42,9 @@ let private dynamicScope (ctx:Context) target body =
 let internal builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   | Ast.Assign(left, right) -> assign ctx left right
-  | Ast.Global(name) -> Helpers.Variable.Globals.dlrValueExpr ctx name
-  | Ast.Local(name) -> Helpers.Variable.Locals.dlrValueExpr ctx name
-  | Ast.Closure(name) -> Helpers.Variable.Closure.dlrValueExpr ctx name
+  | Ast.Global(name, ds) -> Helpers.Variable.Globals.dlrValueExpr ctx name
+  | Ast.Local(name, ds) -> Helpers.Variable.Locals.dlrValueExpr ctx name
+  | Ast.Closure(name, ds) -> Helpers.Variable.Closure.dlrValueExpr ctx name
   | Ast.Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name
   | Ast.Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
   | Ast.String(value) -> Dlr.Expr.constant value

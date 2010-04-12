@@ -7,13 +7,14 @@ open System.Linq.Expressions
 
 //Compilation context
 type Context = {
-  Closure: EtParam
   This: EtParam
+  Closure: EtParam
   Arguments: EtParam
+  LocalDynScopes: EtParam
   Scope: Ast.Scope
-  ScopeLevel: int
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
+  ScopeLevel: int
 } with
   member x.Globals        = Dlr.Expr.field x.Closure "Globals"
   member x.Environment    = Dlr.Expr.field x.Closure "Environment"
@@ -23,8 +24,9 @@ type Context = {
     Closure = null
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
     Arguments = Dlr.Expr.param "~xargs" typeof<Dynamic array>
-    Scope = Ast.Scope.New
-    ScopeLevel = 0
+    LocalDynScopes = Dlr.Expr.param "~dynscopes" typeof<Runtime.Object ResizeArray>
     Return = Dlr.Expr.label "~return"
+    Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault
+    ScopeLevel  = 0
   }

@@ -45,9 +45,13 @@ module Expr =
   let objIndex (target:Et) (index:Et) = Et.MakeIndex(target, target.Type.GetProperty("Item"), [index])
 
   let newInstance (typ:System.Type) = Et.New(typ) :> Et
+  let newInstanceT<'a> = newInstance typeof<'a>
   let newGeneric (typ:System.Type) (types:ClrType seq) = newInstance (typ.MakeGenericType(Seq.toArray types))
+
   let newArgs (typ:System.Type) (args:Et seq) = Et.New(IronJS.Utils.getCtor typ [for arg in args -> arg.Type], args) :> Et
+  let newArgsT<'a> (args:Et seq) = newArgs typeof<'a> args
   let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = newArgs (typ.MakeGenericType(Seq.toArray types)) args
+
   let throw (typ:System.Type) (args:Et seq) = Et.Throw(newArgs typ args) :> Et
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)

@@ -24,6 +24,16 @@ let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
 let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
   parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body
 
+let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
+  if not ctx.Scope.HasDynamicScopes 
+    then body
+    else Dlr.Expr.assign ctx.LocalDynScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
+
+let private addDynamicScopesVarExpr (ctx:Context) (vars:EtParam list) =
+  if not ctx.Scope.HasDynamicScopes
+    then vars
+    else ctx.LocalDynScopes :: vars
+
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
   [for kvp in parameters -> if kvp.Value.IsClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
@@ -42,12 +52,14 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   let localVariableExprs = 
     closedOverParameters 
       |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
+      |> addDynamicScopesVarExpr ctx
 
   let completeBodyExpr = 
     body 
       |> addUndefinedInitExprs variables
       |> addProxyParamInitExprs closedOverParameters proxyParameters
       |> addStrongBoxInitExprs ctx.Scope.Locals
+      |> addDynamicScopesInitExpr ctx
 
   #if INTERACTIVE
   let lmb = Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]

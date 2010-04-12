@@ -18,7 +18,6 @@
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
-(*
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -34,7 +33,6 @@
 #load "Compiler.Analyzer.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
-*)
 open IronJS
 open IronJS.Fsi
 open IronJS.Tools
@@ -59,7 +57,6 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global
 
-(*
 let exprTree = (Compiler.Core.compileAst Runtime.Closure.TypeDef (fst ast) (snd ast))
 let compiledFunc = (fst exprTree).Compile()
 
@@ -70,4 +67,3 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Object>(
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let value = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
-*)

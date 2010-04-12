@@ -20,13 +20,13 @@ type ClosureAccess =
 
 [<DebuggerDisplay("{DebugView}")>]
 type Local = {
-  ClosureAccess: ClosureAccess
-  ParamIndex: int
-  UsedAs: JsTypes
-  UsedWith: string Set
-  UsedWithClosure: string Set
-  InitUndefined: bool
-  Expr: EtParam
+  Expr:             EtParam
+  UsedAs:           JsTypes
+  UsedWith:         string Set
+  ParamIndex:       int
+  InitUndefined:    bool
+  ClosureAccess:    ClosureAccess
+  UsedWithClosure:  string Set
 } with
   member x.IsClosedOver = not (x.ClosureAccess = ClosureAccess.Nothing)
   member x.IsParameter  = x.ParamIndex > -1
@@ -45,9 +45,9 @@ type Local = {
   
 [<DebuggerDisplay("{DebugView}")>]
 type Closure = {
-  Index: int
-  IsLocalInParent: bool
-  DefinedInScopeLevel: int
+  Index:                int
+  IsLocalInParent:      bool
+  DefinedInScopeLevel:  int
 } with
   member x.DebugView = sprintf "index:%i/local:%b/level:%i" x.Index x.IsLocalInParent x.DefinedInScopeLevel
   static member New = {
@@ -60,12 +60,12 @@ type LocalMap   = Map<string, Local>
 type ClosureMap = Map<string, Closure>
 
 type Scope = {
-  Locals: LocalMap
-  Closure: ClosureMap
-  Arguments: bool
-  ScopeLevel: int
-  DynamicScopeLevel: int
-  HasDynamicScopes: bool
+  Locals:             LocalMap
+  Closure:            ClosureMap
+  Arguments:          bool
+  ScopeLevel:         int
+  HasDynamicScopes:   bool
+  DynamicScopeLevel:  int
 } with
   static member New = { 
     Locals            = Map.empty
@@ -78,9 +78,9 @@ type Scope = {
   static member Global = Scope.New
 
 type ParserState = { 
-  ScopeChain: Scope list
-  GlobalDynamicScopeLevel: int
-  LocalDynamicSCopeLevels: int list
+  ScopeChain:               Scope list
+  GlobalDynamicScopeLevel:  int
+  LocalDynamicSCopeLevels:  int list
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
@@ -101,22 +101,22 @@ type Node =
   | Undefined
 
   //Identifiers
-  | Local of string * (int * int)
-  | Closure of string * (int * int)
-  | Global of string * (int * int)
-  | Property of Node * string
+  | Local     of string * (int * int)
+  | Closure   of string * (int * int)
+  | Global    of string * (int * int)
+  | Property  of Node * string
 
   //Magic
   | Arguments
   | This
 
-  //
-  | DynamicScope of Node * Node
-  | Function of Scope * Node
+  //Scopes
+  | DynamicScope  of Node * Node
+  | Function      of Scope * Node
   
   //
-  | Block of Node list
-  | Invoke of Node * Node list
-  | Assign of Node * Node
-  | Return of Node
-  | Object of Map<string, Node> option
+  | Block   of Node list
+  | Invoke  of Node * Node list
+  | Assign  of Node * Node
+  | Return  of Node
+  | Object  of Map<string, Node> option

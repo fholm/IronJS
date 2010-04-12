@@ -56,6 +56,3 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   #else
   Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
   #endif
-
-(*Convenience function for compiling global ast*)
-let compileGlobalAst = compileAst typeof<Runtime.Closure> Ast.Scope.Global

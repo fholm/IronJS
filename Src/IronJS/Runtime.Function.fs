@@ -8,7 +8,7 @@ open System.Dynamic
 open System.Collections.Generic
 
 type Scope = 
-  val mutable DynamicScopes : Object array
+  val mutable DynamicScopes : Object ResizeArray
   val mutable EvalScope : Object
 
 (*Closure base class, representing a closure environment*)
@@ -19,7 +19,7 @@ type Closure =
 
   static member TypeDef = typedefof<Closure>
 
-  new(globals:Object, env:IEnvironment, scopes:ResizeArray<Object>) = {
+  new(globals:Object, env:IEnvironment, scopes:Object ResizeArray) = {
     Globals = globals
     Environment = env
     Scopes = scopes

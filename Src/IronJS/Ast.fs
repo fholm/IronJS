@@ -36,9 +36,9 @@ module Core =
   and private parseVar t = state { 
     let c = child t 0 
     if isAssign c 
-      then do! createVar (child c 0).Text
+      then do! createVar (child c 0).Text false //TODO: Remove magic constant
            return! parse c
-      else do! createVar c.Text
+      else do! createVar c.Text true
            return  Pass}
 
   and private parseCall t = state {
@@ -75,5 +75,6 @@ module Core =
   and private parseString  t = state { return String(cleanString t.Text) }
   and private parseNumber  t = state { return Number(double t.Text) }
 
-  let parseAst (ast:AstTree) (scopes:Scope list) = 
-     executeState (parse ast) {ParserState.New with ScopeChain = scopes}
+  let parseAst (ast:AstTree) scope = 
+     let ast, state = executeState (parse ast) {ParserState.New with ScopeChain = [scope]}
+     state.ScopeChain.[0], ast

@@ -47,11 +47,13 @@ type Local = {
 type Closure = {
   Index: int
   IsLocalInParent: bool
+  DefinedInScopeLevel: int
 } with
-  member x.DebugView = sprintf "index:%i/local:%b" x.Index x.IsLocalInParent
+  member x.DebugView = sprintf "index:%i/local:%b/level:%i" x.Index x.IsLocalInParent x.DefinedInScopeLevel
   static member New = {
     Index = -1
     IsLocalInParent = false
+    DefinedInScopeLevel = -1
   }
 
 type LocalMap = Map<string, Local>
@@ -62,24 +64,26 @@ type Scope = {
   Closure: ClosureMap
   Arguments: bool
   ScopeLevel: int
-  HasDynamicScope: bool
+  DynamicScopeLevel: int
+  HasDynamicScopes: bool
 } with
   static member New = { 
     Locals = Map.empty
     Closure = Map.empty
     Arguments = false
-    HasDynamicScope = false
+    DynamicScopeLevel = 0
+    HasDynamicScopes = false
     ScopeLevel = 0
   }
   static member Global = Scope.New
 
 type ParserState = { 
-  DynamicScopeLevel: int
+  GlobalDynamicScopeLevel: int
   ScopeChain: Scope list
 } with
-  member x.InDynamicScope = x.DynamicScopeLevel > 0
+  member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
-    DynamicScopeLevel = 0
+    GlobalDynamicScopeLevel = 0
     ScopeChain = []
   }
 
@@ -95,10 +99,9 @@ type Node =
   | Undefined
 
   //Identifiers
-  | Local of string
-  | Closure of string
-  | Global of string
-  | Dynamic of string
+  | Local of string * (int * int)
+  | Closure of string * (int * int)
+  | Global of string * (int * int)
   | Property of Node * string
 
   //Magic

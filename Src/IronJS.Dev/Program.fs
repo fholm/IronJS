@@ -8,14 +8,14 @@ open IronJS.Parser
 open System
 open Antlr.Runtime
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [])
+let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [Ast.Scope.Global])
 
 let exprTree = (Compiler.Core.compileGlobalAst ast)
 let compiledFunc = (fst exprTree).Compile()

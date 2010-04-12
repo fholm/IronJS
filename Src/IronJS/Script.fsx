@@ -18,6 +18,7 @@
 #load "Ast.Helpers.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
+(*
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -33,7 +34,7 @@
 #load "Compiler.Analyzer.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
-
+*)
 open IronJS
 open IronJS.Fsi
 open IronJS.Tools
@@ -49,16 +50,17 @@ fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = fst (Ast.Core.parseAst (program.Tree :?> AstTree) [])
+let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global
 
-let exprTree = (Compiler.Core.compileGlobalAst ast)
+(*
+let exprTree = (Compiler.Core.compileAst Runtime.Closure.TypeDef (fst ast) (snd ast))
 let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
@@ -68,3 +70,4 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Object>(
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let value = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
+*)

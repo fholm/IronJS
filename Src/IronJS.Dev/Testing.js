@@ -4,9 +4,14 @@ obj.a = "lol22";
 
 
 var foo = function(a, b) {
-    return function() {
-        a = "foo";
-        return a;
+    var x = 1;
+    var y;
+    with({}) {
+        y = 2;
+        return function() {
+            a = "foo";
+            return a;
+        }
     }
 }
 

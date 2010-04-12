@@ -23,21 +23,26 @@ module Helpers =
   let internal hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
   let internal setLocal (scope:Scope) (name:string) (loc:Local) = {scope with Locals = scope.Locals.Add(name, loc)}
 
-  let internal createClosure (scope:Scope) name isLocalInParent = 
+  let internal createClosure (scope:Scope) name level isLocalInParent = 
     if scope.Closure.ContainsKey name 
       then scope 
-      else setClosure scope name {Closure.New with Index = scope.Closure.Count; IsLocalInParent = isLocalInParent}
+      else setClosure scope name {
+             Closure.New with 
+                Index               = scope.Closure.Count; 
+                DefinedInScopeLevel = level; 
+                IsLocalInParent     = isLocalInParent
+           }
 
   let internal setAccessRead (scope:Scope) name = 
     let local = scope.Locals.[name]
     setLocal scope name (match local.ClosureAccess with
-                         | Read | Write -> local
-                         | Nothing -> {local with ClosureAccess = Read})
+                         | Read | Write ->  local
+                         | Nothing      -> {local with ClosureAccess = Read})
 
   let internal setAccessWrite (scope:Scope) name =
     let local = scope.Locals.[name]
     setLocal scope name (match local.ClosureAccess with
-                         | Write -> local
+                         | Write          ->  local
                          | Nothing | Read -> {local with ClosureAccess = Write})
 
   let internal setNeedsArguments (scope:Scope) =
@@ -45,30 +50,38 @@ module Helpers =
       then scope
       else {scope with Arguments = true}
 
+  let internal scopeLevels = state {
+    let! s = getState
+    return (s.GlobalDynamicScopeLevel, s.ScopeChain.Head.DynamicScopeLevel)
+  }
+
   let internal getVariable name = state {
-    let! s = getState
-    match s.ScopeChain with
-    | [] -> return Global(name)
-    | x::xs when hasLocal x name -> return Local(name)
-    | x::xs when hasClosure x name -> return Closure(name)
-    | _ ->  if List.exists (fun s -> hasLocal s name) s.ScopeChain then
-              let rec updateScopes s =
-                match s with
-                | []    ->  s
-                | x::xs ->  if hasLocal x name 
-                              then setAccessRead x name :: xs
-                              else createClosure x name (hasLocal xs.Head name) :: updateScopes xs
+    let! s  = getState
+    let! sl = scopeLevels
 
-              do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
-              return Closure(name)
-            else
-              return Global(name)}
-
-  let internal createVar name = state {
-    let! s = getState
     match s.ScopeChain with
-    | []    -> ()
-    | x::xs -> do! setState {s with ScopeChain = (setLocal x name Local.New :: xs)}}  
+    | _::[] -> return Global(name, sl)
+    | x::xs when hasLocal x name   -> return Local(name, sl)
+    | x::xs when hasClosure x name -> return Closure(name, sl)
+    | _     -> match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
+               | Some(level) -> let rec updateScopes s =
+                                  match s with
+                                  | []    -> s
+                                  | x::xs -> if hasLocal x name 
+                                               then setAccessRead x name :: xs
+                                               else createClosure x name level (hasLocal xs.Head name) :: updateScopes xs
+
+                                do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
+                                return Closure(name, sl)
+
+               | None        -> return Global(name, sl)}
+
+  let internal createVar name initUndefined = state {
+    let!  s = getState
+    match s.ScopeChain with
+    | []    -> failwith "Empty scope chain"
+    | _::[] -> ()
+    | x::xs -> do! setState {s with ScopeChain = (setLocal x name {Local.New with InitUndefined = initUndefined} :: xs)}}  
 
   let internal enterScope t = state {
     let! (s:ParserState) = getState
@@ -82,27 +95,40 @@ module Helpers =
     do! setState {s with ScopeChain = (scope :: s.ScopeChain) }}
 
   let internal exitScope() = state {
-    let! s = getState
+    let!  s = getState
     match s.ScopeChain with
     | x::xs -> do! setState {s with ScopeChain = xs}
                return x
     | _     -> return failwith "Couldn't exit scope"}
 
   let internal enterDynamicScope = state {
-      let! (s:ParserState) = getState
-      let sc = {s.ScopeChain.Head with HasDynamicScope = true}
+      let! s  = getState
+      let sc  = s.ScopeChain.Head
+      let sc' = {
+        sc with 
+          HasDynamicScopes = true
+          DynamicScopeLevel = sc.DynamicScopeLevel+1
+      }
+
       do! setState {
         s with 
-          ScopeChain = (sc :: s.ScopeChain.Tail); 
-          DynamicScopeLevel = s.DynamicScopeLevel+1
+          ScopeChain = (sc' :: s.ScopeChain.Tail)
+          GlobalDynamicScopeLevel = s.GlobalDynamicScopeLevel+1
       }}
 
   let internal exitDynamicScope = state {
-      let! s = getState
-      do! setState {s with DynamicScopeLevel = s.DynamicScopeLevel-1}}
+      let! s  = getState
+      let sc  = s.ScopeChain.Head
+      let sc' = {sc with DynamicScopeLevel = sc.DynamicScopeLevel-1}
+
+      do! setState {
+        s with 
+          ScopeChain = (sc' :: s.ScopeChain.Tail)
+          GlobalDynamicScopeLevel = s.GlobalDynamicScopeLevel-1
+      }}
 
   let internal usedAs name typ = state {
-    let! s = getState
+    let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
@@ -110,7 +136,7 @@ module Helpers =
                do! setState({s with ScopeChain =  x'::xs})}
 
   let internal usedWith name rname = state {
-    let! s = getState
+    let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
@@ -118,7 +144,7 @@ module Helpers =
                do! setState({s with ScopeChain =  x'::xs})}
 
   let internal usedWithClosure name rname = state {
-    let! s = getState
+    let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]

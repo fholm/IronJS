@@ -12,15 +12,15 @@ module Analyzer =
     let! (s:ParserState) = getState 
 
     match left with
-    | Local(name) ->
+    | Local(name, _) ->
         match right with
-        | Local(rightName) -> 
+        | Local(rightName, _) -> 
           if s.InDynamicScope 
             then do! usedAs name JsTypes.Dynamic
                  return! usedWith name rightName
             else return! usedWith name rightName
 
-        | Closure(rightName) -> 
+        | Closure(rightName, _) -> 
           if s.InDynamicScope 
             then do! usedAs name JsTypes.Dynamic
                  return! usedWithClosure name rightName
@@ -28,7 +28,7 @@ module Analyzer =
 
         //Property + Global = always dynamic
         | Property(_, _)
-        | Global(_) -> return! usedAs name JsTypes.Dynamic
+        | Global(_, _) -> return! usedAs name JsTypes.Dynamic
 
         //Constants
         | Number(_) -> return! usedAs name JsTypes.Double
@@ -38,7 +38,7 @@ module Analyzer =
 
         | _ -> return ()
 
-    | Closure(name) ->
+    | Closure(name, _) ->
 
       let rec updateScopes s =
         match s with

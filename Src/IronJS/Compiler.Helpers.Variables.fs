@@ -54,8 +54,8 @@ module Variable =
 
     let dlrExpr (ctx:Context) name ds =
       if (fst ds) > 0
-        then let args = [Dlr.Expr.constant name; ctx.DynamicScopes; ctx.Globals]
-             Dlr.Expr.invoke (Dlr.Expr.constant Runtime.Helpers.Core.getGlobalDelegate) args
+        then let args = [Dlr.Expr.constant name]
+             Dlr.Expr.callStaticT<Runtime.Helpers.Globals> "Get" args
 
         else Js.Object.get ctx.Globals name
 
@@ -63,8 +63,8 @@ module Variable =
 
     let assign (ctx:Context) name ds value = 
       if (fst ds) > 0
-        then let args = [Dlr.Expr.constant name; Js.box value; ctx.DynamicScopes; ctx.Globals]
-             Dlr.Expr.invoke (Dlr.Expr.constant Runtime.Helpers.Core.setGlobalDelegate) args
+        then let args = [Dlr.Expr.constant name; Js.box value]
+             Dlr.Expr.callStaticT<Runtime.Helpers.Globals> "Set" args
 
         else Js.Object.set ctx.Globals name value
 

@@ -26,12 +26,13 @@ module Expr =
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
+
+  let callStatic (typ:ClrType) name (args:Et list) = Et.Call(null, typ.GetMethod(name), args) :> Et
+  let callStaticT<'a> name (args:Et list) = callStatic typeof<'a> name args
   let call (expr:Et) name (args:Et list) =
     let mutable mi = expr.Type.GetMethod(name)
-    
     if mi.ContainsGenericParameters then 
       mi <- mi.MakeGenericMethod(List.toArray [for arg in args -> arg.Type])
-
     Et.Call(expr, mi, args) :> Et
 
   let cast expr typ = Et.Convert(expr, typ) :> Et

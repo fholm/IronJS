@@ -5,38 +5,13 @@ open IronJS.Utils
 open IronJS.Tools
 open IronJS.Runtime
 
+type Globals =
+  static member GetMi = typeof<Globals>.GetMethod("Get")
+  static member Get(name:string) = new obj()
+  static member SetMi = typeof<Globals>.GetMethod("Set")
+  static member Set(name:string, value:obj) = value
+
 module Core =
   
   let isObject (typ:ClrType) = 
     typ = Runtime.Object.TypeDef || typ.IsSubclassOf(Runtime.Object.TypeDef)
-
-  (**)
-  let getGlobal name (dynScopes:ResizeArray<Object>) (globals:Object) =
-    let mutable i = dynScopes.Count - 1
-    let mutable result = null
-
-    while result = null && i >= 0 do
-      let success, value = dynScopes.[i].TryGet name
-      if success 
-        then result <- value
-        else i <- i - 1
-
-    if result = null then globals.Get name else result
-
-  let getGlobalDelegate = new System.Func<System.String, ResizeArray<Object>, Object, Dynamic>(getGlobal)
-
-  (**)
-  let setGlobal name (value:Dynamic) (dynScopes:ResizeArray<Object>) (globals:Object) =
-    let mutable i = dynScopes.Count - 1
-    let mutable found = false
-
-    while found = false && i >= 0 do
-      if dynScopes.[i].Has name 
-        then dynScopes.[i].Set name value
-             found <- true
-        else i <- i - 1
-
-    if found = false then globals.Set name value
-    value
-
-  let setGlobalDelegate = new System.Func<System.String, Dynamic, ResizeArray<Object>, Object, Dynamic>(setGlobal)

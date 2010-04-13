@@ -12,6 +12,12 @@ type Scope =
   val mutable EvalScope : Object
   val mutable ModifiedByEval : bool
 
+  new(dynamicScopes, evalScope, modifiedByEval) = {
+    DynamicScopes = dynamicScopes
+    EvalScope = evalScope
+    ModifiedByEval = modifiedByEval
+  }
+
 (*Closure base class, representing a closure environment*)
 type Closure =
   val mutable Globals : Object

@@ -12,7 +12,7 @@ let private assign (ctx:Context) left right =
   let value = (ctx.Builder ctx right)
 
   match left with
-  | Ast.Global(name, ds) -> Helpers.Variable.Globals.assign ctx name value
+  | Ast.Global(name, ds) -> Helpers.Variable.Globals.assign ctx name ds value
   | Ast.Local(name, ds) -> Helpers.Variable.Locals.assign ctx name value
   | Ast.Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
   | _ -> Dlr.Expr.dynamicDefault
@@ -31,18 +31,15 @@ let private objectShorthand (ctx:Context) properties =
 
 let private dynamicScope (ctx:Context) target body =
   let push = Helpers.ExprGen.pushDynamicScope ctx (ctx.Builder ctx target)
-  
-  let ctx' = {ctx with ScopeLevel = ctx.ScopeLevel+1}
-  let body = ctx.Builder ctx' body
-
-  let pop = Helpers.ExprGen.popDynamicScope ctx'
+  let body = ctx.Builder ctx body
+  let pop = Helpers.ExprGen.popDynamicScope ctx
   Dlr.Expr.block [push; body; pop]
 
 //Builder function for expression generation
 let internal builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   | Ast.Assign(left, right) -> assign ctx left right
-  | Ast.Global(name, ds) -> Helpers.Variable.Globals.dlrValueExpr ctx name
+  | Ast.Global(name, ds) -> Helpers.Variable.Globals.dlrValueExpr ctx name ds
   | Ast.Local(name, ds) -> Helpers.Variable.Locals.dlrValueExpr ctx name
   | Ast.Closure(name, ds) -> Helpers.Variable.Closure.dlrValueExpr ctx name
   | Ast.Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name

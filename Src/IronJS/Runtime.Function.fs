@@ -10,6 +10,7 @@ open System.Collections.Generic
 type Scope = 
   val mutable DynamicScopes : Object ResizeArray
   val mutable EvalScope : Object
+  val mutable ModifiedByEval : bool
 
 (*Closure base class, representing a closure environment*)
 type Closure =

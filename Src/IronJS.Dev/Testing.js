@@ -1,9 +1,9 @@
 ﻿
+var obj = {};
+obj.a = "a-org";
 
+/*
 with({}){
-    var obj = {};
-    obj.a = "lol22";
-
     var foo = function(a, b) {
         var x = 1;
         var y;
@@ -16,5 +16,12 @@ with({}){
         }
     }
 }
+*/
 
-obj.b = foo(1, "foooooo", {})();
+with (obj) {
+    var b;
+    b = a;
+    a = "a-next";
+}
+
+obj.b = b;

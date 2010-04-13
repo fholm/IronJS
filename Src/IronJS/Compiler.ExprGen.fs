@@ -51,4 +51,5 @@ let internal builder (ctx:Context) (ast:Ast.Node) =
   | Ast.DynamicScope(target, body) -> dynamicScope ctx target body
   | Ast.Invoke(target, args) -> functionInvoke ctx target args
   | Ast.Object(properties) -> objectShorthand ctx properties
+  | Ast.Pass -> Dlr.Expr.empty
   | _ -> Dlr.Expr.dynamicDefault

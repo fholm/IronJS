@@ -5,11 +5,42 @@ open IronJS.Utils
 open IronJS.Tools
 open IronJS.Runtime
 
+type ObjectList = Object ResizeArray
+
 type Globals =
-  static member GetMi = typeof<Globals>.GetMethod("Get")
-  static member Get(name:string) = new obj()
-  static member SetMi = typeof<Globals>.GetMethod("Set")
-  static member Set(name:string, value:obj) = value
+  static member Get(name:string, localScopes:ObjectList, closure:Closure) = 
+    let mutable result = null
+    let mutable found = false
+    let mutable index = 0
+    let mutable count = localScopes.Count
+
+    while not found && index < count do
+      let success, obj = localScopes.[index].TryGet name
+      if success 
+        then result <- obj 
+             found <- true
+        else index <- index + 1
+
+    if not found then
+      result <- closure.Globals.Get name
+
+    result
+    
+  static member Set(name:string, value:obj, localScopes:ObjectList, closure:Closure) = 
+    let mutable found = false
+    let mutable index = 0
+    let mutable count = localScopes.Count
+    
+    while not found && index < count do
+      if localScopes.[index].Has name 
+        then localScopes.[index].Set name value
+             found <- true
+        else index <- index + 1
+
+    if not found then
+      closure.Globals.Set name value
+
+    value
 
 module Core =
   

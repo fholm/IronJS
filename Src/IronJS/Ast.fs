@@ -62,8 +62,8 @@ module Core =
       return Error("Only support anonymous functions atm")}
 
   and private parseWith t = state {
-    do! enterDynamicScope
     let! obj = parse (child t 0)
+    do! enterDynamicScope
     let! block = parse (child t 1)
     do! exitDynamicScope
     return DynamicScope(obj, block)}

@@ -28,12 +28,12 @@ let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtP
 let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
   if not ctx.Scope.HasDynamicScopes 
     then body
-    else Dlr.Expr.assign ctx.LocalDynScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
+    else Dlr.Expr.assign ctx.LocalScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
 
 let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
   if not ctx.Scope.HasDynamicScopes
     then vars
-    else ctx.LocalDynScopes :: vars
+    else ctx.LocalScopes :: vars
 
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =

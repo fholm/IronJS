@@ -10,7 +10,7 @@ type Context = {
   This: EtParam
   Closure: EtParam
   Arguments: EtParam
-  LocalDynScopes: EtParam
+  LocalScopes: EtParam
   Scope: Ast.Scope
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
@@ -18,13 +18,13 @@ type Context = {
 } with
   member x.Globals        = Dlr.Expr.field x.Closure "Globals"
   member x.Environment    = Dlr.Expr.field x.Closure "Environment"
-  member x.DynamicScopes  = Dlr.Expr.field x.Closure "Scopes"
+  member x.ClosureScopes  = Dlr.Expr.field x.Closure "Scopes"
   member x.InDynamicScope = x.ScopeLevel > 0
   static member New = {
     Closure = null
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
     Arguments = Dlr.Expr.param "~xargs" typeof<Dynamic array>
-    LocalDynScopes = Dlr.Expr.param "~dynscopes" typeof<Runtime.Object ResizeArray>
+    LocalScopes = Dlr.Expr.param "~localScopes" typeof<Runtime.Object ResizeArray>
     Return = Dlr.Expr.label "~return"
     Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault

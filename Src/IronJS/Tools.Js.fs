@@ -26,6 +26,9 @@ let makeReturn label (value:Et) =
 let index (left:Et) (i:int64) =
   Et.ArrayIndex(left, Dlr.Expr.constant i) :> Et
 
+let newResizeArray<'a> (arg:Et) = 
+  Dlr.Expr.newArgsT<ResizeArray<'a>> [Dlr.Expr.castT<IEnum<'a>> arg]
+
 let forIterRev (v:int) f = 
   let i = Dlr.Expr.param "~i" Constants.clrInt32
   let m = Dlr.Expr.constant v

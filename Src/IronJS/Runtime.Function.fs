@@ -7,26 +7,37 @@ open IronJS.Runtime
 open System.Dynamic
 open System.Collections.Generic
 
+[<AllowNullLiteral>]
 type Scope = 
   val mutable DynamicScopes : Object ResizeArray
   val mutable EvalScope : Object
-  val mutable ModifiedByEval : bool
+  val mutable ScopeLevel : int
 
-  new(dynamicScopes, evalScope, modifiedByEval) = {
+  new(dynamicScopes, evalScope, scopeLevel) = {
     DynamicScopes = dynamicScopes
     EvalScope = evalScope
-    ModifiedByEval = modifiedByEval
+    ScopeLevel = scopeLevel
   }
+
+  member x.Set (name:string) (value:Dynamic) = 
+    match ResizeArray.tryFind (fun (s:Object) -> s.Has name) x.DynamicScopes with
+    | None    -> false
+    | Some(s) -> s.Set name value; true
+
+  member x.Get (name:string) =
+    match ResizeArray.tryFind (fun (s:Object) -> s.Has name) x.DynamicScopes with
+    | None    -> false, null
+    | Some(s) -> true, s.Get name
 
 (*Closure base class, representing a closure environment*)
 type Closure =
   val mutable Globals : Object
   val mutable Environment : IEnvironment
-  val mutable Scopes : Object ResizeArray
+  val mutable Scopes : Scope ResizeArray
 
   static member TypeDef = typedefof<Closure>
 
-  new(globals:Object, env:IEnvironment, scopes:Object ResizeArray) = {
+  new(globals:Object, env:IEnvironment, scopes) = {
     Globals = globals
     Environment = env
     Scopes = scopes

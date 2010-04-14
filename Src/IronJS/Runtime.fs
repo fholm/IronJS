@@ -7,20 +7,16 @@ open System.Dynamic
 open System.Collections.Generic
 
 (*Environment interface*)
+
 type IEnvironment =
   interface
     abstract GetDelegate : Ast.Node -> ClrType -> ClrType list -> System.Delegate * ClrType list
   end
 
-(*Class representing the javascript Undefined type*)
-type Undefined() =
-  static let instance = Undefined()
-  static member Instance = instance
-  static member InstanceExpr = Dlr.Expr.constant instance
-  static member InstanceExprAsDynamic = Dlr.Expr.castT<Dynamic> Undefined.InstanceExpr
 
 (*Class representing a Javascript native object*)
-and Object(env:IEnvironment) =
+[<AllowNullLiteral>]
+type Object(env:IEnvironment) =
   let properties = new Dictionary<string, Dynamic>();
 
   static member TypeDef = typedefof<Object>
@@ -34,6 +30,13 @@ and Object(env:IEnvironment) =
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
+
+(*Class representing the javascript Undefined type*)
+and Undefined() =
+  static let instance = Undefined()
+  static member Instance = instance
+  static member InstanceExpr = Dlr.Expr.constant instance
+  static member InstanceExprAsDynamic = Dlr.Expr.castT<Dynamic> Undefined.InstanceExpr
 
 (*DLR meta object for the above Object class*)
 and ObjectMeta(expr, jsObj:Object) =

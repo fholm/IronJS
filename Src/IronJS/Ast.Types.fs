@@ -65,6 +65,7 @@ type Scope = {
   Arguments:          bool
   ScopeLevel:         int
   HasDynamicScopes:   bool
+  InParentDynamicScope: bool
 } with
   static member New = { 
     Locals            = Map.empty
@@ -72,6 +73,7 @@ type Scope = {
     Arguments         = false
     ScopeLevel        = 0
     HasDynamicScopes  = false
+    InParentDynamicScope = false
   }
   static member Global = Scope.New
 

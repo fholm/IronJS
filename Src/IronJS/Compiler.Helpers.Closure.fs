@@ -25,6 +25,11 @@ module Closure =
     )
 
   let newClosure (ctx:Context) (scope:Ast.Scope) =
+    let scopesExpr = if scope.InParentDynamicScope 
+                      then  let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant ctx.Scope.ScopeLevel]
+                            Dlr.Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
+                      else  ctx.ClosureScopes
+  
     let closureType = resolveType ctx scope
-    let dynScopesExpr = Dlr.Expr.newArgs typeof<ResizeArray<Runtime.Object>> [ctx.ClosureScopes]
-    closureType, Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: dynScopesExpr :: resolveItems ctx scope)
+    let dynScopesExpr = Dlr.Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopes]
+    closureType, Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: scopesExpr :: resolveItems ctx scope)

@@ -1,9 +1,10 @@
 ﻿#light
-#r "../Dependencies/Antlr3.Runtime.dll"
-#r "../Dependencies/Microsoft.Dynamic.dll"
-#r "../Dependencies/Microsoft.Scripting.dll"
-#r "../Dependencies/Antlr3.Runtime.dll"
-#r "../IronJS.Parser/bin/Debug/IronJS.Parser.dll"
+#r @"..\Dependencies\Antlr3.Runtime.dll"
+#r @"..\Dependencies\Microsoft.Dynamic.dll"
+#r @"..\Dependencies\Microsoft.Scripting.dll"
+#r @"..\Dependencies\Antlr3.Runtime.dll"
+#r @"..\IronJS.Parser\bin\Debug\IronJS.Parser.dll"
+#r @"FSharp.PowerPack"
 #load "Fsi.fs"
 #load "Monads.fs"
 #load "Operators.fs"
@@ -48,8 +49,8 @@ fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
@@ -62,10 +63,10 @@ let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Object(env)
-let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Object>())
+let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-let value = (closure.Globals.Get("obj") :?> Runtime.Object).Get("a")
-let value = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
-
+let valuea = (closure.Globals.Get("obj") :?> Runtime.Object).Get("a")
+let valueb = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
+let aval = closure.Globals.Get("a_val")

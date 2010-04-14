@@ -14,12 +14,14 @@ type Context = {
   Scope: Ast.Scope
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
-  ScopeLevel: int
 } with
   member x.Globals        = Dlr.Expr.field x.Closure "Globals"
   member x.Environment    = Dlr.Expr.field x.Closure "Environment"
   member x.ClosureScopes  = Dlr.Expr.field x.Closure "Scopes"
-  member x.InDynamicScope = x.ScopeLevel > 0
+  member x.LocalScopesExpr = if x.Scope.HasDynamicScopes 
+                              then x.LocalScopes :> Et 
+                              else Dlr.Expr.typeDefault<Runtime.Object ResizeArray>
+
   static member New = {
     Closure = null
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
@@ -28,5 +30,4 @@ type Context = {
     Return = Dlr.Expr.label "~return"
     Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault
-    ScopeLevel  = 0
   }

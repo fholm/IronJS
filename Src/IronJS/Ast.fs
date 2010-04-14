@@ -57,7 +57,8 @@ module Core =
       do! enterScope t
       let! body  = parse (child t 1)
       let! scope = exitScope()
-      return Function(scope, body)
+      let! s = getState
+      return Function({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0}, body)
     else
       return Error("Only support anonymous functions atm")}
 

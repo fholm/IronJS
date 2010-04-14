@@ -23,6 +23,7 @@ type ClrType        = System.Type
 type Dynamic        = System.Object
 type StrongBox<'a>  = System.Runtime.CompilerServices.StrongBox<'a>
 type JitCache       = System.Collections.Concurrent.ConcurrentDictionary<System.Type, System.Delegate>
+type IEnum<'a>      = System.Collections.Generic.IEnumerable<'a>
 
 
 let toList<'a> (ilst:System.Collections.IList) =
@@ -45,9 +46,11 @@ let getCtor (typ:Type) (args:Type list) =
                                 then matchArgs xsA xsP
                                 else false
 
+  let ctors = typ.GetConstructors()
+
   Array.find (fun (ctor:CtorInfo) ->
     let parms = List.ofArray (ctor.GetParameters())
     if args.Length = parms.Length 
       then matchArgs args parms 
       else false
-  ) (typ.GetConstructors())
+  ) ctors

@@ -4,8 +4,12 @@ obj.a = "a-org";
 
 with (obj) {
     var foo = function(x, y) {
-        return function() {
-            return a;
+        var myobj = {}
+        myobj.a = "lol";
+        with(myobj) {
+            return function() {
+                return a;
+            }
         }
     }
 

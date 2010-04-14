@@ -10,7 +10,6 @@
 #load "Operators.fs"
 #load "Constants.fs"
 #load "Utils.fs"
-#load "Tools.fs"
 #load "Tools.Dlr.Expr.fs"
 #load "Tools.Dlr.Restrict.fs"
 #load "Tools.Js.fs"
@@ -70,3 +69,4 @@ compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 let valuea = (closure.Globals.Get("obj") :?> Runtime.Object).Get("a")
 let valueb = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
 let aval = closure.Globals.Get("a_val")
+

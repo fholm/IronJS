@@ -40,7 +40,6 @@
     <Compile Include="Operators.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Tools.fs" />
     <Compile Include="Tools.Dlr.Expr.fs" />
     <Compile Include="Tools.Dlr.Restrict.fs" />
     <Compile Include="Tools.Js.fs" />

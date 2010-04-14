@@ -22,7 +22,7 @@ module ExprGen =
 
   let private functionDefine ctx (scope:Ast.Scope) ast =
     let closureType, closureExpr = Helpers.Closure.newClosure ctx scope
-    Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
+    Dlr.Expr.castT<Runtime.Object> (Helpers.ExprGen.newFunction closureType [Dlr.Expr.constant ast; closureExpr; ctx.Environment])
 
   let private functionInvoke (ctx:Context) target args =
     Helpers.ExprGen.callFunction (ctx.Builder ctx target)  (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])

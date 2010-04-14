@@ -72,4 +72,3 @@ compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 let valuea = (closure.Globals.Get("obj") :?> Runtime.Object).Get("a")
 let valueb = (closure.Globals.Get("obj") :?> Runtime.Object).Get("b")
 let aval = closure.Globals.Get("a_val")
-

@@ -10,11 +10,6 @@ open IronJS.Compiler.Helpers.Core
 
 module Variable =
 
-  let private getTmpVarType (typ:ClrType) =  
-    if typ.IsGenericType && typ.GetGenericTypeDefinition() = (Runtime.Function<_>.TypeDef)
-      then Runtime.Object.TypeDef
-      else typ
-
   (*Helper functions for dealing with closure variables*)
   module Closure = 
 
@@ -100,7 +95,7 @@ module Variable =
     let assign ctx name value scopeLevel = 
       if scopeLevel = 0
         then  Js.assign (ctx.Scope.Locals.[name].Expr) value
-        else  let tmp = Dlr.Expr.param "~tmp" (getTmpVarType value.Type)
+        else  let tmp = Dlr.Expr.param "~tmp" value.Type
               let vars = (Js.assign (ctx.Scope.Locals.[name].Expr) tmp)
               Dlr.Expr.blockWithLocals [tmp] [
                 (Dlr.Expr.assign tmp value)

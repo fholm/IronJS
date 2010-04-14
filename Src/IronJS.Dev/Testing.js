@@ -4,7 +4,9 @@ obj.a = "a-org";
 
 with (obj) {
     var foo = function(x, y) {
-        return a;
+        return function() {
+            return a;
+        }
     }
 
     var b;
@@ -13,4 +15,4 @@ with (obj) {
 }
 
 obj.b = b;
-a_val = foo(1, 2);
+a_val = foo(1, 2)();

@@ -26,7 +26,7 @@ module Closure =
 
   let newClosure (ctx:Context) (scope:Ast.Scope) =
     let scopesExpr = if scope.InParentDynamicScope 
-                      then  let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant ctx.Scope.ScopeLevel]
+                      then  let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant scope.ScopeLevel]
                             Dlr.Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
                       else  ctx.ClosureScopes
   

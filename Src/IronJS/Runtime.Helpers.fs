@@ -15,14 +15,14 @@ module Core =
 type Closures = 
   
   static member BuildScopes (closure:Closure) (localScopes:Object ResizeArray) (scopeLevel:int) =
-    let newScopes = new ResizeArray<Scope>(closure.Scopes)
-    let newScope  = new Scope(new ResizeArray<Object>(localScopes), null, scopeLevel)
-    newScopes.Add(newScope)
-    newScopes
+    let scopes = new ResizeArray<Scope>(closure.Scopes)
+    let localScope  = new Scope(new ResizeArray<Object>(localScopes), null, scopeLevel)
+    scopes.Add(localScope)
+    scopes
 
 module Variables = 
 
-  let private cListFind (lst:'a ResizeArray) fnc = 
+  let private cListFind fnc (lst:'a ResizeArray) = 
     let rec cListFind' n = 
       if n >= lst.Count
         then  false, null
@@ -32,38 +32,34 @@ module Variables =
                 else cListFind' (n+1)
     cListFind' 0
 
-  let private getVarInScopes (name:string) (scopes:ObjectList) =
+  let private setInObjects (name:string) (value:Dynamic) scopes = 
     if scopes = null
-      then false, null
-      else cListFind scopes (fun x -> x.TryGet name)
+      then  false
+      else  match ResizeArray.tryFind (fun (s:Object) -> s.Has name) scopes with
+            | None    -> false
+            | Some(s) -> s.Set name value; true
 
-  let private setVarInScopes (name:string) (value:obj) (scopes:ObjectList) =
-    let mutable found = false
-    let mutable index = 0
-    let count = scopes.Count
-
-    while not found && index < count do
-      if scopes.[index].Has name 
-        then scopes.[index].Set name value
-             found <- true
-        else index <- index + 1
-
-    found
+  let private getFromObjects (name:string) scopes =
+    if scopes = null
+      then  false, null
+      else  match ResizeArray.tryFind (fun (s:Object) -> s.Has name) scopes with
+            | None    -> false, null
+            | Some(s) -> true, s.Get name
 
   type Globals =
     static member Get(name:string, localScopes:ObjectList, closure:Closure) = 
-      let found, item = getVarInScopes name localScopes
+      let found, item = getFromObjects name localScopes
 
       if found 
         then  item
-        else  let found, item = cListFind closure.Scopes (fun x -> x.Get name)
+        else  let found, item = cListFind (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes 
               if found 
                 then item
                 else closure.Globals.Get name
   
     static member Set(name:string, value:obj, localScopes:ObjectList, closure:Closure) = 
-      if not (setVarInScopes name value localScopes ) 
-        then if not (ResizeArray.exists (fun (x:Scope) -> x.Set name value) closure.Scopes)
+      if not (setInObjects name value localScopes) 
+        then if not (ResizeArray.exists (fun (x:Scope) -> setInObjects name value x.Objects) closure.Scopes)
              then closure.Globals.Set name value
 
       value

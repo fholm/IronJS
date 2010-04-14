@@ -53,10 +53,19 @@ module Variable =
                 )
               ]
               
-    (*let assign ctx name value scopeLevel = 
+    let assign ctx name value scopeLevel = 
       if scopeLevel = 0
-        then Js.assign (expr ctx name) value
-        else let tmp = Dlr.Expr.param "~tmp" value.Type*)
+        then  Js.assign (expr ctx name) value
+        else  let tmp = Dlr.Expr.param "~tmp" value.Type
+              let setArgs = [Dlr.Expr.constant name; Js.box tmp; ctx.LocalScopesExpr; ctx.Closure :> Et; Dlr.Expr.constant (definedInScope ctx name)]
+              Dlr.Expr.blockWithLocals [tmp] [
+                Dlr.Expr.assign tmp value
+                (Dlr.Expr.ControlFlow.ternary
+                  (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Set" setArgs)
+                  (tmp)
+                  (Js.assign (expr ctx name) tmp)
+                )
+              ]
 
   (*Helper functions for dealing with local variables*)
   module Locals = 

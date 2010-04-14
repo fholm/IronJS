@@ -16,6 +16,7 @@ module ExprGen =
     match left with
     | Ast.Global(name, globalScopeLevel) -> Helpers.Variable.Globals.assign ctx name value globalScopeLevel
     | Ast.Local(name, localScopeLevel) -> Helpers.Variable.Locals.assign ctx name value localScopeLevel
+    | Ast.Closure(name, globalScopeLevel) -> Helpers.Variable.Closure.assign ctx name value globalScopeLevel
     | Ast.Property(target, name) -> Helpers.ExprGen.setProperty (ctx.Builder ctx target) name value
     | _ -> Dlr.Expr.dynamicDefault
 

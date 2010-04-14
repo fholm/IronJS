@@ -35,6 +35,7 @@ module Variables =
             | None    -> false, null
             | Some(s) -> true, s.Get name
 
+  (**)
   type Locals = 
     static member Get(name:string, localScopes:ObjectList) =
       let pair = getFromObjects name localScopes
@@ -45,6 +46,7 @@ module Variables =
     static member Set(name:string, value:Dynamic, localScopes:ObjectList) =
       setInObjects name value localScopes
 
+  (**)
   type Closures =
     static member Get(name:string, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) =
       let pair = getFromObjects name localScopes
@@ -55,12 +57,19 @@ module Variables =
                 then pair
                 else false, null
 
+    static member Set(name:string, value:Dynamic, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) = 
+      if setInObjects name value localScopes
+        then  true
+        else  let found, _ = scanObjects (fun (x:Scope) -> setInObjects name value x.Objects, null) closure.Scopes maxScopeLevel
+              found
+
+  (**)
   type Globals =
     static member Get(name:string, localScopes:ObjectList, closure:Closure) = 
       let found, item = getFromObjects name localScopes
       if found 
         then  item
-        else  let found, item = scanObjects (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes -1
+        else  let found, item = scanObjects (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes (-1)
               if found 
                 then item
                 else closure.Globals.Get name

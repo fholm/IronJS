@@ -11,11 +11,12 @@ with (obj) {
         with(myobj) {
             var foo = function() {
                 with({}) {
-                    return z;
+                    z = 3;
                 }
             }
         }
-        return foo;
+        foo();
+        return z;
     }
     var b;
     b = a;
@@ -24,7 +25,7 @@ with (obj) {
 
 obj.b = b;
 
-a_val = foo(1, 2)();
+a_val = foo(1, 2);
 
 /*
 var outer = {}

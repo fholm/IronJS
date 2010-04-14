@@ -102,7 +102,7 @@ type Node =
 
   //Identifiers
   | Local     of string * int
-  | Closure   of string * (int * int)
+  | Closure   of string * int
   | Global    of string * int
   | Property  of Node * string
 

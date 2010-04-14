@@ -13,6 +13,9 @@ module Variable =
   (*Helper functions for dealing with closure variables*)
   module Closure = 
 
+    let definedInScope ctx name = 
+      ctx.Scope.Closure.[name].DefinedInScopeLevel
+
     let fieldNameN n =
       sprintf "Item%i" n
 
@@ -27,11 +30,23 @@ module Variable =
         then clrTypeN ctx.Closure.Type ctx.Scope.Closure.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
-    let dlrValueExpr ctx name  scopeLevels =
-      Dlr.Expr.field (Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
-
-    let dlrExpr ctx (name:string) ds =
+    let expr ctx (name:string) =
       Dlr.Expr.field ctx.Closure (fieldName ctx name)
+
+    let value ctx name scopeLevel =
+      let defaultExpr = Dlr.Expr.field (expr ctx name) "Value"
+      if scopeLevel = 0 
+        then  defaultExpr
+        else  let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
+              let getArgs = [Dlr.Expr.constant name; ctx.LocalScopesExpr; ctx.Closure :> Et; Dlr.Expr.constant (definedInScope ctx name)]
+              Dlr.Expr.blockWithLocals [tmp] [
+                Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Get" getArgs)
+                (Dlr.Expr.ControlFlow.ternary 
+                  (Dlr.Expr.property tmp "Item1")
+                  (Dlr.Expr.property tmp "Item2")
+                  (Js.box defaultExpr)
+                )
+              ]
 
   (*Helper functions for dealing with local variables*)
   module Locals = 
@@ -41,9 +56,12 @@ module Variable =
         then ToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
-    let dlrExpr ctx name scopeLevel =
+    let expr ctx name = 
+      ctx.Scope.Locals.[name].Expr :> Et
+
+    let value ctx name scopeLevel =
       if scopeLevel = 0 
-        then  ctx.Scope.Locals.[name].Expr :> Et
+        then  expr ctx name
         else  let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
               Dlr.Expr.blockWithLocals [tmp] [
                 Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Get" [Dlr.Expr.constant name; ctx.LocalScopesExpr])
@@ -53,8 +71,6 @@ module Variable =
                   (Js.box (ctx.Scope.Locals.[name].Expr :> Et))
                 )
               ]
-
-    let dlrValueExpr = dlrExpr
 
     let assign ctx name value scopeLevel = 
       if scopeLevel = 0
@@ -73,14 +89,12 @@ module Variable =
     let clrType ctx name =
       Constants.clrDynamic
 
-    let dlrExpr (ctx:Context) name globalDynamicScopes =
+    let value (ctx:Context) name globalDynamicScopes =
       if globalDynamicScopes > 0
         then let args = [Dlr.Expr.constant name; ctx.LocalScopesExpr; ctx.Closure :> Et]
              Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Get" args
 
         else Js.Object.get ctx.Globals name
-
-    let dlrValueExpr = dlrExpr
 
     let assign (ctx:Context) name value globalDynamicScopes = 
       if globalDynamicScopes > 0
@@ -97,5 +111,5 @@ module Variable =
     
   let dlrExpr ctx name isLocal =
     if isLocal 
-      then Locals.dlrExpr  ctx name 0
-      else Closure.dlrExpr ctx name (0,0)
+      then Locals.expr ctx name
+      else Closure.expr ctx name

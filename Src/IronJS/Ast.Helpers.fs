@@ -62,7 +62,7 @@ module Helpers =
     match s.ScopeChain with
     | _::[] -> return Global(name, fst sl)
     | x::xs when hasLocal x name   -> return Local(name, snd sl)
-    | x::xs when hasClosure x name -> return Closure(name, sl)
+    | x::xs when hasClosure x name -> return Closure(name, fst sl)
     | _     -> match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
                | Some(level) -> let rec updateScopes s =
                                   match s with
@@ -72,7 +72,7 @@ module Helpers =
                                                else createClosure x name level (hasLocal xs.Head name) :: updateScopes xs
 
                                 do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
-                                return Closure(name, sl)
+                                return Closure(name, fst sl)
 
                | None        -> return Global(name, fst sl)}
 

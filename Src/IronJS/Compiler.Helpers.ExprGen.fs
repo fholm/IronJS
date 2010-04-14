@@ -33,7 +33,7 @@ module ExprGen =
            Dlr.Expr.dynamic binder Constants.clrDynamic [expr]
 
   let pushDynamicScope (ctx:Context) (expr:Et) =
-    Dlr.Expr.call ctx.LocalScopes "Add" [convertToObject expr]
+    Dlr.Expr.call ctx.LocalScopes "Insert" [Dlr.Expr.Math.int0; convertToObject expr]
 
   let popDynamicScope (ctx:Context) =
-    Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.Math.sub (Dlr.Expr.property ctx.LocalScopes "Count") Dlr.Expr.Math.int1]
+    Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.Math.int0]

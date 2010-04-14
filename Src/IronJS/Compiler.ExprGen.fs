@@ -41,9 +41,9 @@ module ExprGen =
   let internal builder (ctx:Context) (ast:Ast.Node) =
     match ast with
     | Ast.Assign(left, right) -> assign ctx left right
-    | Ast.Global(name, globalScopeLevel) -> Helpers.Variable.Globals.dlrValueExpr ctx name globalScopeLevel
-    | Ast.Local(name, localScopeLevel) -> Helpers.Variable.Locals.dlrValueExpr ctx name localScopeLevel
-    | Ast.Closure(name, scopeLevels) -> Helpers.Variable.Closure.dlrValueExpr ctx name scopeLevels
+    | Ast.Global(name, globalScopeLevel) -> Helpers.Variable.Globals.value ctx name globalScopeLevel
+    | Ast.Local(name, localScopeLevel) -> Helpers.Variable.Locals.value ctx name localScopeLevel
+    | Ast.Closure(name, globalScopeLevel) -> Helpers.Variable.Closure.value ctx name globalScopeLevel
     | Ast.Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name
     | Ast.Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
     | Ast.String(value) -> Dlr.Expr.constant value

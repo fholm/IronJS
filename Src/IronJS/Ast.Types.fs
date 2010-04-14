@@ -120,3 +120,4 @@ type Node =
   | Assign  of Node * Node
   | Return  of Node
   | Object  of Map<string, Node> option
+  | Convert of Node * JsTypes

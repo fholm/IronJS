@@ -10,6 +10,11 @@ open IronJS.Compiler.Helpers.Core
 
 module Variable =
 
+  let private getTmpVarType (typ:ClrType) =  
+    if typ.IsGenericType && typ.GetGenericTypeDefinition() = (Runtime.Function<_>.TypeDef)
+      then Runtime.Object.TypeDef
+      else typ
+
   (*Helper functions for dealing with closure variables*)
   module Closure = 
 
@@ -47,6 +52,11 @@ module Variable =
                   (Js.box defaultExpr)
                 )
               ]
+              
+    (*let assign ctx name value scopeLevel = 
+      if scopeLevel = 0
+        then Js.assign (expr ctx name) value
+        else let tmp = Dlr.Expr.param "~tmp" value.Type*)
 
   (*Helper functions for dealing with local variables*)
   module Locals = 
@@ -60,28 +70,35 @@ module Variable =
       ctx.Scope.Locals.[name].Expr :> Et
 
     let value ctx name scopeLevel =
+
+      let valueExpr (expr:Et) = 
+        if Js.isStrongBox (expr.Type)
+          then Dlr.Expr.field expr "Value"
+          else expr
+
       if scopeLevel = 0 
-        then  expr ctx name
+        then  valueExpr (expr ctx name)
         else  let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
               Dlr.Expr.blockWithLocals [tmp] [
                 Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Get" [Dlr.Expr.constant name; ctx.LocalScopesExpr])
                 (Dlr.Expr.ControlFlow.ternary 
                   (Dlr.Expr.property tmp "Item1")
                   (Dlr.Expr.property tmp "Item2")
-                  (Js.box (ctx.Scope.Locals.[name].Expr :> Et))
+                  (Js.box (valueExpr (expr ctx name)))
                 )
               ]
 
     let assign ctx name value scopeLevel = 
       if scopeLevel = 0
         then  Js.assign (ctx.Scope.Locals.[name].Expr) value
-        else  let tmp = Dlr.Expr.param "~tmp" value.Type
+        else  let tmp = Dlr.Expr.param "~tmp" (getTmpVarType value.Type)
+              let vars = (Js.assign (ctx.Scope.Locals.[name].Expr) tmp)
               Dlr.Expr.blockWithLocals [tmp] [
                 (Dlr.Expr.assign tmp value)
                 (Dlr.Expr.ControlFlow.ternary
                   (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Set" [Dlr.Expr.constant name; Js.box tmp; ctx.LocalScopesExpr])
                   (tmp)
-                  (Js.assign (ctx.Scope.Locals.[name].Expr) tmp)
+                  (vars)
               ) :> Et]
 
   module Globals =

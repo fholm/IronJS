@@ -11,7 +11,7 @@ let private isDynamic (loc:Ast.Local) =
   match loc.UsedAs with
   | Ast.JsTypes.Double 
   | Ast.JsTypes.String
-  | Ast.JsTypes.Object -> true && (loc.InitUndefined || loc.ClosureAccess = Ast.Write)
+  | Ast.JsTypes.Object -> true && (loc.InitUndefined)
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)

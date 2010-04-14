@@ -6,9 +6,13 @@ with (obj) {
     var foo = function(x, y) {
         var myobj = {}
         myobj.a = "lol";
+        var z = 2;
+        var a = "plz no";
         with(myobj) {
-            var a = 2;
-            return a;
+            z = 4; 
+            return function() {
+                return a;
+            }
         }
     }
 
@@ -18,4 +22,4 @@ with (obj) {
 }
 
 obj.b = b;
-a_val = foo(1, 2);
+a_val = foo(1, 2)();

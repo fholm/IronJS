@@ -35,13 +35,14 @@
 #load "Compiler.Analyzer.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
+open System
+
 open IronJS
 open IronJS.Fsi
 open IronJS.Tools
 open IronJS.Utils
 open IronJS.Parser
 
-open System
 open Antlr.Runtime
 
 fsi.AddPrinter(fun (x:Ast.Local) -> x.DebugView)

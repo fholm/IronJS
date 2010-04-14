@@ -101,9 +101,9 @@ type Node =
   | Undefined
 
   //Identifiers
-  | Local     of string * (int * int)
+  | Local     of string * int
   | Closure   of string * (int * int)
-  | Global    of string * (int * int)
+  | Global    of string * int
   | Property  of Node * string
 
   //Magic

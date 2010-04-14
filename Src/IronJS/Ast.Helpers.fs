@@ -60,8 +60,8 @@ module Helpers =
     let! sl = scopeLevels
 
     match s.ScopeChain with
-    | _::[] -> return Global(name, sl)
-    | x::xs when hasLocal x name   -> return Local(name, sl)
+    | _::[] -> return Global(name, fst sl)
+    | x::xs when hasLocal x name   -> return Local(name, snd sl)
     | x::xs when hasClosure x name -> return Closure(name, sl)
     | _     -> match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
                | Some(level) -> let rec updateScopes s =
@@ -74,7 +74,7 @@ module Helpers =
                                 do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
                                 return Closure(name, sl)
 
-               | None        -> return Global(name, sl)}
+               | None        -> return Global(name, fst sl)}
 
   let internal createVar name initUndefined = state {
     let!  s = getState

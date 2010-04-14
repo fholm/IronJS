@@ -1,0 +1,13 @@
+﻿namespace IronJS.Runtime.Helpers
+
+open IronJS
+open IronJS.Utils
+open IronJS.Tools
+open IronJS.Runtime
+
+type Closures = 
+  static member BuildScopes (closure:Closure, localScopes:Object ResizeArray, scopeLevel:int) =
+    let scopes = new ResizeArray<Scope>(closure.Scopes)
+    let localScope  = new Scope(new ResizeArray<Object>(localScopes), null, scopeLevel)
+    scopes.Insert(0, localScope)
+    scopes

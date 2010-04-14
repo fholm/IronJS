@@ -1,5 +1,7 @@
 ﻿namespace IronJS.Compiler.Helpers
 
+open System
+
 open IronJS
 open IronJS.Utils
 open IronJS.Tools
@@ -28,7 +30,7 @@ module Variable =
     let dlrValueExpr ctx name =
       Dlr.Expr.field (Dlr.Expr.field ctx.Closure (sprintf "Item%i" ctx.Scope.Closure.[name].Index)) "Value"
 
-    let dlrExpr ctx (name:string) =
+    let dlrExpr ctx (name:string) ds =
       Dlr.Expr.field ctx.Closure (fieldName ctx name)
 
   (*Helper functions for dealing with local variables*)
@@ -39,8 +41,18 @@ module Variable =
         then ToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
-    let dlrExpr ctx name =
-      ctx.Scope.Locals.[name].Expr :> Et
+    let dlrExpr ctx name (ds:int*int) =
+      if (snd ds) = 0 
+        then  ctx.Scope.Locals.[name].Expr :> Et
+        else  let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
+              Dlr.Expr.blockWithLocals [tmp] [
+                Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Get" [Dlr.Expr.constant name; ctx.LocalScopesExpr])
+                (Dlr.Expr.ControlFlow.ternary 
+                  (Dlr.Expr.property tmp "Item1")
+                  (Dlr.Expr.property tmp "Item2")
+                  (Js.box (ctx.Scope.Locals.[name].Expr :> Et))
+                )
+              ]
 
     let dlrValueExpr = dlrExpr
 
@@ -73,4 +85,4 @@ module Variable =
     (if isLocal then Locals.clrType else Closure.clrType) ctx name
     
   let dlrExpr ctx name isLocal =
-    (if isLocal then Locals.dlrExpr else Closure.dlrExpr) ctx name
+    (if isLocal then Locals.dlrExpr else Closure.dlrExpr) ctx name (0,0)

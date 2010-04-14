@@ -7,9 +7,8 @@ with (obj) {
         var myobj = {}
         myobj.a = "lol";
         with(myobj) {
-            return function() {
-                return a;
-            }
+            var a = 2;
+            return a;
         }
     }
 
@@ -19,4 +18,4 @@ with (obj) {
 }
 
 obj.b = b;
-a_val = foo(1, 2)();
+a_val = foo(1, 2);

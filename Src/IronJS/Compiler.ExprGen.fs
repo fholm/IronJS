@@ -40,7 +40,7 @@ let internal builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   | Ast.Assign(left, right) -> assign ctx left right
   | Ast.Global(name, ds) -> Helpers.Variable.Globals.dlrValueExpr ctx name ds
-  | Ast.Local(name, ds) -> Helpers.Variable.Locals.dlrValueExpr ctx name
+  | Ast.Local(name, ds) -> Helpers.Variable.Locals.dlrValueExpr ctx name ds
   | Ast.Closure(name, ds) -> Helpers.Variable.Closure.dlrValueExpr ctx name
   | Ast.Property(target, name) -> Helpers.ExprGen.getProperty (ctx.Builder ctx target) name
   | Ast.Block(nodes) -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]

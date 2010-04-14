@@ -68,7 +68,11 @@ module Expr =
 
   module ControlFlow =
     let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse)
+    let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse)
 
   module Logical =
+    let eq left right = Et.Equal(left, right)
     let lt left right = Et.LessThan(left, right)
+    let ltEq left right = Et.LessThanOrEqual(left, right)
+    let gt left right = Et.GreaterThan(left, right)
     let gtEq left right = Et.GreaterThanOrEqual(left, right)

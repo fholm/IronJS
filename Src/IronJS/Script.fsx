@@ -22,6 +22,8 @@
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
 #load "Runtime.Helpers.fs"
+#load "Runtime.Helpers.Variables.fs"
+#load "Runtime.Helpers.Function.fs"
 #load "Runtime.Binders.fs"
 #load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"

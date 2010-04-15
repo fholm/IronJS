@@ -9,17 +9,27 @@ open IronJS.Compiler
 module Closure =
 
   let private resolveItems ctx (scope:Ast.Scope) =
+    let expr ctx (pair:string*Ast.Closure) =
+      if (snd pair).IsLocalInParent 
+        then Utils.Variable.Locals.expr  ctx (fst pair)
+        else Utils.Variable.Closure.expr ctx (fst pair)
+
     scope.Closure
       |> Map.toSeq
       |> Seq.sortBy (fun pair -> (snd pair).Index)
-      |> Seq.map (fun pair -> Utils.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
+      |> Seq.map (fun pair -> expr ctx pair)
       |> List.ofSeq
 
   let private resolveType ctx (scope:Ast.Scope) =
+    let clrType ctx (pair:string*Ast.Closure) =
+      if (snd pair).IsLocalInParent 
+        then Utils.Variable.Locals.clrType  ctx (fst pair)
+        else Utils.Variable.Closure.clrType ctx (fst pair)
+
     Runtime.Closures.createClosureType (
       scope.Closure
         |> Map.toSeq
-        |> Seq.fold (fun state pair -> (Utils.Variable.clrType ctx (fst pair) (snd pair).IsLocalInParent, (snd pair).Index) :: state) [] 
+        |> Seq.fold (fun state pair -> (clrType ctx pair, (snd pair).Index) :: state) [] 
         |> Seq.sortBy (fun pair -> snd pair)
         |> Seq.map (fun pair -> fst pair)
     )

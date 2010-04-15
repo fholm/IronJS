@@ -9,13 +9,13 @@ open System.Dynamic
 module Core = 
 
   (*Converts a ClrType to JsType*)
-  let ToJs typ = 
+  let internal ToJs typ = 
     if typ = Constants.clrDouble then Ast.JsTypes.Double
     elif typ = Constants.clrString then Ast.JsTypes.String
     else Ast.JsTypes.Dynamic
 
   (*Converts a JsType to ClrType*)
-  let ToClr typ =
+  let internal ToClr typ =
     match typ with
     | Ast.JsTypes.Double -> Constants.clrDouble
     | Ast.JsTypes.String -> Constants.clrString
@@ -23,4 +23,4 @@ module Core =
     | _ -> Constants.clrDynamic
 
   (*Gets the inner type of a strongbox Type object*)
-  let strongBoxInnerType typ = Type.genericArgumentN typ 0
+  let internal strongBoxInnerType typ = Type.genericArgumentN typ 0

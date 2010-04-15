@@ -123,14 +123,3 @@ module Variable =
              Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Set" args
 
         else Js.Object.set ctx.Globals name value
-
-  (*Generic functions for dealing with variables no matter if they're closures or locals*)
-  let clrType ctx name isLocal =
-    if isLocal 
-      then Locals.clrType  ctx name
-      else Closure.clrType ctx name
-    
-  let dlrExpr ctx name isLocal =
-    if isLocal 
-      then Locals.expr ctx name
-      else Closure.expr ctx name

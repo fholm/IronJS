@@ -24,11 +24,13 @@ let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtP
   //TODO: Merge this into addStrongBoxInitExprs
   parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body
 
+(**)
 let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
   if not ctx.Scope.HasDynamicScopes 
     then body
     else Dlr.Expr.assign ctx.LocalScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
 
+(**)
 let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
   if not ctx.Scope.HasDynamicScopes
     then vars

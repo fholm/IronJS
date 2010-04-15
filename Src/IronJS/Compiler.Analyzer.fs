@@ -28,26 +28,27 @@ let private setType name (var:Ast.Local) typ =
 (*Get the type of a variable, evaluating it if necessary*)
 let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
-  let rec getType name (exclude:string Set) =
+  let rec getType' name (exclude:string Set) =
     let var = vars.[name]
-    if exclude.Contains name then Ast.JsTypes.Nothing
-    elif not(var.Expr = null) then var.UsedAs 
-    else 
-      let evaledWithClosures =
-        Set.fold (fun state var -> 
-                   state ||| ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
-                 ) var.UsedAs var.UsedWithClosure
 
-      // Combine UsedAs + UsedWithClosure types with UsedWith types
-      var.UsedWith
-        |> Set.map  (fun var -> getType var (exclude.Add name))
-        |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
+    if  exclude.Contains name 
+      then  Ast.JsTypes.Nothing
+      else  if not(var.Expr = null) 
+              then  var.UsedAs 
+              else  let evaledWithClosures =
+                      Set.fold (fun state var -> 
+                             state ||| ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
+                           ) var.UsedAs var.UsedWithClosure
 
-  getType name Set.empty
+                    // Combine UsedAs + UsedWithClosure types with UsedWith types
+                    var.UsedWith
+                      |> Set.map  (fun var -> getType' var (exclude.Add name))
+                      |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
+
+  getType' name Set.empty
 
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
-
   (*Resolves the type of a variable and updates the map with it*)
   let resolveType name (vars:Ast.LocalMap) =
     Map.add name (setType name vars.[name] (getType name closureType scope.Closure vars)) vars

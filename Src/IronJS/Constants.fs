@@ -1,7 +1,5 @@
 ﻿module IronJS.Constants
 
-let maxTypedArgs  = 125
-
 let clrDynamic = typeof<obj>
 let clrDynamicHashCode = clrDynamic.GetHashCode()
 

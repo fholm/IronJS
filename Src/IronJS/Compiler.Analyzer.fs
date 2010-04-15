@@ -63,7 +63,7 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
         scope.Locals 
           |> Map.map (fun name var -> 
             if var.IsParameter then
-              if var.ParamIndex < types.Length && types.Length < IronJS.Constants.maxTypedArgs
+              if var.ParamIndex < types.Length
                 then { var with UsedAs = var.UsedAs ||| ToJs types.[var.ParamIndex] } // We got an argument for this parameter
                 else setType name var Ast.JsTypes.Dynamic // We didn't, means make it dynamic
             else 

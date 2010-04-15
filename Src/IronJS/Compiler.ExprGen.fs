@@ -11,22 +11,11 @@ module ExprGen =
     let value = ctx.Builder ctx right
 
     match left with
-    | Ast.Global(name, globalScopeLevel)  -> Variables.Global.assign ctx name value globalScopeLevel
-    | Ast.Local(name, localScopeLevel)    -> Variables.Local.assign ctx name value localScopeLevel
-    | Ast.Closure(name, globalScopeLevel) -> Variables.Closure.assign ctx name value globalScopeLevel
-    | Ast.Property(target, name)          -> Utils.ExprGen.setProperty (ctx.Builder ctx target) name value
+    | Ast.Global(name, globalScopeLevel)  -> (if globalScopeLevel = 0 then Variables.Global.assign else DynamicScope.setGlobalValue) ctx name value
+    | Ast.Local(name, localScopeLevel)    -> (if localScopeLevel = 0 then Variables.Local.assign else DynamicScope.setLocalValue) ctx name value
+    | Ast.Closure(name, globalScopeLevel) -> (if globalScopeLevel = 0 then Variables.Closure.assign else DynamicScope.setClosureValue) ctx name value
+    | Ast.Property(target, name) -> Utils.ExprGen.setProperty (ctx.Builder ctx target) name value
     | _ -> failwith "Assignment for '%A' is not defined" left
-
-  let private objectShorthand (ctx:Context) properties =
-    match properties with
-    | Some(_) -> failwith "Objects with auto-properties not supported"
-    | None    -> Dlr.Expr.newArgs Runtime.Object.TypeDef [ctx.Environment]
-
-  let private dynamicScope (ctx:Context) target body =
-    let push = Utils.ExprGen.pushDynamicScope ctx (ctx.Builder ctx target)
-    let body = ctx.Builder ctx body
-    let pop  = Utils.ExprGen.popDynamicScope ctx
-    Dlr.Expr.block [push; body; pop]
 
   //Builder function for expression generation
   let internal builder (ctx:Context) (ast:Ast.Node) =
@@ -34,9 +23,9 @@ module ExprGen =
     | Ast.Assign(left, right) -> assign ctx left right
 
     //Variables
-    | Ast.Global(name, globalScopeLevel)  -> Variables.Global.value ctx name globalScopeLevel
-    | Ast.Local(name, localScopeLevel)    -> Variables.Local.value ctx name localScopeLevel
-    | Ast.Closure(name, globalScopeLevel) -> Variables.Closure.value ctx name globalScopeLevel
+    | Ast.Global(name, globalScopeLevel)  -> (if globalScopeLevel = 0 then Variables.Global.value else DynamicScope.getGlobalValue) ctx name
+    | Ast.Local(name, localScopeLevel)    -> (if localScopeLevel = 0 then Variables.Local.value else DynamicScope.getLocalValue) ctx name
+    | Ast.Closure(name, globalScopeLevel) -> (if globalScopeLevel = 0 then Variables.Closure.value else DynamicScope.getClosureValue) ctx name
 
     //Constants
     | Ast.String(value) -> Dlr.Expr.constant value
@@ -44,7 +33,7 @@ module ExprGen =
     | Ast.Null          -> Dlr.Expr.dynamicDefault
 
     //Objects
-    | Ast.Object(properties)      -> objectShorthand ctx properties
+    | Ast.Object(properties)      -> Object.create ctx properties
     | Ast.Property(target, name)  -> Utils.ExprGen.getProperty (ctx.Builder ctx target) name
 
     //Functions
@@ -54,7 +43,7 @@ module ExprGen =
 
     //
     | Ast.Block(nodes)                -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
-    | Ast.DynamicScope(target, body)  -> dynamicScope ctx target body
+    | Ast.DynamicScope(target, body)  -> DynamicScope.wrapInScope ctx target body
 
     //
     | Ast.Pass -> Dlr.Expr.empty

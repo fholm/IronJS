@@ -7,7 +7,6 @@ open IronJS.Compiler
 
 module Function =
 
-  (**)
   module private Closure =
     (*Resolves all item expressions for a closure*)
     let private resolveItems ctx (scope:Ast.Scope) =
@@ -21,7 +20,7 @@ module Function =
                     |> Seq.map (fun pair -> expr ctx pair)
                     |> List.ofSeq
 
-    (*Creates a closure typ*)
+    (*Creates a closure type*)
     let private createType ctx (scope:Ast.Scope) =
       let clrType ctx (pair:string*Ast.Closure) =
         if (snd pair).IsLocalInParent 

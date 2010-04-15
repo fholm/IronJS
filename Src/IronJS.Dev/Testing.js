@@ -3,20 +3,23 @@ var obj = {};
 obj.a = "a-org";
 
 with (obj) {
-    var foo = function(x, y) {
+    var foo = function (x, y) {
         var myobj = {}
-        myobj.z = 4;
         var z = 2;
         var a = "plz no";
-        with(myobj) {
-            var foo = function() {
-                with({}) {
-                    z = 3;
+        with (myobj) {
+            z = 4;
+            var foo = function () {
+                var innerobj = {}
+                innerobj.z = 5;
+                with (innerobj) {
+                    z = 6;
                 }
             }
         }
         foo();
         return z;
+        //return z;
     }
     var b;
     b = a;

@@ -61,10 +61,11 @@
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Utils.Type.fs" />
     <Compile Include="Compiler.Variables.fs" />
-    <Compile Include="Compiler.Utils.Object.fs" />
+    <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.Utils.ExprGen.fs" />
     <Compile Include="Compiler.Function.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
+    <Compile Include="Compiler.DynamicScope.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />

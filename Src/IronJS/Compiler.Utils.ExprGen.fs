@@ -19,18 +19,12 @@ module ExprGen =
 
   let setProperty (expr:Et) name value = 
     if Runtime.Utils.Type.isObject expr.Type 
-      then Utils.Object.setProperty expr name value
+      then Object.setProperty expr name value
       else let binder = new Runtime.Binders.SetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic (expr :: [value])
 
   let getProperty (expr:Et) name = 
     if Runtime.Utils.Type.isObject expr.Type 
-      then Utils.Object.getProperty expr name
+      then Object.getProperty expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic [expr]
-
-  let pushDynamicScope (ctx:Context) (expr:Et) =
-    Dlr.Expr.call ctx.LocalScopes "Insert" [Dlr.Expr.Math.int0; convertToObject expr]
-
-  let popDynamicScope (ctx:Context) =
-    Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.Math.int0]

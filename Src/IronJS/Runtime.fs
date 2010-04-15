@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Runtime
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open System.Dynamic
 open System.Collections.Generic

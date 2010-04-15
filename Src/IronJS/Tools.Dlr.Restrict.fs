@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Tools.Dlr
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 
 (*Tools for working with the System.Dynamic.BindingRestrictions class*)

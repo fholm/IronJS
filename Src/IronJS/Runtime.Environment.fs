@@ -1,7 +1,7 @@
 ﻿module IronJS.Runtime.Environment
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Runtime
 

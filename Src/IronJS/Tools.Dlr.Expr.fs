@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Tools.Dlr
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open System.Linq.Expressions
 
 (*Tools for working with DLR expressions*)
@@ -49,7 +49,7 @@ module Expr =
   let newInstanceT<'a> = newInstance typeof<'a>
   let newGeneric (typ:System.Type) (types:ClrType seq) = newInstance (typ.MakeGenericType(Seq.toArray types))
 
-  let newArgs (typ:System.Type) (args:Et seq) = Et.New(IronJS.Utils.getCtor typ [for arg in args -> arg.Type], args) :> Et
+  let newArgs (typ:System.Type) (args:Et seq) = Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
   let newArgsT<'a> (args:Et seq) = newArgs typeof<'a> args
   let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = newArgs (typ.MakeGenericType(Seq.toArray types)) args
 

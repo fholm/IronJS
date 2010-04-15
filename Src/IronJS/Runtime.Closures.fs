@@ -1,7 +1,7 @@
 ﻿module IronJS.Runtime.Closures
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 
 
 

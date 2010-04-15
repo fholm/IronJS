@@ -1,7 +1,7 @@
 ﻿open IronJS
 open IronJS.Fsi
 open IronJS.Tools
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Parser
 
 open System

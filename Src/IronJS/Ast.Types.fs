@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Ast
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open Antlr.Runtime.Tree
 open System.Diagnostics
 

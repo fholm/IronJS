@@ -2,7 +2,7 @@
 
 (*Tools for working with the System.Type object*)
 
-open IronJS.Utils
+open IronJS.Aliases
 
 (*Gets the FieldInfo object for a field on a type*)
 let field (typ:ClrType) name = typ.GetField name
@@ -19,3 +19,22 @@ let genericArguments (typ:ClrType) =
 
 (*Gets a specific generic argument from a type*)
 let genericArgumentN (typ:ClrType) n = (genericArguments typ).[n]
+
+let getCtor (typ:ClrType) (args:ClrType list) =
+  let rec matchArgs args (parms:ParmInfo list) = 
+    match args with
+    | []      -> true
+    | xA::xsA -> match parms with
+                 | []      -> failwith "Should never happen"
+                 | xP::xsP -> if xP.ParameterType.IsAssignableFrom(xA)
+                                then matchArgs xsA xsP
+                                else false
+
+  let ctors = typ.GetConstructors()
+
+  Array.find (fun (ctor:CtorInfo) ->
+    let parms = List.ofArray (ctor.GetParameters())
+    if args.Length = parms.Length 
+      then matchArgs args parms 
+      else false
+  ) ctors

@@ -1,11 +1,11 @@
 ﻿namespace IronJS.Ast
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Monads
 open IronJS.Ast
-open IronJS.Ast.Helpers
+open IronJS.Ast.Utils
 open IronJS.Parser
 
 module Core = 

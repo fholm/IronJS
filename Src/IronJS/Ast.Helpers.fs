@@ -3,17 +3,17 @@
 open IronJS
 open IronJS.Ast
 open IronJS.Tools
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Monads
 open IronJS.Parser
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
-module Helpers =
+module Utils =
 
   let internal ct (tree:obj) = tree :?> AstTree
   let internal child (tree:AstTree) index = (ct tree.Children.[index])
-  let internal children (tree:AstTree) = toList<AstTree> tree.Children
+  let internal children (tree:AstTree) = Tools.CSharp.toList<AstTree> tree.Children
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2

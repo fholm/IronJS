@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Runtime.Helpers
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Runtime
 

@@ -1,7 +1,7 @@
-﻿namespace IronJS.Compiler.Helpers
+﻿namespace IronJS.Compiler.Utils
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
 

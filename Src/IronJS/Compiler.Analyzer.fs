@@ -1,10 +1,10 @@
 ﻿module IronJS.Compiler.Analyzer
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Helpers.Core
+open IronJS.Compiler.Utils.Core
 
 (*Checks if a local always will result in a Dynamic type*)
 let private isDynamic (loc:Ast.Local) =
@@ -35,7 +35,7 @@ let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap
     else 
       let evaledWithClosures =
         Set.fold (fun state var -> 
-                   state ||| ToJs (Helpers.Variable.Closure.clrTypeN closureType closure.[var].Index)
+                   state ||| ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
                  ) var.UsedAs var.UsedWithClosure
 
       // Combine UsedAs + UsedWithClosure types with UsedWith types

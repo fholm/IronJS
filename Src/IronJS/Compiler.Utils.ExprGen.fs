@@ -1,7 +1,7 @@
-﻿namespace IronJS.Compiler.Helpers
+﻿namespace IronJS.Compiler.Utils
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
 
@@ -22,13 +22,13 @@ module ExprGen =
 
   let setProperty (expr:Et) name value = 
     if Runtime.Helpers.Core.isObject expr.Type 
-      then Helpers.Object.setProperty expr name value
+      then Utils.Object.setProperty expr name value
       else let binder = new Runtime.Binders.SetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic (expr :: [value])
 
   let getProperty (expr:Et) name = 
     if Runtime.Helpers.Core.isObject expr.Type 
-      then Helpers.Object.getProperty expr name
+      then Utils.Object.getProperty expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic [expr]
 

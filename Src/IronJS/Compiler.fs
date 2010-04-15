@@ -1,10 +1,10 @@
 ﻿module IronJS.Compiler.Core
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Helpers.Core
+open IronJS.Compiler.Utils.Core
 
 (*Adds initilization expressions for variables that should be Undefined*)
 let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =

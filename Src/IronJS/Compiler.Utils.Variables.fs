@@ -1,12 +1,12 @@
-﻿namespace IronJS.Compiler.Helpers
+﻿namespace IronJS.Compiler.Utils
 
 open System
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Helpers.Core
+open IronJS.Compiler.Utils.Core
 
 module Variable =
 
@@ -26,7 +26,7 @@ module Variable =
       strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
-      if Ast.Helpers.hasClosure ctx.Scope name 
+      if Ast.Utils.hasClosure ctx.Scope name 
         then clrTypeN ctx.Closure.Type ctx.Scope.Closure.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
@@ -66,7 +66,7 @@ module Variable =
   module Locals = 
     
     let clrType ctx name =
-      if Ast.Helpers.hasLocal ctx.Scope name
+      if Ast.Utils.hasLocal ctx.Scope name
         then ToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 

@@ -3,7 +3,7 @@
 (*Tools for working with DLR expressions related to IronJS specific stuff*)
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 
 let isStrongBox (typ:System.Type) =

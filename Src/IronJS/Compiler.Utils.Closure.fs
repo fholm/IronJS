@@ -1,7 +1,7 @@
-﻿namespace IronJS.Compiler.Helpers
+﻿namespace IronJS.Compiler.Utils
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
 
@@ -12,14 +12,14 @@ module Closure =
     scope.Closure
       |> Map.toSeq
       |> Seq.sortBy (fun pair -> (snd pair).Index)
-      |> Seq.map (fun pair -> Helpers.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
+      |> Seq.map (fun pair -> Utils.Variable.dlrExpr ctx (fst pair) (snd pair).IsLocalInParent)
       |> List.ofSeq
 
   let private resolveType ctx (scope:Ast.Scope) =
     Runtime.Closures.createClosureType (
       scope.Closure
         |> Map.toSeq
-        |> Seq.fold (fun state pair -> (Helpers.Variable.clrType ctx (fst pair) (snd pair).IsLocalInParent, (snd pair).Index) :: state) [] 
+        |> Seq.fold (fun state pair -> (Utils.Variable.clrType ctx (fst pair) (snd pair).IsLocalInParent, (snd pair).Index) :: state) [] 
         |> Seq.sortBy (fun pair -> snd pair)
         |> Seq.map (fun pair -> fst pair)
     )

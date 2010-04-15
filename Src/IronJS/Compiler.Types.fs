@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Compiler
 
 open IronJS
-open IronJS.Utils
+open IronJS.Aliases
 open IronJS.Tools
 open System.Linq.Expressions
 

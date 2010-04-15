@@ -36,7 +36,7 @@ let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap
               then  var.UsedAs 
               else  let evaledWithClosures =
                       Set.fold (fun state var -> 
-                             state ||| Utils.Type.ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
+                             state ||| Utils.Type.ToJs (Variables.Closure.clrTypeN closureType closure.[var].Index)
                            ) var.UsedAs var.UsedWithClosure
 
                     // Combine UsedAs + UsedWithClosure types with UsedWith types

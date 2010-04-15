@@ -1,4 +1,4 @@
-﻿namespace IronJS.Compiler.Utils
+﻿namespace IronJS.Compiler
 
 open System
 
@@ -7,7 +7,7 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
 
-module Variable =
+module Variables =
 
   (*Helper functions for dealing with closure variables*)
   module Closure = 
@@ -62,7 +62,7 @@ module Variable =
               ]
 
   (*Helper functions for dealing with local variables*)
-  module Locals = 
+  module Local = 
     
     let clrType ctx name =
       if Ast.Utils.hasLocal ctx.Scope name
@@ -73,7 +73,6 @@ module Variable =
       ctx.Scope.Locals.[name].Expr :> Et
 
     let value ctx name scopeLevel =
-
       let valueExpr (expr:Et) = 
         if Js.isStrongBox (expr.Type)
           then Dlr.Expr.field expr "Value"
@@ -104,7 +103,7 @@ module Variable =
                   (vars)
               ) :> Et]
 
-  module Globals =
+  module Global =
     
     let clrType ctx name =
       Constants.clrDynamic

@@ -5,9 +5,9 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Runtime
 
-type ObjectList = Object ResizeArray
-
 module Variables = 
+  type private ObjectList = Object ResizeArray
+
   let rec private scanScopes fnc (lst:Scope ResizeArray) topScope = 
     let rec scanScopes n = 
       if n >= lst.Count

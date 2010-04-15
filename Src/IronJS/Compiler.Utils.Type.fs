@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Compiler
 open System.Dynamic
 
-module Core = 
+module Type = 
 
   (*Converts a ClrType to JsType*)
   let internal ToJs typ = 

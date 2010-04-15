@@ -59,7 +59,7 @@
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
-    <Compile Include="Compiler.Utils.Types.fs" />
+    <Compile Include="Compiler.Utils.Type.fs" />
     <Compile Include="Compiler.Utils.Variables.fs" />
     <Compile Include="Compiler.Utils.Object.fs" />
     <Compile Include="Compiler.Utils.ExprGen.fs" />

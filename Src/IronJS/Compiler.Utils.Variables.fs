@@ -6,7 +6,6 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Utils.Core
 
 module Variable =
 
@@ -23,7 +22,7 @@ module Variable =
       fieldNameN ctx.Scope.Closure.[name].Index
 
     let clrTypeN typ n =
-      strongBoxInnerType (Type.fieldType typ (fieldNameN n))
+      Utils.Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
       if Ast.Utils.hasClosure ctx.Scope name 
@@ -67,7 +66,7 @@ module Variable =
     
     let clrType ctx name =
       if Ast.Utils.hasLocal ctx.Scope name
-        then ToClr ctx.Scope.Locals.[name].UsedAs
+        then Utils.Type.ToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
     let expr ctx name = 

@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Utils.Core
 
 (*Checks if a local always will result in a Dynamic type*)
 let private isDynamic (loc:Ast.Local) =
@@ -20,8 +19,8 @@ let private isNotAssignedTo (var:Ast.Local) = var.UsedWith.Count = 0 && var.Used
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (var:Ast.Local) typ =
   let expr = Dlr.Expr.param name (match var.ClosureAccess with
-                                  | Ast.Read | Ast.Write -> Constants.strongBoxTypeDef.MakeGenericType(ToClr typ)
-                                  | Ast.Nothing -> ToClr typ)
+                                  | Ast.Read | Ast.Write -> Constants.strongBoxTypeDef.MakeGenericType(Utils.Type.ToClr typ)
+                                  | Ast.Nothing -> Utils.Type.ToClr typ)
 
   { var with UsedAs = typ; Expr = expr }
 
@@ -37,7 +36,7 @@ let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap
               then  var.UsedAs 
               else  let evaledWithClosures =
                       Set.fold (fun state var -> 
-                             state ||| ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
+                             state ||| Utils.Type.ToJs (Utils.Variable.Closure.clrTypeN closureType closure.[var].Index)
                            ) var.UsedAs var.UsedWithClosure
 
                     // Combine UsedAs + UsedWithClosure types with UsedWith types
@@ -65,7 +64,7 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
           |> Map.map (fun name var -> 
             if var.IsParameter then
               if var.ParamIndex < types.Length
-                then { var with UsedAs = var.UsedAs ||| ToJs types.[var.ParamIndex] } // We got an argument for this parameter
+                then { var with UsedAs = var.UsedAs ||| Utils.Type.ToJs types.[var.ParamIndex] } // We got an argument for this parameter
                 else setType name var Ast.JsTypes.Dynamic // We didn't, means make it dynamic
             else 
               if   isDynamic var       then setType name var Ast.JsTypes.Dynamic // No need to resolve type, force it here

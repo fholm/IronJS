@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Compiler.Utils.Core
 
 (*Adds initilization expressions for variables that should be Undefined*)
 let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
@@ -46,7 +45,7 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
   let parameters, variables = ctx.Scope.Locals |> Map.partition (fun _ (var:Ast.Local) -> var.IsParameter && not var.InitUndefined)
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
-  let proxyParameters = closedOverParameters |> Map.map (fun name var -> Dlr.Expr.param ("~" + name + "_proxy") (ToClr var.UsedAs))
+  let proxyParameters = closedOverParameters |> Map.map (fun name var -> Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.ToClr var.UsedAs))
   let inputParameters = (getParameterListExprs parameters proxyParameters)
   let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters
 

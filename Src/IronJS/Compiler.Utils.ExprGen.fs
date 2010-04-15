@@ -15,19 +15,19 @@ module ExprGen =
     Dlr.Expr.dynamic binder Constants.clrDynamic (func :: args)
 
   let convertToObject (expr:Et) =
-    if Runtime.Helpers.Core.isObject expr.Type 
+    if Runtime.Utils.Type.isObject expr.Type 
       then expr
       else let binder = new Runtime.Binders.Convert(Runtime.Object.TypeDef, false) 
            Dlr.Expr.dynamic binder Runtime.Object.TypeDef [expr]
 
   let setProperty (expr:Et) name value = 
-    if Runtime.Helpers.Core.isObject expr.Type 
+    if Runtime.Utils.Type.isObject expr.Type 
       then Utils.Object.setProperty expr name value
       else let binder = new Runtime.Binders.SetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic (expr :: [value])
 
   let getProperty (expr:Et) name = 
-    if Runtime.Helpers.Core.isObject expr.Type 
+    if Runtime.Utils.Type.isObject expr.Type 
       then Utils.Object.getProperty expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
            Dlr.Expr.dynamic binder Constants.clrDynamic [expr]

@@ -7,17 +7,15 @@ open IronJS.Compiler
 
 (*Adds initilization expressions for variables that should be Undefined*)
 let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
-  variables
-    |> Map.toSeq
-    |> Seq.filter (fun pair -> (snd pair).InitUndefined)
-    |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Undefined.InstanceExpr) :: state) body
+  variables |> Map.toSeq
+            |> Seq.filter (fun pair -> (snd pair).InitUndefined)
+            |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Undefined.InstanceExpr) :: state) body
 
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
 let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
-  variables
-    |> Map.toSeq
-    |> Seq.filter (fun pair -> (snd pair).IsClosedOver)
-    |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.newInstance (snd pair).Expr.Type)) :: state) body
+  variables |> Map.toSeq
+            |> Seq.filter (fun pair -> (snd pair).IsClosedOver)
+            |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.newInstance (snd pair).Expr.Type)) :: state) body
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
@@ -39,10 +37,12 @@ let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
   [for kvp in parameters -> if kvp.Value.IsClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
-
+  
+(**)
 let private createProxyParameter name (var:Ast.Local) = 
   Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.jsToClr var.UsedAs)
-
+  
+(**)
 let private partitionParamsAndVars _ (var:Ast.Local) =
    var.IsParameter && not var.InitUndefined
 
@@ -65,7 +65,7 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
   let proxyParameters = closedOverParameters |> Map.map createProxyParameter
-  let inputParameters = (getParameterListExprs parameters proxyParameters)
+  let inputParameters = getParameterListExprs parameters proxyParameters
   let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters
 
   let localVariableExprs = 

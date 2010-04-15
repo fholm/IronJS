@@ -35,7 +35,7 @@ module Function =
       )
 
     (*Creates a new closure type and expression to create an instance of that type*)
-    let create (ctx:Context) (scope:Ast.Scope) =
+    let internal create (ctx:Context) (scope:Ast.Scope) =
       let scopesExpr = if scope.InParentDynamicScope 
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant ctx.Scope.ScopeLevel]
                               Dlr.Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
@@ -55,4 +55,5 @@ module Function =
 
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args =
-    Utils.ExprGen.callFunction (ctx.Builder ctx target)  (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])
+    ctx.TemporaryTypes.Clear()
+    CallSites.invoke (ctx.Builder ctx target)  (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])

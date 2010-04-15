@@ -1,7 +1,5 @@
 ﻿module IronJS.Tools.Type
 
-(*Tools for working with the System.Type object*)
-
 open IronJS.Aliases
 
 (*Gets the FieldInfo object for a field on a type*)
@@ -30,11 +28,9 @@ let getCtor (typ:ClrType) (args:ClrType list) =
                                 then matchArgs xsA xsP
                                 else false
 
-  let ctors = typ.GetConstructors()
-
   Array.find (fun (ctor:CtorInfo) ->
     let parms = List.ofArray (ctor.GetParameters())
     if args.Length = parms.Length 
       then matchArgs args parms 
       else false
-  ) ctors
+  ) (typ.GetConstructors())

@@ -109,6 +109,7 @@ type Node =
   //Magic
   | Arguments
   | This
+  | Eval of string
 
   //Scopes
   | DynamicScope  of Node * Node

@@ -29,16 +29,11 @@ module Variables =
   module Local = 
     let expr ctx name = ctx.Scope.Locals.[name].Expr :> Et
     let assign ctx name value = Js.assign (expr ctx name) value
-
-    let value ctx name =
-      let expr = expr ctx name
-      if Js.isStrongBox (expr.Type) 
-        then Dlr.Expr.field expr "Value" 
-        else expr
+    let value ctx name = let expr = expr ctx name in if Js.isStrongBox (expr.Type) then Dlr.Expr.field expr "Value" else expr
     
     let clrType ctx name =
       if Ast.Utils.hasLocal ctx.Scope name
-        then Utils.Type.ToClr ctx.Scope.Locals.[name].UsedAs
+        then Utils.Type.jsToClr ctx.Scope.Locals.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
   module Global =

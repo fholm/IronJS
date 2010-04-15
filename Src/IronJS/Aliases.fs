@@ -20,3 +20,4 @@ type ClrType        = System.Type
 type Dynamic        = System.Object
 type StrongBox<'a>  = System.Runtime.CompilerServices.StrongBox<'a>
 type IEnum<'a>      = System.Collections.Generic.IEnumerable<'a>
+type Dict<'a, 'b>   = System.Collections.Generic.Dictionary<'a, 'b>

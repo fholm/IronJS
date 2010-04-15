@@ -36,6 +36,7 @@ module Analyzer =
         | Undefined -> return! usedAs name JsTypes.Dynamic
         | Null      -> return! usedAs name JsTypes.Dynamic
         | Function(_, _) -> return! usedAs name JsTypes.Object
+        | Object(_) -> return! usedAs name JsTypes.Object
 
         | _ -> return ()
 

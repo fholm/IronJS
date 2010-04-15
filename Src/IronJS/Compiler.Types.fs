@@ -14,6 +14,7 @@ type Context = {
   Scope: Ast.Scope
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
+  TemporaryTypes: Dict<string, ClrType>
 } with
   member x.Globals        = Dlr.Expr.field x.Closure "Globals"
   member x.Environment    = Dlr.Expr.field x.Closure "Environment"
@@ -30,4 +31,5 @@ type Context = {
     Return = Dlr.Expr.label "~return"
     Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault
+    TemporaryTypes = null
   }

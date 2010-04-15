@@ -59,10 +59,10 @@
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
-    <Compile Include="Compiler.Utils.Type.fs" />
+    <Compile Include="Compiler.Utils.fs" />
     <Compile Include="Compiler.Variables.fs" />
     <Compile Include="Compiler.Object.fs" />
-    <Compile Include="Compiler.Utils.ExprGen.fs" />
+    <Compile Include="Compiler.CallSites.fs" />
     <Compile Include="Compiler.Function.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.DynamicScope.fs" />

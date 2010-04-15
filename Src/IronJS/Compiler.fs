@@ -40,14 +40,31 @@ let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
   [for kvp in parameters -> if kvp.Value.IsClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
 
+let private createProxyParameter name (var:Ast.Local) = 
+  Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.jsToClr var.UsedAs)
+
+let private partitionParamsAndVars _ (var:Ast.Local) =
+   var.IsParameter && not var.InitUndefined
+
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
-  let ctx = {Context.New with Closure = Dlr.Expr.param "~closure" closureType; Scope = scope; Builder = Compiler.ExprGen.builder}
-  let body = [(Compiler.ExprGen.builder ctx ast); Dlr.Expr.labelExpr ctx.Return]
 
-  let parameters, variables = ctx.Scope.Locals |> Map.partition (fun _ (var:Ast.Local) -> var.IsParameter && not var.InitUndefined)
+  let ctx = {
+    Context.New with
+      Closure = Dlr.Expr.param "~closure" closureType
+      Scope = scope
+      Builder = Compiler.ExprGen.builder
+      TemporaryTypes = new Dict<string, ClrType>()
+  }
+
+  let body = [
+    (Compiler.ExprGen.builder ctx ast)
+    (Dlr.Expr.labelExpr ctx.Return)
+  ]
+
+  let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
-  let proxyParameters = closedOverParameters |> Map.map (fun name var -> Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.ToClr var.UsedAs))
+  let proxyParameters = closedOverParameters |> Map.map createProxyParameter
   let inputParameters = (getParameterListExprs parameters proxyParameters)
   let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters
 

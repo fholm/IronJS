@@ -12,15 +12,24 @@ module ExprGen =
 
     match left with
     | Ast.Global(name, globalScopeLevel)  -> 
-      (if globalScopeLevel = 0 then Variables.Global.assign else DynamicScope.setGlobalValue) ctx name value
+      if globalScopeLevel = 0 
+        then ctx.TemporaryTypes.[name] <- value.Type
+             Variables.Global.assign ctx name value
+        else DynamicScope.setGlobalValue ctx name value
 
     | Ast.Local(name, localScopeLevel)    -> 
-      (if localScopeLevel = 0 then Variables.Local.assign else DynamicScope.setLocalValue) ctx name value
+      if localScopeLevel = 0 
+        then ctx.TemporaryTypes.[name] <- value.Type
+             Variables.Local.assign ctx name value
+        else DynamicScope.setLocalValue ctx name value
 
     | Ast.Closure(name, globalScopeLevel) -> 
-      (if globalScopeLevel = 0 then Variables.Closure.assign else DynamicScope.setClosureValue) ctx name value
+      if globalScopeLevel = 0 
+        then ctx.TemporaryTypes.[name] <- value.Type
+             Variables.Closure.assign ctx name value
+        else DynamicScope.setClosureValue ctx name value
 
-    | Ast.Property(target, name) -> Utils.ExprGen.setProperty (ctx.Builder ctx target) name value
+    | Ast.Property(target, name) -> CallSites.setMember (ctx.Builder ctx target) name value
     | _ -> failwith "Assignment for '%A' is not defined" left
 
   //Builder function for expression generation
@@ -45,7 +54,7 @@ module ExprGen =
 
     //Objects
     | Ast.Object(properties)      -> Object.create ctx properties
-    | Ast.Property(target, name)  -> Utils.ExprGen.getProperty (ctx.Builder ctx target) name
+    | Ast.Property(target, name)  -> CallSites.getMember (ctx.Builder ctx target) name
 
     //Functions
     | Ast.Function(scope, _)    -> Function.definition ctx scope ast

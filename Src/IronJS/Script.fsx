@@ -72,3 +72,6 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>()
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
 let aval = globals.Get("a_val")
+
+let p = Et.Parameter(typeof<obj>)
+

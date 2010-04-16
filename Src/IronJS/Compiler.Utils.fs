@@ -11,14 +11,14 @@ module Utils =
 
   module Type = 
 
-    (*Converts a ClrType to JsType*)
+    (*Converts a ClrType object to JsType enum*)
     let internal clrToJs typ = 
       if typ = Constants.clrDouble then Ast.JsTypes.Double
       elif typ = Constants.clrString then Ast.JsTypes.String
       elif typ = Runtime.Object.TypeDef then Ast.JsTypes.Object
       else Ast.JsTypes.Dynamic
 
-    (*Converts a JsType to ClrType*)
+    (*Converts a JsType enum to ClrType object*)
     let internal jsToClr typ =
       match typ with
       | Ast.JsTypes.Double -> Constants.clrDouble

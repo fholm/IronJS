@@ -22,14 +22,26 @@ module Variables =
         else failwithf "No closure variable named '%s' exist" name
 
     let expr ctx (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
-    let value ctx name = Dlr.Expr.field (expr ctx name) "Value"
     let assign ctx name value = Js.assign (expr ctx name) value
+    let value ctx name = 
+      let expr = Dlr.Expr.field (expr ctx name) "Value"
+      if ctx.TemporaryTypes.ContainsKey name
+        then Dlr.Expr.cast expr ctx.TemporaryTypes.[name]
+        else expr
 
   (*Helper functions for dealing with local variables*)
   module Local = 
     let expr ctx name = ctx.Scope.Locals.[name].Expr :> Et
     let assign ctx name value = Js.assign (expr ctx name) value
-    let value ctx name = let expr = expr ctx name in if Js.isStrongBox (expr.Type) then Dlr.Expr.field expr "Value" else expr
+    let value ctx name = 
+      let expr = expr ctx name 
+      let exprBox = if Js.isStrongBox (expr.Type) 
+                      then Dlr.Expr.field expr "Value" 
+                      else expr
+
+      if ctx.TemporaryTypes.ContainsKey name 
+        then Dlr.Expr.cast exprBox ctx.TemporaryTypes.[name]
+        else exprBox
     
     let clrType ctx name =
       if Ast.Utils.hasLocal ctx.Scope name
@@ -38,5 +50,11 @@ module Variables =
 
   module Global =
     let clrType ctx name = Constants.clrDynamic
-    let value (ctx:Context) name = Js.Object.get ctx.Globals name
+
+    let value (ctx:Context) name = 
+      let expr = Js.Object.get ctx.Globals name
+      if ctx.TemporaryTypes.ContainsKey name 
+        then Dlr.Expr.cast expr ctx.TemporaryTypes.[name]
+        else expr
+
     let assign (ctx:Context) name value = Js.Object.set ctx.Globals name value

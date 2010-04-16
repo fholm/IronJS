@@ -13,7 +13,6 @@ module DynamicScope =
     ctx.TemporaryTypes.Clear()
     Dlr.Expr.call ctx.LocalScopes "Insert" [Dlr.Expr.Math.int0; target]
     
-
   let leave (ctx:Context) =
     Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.Math.int0]
 

@@ -16,12 +16,15 @@ module CallSites =
     let typeDef = typeof<'a>
 
     //First, check exception for Runtime.Object type
-    if typeDef = Runtime.Object.TypeDef && Runtime.Utils.Type.isObject expr.Type 
-      then  Dlr.Expr.castT<Runtime.Object> expr
-      else  if typeDef = expr.Type
-              then  expr
-              else  let binder = new Runtime.Binders.Convert(typeof<'a>, false) 
-                    Dlr.Expr.dynamic binder Runtime.Object.TypeDef [expr]
+    if typeDef = Runtime.Object.TypeDef && Runtime.Utils.Type.isObject expr.Type then
+      if expr.Type = Runtime.Object.TypeDef 
+        then expr
+        else Dlr.Expr.castT<Runtime.Object> expr
+    else  
+      if typeDef = expr.Type
+        then expr
+        else let binder = new Runtime.Binders.Convert(typeof<'a>, false) 
+             Dlr.Expr.dynamic binder Runtime.Object.TypeDef [expr]
 
   let setMember (expr:Et) name value = 
     if Runtime.Utils.Type.isObject expr.Type 

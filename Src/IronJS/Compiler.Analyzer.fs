@@ -18,9 +18,11 @@ let private isNotAssignedTo (var:Ast.Local) = var.UsedWith.Count = 0 && var.Used
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (var:Ast.Local) typ =
-  let expr = Dlr.Expr.param name (match var.ClosureAccess with
-                                  | Ast.Read | Ast.Write -> Constants.strongBoxTypeDef.MakeGenericType(Utils.Type.jsToClr typ)
-                                  | Ast.Nothing -> Utils.Type.jsToClr typ)
+  let exprType = if var.ClosedOver 
+                   then Constants.strongBoxTypeDef.MakeGenericType(Utils.Type.jsToClr typ) 
+                   else Utils.Type.jsToClr typ
+
+  let expr = Dlr.Expr.param name exprType
 
   { var with UsedAs = typ; Expr = expr }
 

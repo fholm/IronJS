@@ -13,33 +13,27 @@ type JsTypes =
   | Object    = 8
   | Dynamic   = 16
 
-type ClosureAccess =
-  | Nothing
-  | Read
-  | Write
-
 [<DebuggerDisplay("{DebugView}")>]
 type Local = {
   Expr:             EtParam
-  UsedAs:           JsTypes
-  UsedWith:         string Set
   ParamIndex:       int
   InitUndefined:    bool
-  ClosureAccess:    ClosureAccess
+  ClosedOver:       bool
+  UsedAs:           JsTypes
+  UsedWith:         string Set
   UsedWithClosure:  string Set
 } with
-  member x.IsClosedOver = not (x.ClosureAccess = ClosureAccess.Nothing)
   member x.IsParameter  = x.ParamIndex > -1
   member x.DebugView = (sprintf 
-    @"access:%A/index:%i/undefined:%b/as:%A/with:%A, %A" 
-    x.ClosureAccess x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
+    @"closure:%b/index:%i/undefined:%b/as:%A/with:%A, %A" 
+    x.ClosedOver x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
   static member New = {
     Expr            = null
-    UsedAs          = JsTypes.Nothing
-    UsedWith        = Set.empty
     ParamIndex      = -1
     InitUndefined   = false
-    ClosureAccess   = ClosureAccess.Nothing
+    ClosedOver      = false
+    UsedAs          = JsTypes.Nothing
+    UsedWith        = Set.empty
     UsedWithClosure = Set.empty
   }
   
@@ -48,7 +42,7 @@ type Closure = {
   Index:                int
   DefinedInScopeLevel:  int
 } with
-  member x.DebugView = sprintf "index:%i/level:%i" x.Index x.DefinedInScopeLevel
+  member x.DebugView = sprintf "index:%i/from:%i" x.Index x.DefinedInScopeLevel
   static member New = {
     Index               = -1
     DefinedInScopeLevel = -1

@@ -32,11 +32,8 @@ module Utils =
                 DefinedInScopeLevel = level
            }
 
-  let internal setAccessRead (scope:Scope) name = 
-    let local = scope.Locals.[name]
-    setLocal scope name (match local.ClosureAccess with
-                         | Read | Write ->  local
-                         | Nothing      -> {local with ClosureAccess = Read})
+  let internal setClosedOver (scope:Scope) name = 
+    setLocal scope name {scope.Locals.[name] with ClosedOver = true}
 
   let internal setNeedsArguments (scope:Scope) =
     if scope.Arguments 
@@ -61,7 +58,7 @@ module Utils =
                                   match s with
                                   | []    -> s
                                   | x::xs -> if hasLocal x name 
-                                               then setAccessRead x name :: xs
+                                               then setClosedOver x name :: xs
                                                else createClosure x name level :: updateScopes xs
 
                                 do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}

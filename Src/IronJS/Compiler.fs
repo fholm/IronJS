@@ -14,7 +14,7 @@ let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
 let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
   variables |> Map.toSeq
-            |> Seq.filter (fun pair -> (snd pair).IsClosedOver)
+            |> Seq.filter (fun pair -> (snd pair).ClosedOver)
             |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.newInstance (snd pair).Expr.Type)) :: state) body
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
@@ -36,7 +36,7 @@ let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
 
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
-  [for kvp in parameters -> if kvp.Value.IsClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
+  [for kvp in parameters -> if kvp.Value.ClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
   
 (**)
 let private createProxyParameter name (var:Ast.Local) = 
@@ -63,7 +63,7 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
   ]
 
   let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
-  let closedOverParameters = parameters |> Map.filter (fun _ var -> var.IsClosedOver)
+  let closedOverParameters = parameters |> Map.filter (fun _ var -> var.ClosedOver)
   let proxyParameters = closedOverParameters |> Map.map createProxyParameter
   let inputParameters = getParameterListExprs parameters proxyParameters
   let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters

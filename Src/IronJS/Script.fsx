@@ -67,6 +67,7 @@ let compiledFunc = (fst exprTree).Compile()
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Object(env)
+globals.Prototype
 let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)

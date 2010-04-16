@@ -18,6 +18,7 @@ type IEnvironment =
 [<AllowNullLiteral>]
 type Object(env:IEnvironment) =
   let properties = new Dictionary<string, Dynamic>();
+  [<DefaultValue>] val mutable Prototype : Object
 
   static member TypeDef = typedefof<Object>
   static member TypeDefHashCode = typedefof<Object>.GetHashCode()

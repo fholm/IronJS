@@ -28,3 +28,28 @@ with(outer){
     }
 }
 */
+
+/*
+var x = { foo: 1 }
+var y = { bar: 2 }
+y.Prototype = x
+
+cell.id = -1
+cell.index = -1
+cell.resolver = null
+
+if(cell.id == x.id) {
+	x.properties.[cell.index]
+} else if(cell.resolver != null) {
+    tmp = cell.resolver(x)
+    if(pair.Item1) {
+        
+    } else {
+        
+    }
+} else {
+	
+}
+
+x.chain.[cell.level].id = cell.id
+*/

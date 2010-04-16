@@ -57,7 +57,7 @@ module DynamicScope =
 
     let setArgs = [
       Dlr.Expr.constant name  // Name
-      Js.box tmp              // Value to set
+      Js.box tmp              // Value to set (boxed to object)
       ctx.LocalScopesExpr     // Local dynamic scopes
       ctx.Closure :> Et       // Function closure object
       Dlr.Expr.constant closure.DefinedInScopeLevel // Scope level this variable was defined in
@@ -67,9 +67,11 @@ module DynamicScope =
       //Creates a block that looks like this:
       {
         var tmp = value;
-        Runtime.Helpers.Variables.Closures.Set(name, (object)tmp, localScopes, closure, <scopeLevel>) 
-          ? tmp
-          : closure.{name} = tmp
+        if(Closures.Set(name, (object)tmp, localScopes, closure, <scopeLevel>)) {
+          tmp
+        } else {
+          closure.{name} = tmp
+        }
       }
     *)
 

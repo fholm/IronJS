@@ -23,14 +23,13 @@ module Utils =
   let internal hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
   let internal setLocal (scope:Scope) (name:string) (loc:Local) = {scope with Locals = scope.Locals.Add(name, loc)}
 
-  let internal createClosure (scope:Scope) name level isLocalInParent = 
+  let internal createClosure (scope:Scope) name level = 
     if scope.Closure.ContainsKey name 
       then scope 
       else setClosure scope name {
              Closure.New with 
-                Index               = scope.Closure.Count; 
-                DefinedInScopeLevel = level; 
-                IsLocalInParent     = isLocalInParent
+                Index               = scope.Closure.Count
+                DefinedInScopeLevel = level
            }
 
   let internal setAccessRead (scope:Scope) name = 
@@ -38,12 +37,6 @@ module Utils =
     setLocal scope name (match local.ClosureAccess with
                          | Read | Write ->  local
                          | Nothing      -> {local with ClosureAccess = Read})
-
-  let internal setAccessWrite (scope:Scope) name =
-    let local = scope.Locals.[name]
-    setLocal scope name (match local.ClosureAccess with
-                         | Write          ->  local
-                         | Nothing | Read -> {local with ClosureAccess = Write})
 
   let internal setNeedsArguments (scope:Scope) =
     if scope.Arguments 
@@ -69,7 +62,7 @@ module Utils =
                                   | []    -> s
                                   | x::xs -> if hasLocal x name 
                                                then setAccessRead x name :: xs
-                                               else createClosure x name level (hasLocal xs.Head name) :: updateScopes xs
+                                               else createClosure x name level :: updateScopes xs
 
                                 do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
                                 return Closure(name, fst sl)
@@ -142,7 +135,7 @@ module Utils =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
-               do! setState({s with ScopeChain = x'::xs})}
+               do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWith name rname = state {
     let!  s = getState
@@ -150,7 +143,7 @@ module Utils =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
-               do! setState({s with ScopeChain = x'::xs})}
+               do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWithClosure name rname = state {
     let!  s = getState
@@ -158,4 +151,4 @@ module Utils =
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
                let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
-               do! setState({s with ScopeChain = x'::xs})}
+               do! setState {s with ScopeChain = x'::xs}}

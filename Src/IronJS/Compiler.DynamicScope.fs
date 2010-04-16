@@ -33,7 +33,7 @@ module DynamicScope =
 
   let getClosureValue (ctx:Context) name = 
     let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
-    let getArgs = [Dlr.Expr.constant name; ctx.LocalScopesExpr; ctx.Closure :> Et; Dlr.Expr.constant (Variables.Closure.definedInScope ctx name)]
+    let getArgs = [Dlr.Expr.constant name; ctx.LocalScopesExpr; ctx.Closure :> Et; Dlr.Expr.constant (Variables.Closure.definingScopeLevel ctx name)]
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Get" getArgs)
       (Dlr.Expr.ControlFlow.ternary 
@@ -51,7 +51,7 @@ module DynamicScope =
       Js.box tmp 
       ctx.LocalScopesExpr 
       ctx.Closure :> Et
-      Dlr.Expr.constant (Variables.Closure.definedInScope ctx name)
+      Dlr.Expr.constant (Variables.Closure.definingScopeLevel ctx name)
     ]
 
     Dlr.Expr.blockWithLocals [tmp] [

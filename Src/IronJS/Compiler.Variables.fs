@@ -11,7 +11,7 @@ module Variables =
 
   (*Helper functions for dealing with closure variables*)
   module Closure = 
-    let definedInScope ctx name = ctx.Scope.Closure.[name].DefinedInScopeLevel
+    let definingScopeLevel ctx name = ctx.Scope.Closure.[name].DefinedInScopeLevel
     let fieldNameN n = sprintf "Item%i" n
     let fieldName ctx name = fieldNameN ctx.Scope.Closure.[name].Index
     let clrTypeN typ n = Utils.Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))

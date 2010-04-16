@@ -11,7 +11,7 @@ module Function =
     (*Resolves all item expressions for a closure*)
     let private resolveItems ctx (scope:Ast.Scope) =
       let expr ctx (pair:string * Ast.Closure) =
-        if (snd pair).IsLocalInParent 
+        if ctx.Scope.Locals.ContainsKey (fst pair)
           then Variables.Local.expr ctx (fst pair)    // Local closed over variable
           else Variables.Closure.expr ctx (fst pair)  // Variable that is a closure in parent also
 
@@ -23,8 +23,8 @@ module Function =
     (*Creates a closure type*)
     let private createType ctx (scope:Ast.Scope) =
       let clrType ctx (pair:string*Ast.Closure) =
-        if (snd pair).IsLocalInParent 
-          then Variables.Local.clrType  ctx (fst pair)
+        if ctx.Scope.Locals.ContainsKey (fst pair)
+          then Variables.Local.clrType ctx (fst pair)
           else Variables.Closure.clrType ctx (fst pair)
 
       Runtime.Closures.createClosureType (

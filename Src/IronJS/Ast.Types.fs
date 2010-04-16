@@ -46,13 +46,11 @@ type Local = {
 [<DebuggerDisplay("{DebugView}")>]
 type Closure = {
   Index:                int
-  IsLocalInParent:      bool
   DefinedInScopeLevel:  int
 } with
-  member x.DebugView = sprintf "index:%i/local:%b/level:%i" x.Index x.IsLocalInParent x.DefinedInScopeLevel
+  member x.DebugView = sprintf "index:%i/level:%i" x.Index x.DefinedInScopeLevel
   static member New = {
     Index               = -1
-    IsLocalInParent     = false
     DefinedInScopeLevel = -1
   }
 

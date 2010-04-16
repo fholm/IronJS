@@ -45,8 +45,7 @@ module Analyzer =
           if hasLocal x name
             then let l  = x.Locals.[name]
                  let l' = {l with UsedAs = l.UsedAs ||| (getType right)}
-                 let x' = {x with Locals = x.Locals.Add(name, l')}
-                 (setAccessWrite x' name) :: xs
+                 {x with Locals = x.Locals.Add(name, l')} :: xs
             else x :: updateScopes xs
 
       do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}

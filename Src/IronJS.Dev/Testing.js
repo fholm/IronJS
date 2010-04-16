@@ -1,31 +1,16 @@
 ﻿
-var obj = {};
+var foo = function () {
+    var x = 2;
 
-with (obj) {
-    /*
-    var foo = function (x, y) {
-        var myobj = {}
-        var z = 2;
-        var a = "plz no";
-        with (myobj) {
-            z = 4;
-            var foo = function () {
-                var innerobj = {}
-                innerobj.z = 5;
-                with (innerobj) {
-                    z = 6;
-                }
-            }
-        }
-        foo();
-        return z;
-        //return z;
+    var bar = function () {
+        x = "asd";
+        return x;
     }
-    var b;
-    b = a;
-    a = "a-next";
-    */
+
+    return bar();
 }
+
+a_val = foo();
 
 /*
 obj.b = b;

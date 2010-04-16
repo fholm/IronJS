@@ -8,6 +8,14 @@ open IronJS.Ast
 open IronJS.Ast.Utils
 
 module Analyzer =
+
+  let private getType = function
+    | Number(_) -> JsTypes.Double
+    | String(_) -> JsTypes.String 
+    | Function(_, _) -> JsTypes.Object
+    | Object(_) ->  JsTypes.Object
+    | _ -> JsTypes.Dynamic
+  
   let assign left right = state {
     let! (s:ParserState) = getState 
 
@@ -26,19 +34,7 @@ module Analyzer =
                  return! usedWithClosure name rightName
             else return! usedWithClosure name rightName
 
-        //Property + Global = always dynamic
-        | Property(_, _)
-        | Global(_, _) -> return! usedAs name JsTypes.Dynamic
-
-        //Constants
-        | Number(_) -> return! usedAs name JsTypes.Double
-        | String(_) -> return! usedAs name JsTypes.String 
-        | Undefined -> return! usedAs name JsTypes.Dynamic
-        | Null      -> return! usedAs name JsTypes.Dynamic
-        | Function(_, _) -> return! usedAs name JsTypes.Object
-        | Object(_) -> return! usedAs name JsTypes.Object
-
-        | _ -> return ()
+        | _ -> return! usedAs name (getType right)
 
     | Closure(name, _) ->
 
@@ -47,7 +43,10 @@ module Analyzer =
         | [] -> []
         | x::xs ->
           if hasLocal x name
-            then setAccessWrite x name :: xs
+            then let l  = x.Locals.[name]
+                 let l' = {l with UsedAs = l.UsedAs ||| (getType right)}
+                 let x' = {x with Locals = x.Locals.Add(name, l')}
+                 (setAccessWrite x' name) :: xs
             else x :: updateScopes xs
 
       do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}

@@ -6,6 +6,8 @@
 #r @"..\IronJS.Parser\bin\Debug\IronJS.Parser.dll"
 #r @"FSharp.PowerPack"
 #load "Fsi.fs"
+#load "Utils.fs"
+#load "Dynamic.fs"
 #load "Monads.fs"
 #load "Operators.fs"
 #load "Constants.fs"
@@ -71,7 +73,76 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>()
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
-let aval = globals.Get("a_val")
+Utils.time (fun () -> 
+  let mutable x = jsLexer :> obj
 
-let p = Et.Parameter(typeof<obj>)
+  let mutable i = 0
+  while i < 10000000 do
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    if x :? ES3Lexer then ()
+    i <- i + 1
+)
 
+Utils.time (fun () -> 
+  let mutable x = new IronJS.Dynamic()
+  x.typeCode <- 2uy
+
+  let mutable i = 0
+  while i < 10000000 do
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    if x.typeCode = 3uy then ()
+    i <- i + 1
+)
+
+
+Utils.time (fun () -> 
+  let mutable x = 1 :> obj
+  let mutable i = 0
+
+  while i < 10000000 do
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    x <- i :> obj
+    i <- i + 1
+)
+
+Utils.time (fun () -> 
+  let mutable x = new IronJS.Dynamic()
+  let mutable i = 0
+
+  while i < 10000000 do
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    i <- i + 1
+)

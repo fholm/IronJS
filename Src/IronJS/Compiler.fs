@@ -46,6 +46,9 @@ let private createProxyParameter name (var:Ast.Local) =
 let private partitionParamsAndVars _ (var:Ast.Local) =
    var.IsParameter && not var.InitUndefined
 
+let private addDynamicTempLocal (ctx:Context) (vars:EtParam list) =
+  ctx.DynamicTemp :: vars
+
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
@@ -72,6 +75,7 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
     closedOverParameters 
       |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
       |> addDynamicScopesLocal ctx
+      |> addDynamicTempLocal ctx
 
   let completeBodyExpr = 
     body 

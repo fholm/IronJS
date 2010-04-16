@@ -57,6 +57,10 @@ module Expr =
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
   let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    
+
+  let lambdaWithLocals (parms:EtParam list) (vars:EtParam list) (body:Et list) = 
+    lambda parms (blockWithLocals vars body)
+
   let invoke (func:Et) (args:Et list) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 

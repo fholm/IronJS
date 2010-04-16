@@ -10,26 +10,26 @@ module Function =
   module private Closure =
     (*Resolves all item expressions for a closure*)
     let private resolveItems ctx (scope:Ast.Scope) =
-      let expr ctx (pair:string * Ast.Closure) =
-        if ctx.Scope.Locals.ContainsKey (fst pair)
-          then Variables.Local.expr ctx (fst pair)    // Local closed over variable
-          else Variables.Closure.expr ctx (fst pair)  // Variable that is a closure in parent also
+      let expr ctx name =
+        if ctx.Scope.Locals.ContainsKey name
+          then Variables.Local.expr ctx name   // Local closed over variable
+          else Variables.Closure.expr ctx name // Variable that is a closure in parent also
 
       scope.Closure |> Map.toSeq
                     |> Seq.sortBy (fun pair -> (snd pair).Index)
-                    |> Seq.map (fun pair -> expr ctx pair)
+                    |> Seq.map (fun pair -> expr ctx (fst pair))
                     |> List.ofSeq
 
     (*Creates a closure type*)
     let private createType ctx (scope:Ast.Scope) =
-      let clrType ctx (pair:string*Ast.Closure) =
-        if ctx.Scope.Locals.ContainsKey (fst pair)
-          then Variables.Local.clrType ctx (fst pair)
-          else Variables.Closure.clrType ctx (fst pair)
+      let clrType ctx name =
+        if ctx.Scope.Locals.ContainsKey name
+          then Variables.Local.clrType ctx name
+          else Variables.Closure.clrType ctx name
 
       Runtime.Closures.createClosureType (
         scope.Closure |> Map.toSeq
-                      |> Seq.fold (fun state pair -> (clrType ctx pair, (snd pair).Index) :: state) [] 
+                      |> Seq.fold (fun state pair -> (clrType ctx (fst pair), (snd pair).Index) :: state) [] 
                       |> Seq.sortBy (fun pair -> snd pair)
                       |> Seq.map (fun pair -> fst pair)
       )

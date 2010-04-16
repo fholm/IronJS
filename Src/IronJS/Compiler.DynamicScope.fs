@@ -32,8 +32,16 @@ module DynamicScope =
     Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Set" args
 
   let getClosureValue (ctx:Context) name = 
+    let closure = ctx.Scope.Closure.[name]
     let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
-    let getArgs = [Dlr.Expr.constant name; ctx.LocalScopesExpr; ctx.Closure :> Et; Dlr.Expr.constant (Variables.Closure.definingScopeLevel ctx name)]
+
+    let getArgs = [
+      Dlr.Expr.constant name // Name
+      ctx.LocalScopesExpr    // Local dynamic scopes
+      ctx.Closure :> Et      // Function closure object
+      Dlr.Expr.constant closure.DefinedInScopeLevel // Scope level this variable was defined in
+    ]
+
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Get" getArgs)
       (Dlr.Expr.ControlFlow.ternary 
@@ -44,15 +52,26 @@ module DynamicScope =
     ]
 
   let setClosureValue (ctx:Context) name (value:Et) =
+    let closure = ctx.Scope.Closure.[name]
     let tmp = Dlr.Expr.param "~tmp" value.Type
 
     let setArgs = [
-      Dlr.Expr.constant name
-      Js.box tmp 
-      ctx.LocalScopesExpr 
-      ctx.Closure :> Et
-      Dlr.Expr.constant (Variables.Closure.definingScopeLevel ctx name)
+      Dlr.Expr.constant name  // Name
+      Js.box tmp              // Value to set
+      ctx.LocalScopesExpr     // Local dynamic scopes
+      ctx.Closure :> Et       // Function closure object
+      Dlr.Expr.constant closure.DefinedInScopeLevel // Scope level this variable was defined in
     ]
+
+    (* 
+      //Creates a block that looks like this:
+      {
+        var tmp = value;
+        Runtime.Helpers.Variables.Closures.Set(name, (object)tmp, localScopes, closure, <scopeLevel>) 
+          ? tmp
+          : closure.{name} = tmp
+      }
+    *)
 
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp value

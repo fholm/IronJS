@@ -29,6 +29,3 @@ let stringTypeCode = 8uy
 let anyTypeCode = 16uy
 let intTypeCode = 32uy
 let longTypeCode = 64uy
-
-let mutable dynamicNull = Dynamic()
-dynamicNull.objectPtr <- null

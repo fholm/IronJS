@@ -4,7 +4,7 @@ open System.Runtime.InteropServices
 
 #nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 [<StructLayout(LayoutKind.Explicit)>]
-type Dynamic =
+type Dynamic_ =
    struct
         [<FieldOffset(0)>] val mutable objectPtr : obj
         [<FieldOffset(4)>] val mutable typeCode : byte 

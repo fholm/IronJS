@@ -11,10 +11,10 @@ module Variables =
   let rec private scanScopes fnc (lst:Scope ResizeArray) topScope = 
     let rec scanScopes n = 
       if n >= lst.Count
-        then  false, Constants.dynamicNull
+        then  false, null
         else  let scope = lst.[n]
               if scope.ScopeLevel < topScope 
-                then  false, Constants.dynamicNull
+                then  false, null
                 else  let pair = fnc scope
                       if fst pair
                         then pair
@@ -30,9 +30,9 @@ module Variables =
 
   let private getFromObjects (name:string) scopes =
     if scopes = null
-      then  false, Constants.dynamicNull
+      then  false, null
       else  match ResizeArray.tryFind (fun (s:Object) -> s.Has name) scopes with
-            | None    -> false, Constants.dynamicNull
+            | None    -> false, null
             | Some(s) -> true, s.Get name
 
   (**)
@@ -41,7 +41,7 @@ module Variables =
       let pair = getFromObjects name localScopes
       if (fst pair)
         then  pair
-        else  false, Constants.dynamicNull
+        else  false, null
 
     static member Set(name:string, value:Dynamic, localScopes:ObjectList) =
       setInObjects name value localScopes
@@ -55,12 +55,12 @@ module Variables =
         else  let pair = scanScopes (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes maxScopeLevel
               if (fst pair)
                 then pair
-                else false, Constants.dynamicNull
+                else false, null
 
     static member Set(name:string, value:Dynamic, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) = 
       if setInObjects name value localScopes
         then  true
-        else  let found, _ = scanScopes (fun (x:Scope) -> setInObjects name value x.Objects, Constants.dynamicNull) closure.Scopes maxScopeLevel
+        else  let found, _ = scanScopes (fun (x:Scope) -> setInObjects name value x.Objects, null) closure.Scopes maxScopeLevel
               found
 
   (**)

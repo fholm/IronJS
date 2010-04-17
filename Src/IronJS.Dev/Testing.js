@@ -1,13 +1,6 @@
 ﻿
-var foo = function () {
-    var x = 2;
 
-    var bar = function () {
-        x = "asd";
-        return x;
-    }
 
-    return bar();
+for(var i = 0; i < 10; ++i) {
+    
 }
-
-a_val = foo();

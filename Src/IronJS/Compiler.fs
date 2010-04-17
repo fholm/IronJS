@@ -19,8 +19,7 @@ let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
-  //TODO: Merge this into addStrongBoxInitExprs
-  parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body
+  parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body 
 
 (**)
 let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
@@ -38,13 +37,11 @@ let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
   [for kvp in parameters -> if kvp.Value.ClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
   
-(**)
-let private createProxyParameter name (var:Ast.Local) = 
+let private createProxyParameter name (var:Ast.Local) =
   Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.jsToClr var.UsedAs)
-  
-(**)
-let private partitionParamsAndVars _ (var:Ast.Local) =
-   var.IsParameter && not var.InitUndefined
+
+let private partitionParamsAndVars _ (var:Ast.Local) = 
+  var.IsParameter && not var.InitUndefined
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =

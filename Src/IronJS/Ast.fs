@@ -24,6 +24,7 @@ module Core =
     | ES3Parser.RETURN          -> return! parseReturn t
     | ES3Parser.BYFIELD         -> return! parseByField t
     | ES3Parser.WITH            -> return! parseWith t
+    | ES3Parser.FOR             -> return! parseFor t
 
     //Error handling
     | _ -> return Error(sprintf "No parser for token %s (%i)" ES3Parser.tokenNames.[t.Type] t.Type)}
@@ -31,7 +32,18 @@ module Core =
   and private parseList lst = state { 
     match lst with
     | []    -> return [] 
-    | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs' }
+    | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs'}
+
+  and private parseForStep head body = state{
+      let h = head
+      return Pass
+    }
+
+  and private parseFor t = state {
+    let c0 = (child t 0)
+    match c0.Type with
+    | ES3Parser.FORSTEP -> return! parseForStep c0 (child t 1)
+    | _ -> return Error("Only FORSTEP loops are parseable currently")}
 
   and private parseVar t = state { 
     let c = child t 0 

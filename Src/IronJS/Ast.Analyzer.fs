@@ -11,9 +11,10 @@ module Analyzer =
 
   let private getType = function
     | Number(_) -> JsTypes.Double
+    | Integer(_) -> JsTypes.Integer
     | String(_) -> JsTypes.String 
     | Function(_, _) -> JsTypes.Object
-    | Object(_) ->  JsTypes.Object
+    | Object(_) -> JsTypes.Object
     | _ -> JsTypes.Dynamic
   
   let assign left right = state {
@@ -34,7 +35,13 @@ module Analyzer =
                  return! usedWithClosure name rightName
             else return! usedWithClosure name rightName
 
-        | _ -> return! usedAs name (getType right)
+        | Number(_) -> return! usedAs name JsTypes.Double
+        | Integer(_) -> return! usedAs name JsTypes.Integer
+        | String(_) -> return! usedAs name JsTypes.String 
+        | Function(_, _) -> return! usedAs name JsTypes.Object
+        | Object(_) -> return! usedAs name JsTypes.Object
+
+        | _ -> return! assignedFrom name right
 
     | Closure(name, _) ->
 

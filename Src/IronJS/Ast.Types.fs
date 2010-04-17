@@ -13,8 +13,64 @@ type JsTypes =
   | Object  = 8
   | Dynamic = 16
 
-[<DebuggerDisplay("{DebugView}")>]
-type Local = {
+type BinaryOp =
+  | Lt
+  | LtEq
+  | Gt
+  | GtEq
+  | Eq
+  | NotEq
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | Mod
+
+type UnaryOp =
+  | PreInc
+  | PreDec
+
+type Node =
+  //Error
+  | Error of string
+
+  //Constants
+  | String of string
+  | Number of double
+  | Integer of int
+  | Pass
+  | Null
+  | Undefined
+
+  //Identifiers
+  | Local     of string * int
+  | Closure   of string * int
+  | Global    of string * int
+  | Property  of Node * string
+
+  //Magic
+  | Arguments
+  | This
+  | Eval of string
+
+  //Scopes
+  | DynamicScope  of Node * Node
+  | Function      of Scope * Node
+
+  //Loops
+  | ForIter of Node * Node * Node * Node // init * test * incr * body
+  
+  //
+  | Block     of Node list
+  | Invoke    of Node * Node list
+  | Assign    of Node * Node
+  | Return    of Node
+  | Object    of Map<string, Node> option
+  | Convert   of Node * JsTypes
+  | BinaryOp  of Node * BinaryOp * Node
+  | UnaryOp   of UnaryOp * Node
+
+and [<DebuggerDisplay("{DebugView}")>] Local = {
   Expr: EtParam
   ParamIndex: int
   InitUndefined: bool
@@ -22,6 +78,7 @@ type Local = {
   UsedAs: JsTypes
   UsedWith: string Set
   UsedWithClosure: string Set
+  AssignedFrom: Node list
 } with
   member x.IsParameter = x.ParamIndex > -1
   member x.DebugView = (sprintf 
@@ -35,10 +92,10 @@ type Local = {
     UsedAs = JsTypes.Nothing
     UsedWith = Set.empty
     UsedWithClosure = Set.empty
+    AssignedFrom = List.empty
   }
   
-[<DebuggerDisplay("{DebugView}")>]
-type Closure = {
+and [<DebuggerDisplay("{DebugView}")>] Closure = {
   Index: int
   DefinedInScopeLevel: int
 } with
@@ -48,10 +105,10 @@ type Closure = {
     DefinedInScopeLevel = -1
   }
 
-type LocalMap = Map<string, Local>
-type ClosureMap = Map<string, Closure>
+and LocalMap = Map<string, Local>
+and ClosureMap = Map<string, Closure>
 
-type Scope = {
+and Scope = {
   Locals: LocalMap
   Closure: ClosureMap
   Arguments: bool
@@ -80,37 +137,3 @@ type ParserState = {
     GlobalDynamicScopeLevel = 0
     LocalDynamicScopeLevels = [0]
   }
-
-type Node =
-  //Error
-  | Error of string
-
-  //Constants
-  | String of string
-  | Number of double
-  | Pass
-  | Null
-  | Undefined
-
-  //Identifiers
-  | Local     of string * int
-  | Closure   of string * int
-  | Global    of string * int
-  | Property  of Node * string
-
-  //Magic
-  | Arguments
-  | This
-  | Eval of string
-
-  //Scopes
-  | DynamicScope  of Node * Node
-  | Function      of Scope * Node
-  
-  //
-  | Block   of Node list
-  | Invoke  of Node * Node list
-  | Assign  of Node * Node
-  | Return  of Node
-  | Object  of Map<string, Node> option
-  | Convert of Node * JsTypes

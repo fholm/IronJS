@@ -12,7 +12,7 @@ open Antlr.Runtime.Tree
 module Utils =
 
   let internal ct (tree:obj) = tree :?> AstTree
-  let internal child (tree:AstTree) index = (ct tree.Children.[index])
+  let internal child (tree:AstTree) index = if tree.ChildCount > index then (ct tree.Children.[index]) else null
   let internal children (tree:AstTree) = Tools.CSharp.toList<AstTree> tree.Children
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
@@ -73,7 +73,7 @@ module Utils =
     | _::[] -> ()
     | x::xs -> do! setState {s with ScopeChain = (setLocal x name {Local.New with InitUndefined = initUndefined} :: xs)}}  
 
-  let internal enterScope t = state {
+  let internal enterScope (parms:AstTree list) = state {
     let! (s:ParserState) = getState
     
     let rec createLocals parms index =
@@ -84,7 +84,7 @@ module Utils =
     let scope = {
       Scope.New with 
         ScopeLevel  = s.ScopeChain.Length;
-        Locals = createLocals [for c in (childrenOf t 0) -> c.Text] 0
+        Locals = createLocals [for c in parms -> c.Text] 0
     }
 
     do! setState {
@@ -126,12 +126,20 @@ module Utils =
           LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
       }}
 
+  let internal assignedFrom name node = state {
+    let!  s = getState
+    match s.ScopeChain with
+    | []    -> failwith "Global scope"
+    | x::xs -> let l  = x.Locals.[name]
+               let x' = setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
+               do! setState {s with ScopeChain = x'::xs}}
+
   let internal usedAs name typ = state {
     let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedAs = l.UsedAs ||| typ }
+               let x' = setLocal x name {l with UsedAs = l.UsedAs ||| typ}
                do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWith name rname = state {
@@ -139,7 +147,7 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedWith = l.UsedWith.Add(rname) }
+               let x' = setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWithClosure name rname = state {
@@ -147,5 +155,5 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.Locals.[name]
-               let x' = setLocal x name { l with UsedWithClosure = l.UsedWithClosure.Add(rname) }
+               let x' = setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}

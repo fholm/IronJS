@@ -17,6 +17,64 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{A4
 		Examples\DLR_ByRef.fsx = Examples\DLR_ByRef.fsx
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sunspider-0.9.1", "sunspider-0.9.1", "{60A31C26-C669-4BDB-86E6-CF9DF36BB7C5}"
+	ProjectSection(SolutionItems) = preProject
+		Benchmarks\sunspider-0.9.1\3d-cube.js = Benchmarks\sunspider-0.9.1\3d-cube.js
+		Benchmarks\sunspider-0.9.1\3d-morph.js = Benchmarks\sunspider-0.9.1\3d-morph.js
+		Benchmarks\sunspider-0.9.1\3d-raytrace.js = Benchmarks\sunspider-0.9.1\3d-raytrace.js
+		Benchmarks\sunspider-0.9.1\access-binary-trees.js = Benchmarks\sunspider-0.9.1\access-binary-trees.js
+		Benchmarks\sunspider-0.9.1\access-fannkuch.js = Benchmarks\sunspider-0.9.1\access-fannkuch.js
+		Benchmarks\sunspider-0.9.1\access-nbody.js = Benchmarks\sunspider-0.9.1\access-nbody.js
+		Benchmarks\sunspider-0.9.1\access-nsieve.js = Benchmarks\sunspider-0.9.1\access-nsieve.js
+		Benchmarks\sunspider-0.9.1\bitops-3bit-bits-in-byte.js = Benchmarks\sunspider-0.9.1\bitops-3bit-bits-in-byte.js
+		Benchmarks\sunspider-0.9.1\bitops-bits-in-byte.js = Benchmarks\sunspider-0.9.1\bitops-bits-in-byte.js
+		Benchmarks\sunspider-0.9.1\bitops-bitwise-and.js = Benchmarks\sunspider-0.9.1\bitops-bitwise-and.js
+		Benchmarks\sunspider-0.9.1\bitops-nsieve-bits.js = Benchmarks\sunspider-0.9.1\bitops-nsieve-bits.js
+		Benchmarks\sunspider-0.9.1\controlflow-recursive.js = Benchmarks\sunspider-0.9.1\controlflow-recursive.js
+		Benchmarks\sunspider-0.9.1\crypto-aes.js = Benchmarks\sunspider-0.9.1\crypto-aes.js
+		Benchmarks\sunspider-0.9.1\crypto-md5.js = Benchmarks\sunspider-0.9.1\crypto-md5.js
+		Benchmarks\sunspider-0.9.1\crypto-sha1.js = Benchmarks\sunspider-0.9.1\crypto-sha1.js
+		Benchmarks\sunspider-0.9.1\date-format-tofte.js = Benchmarks\sunspider-0.9.1\date-format-tofte.js
+		Benchmarks\sunspider-0.9.1\date-format-xparb.js = Benchmarks\sunspider-0.9.1\date-format-xparb.js
+		Benchmarks\sunspider-0.9.1\math-cordic.js = Benchmarks\sunspider-0.9.1\math-cordic.js
+		Benchmarks\sunspider-0.9.1\math-partial-sums.js = Benchmarks\sunspider-0.9.1\math-partial-sums.js
+		Benchmarks\sunspider-0.9.1\math-spectral-norm.js = Benchmarks\sunspider-0.9.1\math-spectral-norm.js
+		Benchmarks\sunspider-0.9.1\regexp-dna.js = Benchmarks\sunspider-0.9.1\regexp-dna.js
+		Benchmarks\sunspider-0.9.1\string-base64.js = Benchmarks\sunspider-0.9.1\string-base64.js
+		Benchmarks\sunspider-0.9.1\string-fasta.js = Benchmarks\sunspider-0.9.1\string-fasta.js
+		Benchmarks\sunspider-0.9.1\string-tagcloud.js = Benchmarks\sunspider-0.9.1\string-tagcloud.js
+		Benchmarks\sunspider-0.9.1\string-unpack-code.js = Benchmarks\sunspider-0.9.1\string-unpack-code.js
+		Benchmarks\sunspider-0.9.1\string-validate-input.js = Benchmarks\sunspider-0.9.1\string-validate-input.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "v8-v4", "v8-v4", "{4AE05184-796A-4800-A58E-310653D8F23B}"
+	ProjectSection(SolutionItems) = preProject
+		Benchmarks\v8-v4\v8-crypto.js = Benchmarks\v8-v4\v8-crypto.js
+		Benchmarks\v8-v4\v8-deltablue.js = Benchmarks\v8-v4\v8-deltablue.js
+		Benchmarks\v8-v4\v8-earley-boyer.js = Benchmarks\v8-v4\v8-earley-boyer.js
+		Benchmarks\v8-v4\v8-raytrace.js = Benchmarks\v8-v4\v8-raytrace.js
+		Benchmarks\v8-v4\v8-regexp.js = Benchmarks\v8-v4\v8-regexp.js
+		Benchmarks\v8-v4\v8-richards.js = Benchmarks\v8-v4\v8-richards.js
+		Benchmarks\v8-v4\v8-splay.js = Benchmarks\v8-v4\v8-splay.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ubench", "ubench", "{1B0D22B3-1885-44F8-89DA-85771E68CBEC}"
+	ProjectSection(SolutionItems) = preProject
+		Benchmarks\ubench\function-closure.js = Benchmarks\ubench\function-closure.js
+		Benchmarks\ubench\function-correct-args.js = Benchmarks\ubench\function-correct-args.js
+		Benchmarks\ubench\function-empty.js = Benchmarks\ubench\function-empty.js
+		Benchmarks\ubench\function-excess-args.js = Benchmarks\ubench\function-excess-args.js
+		Benchmarks\ubench\function-missing-args.js = Benchmarks\ubench\function-missing-args.js
+		Benchmarks\ubench\function-sum.js = Benchmarks\ubench\function-sum.js
+		Benchmarks\ubench\loop-empty-resolve.js = Benchmarks\ubench\loop-empty-resolve.js
+		Benchmarks\ubench\loop-empty.js = Benchmarks\ubench\loop-empty.js
+		Benchmarks\ubench\loop-sum.js = Benchmarks\ubench\loop-sum.js
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Benchmarks", "IronJS.Benchmarks\IronJS.Benchmarks.fsproj", "{11389A63-B1E3-475E-8440-4F6A72FA9D63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,12 +89,14 @@ Global
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x86.ActiveCfg = Debug|x86
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x86.Build.0 = Debug|x86
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.ActiveCfg = Release|Any CPU
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.Build.0 = Release|x86
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.ActiveCfg = Release|x86
+		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.Build.0 = Release|x86
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40105097-FE8E-4B39-A52A-8F8DDFA16B91}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
@@ -58,8 +118,23 @@ Global
 		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x86.ActiveCfg = Release|Any CPU
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Debug|x86.ActiveCfg = Debug|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Debug|x86.Build.0 = Debug|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Release|Any CPU.ActiveCfg = Release|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Release|Mixed Platforms.Build.0 = Release|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Release|x86.ActiveCfg = Release|x86
+		{11389A63-B1E3-475E-8440-4F6A72FA9D63}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{60A31C26-C669-4BDB-86E6-CF9DF36BB7C5} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
+		{4AE05184-796A-4800-A58E-310653D8F23B} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
+		{1B0D22B3-1885-44F8-89DA-85771E68CBEC} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
 	EndGlobalSection
 EndGlobal

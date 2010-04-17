@@ -22,6 +22,7 @@ module Expr =
   let labelExpr label = Et.Label(label, Et.Default(typeof<Dynamic>)) :> Et
 
   let blockWithLocals (parms:EtParam list) (exprs:Et list) = Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
+  let blockWithTmp fn typ = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
   let block = blockWithLocals []
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
@@ -69,19 +70,20 @@ module Expr =
     let int1 = constant 1
 
   module ControlFlow =
-    let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse)
-    let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse)
+    let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
+    let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
+    let forIter init test incr body = block [init; AstUtils.Loop(test, incr, body, empty)]
     
   module Logical =
-    let typeIs target typ = Et.TypeIs(target, typ)
-    let typeEqual target typ = Et.TypeEqual(target, typ)
-    let isFalse target = Et.IsFalse(target)
-    let isTrue target = Et.IsTrue(target)
-    let refEq left right = Et.ReferenceEqual(left, right)
-    let refNotEq left right = Et.ReferenceNotEqual(left, right)
-    let eq left right = Et.Equal(left, right)
-    let notEq left right = Et.NotEqual(left, right)
-    let lt left right = Et.LessThan(left, right)
-    let ltEq left right = Et.LessThanOrEqual(left, right)
-    let gt left right = Et.GreaterThan(left, right)
-    let gtEq left right = Et.GreaterThanOrEqual(left, right)
+    let typeIs target typ = Et.TypeIs(target, typ) :> Et
+    let typeEqual target typ = Et.TypeEqual(target, typ) :> Et
+    let isFalse target = Et.IsFalse(target) :> Et
+    let isTrue target = Et.IsTrue(target) :> Et
+    let refEq left right = Et.ReferenceEqual(left, right) :> Et
+    let refNotEq left right = Et.ReferenceNotEqual(left, right) :> Et
+    let eq left right = Et.Equal(left, right) :> Et
+    let notEq left right = Et.NotEqual(left, right) :> Et
+    let lt left right = Et.LessThan(left, right) :> Et
+    let ltEq left right = Et.LessThanOrEqual(left, right) :> Et
+    let gt left right = Et.GreaterThan(left, right) :> Et
+    let gtEq left right = Et.GreaterThanOrEqual(left, right) :> Et

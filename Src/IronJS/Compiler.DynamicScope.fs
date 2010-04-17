@@ -104,5 +104,5 @@ module DynamicScope =
           (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Set" setArgs)
           (tmp)
           (Variables.Local.assign ctx name tmp)
-        ) :> Et
+        )
       ]

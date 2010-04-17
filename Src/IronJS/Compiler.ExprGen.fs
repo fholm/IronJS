@@ -7,35 +7,10 @@ open IronJS.Compiler
 
 module ExprGen = 
 
-  let private assign (ctx:Context) left right =
-    let value = ctx.Builder ctx right
-
-    match left with
-    | Ast.Global(name, globalScopeLevel)  -> 
-      if globalScopeLevel = 0 
-        then ctx.TemporaryTypes.[name] <- value.Type
-             Variables.Global.assign ctx name value
-        else DynamicScope.setGlobalValue ctx name value
-
-    | Ast.Local(name, localScopeLevel)    -> 
-      if localScopeLevel = 0 
-        then ctx.TemporaryTypes.[name] <- value.Type
-             Variables.Local.assign ctx name value
-        else DynamicScope.setLocalValue ctx name value
-
-    | Ast.Closure(name, globalScopeLevel) -> 
-      if globalScopeLevel = 0 
-        then ctx.TemporaryTypes.[name] <- value.Type
-             Variables.Closure.assign ctx name value
-        else DynamicScope.setClosureValue ctx name value
-
-    | Ast.Property(target, name) -> CallSites.setMember (ctx.Builder ctx target) name value
-    | _ -> failwith "Assignment for '%A' is not defined" left
-
   //Builder function for expression generation
   let internal builder (ctx:Context) (ast:Ast.Node) =
     match ast with
-    | Ast.Assign(left, right) -> assign ctx left right
+    | Ast.Assign(left, right) -> Assign.build ctx left (ctx.Builder ctx right)
 
     //Variables
     | Ast.Global(name, globalScopeLevel)  -> 
@@ -48,9 +23,10 @@ module ExprGen =
       (if globalScopeLevel = 0 then Variables.Closure.value else DynamicScope.getClosureValue) ctx name
 
     //Constants
-    | Ast.String(value) -> Dlr.Expr.constant value
-    | Ast.Number(value) -> Dlr.Expr.constant value
-    | Ast.Null          -> Dlr.Expr.dynamicDefault
+    | Ast.String(value)   -> Dlr.Expr.constant value
+    | Ast.Number(value)   -> Dlr.Expr.constant value
+    | Ast.Integer(value)  -> Dlr.Expr.constant value
+    | Ast.Null            -> Dlr.Expr.dynamicDefault
 
     //Objects
     | Ast.Object(properties)      -> Object.create ctx properties
@@ -61,10 +37,15 @@ module ExprGen =
     | Ast.Invoke(target, args)  -> Function.invoke ctx target args
     | Ast.Return(value)         -> Js.makeReturn ctx.Return (ctx.Builder ctx value)
 
+    //Loops
+    | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
+
     //
     | Ast.Block(nodes)                -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
     | Ast.DynamicScope(target, body)  -> DynamicScope.wrapInScope ctx target body
+    | Ast.BinaryOp(left, op, right)   -> BinaryOp.build ctx left op right
+    | Ast.UnaryOp(op, target)         -> UnaryOp.build ctx op target
 
     //
     | Ast.Pass -> Dlr.Expr.empty
-    | _        -> failwith "No builder function defined for '%A'" ast
+    | _        -> failwithf "No builder function defined for %A" ast

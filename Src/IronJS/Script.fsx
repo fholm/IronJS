@@ -30,13 +30,17 @@
 #load "Runtime.Binders.fs"
 #load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"
-#load "Compiler.Utils.fs"
+#load "Compiler.Utils.Type.fs"
 #load "Compiler.Variables.fs"
 #load "Compiler.Object.fs"
 #load "Compiler.CallSites.fs"
-#load "Compiler.Function.fs"
 #load "Compiler.DynamicScope.fs"
+#load "Compiler.Assign.fs"
+#load "Compiler.Function.fs"
 #load "Compiler.Analyzer.fs"
+#load "Compiler.Loops.fs"
+#load "Compiler.BinaryOp.fs"
+#load "Compiler.UnaryOp.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
 open System
@@ -65,10 +69,10 @@ let program = jsParser.program()
 let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global
 
 let exprTree = (Compiler.Core.compileAst Runtime.Closure.TypeDef (fst ast) (snd ast))
-let compiledFunc = (fst exprTree).Compile()
+let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Closure, Dynamic array, Runtime.Object, Dynamic>
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
 let globals = new Runtime.Object(env)
 let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
 
-compiledFunc.DynamicInvoke(closure, null, closure.Globals)
+Utils.time(fun () -> compiledFunc.Invoke(closure, null, closure.Globals) |> ignore)

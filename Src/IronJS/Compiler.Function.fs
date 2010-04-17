@@ -56,4 +56,5 @@ module Function =
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args =
     ctx.TemporaryTypes.Clear()
-    CallSites.invoke (ctx.Builder ctx target)  (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])
+    let targetExpr = ctx.Builder ctx target
+    CallSites.invoke  targetExpr (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])

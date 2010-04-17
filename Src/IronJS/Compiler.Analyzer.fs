@@ -10,11 +10,15 @@ let private isDynamic (loc:Ast.Local) =
   match loc.UsedAs with
   | Ast.JsTypes.Double 
   | Ast.JsTypes.String
+  | Ast.JsTypes.Integer
   | Ast.JsTypes.Object -> true && loc.InitUndefined
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
-let private isNotAssignedTo (var:Ast.Local) = var.UsedWith.Count = 0 && var.UsedWithClosure.Count = 0
+let private isNotAssignedTo (var:Ast.Local) = 
+     var.UsedWith.Count = 0 
+  && var.UsedWithClosure.Count = 0 
+  && var.AssignedFrom.Length = 0
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (var:Ast.Local) typ =
@@ -27,26 +31,46 @@ let private setType name (var:Ast.Local) typ =
   { var with UsedAs = typ; Expr = expr }
 
 (*Get the type of a variable, evaluating it if necessary*)
-let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
+let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
-  let rec getType' name (exclude:string Set) =
+  let excluded = ref Set.empty
+
+  let rec getExprType' expr = 
+    match expr with
+    | Ast.BinaryOp(left, op, right) -> 
+      match op with
+      | Ast.Add -> getExprType' left ||| getExprType' right
+    | Ast.Local(name, _) -> getLocalType' name
+
+  and getLocalType' name =
     let var = vars.[name]
 
-    if  exclude.Contains name 
+    if (!excluded).Contains name 
       then  Ast.JsTypes.Nothing
-      else  if not(var.Expr = null) 
+      else  if not (var.Expr = null) 
               then  var.UsedAs 
-              else  let evaledWithClosures =
+              else  
+                    excluded := (!excluded).Add name
+
+                    let evaledWithClosures =
                       Set.fold (fun state var -> 
                              state ||| Utils.Type.clrToJs (Variables.Closure.clrTypeN closureType closure.[var].Index)
                            ) var.UsedAs var.UsedWithClosure
 
                     // Combine UsedAs + UsedWithClosure types with UsedWith types
-                    var.UsedWith
-                      |> Set.map  (fun var -> getType' var (exclude.Add name))
-                      |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
+                    let evaledWithVariables = 
+                      var.UsedWith |> Set.map  (fun var -> getLocalType' var)
+                                   |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
 
-  getType' name Set.empty
+                    // Eval any expression values we're assigned to from
+                    let result = var.AssignedFrom |> Seq.ofList
+                                                  |> Seq.map  (fun expr -> getExprType' expr)
+                                                  |> Seq.fold (fun state typ -> state ||| typ) evaledWithVariables
+
+                    excluded := (!excluded).Remove name
+                    result
+
+  getLocalType' name
 
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 

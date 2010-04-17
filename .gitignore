@@ -4,4 +4,6 @@ Src/IronJS.Dev/obj/**/*
 Src/IronJS.Dev/bin/**/*
 Src/IronJS.Parser/obj/**/*
 Src/IronJS.Parser/bin/**/*
+Src/IronJS.Benchmarks/**/*
+Src/IronJS.Benchmarks/*
 *.suo

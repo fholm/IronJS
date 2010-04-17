@@ -76,3 +76,13 @@ let globals = new Runtime.Object(env)
 let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
 
 Utils.time(fun () -> compiledFunc.Invoke(closure, null, closure.Globals) |> ignore)
+
+
+type Func1 = delegate of (int byref) -> int
+
+
+type Result = 
+  struct
+    val mutable result : obj
+    val mutable status : byte
+  end

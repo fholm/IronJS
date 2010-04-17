@@ -73,6 +73,7 @@ let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>()
 
 compiledFunc.DynamicInvoke(closure, null, closure.Globals)
 
+
 Utils.time (fun () -> 
   let mutable x = jsLexer :> obj
 
@@ -113,36 +114,38 @@ Utils.time (fun () ->
 
 Utils.time (fun () -> 
   let mutable x = 1 :> obj
+  let mutable t = 0
   let mutable i = 0
 
   while i < 10000000 do
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
-    x <- i :> obj
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
+    t <- x :?> int
     i <- i + 1
 )
 
 Utils.time (fun () -> 
   let mutable x = new IronJS.Dynamic()
-  let mutable i = 0
+  x.typeCode <- 2uy
 
+  let mutable i = 0
   while i < 10000000 do
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
-    x <- new IronJS.Dynamic(); x.typeCode <- 2uy; x.valBool <- true
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
+    x :> obj
     i <- i + 1
 )

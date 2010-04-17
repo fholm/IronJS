@@ -14,7 +14,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Parser", "IronJS.Par
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{A4648719-B034-4F27-94AD-96B398C11663}"
 	ProjectSection(SolutionItems) = preProject
-		Examples\DLR_ByRef.fs = Examples\DLR_ByRef.fs
+		Examples\DLR_ByRef.fsx = Examples\DLR_ByRef.fsx
 	EndProjectSection
 EndProject
 Global

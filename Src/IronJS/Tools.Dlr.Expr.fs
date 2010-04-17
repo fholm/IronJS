@@ -57,9 +57,7 @@ module Expr =
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
   let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    
-
-  let lambdaWithLocals (parms:EtParam list) (vars:EtParam list) (body:Et list) = 
-    lambda parms (blockWithLocals vars body)
+  let lambdaWithLocals (parms:EtParam list) (vars:EtParam list) (body:Et list) = lambda parms (blockWithLocals vars body)
 
   let invoke (func:Et) (args:Et list) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
@@ -73,9 +71,16 @@ module Expr =
   module ControlFlow =
     let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse)
     let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse)
-
+    
   module Logical =
+    let typeIs target typ = Et.TypeIs(target, typ)
+    let typeEqual target typ = Et.TypeEqual(target, typ)
+    let isFalse target = Et.IsFalse(target)
+    let isTrue target = Et.IsTrue(target)
+    let refEq left right = Et.ReferenceEqual(left, right)
+    let refNotEq left right = Et.ReferenceNotEqual(left, right)
     let eq left right = Et.Equal(left, right)
+    let notEq left right = Et.NotEqual(left, right)
     let lt left right = Et.LessThan(left, right)
     let ltEq left right = Et.LessThanOrEqual(left, right)
     let gt left right = Et.GreaterThan(left, right)

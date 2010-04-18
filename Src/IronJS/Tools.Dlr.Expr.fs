@@ -67,11 +67,8 @@ module Expr =
   let invoke (func:Et) (args:Et list) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 
-  module Constants = 
-    let boolTrue = constant true
-    let boolFalse = constant false
-    let int0 = constant 0
-    let int1 = constant 1
+  let boolTrue = constant true
+  let boolFalse = constant false
 
   module Math =
     let sub left right = Et.Subtract(left, right) :> Et
@@ -86,6 +83,8 @@ module Expr =
     let forIter init test incr body = block [init; AstUtils.Loop(test, incr, body, empty)]
     
   module Logical =
+    let orElse left right = Et.OrElse(left, right) :> Et
+    let andAlso left right = Et.AndAlso(left, right) :> Et
     let typeIs target typ = Et.TypeIs(target, typ) :> Et
     let typeEqual target typ = Et.TypeEqual(target, typ) :> Et
     let isFalse target = Et.IsFalse(target) :> Et

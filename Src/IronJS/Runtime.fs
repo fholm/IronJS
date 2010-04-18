@@ -13,6 +13,7 @@ type IEnvironment() =
     [<DefaultValue>] val mutable Globals : Object
     abstract GetDelegate : Ast.Node -> ClrType -> ClrType list -> System.Delegate * ClrType list
     abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
+    abstract GetClosureId : ClrType -> int
 
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =

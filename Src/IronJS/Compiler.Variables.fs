@@ -53,9 +53,13 @@ module Variables =
 
     let value (ctx:Context) name = 
       let expr = Js.Object.get ctx.Globals name
-      if ctx.TemporaryTypes.ContainsKey name 
-        then Dlr.Expr.cast expr ctx.TemporaryTypes.[name]
-        else expr
+      if ctx.TemporaryTypes.ContainsKey name then 
+        if expr.Type = typeof<Box> then
+          Dlr.Expr.cast (Dlr.Expr.field expr "obj") ctx.TemporaryTypes.[name]
+        else
+          expr
+      else 
+        expr
 
     let assign (ctx:Context) name value = 
       Js.Object.set ctx.Globals name (Utils.Box.box value)

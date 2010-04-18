@@ -74,6 +74,7 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
   inherit IEnvironment()
 
   let astMap = new Dict<int, Ast.Scope * Ast.Node>()
+  let closureMap = new Dict<ClrType, int>()
   let jitCache = new Dict<DelegateCell, System.Delegate * ClrType list>()
 
   //Implementation of IEnvironment.GetDelegate
@@ -84,6 +85,12 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
     | None -> x.CacheCompiledDelegate cell (x.Compile ast closureType types)
 
   override x.AstMap = astMap
+  override x.GetClosureId clrType = 
+    let success, id = closureMap.TryGetValue clrType
+    if success then id
+    else
+      closureMap.Add(clrType, closureMap.Count)
+      closureMap.Count-1
 
   //Private members
   member private self.GetCachedDelegate cell =

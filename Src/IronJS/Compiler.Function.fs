@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 module Function =
@@ -49,11 +50,39 @@ module Function =
   let internal definition (ctx:Context) astId =
     let scope, _ = ctx.Env.AstMap.[astId]
     let closureExpr = Closure.create ctx scope
-    let functionArgs = [Dlr.Expr.constant astId; closureExpr; ctx.Environment]
+    let functionArgs = [
+      Dlr.Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
+      Dlr.Expr.constant astId
+      closureExpr
+      ctx.Environment
+    ]
+
     Dlr.Expr.newArgs Runtime.Function.TypeDef functionArgs
 
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args =
-    ctx.TemporaryTypes.Clear()
     let targetExpr = ctx.Builder ctx target
-    CallSites.invoke  targetExpr (ctx.Globals:>Et :: [for arg in args -> ctx.Builder ctx arg])
+    let argExprs = [for arg in args -> ctx.Builder ctx arg]
+
+    ctx.TemporaryTypes.Clear()
+
+    let types = typeof<Runtime.Function> 
+                :: typeof<Runtime.Object> 
+                :: List.foldBack (fun (x:Et) s -> x.Type :: s) argExprs [typeof<Box>]
+
+    let funcType = Expr.delegateType types
+    let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
+    let cacheInst = cacheType.GetConstructor(System.Type.EmptyTypes).Invoke([||])
+    let cacheConst = Expr.constant cacheInst
+
+    (Expr.blockWithTmp (fun tmp -> 
+      let checkAstId = Expr.Logical.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
+      let checkClosureId = Expr.Logical.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
+      [
+          Expr.assign tmp targetExpr
+          (Expr.ControlFlow.ifThen
+            (Expr.Logical.orElse checkAstId checkClosureId)
+            (Expr.dynamicDefault)
+          )
+          Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs)
+       ]) typeof<Runtime.Function>)

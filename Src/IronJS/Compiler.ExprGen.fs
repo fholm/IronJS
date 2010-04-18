@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 module ExprGen = 
@@ -35,7 +36,14 @@ module ExprGen =
     //Functions
     | Ast.Function(astId)       -> Function.definition ctx astId
     | Ast.Invoke(target, args)  -> Function.invoke ctx target args
-    | Ast.Return(value)         -> Js.makeReturn ctx.Return (ctx.Builder ctx value)
+    | Ast.Return(value)         -> 
+      let value = (ctx.Builder ctx value)
+      let typeCode = Utils.Box.typeCode value.Type
+      Expr.block [
+        Expr.assign (Utils.Box.fieldByTypeCode ctx.ReturnBox typeCode) value
+        Expr.assign (Expr.field ctx.ReturnBox "typeCode") (Expr.constant typeCode)
+        Js.makeReturn ctx.Return (Dlr.Expr.dynamicDefault)
+      ]
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
@@ -49,3 +57,4 @@ module ExprGen =
     //
     | Ast.Pass -> Dlr.Expr.empty
     | _        -> failwithf "No builder function defined for %A" ast
+

@@ -20,6 +20,7 @@ type Context = {
   mutable GlobalAccess: int
   mutable ClosureAccess: int
 } with
+  member x.ReturnBox      = Dlr.Expr.field x.Function "ReturnBox"
   member x.Environment    = Dlr.Expr.field x.Function "Environment"
   member x.ClosureScopes  = Dlr.Expr.field x.Closure "Scopes"
   member x.LocalScopesExpr = if x.Scope.HasDynamicScopes 
@@ -39,7 +40,7 @@ type Context = {
     GlobalsParam = Dlr.Expr.param "~globals" typeof<Runtime.Object>
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
     LocalScopes = Dlr.Expr.param "~localScopes" typeof<Runtime.Object ResizeArray>
-    Return = Dlr.Expr.labelT<Box> "~return"
+    Return = Dlr.Expr.labelT<Dynamic> "~return"
     Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault
     TemporaryTypes = null

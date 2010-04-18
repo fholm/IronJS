@@ -21,7 +21,7 @@ let box (expr:Et) =
     else Dlr.Expr.castT<Dynamic> expr
 
 let makeReturn label (value:Et) =
-  Dlr.Expr.makeReturn label (box value)
+  Dlr.Expr.makeReturn label (value)
 
 let index (left:Et) (i:int64) =
   Et.ArrayIndex(left, Dlr.Expr.constant i) :> Et

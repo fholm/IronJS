@@ -36,12 +36,14 @@ type Function =
   val mutable Closure : Closure
   val mutable AstId : int
   val mutable ClosureId : int
+  val mutable ReturnBox : Box
 
   new(astId, closureId, closure, env) = { 
     inherit Object(env)
     Closure = closure
     AstId = astId
     ClosureId = closureId
+    ReturnBox = new Box()
   }
 
   static member TypeDef = typedefof<Function>

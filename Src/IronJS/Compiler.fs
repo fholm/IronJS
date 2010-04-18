@@ -53,6 +53,10 @@ let private createProxyParameter name (var:Ast.Local) =
 let private partitionParamsAndVars _ (var:Ast.Local) = 
   var.IsParameter && not var.InitUndefined
 
+let private addClosureAndGlobals (ctx:Context) (vars:EtParam list) =
+  let vars = if ctx.GlobalAccess > 0 then ctx.GlobalsParam :: vars else vars
+  if ctx.ClosureAccess > 0 then ctx.ClosureParam :: vars else vars
+
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
@@ -67,7 +71,7 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
 
   let body = [
     (Compiler.ExprGen.builder ctx ast)
-    (Dlr.Expr.labelExprVal ctx.Return (Expr.constant Runtime.Utils.Box.nullBox))
+    (Dlr.Expr.labelExprVal ctx.Return (Expr.typeDefault<Dynamic>))
   ]
 
   let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
@@ -77,11 +81,10 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
   let parameters = ctx.Function :: ctx.This :: inputParameters
 
   let localVariableExprs = 
-       ctx.GlobalsParam 
-    :: ctx.Closure 
-    :: (closedOverParameters 
-        |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
-        |> addDynamicScopesLocal ctx)
+    closedOverParameters 
+    |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
+    |> addDynamicScopesLocal ctx
+    |> addClosureAndGlobals ctx
 
   let completeBodyExpr = 
       (if ctx.GlobalAccess > 0 then Expr.assign ctx.Globals (Expr.field ctx.Environment "Globals") else Expr.empty)

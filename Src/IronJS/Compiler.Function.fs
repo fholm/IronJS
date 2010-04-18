@@ -68,7 +68,7 @@ module Function =
 
     let types = typeof<Runtime.Function> 
                 :: typeof<Runtime.Object> 
-                :: List.foldBack (fun (x:Et) s -> x.Type :: s) argExprs [typeof<Box>]
+                :: List.foldBack (fun (x:Et) s -> x.Type :: s) argExprs [typeof<Dynamic>]
 
     let funcType = Expr.delegateType types
     let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
@@ -94,6 +94,7 @@ module Function =
           ])
         )
         (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: argExprs))
+        (Expr.field tmp "ReturnBox")
       ]
 
     Expr.blockWithLocals locs (if targetExpr :? EtParam then body else Expr.assign tmp targetExpr :: body)

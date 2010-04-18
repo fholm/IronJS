@@ -11,7 +11,7 @@ open System.Collections.Generic
 [<AbstractClass>]
 type IEnvironment() =
     [<DefaultValue>] val mutable Globals : Object
-    abstract GetDelegate : Ast.Node -> ClrType -> ClrType list -> System.Delegate * ClrType list
+    abstract GetDelegate : int -> ClrType -> ClrType list -> System.Delegate
     abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
     abstract GetClosureId : ClrType -> int
 

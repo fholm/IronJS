@@ -51,12 +51,12 @@ let private compareTypes (a:'a list) (b:'a list) =
           compareTypes' a b
 
 (**)
-type DelegateCell(ast:Ast.Node, closureType:ClrType, types:ClrType list) =
-  let hashRef = ref (37 * closureType.GetHashCode() + ast.GetHashCode())
+type DelegateCell(astId:int, closureType:ClrType, types:ClrType list) =
+  let hashRef = ref (37 * closureType.GetHashCode() + astId.GetHashCode())
   let uniformTypes = calculateHashAndTypes types hashRef
   let hashCode = !hashRef
 
-  member self.Ast = ast
+  member self.AstId = astId
   member self.Types = uniformTypes
   member self.ClosureType = closureType
 
@@ -64,7 +64,7 @@ type DelegateCell(ast:Ast.Node, closureType:ClrType, types:ClrType list) =
   override self.Equals obj = 
     match obj with
     | :? DelegateCell as cell -> 
-      if cell.Ast = self.Ast && cell.ClosureType = self.ClosureType 
+      if cell.AstId = self.AstId && cell.ClosureType = self.ClosureType 
         then compareTypes cell.Types self.Types
         else false
     | _ -> false
@@ -75,7 +75,7 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
 
   let astMap = new Dict<int, Ast.Scope * Ast.Node>()
   let closureMap = new Dict<ClrType, int>()
-  let jitCache = new Dict<DelegateCell, System.Delegate * ClrType list>()
+  let jitCache = new Dict<DelegateCell, System.Delegate>()
 
   //Implementation of IEnvironment.GetDelegate
   override x.GetDelegate ast closureType types =
@@ -101,14 +101,10 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
     jitCache.[cell] <- func
     func
 
-  member private self.Compile ast closureType types =
-    match ast with
-    | Ast.Node.Function(astId) -> 
-      let scope, body = astMap.[astId]
-      let lambda, paramTypes = exprGenerator self closureType (scopeAnalyzer scope closureType types) body
-      lambda.Compile(), paramTypes
-
-    | _ -> failwith "Can only compile Ast.Types.Node.Function"
+  member private self.Compile astId closureType types =
+    let scope, body = astMap.[astId]
+    let lambda, _ = exprGenerator self closureType (scopeAnalyzer scope closureType types) body
+    lambda.Compile()
 
   static member Create sa eg =
     let env = new Environment(sa, eg)

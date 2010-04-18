@@ -37,15 +37,18 @@ type Function =
   val mutable AstId : int
   val mutable ClosureId : int
 
-  static member TypeDef = typedefof<Function>
-  static member TypeDefHashCode = typedefof<Function>.GetHashCode()
-
   new(astId, closureId, closure, env) = { 
     inherit Object(env)
     Closure = closure
     AstId = astId
     ClosureId = closureId
   }
+
+  static member TypeDef = typedefof<Function>
+  static member TypeDefHashCode = typedefof<Function>.GetHashCode()
+
+  member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
+     ((x :> Object).Environment.GetDelegate x.AstId (x.Closure.GetType()) types) :?> 'a
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new FunctionMeta(expr, self) :> MetaObj
@@ -58,9 +61,14 @@ type InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable AstId : int
   val mutable ClosureId : int
   val mutable Delegate : 'a
+  val mutable ArgTypes : ClrType list
 
-  new() = {
+  new(argTypes) = {
     AstId = -1
     ClosureId = -1
     Delegate = null
+    ArgTypes = argTypes
   }
+
+  member x.Update (fnc:Function) =
+    x.Delegate <- fnc.Compile<'a>(x.ArgTypes)

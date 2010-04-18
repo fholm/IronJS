@@ -21,7 +21,7 @@ module Variables =
         then clrTypeN ctx.Closure.Type ctx.Scope.Closure.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
-    let expr ctx (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
+    let expr (ctx:Context) (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
     let assign ctx name value = Js.assign (expr ctx name) value
     let value ctx name = 
       let expr = Dlr.Expr.field (expr ctx name) "Value"
@@ -55,7 +55,8 @@ module Variables =
       let expr = Js.Object.get ctx.Globals name
       if ctx.TemporaryTypes.ContainsKey name then 
         if expr.Type = typeof<Box> then
-          Dlr.Expr.cast (Dlr.Expr.field expr "obj") ctx.TemporaryTypes.[name]
+          let typeCode = Utils.Box.typeCode ctx.TemporaryTypes.[name]
+          Dlr.Expr.cast (Utils.Box.fieldByTypeCode expr typeCode) ctx.TemporaryTypes.[name]
         else
           expr
       else 

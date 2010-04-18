@@ -12,6 +12,7 @@ type JsTypes =
   | String  = 4
   | Object  = 8
   | Dynamic = 16
+  | Function = 32
 
 type BinaryOp =
   | Lt

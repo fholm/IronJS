@@ -74,12 +74,8 @@ let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstM
 
 let exprTree = (Compiler.Core.compileAst env Runtime.Closure.TypeDef (fst ast) (snd ast))
 
-(*
-let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Closure, Dynamic array, Runtime.Object, Dynamic>
+let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Function, Runtime.Object, IronJS.Box>
+let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
+let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
 
-let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
-let globals = new Runtime.Object(env)
-let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
-
-Utils.time(fun () -> compiledFunc.Invoke(closure, null, closure.Globals) |> ignore)
-*)
+Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)

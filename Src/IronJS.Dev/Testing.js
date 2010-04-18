@@ -1,9 +1,12 @@
 ﻿
+function bench()
+{
+    function f()
+    {
+    }
 
-var x = 2;
-var y = 3;
-
-var foo = function(a, b) {
+    for (var i = 0; i < 4000000; ++i)
+        f();
 }
 
-foo(1, "lol");
+bench();

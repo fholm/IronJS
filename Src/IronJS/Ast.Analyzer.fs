@@ -38,7 +38,7 @@ module Analyzer =
         | Number(_) -> return! usedAs name JsTypes.Double
         | Integer(_) -> return! usedAs name JsTypes.Integer
         | String(_) -> return! usedAs name JsTypes.String 
-        | Function(_) -> return! usedAs name JsTypes.Object
+        | Function(_) -> return! usedAs name JsTypes.Function
         | Object(_) -> return! usedAs name JsTypes.Object
 
         | _ -> return! assignedFrom name right

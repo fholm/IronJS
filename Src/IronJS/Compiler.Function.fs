@@ -51,8 +51,8 @@ module Function =
     let scope, _ = ctx.Env.AstMap.[astId]
     let closureExpr = Closure.create ctx scope
     let functionArgs = [
-      Dlr.Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
       Dlr.Expr.constant astId
+      Dlr.Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
       closureExpr
       ctx.Environment
     ]
@@ -72,7 +72,7 @@ module Function =
 
     let funcType = Expr.delegateType types
     let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
-    let cacheInst = cacheType.GetConstructor(System.Type.EmptyTypes).Invoke([||])
+    let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst
 
     (Expr.blockWithTmp (fun tmp -> 
@@ -82,7 +82,11 @@ module Function =
           Expr.assign tmp targetExpr
           (Expr.ControlFlow.ifThen
             (Expr.Logical.orElse checkAstId checkClosureId)
-            (Expr.dynamicDefault)
+            (Expr.block[
+              (Expr.call cacheConst "Update" [tmp])
+              (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))
+              (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
+            ])
           )
           Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs)
        ]) typeof<Runtime.Function>)

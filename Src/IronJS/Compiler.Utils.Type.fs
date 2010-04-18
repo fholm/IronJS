@@ -15,6 +15,7 @@ module Type =
     elif typ = Constants.clrInt32     then Ast.JsTypes.Integer
     elif typ = Constants.clrString    then Ast.JsTypes.String
     elif typ = Runtime.Object.TypeDef then Ast.JsTypes.Object
+    elif typ = Runtime.Function.TypeDef then Ast.JsTypes.Function
     else  Ast.JsTypes.Dynamic
 
   (*Converts a JsType enum to ClrType object*)
@@ -24,6 +25,7 @@ module Type =
     | Ast.JsTypes.Integer -> Constants.clrInt32
     | Ast.JsTypes.String  -> Constants.clrString
     | Ast.JsTypes.Object  -> Runtime.Object.TypeDef
+    | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
     | _ -> Constants.clrDynamic
 
   (*Gets the inner type of a strongbox Type object*)

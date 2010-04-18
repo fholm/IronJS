@@ -11,17 +11,17 @@ module Variables =
   let rec private scanScopes fnc (lst:Scope ResizeArray) topScope = 
     let rec scanScopes n = 
       if n >= lst.Count
-        then  false, null
+        then  false, Utils.Box.nullBox
         else  let scope = lst.[n]
               if scope.ScopeLevel < topScope 
-                then  false, null
+                then  false, Utils.Box.nullBox
                 else  let pair = fnc scope
                       if fst pair
                         then pair
                         else scanScopes (n+1)
     scanScopes 0
 
-  let private setInObjects (name:string) (value:Dynamic) scopes = 
+  let private setInObjects (name:string) (value:Box) scopes = 
     if scopes = null
       then  false
       else  match ResizeArray.tryFind (fun (s:Object) -> s.Has name) scopes with
@@ -30,9 +30,9 @@ module Variables =
 
   let private getFromObjects (name:string) scopes =
     if scopes = null
-      then  false, null
+      then  false, Utils.Box.nullBox
       else  match ResizeArray.tryFind (fun (s:Object) -> s.Has name) scopes with
-            | None    -> false, null
+            | None    -> false, Utils.Box.nullBox
             | Some(s) -> true, s.Get name
 
   (**)
@@ -41,9 +41,9 @@ module Variables =
       let pair = getFromObjects name localScopes
       if (fst pair)
         then  pair
-        else  false, null
+        else  false, Utils.Box.nullBox
 
-    static member Set(name:string, value:Dynamic, localScopes:ObjectList) =
+    static member Set(name:string, value:Box, localScopes:ObjectList) =
       setInObjects name value localScopes
 
   (**)
@@ -55,12 +55,12 @@ module Variables =
         else  let pair = scanScopes (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes maxScopeLevel
               if (fst pair)
                 then pair
-                else false, null
+                else false, Utils.Box.nullBox
 
-    static member Set(name:string, value:Dynamic, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) = 
+    static member Set(name:string, value:Box, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) = 
       if setInObjects name value localScopes
         then  true
-        else  let found, _ = scanScopes (fun (x:Scope) -> setInObjects name value x.Objects, null) closure.Scopes maxScopeLevel
+        else  let found, _ = scanScopes (fun (x:Scope) -> setInObjects name value x.Objects, Utils.Box.nullBox) closure.Scopes maxScopeLevel
               found
 
   (**)
@@ -72,11 +72,11 @@ module Variables =
         else  let found, item = scanScopes (fun (x:Scope) -> getFromObjects name x.Objects) closure.Scopes (-1)
               if found 
                 then item
-                else closure.Globals.Get name
+                else failwith "Re-add support for globals inside with()"
   
-    static member Set(name:string, value:Dynamic, localScopes:ObjectList, closure:Closure) = 
+    static member Set(name:string, value:Box, localScopes:ObjectList, closure:Closure) = 
       if not (setInObjects name value localScopes) 
         then if not (ResizeArray.exists (fun (x:Scope) -> setInObjects name value x.Objects) closure.Scopes)
-             then closure.Globals.Set name value
+             then failwith "Re-add support for globals inside with()"
       value
   

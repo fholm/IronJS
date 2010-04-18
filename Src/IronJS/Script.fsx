@@ -7,9 +7,8 @@
 #r @"FSharp.PowerPack"
 #load "Fsi.fs"
 #load "Utils.fs"
-#load "Dynamic.fs"
+#load "Box.fs"
 #load "Monads.fs"
-#load "Operators.fs"
 #load "Constants.fs"
 #load "Aliases.fs"
 #load "Tools.Type.fs"
@@ -21,6 +20,7 @@
 #load "Ast.Utils.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
+#load "InterOp.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
 #load "Runtime.Environment.fs"
@@ -30,6 +30,7 @@
 #load "Runtime.Binders.fs"
 #load "Runtime.Closures.fs"
 #load "Compiler.Types.fs"
+#load "Compiler.Utils.Box.fs"
 #load "Compiler.Utils.Type.fs"
 #load "Compiler.Variables.fs"
 #load "Compiler.Object.fs"
@@ -62,13 +63,18 @@ fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
+
+let env = Runtime.Environment.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
+
 let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
-let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global
+let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstMap
 
-let exprTree = (Compiler.Core.compileAst Runtime.Closure.TypeDef (fst ast) (snd ast))
+let exprTree = (Compiler.Core.compileAst env Runtime.Closure.TypeDef (fst ast) (snd ast))
+
+(*
 let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Closure, Dynamic array, Runtime.Object, Dynamic>
 
 let env = new Runtime.Environment.Environment(Compiler.Analyzer.analyze, Compiler.Core.compileAst)
@@ -76,13 +82,4 @@ let globals = new Runtime.Object(env)
 let closure = new Runtime.Closure(globals, env, new ResizeArray<Runtime.Scope>())
 
 Utils.time(fun () -> compiledFunc.Invoke(closure, null, closure.Globals) |> ignore)
-
-
-type Func1 = delegate of (int byref) -> int
-
-
-type Result = 
-  struct
-    val mutable result : obj
-    val mutable status : byte
-  end
+*)

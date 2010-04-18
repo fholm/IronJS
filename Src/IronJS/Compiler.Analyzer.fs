@@ -45,30 +45,29 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
   and getLocalType' name =
     let var = vars.[name]
 
-    if (!excluded).Contains name 
-      then  Ast.JsTypes.Nothing
-      else  if not (var.Expr = null) 
-              then  var.UsedAs 
-              else  
-                    excluded := (!excluded).Add name
+    if (!excluded).Contains name then Ast.JsTypes.Nothing
+    else  
+      if not (var.Expr = null) then var.UsedAs 
+      else  
+        excluded := (!excluded).Add name
 
-                    let evaledWithClosures =
-                      Set.fold (fun state var -> 
-                             state ||| Utils.Type.clrToJs (Variables.Closure.clrTypeN closureType closure.[var].Index)
-                           ) var.UsedAs var.UsedWithClosure
+        let evaledWithClosures =
+          Set.fold (fun state var -> 
+                 state ||| Utils.Type.clrToJs (Variables.Closure.clrTypeN closureType closure.[var].Index)
+               ) var.UsedAs var.UsedWithClosure
 
-                    // Combine UsedAs + UsedWithClosure types with UsedWith types
-                    let evaledWithVariables = 
-                      var.UsedWith |> Set.map  (fun var -> getLocalType' var)
-                                   |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
+        // Combine UsedAs + UsedWithClosure types with UsedWith types
+        let evaledWithVariables = 
+          var.UsedWith |> Set.map  (fun var -> getLocalType' var)
+                       |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
 
-                    // Eval any expression values we're assigned to from
-                    let result = var.AssignedFrom |> Seq.ofList
-                                                  |> Seq.map  (fun expr -> getExprType' expr)
-                                                  |> Seq.fold (fun state typ -> state ||| typ) evaledWithVariables
+        // Eval any expression values we're assigned to from
+        let result = var.AssignedFrom |> Seq.ofList
+                                      |> Seq.map  (fun expr -> getExprType' expr)
+                                      |> Seq.fold (fun state typ -> state ||| typ) evaledWithVariables
 
-                    excluded := (!excluded).Remove name
-                    result
+        excluded := (!excluded).Remove name
+        result
 
   getLocalType' name
 

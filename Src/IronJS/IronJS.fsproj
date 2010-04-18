@@ -58,9 +58,8 @@
   <ItemGroup>
     <Compile Include="Fsi.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Dynamic.fs" />
+    <Compile Include="Box.fs" />
     <Compile Include="Monads.fs" />
-    <Compile Include="Operators.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="Aliases.fs" />
     <Compile Include="Tools.Type.fs" />
@@ -72,9 +71,9 @@
     <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
+    <Compile Include="InterOp.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Function.fs" />
-    <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Utils.fs" />
     <Compile Include="Runtime.Helpers.Variables.fs" />
@@ -82,6 +81,7 @@
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
+    <Compile Include="Compiler.Utils.Box.fs" />
     <Compile Include="Compiler.Utils.Type.fs" />
     <Compile Include="Compiler.Variables.fs" />
     <Compile Include="Compiler.Object.fs" />

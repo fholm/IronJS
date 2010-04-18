@@ -1,6 +1,7 @@
-﻿var bench = function() {
-    for (var i = 0; i < 10000000; ++i)
-        ;
-}
+﻿
 
-bench();
+var x = 2;
+var y = 3;
+
+var foo = function() {
+}

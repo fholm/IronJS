@@ -9,15 +9,16 @@ open System.Linq.Expressions
 type Context = {
   This: EtParam
   Closure: EtParam
-  Arguments: EtParam
+  Function: EtParam
   LocalScopes: EtParam
+  Globals: EtParam
   Scope: Ast.Scope
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
   TemporaryTypes: Dict<string, ClrType>
+  Env: Runtime.IEnvironment
 } with
-  member x.Globals        = Dlr.Expr.field x.Closure "Globals"
-  member x.Environment    = Dlr.Expr.field x.Closure "Environment"
+  member x.Environment    = Dlr.Expr.field x.Function "Environment"
   member x.ClosureScopes  = Dlr.Expr.field x.Closure "Scopes"
   member x.LocalScopesExpr = if x.Scope.HasDynamicScopes 
                               then x.LocalScopes :> Et 
@@ -25,11 +26,13 @@ type Context = {
 
   static member New = {
     Closure = null
+    Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
+    Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
-    Arguments = Dlr.Expr.param "~xargs" typeof<Dynamic array>
     LocalScopes = Dlr.Expr.param "~localScopes" typeof<Runtime.Object ResizeArray>
-    Return = Dlr.Expr.label "~return"
+    Return = Dlr.Expr.labelT<Box> "~return"
     Scope = Ast.Scope.New
     Builder = fun x a -> Dlr.Expr.dynamicDefault
     TemporaryTypes = null
+    Env = null
   }

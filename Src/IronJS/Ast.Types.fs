@@ -55,7 +55,7 @@ type Node =
 
   //Scopes
   | DynamicScope  of Node * Node
-  | Function      of Scope * Node
+  | Function      of int
 
   //Loops
   | ForIter of Node * Node * Node * Node // init * test * incr * body
@@ -130,10 +130,12 @@ type ParserState = {
   ScopeChain: Scope list
   GlobalDynamicScopeLevel: int
   LocalDynamicScopeLevels: int list
+  AstMap : Dict<int, Scope * Node>
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
     ScopeChain = []
     GlobalDynamicScopeLevel = 0
     LocalDynamicScopeLevels = [0]
+    AstMap = null
   }

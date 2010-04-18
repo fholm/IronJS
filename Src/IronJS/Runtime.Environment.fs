@@ -9,7 +9,7 @@ open System.Dynamic
 open System.Collections.Generic
 
 type private AnalyzeFunc = Ast.Scope -> ClrType -> ClrType list -> Ast.Scope
-type private ExprGenFunc = ClrType -> Ast.Scope -> Ast.Node -> (EtLambda * ClrType list)
+type private ExprGenFunc = IEnvironment -> ClrType -> Ast.Scope -> Ast.Node -> (EtLambda * ClrType list)
 
 (**)
 let rec private calculateHashAndTypes types (hash:int ref) = 
@@ -28,9 +28,9 @@ let rec private calculateHashAndTypes types (hash:int ref) =
       hash := (37 * !hash + Runtime.Object.TypeDefHashCode)
       Runtime.Object.TypeDef :: calculateHashAndTypes xsTypes hash
 
-    elif x = Runtime.Function<_>.TypeDef then
-      hash := (37 * !hash + Runtime.Function<_>.TypeDefHashCode)
-      Runtime.Function<_>.TypeDef :: calculateHashAndTypes xsTypes hash
+    elif x = Runtime.Function.TypeDef then
+      hash := (37 * !hash + Runtime.Function.TypeDefHashCode)
+      Runtime.Function.TypeDef :: calculateHashAndTypes xsTypes hash
 
     else
       hash := (37 * !hash + Constants.clrDynamicHashCode)
@@ -63,22 +63,27 @@ type DelegateCell(ast:Ast.Node, closureType:ClrType, types:ClrType list) =
   override self.GetHashCode() = hashCode
   override self.Equals obj = 
     match obj with
-    | :? DelegateCell as cell -> if cell.Ast = self.Ast && cell.ClosureType = self.ClosureType
-                                   then compareTypes cell.Types self.Types
-                                   else false
+    | :? DelegateCell as cell -> 
+      if cell.Ast = self.Ast && cell.ClosureType = self.ClosureType 
+        then compareTypes cell.Types self.Types
+        else false
     | _ -> false
 
 (*The currently executing environment*)
 and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
-  let jitCache = new Dictionary<DelegateCell, System.Delegate * ClrType list>()
+  inherit IEnvironment()
 
-  //Implementation of IEnvironment interface
-  interface IEnvironment with
-    member self.GetDelegate ast closureType types =
-      let cell = new DelegateCell(ast, closureType, types)
-      match self.GetCachedDelegate cell with
-      | Some(func) -> func
-      | None -> self.CacheCompiledDelegate cell (self.Compile ast closureType types)
+  let astMap = new Dict<int, Ast.Scope * Ast.Node>()
+  let jitCache = new Dict<DelegateCell, System.Delegate * ClrType list>()
+
+  //Implementation of IEnvironment.GetDelegate
+  override x.GetDelegate ast closureType types =
+    let cell = new DelegateCell(ast, closureType, types)
+    match x.GetCachedDelegate cell with
+    | Some(func) -> func
+    | None -> x.CacheCompiledDelegate cell (x.Compile ast closureType types)
+
+  override x.AstMap = astMap
 
   //Private members
   member private self.GetCachedDelegate cell =
@@ -91,8 +96,14 @@ and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
 
   member private self.Compile ast closureType types =
     match ast with
-    | Ast.Node.Function(scope, body) -> 
-      let lambda, paramTypes = (exprGenerator closureType (scopeAnalyzer scope closureType types) body)
+    | Ast.Node.Function(astId) -> 
+      let scope, body = astMap.[astId]
+      let lambda, paramTypes = exprGenerator self closureType (scopeAnalyzer scope closureType types) body
       lambda.Compile(), paramTypes
 
     | _ -> failwith "Can only compile Ast.Types.Node.Function"
+
+  static member Create sa eg =
+    let env = new Environment(sa, eg)
+    (env :> IEnvironment).Globals <- new Object(env)
+    env

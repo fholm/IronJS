@@ -13,8 +13,8 @@ type Closure<'t0> =
   val mutable Item0 : StrongBox<'t0>
   
 
-  new(globals, env, maxDynamicScopes, item0) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -33,8 +33,8 @@ type Closure<'t0,'t1> =
   val mutable Item1 : StrongBox<'t1>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -55,8 +55,8 @@ type Closure<'t0,'t1,'t2> =
   val mutable Item2 : StrongBox<'t2>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -79,8 +79,8 @@ type Closure<'t0,'t1,'t2,'t3> =
   val mutable Item3 : StrongBox<'t3>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -105,8 +105,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4> =
   val mutable Item4 : StrongBox<'t4>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -133,8 +133,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5> =
   val mutable Item5 : StrongBox<'t5>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -163,8 +163,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6> =
   val mutable Item6 : StrongBox<'t6>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -195,8 +195,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7> =
   val mutable Item7 : StrongBox<'t7>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -229,8 +229,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8> =
   val mutable Item8 : StrongBox<'t8>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -265,8 +265,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9> =
   val mutable Item9 : StrongBox<'t9>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -303,8 +303,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10> =
   val mutable Item10 : StrongBox<'t10>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -343,8 +343,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11> =
   val mutable Item11 : StrongBox<'t11>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -385,8 +385,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12> =
   val mutable Item12 : StrongBox<'t12>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -429,8 +429,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13> =
   val mutable Item13 : StrongBox<'t13>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -475,8 +475,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14> =
   val mutable Item14 : StrongBox<'t14>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0
@@ -523,8 +523,8 @@ type Closure<'t0,'t1,'t2,'t3,'t4,'t5,'t6,'t7,'t8,'t9,'t10,'t11,'t12,'t13,'t14,'t
   val mutable Item15 : StrongBox<'t15>
   
 
-  new(globals, env, maxDynamicScopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14, item15) = {
-    inherit Runtime.Closure (globals, env, maxDynamicScopes)
+  new(scopes, item0, item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14, item15) = {
+    inherit Runtime.Closure (scopes)
 
     //Fields
     Item0 = item0

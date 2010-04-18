@@ -13,7 +13,7 @@ module Analyzer =
     | Number(_) -> JsTypes.Double
     | Integer(_) -> JsTypes.Integer
     | String(_) -> JsTypes.String 
-    | Function(_, _) -> JsTypes.Object
+    | Function(_) -> JsTypes.Object
     | Object(_) -> JsTypes.Object
     | _ -> JsTypes.Dynamic
   
@@ -38,7 +38,7 @@ module Analyzer =
         | Number(_) -> return! usedAs name JsTypes.Double
         | Integer(_) -> return! usedAs name JsTypes.Integer
         | String(_) -> return! usedAs name JsTypes.String 
-        | Function(_, _) -> return! usedAs name JsTypes.Object
+        | Function(_) -> return! usedAs name JsTypes.Object
         | Object(_) -> return! usedAs name JsTypes.Object
 
         | _ -> return! assignedFrom name right

@@ -21,39 +21,36 @@ type Scope =
 
 (*Closure base class, representing a closure environment*)
 type Closure =
-  val mutable Globals : Object
-  val mutable Environment : IEnvironment
   val mutable Scopes : Scope ResizeArray
-
   static member TypeDef = typedefof<Closure>
 
-  new(globals:Object, env:IEnvironment, scopes) = {
-    Globals = globals
-    Environment = env
+  new(scopes) = {
     Scopes = scopes
   }
 
 (*Javascript object that also is a function*)
-type Function<'a> when 'a :> Closure =
+type Function =
   inherit Object
 
-  val mutable Closure : 'a
+  val mutable Closure : Closure
   val mutable Ast : Ast.Node
+  val mutable AstId : int
 
-  static member TypeDef = typedefof<Function<_>>
-  static member TypeDefHashCode = typedefof<Function<_>>.GetHashCode()
+  static member TypeDef = typedefof<Function>
+  static member TypeDefHashCode = typedefof<Function>.GetHashCode()
 
-  new(ast, closure, env) = { 
+  new(astId, closure, env) = { 
     inherit Object(env)
     Closure = closure
-    Ast = ast
+    AstId = astId
+    Ast = Ast.Null
   }
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
-    member self.GetMetaObject expr = new FunctionMeta<'a>(expr, self) :> MetaObj
+    member self.GetMetaObject expr = new FunctionMeta(expr, self) :> MetaObj
 
 (*DLR meta object for the above Function class*)
-and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
+and FunctionMeta (expr, jsFunc:Function) =
   inherit ObjectMeta(expr, jsFunc)
 
   let getExtraArgs argsDiff (args:MetaObj array) =
@@ -72,13 +69,13 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let max = (if argsDiff < 0 then paramTypes.Length else args.Length) - 1
     [for i in 0..max -> Dlr.Expr.cast args.[i].Expression paramTypes.[i]]
 
-  member self.FuncExpr with get() = Dlr.Expr.castT<Function<'a>> self.Expression
+  member self.FuncExpr with get() = Dlr.Expr.castT<Function> self.Expression
   member self.ClosureExpr with get() = Dlr.Expr.field self.FuncExpr "Closure"
   member self.AstExpr with get() = Dlr.Expr.field self.FuncExpr "Ast"
 
   override self.BindInvoke (binder, args) =
     let types = List.tail [for arg in args -> arg.LimitType]
-    let func, paramTypes = jsFunc.Environment.GetDelegate jsFunc.Ast typeof<'a> types
+    let func, paramTypes = jsFunc.Environment.GetDelegate jsFunc.Ast (jsFunc.Closure.GetType()) types
     let paramTypes = Runtime.Object.TypeDef :: paramTypes
     let argsDiff = paramTypes.Length - args.Length
     
@@ -89,7 +86,7 @@ and FunctionMeta<'a> when 'a :> Closure (expr, jsFunc:Function<'a>) =
     let argExprs = self.ClosureExpr :: extraArgs :: (suppliedArgs @ missingArgs)
 
     let expr = Tools.Dlr.Expr.invoke (Dlr.Expr.constant func) argExprs     
-    let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function<'a>>).
+    let restrict = (Tools.Dlr.Restrict.byType self.Expression typeof<Function>).
                     Merge(Tools.Dlr.Restrict.byInstance self.AstExpr jsFunc.Ast).
                     Merge(Tools.Dlr.Restrict.byArgs (List.tail (Array.toList args)))
 

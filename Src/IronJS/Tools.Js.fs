@@ -29,22 +29,6 @@ let index (left:Et) (i:int64) =
 let newResizeArray<'a> (arg:Et) = 
   Dlr.Expr.newArgsT<ResizeArray<'a>> [Dlr.Expr.castT<IEnum<'a>> arg]
 
-let forIterRev (v:int) f = 
-  let i = Dlr.Expr.param "~i" Constants.clrInt32
-  let m = Dlr.Expr.constant v
-
-  let breakLbl = Dlr.Expr.labelBreak()
-  let continueLbl = Dlr.Expr.labelContinue()
-
-  let init = Dlr.Expr.assign i (Dlr.Expr.constant v)
-  let test = Dlr.Expr.Logical.gtEq i Dlr.Expr.Math.int0
-  let incr = Dlr.Expr.assign i (Dlr.Expr.Math.sub i Dlr.Expr.Math.int1)
-  let body = f i breakLbl continueLbl
-
-  let loop = AstUtils.Loop(test, incr, body, Dlr.Expr.empty, breakLbl, continueLbl) :> Et
-
-  Dlr.Expr.blockWithLocals [i] [init; loop]
-
 module Object =
 
   //Get a global variable
@@ -53,4 +37,4 @@ module Object =
 
   //Set a global variable
   let set (expr:Et) name value =
-    Dlr.Expr.call expr "Set" [Dlr.Expr.constant name; box value]
+    Dlr.Expr.call expr "Set" [Dlr.Expr.constant name; value]

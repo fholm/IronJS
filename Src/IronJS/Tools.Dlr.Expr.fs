@@ -19,7 +19,9 @@ module Expr =
   let labelContinue() = Et.Label(Constants.clrVoid, "~continue")
 
   let label name = Et.Label(typeof<Dynamic>, name)
+  let labelT<'a> name = Et.Label(typeof<'a>, name)
   let labelExpr label = Et.Label(label, Et.Default(typeof<Dynamic>)) :> Et
+  let labelExprVal label (value:Et) = Et.Label(label, value) :> Et
 
   let blockWithLocals (parms:EtParam list) (exprs:Et list) = Et.Block(parms, if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs) :> Et
   let blockWithTmp fn typ = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
@@ -37,6 +39,7 @@ module Expr =
     Et.Call(expr, mi, args) :> Et
 
   let cast expr typ = Et.Convert(expr, typ) :> Et
+  let cast2 typ expr = cast expr typ
   let castT<'a> expr = cast expr typeof<'a> 
   
   let constant value = Et.Constant(value, value.GetType()) :> Et
@@ -49,10 +52,11 @@ module Expr =
   let newInstance (typ:System.Type) = Et.New(typ) :> Et
   let newInstanceT<'a> = newInstance typeof<'a>
   let newGeneric (typ:System.Type) (types:ClrType seq) = newInstance (typ.MakeGenericType(Seq.toArray types))
-
+  let newGenericT<'a> (types:ClrType seq) = newGeneric typedefof<'a> types
   let newArgs (typ:System.Type) (args:Et seq) = Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
   let newArgsT<'a> (args:Et seq) = newArgs typeof<'a> args
   let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = newArgs (typ.MakeGenericType(Seq.toArray types)) args
+  let newGenericArgsT<'a> (types:ClrType seq) (args:Et seq) = newGenericArgs typedefof<'a> types args
 
   let throw (typ:System.Type) (args:Et seq) = Et.Throw(newArgs typ args) :> Et
 
@@ -63,6 +67,12 @@ module Expr =
   let invoke (func:Et) (args:Et list) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 
+  module Constants = 
+    let boolTrue = constant true
+    let boolFalse = constant false
+    let int0 = constant 0
+    let int1 = constant 1
+
   module Math =
     let sub left right = Et.Subtract(left, right) :> Et
     let add left right = Et.Add(left, right) :> Et
@@ -71,6 +81,7 @@ module Expr =
 
   module ControlFlow =
     let ifThenElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
+    let ifThen test ifTrue = Et.IfThen(test, ifTrue) :> Et
     let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
     let forIter init test incr body = block [init; AstUtils.Loop(test, incr, body, empty)]
     

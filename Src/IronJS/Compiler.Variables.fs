@@ -57,4 +57,5 @@ module Variables =
         then Dlr.Expr.cast expr ctx.TemporaryTypes.[name]
         else expr
 
-    let assign (ctx:Context) name value = Js.Object.set ctx.Globals name value
+    let assign (ctx:Context) name value = 
+      Js.Object.set ctx.Globals name (Utils.Box.box value)

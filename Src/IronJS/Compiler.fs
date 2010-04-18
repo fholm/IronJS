@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 (*Adds initilization expressions for variables that should be Undefined*)
@@ -33,6 +34,12 @@ let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
     then vars
     else ctx.LocalScopes :: vars
 
+let private addClosureInitExpr (ctx:Context) (body:Et list) =
+  if ctx.Closure.Type = Runtime.Closure.TypeDef then
+    Expr.assign ctx.Closure (Expr.field ctx.Function "Closure") :: body
+  else
+    Expr.assign ctx.Closure (Expr.cast2 ctx.Closure.Type (Expr.field ctx.Function "Closure")) :: body
+
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
   [for kvp in parameters -> if kvp.Value.ClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
@@ -44,7 +51,7 @@ let private partitionParamsAndVars _ (var:Ast.Local) =
   var.IsParameter && not var.InitUndefined
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
+let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
   let ctx = {
     Context.New with
@@ -52,30 +59,35 @@ let compileAst (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
       Scope = scope
       Builder = Compiler.ExprGen.builder
       TemporaryTypes = new Dict<string, ClrType>()
+      Env = env
   }
 
   let body = [
     (Compiler.ExprGen.builder ctx ast)
-    (Dlr.Expr.labelExpr ctx.Return)
+    (Dlr.Expr.labelExprVal ctx.Return Dlr.Expr.typeDefault<Box>)
   ]
 
   let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.ClosedOver)
   let proxyParameters = closedOverParameters |> Map.map createProxyParameter
   let inputParameters = getParameterListExprs parameters proxyParameters
-  let parameters = ctx.Closure :: ctx.Arguments :: ctx.This :: inputParameters
+  let parameters = ctx.Function :: ctx.This :: inputParameters
 
   let localVariableExprs = 
-    closedOverParameters 
-      |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
-      |> addDynamicScopesLocal ctx
+       ctx.Globals 
+    :: ctx.Closure 
+    :: (closedOverParameters 
+        |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
+        |> addDynamicScopesLocal ctx)
 
   let completeBodyExpr = 
-    body 
+      Expr.assign ctx.Globals (Expr.field ctx.Environment "Globals")
+   :: (body 
       |> addUndefinedInitExprs variables
       |> addProxyParamInitExprs closedOverParameters proxyParameters
       |> addStrongBoxInitExprs ctx.Scope.Locals
       |> addDynamicScopesInitExpr ctx
+      |> addClosureInitExpr ctx)
 
   #if INTERACTIVE
   let lmb = Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]

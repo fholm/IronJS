@@ -7,27 +7,30 @@ open System.Dynamic
 open System.Collections.Generic
 
 (*Environment interface*)
-
-type IEnvironment =
-  interface
+[<AllowNullLiteral>]
+[<AbstractClass>]
+type IEnvironment() =
+    [<DefaultValue>] val mutable Globals : Object
     abstract GetDelegate : Ast.Node -> ClrType -> ClrType list -> System.Delegate * ClrType list
-  end
-
+    abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
 
 (*Class representing a Javascript native object*)
-[<AllowNullLiteral>]
-type Object(env:IEnvironment) =
-  let properties = new Dictionary<string, Dynamic>();
-  [<DefaultValue>] val mutable Prototype : Object
+and [<AllowNullLiteral>] Object =
+  val mutable Environment : IEnvironment
+  val mutable Properties : Dict<string, Box>
+
+  new(env:IEnvironment) = {
+    Environment = env
+    Properties = new Dictionary<string, Box>()
+  }
 
   static member TypeDef = typedefof<Object>
   static member TypeDefHashCode = typedefof<Object>.GetHashCode()
 
-  member self.Get name = properties.[name]
-  member self.TryGet name = properties.TryGetValue name
-  member self.Has name = properties.ContainsKey name
-  member self.Set name (value:Dynamic) = properties.[name] <- value
-  member self.Environment = env
+  member self.Get name = self.Properties.[name]
+  member self.TryGet name = self.Properties.TryGetValue name
+  member self.Has name = self.Properties.ContainsKey name
+  member self.Set name (value:Box) = self.Properties.[name] <- value
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj

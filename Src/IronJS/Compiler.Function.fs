@@ -43,18 +43,17 @@ module Function =
   
       let closureType = createType ctx scope
       let dynScopesExpr = Dlr.Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopes]
-      Dlr.Expr.newArgs closureType (ctx.Globals :: ctx.Environment :: scopesExpr :: resolveItems ctx scope)
+      Dlr.Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
 
   (*Defines a new function*)
-  let internal definition (ctx:Context) (scope:Ast.Scope) (ast:Ast.Node) =
+  let internal definition (ctx:Context) astId =
+    let scope, _ = ctx.Env.AstMap.[astId]
     let closureExpr = Closure.create ctx scope
-    let functionArgs = [Dlr.Expr.constant ast; closureExpr; ctx.Environment]
-    let functionExpr = Dlr.Expr.newGenericArgs Runtime.Function<_>.TypeDef [closureExpr.Type] functionArgs
-    Dlr.Expr.castT<Runtime.Object> functionExpr //Need to cast all functions to Runtime.Object so 
-                                                //they play nice with the rest of the compiler
+    let functionArgs = [Dlr.Expr.constant astId; closureExpr; ctx.Environment]
+    Dlr.Expr.newArgs Runtime.Function.TypeDef functionArgs
 
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args =
     ctx.TemporaryTypes.Clear()
     let targetExpr = ctx.Builder ctx target
-    CallSites.invoke  targetExpr (ctx.Globals :: [for arg in args -> ctx.Builder ctx arg])
+    CallSites.invoke  targetExpr (ctx.Globals:>Et :: [for arg in args -> ctx.Builder ctx arg])

@@ -33,7 +33,7 @@ module ExprGen =
     | Ast.Property(target, name)  -> CallSites.getMember (ctx.Builder ctx target) name
 
     //Functions
-    | Ast.Function(scope, _)    -> Function.definition ctx scope ast
+    | Ast.Function(astId)       -> Function.definition ctx astId
     | Ast.Invoke(target, args)  -> Function.invoke ctx target args
     | Ast.Return(value)         -> Js.makeReturn ctx.Return (ctx.Builder ctx value)
 

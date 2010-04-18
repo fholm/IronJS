@@ -102,7 +102,8 @@ module Core =
       let! body  = parse (child t 1)
       let! scope = exitScope()
       let! s = getState
-      return Function({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0}, body)
+      s.AstMap.Add(s.AstMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+      return Function(s.AstMap.Count-1)
     else
       do! createVar (child t 0).Text false
       let! name = parse (child t 0)
@@ -110,7 +111,8 @@ module Core =
       let! body  = parse (child t 2)
       let! scope = exitScope()
       let! s = getState
-      let func = Function({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0}, body)
+      s.AstMap.Add(s.AstMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+      let func = Function(s.AstMap.Count-1)
       do! Analyzer.assign name func
       return Assign(name, func)}
 
@@ -135,6 +137,6 @@ module Core =
   and private parseObject  t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
   and private parseString  t = state { return String(cleanString t.Text) }
 
-  let parseAst (ast:AstTree) scope = 
-     let ast, state = executeState (parse ast) {ParserState.New with ScopeChain = [scope]}
+  let parseAst (ast:AstTree) scope astMap = 
+     let ast, state = executeState (parse ast) {ParserState.New with ScopeChain = [scope]; AstMap = astMap}
      state.ScopeChain.[0], ast

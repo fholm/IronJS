@@ -39,7 +39,7 @@ module Variables =
                       then Dlr.Expr.field expr "Value" 
                       else expr
 
-      if ctx.TemporaryTypes.ContainsKey name 
+      if ctx.TemporaryTypes.ContainsKey name && not(ctx.TemporaryTypes.[name] = exprBox.Type)
         then Dlr.Expr.cast exprBox ctx.TemporaryTypes.[name]
         else exprBox
     

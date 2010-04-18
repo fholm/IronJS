@@ -75,18 +75,25 @@ module Function =
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst
 
-    (Expr.blockWithTmp (fun tmp -> 
-      let checkAstId = Expr.Logical.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
-      let checkClosureId = Expr.Logical.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
+    let tmp, locs = if targetExpr :? EtParam then 
+                      targetExpr, [] 
+                    else 
+                      let tmp = Expr.paramT<Runtime.Function> "~tmp"
+                      tmp:>Et, [tmp]
+
+    let checkAstId = Expr.Logical.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
+    let checkClosureId = Expr.Logical.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
+    let body = 
       [
-          Expr.assign tmp targetExpr
-          (Expr.ControlFlow.ifThen
-            (Expr.Logical.orElse checkAstId checkClosureId)
-            (Expr.block[
-              (Expr.call cacheConst "Update" [tmp])
-              (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))
-              (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
-            ])
-          )
-          Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs)
-       ]) typeof<Runtime.Function>)
+        (Expr.ControlFlow.ifThen
+          (Expr.Logical.orElse checkAstId checkClosureId)
+          (Expr.block[
+            (Expr.call cacheConst "Update" [tmp])
+            (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))
+            (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
+          ])
+        )
+        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: argExprs))
+      ]
+
+    Expr.blockWithLocals locs (if targetExpr :? EtParam then body else Expr.assign tmp targetExpr :: body)

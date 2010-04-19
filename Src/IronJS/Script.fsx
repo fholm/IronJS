@@ -79,6 +79,8 @@ let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
 
 Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)
 
+(*
+
 let i = Dlr.Expr.paramT<int> "~i"
 let r = Dlr.Expr.paramT<bool> "~r"
 let x = Dlr.Expr.paramT<obj> "~x"
@@ -288,3 +290,64 @@ let funcBody = Dlr.Expr.blockWithLocals [i; x] [
 let func = ((Dlr.Expr.lambda [] funcBody).Compile()) :?> System.Action
 
 Utils.time(fun () -> func.Invoke())
+
+
+let i = Dlr.Expr.paramT<int> "~i"
+let r = Dlr.Expr.paramT<obj> "~r"
+let x = Dlr.Expr.paramT<obj> "~x"
+let loopInit = Dlr.Expr.assign i (Dlr.Expr.constant 0)
+let loopTest = Dlr.Expr.Logical.lt i (Dlr.Expr.constant 10000000)
+let loopIncr = Dlr.Expr.assign i (Dlr.Expr.Math.add i (Dlr.Expr.constant 1))
+let loopBody = Dlr.Expr.block [
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign x (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+]
+
+let box = new IronJS.Box()
+box.typeCode = 32uy
+
+let funcBody = Dlr.Expr.blockWithLocals [i; r; x] [
+  Dlr.Expr.ControlFlow.forIter loopInit loopTest loopIncr loopBody
+]
+
+let func = ((Dlr.Expr.lambda [] funcBody).Compile()) :?> System.Action
+
+Utils.time(fun () -> func.Invoke())
+
+type TypeBox() = 
+  [<DefaultValue>] val mutable typeCode : byte
+
+type ValueBox<'a>() = 
+  inherit TypeBox()
+  [<DefaultValue>] val mutable value : 'a
+
+let i = Dlr.Expr.paramT<int> "~i"
+let x = Dlr.Expr.paramT<ValueBox<int>> "~x"
+let loopInit = Dlr.Expr.assign i (Dlr.Expr.constant 0)
+let loopTest = Dlr.Expr.Logical.lt i (Dlr.Expr.constant 10000000)
+let loopIncr = Dlr.Expr.assign i (Dlr.Expr.Math.add i (Dlr.Expr.constant 1))
+let loopBody = Dlr.Expr.block [
+  Dlr.Expr.assign x (Dlr.Expr.newGenericT<ValueBox<_>> [typeof<int>])
+  Dlr.Expr.assign (Dlr.Expr.field x "typeCode") (Dlr.Expr.constant 2uy)
+  Dlr.Expr.assign (Dlr.Expr.field x "value") (Dlr.Expr.constant 2)
+]
+
+let box = new IronJS.Box()
+box.typeCode = 32uy
+
+let funcBody = Dlr.Expr.blockWithLocals [i; x] [
+  Dlr.Expr.ControlFlow.forIter loopInit loopTest loopIncr loopBody
+]
+
+let func = ((Dlr.Expr.lambda [] funcBody).Compile()) :?> System.Action
+
+Utils.time(fun () -> func.Invoke())
+*)

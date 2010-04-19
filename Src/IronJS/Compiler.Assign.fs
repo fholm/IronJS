@@ -11,13 +11,13 @@ module Assign =
 
     let internal build (ctx:Context) left (value:Et) =
       match left with
-      | Ast.Global(name, globalScopeLevel)  -> 
+      | Ast.Global(name, globalScopeLevel) -> 
         if globalScopeLevel = 0 
           then ctx.TemporaryTypes.[name] <- value.Type
                Variables.Global.assign ctx name value
           else DynamicScope.setGlobalValue ctx name value
 
-      | Ast.Local(name, localScopeLevel)    -> 
+      | Ast.Local(name, localScopeLevel) -> 
         if localScopeLevel = 0 
           then ctx.TemporaryTypes.[name] <- value.Type
                Variables.Local.assign ctx name value

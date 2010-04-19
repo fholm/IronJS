@@ -32,7 +32,7 @@ module Variables =
   (*Helper functions for dealing with local variables*)
   module Local = 
     let expr ctx name = ctx.Scope.Locals.[name].Expr :> Et
-    let assign ctx name value = Js.assign (expr ctx name) value
+    let assign ctx name value = Utils.Type.assign (expr ctx name) value
     let value ctx name = 
       let expr = expr ctx name 
       let exprBox = if Js.isStrongBox (expr.Type) 

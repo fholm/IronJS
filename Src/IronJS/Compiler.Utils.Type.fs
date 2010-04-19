@@ -26,7 +26,21 @@ module Type =
     | Ast.JsTypes.String  -> Constants.clrString
     | Ast.JsTypes.Object  -> Runtime.Object.TypeDef
     | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
-    | _ -> Constants.clrDynamic
+    | _ -> typeof<Box>
 
   (*Gets the inner type of a strongbox Type object*)
   let internal strongBoxInnerType typ = Type.genericArgumentN typ 0
+
+
+  let assign (left:Et) (right:Et) =
+    let assign (left:Et) (right:Et) =
+      if left.Type = typeof<Box> && not (right.Type = typeof<Box>) then
+        let typeCode = Utils.Box.typeCode right.Type
+        Dlr.Expr.block [
+          Dlr.Expr.assign (Utils.Box.fieldByTypeCode left typeCode) right
+          Dlr.Expr.assign (Dlr.Expr.field left "typeCode") (Dlr.Expr.constant typeCode)
+        ]
+      else
+        Dlr.Expr.assign left (if left.Type = right.Type then right else Dlr.Expr.cast right left.Type)
+
+    if Js.isStrongBox left.Type then assign (Dlr.Expr.field left "Value") right else assign left right

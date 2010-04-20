@@ -44,6 +44,7 @@ module ExprGen =
         Expr.assign (Expr.field ctx.ReturnBox "typeCode") (Expr.constant typeCode)
         Js.makeReturn ctx.Return (Dlr.Expr.dynamicDefault)
       ]
+      //Js.makeReturn ctx.Return (Js.box value)
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

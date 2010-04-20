@@ -26,20 +26,20 @@ module Constants =
 
 module TypeCodes = 
   //Represents null
-  let null' = 0uy
+  let null' = 0
 
   //Used for CLR objects
-  let clr = 1uy
+  let clr = 1
 
   //Primitives
-  let bool = 2uy
-  let double = 4uy
-  let int = 8uy
+  let bool = 2
+  let double = 4
+  let int = 8
 
   //
-  let string = 16uy
+  let string = 16
 
   //IronJS object types
-  let object' = 32uy
-  let function' = 64uy
-  let array = 128uy
+  let object' = 32
+  let function' = 64
+  let array = 128

@@ -94,7 +94,7 @@ module Function =
           ])
         )
         (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: argExprs))
-        (Expr.field tmp "ReturnBox")
+        tmp
       ]
 
     Expr.blockWithLocals locs (if targetExpr :? EtParam then body else Expr.assign tmp targetExpr :: body)

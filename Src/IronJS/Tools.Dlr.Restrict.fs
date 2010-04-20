@@ -18,7 +18,7 @@ module Restrict =
     match args with
     | [] -> BindingRestrictions.Empty
     | x::xs -> 
-      (if x.HasValue && x.Value = null 
-          then BindingRestrictions.GetInstanceRestriction(x.Expression, Dlr.Expr.dynamicDefault)
-          else BindingRestrictions.GetTypeRestriction(x.Expression, x.LimitType)
-      ).Merge(x.Restrictions).Merge(byArgs xs)
+    (if x.HasValue && x.Value = null 
+        then BindingRestrictions.GetInstanceRestriction(x.Expression, Dlr.Expr.dynamicDefault)
+        else BindingRestrictions.GetTypeRestriction(x.Expression, x.LimitType)
+    ).Merge(x.Restrictions).Merge(byArgs xs)

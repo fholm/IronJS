@@ -78,3 +78,145 @@ let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
 
 Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)
+
+let i = Dlr.Expr.paramT<int> "~i"
+let loopInit = Dlr.Expr.assign i (Dlr.Expr.constant 0)
+let loopTest = Dlr.Expr.Logical.lt i (Dlr.Expr.constant 10000000)
+let loopIncr = Dlr.Expr.assign i (Dlr.Expr.Math.add i (Dlr.Expr.constant 1))
+
+let a0 = Dlr.Expr.param "~a0" (typeof<Box>.MakeByRefType())
+let a1 = Dlr.Expr.param "~a1" (typeof<Box>.MakeByRefType())
+let a2 = Dlr.Expr.param "~a2" (typeof<Box>.MakeByRefType())
+let re = Dlr.Expr.param "~re" (typeof<Box>.MakeByRefType())
+let f = Dlr.Expr.constant ((Dlr.Expr.lambda [a0; a1; a2; re] (Dlr.Expr.block [
+  Dlr.Expr.assign (Dlr.Expr.field re "Type") (Dlr.Expr.constant 2)
+  Dlr.Expr.assign (Dlr.Expr.field re "Int") (Dlr.Expr.constant 2)
+])).Compile())
+
+let p0 = Dlr.Expr.paramT<Box> "~p0"
+let p1 = Dlr.Expr.paramT<Box> "~p1"
+let p2 = Dlr.Expr.paramT<Box> "~p2"
+let re0 = Dlr.Expr.paramT<Box> "~re0"
+
+let loopBody = Dlr.Expr.block [
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+]
+
+let funcBody = Dlr.Expr.blockWithLocals [i; p0; p1; p2; re0] [
+  Dlr.Expr.ControlFlow.forIter loopInit loopTest loopIncr loopBody
+]
+
+let func = ((Dlr.Expr.lambda [] funcBody).Compile())
+
+Utils.time(fun () -> printf "%A" (func.DynamicInvoke()))
+
+
+
+
+
+typeof<Box> = (typeof<Box>.MakeByRefType())
+
+
+
+
+
+
+
+
+
+
+
+let a0 = Dlr.Expr.param "~a0" (typeof<Box>)
+let a1 = Dlr.Expr.param "~a1" (typeof<Box>)
+let a2 = Dlr.Expr.param "~a2" (typeof<Box>)
+let re = Dlr.Expr.param "~re" (typeof<Box>)
+let f = Dlr.Expr.constant ((Dlr.Expr.lambda [a0; a1; a2; re] (Dlr.Expr.block [
+  Dlr.Expr.assign (Dlr.Expr.field re "Type") (Dlr.Expr.constant 2)
+  Dlr.Expr.assign (Dlr.Expr.field re "Int") (Dlr.Expr.constant 2)
+])).Compile())
+
+let p0 = Dlr.Expr.paramT<Box> "~p0"
+let p1 = Dlr.Expr.paramT<Box> "~p1"
+let p2 = Dlr.Expr.paramT<Box> "~p2"
+let re0 = Dlr.Expr.paramT<Box> "~re0"
+
+let loopBody = Dlr.Expr.block [
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+  (Dlr.Expr.invoke f [p0; p1; p2; re0])
+]
+
+let funcBody = Dlr.Expr.blockWithLocals [i; p0; p1; p2; re0] [
+  Dlr.Expr.ControlFlow.forIter loopInit loopTest loopIncr loopBody
+]
+
+let func = ((Dlr.Expr.lambda [] funcBody).Compile())
+
+Utils.time(fun () -> printf "%A" (func.DynamicInvoke()))
+
+
+
+
+
+
+
+
+let i = Dlr.Expr.paramT<int> "~i"
+let loopInit = Dlr.Expr.assign i (Dlr.Expr.constant 0)
+let loopTest = Dlr.Expr.Logical.lt i (Dlr.Expr.constant 10000000)
+let loopIncr = Dlr.Expr.assign i (Dlr.Expr.Math.add i (Dlr.Expr.constant 1))
+
+
+let a0 = Dlr.Expr.param "~a0" (typeof<obj>)
+let a1 = Dlr.Expr.param "~a1" (typeof<obj>)
+let a2 = Dlr.Expr.param "~a2" (typeof<obj>)
+let re = Dlr.Expr.label "~re"
+let f = Dlr.Expr.constant ((Dlr.Expr.lambda [a0; a1; a2] (Dlr.Expr.block [
+  Dlr.Expr.makeReturn re (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.labelExpr re
+])).Compile())
+
+let p0 = Dlr.Expr.paramT<obj> "~p0"
+let p1 = Dlr.Expr.paramT<obj> "~p1"
+let p2 = Dlr.Expr.paramT<obj> "~p2"
+let re0 = Dlr.Expr.paramT<obj> "~re0"
+
+let loopBody = Dlr.Expr.block [
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+  (Dlr.Expr.assign re0 (Dlr.Expr.invoke f [p0; p1; p2]))
+]
+
+let funcBody = Dlr.Expr.blockWithLocals [i; p0; p1; p2; re0] [
+  Dlr.Expr.assign p0 (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign p1 (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.assign p2 (Dlr.Expr.castT<obj> (Dlr.Expr.constant 2))
+  Dlr.Expr.ControlFlow.forIter loopInit loopTest loopIncr loopBody
+]
+
+let func = ((Dlr.Expr.lambda [] funcBody).Compile())
+
+Utils.time(fun () -> printf "%A" (func.DynamicInvoke()))

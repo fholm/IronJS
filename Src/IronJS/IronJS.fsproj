@@ -73,6 +73,7 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
     <PlatformTarget>x64</PlatformTarget>
+    <OtherFlags>--debug-</OtherFlags>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
@@ -115,8 +116,8 @@
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.UnaryOp.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
-    <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
+    <Compile Include="Compiler.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

@@ -41,7 +41,7 @@ module ExprGen =
       let typeCode = Utils.Box.typeCode value.Type
       Expr.block [
         Expr.assign (Utils.Box.fieldByTypeCode ctx.ReturnBox typeCode) value
-        Expr.assign (Expr.field ctx.ReturnBox "typeCode") (Expr.constant typeCode)
+        Expr.assign (Expr.field ctx.ReturnBox "Type") (Expr.constant typeCode)
         Js.makeReturn ctx.Return (Dlr.Expr.dynamicDefault)
       ]
       //Js.makeReturn ctx.Return (Js.box value)

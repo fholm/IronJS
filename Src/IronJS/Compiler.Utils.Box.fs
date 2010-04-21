@@ -27,10 +27,10 @@ module Box =
 
   let fieldByTypeCode (expr:Et) typeCode = 
     match typeCode with
-    | Bool    -> Expr.field expr "bool"
-    | Double  -> Expr.field expr "double"
-    | Int     -> Expr.field expr "int"
-    | Other   -> Expr.field expr "obj"
+    | Bool    -> Expr.field expr "Bool"
+    | Double  -> Expr.field expr "Double"
+    | Int     -> Expr.field expr "Int"
+    | Other   -> Expr.field expr "Obj"
 
   let box (expr:Et) =
     if isBoxed expr then expr 
@@ -39,6 +39,6 @@ module Box =
       Expr.blockWithTmp (fun tmp -> [
                                       Expr.assign tmp Expr.newInstanceT<Box>;
                                       Expr.assign (fieldByTypeCode tmp typeCode) expr;
-                                      Expr.assign (Expr.field tmp "typeCode") (Expr.constant typeCode);
+                                      Expr.assign (Expr.field tmp "Type") (Expr.constant typeCode);
                                       tmp;
                                     ]) typeof<Box>

@@ -7,8 +7,8 @@ open IronJS.Parser
 open System
 open Antlr.Runtime
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Dev")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
 let env = Runtime.Environment.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 
@@ -24,4 +24,9 @@ let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Function, Runtime.O
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
 
-compiledFunc.Invoke(globalScope, null) |> ignore
+Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore) |> ignore
+
+let time = Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)
+
+Console.WriteLine(sprintf "%i:%i" time.Seconds time.Milliseconds)
+Console.ReadLine() |> ignore

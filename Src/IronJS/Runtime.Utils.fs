@@ -14,5 +14,5 @@ module Box =
 
   let nullBox = 
     let mutable box = new Box()
-    box.typeCode <- TypeCodes.null'
+    box.Type <- TypeCodes.null'
     box

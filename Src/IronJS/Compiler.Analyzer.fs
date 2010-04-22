@@ -75,8 +75,6 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
 
-  let x = 1
-
   (*Resolves the type of a variable and updates the map with it*)
   let resolveType name (vars:Ast.LocalMap) =
     Map.add name (setType name vars.[name] (getType name closureType scope.Closure vars)) vars

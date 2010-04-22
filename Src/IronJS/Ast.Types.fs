@@ -6,13 +6,15 @@ open Antlr.Runtime.Tree
 open System.Diagnostics
 
 type JsTypes = 
-  | Nothing = 0
-  | Double  = 1
-  | Integer = 2 // Not used
-  | String  = 4
-  | Object  = 8
-  | Dynamic = 16
-  | Function = 32
+  | Nothing   = 0
+  | Double    = 1
+  | Integer   = 2
+  | String    = 4
+  | Boolean   = 8
+  | Dynamic   = 16
+  | Object    = 32
+  | Function  = 64
+  | Array     = 128
 
 type BinaryOp =
   | Lt
@@ -36,8 +38,8 @@ type Node =
   | Error of string
 
   //Constants
-  | String of string
-  | Number of double
+  | String  of string
+  | Number  of double
   | Integer of int
   | Pass
   | Null
@@ -49,7 +51,7 @@ type Node =
   | Global    of string * int
   | Property  of Node * string
 
-  //Magic
+  //Special
   | Arguments
   | This
   | Eval of string
@@ -71,7 +73,8 @@ type Node =
   | BinaryOp  of Node * BinaryOp * Node
   | UnaryOp   of UnaryOp * Node
 
-and [<DebuggerDisplay("{DebugView}")>] Local = {
+[<DebuggerDisplay("{DebugView}")>] 
+type Local = {
   Expr: EtParam
   ParamIndex: int
   InitUndefined: bool
@@ -96,7 +99,8 @@ and [<DebuggerDisplay("{DebugView}")>] Local = {
     AssignedFrom = List.empty
   }
   
-and [<DebuggerDisplay("{DebugView}")>] Closure = {
+[<DebuggerDisplay("{DebugView}")>]
+type Closure = {
   Index: int
   DefinedInScopeLevel: int
 } with
@@ -106,10 +110,10 @@ and [<DebuggerDisplay("{DebugView}")>] Closure = {
     DefinedInScopeLevel = -1
   }
 
-and LocalMap = Map<string, Local>
-and ClosureMap = Map<string, Closure>
+type LocalMap = Map<string, Local>
+type ClosureMap = Map<string, Closure>
 
-and Scope = {
+type Scope = {
   Locals: LocalMap
   Closure: ClosureMap
   Arguments: bool

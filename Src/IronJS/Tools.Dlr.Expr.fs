@@ -87,12 +87,15 @@ module Expr =
 
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>
+
   let newGeneric (typ:System.Type) (types:ClrType seq) = new' (typ.MakeGenericType(Seq.toArray types))
-  let newGenericT<'a> (types:ClrType seq) = newGeneric typedefof<'a> types
+  let newGenericT<'a> = newGeneric typedefof<'a>
+
   let newArgs (typ:System.Type) (args:Et seq) = Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
-  let newArgsT<'a> (args:Et seq) = newArgs typeof<'a> args
+  let newArgsT<'a> (args:Et seq) = newArgs typeof<'a>
+
   let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = newArgs (typ.MakeGenericType(Seq.toArray types)) args
-  let newGenericArgsT<'a> (types:ClrType seq) (args:Et seq) = newGenericArgs typedefof<'a> types args
+  let newGenericArgsT<'a> = newGenericArgs typedefof<'a> 
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
   let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    

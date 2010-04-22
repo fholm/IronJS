@@ -113,11 +113,11 @@
     <Compile Include="Compiler.DynamicScope.fs" />
     <Compile Include="Compiler.Assign.fs" />
     <Compile Include="Compiler.Function.fs" />
-    <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.Loops.fs" />
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.UnaryOp.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
+    <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>

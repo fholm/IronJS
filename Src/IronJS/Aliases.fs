@@ -16,9 +16,10 @@ type MethodInfo     = System.Reflection.MethodInfo
 
 type AstTree        = Antlr.Runtime.Tree.CommonTree
 
-type ClrType        = System.Type
-type Dynamic        = System.Object
-type StrongBox<'a>  = System.Runtime.CompilerServices.StrongBox<'a>
-type IEnum<'a>      = System.Collections.Generic.IEnumerable<'a>
-type Dict<'a, 'b>   = System.Collections.Generic.Dictionary<'a, 'b>
-type Delegate       = System.Delegate
+type ClrType          = System.Type
+type Dynamic          = System.Object
+type StrongBox<'a>    = System.Runtime.CompilerServices.StrongBox<'a>
+type IEnum<'a>        = System.Collections.Generic.IEnumerable<'a>
+type Dict<'a, 'b>     = System.Collections.Generic.Dictionary<'a, 'b>
+type SafeDict<'a, 'b> = System.Collections.Concurrent.ConcurrentDictionary<'a, 'b>
+type Delegate         = System.Delegate

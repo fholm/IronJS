@@ -37,7 +37,7 @@ module Box =
     else
       let typeCode = typeCode expr.Type
       Expr.blockWithTmp (fun tmp -> [
-                                      Expr.assign tmp Expr.newInstanceT<Box>;
+                                      Expr.assign tmp Expr.newT<Box>;
                                       Expr.assign (fieldByTypeCode tmp typeCode) expr;
                                       Expr.assign (Expr.field tmp "Type") (Expr.constant typeCode);
                                       tmp;

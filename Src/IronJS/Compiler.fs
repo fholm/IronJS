@@ -16,7 +16,7 @@ let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
 let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
   variables |> Map.toSeq
             |> Seq.filter (fun pair -> (snd pair).ClosedOver)
-            |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.newInstance (snd pair).Expr.Type)) :: state) body
+            |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.new' (snd pair).Expr.Type)) :: state) body
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
 let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
@@ -26,7 +26,7 @@ let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtP
 let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
   if not ctx.Scope.HasDynamicScopes 
     then body
-    else Dlr.Expr.assign ctx.LocalScopes (Dlr.Expr.newInstanceT<Runtime.Object ResizeArray>) :: body
+    else Dlr.Expr.assign ctx.LocalScopes (Dlr.Expr.newT<Runtime.Object ResizeArray>) :: body
 
 (**)
 let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
@@ -39,7 +39,7 @@ let private addClosureInitExpr (ctx:Context) (body:Et list) =
     if ctx.Closure.Type = Runtime.Closure.TypeDef then
       Expr.assign ctx.Closure (Expr.field ctx.Function "Closure") :: body
     else
-      Expr.assign ctx.Closure (Expr.cast2 ctx.Closure.Type (Expr.field ctx.Function "Closure")) :: body
+      Expr.assign ctx.Closure (Expr.cast ctx.Closure.Type (Expr.field ctx.Function "Closure")) :: body
   else
     body
 

@@ -23,6 +23,7 @@
 #load "InterOp.fs"
 #load "Runtime.fs"
 #load "Runtime.Function.fs"
+#load "Runtime.DelegateCache.fs"
 #load "Runtime.Environment.fs"
 #load "Runtime.Utils.fs"
 #load "Runtime.Helpers.Variables.fs"
@@ -44,6 +45,7 @@
 #load "Compiler.UnaryOp.fs"
 #load "Compiler.ExprGen.fs"
 #load "Compiler.fs"
+
 open System
 
 open IronJS
@@ -78,32 +80,3 @@ let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
 
 Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)
-
-type Cell = { 
-  Delegate : Type
-  Next : Cell array
-} with
-  static member New = { 
-    Delegate = null
-    Next = Array.zeroCreate 8 
-  }
- 
-let root = Cell.New
-let boxByRef = typeof<Box>.MakeByRefType()
-
-let inline typeToIndex typ =
-  if   typ = Constants.clrInt32       then 0
-  elif typ = Constants.clrString      then 1
-  elif typ = Constants.clrDouble      then 2
-  elif typ = Constants.clrBool        then 3
-  elif typ = Runtime.Object.TypeDef   then 4
-  elif typ = Runtime.Function.TypeDef then 5
-  elif typ = boxByRef                 then 7
-  else failwith "Invalid type '%s'" typ.Name
-
-type DelegateCache() =
-  class end
-
-let delegateStore = Map.empty
-
-Map.add [typeof<int>] "test" delegateStore

@@ -44,7 +44,7 @@ module DynamicScope =
 
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Get" getArgs)
-      (Dlr.Expr.ControlFlow.ternary 
+      (Dlr.Expr.Flow.ternary 
         (Dlr.Expr.property tmp "Item1")
         (Dlr.Expr.property tmp "Item2")
         (Js.box (Variables.Closure.value ctx name))
@@ -77,7 +77,7 @@ module DynamicScope =
 
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp value
-      (Dlr.Expr.ControlFlow.ternary
+      (Dlr.Expr.Flow.ternary
         (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Closures> "Set" setArgs)
         (tmp)
         (Variables.Closure.assign ctx name tmp)
@@ -88,7 +88,7 @@ module DynamicScope =
     let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Get" [Dlr.Expr.constant name; ctx.LocalScopesExpr])
-      (Dlr.Expr.ControlFlow.ternary 
+      (Dlr.Expr.Flow.ternary 
         (Dlr.Expr.property tmp "Item1")
         (Dlr.Expr.property tmp "Item2")
         (Js.box (Variables.Local.value ctx name))
@@ -100,7 +100,7 @@ module DynamicScope =
     let setArgs = [Dlr.Expr.constant name; Js.box tmp; ctx.LocalScopesExpr]
     Dlr.Expr.blockWithLocals [tmp] [
         (Dlr.Expr.assign tmp value)
-        (Dlr.Expr.ControlFlow.ternary
+        (Dlr.Expr.Flow.ternary
           (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Set" setArgs)
           (tmp)
           (Variables.Local.assign ctx name tmp)

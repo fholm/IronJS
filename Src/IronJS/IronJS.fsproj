@@ -79,6 +79,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="Fsi.fs" />
+    <Compile Include="Attributes.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Box.fs" />
     <Compile Include="Monads.fs" />
@@ -96,6 +97,7 @@
     <Compile Include="InterOp.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Function.fs" />
+    <Compile Include="Runtime.DelegateCache.fs" />
     <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Utils.fs" />
     <Compile Include="Runtime.Helpers.Variables.fs" />
@@ -116,8 +118,8 @@
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.UnaryOp.fs" />
     <Compile Include="Compiler.ExprGen.fs" />
-    <None Include="Script.fsx" />
     <Compile Include="Compiler.fs" />
+    <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

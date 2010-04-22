@@ -11,7 +11,7 @@ let isStrongBox (typ:System.Type) =
 
 let assign (left:Et) (right:Et) =
   let assign (left:Et) (right:Et) =
-    Dlr.Expr.assign left (if left.Type = right.Type then right else Dlr.Expr.cast right left.Type)
+    Dlr.Expr.assign left (if left.Type = right.Type then right else Dlr.Expr.cast left.Type right)
 
   if isStrongBox left.Type then assign (Dlr.Expr.field left "Value") right else assign left right
 

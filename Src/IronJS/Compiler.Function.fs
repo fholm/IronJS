@@ -81,12 +81,12 @@ module Function =
                       let tmp = Expr.paramT<Runtime.Function> "~tmp"
                       tmp:>Et, [tmp]
 
-    let checkAstId = Expr.Logical.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
-    let checkClosureId = Expr.Logical.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
+    let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
+    let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
     let body = 
       [
-        (Expr.ControlFlow.ifThen
-          (Expr.Logical.orElse checkAstId checkClosureId)
+        (Expr.Flow.if'
+          (Expr.Logic.or' checkAstId checkClosureId)
           (Expr.block[
             (Expr.call cacheConst "Update" [tmp])
             (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))

@@ -26,7 +26,7 @@ module Variables =
     let value ctx name = 
       let expr = Dlr.Expr.field (expr ctx name) "Value"
       if ctx.TemporaryTypes.ContainsKey name
-        then Dlr.Expr.cast expr ctx.TemporaryTypes.[name]
+        then Dlr.Expr.cast ctx.TemporaryTypes.[name] expr
         else expr
 
   (*Helper functions for dealing with local variables*)
@@ -40,7 +40,7 @@ module Variables =
                       else expr
 
       if ctx.TemporaryTypes.ContainsKey name && not(ctx.TemporaryTypes.[name] = exprBox.Type)
-        then Dlr.Expr.cast exprBox ctx.TemporaryTypes.[name]
+        then Dlr.Expr.cast ctx.TemporaryTypes.[name] exprBox 
         else exprBox
     
     let clrType ctx name =
@@ -56,7 +56,7 @@ module Variables =
       if ctx.TemporaryTypes.ContainsKey name then 
         if expr.Type = typeof<Box> then
           let typeCode = Utils.Box.typeCode ctx.TemporaryTypes.[name]
-          Dlr.Expr.cast (Utils.Box.fieldByTypeCode expr typeCode) ctx.TemporaryTypes.[name]
+          Dlr.Expr.cast ctx.TemporaryTypes.[name] (Utils.Box.fieldByTypeCode expr typeCode)
         else
           expr
       else 

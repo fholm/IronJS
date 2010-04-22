@@ -7,7 +7,7 @@ open IronJS.Compiler
 
 module BinaryOp = 
 
-  let private buildLt (left:Et) (right:Et) = Dlr.Expr.Logical.lt left right
+  let private buildLt (left:Et) (right:Et) = Dlr.Expr.Logic.lt left right
   let private buildLtDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
   let private buildAdd (left:Et) (right:Et) = Dlr.Expr.Math.add left right

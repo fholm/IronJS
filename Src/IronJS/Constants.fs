@@ -7,6 +7,9 @@ module Constants =
   let clrDynamic = typeof<obj>
   let clrDynamicHashCode = clrDynamic.GetHashCode()
 
+  let clrBool = typeof<bool>
+  let clrBoolHashCode = clrDynamic.GetHashCode()
+
   let clrDouble = typeof<double>
   let clrDoubleHashCode = clrDouble.GetHashCode()
 

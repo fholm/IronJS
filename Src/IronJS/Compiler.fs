@@ -7,41 +7,42 @@ open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 (*Adds initilization expressions for variables that should be Undefined*)
-let private addUndefinedInitExprs (variables:Ast.LocalMap) (body:Et list) =
-  variables |> Map.toSeq
-            |> Seq.filter (fun pair -> (snd pair).InitUndefined)
-            |> Seq.fold (fun state pair -> (Js.assign (snd pair).Expr Runtime.Undefined.InstanceExpr) :: state) body
+let private initUndefined (ctx:Context) (body:Et list) =
+  let prependExprs body (var:Ast.Local) =
+    (Js.assign var.Expr Runtime.Undefined.InstanceExpr) :: body
+
+  ctx.Scope.Locals
+    |> Map.toSeq
+    |> Seq.filter (fun pair -> (snd pair).InitUndefined)
+    |> Seq.map (fun pair -> snd pair)
+    |> Seq.fold prependExprs body
 
 (*Adds initilization expression for variables that are closed over, creating their strongbox instance*)
-let private addStrongBoxInitExprs (variables:Ast.LocalMap) (body:Et list) =
-  variables |> Map.toSeq
-            |> Seq.filter (fun pair -> (snd pair).ClosedOver)
-            |> Seq.fold (fun state pair -> (Dlr.Expr.assign (snd pair).Expr (Dlr.Expr.new' (snd pair).Expr.Type)) :: state) body
+let private initStrongBoxes ctx body =
+  let prependExprs body (var:Ast.Local) = 
+    let newExpr = Dlr.Expr.new' var.Expr.Type
+    Dlr.Expr.assign var.Expr newExpr :: body
+
+  ctx.Scope.Locals
+    |> Map.toSeq
+    |> Seq.filter (fun pair -> (snd pair).ClosedOver)
+    |> Seq.map (fun pair -> snd pair)
+    |> Seq.fold prependExprs body
 
 (*Adds initilization expressions for closed over parameters, fetching their proxy parameters value*)
-let private addProxyParamInitExprs (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
-  parms |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body 
+let private initProxyParams (parms:Ast.LocalMap) (proxies:Map<string, EtParam>) body =
+  parms 
+    |> Map.fold (fun state name (var:Ast.Local) -> Js.assign var.Expr proxies.[name] :: state) body 
 
 (**)
-let private addDynamicScopesInitExpr (ctx:Context) (body:Et list) =
+let private initDynamicScopes (ctx:Context) (body:Et list) =
   if not ctx.Scope.HasDynamicScopes 
     then body
     else Dlr.Expr.assign ctx.LocalScopes (Dlr.Expr.newT<Runtime.Object ResizeArray>) :: body
 
 (**)
-let private addDynamicScopesLocal (ctx:Context) (vars:EtParam list) =
-  if not ctx.Scope.HasDynamicScopes
-    then vars
-    else ctx.LocalScopes :: vars
-
-let private addClosureInitExpr (ctx:Context) (body:Et list) =
-  if ctx.ClosureAccess > 0 then
-    if ctx.Closure.Type = Runtime.Closure.TypeDef then
-      Expr.assign ctx.Closure (Expr.field ctx.Function "Closure") :: body
-    else
-      Expr.assign ctx.Closure (Expr.cast ctx.Closure.Type (Expr.field ctx.Function "Closure")) :: body
-  else
-    body
+let private dynamicScopesLocal (ctx:Context) (vars:EtParam list) =
+  if ctx.Scope.HasDynamicScopes then ctx.LocalScopes :: vars else vars
 
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
@@ -53,7 +54,7 @@ let private createProxyParameter name (var:Ast.Local) =
 let private partitionParamsAndVars _ (var:Ast.Local) = 
   var.IsParameter && not var.InitUndefined
 
-let private addClosureAndGlobals (ctx:Context) (vars:EtParam list) =
+let private closureAndGlobalsLocals (ctx:Context) (vars:EtParam list) =
   let vars = if ctx.GlobalAccess > 0 then ctx.GlobalsParam :: vars else vars
   if ctx.ClosureAccess > 0 then ctx.ClosureParam :: vars else vars
 
@@ -69,6 +70,22 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
       Env = env
   }
 
+  (*Local functions*)
+  let initGlobals body = 
+    if ctx.GlobalAccess > 0 then 
+      let globalsExpr = Expr.field ctx.Environment "Globals"
+      (Expr.assign ctx.GlobalsParam globalsExpr) :: body
+    else 
+      body
+
+  let initClosure body =
+    if ctx.ClosureAccess > 0 then 
+      let closureExpr = Expr.field ctx.Function "Closure"
+      let closureCast = Expr.cast ctx.Closure.Type closureExpr
+      (Expr.assign ctx.Closure closureCast) :: body
+    else
+      body
+
   let body = [
     (Compiler.ExprGen.builder ctx ast)
     (Dlr.Expr.labelExprVal ctx.Return (Expr.typeDefault<Dynamic>))
@@ -82,18 +99,18 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
 
   let localVariableExprs = 
     closedOverParameters 
-    |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
-    |> addDynamicScopesLocal ctx
-    |> addClosureAndGlobals ctx
+      |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
+      |> dynamicScopesLocal ctx
+      |> closureAndGlobalsLocals ctx
 
   let completeBodyExpr = 
-      (if ctx.GlobalAccess > 0 then Expr.assign ctx.Globals (Expr.field ctx.Environment "Globals") else Expr.empty)
-   :: (body 
-      |> addUndefinedInitExprs variables
-      |> addProxyParamInitExprs closedOverParameters proxyParameters
-      |> addStrongBoxInitExprs ctx.Scope.Locals
-      |> addDynamicScopesInitExpr ctx
-      |> addClosureInitExpr ctx)
+    body
+        |> initUndefined ctx
+        |> initProxyParams closedOverParameters proxyParameters
+        |> initStrongBoxes ctx
+        |> initDynamicScopes ctx
+        |> initClosure
+        |> initGlobals
 
   #if INTERACTIVE
   let lmb = Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]

@@ -5,7 +5,7 @@ open IronJS.Aliases
 open IronJS.Tools
 open System.Linq.Expressions
 
-//Compilation context
+[<NotThreadSafe>]
 type Context = {
   This: EtParam
   ClosureParam: EtParam
@@ -20,12 +20,12 @@ type Context = {
   mutable GlobalAccess: int
   mutable ClosureAccess: int
 } with
-  member x.ReturnBox      = Dlr.Expr.field x.Function "ReturnBox"
-  member x.Environment    = Dlr.Expr.field x.Function "Environment"
-  member x.ClosureScopes  = Dlr.Expr.field x.Closure "Scopes"
+  member x.ReturnBox       = Dlr.Expr.field x.Function "ReturnBox"
+  member x.Environment     = Dlr.Expr.field x.Function "Environment"
+  member x.ClosureScopes   = Dlr.Expr.field x.Closure "Scopes"
   member x.LocalScopesExpr = if x.Scope.HasDynamicScopes 
-                              then x.LocalScopes :> Et 
-                              else Dlr.Expr.typeDefault<Runtime.Object ResizeArray>
+                               then x.LocalScopes :> Et 
+                               else Dlr.Expr.typeDefault<Runtime.Object ResizeArray>
   member x.Globals = 
     x.GlobalAccess <- x.GlobalAccess + 1
     x.GlobalsParam

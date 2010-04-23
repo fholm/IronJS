@@ -1,5 +1,5 @@
 ﻿
-function bench()
+var bench = function()
 {
     function f(x, y, z)
     {

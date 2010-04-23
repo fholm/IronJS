@@ -11,10 +11,10 @@ type JsTypes =
   | Integer   = 2
   | String    = 4
   | Boolean   = 8
-  | Dynamic   = 16
-  | Object    = 32
-  | Function  = 64
-  | Array     = 128
+  | Object    = 16
+  | Function  = 32
+  | Array     = 64
+  | Dynamic   = 128 // includes null + undefined
 
 type BinaryOp =
   | Lt
@@ -85,9 +85,11 @@ type Local = {
   AssignedFrom: Node list
 } with
   member x.IsParameter = x.ParamIndex > -1
-  member x.DebugView = (sprintf 
-    @"closure:%b/index:%i/undefined:%b/as:%A/with:%A, %A" 
-    x.ClosedOver x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure)
+  member x.DebugView = (
+    sprintf 
+      @"closure:%b/index:%i/undefined:%b/as:%A/with:%A, %A/assignedFrom:%i" 
+      x.ClosedOver x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure x.AssignedFrom.Length
+  )
   static member New = {
     Expr = null
     ParamIndex = -1
@@ -135,12 +137,12 @@ type ParserState = {
   ScopeChain: Scope list
   GlobalDynamicScopeLevel: int
   LocalDynamicScopeLevels: int list
-  AstMap : Dict<int, Scope * Node>
+  FunctionMap : Dict<int, Scope * Node>
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   static member New = {
     ScopeChain = []
     GlobalDynamicScopeLevel = 0
     LocalDynamicScopeLevels = [0]
-    AstMap = null
+    FunctionMap = null
   }

@@ -21,7 +21,7 @@ module DelegateCache =
     else failwith "Invalid type '%s'" typ.Name
 
   let private createDelegate types = 
-    Dlr.Expr.delegateType (typeof<Function> :: typeof<Object> :: boxByRef :: types)
+    Dlr.Expr.delegateType (typeof<Function> :: typeof<Object> :: boxByRef :: types @ [typeof<System.Void>])
 
   let getDelegate types =
     let key = List.map typeToInt types

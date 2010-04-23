@@ -56,7 +56,7 @@ module Expr =
 
     let concreteMethd = 
       match typ.GetMethod(name, argTypes) with
-      | null -> failwith "No method named '%s' taking these arguments" name
+      | null -> failwith "No method named '%s' taking these type arguments found" name
       | m    -> m.MakeGenericMethod(Seq.toArray typArgs)
 
     Et.Call(null, concreteMethd, args) :> Et
@@ -65,10 +65,7 @@ module Expr =
     callStaticGeneric typeof<'a> name typArgs args
 
   let call (expr:Et) name (args:Et list) =
-    let mutable mi = expr.Type.GetMethod(name)
-    if mi.ContainsGenericParameters then 
-      mi <- mi.MakeGenericMethod(List.toArray [for arg in args -> arg.Type])
-    Et.Call(expr, mi, args) :> Et
+    Et.Call(expr, expr.Type.GetMethod(name), args) :> Et
 
   let cast typ expr = Et.Convert(expr, typ) :> Et
   let castT<'a> = cast typeof<'a> 

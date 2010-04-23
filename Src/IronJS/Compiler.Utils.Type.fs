@@ -21,10 +21,11 @@ module Type =
   (*Converts a JsType enum to ClrType object*)
   let internal jsToClr typ =
     match typ with
-    | Ast.JsTypes.Double  -> Constants.clrDouble
-    | Ast.JsTypes.Integer -> Constants.clrInt32
-    | Ast.JsTypes.String  -> Constants.clrString
-    | Ast.JsTypes.Object  -> Runtime.Object.TypeDef
+    | Ast.JsTypes.Double    -> InterOp.Types.double
+    | Ast.JsTypes.Integer   -> InterOp.Types.int
+    | Ast.JsTypes.Boolean   -> InterOp.Types.bool
+    | Ast.JsTypes.String    -> InterOp.Types.string
+    | Ast.JsTypes.Object    -> Runtime.Object.TypeDef
     | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
     | _ -> typeof<Box>
 

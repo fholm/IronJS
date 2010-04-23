@@ -41,6 +41,7 @@ type Node =
   | String  of string
   | Number  of double
   | Integer of int
+  | Boolean of bool
   | Pass
   | Null
   | Undefined
@@ -121,6 +122,8 @@ type Scope = {
   ScopeLevel: int
   HasDynamicScopes: bool
   InParentDynamicScope: bool
+  GlobalsAccessed: bool
+  ClosureAccessed: bool
 } with
   static member New = { 
     Locals = Map.empty
@@ -128,6 +131,8 @@ type Scope = {
     ScopeLevel = 0
     HasDynamicScopes = false
     InParentDynamicScope = false
+    GlobalsAccessed = false
+    ClosureAccessed = false
   }
   static member Global = Scope.New
 

@@ -22,26 +22,28 @@ module Analyzer =
 
     match left with
     | Local(name, _) ->
-        match right with
-        | Local(rightName, _) -> 
-          if s.InDynamicScope 
-            then do! usedAs name JsTypes.Dynamic
-                 return! usedWith name rightName
-            else return! usedWith name rightName
+      match right with
+      | Local(rightName, _) -> 
+        if s.InDynamicScope 
+          then do! usedAs name JsTypes.Dynamic
+               return! usedWith name rightName
+          else return! usedWith name rightName
 
-        | Closure(rightName, _) -> 
-          if s.InDynamicScope 
-            then do! usedAs name JsTypes.Dynamic
-                 return! usedWithClosure name rightName
-            else return! usedWithClosure name rightName
+      | Closure(rightName, _) -> 
+        if s.InDynamicScope 
+          then do! usedAs name JsTypes.Dynamic
+               return! usedWithClosure name rightName
+          else return! usedWithClosure name rightName
 
-        | Number(_) -> return! usedAs name JsTypes.Double
-        | Integer(_) -> return! usedAs name JsTypes.Integer
-        | String(_) -> return! usedAs name JsTypes.String 
-        | Function(_) -> return! usedAs name JsTypes.Function
-        | Object(_) -> return! usedAs name JsTypes.Object
+      | Number(_)   -> return! usedAs name JsTypes.Double
+      | Integer(_)  -> return! usedAs name JsTypes.Integer
+      | String(_)   -> return! usedAs name JsTypes.String 
+      | Boolean(_)  -> return! usedAs name JsTypes.Boolean
+      | Function(_) -> return! usedAs name JsTypes.Function
+      | Object(_)   -> return! usedAs name JsTypes.Object
 
-        | _ -> return! assignedFrom name right
+      //Anything we can't determine runtime types for
+      | _ -> return! assignedFrom name right
 
     | Closure(name, _) ->
 
@@ -58,5 +60,3 @@ module Analyzer =
       do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
 
     | _ -> return ()}
-
-

@@ -103,6 +103,7 @@ module Core =
       let! scope = exitScope()
       let! s = getState
       s.FunctionMap.Add(s.FunctionMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+      do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
       return Function(s.FunctionMap.Count-1)
     else
       do! createVar (child t 0).Text false
@@ -112,6 +113,7 @@ module Core =
       let! scope = exitScope()
       let! s = getState
       s.FunctionMap.Add(s.FunctionMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+      do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
       let func = Function(s.FunctionMap.Count-1)
       do! Analyzer.assign name func
       return Assign(name, func)}

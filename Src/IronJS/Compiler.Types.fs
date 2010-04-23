@@ -5,20 +5,17 @@ open IronJS.Aliases
 open IronJS.Tools
 open System.Linq.Expressions
 
-[<NotThreadSafe>]
 type Context = {
   This: EtParam
-  ClosureParam: EtParam
+  Closure: EtParam
   Function: EtParam
   LocalScopes: EtParam
-  GlobalsParam: EtParam
+  Globals: EtParam
   Scope: Ast.Scope
   Return: LabelTarget
   Builder: Context -> Ast.Node -> Et
-  TemporaryTypes: Dict<string, ClrType>
+  TemporaryTypes: SafeDict<string, ClrType>
   Env: Runtime.IEnvironment
-  mutable GlobalAccess: int
-  mutable ClosureAccess: int
 } with
   member x.ReturnBox       = Dlr.Expr.field x.Function "ReturnBox"
   member x.Environment     = Dlr.Expr.field x.Function "Environment"
@@ -26,18 +23,11 @@ type Context = {
   member x.LocalScopesExpr = if x.Scope.HasDynamicScopes 
                                then x.LocalScopes :> Et 
                                else Dlr.Expr.typeDefault<Runtime.Object ResizeArray>
-  member x.Globals = 
-    x.GlobalAccess <- x.GlobalAccess + 1
-    x.GlobalsParam
-
-  member x.Closure = 
-    x.ClosureAccess <- x.ClosureAccess + 1
-    x.ClosureParam
 
   static member New = {
-    ClosureParam = null
+    Closure = null
     Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
-    GlobalsParam = Dlr.Expr.param "~globals" typeof<Runtime.Object>
+    Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
     LocalScopes = Dlr.Expr.param "~localScopes" typeof<Runtime.Object ResizeArray>
     Return = Dlr.Expr.labelT<Dynamic> "~return"
@@ -45,6 +35,4 @@ type Context = {
     Builder = fun x a -> Dlr.Expr.dynamicDefault
     TemporaryTypes = null
     Env = null
-    GlobalAccess = 0
-    ClosureAccess = 0
   }

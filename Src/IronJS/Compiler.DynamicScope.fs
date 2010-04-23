@@ -63,18 +63,6 @@ module DynamicScope =
       Dlr.Expr.constant closure.DefinedInScopeLevel // Scope level this variable was defined in
     ]
 
-    (* 
-      //Creates a block that looks like this:
-      {
-        var tmp = value;
-        if(Closures.Set(name, (object)tmp, localScopes, closure, <scopeLevel>)) {
-          tmp
-        } else {
-          closure.{name} = tmp
-        }
-      }
-    *)
-
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp value
       (Dlr.Expr.Flow.ternary

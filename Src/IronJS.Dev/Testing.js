@@ -1,8 +1,6 @@
 ﻿
-var bench = function()
-{
-    function f(x, y, z)
-    {
+var bench = function () {
+    function f(x, y, z) {
         return x + y + z;
     }
 

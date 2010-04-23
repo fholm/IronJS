@@ -5,10 +5,12 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Runtime
 
-module DelegateCache =
+module Delegate =
 
-  let private boxByRef = (typeof<Box>.MakeByRefType())
+  let private boxByRef = typeof<Box>.MakeByRefType()
   let private dict = new SafeDict<int list, ClrType>()
+  let private internalArgs = List.toSeq (typeof<Function> :: typeof<Object> :: boxByRef :: [])
+  let private returnType = List.toSeq [typeof<System.Void>]
 
   let private typeToInt typ =
     if   typ = typeof<int>      then 0
@@ -20,19 +22,19 @@ module DelegateCache =
     elif typ = boxByRef         then 7
     else failwith "Invalid type '%s'" typ.Name
 
-  let private createDelegate types = 
-    Dlr.Expr.delegateType (typeof<Function> :: typeof<Object> :: boxByRef :: types @ [typeof<System.Void>])
+  let private create (types:ClrType seq) = 
+    Dlr.Expr.delegateType (Seq.concat [internalArgs; types; returnType])
 
-  let getDelegate types =
-    let key = List.map typeToInt types
+  let getFor (types:ClrType seq) =
+    let key = Seq.fold (fun s t -> typeToInt t :: s) [] types
 
-    let rec getDelegate' types =
+    let rec getFor' types =
       let success, func = dict.TryGetValue key
       if success then func
       else
-        let funcType = createDelegate types
+        let funcType = create types
         if dict.TryAdd(key, funcType) 
           then funcType
-          else getDelegate' types
+          else getFor' types
 
-    getDelegate' types
+    getFor' types

@@ -59,18 +59,18 @@ let private partitionParamsAndVars _ (var:Ast.Local) =
   var.IsParameter && not var.InitUndefined
 
 let private closureAndGlobalsLocals (ctx:Context) (vars:EtParam list) =
-  let vars = if ctx.GlobalAccess > 0 then ctx.GlobalsParam :: vars else vars
-  if ctx.ClosureAccess > 0 then ctx.ClosureParam :: vars else vars
+  let vars = if ctx.Scope.GlobalsAccessed then ctx.Globals :: vars else vars
+  if ctx.Scope.ClosureAccessed then ctx.Closure :: vars else vars
 
 let private initGlobals ctx body = 
-  if ctx.GlobalAccess > 0 then 
+  if ctx.Scope.GlobalsAccessed then 
     let globalsExpr = Expr.field ctx.Environment "Globals"
-    (Expr.assign ctx.GlobalsParam globalsExpr) :: body
+    (Expr.assign ctx.Globals globalsExpr) :: body
   else 
     body
 
 let private initClosure ctx body =
-  if ctx.ClosureAccess > 0 then 
+  if ctx.Scope.ClosureAccessed then 
     let closureExpr = Expr.field ctx.Function "Closure"
     let closureCast = Expr.cast ctx.Closure.Type closureExpr
     (Expr.assign ctx.Closure closureCast) :: body
@@ -82,10 +82,10 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
 
   let ctx = {
     Context.New with
-      ClosureParam = Dlr.Expr.param "~closure" closureType
+      Closure = Dlr.Expr.param "~closure" closureType
       Scope = scope
       Builder = Compiler.ExprGen.builder
-      TemporaryTypes = new Dict<string, ClrType>()
+      TemporaryTypes = new SafeDict<string, ClrType>()
       Env = env
   }
 

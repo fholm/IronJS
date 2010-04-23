@@ -11,28 +11,30 @@ module Function =
   module private Closure =
     (*Resolves all item expressions for a closure*)
     let private resolveItems ctx (scope:Ast.Scope) =
-      let expr ctx name =
+      let expr name =
         if ctx.Scope.Locals.ContainsKey name
           then Variables.Local.expr ctx name   // Local closed over variable
           else Variables.Closure.expr ctx name // Variable that is a closure in parent also
 
-      scope.Closure |> Map.toSeq
-                    |> Seq.sortBy (fun pair -> (snd pair).Index)
-                    |> Seq.map (fun pair -> expr ctx (fst pair))
-                    |> List.ofSeq
+      scope.Closure 
+        |> Map.toSeq
+        |> Seq.sortBy (fun pair -> (snd pair).Index)
+        |> Seq.map (fun pair -> expr (fst pair))
+        |> List.ofSeq
 
     (*Creates a closure type*)
     let private createType ctx (scope:Ast.Scope) =
-      let clrType ctx name =
+      let clrType name =
         if ctx.Scope.Locals.ContainsKey name
           then Variables.Local.clrType ctx name
           else Variables.Closure.clrType ctx name
 
       Runtime.Closures.createClosureType (
-        scope.Closure |> Map.toSeq
-                      |> Seq.fold (fun state pair -> (clrType ctx (fst pair), (snd pair).Index) :: state) [] 
-                      |> Seq.sortBy (fun pair -> snd pair)
-                      |> Seq.map (fun pair -> fst pair)
+        scope.Closure 
+          |> Map.toSeq
+          |> Seq.fold (fun state pair -> (clrType (fst pair), (snd pair).Index) :: state) [] 
+          |> Seq.sortBy (fun pair -> snd pair)
+          |> Seq.map (fun pair -> fst pair)
       )
 
     (*Creates a new closure type and expression to create an instance of that type*)
@@ -61,6 +63,8 @@ module Function =
 
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args =
+    //TODO: Wow this is ugly, redo.
+
     let targetExpr = ctx.Builder ctx target
     let argExprs = [for arg in args -> ctx.Builder ctx arg]
 

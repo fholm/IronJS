@@ -40,26 +40,38 @@ module Utils =
     return (s.GlobalDynamicScopeLevel, s.LocalDynamicScopeLevels.Head)
   }
 
+  let setClosureAccessed (scopeChain:Scope list) = 
+    {scopeChain.Head with ClosureAccessed = true} :: scopeChain.Tail
+
+  let setGlobalsAccessed (scopeChain:Scope list) =
+    {scopeChain.Head with GlobalsAccessed = true} :: scopeChain.Tail
+
   let internal getVariable name = state {
     let! s  = getState
     let! sl = scopeLevels
 
     match s.ScopeChain with
-    | _::[] -> return Global(name, fst sl)
-    | x::xs when hasLocal x name   -> return Local(name, snd sl)
+    | x::xs when hasLocal x name -> return Local(name, snd sl)
     | x::xs when hasClosure x name -> return Closure(name, fst sl)
-    | _     -> match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
-               | Some(level) -> let rec updateScopes s =
-                                  match s with
-                                  | []    -> s
-                                  | x::xs -> if hasLocal x name 
-                                               then setClosedOver x name :: xs
-                                               else createClosure x name level :: updateScopes xs
+    | _  -> 
+      match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
+      //We found a scope with a Local named 'name'
+      | Some(level) -> 
+        let rec updateScopes s =
+          match s with
+          | []    -> s
+          | x::xs -> 
+            if hasLocal x name 
+              then setClosedOver x name :: xs
+              else createClosure x name level :: updateScopes xs
 
-                                do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
-                                return Closure(name, fst sl)
+        do! setState {s with ScopeChain = setClosureAccessed (updateScopes s.ScopeChain)}
+        return Closure(name, fst sl)
 
-               | None        -> return Global(name, fst sl)}
+      //Or not, it's a global
+      | None -> 
+        do! setState {s with ScopeChain = (setGlobalsAccessed s.ScopeChain)}
+        return Global(name, fst sl)}
 
   let internal createVar name initUndefined = state {
     let!  s = getState

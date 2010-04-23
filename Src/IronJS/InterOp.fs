@@ -1,7 +1,8 @@
 ﻿namespace IronJS.InterOp
 
+open IronJS
+
 module Types =
-  let dynamic = typeof<obj>
   let double = typeof<double>
   let bool = typeof<bool>
   let int = typeof<int32>

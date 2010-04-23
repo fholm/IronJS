@@ -59,13 +59,16 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
         // Combine UsedAs + UsedWithClosure types with UsedWith types
         let evaledWithVariables = 
-          var.UsedWith |> Set.map  (fun var -> getLocalType' var)
-                       |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
+          var.UsedWith 
+            |> Set.map  (fun var -> getLocalType' var)
+            |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
 
         // Eval any expression values we're assigned to from
-        let result = var.AssignedFrom |> Seq.ofList
-                                      |> Seq.map  (fun expr -> getExprType' expr)
-                                      |> Seq.fold (fun state typ -> state ||| typ) evaledWithVariables
+        let result = 
+          var.AssignedFrom 
+            |> Seq.ofList
+            |> Seq.map  (fun expr -> getExprType' expr)
+            |> Seq.fold (fun state typ -> state ||| typ) evaledWithVariables
 
         excluded := (!excluded).Remove name
         result

@@ -35,11 +35,6 @@ module Utils =
   let internal setClosedOver (scope:Scope) name = 
     setLocal scope name {scope.Locals.[name] with ClosedOver = true}
 
-  let internal setNeedsArguments (scope:Scope) =
-    if scope.Arguments 
-      then scope
-      else {scope with Arguments = true}
-
   let internal scopeLevels = state {
     let! s = getState
     return (s.GlobalDynamicScopeLevel, s.LocalDynamicScopeLevels.Head)

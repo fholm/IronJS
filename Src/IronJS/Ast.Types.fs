@@ -118,7 +118,6 @@ type ClosureMap = Map<string, Closure>
 type Scope = {
   Locals: LocalMap
   Closure: ClosureMap
-  Arguments: bool
   ScopeLevel: int
   HasDynamicScopes: bool
   InParentDynamicScope: bool
@@ -126,7 +125,6 @@ type Scope = {
   static member New = { 
     Locals = Map.empty
     Closure = Map.empty
-    Arguments = false
     ScopeLevel = 0
     HasDynamicScopes = false
     InParentDynamicScope = false

@@ -9,7 +9,7 @@ open IronJS.Compiler
 (*Adds initilization expressions for variables that should be Undefined*)
 let private initUndefined (ctx:Context) (body:Et list) =
   let prependExpr body (var:Ast.Local) =
-    (Js.assign var.Expr Runtime.Undefined.InstanceExpr) :: body
+    (Assign.value var.Expr Runtime.Undefined.InstanceExpr) :: body
 
   ctx.Scope.Locals
     |> Map.toSeq
@@ -50,7 +50,7 @@ let private dynamicScopesLocal (ctx:Context) (vars:EtParam list) =
 
 (*Gets the proper parameter list with the correct proxy replacements*)
 let private getParameterListExprs (parameters:Ast.LocalMap) (proxies:Map<string, EtParam>) =
-  [for kvp in parameters -> if kvp.Value.ClosedOver then proxies.[kvp.Key] else kvp.Value.Expr]
+  [for kvp in parameters -> if kvp.Value.ClosedOver then proxies.[kvp.Key] else kvp.Value.Expr :?> EtParam]
   
 let private createProxyParameter name (var:Ast.Local) =
   Dlr.Expr.param ("~" + name + "_proxy") (Utils.Type.jsToClr var.UsedAs)
@@ -59,26 +59,21 @@ let private partitionParamsAndVars _ (var:Ast.Local) =
   var.IsParameter && not var.InitUndefined
 
 let private closureAndGlobalsLocals (ctx:Context) (vars:EtParam list) =
-  let vars = if ctx.Scope.GlobalsAccessed then ctx.Globals :: vars else vars
-  if ctx.Scope.ClosureAccessed then ctx.Closure :: vars else vars
+  ctx.Closure :: ctx.Globals :: vars
 
-let private initGlobals ctx body = 
-  if ctx.Scope.GlobalsAccessed then 
-    let globalsExpr = Expr.field ctx.Environment "Globals"
-    (Expr.assign ctx.Globals globalsExpr) :: body
-  else 
-    body
+let private initGlobals (ctx:Context) body = 
+  let globalsExpr = Expr.field ctx.Environment "Globals"
+  (Expr.assign ctx.Globals globalsExpr) :: body
 
 let private initClosure ctx body =
-  if ctx.Scope.ClosureAccessed then 
-    let closureExpr = Expr.field ctx.Function "Closure"
-    let closureCast = Expr.cast ctx.Closure.Type closureExpr
-    (Expr.assign ctx.Closure closureCast) :: body
-  else
-    body
+  let closureExpr = Expr.field ctx.Function "Closure"
+  let closureCast = Expr.cast ctx.Closure.Type closureExpr
+  (Expr.assign ctx.Closure closureCast) :: body
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
+let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
+
+  Locals bit mask fields for flags
 
   let ctx = {
     Context.New with
@@ -91,18 +86,19 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
 
   let body = [
     (Compiler.ExprGen.builder ctx ast)
-    (Dlr.Expr.labelExprVal ctx.Return (Expr.typeDefault<Dynamic>))
+    (Expr.labelExprVoid ctx.Return)
   ]
 
-  let parameters, variables = ctx.Scope.Locals |> Map.partition partitionParamsAndVars
+  let realLocals, fakeLocals = ctx.Scope.Locals |> Map.partition (fun _ v -> v.Expr :? EtParam)
+  let parameters, variables = realLocals |> Map.partition partitionParamsAndVars
   let closedOverParameters = parameters |> Map.filter (fun _ var -> var.ClosedOver)
   let proxyParameters = closedOverParameters |> Map.map createProxyParameter
   let inputParameters = getParameterListExprs parameters proxyParameters
-  let parameters = ctx.Function :: ctx.This :: inputParameters
+  let parameters = ctx.Function :: ctx.This :: ctx.ReturnParam :: inputParameters
 
   let localVariableExprs = 
     closedOverParameters 
-      |> Map.fold (fun state _ var -> var.Expr :: state) [for kvp in variables -> kvp.Value.Expr] 
+      |> Map.fold (fun state _ var -> var.Expr :?> EtParam :: state) [for kvp in variables -> kvp.Value.Expr :?> EtParam] 
       |> dynamicScopesLocal ctx
       |> closureAndGlobalsLocals ctx
 
@@ -115,10 +111,10 @@ let compileAst (env:Runtime.IEnvironment) (closureType:ClrType) (scope:Ast.Scope
       |> initClosure ctx
       |> initGlobals ctx
 
+  let lmb = Dlr.Expr.lambda delegateType parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr)
+
   #if INTERACTIVE
-  let lmb = Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
-  printf "%A" (Fsi.dbgViewProp.GetValue((fst lmb) :> Et, null))
-  lmb
-  #else
-  Dlr.Expr.lambda parameters (Dlr.Expr.blockWithLocals localVariableExprs completeBodyExpr), [for p in inputParameters -> p.Type]
+  printf "%A" (Fsi.dbgViewProp.GetValue(lmb :> Et, null))
   #endif
+
+  lmb

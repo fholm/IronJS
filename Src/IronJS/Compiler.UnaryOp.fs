@@ -13,7 +13,7 @@ module UnaryOp =
       Dlr.Expr.blockWithTmp (fun tmp -> 
       [
         (Dlr.Expr.assign tmp expr)
-        (Assign.build ctx target (Dlr.Expr.Math.add tmp Dlr.Expr.Math.int1))
+        (Assign.build ctx target (Ast.Quote(Dlr.Expr.Math.add tmp Dlr.Expr.Math.int1)))
         (tmp)
       ]) expr.Type 
     else
@@ -22,4 +22,5 @@ module UnaryOp =
   let build (ctx:Context) op target =
     match op with
     | Ast.PreInc -> buildPreInc ctx target
+    | _ -> failwith "not supported"
 

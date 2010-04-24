@@ -56,6 +56,7 @@ type Node =
   | Arguments
   | This
   | Eval of string
+  | Quote of Et
 
   //Scopes
   | DynamicScope  of Node * Node
@@ -76,7 +77,7 @@ type Node =
 
 [<DebuggerDisplay("{DebugView}")>] 
 type Local = {
-  Expr: EtParam
+  Expr: Et
   ParamIndex: int
   InitUndefined: bool
   ClosedOver: bool

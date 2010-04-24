@@ -11,7 +11,7 @@ module ExprGen =
   //Builder function for expression generation
   let internal builder (ctx:Context) (ast:Ast.Node) =
     match ast with
-    | Ast.Assign(left, right) -> Assign.build ctx left (ctx.Builder ctx right)
+    | Ast.Assign(left, right) -> Assign.build ctx left right
 
     //Variables
     | Ast.Global(name, globalScopeLevel)  -> 
@@ -28,6 +28,7 @@ module ExprGen =
     | Ast.Number(value)   -> Dlr.Expr.constant value
     | Ast.Integer(value)  -> Dlr.Expr.constant value
     | Ast.Null            -> Dlr.Expr.dynamicDefault
+    | Ast.Quote(expr)     -> expr
 
     //Objects
     | Ast.Object(properties)      -> Object.create ctx properties
@@ -35,16 +36,15 @@ module ExprGen =
 
     //Functions
     | Ast.Function(astId)       -> Function.definition ctx astId
-    | Ast.Invoke(target, args)  -> Function.invoke ctx target args
+    | Ast.Invoke(target, args)  -> Function.invoke ctx target args null
     | Ast.Return(value)         -> 
-      let value = (ctx.Builder ctx value)
+      let value = ctx.Builder2 value
       let typeCode = Utils.Box.typeCode value.Type
       Expr.block [
-        Expr.assign (Utils.Box.fieldByTypeCode ctx.ReturnBox typeCode) value
-        Expr.assign (Expr.field ctx.ReturnBox "Type") (Expr.constant typeCode)
-        Js.makeReturn ctx.Return (Dlr.Expr.dynamicDefault)
+        Expr.assign (Utils.Box.fieldByTypeCode ctx.ReturnParam typeCode) value
+        Expr.assign (Expr.field ctx.ReturnParam "Type") (Expr.constant typeCode)
+        Expr.makeReturn ctx.Return (Expr.makeDefault typeof<System.Void>)
       ]
-      //Js.makeReturn ctx.Return (Js.box value)
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

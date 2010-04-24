@@ -8,104 +8,56 @@ open IronJS.Runtime
 open System.Dynamic
 open System.Collections.Generic
 
-type private AnalyzeFunc = Ast.Scope -> ClrType -> ClrType list -> Ast.Scope
-type private ExprGenFunc = IEnvironment -> ClrType -> Ast.Scope -> Ast.Node -> (EtLambda * ClrType list)
-
 (**)
-let rec private calculateHashAndTypes types (hash:int ref) = 
-  match types with
-  | [] -> []
-  | x::xsTypes ->
-    if x = Constants.clrDouble then
-      hash := (37 * !hash + Constants.clrDoubleHashCode)
-      Constants.clrDouble :: calculateHashAndTypes xsTypes hash
-      
-    elif x = Constants.clrString then
-      hash := (37 * !hash + Constants.clrStringHashCode)
-      Constants.clrString :: calculateHashAndTypes xsTypes hash
-      
-    elif x = Runtime.Object.TypeDef then
-      hash := (37 * !hash + Runtime.Object.TypeDefHashCode)
-      Runtime.Object.TypeDef :: calculateHashAndTypes xsTypes hash
+type private DelegateCell(func:Function, delegateType:ClrType) =
+  let hashCode = 37 * (37 * func.AstId + func.ClosureId) + delegateType.GetHashCode()
 
-    elif x = Runtime.Function.TypeDef then
-      hash := (37 * !hash + Runtime.Function.TypeDefHashCode)
-      Runtime.Function.TypeDef :: calculateHashAndTypes xsTypes hash
-
-    else
-      hash := (37 * !hash + Constants.clrDynamicHashCode)
-      Constants.clrDynamic :: calculateHashAndTypes xsTypes hash
-
-(**)
-let private compareTypes (a:'a list) (b:'a list) =
-  if not (a.Length = b.Length) 
-    then  false
-    else  let rec compareTypes' a b =
-            match a with
-            | []      -> true
-            | xA::xsA ->
-              match b with
-              | xB::xsB -> if xA = xB then compareTypes' xsA xsB else false
-              | _       -> failwith "Should never happen"
-
-          compareTypes' a b
-
-(**)
-type DelegateCell(astId:int, closureType:ClrType, types:ClrType list) =
-  let hashRef = ref (37 * closureType.GetHashCode() + astId.GetHashCode())
-  let uniformTypes = calculateHashAndTypes types hashRef
-  let hashCode = !hashRef
-
-  member self.AstId = astId
-  member self.Types = uniformTypes
-  member self.ClosureType = closureType
+  member self.AstId = func.AstId
+  member self.ClosureId = func.ClosureId
+  member self.DelegateType = delegateType
 
   override self.GetHashCode() = hashCode
   override self.Equals obj = 
     match obj with
     | :? DelegateCell as cell -> 
-      if cell.AstId = self.AstId && cell.ClosureType = self.ClosureType 
-        then compareTypes cell.Types self.Types
-        else false
+         self.AstId = cell.AstId
+      && self.ClosureId = self.ClosureId
+      && self.DelegateType = self.DelegateType
     | _ -> false
 
 (*The currently executing environment*)
-and Environment (scopeAnalyzer:AnalyzeFunc, exprGenerator:ExprGenFunc) =
+and Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
+                 exprGenerator:IEnvironment -> ClrType -> ClrType -> Ast.Scope -> Ast.Node -> EtLambda) =
+
   inherit IEnvironment()
 
   let astMap = new Dict<int, Ast.Scope * Ast.Node>()
-  let closureMap = new Dict<ClrType, int>()
-  let jitCache = new Dict<DelegateCell, System.Delegate>()
+  let closureMap = new SafeDict<ClrType, int>()
+  let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
 
   //Implementation of IEnvironment.GetDelegate
-  override x.GetDelegate ast closureType types =
-    let cell = new DelegateCell(ast, closureType, types)
-    match x.GetCachedDelegate cell with
-    | Some(func) -> func
-    | None -> x.CacheCompiledDelegate cell (x.Compile ast closureType types)
-
+  override x.GetDelegate func delegateType types =
+    let cell = new DelegateCell(func, delegateType)
+    let success, delegate' = delegateCache.TryGetValue(cell)
+    if success then delegate'
+    else
+      let scope, body = astMap.[func.AstId]
+      let closureType = func.Closure.GetType()
+      let lambdaExpr  = exprGenerator x delegateType closureType (scopeAnalyzer scope closureType types) body
+      delegateCache.[cell] <- lambdaExpr.Compile()
+      delegateCache.[cell]
+      
+  //Implementation of IEnvironment.AstMap
   override x.AstMap = astMap
+  
+  //Implementation of IEnvironment.GetClosureId
   override x.GetClosureId clrType = 
     let success, id = closureMap.TryGetValue clrType
     if success then id
     else
-      closureMap.Add(clrType, closureMap.Count)
-      closureMap.Count-1
+      closureMap.GetOrAdd(clrType, closureMap.Count)
 
-  //Private members
-  member private self.GetCachedDelegate cell =
-    let success, func = jitCache.TryGetValue(cell)
-    if success then Some(func) else None
-
-  member private self.CacheCompiledDelegate cell func =
-    jitCache.[cell] <- func
-    func
-
-  member private self.Compile astId closureType types =
-    let scope, body = astMap.[astId]
-    let lambda, _ = exprGenerator self closureType (scopeAnalyzer scope closureType types) body
-    lambda.Compile()
-
+  //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
     (env :> IEnvironment).Globals <- new Object(env)

@@ -81,7 +81,6 @@
     <Compile Include="Fsi.fs" />
     <Compile Include="Attributes.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Box.fs" />
     <Compile Include="Monads.fs" />
     <Compile Include="Constants.fs" />
     <Compile Include="Aliases.fs" />
@@ -96,7 +95,6 @@
     <Compile Include="Ast.fs" />
     <Compile Include="InterOp.fs" />
     <Compile Include="Runtime.fs" />
-    <Compile Include="Runtime.Function.fs" />
     <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Utils.fs" />
@@ -111,8 +109,8 @@
     <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.CallSites.fs" />
     <Compile Include="Compiler.DynamicScope.fs" />
-    <Compile Include="Compiler.Assign.fs" />
     <Compile Include="Compiler.Function.fs" />
+    <Compile Include="Compiler.Assign.fs" />
     <Compile Include="Compiler.Loops.fs" />
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.UnaryOp.fs" />

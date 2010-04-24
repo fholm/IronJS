@@ -41,7 +41,9 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
     | Ast.BinaryOp(left, op, right) -> 
       match op with
       | Ast.Add -> getExprType' left ||| getExprType' right
+      | _ -> failwith "not supported"
     | Ast.Local(name, _) -> getLocalType' name
+    | _ -> failwith "not supported"
 
   and getLocalType' name =
     let var = vars.[name]
@@ -75,6 +77,13 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
   getLocalType' name
 
+let private handleMissingArgument (name:string) (var:Ast.Local) =
+  if var.ClosedOver 
+    then {setType name var Ast.JsTypes.Dynamic with InitUndefined = true}
+    else 
+      
+      {var with UsedAs = Ast.JsTypes.Dynamic; Expr = expr}
+
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
 
@@ -94,8 +103,8 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
           |> Map.map (fun name var -> 
             if var.IsParameter then
               if var.ParamIndex < types.Length
-                then { var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.ParamIndex] } // We got an argument for this parameter
-                else setType name var Ast.JsTypes.Dynamic // We didn't, means make it dynamic
+                then {var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.ParamIndex]} // We got an argument for this parameter
+                else handleMissingArgument name var // We didn't, means make it dynamic
             else 
               if   isDynamic var       then setType name var Ast.JsTypes.Dynamic // No need to resolve type, force it here
               elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned to from any variables

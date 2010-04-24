@@ -3,17 +3,33 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+
 open System.Dynamic
 open System.Collections.Generic
+open System.Runtime.InteropServices
+
+#nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
 (*Environment interface*)
 [<AllowNullLiteral>]
 [<AbstractClass>]
 type IEnvironment() =
     [<DefaultValue>] val mutable Globals : Object
-    abstract GetDelegate : int -> ClrType -> ClrType list -> System.Delegate
+    abstract GetDelegate : Function -> ClrType -> ClrType list -> System.Delegate
     abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
     abstract GetClosureId : ClrType -> int
+
+and [<StructLayout(LayoutKind.Explicit)>] Box =
+  struct
+    [<FieldOffset(0)>]  val mutable Clr     : obj
+    [<FieldOffset(0)>]  val mutable Object  : Object
+    [<FieldOffset(0)>]  val mutable Func    : Function
+    [<FieldOffset(0)>]  val mutable Str     : string
+    [<FieldOffset(8)>]  val mutable Type    : int32 
+    [<FieldOffset(12)>] val mutable Bool    : bool
+    [<FieldOffset(12)>] val mutable Int     : int32
+    [<FieldOffset(12)>] val mutable Double  : double
+  end
 
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =
@@ -64,3 +80,61 @@ and ObjectMeta(expr, jsObj:Object) =
     let expr = Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Get" [Dlr.Expr.constant binder.Name]
     let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
     new MetaObj(expr, restrict)
+
+and [<AllowNullLiteral>] Scope = 
+  val mutable Objects : Object ResizeArray
+  val mutable EvalObject : Object
+  val mutable ScopeLevel : int
+
+  new(objects, evalObject, scopeLevel) = {
+    Objects = objects
+    EvalObject = evalObject
+    ScopeLevel = scopeLevel
+  }
+
+(*Closure base class, representing a closure environment*)
+and Closure =
+  val mutable Scopes : Scope ResizeArray
+  static member TypeDef = typedefof<Closure>
+
+  new(scopes) = {
+    Scopes = scopes
+  }
+
+(*Javascript object that also is a function*)
+and [<AllowNullLiteral>] Function =
+  inherit Object
+
+  val mutable Closure : Closure
+  val mutable AstId : int
+  val mutable ClosureId : int
+
+  new(astId, closureId, closure, env) = { 
+    inherit Object(env)
+    Closure = closure
+    AstId = astId
+    ClosureId = closureId
+  }
+
+  static member TypeDef = typedefof<Function>
+  static member TypeDefHashCode = typedefof<Function>.GetHashCode()
+
+  member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
+     ((x :> Object).Environment.GetDelegate x typeof<'a> types) :?> 'a
+
+type InvokeCache<'a> when 'a :> Delegate and 'a : null =
+  val mutable AstId : int
+  val mutable ClosureId : int
+  val mutable Delegate : 'a
+  val mutable ArgTypes : ClrType list
+  [<DefaultValue>] val mutable VoidBox : Box
+
+  new(argTypes) = {
+    AstId = -1
+    ClosureId = -1
+    Delegate = null
+    ArgTypes = argTypes
+  }
+
+  member x.Update (fnc:Function) =
+    x.Delegate <- fnc.Compile<'a>(x.ArgTypes)

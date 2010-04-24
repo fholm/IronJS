@@ -52,13 +52,6 @@ type Function =
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      ((x :> Object).Environment.GetDelegate x.AstId (x.Closure.GetType()) types) :?> 'a
 
-  interface System.Dynamic.IDynamicMetaObjectProvider with
-    member self.GetMetaObject expr = new FunctionMeta(expr, self) :> MetaObj
-
-(*DLR meta object for the above Function class*)
-and FunctionMeta (expr, jsFunc:Function) =
-  inherit ObjectMeta(expr, jsFunc)
-
 type InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable AstId : int
   val mutable ClosureId : int

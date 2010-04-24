@@ -62,7 +62,7 @@ module Function =
     Dlr.Expr.newArgs Runtime.Function.TypeDef functionArgs
 
   (*Invokes a function*)
-  let internal invoke (ctx:Context) target args =
+  let internal invoke (ctx:Context) target args (returnBox:Et) =
     //TODO: Wow this is ugly, redo.
 
     let targetExpr = ctx.Builder ctx target
@@ -70,11 +70,7 @@ module Function =
 
     ctx.TemporaryTypes.Clear()
 
-    let types = typeof<Runtime.Function> 
-                :: typeof<Runtime.Object> 
-                :: List.foldBack (fun (x:Et) s -> x.Type :: s) argExprs [typeof<Dynamic>]
-
-    let funcType = Expr.delegateType types
+    let funcType = Runtime.Delegate.getFor (List.map (fun (x:Et) -> x.Type) argExprs)
     let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst
@@ -85,6 +81,7 @@ module Function =
                       let tmp = Expr.paramT<Runtime.Function> "~tmp"
                       tmp:>Et, [tmp]
 
+    let returnArg = if returnBox = null then (Expr.field cacheConst "VoidBox") else returnBox
     let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
     let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
     let body = 
@@ -97,7 +94,7 @@ module Function =
             (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
           ])
         )
-        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: argExprs))
+        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: returnArg :: argExprs))
         tmp
       ]
 

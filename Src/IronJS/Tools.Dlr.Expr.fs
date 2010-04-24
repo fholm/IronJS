@@ -18,10 +18,12 @@ module Expr =
   let paramT<'a> name = param name typeof<'a>
 
   let label (typ:ClrType) name = Et.Label(typ, name)
-  let labelT<'a> name = label typeof<'a> name
+  let labelVoid = label typeof<System.Void>
+  let labelT<'a> = label typeof<'a>
   let labelExpr label (typ:ClrType) = Et.Label(label, Et.Default(typ)) :> Et
   let labelExprT<'a> label = labelExpr label typeof<'a>
   let labelExprVal label (value:Et) = Et.Label(label, value) :> Et
+  let labelExprVoid label = labelExprVal label (makeDefault typeof<System.Void>)
   let dynamicLabelExpr label = Et.Label(label, dynamicDefault) :> Et
   let dynamicLabel = labelT<obj>
 
@@ -50,10 +52,7 @@ module Expr =
     callStatic typeof<'a> name args
 
   let callStaticGeneric (typ:ClrType) (name:string) (typArgs:ClrType seq) (args:Et seq) =
-    let argTypes = args 
-                   |> Seq.map (fun x -> x.Type) 
-                   |> Seq.toArray
-
+    let argTypes = args |> Seq.map (fun x -> x.Type) |> Seq.toArray
     let concreteMethd = 
       match typ.GetMethod(name, argTypes) with
       | null -> failwith "No method named '%s' taking these type arguments found" name
@@ -95,9 +94,7 @@ module Expr =
   let newGenericArgsT<'a> = newGenericArgs typedefof<'a> 
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
-  let lambda (parms:EtParam list) (body:Et) = Et.Lambda(body, parms)    
-  let lambdaWithLocals (parms:EtParam list) (vars:EtParam list) (body:Et list) = lambda parms (blockWithLocals vars body)
-
+  let lambda (typ:ClrType) (parms:EtParam list) (body:Et) = Et.Lambda(typ, body, parms)    
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 
@@ -114,7 +111,6 @@ module Expr =
 
     let newItems typ (exprs:Et seq) = Et.NewArrayInit(typ, exprs) :> Et
     let newItemsT<'a> = newItems typeof<'a>
-
 
   module Exn =
     let throw (typ:System.Type) (args:Et seq) = Et.Throw(newArgs typ args) :> Et

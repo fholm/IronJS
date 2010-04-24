@@ -10,7 +10,7 @@ module Delegate =
   let private boxByRef = typeof<Box>.MakeByRefType()
   let private dict = new SafeDict<int list, ClrType>()
   let private internalArgs = List.toSeq (typeof<Function> :: typeof<Object> :: boxByRef :: [])
-  let private returnType = List.toSeq [typeof<System.Void>]
+  let private returnType = List.toSeq (typeof<System.Void> :: [])
 
   let private typeToInt typ =
     if   typ = typeof<int>      then 0

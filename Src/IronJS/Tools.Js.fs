@@ -20,15 +20,6 @@ let box (expr:Et) =
     then Dlr.Expr.block [expr; Dlr.Expr.dynamicDefault]
     else Dlr.Expr.castT<Dynamic> expr
 
-let makeReturn label (value:Et) =
-  Dlr.Expr.makeReturn label (value)
-
-let index (left:Et) (i:int64) =
-  Et.ArrayIndex(left, Dlr.Expr.constant i) :> Et
-
-let newResizeArray<'a> (arg:Et) = 
-  Dlr.Expr.newArgsT<ResizeArray<'a>> [Dlr.Expr.castT<IEnum<'a>> arg]
-
 module Object =
 
   //Get a global variable

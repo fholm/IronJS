@@ -27,15 +27,15 @@ module Type =
     | Ast.JsTypes.String    -> InterOp.Types.string
     | Ast.JsTypes.Object    -> Runtime.Object.TypeDef
     | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
-    | _ -> typeof<Box>
+    | _ -> typeof<Runtime.Box>
 
   (*Gets the inner type of a strongbox Type object*)
   let internal strongBoxInnerType typ = Type.genericArgumentN typ 0
 
   let assign (left:Et) (right:Et) =
     let assign (left:Et) (right:Et) =
-      if left.Type = typeof<Box> then
-        if right.Type = typeof<Box> then
+      if left.Type = typeof<Runtime.Box> then
+        if right.Type = typeof<Runtime.Box> then
           Dlr.Expr.assign left right
         else
           if right.Type = typeof<Runtime.Function> && right :? System.Linq.Expressions.BlockExpression then

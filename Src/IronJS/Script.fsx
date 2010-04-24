@@ -8,7 +8,6 @@
 #load "Fsi.fs"
 #load "Attributes.fs"
 #load "Utils.fs"
-#load "Box.fs"
 #load "Monads.fs"
 #load "Constants.fs"
 #load "Aliases.fs"
@@ -23,7 +22,6 @@
 #load "Ast.fs"
 #load "InterOp.fs"
 #load "Runtime.fs"
-#load "Runtime.Function.fs"
 #load "Runtime.Delegate.fs"
 #load "Runtime.Environment.fs"
 #load "Runtime.Utils.fs"
@@ -38,8 +36,8 @@
 #load "Compiler.Object.fs"
 #load "Compiler.CallSites.fs"
 #load "Compiler.DynamicScope.fs"
-#load "Compiler.Assign.fs"
 #load "Compiler.Function.fs"
+#load "Compiler.Assign.fs"
 #load "Compiler.Analyzer.fs"
 #load "Compiler.Loops.fs"
 #load "Compiler.BinaryOp.fs"
@@ -74,10 +72,17 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstMap
 
-let exprTree = Compiler.Core.compileAst env Runtime.Closure.TypeDef (fst ast) (snd ast)
+let globalType = Runtime.Delegate.getFor []
+let exprTree = Compiler.Core.compileAst env globalType Runtime.Closure.TypeDef (fst ast) (snd ast)
 
-let compiledFunc = (fst exprTree).Compile() :?> Func<Runtime.Function, Runtime.Object, Dynamic>
+let compiledFunc = exprTree.Compile()
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
-let globalScope = new Runtime.Function(-1, -1, globalClosure, env)
+let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
-Utils.time(fun () -> compiledFunc.Invoke(globalScope, null) |> ignore)
+let funcParam = Dlr.Expr.paramT<Runtime.Function> "~0"
+let globalParam = Dlr.Expr.paramT<Runtime.Object> "~1"
+let invokeExpr = Dlr.Expr.invoke (Dlr.Expr.constant compiledFunc) [funcParam; globalParam; Dlr.Expr.typeDefault<Runtime.Box>]
+let invokeWrapper = Dlr.Expr.lambda typeof<Action<Runtime.Function, Runtime.Object>> [funcParam; globalParam] invokeExpr
+let invoker = invokeWrapper.Compile() :?> Action<Runtime.Function, Runtime.Object>
+let timeCompile = Utils.time(fun () -> invoker.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals)).TotalMilliseconds
+let time = Utils.time(fun () -> invoker.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals)).TotalMilliseconds

@@ -80,6 +80,7 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
 let private handleMissingArgument (name:string) (var:Ast.Local) =
   let removedParam = Ast.Utils.removeLocalFlag Ast.LocalFlags.Parameter var
+  let removedParam = Ast.Utils.removeLocalFlag Ast.LocalFlags.NeedProxy removedParam
   {Ast.Utils.setLocalFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Ast.JsTypes.Undefined}
 
 (*Analyzes a scope*)

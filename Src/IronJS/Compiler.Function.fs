@@ -5,7 +5,6 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
-open IronJS.Parser
 
 module Function =
 
@@ -75,7 +74,7 @@ module Function =
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst
 
-    let tmp = Expr.paramT<Runtime.Function> "~invokeTmp"
+    let tmp = Expr.paramT<Runtime.Function> "~target"
 
     let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
     let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
@@ -94,17 +93,71 @@ module Function =
 
     if targetExpr.Type = typeof<Runtime.Box> then
 
-      if targetExpr :? EtParam || targetExpr :? System.Linq.Expressions.IndexExpression then
-        (Expr.Flow.ifElse
-          (Expr.Logic.eq (Expr.field targetExpr "Type") (Expr.constant TypeCodes.function'))
-          (Expr.blockWithLocals [tmp] (Expr.assign tmp (Utils.Box.fieldByTypeCode targetExpr TypeCodes.function') :: body))
-          (Expr.empty)
-        )
-      else
-        failwith "Not supported"
+      Expr.blockWithTmp (fun dynTmp ->
+        [
+          (Expr.assign dynTmp targetExpr)
+          (Expr.Flow.ternary
+            (Expr.Logic.eq (Dlr.Expr.field dynTmp "Type") (Dlr.Expr.constant TypeCodes.function'))
+            (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> (Dlr.Expr.field dynTmp "Clr"))) :: body))
+            (Expr.typeDefault<Runtime.Box>)
+          )
+        ]
+      ) typeof<Runtime.Box>
 
     elif targetExpr.Type = typeof<Runtime.Function> then
       Expr.blockWithLocals [tmp] (Expr.assign tmp targetExpr :: body)
 
     else
       failwith "Can't call non-function"
+
+(*
+
+    //TODO: Wow this is ugly, redo.
+    let targetExpr = ctx.Builder ctx target
+    let argExprs = [for arg in args -> ctx.Builder ctx arg]
+
+    ctx.TemporaryTypes.Clear()
+
+    let funcType = Runtime.Delegate.getFor (List.map (fun (x:Et) -> x.Type) argExprs)
+    let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
+    let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
+    let cacheConst = Expr.constant cacheInst
+
+    let tmp = Expr.paramT<Runtime.Function> "~target"
+
+    let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
+    let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
+
+    let body = 
+      [
+        (Expr.Flow.if'
+          (Expr.Logic.or' checkAstId checkClosureId)
+          (Expr.block[
+            (Expr.call cacheConst "Update" [tmp])
+            (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))
+            (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
+          ])
+        )
+        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs))
+      ]
+
+    if targetExpr.Type = typeof<Dynamic> then
+
+      Expr.blockWithTmp (fun dynTmp ->
+        [
+          (Expr.assign dynTmp targetExpr)
+          (Expr.Flow.ternary
+            (Expr.Logic.typeIsT<Runtime.Function> dynTmp)
+            (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> dynTmp)) :: body))
+            (Expr.dynamicDefault)
+          )
+        ]
+      ) typeof<Dynamic>
+
+    elif targetExpr.Type = typeof<Runtime.Function> then
+      Expr.blockWithLocals [tmp] (Expr.assign tmp targetExpr :: body)
+
+    else
+      failwith "Can't call non-function"
+
+*)

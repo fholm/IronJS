@@ -172,6 +172,10 @@ module Expr =
     let and' left right = Et.AndAlso(left, right) :> Et
 
     let typeIs target typ = Et.TypeIs(target, typ) :> Et
+    
+    let is' typ target = Et.TypeIs(target, typ) :> Et
+    let isT<'a> = is' typeof<'a> 
+
     let typeEq target typ = Et.TypeEqual(target, typ) :> Et
 
     let isFalse target = Et.IsFalse(target) :> Et

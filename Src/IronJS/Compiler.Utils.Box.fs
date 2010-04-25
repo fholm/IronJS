@@ -17,7 +17,7 @@ module Box =
     elif input = TypeCodes.function'  then Function
                                       else Other
   
-  let isBoxed (expr:Et) = 
+  let isWrapped (expr:Et) = 
     expr.Type = typeof<Runtime.Box>
 
   let typeCode (typ:ClrType) =
@@ -39,7 +39,6 @@ module Box =
     | Function  -> field expr "Clr"
     | Other     -> field expr "Clr"
 
-
   let assign (left:Et) (right:Et) =
 
     if not (left.Type = typeof<Runtime.Box>) then
@@ -60,7 +59,7 @@ module Box =
           else failwith "Not supprted"
 
   let wrap (expr:Et) =
-    if isBoxed expr then expr 
+    if isWrapped expr then expr 
     else
       let typeCode = typeCode expr.Type
       blockWithTmp (fun tmp ->  [

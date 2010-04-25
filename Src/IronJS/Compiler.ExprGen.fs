@@ -39,15 +39,21 @@ module ExprGen =
     | Ast.Invoke(target, args)  -> Function.invoke ctx target args null
     | Ast.Return(value)         -> 
       let value = ctx.Builder2 value
-      let typCode = Utils.Box.typeCode value.Type
 
-      Expr.blockWithTmp (
-        fun tmp -> 
-        [
-          Expr.assign (Expr.field tmp "Type") (Expr.constant typCode)
-          Expr.assign (Utils.Box.fieldByTypeCode tmp typCode) value
-          tmp
-        ]) typeof<Runtime.Box>
+      if Utils.Box.isWrapped value then
+        Expr.makeReturn ctx.Return value
+
+      else
+        let typCode = Utils.Box.typeCode value.Type
+
+        Expr.blockWithTmp (
+          fun tmp -> 
+          [
+            Expr.assign (Expr.field tmp "Type") (Expr.constant typCode)
+            Expr.assign (Utils.Box.fieldByTypeCode tmp typCode) value
+            tmp
+            Expr.makeReturn ctx.Return tmp
+          ]) typeof<Runtime.Box>
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

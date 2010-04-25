@@ -16,9 +16,6 @@ let private buildVarsMap (scope:Ast.Scope) =
   let (|Proxied|Not|) (input:Ast.Local) =
     if Set.contains F.NeedProxy input.Flags then Proxied else Not
 
-  let dynamicIndex = ref -1 
-  let dynamicExpr = Expr.paramT<Runtime.Box array> "~dynamic"
-
   let createVar (l:Ast.Local) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
     if l.ClosedOver 
@@ -28,18 +25,15 @@ let private buildVarsMap (scope:Ast.Scope) =
   let createProxy (l:Ast.Local) =
     Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
 
-  let vars = 
-    scope.Locals
-      |> Map.map(fun _ l -> 
+  scope.Locals
+    |> Map.map(fun _ l -> 
+                match l with
+                | Parameter -> 
                   match l with
-                  | Parameter -> 
-                    match l with
-                    | Proxied -> Proxied(createVar l, createProxy l)
-                    | Not -> Variable(createVar l, P)
-                  | Local -> Variable(createVar l, L)
-                )
-
-  vars, (!dynamicIndex + 1), dynamicExpr
+                  | Proxied -> Proxied(createVar l, createProxy l)
+                  | Not -> Variable(createVar l, P)
+                | Local -> Variable(createVar l, L)
+              )
 
 let isLocal (pair:string * Var) =
   match pair with
@@ -61,38 +55,30 @@ let toParm (pair:string * Var) =
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
-  let vars, dynamicCount, dynamicArray = buildVarsMap scope
-
   let ctx = {
     Context.New with
-      DynamicArray = dynamicArray
-      DynamicCount = dynamicCount
       Closure = Dlr.Expr.param "~closure" closureType
       Scope = scope
       Builder = Compiler.ExprGen.builder
       TemporaryTypes = new SafeDict<string, ClrType>()
       Env = env
-      Locals = vars
+      Locals = buildVarsMap scope
   }
 
   let initGlobals = Expr.assign ctx.Globals (Expr.field ctx.Environment "Globals")
   let initClosure = Expr.assign ctx.Closure (Expr.cast closureType (Expr.field ctx.Function "Closure"))
-  let initDynamic = 
-    if dynamicCount = 0 then Expr.empty
-    else 
-      Expr.assign ctx.DynamicArray (Expr.Array.newT<Runtime.Box> [Expr.constant dynamicCount])
 
   let body = 
     [ctx.Builder2 ast; Expr.labelExprT<Runtime.Box> ctx.Return]
       |> List.toSeq
-      |> Seq.append [initGlobals; initClosure; initDynamic]
+      |> Seq.append [initGlobals; initClosure]
       #if DEBUG
       |> Seq.toArray
       |> fun x -> Expr.block x
       #endif
 
   let parms  = 
-    vars
+    ctx.Locals
       |> Map.toSeq
       |> Seq.filter isParameter
       |> Seq.map toParm
@@ -102,7 +88,7 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       #endif
 
   let locals = 
-    vars
+    ctx.Locals
       |> Map.toSeq
       |> Seq.filter isLocal 
       |> Seq.map toParm

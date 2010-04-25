@@ -47,7 +47,7 @@ module ExprGen =
           Expr.assign (Expr.field tmp "Type") (Expr.constant typCode)
           Expr.assign (Utils.Box.fieldByTypeCode tmp typCode) value
           tmp
-        ]) typeof<Parser.Box>
+        ]) typeof<Runtime.Box>
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

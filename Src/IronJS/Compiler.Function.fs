@@ -92,7 +92,7 @@ module Function =
         (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs))
       ]
 
-    if targetExpr.Type = typeof<Parser.Box> then
+    if targetExpr.Type = typeof<Runtime.Box> then
 
       if targetExpr :? EtParam || targetExpr :? System.Linq.Expressions.IndexExpression then
         (Expr.Flow.ifElse

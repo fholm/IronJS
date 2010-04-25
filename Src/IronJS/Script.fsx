@@ -76,7 +76,7 @@ let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstM
 let globalType = Runtime.Delegate.getFor []
 let exprTree = Compiler.Core.compileAst env globalType Runtime.Closure.TypeDef (fst ast) (snd ast)
 
-let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Parser.Box>
+let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 

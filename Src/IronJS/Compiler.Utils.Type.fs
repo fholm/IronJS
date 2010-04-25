@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Compiler
-open IronJS.Parser
 
 open System.Dynamic
 
@@ -29,15 +28,15 @@ module Type =
     | Ast.JsTypes.Object    -> Runtime.Object.TypeDef
     | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
     | Ast.JsTypes.Undefined -> typeof<Runtime.Undefined>
-    | _ -> typeof<Parser.Box>
+    | _ -> typeof<Runtime.Box>
 
   (*Gets the inner type of a strongbox Type object*)
   let internal strongBoxInnerType typ = Type.genericArgumentN typ 0
 
   let assign (left:Et) (right:Et) =
     let assign (left:Et) (right:Et) =
-      if left.Type = typeof<Parser.Box> then
-        if right.Type = typeof<Parser.Box> then
+      if left.Type = typeof<Runtime.Box> then
+        if right.Type = typeof<Runtime.Box> then
           Dlr.Expr.assign left right
         else
           if right.Type = typeof<Runtime.Function> && right :? System.Linq.Expressions.BlockExpression then

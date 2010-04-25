@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\IronJS.XML</DocumentationFile>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -69,7 +70,8 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants />
+    <DefineConstants>
+    </DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
     <PlatformTarget>x64</PlatformTarget>
@@ -124,6 +126,9 @@
       <HintPath>..\Dependencies\Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.PowerPack, Version=1.9.9.9, Culture=neutral, PublicKeyToken=a19089b1c74d0809" />
+    <Reference Include="IronJS.Parser">
+      <HintPath>..\IronJS.Parser\bin\Debug\IronJS.Parser.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Dynamic">
       <HintPath>..\Dependencies\Microsoft.Dynamic.dll</HintPath>
     </Reference>
@@ -135,13 +140,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\IronJS.Parser\IronJS.Parser.csproj">
-      <Name>IronJS.Parser</Name>
-      <Project>{fa54cac0-57bd-4ad0-b5fb-4e743bfd4d73}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

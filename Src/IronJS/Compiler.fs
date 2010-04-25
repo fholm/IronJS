@@ -5,7 +5,6 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
-open IronJS.Parser
 
 type private F = IronJS.Ast.LocalFlags
 
@@ -18,7 +17,7 @@ let private buildVarsMap (scope:Ast.Scope) =
     if Set.contains F.NeedProxy input.Flags then Proxied else Not
 
   let dynamicIndex = ref -1 
-  let dynamicExpr = Expr.paramT<Box array> "~dynamic"
+  let dynamicExpr = Expr.paramT<Runtime.Box array> "~dynamic"
 
   let createVar (l:Ast.Local) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
@@ -81,10 +80,10 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
   let initDynamic = 
     if dynamicCount = 0 then Expr.empty
     else 
-      Expr.assign ctx.DynamicArray (Expr.Array.newT<Box> [Expr.constant dynamicCount])
+      Expr.assign ctx.DynamicArray (Expr.Array.newT<Runtime.Box> [Expr.constant dynamicCount])
 
   let body = 
-    [ctx.Builder2 ast; Expr.labelExprT<Box> ctx.Return]
+    [ctx.Builder2 ast; Expr.labelExprT<Runtime.Box> ctx.Return]
       |> List.toSeq
       |> Seq.append [initGlobals; initClosure; initDynamic]
       #if DEBUG

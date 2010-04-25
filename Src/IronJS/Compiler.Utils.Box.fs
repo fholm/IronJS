@@ -5,8 +5,6 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Tools.Dlr.Expr
-open IronJS.Parser
-open IronJS.Parser
 
 module Box =
 
@@ -20,7 +18,7 @@ module Box =
                                       else Other
   
   let isBoxed (expr:Et) = 
-    expr.Type = typeof<Parser.Box>
+    expr.Type = typeof<Runtime.Box>
 
   let typeCode (typ:ClrType) =
     if    typ = InterOp.Types.double      then TypeCodes.double
@@ -44,8 +42,8 @@ module Box =
 
   let assign (left:Et) (right:Et) =
 
-    if not (left.Type = typeof<Parser.Box>) then
-      failwith "Left expression is not a Parser.Box"
+    if not (left.Type = typeof<Runtime.Box>) then
+      failwith "Left expression is not a Runtime.Box"
     
     let assignValueTo (left:Et) =
       let typeCode = typeCode right.Type
@@ -54,7 +52,7 @@ module Box =
         assign (field left "Type") (constant typeCode)
       ]
 
-    if right.Type = typeof<Parser.Box> 
+    if right.Type = typeof<Runtime.Box> 
       then assign left right
       else
         if left :? EtParam 
@@ -66,8 +64,8 @@ module Box =
     else
       let typeCode = typeCode expr.Type
       blockWithTmp (fun tmp ->  [
-                                  Expr.assign tmp newT<Parser.Box>;
+                                  Expr.assign tmp newT<Runtime.Box>;
                                   Expr.assign (fieldByTypeCode tmp typeCode) expr;
                                   Expr.assign (field tmp "Type") (constant typeCode);
                                   tmp;
-                                ]) typeof<Parser.Box>
+                                ]) typeof<Runtime.Box>

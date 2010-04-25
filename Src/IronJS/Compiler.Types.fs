@@ -56,7 +56,7 @@ type Context = {
     LocalScopes = Dlr.Expr.param "~scopes" typeof<Runtime.Object ResizeArray>
 
     //Labels
-    Return = Dlr.Expr.labelT<Parser.Box> "~exit"
+    Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
 
     //Others
     DynamicCount = 0

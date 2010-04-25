@@ -119,7 +119,6 @@
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.fs" />
-    <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

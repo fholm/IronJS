@@ -103,6 +103,7 @@ type Local = {
   member x.ClosedOver     = x.Flags.Contains LocalFlags.ClosedOver
   member x.InitUndefined  = x.Flags.Contains LocalFlags.InitToUndefined
   member x.TypeResolved   = x.Flags.Contains LocalFlags.TypeResolved
+  member x.NeedsProxy     = x.Flags.Contains LocalFlags.NeedProxy
   member x.IsDynamic      = x.UsedAs = JsTypes.Dynamic || not (System.Enum.IsDefined(typeof<JsTypes>, x.UsedAs))
   member x.ReadOnly       =    x.UsedWith.Count        = 0 
                             && x.UsedWithClosure.Count = 0 

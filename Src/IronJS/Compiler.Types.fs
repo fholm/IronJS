@@ -19,13 +19,11 @@ type Context = {
   Function: EtParam
   LocalScopes: EtParam
   Globals: EtParam
-  DynamicArray: EtParam
 
   //Labels
   Return: LabelTarget
 
   //Others
-  DynamicCount: int
   Scope: Ast.Scope
   Locals: Map<string, Var>
   Builder: Context -> Ast.Node -> Et
@@ -49,7 +47,6 @@ type Context = {
   static member New = {
     //Params
     Closure = null
-    DynamicArray = null
     Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
     Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
@@ -59,7 +56,6 @@ type Context = {
     Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
 
     //Others
-    DynamicCount = 0
     Scope = Ast.Scope.New
     Locals = Map.empty
     Builder = fun x a -> Dlr.Expr.dynamicDefault

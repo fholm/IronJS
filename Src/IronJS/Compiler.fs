@@ -8,13 +8,16 @@ open IronJS.Compiler
 
 type private F = IronJS.Ast.LocalFlags
 
+let (|Parameter|Local|) (input:Ast.Local) = 
+  if Set.contains F.Parameter input.Flags then Parameter else Local
+
+let (|ClosedOver|Not|) (input:Ast.Local) = 
+  if Set.contains F.ClosedOver input.Flags then ClosedOver else Not
+
+let (|NeedProxy|Not|) (input:Ast.Local) =
+  if Set.contains F.NeedProxy input.Flags then NeedProxy else Not
+
 let private buildVarsMap (scope:Ast.Scope) =
-
-  let (|Parameter|Local|) (input:Ast.Local) = 
-    if Set.contains F.Parameter input.Flags then Parameter else Local
-
-  let (|Proxied|Not|) (input:Ast.Local) =
-    if Set.contains F.NeedProxy input.Flags then Proxied else Not
 
   let createVar (l:Ast.Local) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
@@ -30,27 +33,48 @@ let private buildVarsMap (scope:Ast.Scope) =
                 match l with
                 | Parameter -> 
                   match l with
-                  | Proxied -> Proxied(createVar l, createProxy l)
+                  | NeedProxy -> Proxied(createVar l, createProxy l)
                   | Not -> Variable(createVar l, P)
-                | Local -> Variable(createVar l, L)
+                | Local -> 
+                  Variable(createVar l, L)
               )
 
-let isLocal (pair:string * Var) =
-  match pair with
-  | (_, Variable(_, L)) -> true
+let isLocal (_, v:Var) =
+  match v with
+  | Variable(_, L) -> true
+  | Proxied(_, _) -> true
   | _ -> false
 
-let isParameter (pair:string * Var) =
-  match pair with
-  | (_, Variable(_, P)) -> true
-  | (_, Proxied(_, _)) -> true
+let isParameter (_, v:Var) =
+  match v with
+  | Variable(_, P) -> true
+  | Proxied(_, _) -> true
   | _ -> false
 
-let toParm (pair:string * Var) =
-  match pair with
-  | (_, Variable(p, _)) -> p
-  | (_, Proxied(_, p))  -> p
+let toParm (_, v:Var) =
+  match v with
+  | Variable(p, P) -> p
+  | Proxied(_, p)  -> p
   | _ -> failwith "Que?"
+
+let toLocal (_, v:Var) =
+  match v with
+  | Variable(p, L) -> p
+  | Proxied(l, _)  -> l
+  | _ -> failwith "Que?"
+
+let isProxied (_, v:Var) =
+  match v with
+  | Proxied(_, _) -> true
+  | _ -> false
+
+let initProxies (_, v:Var) =
+  match v with
+  | Proxied(var, proxy) ->
+    if Js.isStrongBox var.Type 
+      then Expr.assign var (Expr.newArgs var.Type [proxy])
+      else Expr.assign var (Expr.cast var.Type proxy)
+  | _ -> failwith "Not allowed"
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
@@ -65,13 +89,52 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       Locals = buildVarsMap scope
   }
 
-  let initGlobals = Expr.assign ctx.Globals (Expr.field ctx.Environment "Globals")
-  let initClosure = Expr.assign ctx.Closure (Expr.cast closureType (Expr.field ctx.Function "Closure"))
+  let initGlobals = 
+    let field = Expr.field ctx.Environment "Globals"
+    Expr.assign ctx.Globals field
+
+  let initClosure = 
+    let field = Expr.field ctx.Function "Closure"
+    Expr.assign ctx.Closure (Expr.cast closureType field)
+
+  let initProxied = 
+    (Dlr.Expr.block 
+      (ctx.Locals
+        |> Map.toSeq
+        |> Seq.filter isProxied
+        |> Seq.map initProxies
+        #if DEBUG
+        |> Seq.toArray
+        #endif
+      )
+    )
+
+  let initClosedOver = 
+    (Dlr.Expr.block 
+      (ctx.Scope.Locals
+        |> Map.toSeq
+        |> Seq.map (fun pair -> snd pair)
+        |> Seq.filter (fun l -> l.ClosedOver)
+        |> Seq.filter (fun l -> not l.NeedsProxy)
+        |> Seq.map (fun l -> 
+             let expr = ctx.LocalExpr l.Name
+             Expr.assign expr (Expr.new' expr.Type) 
+           )
+        #if DEBUG
+        |> Seq.toArray
+        #endif
+      )
+    )
 
   let body = 
     [ctx.Builder2 ast; Expr.labelExprT<Runtime.Box> ctx.Return]
       |> List.toSeq
-      |> Seq.append [initGlobals; initClosure]
+      |> Seq.append [
+           initGlobals
+           initClosure
+           initProxied
+           initClosedOver
+         ]
       #if DEBUG
       |> Seq.toArray
       |> fun x -> Expr.block x
@@ -91,8 +154,8 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
     ctx.Locals
       |> Map.toSeq
       |> Seq.filter isLocal 
-      |> Seq.map toParm
-      |> Seq.append (ctx.Globals :: ctx.Closure :: ctx.DynamicArray :: [])
+      |> Seq.map toLocal
+      |> Seq.append (ctx.Globals :: ctx.Closure :: [])
       #if DEBUG
       |> Seq.toArray
       #endif

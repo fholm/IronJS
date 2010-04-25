@@ -43,6 +43,7 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
       | Ast.Add -> getExprType' left ||| getExprType' right
       | _ -> failwith "not supported"
     | Ast.Local(name, _) -> getLocalType' name
+    | Ast.Invoke(_, _) -> Ast.JsTypes.Dynamic
     | _ -> failwith "not supported"
 
   and getLocalType' name =

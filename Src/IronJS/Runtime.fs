@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Parser
 
 open System.Dynamic
 open System.Collections.Generic
@@ -19,6 +20,7 @@ type IEnvironment() =
     abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
     abstract GetClosureId : ClrType -> int
 
+  (*
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     [<FieldOffset(0)>]  val mutable Clr     : obj
@@ -30,7 +32,7 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(12)>] val mutable Int     : int32
     [<FieldOffset(12)>] val mutable Double  : double
   end
-
+*)
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =
   val mutable Environment : IEnvironment

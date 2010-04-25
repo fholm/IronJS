@@ -19,7 +19,6 @@ type Context = {
   Function: EtParam
   LocalScopes: EtParam
   Globals: EtParam
-  ReturnParam: EtParam
   DynamicArray: EtParam
 
   //Labels
@@ -55,10 +54,9 @@ type Context = {
     Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
     This = Dlr.Expr.param "~this" typeof<Runtime.Object>
     LocalScopes = Dlr.Expr.param "~scopes" typeof<Runtime.Object ResizeArray>
-    ReturnParam = Dlr.Expr.param "~return" (typeof<Runtime.Box>.MakeByRefType())
 
     //Labels
-    Return = Dlr.Expr.labelVoid "~exit"
+    Return = Dlr.Expr.labelT<Parser.Box> "~exit"
 
     //Others
     DynamicCount = 0

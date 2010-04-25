@@ -27,7 +27,7 @@ let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
 let funcParam = Dlr.Expr.paramT<Runtime.Function> "~0"
 let globalParam = Dlr.Expr.paramT<Runtime.Object> "~1"
-let invokeExpr = Dlr.Expr.invoke (Dlr.Expr.constant compiledFunc) [funcParam; globalParam; Dlr.Expr.typeDefault<Runtime.Box>]
+let invokeExpr = Dlr.Expr.invoke (Dlr.Expr.constant compiledFunc) [funcParam; globalParam]
 let invokeWrapper = Dlr.Expr.lambda typeof<Action<Runtime.Function, Runtime.Object>> [funcParam; globalParam] invokeExpr
 let invoker = invokeWrapper.Compile() :?> Action<Runtime.Function, Runtime.Object>
 let timeCompile = Utils.time(fun () -> invoker.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals)).TotalMilliseconds

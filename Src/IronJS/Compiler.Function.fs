@@ -5,6 +5,7 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Parser
 
 module Function =
 
@@ -76,7 +77,6 @@ module Function =
 
     let tmp = Expr.paramT<Runtime.Function> "~invokeTmp"
 
-    let returnArg = if returnBox = null then (Expr.field cacheConst "VoidBox") else returnBox
     let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
     let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
     let body = 
@@ -89,10 +89,10 @@ module Function =
             (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
           ])
         )
-        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: returnArg :: argExprs))
+        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs))
       ]
 
-    if targetExpr.Type = typeof<Runtime.Box> then
+    if targetExpr.Type = typeof<Parser.Box> then
 
       if targetExpr :? EtParam || targetExpr :? System.Linq.Expressions.IndexExpression then
         (Expr.Flow.ifElse

@@ -54,7 +54,7 @@ module Variables =
     let value (ctx:Context) name = 
       let expr = Js.Object.get ctx.Globals name
       if ctx.TemporaryTypes.ContainsKey name then 
-        if expr.Type = typeof<Runtime.Box> then
+        if expr.Type = typeof<Parser.Box> then
           let typeCode = Utils.Box.typeCode ctx.TemporaryTypes.[name]
           Dlr.Expr.cast ctx.TemporaryTypes.[name] (Utils.Box.fieldByTypeCode expr typeCode)
         else

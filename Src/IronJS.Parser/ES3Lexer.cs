@@ -10,9 +10,31 @@ using Antlr.Runtime;
 using IList = System.Collections.IList;
 using ArrayList = System.Collections.ArrayList;
 using Stack = Antlr.Runtime.Collections.StackList;
+using System.Runtime.InteropServices;
 
 namespace IronJS.Parser
 {
+
+    public class Foo
+    {
+
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct Box
+    {
+        [FieldOffset(0)]
+        public object Clr;
+        [FieldOffset(8)]
+        public double Double;
+        [FieldOffset(8)]
+        public bool Bool;
+        [FieldOffset(8)]
+        public int Int;
+        [FieldOffset(12)]
+        public int Type;
+    }
+
     public partial class ES3Lexer : Lexer
     {
         public const int PACKAGE = 52;

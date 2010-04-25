@@ -38,14 +38,16 @@ module ExprGen =
     | Ast.Function(astId)       -> Function.definition ctx astId
     | Ast.Invoke(target, args)  -> Function.invoke ctx target args null
     | Ast.Return(value)         -> 
-      match value with
-      | Ast.Invoke(target, args) -> 
-        Expr.block[
-          Function.invoke ctx target args ctx.ReturnParam
-          Expr.makeReturn ctx.Return (Expr.makeDefault typeof<System.Void>)
-        ]
+      let value = ctx.Builder2 value
+      let typCode = Utils.Box.typeCode value.Type
 
-      | _ -> Utils.Box.assign ctx.ReturnParam (ctx.Builder2 value)
+      Expr.blockWithTmp (
+        fun tmp -> 
+        [
+          Expr.assign (Expr.field tmp "Type") (Expr.constant typCode)
+          Expr.assign (Utils.Box.fieldByTypeCode tmp typCode) value
+          tmp
+        ]) typeof<Parser.Box>
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

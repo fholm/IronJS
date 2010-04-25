@@ -1,17 +1,15 @@
-﻿/*
+﻿
 var bench = function () {
     function f(x, y, z) {
         return x + y + z;
     }
 
-    var y = "lol"
-    y = 2;
+    var y = 2;
 
     for (var i = 0; i < 2500000; ++i) {
         y = f(1, 2, 3);
     }
 }
-*/
 
 /*
 var bench = function () {
@@ -22,8 +20,7 @@ var bench = function () {
     for (var i = 0; i < 3000000; ++i)
         f();
 }
-*/
-
+/*
 var bench = function () {
     var foo = function (a, b) {
         return function () {
@@ -34,5 +31,6 @@ var bench = function () {
     }
     return foo()()();
 }
+*/
 
 bench();

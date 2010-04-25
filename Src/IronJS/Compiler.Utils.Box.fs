@@ -5,6 +5,8 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Tools.Dlr.Expr
+open IronJS.Parser
+open IronJS.Parser
 
 module Box =
 
@@ -18,7 +20,7 @@ module Box =
                                       else Other
   
   let isBoxed (expr:Et) = 
-    expr.Type = typeof<Runtime.Box>
+    expr.Type = typeof<Parser.Box>
 
   let typeCode (typ:ClrType) =
     if    typ = InterOp.Types.double      then TypeCodes.double
@@ -34,16 +36,16 @@ module Box =
     | Bool      -> field expr "Bool"
     | Int       -> field expr "Int"
     | Double    -> field expr "Double"
-    | String    -> field expr "Str"
-    | Object    -> field expr "Object"
-    | Function  -> field expr "Func"
+    | String    -> field expr "Clr"
+    | Object    -> field expr "Clr"
+    | Function  -> field expr "Clr"
     | Other     -> field expr "Clr"
 
 
   let assign (left:Et) (right:Et) =
 
-    if not (left.Type = typeof<Runtime.Box>) then
-      failwith "Left expression is not a Runtime.Box"
+    if not (left.Type = typeof<Parser.Box>) then
+      failwith "Left expression is not a Parser.Box"
     
     let assignValueTo (left:Et) =
       let typeCode = typeCode right.Type
@@ -52,7 +54,7 @@ module Box =
         assign (field left "Type") (constant typeCode)
       ]
 
-    if right.Type = typeof<Runtime.Box> 
+    if right.Type = typeof<Parser.Box> 
       then assign left right
       else
         if left :? EtParam 
@@ -64,8 +66,8 @@ module Box =
     else
       let typeCode = typeCode expr.Type
       blockWithTmp (fun tmp ->  [
-                                  Expr.assign tmp newT<Runtime.Box>;
+                                  Expr.assign tmp newT<Parser.Box>;
                                   Expr.assign (fieldByTypeCode tmp typeCode) expr;
                                   Expr.assign (field tmp "Type") (constant typeCode);
                                   tmp;
-                                ]) typeof<Runtime.Box>
+                                ]) typeof<Parser.Box>

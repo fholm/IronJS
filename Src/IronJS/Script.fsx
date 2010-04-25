@@ -76,14 +76,10 @@ let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstM
 let globalType = Runtime.Delegate.getFor []
 let exprTree = Compiler.Core.compileAst env globalType Runtime.Closure.TypeDef (fst ast) (snd ast)
 
-let compiledFunc = exprTree.Compile()
+let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Parser.Box>
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
-let funcParam = Dlr.Expr.paramT<Runtime.Function> "~0"
-let globalParam = Dlr.Expr.paramT<Runtime.Object> "~1"
-let invokeExpr = Dlr.Expr.invoke (Dlr.Expr.constant compiledFunc) [funcParam; globalParam; Dlr.Expr.typeDefault<Runtime.Box>]
-let invokeWrapper = Dlr.Expr.lambda typeof<Action<Runtime.Function, Runtime.Object>> [funcParam; globalParam] invokeExpr
-let invoker = invokeWrapper.Compile() :?> Action<Runtime.Function, Runtime.Object>
-let timeCompile = Utils.time(fun () -> invoker.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals)).TotalMilliseconds
-let time = Utils.time(fun () -> invoker.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals)).TotalMilliseconds
+let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
+let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
+

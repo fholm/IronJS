@@ -88,26 +88,7 @@ module Core =
   and private parseCall t = state {
     let! target = parse (child t 0) 
     let! args   = parseList (childrenOf t 1)
-    let! var = getVariable "~invokeTmp"
-
-    let unrollInvoke target =
-      match target with
-      | Invoke(target, args) ->
-
-        Assign(var, target)
-        Invoke(var, args)
-
-      | _ -> target
-
-    match target with 
-    | Invoke(_, _) -> 
-      let! var = getVariable "~invokeTmp"
-      return Block([
-                     Assign(var, target)
-                     Invoke(var, args)
-                   ])
-
-    | _ -> return Invoke(target, args)}
+    return Invoke(target, args)}
 
   and private parseAssign t = state { 
     let! l = parse (child t 0)
@@ -118,7 +99,6 @@ module Core =
   and private parseFunction t = state {
     if isAnonymous t then
       do! enterScope (childrenOf t 0)
-      do! createVar "~invokeTmp" false
       let! body  = parse (child t 1)
       let! scope = exitScope()
       let! s = getState
@@ -132,7 +112,6 @@ module Core =
       do! createVar (child t 0).Text false
       let! name = parse (child t 0)
       do! enterScope (childrenOf t 1)
-      do! createVar "~invokeTmp" false
       let! body  = parse (child t 2)
       let! scope = exitScope()
       let! s = getState

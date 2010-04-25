@@ -18,7 +18,7 @@ module Assign =
 
       if l.Type = r.Type then Dlr.Expr.assign l r
       else
-        if l.Type = typeof<Runtime.Box> then
+        if l.Type = typeof<Parser.Box> then
           Utils.Box.assign left right
         else
           failwith "Not supported"
@@ -35,12 +35,8 @@ module Assign =
 
       | Ast.Local(name, localScopeLevel) -> 
         if localScopeLevel = 0 
-          then match right with
-               | Ast.Invoke(target, args) -> Function.invoke ctx target args (Variables.Local.value ctx name)
-               | _ -> 
-                  ctx.TemporaryTypes.[name] <- value.Type
-                  Variables.Local.assign ctx name value
-
+          then ctx.TemporaryTypes.[name] <- value.Type
+               Variables.Local.assign ctx name value
           else DynamicScope.setLocalValue ctx name value
 
       | Ast.Closure(name, globalScopeLevel) -> 

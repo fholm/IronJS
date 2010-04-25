@@ -4,13 +4,14 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Runtime
+open IronJS.Parser
 
 module Delegate =
 
   let private boxByRef = typeof<Box>.MakeByRefType()
   let private dict = new SafeDict<int list, ClrType>()
-  let private internalArgs = List.toSeq (typeof<Function> :: typeof<Object> :: boxByRef :: [])
-  let private returnType = List.toSeq (typeof<System.Void> :: [])
+  let private internalArgs = List.toSeq (typeof<Function> :: typeof<Object> :: [])
+  let private returnType = List.toSeq (typeof<Box> :: [])
 
   let private typeToInt typ =
     if   typ = typeof<int>      then 0

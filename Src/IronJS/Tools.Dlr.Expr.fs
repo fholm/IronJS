@@ -30,13 +30,10 @@ module Expr =
   let labelBreak() = Et.Label(Constants.clrVoid, "~break")
   let labelContinue() = Et.Label(Constants.clrVoid, "~continue")
 
-  let blockWithLocals (parms:EtParam list) (exprs:Et list) = 
-    if parms.Length = 0 && exprs.Length = 1 then exprs.Head
-    else
-      let body = if exprs.Length = 0 then [AstUtils.Empty() :> Et] else exprs
-      Et.Block(parms, body) :> Et
-      
-  let block = blockWithLocals []
+  let blockWithLocals (parms:EtParam seq) (exprs:Et seq) = 
+    if Seq.length exprs = 0 then empty else Et.Block(parms, exprs) :> Et
+
+  let block exprs = blockWithLocals [] exprs
   let blockWithTmp fn typ = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
@@ -94,7 +91,7 @@ module Expr =
   let newGenericArgsT<'a> = newGenericArgs typedefof<'a> 
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
-  let lambda (typ:ClrType) (parms:EtParam list) (body:Et) = Et.Lambda(typ, body, parms)    
+  let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)    
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
   let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
 

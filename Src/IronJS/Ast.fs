@@ -88,7 +88,26 @@ module Core =
   and private parseCall t = state {
     let! target = parse (child t 0) 
     let! args   = parseList (childrenOf t 1)
-    return Invoke(target, args)}
+    let! var = getVariable "~invokeTmp"
+
+    let unrollInvoke target =
+      match target with
+      | Invoke(target, args) ->
+
+        Assign(var, target)
+        Invoke(var, args)
+
+      | _ -> target
+
+    match target with 
+    | Invoke(_, _) -> 
+      let! var = getVariable "~invokeTmp"
+      return Block([
+                     Assign(var, target)
+                     Invoke(var, args)
+                   ])
+
+    | _ -> return Invoke(target, args)}
 
   and private parseAssign t = state { 
     let! l = parse (child t 0)
@@ -99,20 +118,28 @@ module Core =
   and private parseFunction t = state {
     if isAnonymous t then
       do! enterScope (childrenOf t 0)
+      do! createVar "~invokeTmp" false
       let! body  = parse (child t 1)
       let! scope = exitScope()
       let! s = getState
-      s.FunctionMap.Add(s.FunctionMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+
+      let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
+      s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
+
       do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
       return Function(s.FunctionMap.Count-1)
     else
       do! createVar (child t 0).Text false
       let! name = parse (child t 0)
       do! enterScope (childrenOf t 1)
+      do! createVar "~invokeTmp" false
       let! body  = parse (child t 2)
       let! scope = exitScope()
       let! s = getState
-      s.FunctionMap.Add(s.FunctionMap.Count,({scope with InParentDynamicScope = s.LocalDynamicScopeLevels.Head > 0},body))
+      
+      let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
+      s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
+
       do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
       let func = Function(s.FunctionMap.Count-1)
       do! Analyzer.assign name func
@@ -131,10 +158,25 @@ module Core =
         then return Integer(result)
         else return Number(double t.Text) 
     }
+    
+  and private parseReturn  t = state { 
+    let! value = parse (child t 0)
+
+    let rec replaceLast n =
+      match n with
+      | [] -> failwith "Meep"
+      | x::[] -> [Return(x)]
+      | x::xs -> x :: replaceLast xs
+
+    match value with
+    | Block(nodes) -> 
+      match nodes.[nodes.Length-1] with
+      | Invoke(_, _) -> return Block(replaceLast nodes)
+      | _ -> return failwith "Invalid AST"
+    | _ -> return Return(value)}
 
   and private parsePossibleNull t = state{if t = null then return Null else return! parse t}
   and private parseByField t = state { let! target = parse (child t 0) in return Property(target, (child t 1).Text) }
-  and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
   and private parseBlock   t = state { let! lst = parseList (children t) in return Block(lst) }
   and private parseObject  t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
   and private parseString  t = state { return String(cleanString t.Text) }

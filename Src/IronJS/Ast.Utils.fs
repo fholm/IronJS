@@ -11,6 +11,30 @@ open Antlr.Runtime.Tree
 
 module Utils =
 
+  let internal setScopeFlag (f:ScopeFlags) (s:Scope) =
+    if s.Flags.Contains f then s else {s with Flags = s.Flags.Add f}
+
+  let internal setScopeFlagIf (f:ScopeFlags) (if':bool) (s:Scope) =
+    if s.Flags.Contains f then s elif if' then {s with Flags = s.Flags.Add f} else s
+
+  let internal removeScopeFlag (f:ScopeFlags) (s:Scope) =
+    if s.Flags.Contains f then {s with Flags = s.Flags.Remove f} else s
+
+  let internal setLocalFlag (f:LocalFlags) (l:Local) =
+    if l.Flags.Contains f then l else {l with Flags = l.Flags.Add f}
+
+  let internal setLocalFlagIf (f:LocalFlags) (if':bool) (l:Local) =
+    if l.Flags.Contains f then l elif if' then {l with Flags = l.Flags.Add f} else l
+
+  let internal removeLocalFlag (f:LocalFlags) (l:Local) =
+    if l.Flags.Contains f then {l with Flags = l.Flags.Remove f} else l
+
+  let internal activeScope (ps:ParserState) =
+    ps.ScopeChain.Head
+
+  let internal insideLocalDS (ps:ParserState) =
+    ps.LocalDynamicScopeLevels.Head > 0
+
   let internal ct (tree:obj) = tree :?> AstTree
   let internal child (tree:AstTree) index = if tree.ChildCount > index then (ct tree.Children.[index]) else null
   let internal children (tree:AstTree) = Tools.CSharp.toList<AstTree> tree.Children
@@ -33,7 +57,9 @@ module Utils =
            }
 
   let internal setClosedOver (scope:Scope) name = 
-    setLocal scope name {scope.Locals.[name] with ClosedOver = true}
+    let l   = scope.Locals.[name]
+    let l'  = if l.Flags.Contains LocalFlags.Parameter then setLocalFlag LocalFlags.NeedProxy l else l
+    setLocal scope name (setLocalFlag LocalFlags.ClosedOver l')
 
   let internal scopeLevels = state {
     let! s = getState
@@ -41,10 +67,10 @@ module Utils =
   }
 
   let setClosureAccessed (scopeChain:Scope list) = 
-    {scopeChain.Head with ClosureAccessed = true} :: scopeChain.Tail
+    setScopeFlag ScopeFlags.NeedClosure scopeChain.Head :: scopeChain.Tail
 
   let setGlobalsAccessed (scopeChain:Scope list) =
-    {scopeChain.Head with GlobalsAccessed = true} :: scopeChain.Tail
+    setScopeFlag ScopeFlags.NeedGlobals scopeChain.Head :: scopeChain.Tail
 
   let internal getVariable name = state {
     let! s  = getState
@@ -78,7 +104,9 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Empty scope chain"
     | _::[] -> ()
-    | x::xs -> do! setState {s with ScopeChain = (setLocal x name {Local.New with InitUndefined = initUndefined} :: xs)}}  
+    | x::xs -> 
+      let newLocal = setLocalFlagIf LocalFlags.InitToUndefined initUndefined (Local.New name)
+      do! setState {s with ScopeChain = (setLocal x name newLocal :: xs)}}  
 
   let internal enterScope (parms:AstTree list) = state {
     let! (s:ParserState) = getState
@@ -86,7 +114,9 @@ module Utils =
     let rec createLocals parms index =
       match parms with
       | []       -> Map.empty
-      | name::xs -> Map.add name {Local.New with ParamIndex = index;} (createLocals xs (index+1))
+      | name::xs -> 
+        let newParam = setLocalFlag LocalFlags.Parameter {Local.New name with Index = index}
+        Map.add name newParam (createLocals xs (index+1))
 
     let scope = {
       Scope.New with 
@@ -113,7 +143,7 @@ module Utils =
 
   let internal enterDynamicScope = state {
       let! s  = getState
-      let sc  = {s.ScopeChain.Head with HasDynamicScopes = true}
+      let sc  = setScopeFlag ScopeFlags.HasDS s.ScopeChain.Head
       let lsc = s.LocalDynamicScopeLevels
 
       do! setState {

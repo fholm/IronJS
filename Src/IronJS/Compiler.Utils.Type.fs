@@ -27,6 +27,7 @@ module Type =
     | Ast.JsTypes.String    -> InterOp.Types.string
     | Ast.JsTypes.Object    -> Runtime.Object.TypeDef
     | Ast.JsTypes.Function  -> Runtime.Function.TypeDef
+    | Ast.JsTypes.Undefined -> typeof<Runtime.Undefined>
     | _ -> typeof<Runtime.Box>
 
   (*Gets the inner type of a strongbox Type object*)

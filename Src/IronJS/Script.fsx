@@ -70,6 +70,7 @@ let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
 let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 
 let program = jsParser.program()
+let astMap = new Dict<int, Ast.Scope * Ast.Node>()
 let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstMap
 
 let globalType = Runtime.Delegate.getFor []

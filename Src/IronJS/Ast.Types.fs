@@ -5,19 +5,26 @@ open IronJS.Aliases
 open Antlr.Runtime.Tree
 open System.Diagnostics
 
-type JsTypes = 
-  | Nothing   = 0
+type JsTypes 
+  = Nothing   = 0   // NOT null
+
   | Double    = 1
   | Integer   = 2
+  | Number    = 3   // Double | Integer
+
   | String    = 4
+
   | Boolean   = 8
+
   | Object    = 16
   | Function  = 32
   | Array     = 64
-  | Dynamic   = 128 // includes null + undefined
 
-type BinaryOp =
-  | Lt
+  | Dynamic   = 128 // includes null
+  | Undefined = 256
+
+type BinaryOp 
+  = Lt
   | LtEq
   | Gt
   | GtEq
@@ -29,13 +36,13 @@ type BinaryOp =
   | Div
   | Mod
 
-type UnaryOp =
-  | PreInc
+type UnaryOp 
+  = PreInc
   | PreDec
 
-type Node =
+type Node 
   //Error
-  | Error of string
+  = Error of string
 
   //Constants
   | String  of string
@@ -75,28 +82,42 @@ type Node =
   | BinaryOp  of Node * BinaryOp * Node
   | UnaryOp   of UnaryOp * Node
 
+type LocalFlags 
+  = Parameter       = 1
+  | ClosedOver      = 2
+  | InitToUndefined = 4
+  | TypeResolved    = 8
+  | NeedProxy       = 16
+
 [<DebuggerDisplay("{DebugView}")>] 
 type Local = {
-  Expr: Et
-  ParamIndex: int
-  InitUndefined: bool
-  ClosedOver: bool
+  Name: string
+  Flags: LocalFlags Set
+  Index: int
   UsedAs: JsTypes
   UsedWith: string Set
   UsedWithClosure: string Set
   AssignedFrom: Node list
 } with
-  member x.IsParameter = x.ParamIndex > -1
+  member x.IsParameter    = x.Flags.Contains LocalFlags.Parameter
+  member x.ClosedOver     = x.Flags.Contains LocalFlags.ClosedOver
+  member x.InitUndefined  = x.Flags.Contains LocalFlags.InitToUndefined
+  member x.TypeResolved   = x.Flags.Contains LocalFlags.TypeResolved
+  member x.IsDynamic      = x.UsedAs = JsTypes.Dynamic || not (System.Enum.IsDefined(typeof<JsTypes>, x.UsedAs))
+  member x.ReadOnly       =    x.UsedWith.Count        = 0 
+                            && x.UsedWithClosure.Count = 0 
+                            && x.AssignedFrom.Length   = 0
+
   member x.DebugView = (
     sprintf 
-      @"closure:%b/index:%i/undefined:%b/as:%A/with:%A, %A/assignedFrom:%i" 
-      x.ClosedOver x.ParamIndex x.InitUndefined x.UsedAs x.UsedWith x.UsedWithClosure x.AssignedFrom.Length
+      @"name:%s/flags:%A/index:%i/as:%A/with:%A, %A/assignedFrom:%i" 
+      x.Name x.Flags x.Index x.UsedAs x.UsedWith x.UsedWithClosure x.AssignedFrom.Length
   )
-  static member New = {
-    Expr = null
-    ParamIndex = -1
-    InitUndefined = false
-    ClosedOver = false
+
+  static member New name = {
+    Name = name
+    Flags = Set.empty
+    Index = -1
     UsedAs = JsTypes.Nothing
     UsedWith = Set.empty
     UsedWithClosure = Set.empty
@@ -117,24 +138,32 @@ type Closure = {
 type LocalMap = Map<string, Local>
 type ClosureMap = Map<string, Closure>
 
+type ScopeFlags 
+  = HasDS = 1
+  | InLocalDS = 2
+  | NeedGlobals = 4
+  | NeedClosure = 8
+
 type Scope = {
   Locals: LocalMap
   Closure: ClosureMap
   ScopeLevel: int
-  HasDynamicScopes: bool
-  InParentDynamicScope: bool
-  GlobalsAccessed: bool
-  ClosureAccessed: bool
+  Flags: ScopeFlags Set
+  ArgTypes: ClrType array
 } with
+  member x.HasDS = x.Flags.Contains ScopeFlags.HasDS
+  member x.InLocalDS = x.Flags.Contains ScopeFlags.InLocalDS
+  member x.NeedClosure = x.Flags.Contains ScopeFlags.NeedClosure
+  member x.NeedGlobals = x.Flags.Contains ScopeFlags.NeedGlobals
+
   static member New = { 
     Locals = Map.empty
     Closure = Map.empty
+    Flags = Set.empty
     ScopeLevel = 0
-    HasDynamicScopes = false
-    InParentDynamicScope = false
-    GlobalsAccessed = false
-    ClosureAccessed = false
+    ArgTypes = null
   }
+
   static member Global = Scope.New
 
 type ParserState = { 

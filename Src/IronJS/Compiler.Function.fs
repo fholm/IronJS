@@ -39,7 +39,7 @@ module Function =
 
     (*Creates a new closure type and expression to create an instance of that type*)
     let internal create (ctx:Context) (scope:Ast.Scope) =
-      let scopesExpr = if scope.InParentDynamicScope 
+      let scopesExpr = if scope.InLocalDS 
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant ctx.Scope.ScopeLevel]
                               Dlr.Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
                          else ctx.ClosureScopes
@@ -64,7 +64,6 @@ module Function =
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args (returnBox:Et) =
     //TODO: Wow this is ugly, redo.
-
     let targetExpr = ctx.Builder ctx target
     let argExprs = [for arg in args -> ctx.Builder ctx arg]
 
@@ -75,11 +74,7 @@ module Function =
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst
 
-    let tmp, locs = if targetExpr :? EtParam then 
-                      targetExpr, [] 
-                    else 
-                      let tmp = Expr.paramT<Runtime.Function> "~tmp"
-                      tmp:>Et, [tmp]
+    let tmp = Expr.paramT<Runtime.Function> "~invokeTmp"
 
     let returnArg = if returnBox = null then (Expr.field cacheConst "VoidBox") else returnBox
     let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
@@ -94,8 +89,22 @@ module Function =
             (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
           ])
         )
-        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp :: (ctx.Globals:>Et) :: returnArg :: argExprs))
-        tmp
+        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: returnArg :: argExprs))
       ]
 
-    Expr.blockWithLocals locs (if targetExpr :? EtParam then body else Expr.assign tmp targetExpr :: body)
+    if targetExpr.Type = typeof<Runtime.Box> then
+
+      if targetExpr :? EtParam || targetExpr :? System.Linq.Expressions.IndexExpression then
+        (Expr.Flow.ifElse
+          (Expr.Logic.eq (Expr.field targetExpr "Type") (Expr.constant TypeCodes.function'))
+          (Expr.blockWithLocals [tmp] (Expr.assign tmp (Utils.Box.fieldByTypeCode targetExpr TypeCodes.function') :: body))
+          (Expr.empty)
+        )
+      else
+        failwith "Not supported"
+
+    elif targetExpr.Type = typeof<Runtime.Function> then
+      Expr.blockWithLocals [tmp] (Expr.assign tmp targetExpr :: body)
+
+    else
+      failwith "Can't call non-function"

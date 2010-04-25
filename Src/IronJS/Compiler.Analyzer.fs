@@ -29,7 +29,7 @@ let private setType name (var:Ast.Local) typ =
 
   let expr = Dlr.Expr.param name exprType
 
-  { var with UsedAs = typ; Expr = expr }
+  {Ast.Utils.setLocalFlag Ast.LocalFlags.TypeResolved var with UsedAs = typ }
 
 (*Get the type of a variable, evaluating it if necessary*)
 let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
@@ -50,7 +50,7 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
     if (!excluded).Contains name then Ast.JsTypes.Nothing
     else  
-      if not (var.Expr = null) then var.UsedAs 
+      if var.TypeResolved then var.UsedAs 
       else  
         excluded := (!excluded).Add name
 
@@ -78,11 +78,8 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
   getLocalType' name
 
 let private handleMissingArgument (name:string) (var:Ast.Local) =
-  if var.ClosedOver 
-    then {setType name var Ast.JsTypes.Dynamic with InitUndefined = true}
-    else 
-      
-      {var with UsedAs = Ast.JsTypes.Dynamic; Expr = expr}
+  let removedParam = Ast.Utils.removeLocalFlag Ast.LocalFlags.Parameter var
+  {Ast.Utils.setLocalFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Ast.JsTypes.Undefined}
 
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
@@ -93,17 +90,19 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
 
   (*Resolves types of all local variables*)
   let rec resolveTypes locals = 
-    match Map.tryFindKey (fun _ (var:Ast.Local) -> var.Expr = null) locals with
+    match Map.tryFindKey (fun _ (var:Ast.Local) -> not (var.Flags.Contains Ast.LocalFlags.TypeResolved)) locals with
     | None       -> locals // All variables have Exprs
     | Some(name) -> resolveTypes (resolveType name locals) // Key found, resolve its type
 
   { scope with 
+      ArgTypes = Array.ofList types
+
       Locals =
         scope.Locals 
           |> Map.map (fun name var -> 
             if var.IsParameter then
-              if var.ParamIndex < types.Length
-                then {var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.ParamIndex]} // We got an argument for this parameter
+              if var.Index < types.Length
+                then {var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.Index]} // We got an argument for this parameter
                 else handleMissingArgument name var // We didn't, means make it dynamic
             else 
               if   isDynamic var       then setType name var Ast.JsTypes.Dynamic // No need to resolve type, force it here

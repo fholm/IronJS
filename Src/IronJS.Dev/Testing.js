@@ -13,11 +13,11 @@ var bench = function () {
 */
 
 var bench = function () {
-    function f(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9) {
-        
+    function f() {
+        function g() { }
     }
 
-    for (var i = 0; i < 3000000; ++i)
+    for (var i = 0; i < 300000; ++i)
         f();
 }
 

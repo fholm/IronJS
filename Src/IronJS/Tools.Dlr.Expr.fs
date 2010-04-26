@@ -172,8 +172,6 @@ module Expr =
     let or' left right = Et.OrElse(left, right) :> Et
     let and' left right = Et.AndAlso(left, right) :> Et
 
-    let typeIs target typ = Et.TypeIs(target, typ) :> Et
-    
     let is' typ target = Et.TypeIs(target, typ) :> Et
     let isT<'a> = is' typeof<'a> 
 

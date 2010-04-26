@@ -99,14 +99,17 @@ module Utils =
         do! setState {s with ScopeChain = (setGlobalsAccessed s.ScopeChain)}
         return Global(name, fst sl)}
 
-  let internal createVar name initUndefined = state {
-    let!  s = getState
+  let internal createVar2 name initUndefined s =
     match s.ScopeChain with
     | []    -> failwith "Empty scope chain"
-    | _::[] -> ()
+    | _::[] -> s
     | x::xs -> 
       let newLocal = setLocalFlagIf LocalFlags.InitToUndefined initUndefined (Local.New name)
-      do! setState {s with ScopeChain = (setLocal x name newLocal :: xs)}}  
+      {s with ScopeChain = (setLocal x name newLocal :: xs)}
+
+  let internal createVar name initUndefined = state {
+    let! s = getState
+    do! setState (createVar2 name initUndefined s)}
 
   let internal enterScope (parms:AstTree list) = state {
     let! (s:ParserState) = getState

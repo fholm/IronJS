@@ -49,6 +49,7 @@ module Variables =
   (**)
   type Closures =
     static member Get(name:string, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) =
+
       let pair = getFromObjects name localScopes
       if (fst pair)
         then  pair

@@ -9,8 +9,11 @@ open IronJS.Compiler
 let private isDynamic (loc:Ast.Local) =
   match loc.UsedAs with
   | Ast.JsTypes.Double 
-  | Ast.JsTypes.String
   | Ast.JsTypes.Integer
+  | Ast.JsTypes.Boolean
+  | Ast.JsTypes.String
+  | Ast.JsTypes.Undefined
+  | Ast.JsTypes.Array
   | Ast.JsTypes.Function
   | Ast.JsTypes.Object -> true && loc.InitUndefined
   | _ -> true
@@ -23,8 +26,8 @@ let private isNotAssignedTo (var:Ast.Local) =
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (var:Ast.Local) typ =
-  let exprType = if var.ClosedOver 
-                   then Constants.strongBoxTypeDef.MakeGenericType(Utils.Type.jsToClr typ) 
+  let exprType = if var.IsClosedOver 
+                   then Type.strongBoxType.MakeGenericType(Utils.Type.jsToClr typ) 
                    else Utils.Type.jsToClr typ
 
   let expr = Dlr.Expr.param name exprType

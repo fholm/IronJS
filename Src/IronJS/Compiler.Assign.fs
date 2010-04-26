@@ -18,10 +18,11 @@ module Assign =
 
       if l.Type = r.Type then Dlr.Expr.assign l r
       else
-        if l.Type = typeof<Runtime.Box> then
-          Utils.Box.assign left right
-        else
-          failwith "Not supported"
+        if l.Type = typeof<Runtime.Box> 
+          then Utils.Box.assign left right
+          else
+            // Special cases
+            failwith "Not supported"
 
     let internal build (ctx:Context) left right =
       let value = ctx.Builder2 right

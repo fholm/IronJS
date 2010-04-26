@@ -7,7 +7,7 @@ open IronJS.Aliases
 open IronJS.Tools
 
 let isStrongBox (typ:System.Type) =
-  typ.IsGenericType && typ.GetGenericTypeDefinition() = Constants.strongBoxTypeDef
+  typ.IsGenericType && typ.GetGenericTypeDefinition() = Type.strongBoxType
 
 let assign (left:Et) (right:Et) =
   let assign (left:Et) (right:Et) =
@@ -16,7 +16,7 @@ let assign (left:Et) (right:Et) =
   if isStrongBox left.Type then assign (Dlr.Expr.field left "Value") right else assign left right
 
 let box (expr:Et) =
-  if expr.Type = Constants.clrVoid
+  if expr.Type = typeof<System.Void>
     then Dlr.Expr.block [expr; Dlr.Expr.dynamicDefault]
     else Dlr.Expr.castT<Dynamic> expr
 

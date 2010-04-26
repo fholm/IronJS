@@ -50,6 +50,7 @@ open System
 open IronJS
 open IronJS.Fsi
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Aliases
 open IronJS.Parser
 
@@ -65,16 +66,10 @@ fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Dev")
 
 let env = Runtime.Environment.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
-
-let jsLexer = new ES3Lexer(new ANTLRFileStream("Testing.js"))
-let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
-
-let program = jsParser.program()
-let astMap = new Dict<int, Ast.Scope * Ast.Node>()
-let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstMap
+let ast = Ast.Core.parseFile env.AstMap "Testing.js"
 
 let globalType = Runtime.Delegate.getFor []
-let exprTree = Compiler.Core.compileAst env globalType Runtime.Closure.TypeDef (fst ast) (snd ast)
+let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> (fst ast) (snd ast)
 
 let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())

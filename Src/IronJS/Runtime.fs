@@ -10,7 +10,6 @@ open System.Runtime.InteropServices
 
 #nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
-(*Environment interface*)
 [<AllowNullLiteral>]
 [<AbstractClass>]
 type IEnvironment() =
@@ -21,11 +20,11 @@ type IEnvironment() =
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
-    [<FieldOffset(0)>]  val mutable Clr     : obj
-    [<FieldOffset(8)>]  val mutable Bool    : bool
-    [<FieldOffset(8)>]  val mutable Int     : int32
-    [<FieldOffset(8)>]  val mutable Double  : double
-    [<FieldOffset(16)>] val mutable Type    : int32 
+    [<FieldOffset(0)>]  val mutable Clr    : obj
+    [<FieldOffset(8)>]  val mutable Bool   : bool
+    [<FieldOffset(8)>]  val mutable Int    : int32
+    [<FieldOffset(8)>]  val mutable Double : double
+    [<FieldOffset(16)>] val mutable Type   : int32
   end
 
 (*Class representing a Javascript native object*)
@@ -37,9 +36,6 @@ and [<AllowNullLiteral>] Object =
     Environment = env
     Properties = new Dictionary<string, Box>()
   }
-
-  static member TypeDef = typedefof<Object>
-  static member TypeDefHashCode = typedefof<Object>.GetHashCode()
 
   member self.Get name = self.Properties.[name]
   member self.TryGet name = self.Properties.TryGetValue name
@@ -54,7 +50,6 @@ and Undefined() =
   static let instance = Undefined()
   static member Instance = instance
   static member InstanceExpr = Dlr.Expr.constant instance
-  static member InstanceExprAsDynamic = Dlr.Expr.castT<Dynamic> Undefined.InstanceExpr
 
 (*DLR meta object for the above Object class*)
 and ObjectMeta(expr, jsObj:Object) =
@@ -92,7 +87,6 @@ and [<AllowNullLiteral>] Scope =
 (*Closure base class, representing a closure environment*)
 and Closure =
   val mutable Scopes : Scope ResizeArray
-  static member TypeDef = typedefof<Closure>
 
   new(scopes) = {
     Scopes = scopes
@@ -113,9 +107,6 @@ and [<AllowNullLiteral>] Function =
     ClosureId = closureId
   }
 
-  static member TypeDef = typedefof<Function>
-  static member TypeDefHashCode = typedefof<Function>.GetHashCode()
-
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      ((x :> Object).Environment.GetDelegate x typeof<'a> types) :?> 'a
 
@@ -124,7 +115,6 @@ type InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable ClosureId : int
   val mutable Delegate : 'a
   val mutable ArgTypes : ClrType list
-  [<DefaultValue>] val mutable VoidBox : Box
 
   new(argTypes) = {
     AstId = -1

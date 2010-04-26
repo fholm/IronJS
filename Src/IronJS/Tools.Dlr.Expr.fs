@@ -27,14 +27,15 @@ module Expr =
   let dynamicLabelExpr label = Et.Label(label, dynamicDefault) :> Et
   let dynamicLabel = labelT<obj>
 
-  let labelBreak() = Et.Label(Constants.clrVoid, "~break")
-  let labelContinue() = Et.Label(Constants.clrVoid, "~continue")
+  let labelBreak() = Et.Label(typeof<System.Void>, "~break")
+  let labelContinue() = Et.Label(typeof<System.Void>, "~continue")
 
   let blockWithLocals (parms:EtParam seq) (exprs:Et seq) = 
     if Seq.length exprs = 0 then empty else Et.Block(parms, exprs) :> Et
 
   let block exprs = blockWithLocals [] exprs
-  let blockWithTmp fn typ = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
+  let blockTmp typ (fn:EtParam -> Et list) = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
+  let blockTmpT<'a> = blockTmp typeof<'a>
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
@@ -93,7 +94,10 @@ module Expr =
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
   let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)    
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
-  let dynamic binder typ (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
+
+
+  let dynamic typ binder (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
+  let dynamicT<'a> = dynamic typeof<'a>
 
   let boolTrue = constant true
   let boolFalse = constant false
@@ -171,8 +175,6 @@ module Expr =
     let or' left right = Et.OrElse(left, right) :> Et
     let and' left right = Et.AndAlso(left, right) :> Et
 
-    let typeIs target typ = Et.TypeIs(target, typ) :> Et
-    
     let is' typ target = Et.TypeIs(target, typ) :> Et
     let isT<'a> = is' typeof<'a> 
 

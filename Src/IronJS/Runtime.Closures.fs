@@ -553,7 +553,7 @@ let createClosureType (types:ClrType seq) =
   let types = Array.ofSeq types
 
   match types.Length with
-  | 0 -> IronJS.Runtime.Closure.TypeDef
+  | 0 -> typeof<Runtime.Closure>
   | 1 -> closure1TypeDef.MakeGenericType(types)
   | 2 -> closure2TypeDef.MakeGenericType(types)
   | 3 -> closure3TypeDef.MakeGenericType(types)

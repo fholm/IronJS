@@ -12,16 +12,37 @@ type JsTypes
   | Integer   = 2
   | Number    = 3   // Double | Integer
 
-  | String    = 4
+  | Boolean   = 4
 
-  | Boolean   = 8
+  | String    = 8
 
   | Object    = 16
   | Function  = 32
   | Array     = 64
 
-  | Dynamic   = 128 // includes null
-  | Undefined = 256
+  | Undefined = 128
+  | Null      = 256
+
+  | Dynamic   = 512
+  
+  // Special combined types to allow us to keep 
+  // strong typing if the only non-typed value is null
+  | StringNull    = 264 // String | Null
+  | ObjectNull    = 272 // Object | Null
+  | FunctionNull  = 288 // Function | Null
+  | ArrayNull     = 320 // Array | Null
+  | UndefinedNull = 384 // Undefined | Null
+
+  // Special combined types for JavaScript objects
+  // to allow strong typing as Runtime.Object
+  | ObjFuncArr      = 112 // Object | Function | Array
+  | ObjFuncArrNull  = 368 // Object | Function | Array | Null
+  | ObjArr          = 80  // Object | Array
+  | ObjArrNull      = 336 // Object | Array | Null
+  | ObjFunc         = 48  // Object | Function
+  | ObjFuncNull     = 304 // Object | Function | Null
+  | ArrFunc         = 96  // Array | Function
+  | ArrFuncNull     = 352 // Array | Function | Null
 
 type BinaryOp 
   = Lt
@@ -100,12 +121,12 @@ type Local = {
   AssignedFrom: Node list
 } with
   member x.IsParameter    = x.Flags.Contains LocalFlags.Parameter
-  member x.ClosedOver     = x.Flags.Contains LocalFlags.ClosedOver
+  member x.IsClosedOver   = x.Flags.Contains LocalFlags.ClosedOver
   member x.InitUndefined  = x.Flags.Contains LocalFlags.InitToUndefined
   member x.TypeResolved   = x.Flags.Contains LocalFlags.TypeResolved
   member x.NeedsProxy     = x.Flags.Contains LocalFlags.NeedProxy
   member x.IsDynamic      = x.UsedAs = JsTypes.Dynamic || not (System.Enum.IsDefined(typeof<JsTypes>, x.UsedAs))
-  member x.ReadOnly       =    x.UsedWith.Count        = 0 
+  member x.IsReadOnly     =    x.UsedWith.Count        = 0 
                             && x.UsedWithClosure.Count = 0 
                             && x.AssignedFrom.Length   = 0
 

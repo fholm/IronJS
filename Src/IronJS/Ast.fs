@@ -8,6 +8,8 @@ open IronJS.Ast
 open IronJS.Ast.Utils
 open IronJS.Parser
 
+open Antlr.Runtime
+
 module Core = 
 
   let rec private parse (t:AstTree) = state {
@@ -97,32 +99,30 @@ module Core =
     return Assign(l, r)}
 
   and private parseFunction t = state {
-    if isAnonymous t then
-      do! enterScope (childrenOf t 0)
-      let! body  = parse (child t 1)
-      let! scope = exitScope()
-      let! s = getState
+    let isAnon = isAnonymous t
+    let bodyChild = if isAnon then 1 else 2
+    let argsChild = if isAnon then 0 else 1
 
-      let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
-      s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
+    let! s = getState
+    do! setState (if isAnon then s else (createVar2 (child t 0).Text false s))
 
-      do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
-      return Function(s.FunctionMap.Count-1)
-    else
-      do! createVar (child t 0).Text false
-      let! name = parse (child t 0)
-      do! enterScope (childrenOf t 1)
-      let! body  = parse (child t 2)
-      let! scope = exitScope()
-      let! s = getState
-      
-      let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
-      s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
+    do! enterScope (childrenOf t argsChild)
+    let! body = parse (child t bodyChild)
+    let! scope = exitScope()
+    let! s = getState
 
-      do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
-      let func = Function(s.FunctionMap.Count-1)
-      do! Analyzer.assign name func
-      return Assign(name, func)}
+    let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
+    s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
+    
+    do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
+    let func = Function(s.FunctionMap.Count-1)
+
+    if isAnon 
+      then return func
+      else
+        let! name = parse (child t 0)
+        do! Analyzer.assign name func
+        return Assign(name, func)}
 
   and private parseWith t = state {
     let! obj = parse (child t 0)
@@ -138,28 +138,18 @@ module Core =
         else return Number(double t.Text) 
     }
     
-  and private parseReturn  t = state { 
-    let! value = parse (child t 0)
-
-    let rec replaceLast n =
-      match n with
-      | [] -> failwith "Meep"
-      | x::[] -> [Return(x)]
-      | x::xs -> x :: replaceLast xs
-
-    match value with
-    | Block(nodes) -> 
-      match nodes.[nodes.Length-1] with
-      | Invoke(_, _) -> return Block(replaceLast nodes)
-      | _ -> return failwith "Invalid AST"
-    | _ -> return Return(value)}
-
+  and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
   and private parsePossibleNull t = state{if t = null then return Null else return! parse t}
   and private parseByField t = state { let! target = parse (child t 0) in return Property(target, (child t 1).Text) }
   and private parseBlock   t = state { let! lst = parseList (children t) in return Block(lst) }
   and private parseObject  t = state { return (if t.Children = null then Object(None) else Error("No supported")) }
   and private parseString  t = state { return String(cleanString t.Text) }
 
-  let parseAst (ast:AstTree) scope funcMap = 
-     let ast, state = executeState (parse ast) {ParserState.New with ScopeChain = [scope]; FunctionMap = funcMap}
-     state.ScopeChain.[0], ast
+  let parseAst (ast:AstTree) scope funcMap =  
+    let ast, state = executeState (parse ast) {ParserState.New with ScopeChain = [scope]; FunctionMap = funcMap}
+    state.ScopeChain.[0], ast
+
+  let parseFile funcMap (fileName:string) =
+    let jsLexer = new ES3Lexer(new ANTLRFileStream(fileName))
+    let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
+    parseAst ((jsParser.program().Tree) :?> AstTree) Ast.Scope.Global funcMap

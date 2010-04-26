@@ -105,6 +105,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Closure : Closure
   val mutable AstId : int
   val mutable ClosureId : int
+  [<DefaultValue>] val mutable ReturnBox : Box
 
   new(astId, closureId, closure, env) = { 
     inherit Object(env)
@@ -124,7 +125,6 @@ type InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable ClosureId : int
   val mutable Delegate : 'a
   val mutable ArgTypes : ClrType list
-  [<DefaultValue>] val mutable VoidBox : Box
 
   new(argTypes) = {
     AstId = -1

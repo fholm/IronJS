@@ -34,7 +34,8 @@ module Expr =
     if Seq.length exprs = 0 then empty else Et.Block(parms, exprs) :> Et
 
   let block exprs = blockWithLocals [] exprs
-  let blockWithTmp fn typ = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
+  let blockTmp typ (fn:EtParam -> Et list) = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
+  let blockTmpT<'a> = blockTmp typeof<'a>
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et

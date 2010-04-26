@@ -19,19 +19,10 @@ let genericArguments (typ:ClrType) =
 let genericArgumentN (typ:ClrType) n = (genericArguments typ).[n]
 
 let getCtor (typ:ClrType) (args:ClrType list) =
-  let rec matchArgs args (parms:ParmInfo list) = 
-    match args with
-    | []      -> true
-    | xA::xsA -> match parms with
-                 | []      -> failwith "Should never happen"
-                 | xP::xsP -> if xP.ParameterType.IsAssignableFrom(xA)
-                                then matchArgs xsA xsP
-                                else false
-
   Array.find (fun (ctor:CtorInfo) ->
     let parms = List.ofArray (ctor.GetParameters())
     if args.Length = parms.Length 
-      then matchArgs args parms 
+      then Seq.forall2 (fun a (p:ParmInfo) -> p.ParameterType.IsAssignableFrom a) args parms
       else false
   ) (typ.GetConstructors())
 

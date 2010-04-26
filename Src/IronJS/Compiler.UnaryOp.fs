@@ -10,12 +10,12 @@ module UnaryOp =
   let private buildPreInc (ctx:Context) (target:Ast.Node) = 
     let expr = ctx.Builder ctx target
     if expr.Type = Constants.clrInt32 then
-      Dlr.Expr.blockWithTmp (fun tmp -> 
+      Dlr.Expr.blockTmp expr.Type (fun tmp -> 
       [
         (Dlr.Expr.assign tmp expr)
         (Assign.build ctx target (Ast.Quote(Dlr.Expr.Math.add tmp Dlr.Expr.Math.int1)))
         (tmp)
-      ]) expr.Type 
+      ])
     else
       failwith "Not supported"
   

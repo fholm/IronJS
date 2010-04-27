@@ -85,7 +85,6 @@
     <Compile Include="Attributes.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="Monads.fs" />
-    <Compile Include="Constants.fs" />
     <Compile Include="Aliases.fs" />
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Tools.Dlr.Expr.fs" />
@@ -106,14 +105,15 @@
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
-    <Compile Include="Compiler.Utils.Box.fs" />
     <Compile Include="Compiler.Utils.Type.fs" />
-    <Compile Include="Compiler.Variables.fs" />
+    <Compile Include="Compiler.Utils.Box.fs" />
+    <Compile Include="Compiler.Utils.Assign.fs" />
     <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.CallSites.fs" />
+    <Compile Include="Compiler.Variables.fs" />
     <Compile Include="Compiler.DynamicScope.fs" />
-    <Compile Include="Compiler.Function.fs" />
     <Compile Include="Compiler.Assign.fs" />
+    <Compile Include="Compiler.Function.fs" />
     <Compile Include="Compiler.Loops.fs" />
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.UnaryOp.fs" />

@@ -8,13 +8,13 @@ open IronJS.Compiler
 
 #nowarn "25"
 
-let private (|Parameter|Local|) (input:Ast.Local) = 
-  if Set.contains IronJS.Ast.LocalFlags.Parameter input.Flags then Parameter else Local
-
-let private (|NeedProxy|Not|) (input:Ast.Local) =
-  if Set.contains IronJS.Ast.LocalFlags.NeedProxy input.Flags then NeedProxy else Not
-
 let private buildVarsMap (scope:Ast.Scope) =
+
+  let (|Parameter|Local|) (input:Ast.Local) = 
+    if input.IsParameter then Parameter else Local
+
+  let (|NeedProxy|Not|) (input:Ast.Local) =
+    if input.NeedsProxy then NeedProxy else Not
 
   let createVar (l:Ast.Local) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
@@ -123,7 +123,7 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       |> Seq.filter (fun l -> l.InitUndefined)
       |> Seq.map (fun l -> 
            let expr = ctx.LocalExpr l.Name
-           Assign.value expr Runtime.Undefined.InstanceExpr
+           Utils.Assign.value expr Runtime.Undefined.InstanceExpr
          )
       #if DEBUG
       |> Seq.toArray

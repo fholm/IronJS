@@ -87,10 +87,10 @@ module DynamicScope =
     let tmp = Dlr.Expr.param "~tmp" value.Type
     let setArgs = [Dlr.Expr.constant name; Js.box tmp; ctx.LocalScopesExpr]
     Dlr.Expr.blockWithLocals [tmp] [
-        (Dlr.Expr.assign tmp value)
-        (Dlr.Expr.Flow.ternary
-          (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Set" setArgs)
-          (tmp)
-          (Variables.Local.assign ctx name tmp)
-        )
-      ]
+      (Dlr.Expr.assign tmp value)
+      (Dlr.Expr.Flow.ternary
+        (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Set" setArgs)
+        (tmp)
+        (Variables.Local.assign ctx name tmp)
+      )
+    ]

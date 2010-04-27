@@ -89,23 +89,5 @@ module Type =
     | _                     -> jsToClr (normalizeJsType typ)
 
   (*Gets the inner type of a strongbox Type object*)
-  let internal strongBoxInnerType typ = Type.genericArgumentN typ 0
-
-  let assign (left:Et) (right:Et) =
-    let assign (left:Et) (right:Et) =
-      if left.Type = typeof<Runtime.Box> then
-        if right.Type = typeof<Runtime.Box> then
-          Dlr.Expr.assign left right
-        else
-          if right.Type = typeof<Runtime.Function> && right :? System.Linq.Expressions.BlockExpression then
-            Dlr.Expr.assign left (Dlr.Expr.field right "ReturnBox")
-          else
-            let typeCode = Utils.Box.typeCode right.Type
-            Dlr.Expr.block [
-              Dlr.Expr.assign (Utils.Box.fieldByTypeCode left typeCode) right
-              Dlr.Expr.assign (Dlr.Expr.field left "Type") (Dlr.Expr.constant typeCode)
-            ]
-      else
-        Dlr.Expr.assign left (if left.Type = right.Type then right else Dlr.Expr.cast left.Type right)
-
-    if Js.isStrongBox left.Type then assign (Dlr.Expr.field left "Value") right else assign left right
+  let internal strongBoxInnerType typ = 
+    Type.genericArgumentN typ 0

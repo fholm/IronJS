@@ -4,39 +4,32 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
+open IronJS.Compiler
 
 module Box =
-
-  let (|Bool|Double|Int|Other|Function|Object|String|) input =
-    if input   = TypeCodes.bool       then Bool
-    elif input = TypeCodes.int        then Int
-    elif input = TypeCodes.double     then Double
-    elif input = TypeCodes.string     then String
-    elif input = TypeCodes.object'    then Object
-    elif input = TypeCodes.function'  then Function
-                                      else Other
   
   let isWrapped (expr:Et) = 
     expr.Type = typeof<Runtime.Box>
 
   let typeCode (typ:ClrType) =
-    if    typ = typeof<double>            then TypeCodes.double
-    elif  typ = typeof<bool>              then TypeCodes.bool
-    elif  typ = typeof<int>               then TypeCodes.int
-    elif  typ = typeof<string>            then TypeCodes.string
-    elif  typ = typeof<Runtime.Object>    then TypeCodes.object'
-    elif  typ = typeof<Runtime.Function>  then TypeCodes.function'
-                                          else TypeCodes.clr
+    Utils.Type.clrToJs typ
 
   let fieldByTypeCode (expr:Et) typeCode = 
     match typeCode with
-    | Bool      -> Expr.field expr "Bool"
-    | Int       -> Expr.field expr "Int"
-    | Double    -> Expr.field expr "Double"
-    | String    -> Expr.field expr "Clr"
-    | Object    -> Expr.field expr "Clr"
-    | Function  -> Expr.field expr "Clr"
-    | Other     -> Expr.field expr "Clr"
+    | Ast.JsTypes.Boolean   -> Expr.field expr "Bool"
+
+    #if ONLY_DOUBLE
+    | Ast.JsTypes.Double    -> Expr.field expr "Double"
+    #else
+    | Ast.JsTypes.Double    -> Expr.field expr "Double"
+    | Ast.JsTypes.Integer   -> Expr.field expr "Int"
+    #endif
+    
+    | Ast.JsTypes.String    -> Expr.field expr "Clr"
+    | Ast.JsTypes.Object    -> Expr.field expr "Clr"
+    | Ast.JsTypes.Function  -> Expr.field expr "Clr"
+    | Ast.JsTypes.Array     -> Expr.field expr "Clr"
+    | _ -> failwith "Invalid js type: '%A'" typeCode
 
   let assign (left:Et) (right:Et) =
 

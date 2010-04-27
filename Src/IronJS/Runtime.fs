@@ -35,12 +35,12 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(8)>]  val mutable Bool   : bool
     [<FieldOffset(8)>]  val mutable Int    : int32
     [<FieldOffset(8)>]  val mutable Double : double
-    [<FieldOffset(16)>] val mutable Type   : int32
+    [<FieldOffset(16)>] val mutable Type   : Ast.JsTypes
     #else // X86
     [<FieldOffset(4)>]  val mutable Bool   : bool
     [<FieldOffset(4)>]  val mutable Int    : int32
     [<FieldOffset(4)>]  val mutable Double : double
-    [<FieldOffset(12)>] val mutable Type   : int32
+    [<FieldOffset(12)>] val mutable Type   : Ast.JsTypes
     #endif
   end
 

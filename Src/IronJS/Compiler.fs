@@ -6,13 +6,13 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 
-type private F = IronJS.Ast.LocalFlags
+#nowarn "25"
 
 let private (|Parameter|Local|) (input:Ast.Local) = 
-  if Set.contains F.Parameter input.Flags then Parameter else Local
+  if Set.contains IronJS.Ast.LocalFlags.Parameter input.Flags then Parameter else Local
 
 let private (|NeedProxy|Not|) (input:Ast.Local) =
-  if Set.contains F.NeedProxy input.Flags then NeedProxy else Not
+  if Set.contains IronJS.Ast.LocalFlags.NeedProxy input.Flags then NeedProxy else Not
 
 let private buildVarsMap (scope:Ast.Scope) =
 

@@ -28,10 +28,10 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants>ONLY_DOUBLE; FAST_CAST; X64</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
+    <OtherFlags>--debug-</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,8 +51,10 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>ONLY_DOUBLE; FAST_CAST</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <PlatformTarget>x86</PlatformTarget>
+    <OtherFlags>--debug-</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>

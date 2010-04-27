@@ -121,12 +121,8 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
       |> Seq.filter (fun l -> l.InitUndefined)
-      |> Seq.map (fun l -> ctx.Locals.[l.Name])
-      |> Seq.map (fun v -> 
-           let expr = match v with
-                      | Expr(expr) -> expr
-                      | Variable(p, _) -> p:>Et
-                      | _ -> failwith "Que?"
+      |> Seq.map (fun l -> 
+           let expr = ctx.LocalExpr l.Name
            Assign.value expr Runtime.Undefined.InstanceExpr
          )
       #if DEBUG

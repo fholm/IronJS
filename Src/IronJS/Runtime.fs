@@ -24,7 +24,7 @@ type IEnvironment() =
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
-    [<FieldOffset(0)>] val mutable Clr    : obj
+    [<FieldOffset(0)>] val mutable Clr    : obj 
 
     #if FAST_CAST
     [<FieldOffset(0)>] val mutable Object : Object
@@ -32,15 +32,15 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     #endif
 
     #if X64
-    [<FieldOffset(8)>] val mutable Bool   : bool
-    [<FieldOffset(8)>] val mutable Int    : int32
-    [<FieldOffset(8)>] val mutable Double : double
-    [<FieldOffset(16)>] val mutable Type  : int32
+    [<FieldOffset(8)>]  val mutable Bool   : bool
+    [<FieldOffset(8)>]  val mutable Int    : int32
+    [<FieldOffset(8)>]  val mutable Double : double
+    [<FieldOffset(16)>] val mutable Type   : int32
     #else // X86
-    [<FieldOffset(4)>] val mutable Bool   : bool
-    [<FieldOffset(4)>] val mutable Int    : int32
-    [<FieldOffset(4)>] val mutable Double : double
-    [<FieldOffset(12)>] val mutable Type  : int32
+    [<FieldOffset(4)>]  val mutable Bool   : bool
+    [<FieldOffset(4)>]  val mutable Int    : int32
+    [<FieldOffset(4)>]  val mutable Double : double
+    [<FieldOffset(12)>] val mutable Type   : int32
     #endif
   end
 
@@ -61,12 +61,6 @@ and [<AllowNullLiteral>] Object =
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
-
-(*Class representing the javascript Undefined type*)
-and Undefined() =
-  static let instance = Undefined()
-  static member Instance = instance
-  static member InstanceExpr = Dlr.Expr.constant instance
 
 (*DLR meta object for the above Object class*)
 and ObjectMeta(expr, jsObj:Object) =
@@ -126,19 +120,3 @@ and [<AllowNullLiteral>] Function =
 
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
-
-type InvokeCache<'a> when 'a :> Delegate and 'a : null =
-  val mutable AstId : int
-  val mutable ClosureId : int
-  val mutable Delegate : 'a
-  val mutable ArgTypes : ClrType list
-
-  new(argTypes) = {
-    AstId = -1
-    ClosureId = -1
-    Delegate = null
-    ArgTypes = argTypes
-  }
-
-  member x.Update (fnc:Function) =
-    x.Delegate <- fnc.Compile<'a>(x.ArgTypes)

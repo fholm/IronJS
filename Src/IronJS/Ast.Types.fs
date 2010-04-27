@@ -18,7 +18,6 @@ type JsTypes
   #endif
 
   | Boolean   = 4
-
   | String    = 8
 
   | Object    = 16

@@ -21,6 +21,7 @@
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
 #load "Runtime.fs"
+#load "Runtime.Support.fs"
 #load "Runtime.Delegate.fs"
 #load "Runtime.Environment.fs"
 #load "Runtime.Utils.fs"

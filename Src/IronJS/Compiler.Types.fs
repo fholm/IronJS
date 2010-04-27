@@ -28,11 +28,10 @@ type Context = {
   Locals: Map<string, Var>
   Builder: Context -> Ast.Node -> Et
   TemporaryTypes: SafeDict<string, ClrType>
-  Env: Runtime.IEnvironment
+  Environment: Runtime.IEnvironment
 } with
   member x.Builder2         = x.Builder x
-  member x.ReturnBox        = Dlr.Expr.field x.Function "ReturnBox"
-  member x.Environment      = Dlr.Expr.field x.Function "Environment"
+  member x.EnvironmentExpr  = Dlr.Expr.field x.Function "Environment"
   member x.ClosureScopes    = Dlr.Expr.field x.Closure "Scopes"
   member x.LocalScopesExpr  = if x.Scope.Flags.Contains Ast.ScopeFlags.HasDS 
                                 then x.LocalScopes :> Et 
@@ -60,5 +59,5 @@ type Context = {
     Locals = Map.empty
     Builder = fun x a -> Dlr.Expr.null'
     TemporaryTypes = null
-    Env = null
+    Environment = null
   }

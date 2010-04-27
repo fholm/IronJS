@@ -26,8 +26,8 @@ type private DelegateCell(func:Function, delegateType:ClrType) =
     | _ -> false
 
 (*The currently executing environment*)
-and Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
-                 exprGenerator:IEnvironment -> ClrType -> ClrType -> Ast.Scope -> Ast.Node -> EtLambda) =
+type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
+                  exprGenerator:IEnvironment -> ClrType -> ClrType -> Ast.Scope -> Ast.Node -> EtLambda) =
 
   inherit IEnvironment()
 
@@ -53,12 +53,12 @@ and Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope
   //Implementation of IEnvironment.GetClosureId
   override x.GetClosureId clrType = 
     let success, id = closureMap.TryGetValue clrType
-    if success then id
-    else
-      closureMap.GetOrAdd(clrType, closureMap.Count)
+    if success 
+      then id
+      else closureMap.GetOrAdd(clrType, closureMap.Count)
 
   //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
-    (env :> IEnvironment).Globals <- new Object(env)
+    env.Globals <- new Object(env)
     env

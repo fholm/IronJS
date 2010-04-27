@@ -12,4 +12,4 @@ module Object =
   let create (ctx:Context) properties =
     match properties with
     | Some(_) -> failwith "Objects with auto-properties not supported"
-    | None    -> Dlr.Expr.newArgs typeof<Runtime.Object> [ctx.Environment]
+    | None    -> Dlr.Expr.newArgs typeof<Runtime.Object> [ctx.EnvironmentExpr]

@@ -74,12 +74,12 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       Scope = scope
       Builder = Compiler.ExprGen.builder
       TemporaryTypes = new SafeDict<string, ClrType>()
-      Env = env
+      Environment = env
       Locals = buildVarsMap scope
   }
 
   let initGlobals = 
-    let field = Expr.field ctx.Environment "Globals"
+    let field = Expr.field ctx.EnvironmentExpr "Globals"
     Expr.assign ctx.Globals field
 
   let initClosure = 

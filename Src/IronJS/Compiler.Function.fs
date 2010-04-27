@@ -50,13 +50,13 @@ module Function =
 
   (*Defines a new function*)
   let internal definition (ctx:Context) astId =
-    let scope, _ = ctx.Env.AstMap.[astId]
+    let scope, _ = ctx.Environment.AstMap.[astId]
     let closureExpr = Closure.create ctx scope
     let functionArgs = [
       Expr.constant astId
-      Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
+      Expr.constant (ctx.Environment.GetClosureId (closureExpr.Type))
       closureExpr
-      ctx.Environment
+      ctx.EnvironmentExpr
     ]
 
     Expr.newArgs typeof<Runtime.Function> functionArgs

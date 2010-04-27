@@ -77,3 +77,42 @@ let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
 let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
 let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
+
+let ex = Expr.paramT<Exception> "~ex"
+let ctc = Et.Catch(ex, Expr.empty)
+
+let bodyExn = 
+  (Expr.block [
+    Et.TryCatch(Expr.empty, [|ctc|])
+  ])
+
+let testLmb = Expr.lambda typeof<Action> [] bodyExn
+let testExn = testLmb.Compile() :?> Action
+
+let testEmp = (Expr.lambda typeof<Action> [] Expr.empty).Compile() :?> Action
+
+testExn.Invoke()
+testEmp.Invoke()
+
+let i = Expr.paramT<int> "~i"
+let init = Expr.assign i Expr.Math.int1
+let test = Expr.Logic.lt i (Expr.constant 10000000)
+let incr = Expr.Math.addAsn i Expr.Math.int1
+let body = 
+  (Expr.block [
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+    Expr.invoke (Expr.constant testExn) []
+  ])
+
+let loop = Expr.Flow.for' init test incr body
+let testAct = (Expr.lambda typeof<Action> [] (Expr.blockWithLocals [i] [loop])).Compile() :?> Action
+
+Utils.time(fun() -> testAct.Invoke())

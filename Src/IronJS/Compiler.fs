@@ -132,7 +132,7 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       #if DEBUG
       |> Seq.toArray
       #endif
-    
+
   (*Assemble the function body expression*)
   let body = 
     (ctx.Builder2 ast :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
@@ -145,6 +145,16 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       |> Seq.toArray
       |> fun x -> Expr.block x
       #endif
+    
+  (*
+  let ex = Expr.paramT<System.Exception> "~ex"
+  let ctc = Et.Catch(ex, Expr.typeDefault<Runtime.Box>)
+
+  let body = 
+    (Expr.block [
+      Et.TryCatch(Expr.block body, [|ctc|])
+    ])
+  *)
 
   (*Resolve all locals that are parameters*)
   let parms  = 
@@ -171,6 +181,7 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
   #if DEBUG
   let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars [body])
   #else
+  //let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars [body])
   let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars body)
   #endif
 

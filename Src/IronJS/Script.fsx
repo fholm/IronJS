@@ -22,7 +22,6 @@
 #load "Runtime.fs"
 #load "Runtime.Support.fs"
 #load "Runtime.Delegate.fs"
-#load "Runtime.Environment.fs"
 #load "Runtime.Utils.fs"
 #load "Runtime.Helpers.Variables.fs"
 #load "Runtime.Helpers.Function.fs"

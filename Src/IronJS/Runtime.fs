@@ -21,10 +21,23 @@ type IEnvironment() =
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     [<FieldOffset(0)>]  val mutable Clr    : obj
+
+    #if FAST_CAST
+    [<FieldOffset(0)>]  val mutable Object : Object
+    [<FieldOffset(0)>]  val mutable Func   : Function
+    #endif
+
+    #if X64
     [<FieldOffset(8)>]  val mutable Bool   : bool
     [<FieldOffset(8)>]  val mutable Int    : int32
     [<FieldOffset(8)>]  val mutable Double : double
     [<FieldOffset(16)>] val mutable Type   : int32
+    #else // X86
+    [<FieldOffset(4)>]  val mutable Bool   : bool
+    [<FieldOffset(4)>]  val mutable Int    : int32
+    [<FieldOffset(4)>]  val mutable Double : double
+    [<FieldOffset(12)>] val mutable Type   : int32
+    #endif
   end
 
 (*Class representing a Javascript native object*)

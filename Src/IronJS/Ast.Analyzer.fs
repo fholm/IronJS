@@ -13,7 +13,8 @@ module Analyzer =
     | Number(_) -> JsTypes.Double
     | Integer(_) -> JsTypes.Integer
     | String(_) -> JsTypes.String 
-    | Function(_) -> JsTypes.Object
+    | Boolean(_) -> JsTypes.Boolean
+    | Function(_) -> JsTypes.Function
     | Object(_) -> JsTypes.Object
     | _ -> JsTypes.Dynamic
   

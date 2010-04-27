@@ -2,7 +2,6 @@
 
 open IronJS
 open IronJS.Aliases
-open Antlr.Runtime.Tree
 open System.Diagnostics
 
 type JsTypes 
@@ -52,10 +51,15 @@ type BinaryOp
   | Eq
   | NotEq
   | Add
+  | AddAsn
   | Sub
+  | SubAsn
   | Mul
+  | MulAsn
   | Div
+  | DivAsn
   | Mod
+  | ModAsn
 
 type UnaryOp 
   = PreInc

@@ -11,25 +11,48 @@ module Box =
   let isWrapped (expr:Et) = 
     expr.Type = typeof<Runtime.Box>
 
-  let typeCode (typ:ClrType) =
-    Utils.Type.clrToJs typ
-
-  let fieldByTypeCode (expr:Et) typeCode = 
+  let fieldByJsType (expr:Et) typeCode = 
     match typeCode with
     | Ast.JsTypes.Boolean   -> Expr.field expr "Bool"
-
-    #if ONLY_DOUBLE
-    | Ast.JsTypes.Double    -> Expr.field expr "Double"
-    #else
     | Ast.JsTypes.Double    -> Expr.field expr "Double"
     | Ast.JsTypes.Integer   -> Expr.field expr "Int"
-    #endif
-    
+
+    | Ast.JsTypes.Clr
+    | Ast.JsTypes.Null
+    | Ast.JsTypes.Undefined -> Expr.field expr "Clr"
+
+    #if FAST_CAST
+    | Ast.JsTypes.String    -> Expr.field expr "String"
+    | Ast.JsTypes.Object    -> Expr.field expr "Object"
+    | Ast.JsTypes.Function  -> Expr.field expr "Func"
+    | Ast.JsTypes.Array     -> Expr.field expr "Array"
+    #else
     | Ast.JsTypes.String    -> Expr.field expr "Clr"
     | Ast.JsTypes.Object    -> Expr.field expr "Clr"
     | Ast.JsTypes.Function  -> Expr.field expr "Clr"
     | Ast.JsTypes.Array     -> Expr.field expr "Clr"
+    #endif
+
     | _ -> failwith "Invalid js type: '%A'" typeCode
+
+  let fieldByClrType (expr:Et) typ = 
+    fieldByJsType expr (Utils.Type.clrToJs typ)
+
+  let fieldByClrTypeT<'a> (expr:Et) = 
+    fieldByJsType expr (Utils.Type.clrToJs typeof<'a>)
+
+  let typeField (target:Et) =
+    Expr.field target "Type"
+
+  let setType (target:Et) (typ:ClrType)  = 
+    Expr.assign (typeField target) (Expr.constant (Utils.Type.clrToJs typ))
+
+  let setTypeT<'a> target = 
+    setType target typeof<'a>
+
+  let setValue (target:Et) (value:Et) =
+    let jsType = Utils.Type.clrToJs value.Type
+    Expr.assign (fieldByJsType target jsType) value
 
   let assign (left:Et) (right:Et) =
 
@@ -37,11 +60,7 @@ module Box =
       failwith "Left expression is not a Runtime.Box"
     
     let assignValueTo (left:Et) =
-      let typeCode = typeCode right.Type
-      Expr.block [
-        Expr.assign (fieldByTypeCode left typeCode) right
-        Expr.assign (Expr.field left "Type") (Expr.constant typeCode)
-      ]
+      Expr.block [setValue left right; setType left right.Type]
 
     if right.Type = typeof<Runtime.Box> 
       then Expr.assign left right
@@ -50,11 +69,6 @@ module Box =
   let wrap (expr:Et) =
     if isWrapped expr then expr 
     else
-      let typeCode = typeCode expr.Type
-      Expr.blockTmpT<Runtime.Box> (fun tmp -> 
-        [
-          Expr.assign tmp Expr.newT<Runtime.Box>
-          Expr.assign (fieldByTypeCode tmp typeCode) expr
-          Expr.assign (Expr.field tmp "Type") (Expr.constant typeCode)
-          tmp
-        ])
+      Expr.blockTmpT<Runtime.Box> (
+        fun tmp -> [setValue tmp expr; setType tmp expr.Type; tmp]
+      )

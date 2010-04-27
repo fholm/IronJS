@@ -9,13 +9,8 @@ type JsTypes
   = Nothing   = 0   // NOT null
 
   | Double    = 1
-  #if ONLY_DOUBLE
-  | Integer   = 1
-  | Number    = 1
-  #else
   | Integer   = 2
   | Number    = 3   // Double | Integer
-  #endif
 
   | Boolean   = 4
   | String    = 8

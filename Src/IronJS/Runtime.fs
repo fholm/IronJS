@@ -29,6 +29,7 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     #if FAST_CAST
     [<FieldOffset(0)>] val mutable Object : Object
     [<FieldOffset(0)>] val mutable Func   : Function
+    [<FieldOffset(0)>] val mutable String : string
     #endif
 
     #if X64

@@ -43,14 +43,14 @@ module ExprGen =
       if Utils.Box.isWrapped value 
         then Expr.makeReturn ctx.Return value
         else
-          let typCode = Utils.Box.typeCode value.Type
-          Expr.blockTmpT<Runtime.Box> (fun tmp -> 
-          [
-            Expr.assign (Expr.field tmp "Type") (Expr.constant typCode)
-            Expr.assign (Utils.Box.fieldByTypeCode tmp typCode) value
-            tmp
-            Expr.makeReturn ctx.Return tmp
-          ])
+          Expr.blockTmpT<Runtime.Box> (
+            fun tmp -> 
+            [
+              Utils.Box.setValue tmp value
+              Utils.Box.setType  tmp value.Type
+              Expr.makeReturn ctx.Return tmp
+            ]
+          )
 
     //Loops
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

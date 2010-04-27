@@ -1,7 +1,7 @@
 Src/IronJS/obj/**/*
 Src/IronJS/bin/**/*
-Src/IronJS.Dev/obj/**/*
-Src/IronJS.Dev/bin/**/*
+Src/IronJS.Console/obj/**/*
+Src/IronJS.Console/bin/**/*
 Src/IronJS.Parser/obj/**/*
 Src/IronJS.Parser/bin/**/*
 Src/IronJS.Benchmarks/**/*

@@ -58,7 +58,7 @@ module ExprGen =
     //
     | Ast.Block(nodes)                -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
     | Ast.DynamicScope(target, body)  -> DynamicScope.wrapInScope ctx target body
-    | Ast.BinaryOp(left, op, right)   -> BinaryOp.build ctx left op right
+    | Ast.BinaryOp(op, left, right)   -> BinaryOp.build ctx left op right
     | Ast.UnaryOp(op, target)         -> UnaryOp.build ctx op target
 
     //

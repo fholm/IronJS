@@ -46,32 +46,27 @@ module Core =
     | x::xs -> let! x' = parse x in let! xs' = parseList xs in return x' :: xs'}
 
   and private parseExpr t = state {
-      return! parse (child t 0)
-    }
+    return! parse (child t 0)}
 
   and private parseInc t = state {
-      let! target = parse (child t 0)
-      return Assign(target, BinaryOp(target, BinaryOp.Add, Integer(1)))
-    }
+    let! target = parse (child t 0)
+    return Assign(target, BinaryOp(Add, target, intAsNode 1))}
 
   and private parsePInc t = state {
-      let! target = parse (child t 0)
-      return UnaryOp(PreInc, target)
-    }
+    let! target = parse (child t 0)
+    return UnaryOp(PreInc, target)}
 
   and private parseBinary t op = state {
-      let! left = parse (child t 0)
-      let! right = parse (child t 1)
-      return BinaryOp(left, op, right)
-    }
+    let! left = parse (child t 0)
+    let! right = parse (child t 1)
+    return BinaryOp(op, left, right)}
 
   and private parseForStep head body = state{
-      let! init = parse (child head 0)
-      let! test = parse (child head 1)
-      let! incr = parse (child head 2)
-      let! body = parsePossibleNull body
-      return ForIter(init, test, incr, body)
-    }
+    let! init = parse (child head 0)
+    let! test = parse (child head 1)
+    let! incr = parse (child head 2)
+    let! body = parsePossibleNull body
+    return ForIter(init, test, incr, body)}
 
   and private parseFor t = state {
     let c0 = (child t 0)
@@ -131,12 +126,8 @@ module Core =
     do! exitDynamicScope
     return DynamicScope(obj, block)}
 
-  and private parseNumber  t = state { 
-      let success, result = System.Int32.TryParse(t.Text)
-      if success 
-        then return Integer(result)
-        else return Number(double t.Text) 
-    }
+  and private parseNumber t = state { 
+    return toNumber t.Text}
     
   and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
   and private parsePossibleNull t = state{if t = null then return Null else return! parse t}

@@ -35,6 +35,21 @@ module Utils =
   let internal insideLocalDS (ps:ParserState) =
     ps.LocalDynamicScopeLevels.Head > 0
 
+  let internal intAsNode (i:int) =
+    #if ONLY_DOUBLE
+    Number(double i)
+    #else
+    Integer(i)
+    #endif
+
+  let internal toNumber (s:string) =
+    #if ONLY_DOUBLE
+    Number(double s)
+    #else
+    let success, result = System.Int32.TryParse(s)
+    if success then Integer(result) else Number(double s) 
+    #endif
+
   let internal ct (tree:obj) = tree :?> AstTree
   let internal child (tree:AstTree) index = if tree.ChildCount > index then (ct tree.Children.[index]) else null
   let internal children (tree:AstTree) = Tools.CSharp.toList<AstTree> tree.Children

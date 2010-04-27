@@ -41,7 +41,7 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
   let rec getExprType' expr = 
     match expr with
-    | Ast.BinaryOp(left, op, right) -> 
+    | Ast.BinaryOp(op, left, right) -> 
       match op with
       | Ast.Add -> getExprType' left ||| getExprType' right
       | _ -> failwith "not supported"

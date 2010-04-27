@@ -9,8 +9,13 @@ type JsTypes
   = Nothing   = 0   // NOT null
 
   | Double    = 1
+  #if ONLY_DOUBLE
+  | Integer   = 1
+  | Number    = 1
+  #else
   | Integer   = 2
   | Number    = 3   // Double | Integer
+  #endif
 
   | Boolean   = 4
 
@@ -101,7 +106,7 @@ type Node
   | Return    of Node
   | Object    of Map<string, Node> option
   | Convert   of Node * JsTypes
-  | BinaryOp  of Node * BinaryOp * Node
+  | BinaryOp  of BinaryOp * Node * Node
   | UnaryOp   of UnaryOp * Node
 
 type LocalFlags 

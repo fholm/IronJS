@@ -24,9 +24,15 @@ module Type =
 
   let internal normalizeJsType typ =
     match typ with
+    #if ONLY_DOUBLE
+    | Ast.JsTypes.Number
+    | Ast.JsTypes.Double    
+    | Ast.JsTypes.Integer   -> Ast.JsTypes.Double
+    #else
     | Ast.JsTypes.Number
     | Ast.JsTypes.Double    -> Ast.JsTypes.Double
     | Ast.JsTypes.Integer   -> Ast.JsTypes.Integer
+    #endif
 
     | Ast.JsTypes.Boolean   -> Ast.JsTypes.Boolean
     
@@ -65,8 +71,13 @@ module Type =
   (*Converts a JsType enum to ClrType object*)
   let rec internal jsToClr typ =
     match typ with
+    #if ONLY_DOUBLE
+    | Ast.JsTypes.Double 
+    | Ast.JsTypes.Integer   -> typeof<double>
+    #else
     | Ast.JsTypes.Double    -> typeof<double>
     | Ast.JsTypes.Integer   -> typeof<int>
+    #endif
     | Ast.JsTypes.Boolean   -> typeof<bool>
     | Ast.JsTypes.String    -> typeof<string>
     | Ast.JsTypes.Object    -> typeof<Runtime.Object>

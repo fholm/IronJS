@@ -20,10 +20,10 @@ module Box =
     expr.Type = typeof<Runtime.Box>
 
   let typeCode (typ:ClrType) =
-    if    typ = InterOp.Types.double      then TypeCodes.double
-    elif  typ = InterOp.Types.bool        then TypeCodes.bool
-    elif  typ = InterOp.Types.int         then TypeCodes.int
-    elif  typ = InterOp.Types.string      then TypeCodes.string
+    if    typ = typeof<double>            then TypeCodes.double
+    elif  typ = typeof<bool>              then TypeCodes.bool
+    elif  typ = typeof<int>               then TypeCodes.int
+    elif  typ = typeof<string>            then TypeCodes.string
     elif  typ = typeof<Runtime.Object>    then TypeCodes.object'
     elif  typ = typeof<Runtime.Function>  then TypeCodes.function'
                                           else TypeCodes.clr

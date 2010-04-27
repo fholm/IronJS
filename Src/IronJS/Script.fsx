@@ -20,7 +20,6 @@
 #load "Ast.Utils.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
-#load "InterOp.fs"
 #load "Runtime.fs"
 #load "Runtime.Delegate.fs"
 #load "Runtime.Environment.fs"
@@ -68,7 +67,7 @@ System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects 
 let env = Runtime.Environment.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 let ast = Ast.Core.parseFile env.AstMap "Testing.js"
 
-let globalType = Runtime.Delegate.getFor []
+let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
 let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> (fst ast) (snd ast)
 
 let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>

@@ -69,7 +69,7 @@ module Function =
 
     ctx.TemporaryTypes.Clear()
 
-    let funcType = Runtime.Delegate.getFor (List.map (fun (x:Et) -> x.Type) argExprs)
+    let funcType = Runtime.Delegate.getFor (List.map (fun (x:Et) -> x.Type) argExprs) typeof<Runtime.Box>
     let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
     let cacheConst = Expr.constant cacheInst

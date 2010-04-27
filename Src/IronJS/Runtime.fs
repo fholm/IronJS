@@ -13,30 +13,34 @@ open System.Runtime.InteropServices
 [<AllowNullLiteral>]
 [<AbstractClass>]
 type IEnvironment() =
-    [<DefaultValue>] val mutable Globals : Object
+    (**)
+    [<DefaultValue>] 
+    val mutable Globals : Object
+
+    (*Abstract*)
     abstract GetDelegate : Function -> ClrType -> ClrType list -> System.Delegate
     abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
     abstract GetClosureId : ClrType -> int
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
-    [<FieldOffset(0)>]  val mutable Clr    : obj
+    [<FieldOffset(0)>] val mutable Clr    : obj
 
     #if FAST_CAST
-    [<FieldOffset(0)>]  val mutable Object : Object
-    [<FieldOffset(0)>]  val mutable Func   : Function
+    [<FieldOffset(0)>] val mutable Object : Object
+    [<FieldOffset(0)>] val mutable Func   : Function
     #endif
 
     #if X64
-    [<FieldOffset(8)>]  val mutable Bool   : bool
-    [<FieldOffset(8)>]  val mutable Int    : int32
-    [<FieldOffset(8)>]  val mutable Double : double
-    [<FieldOffset(16)>] val mutable Type   : int32
+    [<FieldOffset(8)>] val mutable Bool   : bool
+    [<FieldOffset(8)>] val mutable Int    : int32
+    [<FieldOffset(8)>] val mutable Double : double
+    [<FieldOffset(16)>] val mutable Type  : int32
     #else // X86
-    [<FieldOffset(4)>]  val mutable Bool   : bool
-    [<FieldOffset(4)>]  val mutable Int    : int32
-    [<FieldOffset(4)>]  val mutable Double : double
-    [<FieldOffset(12)>] val mutable Type   : int32
+    [<FieldOffset(4)>] val mutable Bool   : bool
+    [<FieldOffset(4)>] val mutable Int    : int32
+    [<FieldOffset(4)>] val mutable Double : double
+    [<FieldOffset(12)>] val mutable Type  : int32
     #endif
   end
 
@@ -121,7 +125,7 @@ and [<AllowNullLiteral>] Function =
   }
 
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
-     ((x :> Object).Environment.GetDelegate x typeof<'a> types) :?> 'a
+     (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
 
 type InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable AstId : int

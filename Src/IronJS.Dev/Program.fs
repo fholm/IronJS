@@ -18,7 +18,7 @@ let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
 let program = jsParser.program()
 let ast = Ast.Core.parseAst (program.Tree :?> AstTree) Ast.Scope.Global env.AstMap
 
-let globalType = Runtime.Delegate.getFor []
+let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
 let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> (fst ast) (snd ast)
 
 let compiledFunc = exprTree.Compile()

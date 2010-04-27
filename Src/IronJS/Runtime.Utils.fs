@@ -8,7 +8,8 @@ open IronJS.Runtime
 module Type = 
 
   let isObject (typ:ClrType) = 
-    typ = typeof<Runtime.Object> || typ.IsSubclassOf(typeof<Runtime.Object>)
+       typ = typeof<Runtime.Object> 
+    || typ.IsSubclassOf(typeof<Runtime.Object>)
 
 module Box = 
 

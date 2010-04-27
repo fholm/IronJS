@@ -13,7 +13,7 @@ module UnaryOp =
       Dlr.Expr.blockTmp expr.Type (fun tmp -> 
       [
         (Dlr.Expr.assign tmp expr)
-        (Assign.build ctx target (Ast.Quote(Dlr.Expr.Math.add tmp Dlr.Expr.Math.int1)))
+        (Assign.build ctx target (Ast.Quote(Dlr.Expr.Math.add tmp Dlr.Expr.int1)))
         (tmp)
       ])
     else

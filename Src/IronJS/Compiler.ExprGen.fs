@@ -15,24 +15,30 @@ module ExprGen =
 
     //Variables
     | Ast.Global(name, globalScopeLevel)  -> 
-      (if globalScopeLevel = 0 then Variables.Global.value else DynamicScope.getGlobalValue) ctx name
-
-    | Ast.Local(name, localScopeLevel)    -> 
-      (if localScopeLevel = 0 then Variables.Local.value else DynamicScope.getLocalValue) ctx name
+      if globalScopeLevel = 0 
+        then Variables.Global.value ctx name
+        else DynamicScope.getGlobalValue ctx name
 
     | Ast.Closure(name, globalScopeLevel) -> 
-      (if globalScopeLevel = 0 then Variables.Closure.value else DynamicScope.getClosureValue) ctx name
+      if globalScopeLevel = 0 
+        then Variables.Closure.value ctx name
+        else DynamicScope.getClosureValue ctx name
+
+    | Ast.Local(name, localScopeLevel)    -> 
+      if localScopeLevel = 0 
+        then Variables.Local.value ctx name
+        else DynamicScope.getLocalValue ctx name
 
     //Constants
     | Ast.String(value)   -> Dlr.Expr.constant value
     | Ast.Number(value)   -> Dlr.Expr.constant value
     | Ast.Integer(value)  -> Dlr.Expr.constant value
-    | Ast.Null            -> Dlr.Expr.dynamicDefault
+    | Ast.Null            -> Dlr.Expr.null'
     | Ast.Quote(expr)     -> expr
 
     //Objects
     | Ast.Object(properties)      -> Object.create ctx properties
-    | Ast.Property(target, name)  -> CallSites.getMember (ctx.Builder ctx target) name
+    | Ast.Property(target, name)  -> CallSites.getMember (ctx.Builder2 target) name
 
     //Functions
     | Ast.Function(astId)       -> Function.definition ctx astId
@@ -41,14 +47,14 @@ module ExprGen =
       let value = ctx.Builder2 value
 
       if Utils.Box.isWrapped value 
-        then Expr.makeReturn ctx.Return value
+        then Expr.return' ctx.Return value
         else
           Expr.blockTmpT<Runtime.Box> (
             fun tmp -> 
             [
               Utils.Box.setValue tmp value
               Utils.Box.setType  tmp value.Type
-              Expr.makeReturn ctx.Return tmp
+              Expr.return' ctx.Return tmp
             ]
           )
 
@@ -56,12 +62,12 @@ module ExprGen =
     | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
 
     //
-    | Ast.Block(nodes)                -> Dlr.Expr.block [for node in nodes -> ctx.Builder ctx node]
+    | Ast.Block(nodes)                -> Dlr.Expr.block [for node in nodes -> ctx.Builder2 node]
     | Ast.DynamicScope(target, body)  -> DynamicScope.wrapInScope ctx target body
     | Ast.BinaryOp(op, left, right)   -> BinaryOp.build ctx left op right
     | Ast.UnaryOp(op, target)         -> UnaryOp.build ctx op target
 
     //
-    | Ast.Pass -> Dlr.Expr.empty
+    | Ast.Pass -> Dlr.Expr.void'
     | _        -> failwithf "No builder function defined for %A" ast
 

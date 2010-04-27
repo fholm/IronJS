@@ -17,7 +17,7 @@ let assign (left:Et) (right:Et) =
 
 let box (expr:Et) =
   if expr.Type = typeof<System.Void>
-    then Dlr.Expr.block [expr; Dlr.Expr.dynamicDefault]
+    then Dlr.Expr.block [expr; Dlr.Expr.null']
     else Dlr.Expr.castT<ClrObject> expr
 
 module Object =

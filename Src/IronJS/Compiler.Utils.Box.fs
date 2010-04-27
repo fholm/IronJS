@@ -7,9 +7,6 @@ open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 module Box =
-  
-  let isWrapped (expr:Et) = 
-    expr.Type = typeof<Runtime.Box>
 
   let fieldByJsType (expr:Et) typeCode = 
     match typeCode with
@@ -53,18 +50,17 @@ module Box =
   let setValue (target:Et) (value:Et) =
     let jsType = Utils.Type.clrToJs value.Type
     Expr.assign (fieldByJsType target jsType) value
+  
+  let isWrapped (expr:Et) = 
+    expr.Type = typeof<Runtime.Box>
 
   let assign (left:Et) (right:Et) =
-
     if not (left.Type = typeof<Runtime.Box>) then
       failwith "Left expression is not a Runtime.Box"
-    
-    let assignValueTo (left:Et) =
-      Expr.block [setValue left right; setType left right.Type]
 
     if right.Type = typeof<Runtime.Box> 
       then Expr.assign left right
-      else assignValueTo left
+      else Expr.block [setValue left right; setType left right.Type]
 
   let wrap (expr:Et) =
     if isWrapped expr then expr 

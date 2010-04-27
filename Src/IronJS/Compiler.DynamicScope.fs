@@ -11,10 +11,10 @@ module DynamicScope =
   let enter (ctx:Context) (expr:Et) =
     let target = CallSites.convert<Runtime.Object> expr
     ctx.TemporaryTypes.Clear()
-    Dlr.Expr.call ctx.LocalScopes "Insert" [Dlr.Expr.Math.int0; target]
+    Dlr.Expr.call ctx.LocalScopes "Insert" [Dlr.Expr.int0; target]
     
   let leave (ctx:Context) =
-    Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.Math.int0]
+    Dlr.Expr.call ctx.LocalScopes "RemoveAt" [Dlr.Expr.int0]
 
   let wrapInScope (ctx:Context) target body =
     Dlr.Expr.block [

@@ -7,10 +7,10 @@ open System.Linq.Expressions
 (*Tools for working with DLR expressions*)
 module Expr =
 
-  let empty = AstUtils.Empty() :> Et
-  let makeDefault typ = Et.Default(typ) :> Et
-  let typeDefault<'a> = makeDefault typeof<'a>
-  let dynamicDefault = typeDefault<ClrObject>
+  let void' = AstUtils.Empty() :> Et
+  let default' typ = Et.Default(typ) :> Et
+  let defaultT<'a> = default' typeof<'a>
+  let null' = defaultT<ClrObject>
 
   let var name typ = Et.Variable(typ, name)
   let varT<'a> name = var name typeof<'a>
@@ -23,15 +23,15 @@ module Expr =
   let labelExpr label (typ:ClrType) = Et.Label(label, Et.Default(typ)) :> Et
   let labelExprT<'a> label = labelExpr label typeof<'a>
   let labelExprVal label (value:Et) = Et.Label(label, value) :> Et
-  let labelExprVoid label = labelExprVal label (makeDefault typeof<System.Void>)
-  let dynamicLabelExpr label = Et.Label(label, dynamicDefault) :> Et
+  let labelExprVoid label = labelExprVal label (default' typeof<System.Void>)
+  let dynamicLabelExpr label = Et.Label(label, null') :> Et
   let dynamicLabel = labelT<obj>
 
   let labelBreak() = Et.Label(typeof<System.Void>, "~break")
   let labelContinue() = Et.Label(typeof<System.Void>, "~continue")
 
   let blockWithLocals (parms:EtParam seq) (exprs:Et seq) = 
-    if Seq.length exprs = 0 then empty else Et.Block(parms, exprs) :> Et
+    if Seq.length exprs = 0 then void' else Et.Block(parms, exprs) :> Et
 
   let block exprs = blockWithLocals [] exprs
   let blockTmp typ (fn:EtParam -> Et list) = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
@@ -74,10 +74,8 @@ module Expr =
   let castAsT<'a> = castAs typeof<'a> 
   
   let constant value = Et.Constant(value, value.GetType()) :> Et
-  let makeReturn label (value:Et) = Et.Return(label, value) :> Et
+  let return' label (value:Et) = Et.Return(label, value) :> Et
   let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
-  let arrayIndex (left:Et) (i) = Et.ArrayIndex(left, constant i) :> Et
-  let objIndex (target:Et) (index:Et) = Et.MakeIndex(target, target.Type.GetProperty("Item"), [index])
 
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>
@@ -95,12 +93,13 @@ module Expr =
   let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)    
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
 
-
   let dynamic typ binder (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
   let dynamicT<'a> = dynamic typeof<'a>
 
-  let boolTrue = constant true
-  let boolFalse = constant false
+  let true' = constant true
+  let false' = constant false
+  let int0 = constant 0
+  let int1 = constant 1
 
   module Array =
     let length target = Et.ArrayLength(target)
@@ -162,14 +161,11 @@ module Expr =
     let mod' left right = Et.Modulo(left, right) :> Et
     let modAsn left right = Et.ModuloAssign(left, right) :> Et
 
-    let int0 = constant 0
-    let int1 = constant 1
-
   module Flow =
     let if' test ifTrue = Et.IfThen(test, ifTrue) :> Et
     let ifElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
     let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
-    let for' init test incr body = block [init; AstUtils.Loop(test, incr, body, empty)]
+    let for' init test incr body = block [init; AstUtils.Loop(test, incr, body, void')]
 
   module Logic =
     let or' left right = Et.OrElse(left, right) :> Et

@@ -36,7 +36,7 @@ type Context = {
   member x.ClosureScopes    = Dlr.Expr.field x.Closure "Scopes"
   member x.LocalScopesExpr  = if x.Scope.Flags.Contains Ast.ScopeFlags.HasDS 
                                 then x.LocalScopes :> Et 
-                                else Dlr.Expr.typeDefault<Runtime.Object ResizeArray>
+                                else Dlr.Expr.defaultT<Runtime.Object ResizeArray>
 
   member x.LocalExpr name = 
     match x.Locals.[name] with
@@ -58,7 +58,7 @@ type Context = {
     //Others
     Scope = Ast.Scope.New
     Locals = Map.empty
-    Builder = fun x a -> Dlr.Expr.dynamicDefault
+    Builder = fun x a -> Dlr.Expr.null'
     TemporaryTypes = null
     Env = null
   }

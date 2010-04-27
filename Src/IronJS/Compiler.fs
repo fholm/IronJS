@@ -66,7 +66,7 @@ let private isProxied (_, v:Var) =
   | _ -> false
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
+let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Scope) (ast:Ast.Node) =
 
   let ctx = {
     Context.New with

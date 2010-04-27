@@ -10,17 +10,61 @@ open System.Runtime.InteropServices
 
 #nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
+(*The currently executing environment*)
 [<AllowNullLiteral>]
-[<AbstractClass>]
-type IEnvironment() =
-    (**)
-    [<DefaultValue>] 
-    val mutable Globals : Object
+type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
+                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Scope -> Ast.Node -> EtLambda) =
 
-    (*Abstract*)
-    abstract GetDelegate : Function -> ClrType -> ClrType list -> System.Delegate
-    abstract AstMap : Dict<int, Ast.Scope * Ast.Node>
-    abstract GetClosureId : ClrType -> int
+  [<DefaultValue>] 
+  val mutable Globals : Object
+
+  let astMap = new Dict<int, Ast.Scope * Ast.Node>()
+  let closureMap = new SafeDict<ClrType, int>()
+  let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
+
+  //Implementation of IEnvironment.GetDelegate
+  member x.GetDelegate func delegateType types =
+    let cell = new DelegateCell(func, delegateType)
+    let success, delegate' = delegateCache.TryGetValue(cell)
+    if success then delegate'
+    else
+      let scope, body = astMap.[func.AstId]
+      let closureType = func.Closure.GetType()
+      let lambdaExpr  = exprGenerator x delegateType closureType (scopeAnalyzer scope closureType types) body
+      delegateCache.[cell] <- lambdaExpr.Compile()
+      delegateCache.[cell]
+      
+  //Implementation of IEnvironment.AstMap
+  member x.AstMap = astMap
+  
+  //Implementation of IEnvironment.GetClosureId
+  member x.GetClosureId clrType = 
+    let success, id = closureMap.TryGetValue clrType
+    if success 
+      then id
+      else closureMap.GetOrAdd(clrType, closureMap.Count)
+
+  //Static
+  static member Create sa eg =
+    let env = new Environment(sa, eg)
+    env.Globals <- new Object(env)
+    env
+
+and DelegateCell(func:Function, delegateType:ClrType) =
+  let hashCode = 37 * (37 * func.AstId + func.ClosureId) + delegateType.GetHashCode()
+
+  member self.AstId = func.AstId
+  member self.ClosureId = func.ClosureId
+  member self.DelegateType = delegateType
+
+  override self.GetHashCode() = hashCode
+  override self.Equals obj = 
+    match obj with
+    | :? DelegateCell as cell -> 
+         self.AstId = cell.AstId
+      && self.ClosureId = self.ClosureId
+      && self.DelegateType = self.DelegateType
+    | _ -> false
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
@@ -47,10 +91,10 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
 
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =
-  val mutable Environment : IEnvironment
+  val mutable Environment : Environment
   val mutable Properties : Dict<string, Box>
 
-  new(env:IEnvironment) = {
+  new(env:Environment) = {
     Environment = env
     Properties = new Dictionary<string, Box>()
   }

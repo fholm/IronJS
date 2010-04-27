@@ -9,7 +9,7 @@ open System
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
-let env = Runtime.Environment.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
+let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 let ast = Ast.Core.parseFile env.AstMap "Testing.js"
 
 let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
@@ -19,8 +19,8 @@ let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object,
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
-let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
-let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, (env :> Runtime.IEnvironment).Globals) |> ignore).TotalMilliseconds
+let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
 
 Console.WriteLine(sprintf "compile: %f, hot: %f" timeCompile time)
 Console.ReadLine() |> ignore

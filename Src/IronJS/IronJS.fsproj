@@ -98,7 +98,6 @@
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Support.fs" />
     <Compile Include="Runtime.Delegate.fs" />
-    <Compile Include="Runtime.Environment.fs" />
     <Compile Include="Runtime.Utils.fs" />
     <Compile Include="Runtime.Helpers.Variables.fs" />
     <Compile Include="Runtime.Helpers.Function.fs" />

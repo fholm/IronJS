@@ -28,7 +28,7 @@ type Context = {
   Locals: Map<string, Var>
   Builder: Context -> Ast.Node -> Et
   TemporaryTypes: SafeDict<string, ClrType>
-  Environment: Runtime.IEnvironment
+  Environment: Runtime.Environment
 } with
   member x.Builder2           = x.Builder x
   member x.EnvironmentExpr    = Dlr.Expr.field x.Function "Environment"

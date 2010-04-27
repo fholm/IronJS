@@ -142,16 +142,6 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
       |> fun x -> Expr.block x
       #endif
     
-  (*
-  let ex = Expr.paramT<System.Exception> "~ex"
-  let ctc = Et.Catch(ex, Expr.typeDefault<Runtime.Box>)
-
-  let body = 
-    (Expr.block [
-      Et.TryCatch(Expr.block body, [|ctc|])
-    ])
-  *)
-
   (*Resolve all locals that are parameters*)
   let parms  = 
     ctx.Locals
@@ -177,7 +167,6 @@ let compileAst (env:Runtime.IEnvironment) (delegateType:ClrType) (closureType:Cl
   #if DEBUG
   let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars [body])
   #else
-  //let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars [body])
   let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars body)
   #endif
 

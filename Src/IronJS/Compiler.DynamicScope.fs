@@ -33,7 +33,7 @@ module DynamicScope =
 
   let getClosureValue (ctx:Context) name = 
     let closure = ctx.Scope.Closure.[name]
-    let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
+    let tmp = Dlr.Expr.paramT<Tuple<bool, ClrObject>> "~tmp"
 
     let getArgs = [
       Dlr.Expr.constant name // Name
@@ -73,7 +73,7 @@ module DynamicScope =
     ]
 
   let getLocalValue (ctx:Context) name =
-    let tmp = Dlr.Expr.paramT<Tuple<bool, Dynamic>> "~tmp"
+    let tmp = Dlr.Expr.paramT<Tuple<bool, ClrObject>> "~tmp"
     Dlr.Expr.blockWithLocals [tmp] [
       Dlr.Expr.assign tmp (Dlr.Expr.callStaticT<Runtime.Helpers.Variables.Locals> "Get" [Dlr.Expr.constant name; ctx.LocalScopesExpr])
       (Dlr.Expr.Flow.ternary 

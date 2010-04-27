@@ -11,16 +11,59 @@ module Type =
 
   (*Converts a ClrType object to JsType enum*)
   let internal clrToJs typ = 
-    if   typ = typeof<double>           then Ast.JsTypes.Double
-    elif typ = typeof<int>              then Ast.JsTypes.Integer
-    elif typ = typeof<string>           then Ast.JsTypes.String
-    elif typ = typeof<bool>             then Ast.JsTypes.Boolean
-    elif typ = typeof<Runtime.Object>   then Ast.JsTypes.Object
-    elif typ = typeof<Runtime.Function> then Ast.JsTypes.Function
-                                        else Ast.JsTypes.Dynamic
+    if   typ = typeof<double>             then Ast.JsTypes.Double
+    elif typ = typeof<int>                then Ast.JsTypes.Integer
+    elif typ = typeof<string>             then Ast.JsTypes.String
+    elif typ = typeof<bool>               then Ast.JsTypes.Boolean
+    elif typ = typeof<Runtime.Object>     then Ast.JsTypes.Object
+    elif typ = typeof<Runtime.Function>   then Ast.JsTypes.Function
+    elif typ = typeof<Runtime.Undefined>  then Ast.JsTypes.Undefined
+    elif typ = typeof<ClrObject>          then Ast.JsTypes.Clr
+    elif typ = typeof<Runtime.Box>        then Ast.JsTypes.Dynamic
+    else failwithf "Invalid type '%s'" typ.Name
+
+  let internal normalizeJsType typ =
+    match typ with
+    | Ast.JsTypes.Number
+    | Ast.JsTypes.Double    -> Ast.JsTypes.Double
+    | Ast.JsTypes.Integer   -> Ast.JsTypes.Integer
+
+    | Ast.JsTypes.Boolean   -> Ast.JsTypes.Boolean
+    
+    | Ast.JsTypes.StringNull 
+    | Ast.JsTypes.String    -> Ast.JsTypes.String
+
+    | Ast.JsTypes.ObjectNull
+    | Ast.JsTypes.Object    -> Ast.JsTypes.Object
+    
+    | Ast.JsTypes.ArrayNull
+    | Ast.JsTypes.Array     -> Ast.JsTypes.Array
+
+    | Ast.JsTypes.FunctionNull
+    | Ast.JsTypes.Function  -> Ast.JsTypes.Function
+
+    | Ast.JsTypes.UndefinedNull
+    | Ast.JsTypes.Undefined -> Ast.JsTypes.Undefined
+    
+    | Ast.JsTypes.Null
+    | Ast.JsTypes.Clr       -> Ast.JsTypes.Clr
+    | Ast.JsTypes.ClrNull   -> Ast.JsTypes.Clr
+
+    //Special cases that all result in Object
+    | Ast.JsTypes.ArrFunc
+    | Ast.JsTypes.ArrFuncNull
+    | Ast.JsTypes.ObjArr
+    | Ast.JsTypes.ObjArrNull
+    | Ast.JsTypes.ObjFunc
+    | Ast.JsTypes.ObjFuncNull
+    | Ast.JsTypes.ObjFuncArr
+    | Ast.JsTypes.ObjFuncArrNull -> Ast.JsTypes.Object
+
+    //Full dynamic typing
+    | _ -> Ast.JsTypes.Dynamic
 
   (*Converts a JsType enum to ClrType object*)
-  let internal jsToClr typ =
+  let rec internal jsToClr typ =
     match typ with
     | Ast.JsTypes.Double    -> typeof<double>
     | Ast.JsTypes.Integer   -> typeof<int>
@@ -29,7 +72,10 @@ module Type =
     | Ast.JsTypes.Object    -> typeof<Runtime.Object>
     | Ast.JsTypes.Function  -> typeof<Runtime.Function>
     | Ast.JsTypes.Undefined -> typeof<Runtime.Undefined>
-    | _ -> typeof<Runtime.Box>
+    | Ast.JsTypes.Dynamic   -> typeof<Runtime.Box>
+    | Ast.JsTypes.Null      
+    | Ast.JsTypes.Clr       -> typeof<ClrObject>
+    | _                     -> jsToClr (normalizeJsType typ)
 
   (*Gets the inner type of a strongbox Type object*)
   let internal strongBoxInnerType typ = Type.genericArgumentN typ 0

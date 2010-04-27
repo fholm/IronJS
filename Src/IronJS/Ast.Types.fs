@@ -22,8 +22,9 @@ type JsTypes
 
   | Undefined = 128
   | Null      = 256
-
   | Dynamic   = 512
+  | Clr       = 1024
+  | ClrNull   = 1280 // Clr | Null
   
   // Special combined types to allow us to keep 
   // strong typing if the only non-typed value is null

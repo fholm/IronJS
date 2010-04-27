@@ -49,7 +49,7 @@ module Variables =
         else failwithf "No local variable named '%s' exist" name
 
   module Global =
-    let clrType ctx name = typeof<Dynamic>
+    let clrType ctx name = typeof<ClrObject>
 
     let value (ctx:Context) name = 
       let expr = Js.Object.get ctx.Globals name

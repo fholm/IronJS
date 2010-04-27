@@ -9,7 +9,7 @@ module CallSites =
   
   let invoke func (args:Et list) =
     let binder = new Runtime.Binders.Invoke(new System.Dynamic.CallInfo(args.Length))
-    Dlr.Expr.dynamicT<Dynamic> binder (func :: args)
+    Dlr.Expr.dynamicT<ClrObject> binder (func :: args)
   
   let convert<'a> (expr:Et) =
     let typeDef = typeof<'a>
@@ -29,10 +29,10 @@ module CallSites =
     if Runtime.Utils.Type.isObject expr.Type 
       then Object.setProperty expr name value
       else let binder = new Runtime.Binders.SetMember(name, false)
-           Dlr.Expr.dynamicT<Dynamic> binder (expr :: [value])
+           Dlr.Expr.dynamicT<ClrObject> binder (expr :: [value])
 
   let getMember (expr:Et) name = 
     if Runtime.Utils.Type.isObject expr.Type 
       then Object.getProperty expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
-           Dlr.Expr.dynamicT<Dynamic> binder [expr]
+           Dlr.Expr.dynamicT<ClrObject> binder [expr]

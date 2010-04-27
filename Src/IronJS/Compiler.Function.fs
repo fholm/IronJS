@@ -42,10 +42,10 @@ module Function =
       let scopesExpr = if scope.InLocalDS 
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
                               Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
-                         else ctx.ClosureScopes
+                         else ctx.ClosureScopesExpr
   
       let closureType = createType ctx scope
-      let dynScopesExpr = Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopes]
+      let dynScopesExpr = Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopesExpr]
       Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
 
   (*Defines a new function*)

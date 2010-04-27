@@ -30,12 +30,12 @@ type Context = {
   TemporaryTypes: SafeDict<string, ClrType>
   Environment: Runtime.IEnvironment
 } with
-  member x.Builder2         = x.Builder x
-  member x.EnvironmentExpr  = Dlr.Expr.field x.Function "Environment"
-  member x.ClosureScopes    = Dlr.Expr.field x.Closure "Scopes"
-  member x.LocalScopesExpr  = if x.Scope.Flags.Contains Ast.ScopeFlags.HasDS 
-                                then x.LocalScopes :> Et 
-                                else Dlr.Expr.defaultT<Runtime.Object ResizeArray>
+  member x.Builder2           = x.Builder x
+  member x.EnvironmentExpr    = Dlr.Expr.field x.Function "Environment"
+  member x.ClosureScopesExpr  = Dlr.Expr.field x.Closure "Scopes"
+  member x.LocalScopesExpr    = if x.Scope.Flags.Contains Ast.ScopeFlags.HasDS 
+                                  then x.LocalScopes :> Et 
+                                  else Dlr.Expr.defaultT<Runtime.Object ResizeArray>
 
   member x.LocalExpr name = 
     match x.Locals.[name] with

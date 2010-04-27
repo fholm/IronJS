@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 module UnaryOp =
@@ -10,10 +11,10 @@ module UnaryOp =
   let private buildPreInc (ctx:Context) (target:Ast.Node) = 
     let expr = ctx.Builder ctx target
     if expr.Type = typeof<int> then
-      Dlr.Expr.blockTmp expr.Type (fun tmp -> 
+      Expr.blockTmp expr.Type (fun tmp -> 
       [
-        (Dlr.Expr.assign tmp expr)
-        (Assign.build ctx target (Ast.Quote(Dlr.Expr.Math.add tmp Dlr.Expr.int1)))
+        (Expr.assign tmp expr)
+        (Assign.build ctx target (Ast.Quote(Expr.Math.add tmp Dlr.Expr.int1)))
         (tmp)
       ])
     else

@@ -40,26 +40,26 @@ module Function =
     (*Creates a new closure type and expression to create an instance of that type*)
     let internal create (ctx:Context) (scope:Ast.Scope) =
       let scopesExpr = if scope.InLocalDS 
-                         then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Dlr.Expr.constant ctx.Scope.ScopeLevel]
-                              Dlr.Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
+                         then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
+                              Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
                          else ctx.ClosureScopes
   
       let closureType = createType ctx scope
-      let dynScopesExpr = Dlr.Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopes]
-      Dlr.Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
+      let dynScopesExpr = Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopes]
+      Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
 
   (*Defines a new function*)
   let internal definition (ctx:Context) astId =
     let scope, _ = ctx.Env.AstMap.[astId]
     let closureExpr = Closure.create ctx scope
     let functionArgs = [
-      Dlr.Expr.constant astId
-      Dlr.Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
+      Expr.constant astId
+      Expr.constant (ctx.Env.GetClosureId (closureExpr.Type))
       closureExpr
       ctx.Environment
     ]
 
-    Dlr.Expr.newArgs typeof<Runtime.Function> functionArgs
+    Expr.newArgs typeof<Runtime.Function> functionArgs
 
   (*Invokes a function*)
   let internal invoke (ctx:Context) target args (returnBox:Et) =
@@ -97,8 +97,8 @@ module Function =
         [
           (Expr.assign dynTmp targetExpr)
           (Expr.Flow.ternary
-            (Expr.Logic.eq (Dlr.Expr.field dynTmp "Type") (Dlr.Expr.constant Ast.JsTypes.Function))
-            (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> (Dlr.Expr.field dynTmp "Clr"))) :: body))
+            (Expr.Logic.eq (Expr.field dynTmp "Type") (Expr.constant Ast.JsTypes.Function))
+            (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> (Expr.field dynTmp "Clr"))) :: body))
             (Expr.defaultT<Runtime.Box>)
           )
         ]

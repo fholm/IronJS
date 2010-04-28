@@ -8,14 +8,14 @@ open IronJS.Compiler
 (*Checks if a local always will result in a Dynamic type*)
 let private isDynamic (loc:Ast.Local) =
   match loc.UsedAs with
-  | Ast.JsTypes.Double 
-  | Ast.JsTypes.Integer
-  | Ast.JsTypes.Boolean
-  | Ast.JsTypes.String
-  | Ast.JsTypes.Undefined
-  | Ast.JsTypes.Array
-  | Ast.JsTypes.Function
-  | Ast.JsTypes.Object -> true && loc.InitUndefined
+  | Types.Double 
+  | Types.Integer
+  | Types.Boolean
+  | Types.String
+  | Types.Undefined
+  | Types.Array
+  | Types.Function
+  | Types.Object -> true && loc.InitUndefined
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
@@ -46,13 +46,13 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
       | Ast.Add -> getExprType' left ||| getExprType' right
       | _ -> failwith "not supported"
     | Ast.Local(name, _) -> getLocalType' name
-    | Ast.Invoke(_, _) -> Ast.JsTypes.Dynamic
+    | Ast.Invoke(_, _) -> Types.Dynamic
     | _ -> failwith "not supported"
 
   and getLocalType' name =
     let var = vars.[name]
 
-    if (!excluded).Contains name then Ast.JsTypes.Nothing
+    if (!excluded).Contains name then Types.Nothing
     else  
       if var.TypeResolved then var.UsedAs 
       else  
@@ -84,7 +84,7 @@ let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 let private handleMissingArgument (name:string) (var:Ast.Local) =
   let removedParam = Ast.Utils.removeLocalFlag Ast.LocalFlags.Parameter var
   let removedParam = Ast.Utils.removeLocalFlag Ast.LocalFlags.NeedProxy removedParam
-  {Ast.Utils.setLocalFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Ast.JsTypes.Undefined}
+  {Ast.Utils.setLocalFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
 
 (*Analyzes a scope*)
 let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
@@ -110,7 +110,7 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
                 then {var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.Index]} // We got an argument for this parameter
                 else handleMissingArgument name var // We didn't, means make it dynamic
             else 
-              if   isDynamic var       then setType name var Ast.JsTypes.Dynamic // No need to resolve type, force it here
+              if   isDynamic var       then setType name var Types.Dynamic // No need to resolve type, force it here
               elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned to from any variables
               else var // Needs to be resolved
             )

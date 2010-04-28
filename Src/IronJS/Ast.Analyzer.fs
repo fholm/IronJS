@@ -10,13 +10,13 @@ open IronJS.Ast.Utils
 module Analyzer =
 
   let private getType = function
-    | Number(_) -> JsTypes.Double
-    | Integer(_) -> JsTypes.Integer
-    | String(_) -> JsTypes.String 
-    | Boolean(_) -> JsTypes.Boolean
-    | Function(_) -> JsTypes.Function
-    | Object(_) -> JsTypes.Object
-    | _ -> JsTypes.Dynamic
+    | Number(_) -> Types.Double
+    | Integer(_) -> Types.Integer
+    | String(_) -> Types.String 
+    | Boolean(_) -> Types.Boolean
+    | Function(_) -> Types.Function
+    | Object(_) -> Types.Object
+    | _ -> Types.Dynamic
   
   let assign left right = state {
     let! (s:ParserState) = getState 
@@ -26,22 +26,22 @@ module Analyzer =
       match right with
       | Local(rightName, _) -> 
         if s.InDynamicScope 
-          then do! usedAs name JsTypes.Dynamic
+          then do! usedAs name Types.Dynamic
                return! usedWith name rightName
           else return! usedWith name rightName
 
       | Closure(rightName, _) -> 
         if s.InDynamicScope 
-          then do! usedAs name JsTypes.Dynamic
+          then do! usedAs name Types.Dynamic
                return! usedWithClosure name rightName
           else return! usedWithClosure name rightName
 
-      | Number(_)   -> return! usedAs name JsTypes.Double
-      | Integer(_)  -> return! usedAs name JsTypes.Integer
-      | String(_)   -> return! usedAs name JsTypes.String 
-      | Boolean(_)  -> return! usedAs name JsTypes.Boolean
-      | Function(_) -> return! usedAs name JsTypes.Function
-      | Object(_)   -> return! usedAs name JsTypes.Object
+      | Number(_)   -> return! usedAs name Types.Double
+      | Integer(_)  -> return! usedAs name Types.Integer
+      | String(_)   -> return! usedAs name Types.String 
+      | Boolean(_)  -> return! usedAs name Types.Boolean
+      | Function(_) -> return! usedAs name Types.Function
+      | Object(_)   -> return! usedAs name Types.Object
 
       //Anything we can't determine runtime types for
       | _ -> return! assignedFrom name right

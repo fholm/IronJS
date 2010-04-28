@@ -86,6 +86,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Monads.fs" />
     <Compile Include="Aliases.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Tools.Dlr.Expr.fs" />
     <Compile Include="Tools.Dlr.Restrict.fs" />

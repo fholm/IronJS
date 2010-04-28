@@ -97,7 +97,7 @@ module Function =
         [
           (Expr.assign dynTmp targetExpr)
           (Expr.Flow.ternary
-            (Expr.Logic.eq (Expr.field dynTmp "Type") (Expr.constant Ast.JsTypes.Function))
+            (Expr.Logic.eq (Expr.field dynTmp "Type") (Expr.constant Types.Function))
             (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> (Expr.field dynTmp "Clr"))) :: body))
             (Expr.defaultT<Runtime.Box>)
           )

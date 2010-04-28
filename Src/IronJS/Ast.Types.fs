@@ -4,28 +4,6 @@ open IronJS
 open IronJS.Aliases
 open System.Diagnostics
 
-type BinaryOp 
-  = Lt
-  | LtEq
-  | Gt
-  | GtEq
-  | Eq
-  | NotEq
-  | Add
-  | AddAsn
-  | Sub
-  | SubAsn
-  | Mul
-  | MulAsn
-  | Div
-  | DivAsn
-  | Mod
-  | ModAsn
-
-type UnaryOp 
-  = PreInc
-  | PreDec
-
 type Node 
   //Error
   = Error of string

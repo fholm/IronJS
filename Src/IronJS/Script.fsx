@@ -13,7 +13,6 @@
 #load "Tools.Type.fs"
 #load "Tools.Dlr.Expr.fs"
 #load "Tools.Dlr.Restrict.fs"
-#load "Tools.Js.fs"
 #load "Tools.CSharp.fs"
 #load "Ast.Types.fs"
 #load "Ast.Utils.fs"
@@ -31,8 +30,8 @@
 #load "Compiler.Utils.Type.fs"
 #load "Compiler.Utils.Box.fs"
 #load "Compiler.Utils.Assign.fs"
-#load "Compiler.Variables.fs"
 #load "Compiler.Object.fs"
+#load "Compiler.Variables.fs"
 #load "Compiler.CallSites.fs"
 #load "Compiler.DynamicScope.fs"
 #load "Compiler.Function.fs"
@@ -59,8 +58,8 @@ fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
 let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 let ast = Ast.Core.parseFile env.AstMap "Testing.js"

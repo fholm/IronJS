@@ -29,7 +29,7 @@ module DynamicScope =
     Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Get" args
 
   let setGlobalValue (ctx:Context) name value = 
-    let args = [Expr.constant name; Js.box value; ctx.LocalScopesExpr; ctx.Closure :> Et]
+    let args = [Expr.constant name; Utils.Box.wrap value; ctx.LocalScopesExpr; ctx.Closure :> Et]
     Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Set" args
 
   let getClosureValue (ctx:Context) name = 
@@ -48,7 +48,7 @@ module DynamicScope =
       (Expr.Flow.ternary 
         (Expr.property tmp "Item1")
         (Expr.property tmp "Item2")
-        (Js.box (Variables.Closure.value ctx name))
+        (Utils.Box.wrap (Variables.Closure.value ctx name))
       )
     ]
 
@@ -58,7 +58,7 @@ module DynamicScope =
 
     let setArgs = [
       Expr.constant name  // Name
-      Js.box tmp              // Value to set (boxed to object)
+      Utils.Box.wrap tmp      // Value to set (boxed to object)
       ctx.LocalScopesExpr     // Local dynamic scopes
       ctx.Closure :> Et       // Function closure object
       Expr.constant closure.DefinedInScopeLevel // Scope level this variable was defined in
@@ -80,13 +80,13 @@ module DynamicScope =
       (Expr.Flow.ternary 
         (Expr.property tmp "Item1")
         (Expr.property tmp "Item2")
-        (Js.box (Variables.Local.value ctx name))
+        (Utils.Box.wrap (Variables.Local.value ctx name))
       )
     ]
 
   let setLocalValue (ctx:Context) name (value:Et) = 
     let tmp = Expr.param "~tmp" value.Type
-    let setArgs = [Expr.constant name; Js.box tmp; ctx.LocalScopesExpr]
+    let setArgs = [Expr.constant name; Utils.Box.wrap tmp; ctx.LocalScopesExpr]
     Expr.blockWithLocals [tmp] [
       (Expr.assign tmp value)
       (Expr.Flow.ternary

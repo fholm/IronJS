@@ -19,7 +19,12 @@ let genericArguments (typ:ClrType) =
 let genericArgumentN (typ:ClrType) n = (genericArguments typ).[n]
 
 (**)
-let strongBoxType = typedefof<System.Runtime.CompilerServices.StrongBox<_>>
+let strongBoxType = 
+  typedefof<System.Runtime.CompilerServices.StrongBox<_>>
+
+(**)
+let isStrongBox (typ:System.Type) =
+  typ.IsGenericType && typ.GetGenericTypeDefinition() = strongBoxType
 
 (**)
 let getCtor (typ:ClrType) (args:ClrType list) =

@@ -22,7 +22,7 @@ module Variables =
         else failwithf "No closure variable named '%s' exist" name
 
     let expr (ctx:Context) (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
-    let assign ctx name value = Js.assign (expr ctx name) value
+    let assign ctx name value = Utils.Assign.value (expr ctx name) value
     let value ctx name = 
       let expr = Dlr.Expr.field (expr ctx name) "Value"
       if ctx.TemporaryTypes.ContainsKey name
@@ -35,7 +35,7 @@ module Variables =
     let assign ctx name value = Utils.Assign.value (expr ctx name) value
     let value ctx name = 
       let expr = expr ctx name 
-      let exprBox = if Js.isStrongBox (expr.Type) 
+      let exprBox = if Type.isStrongBox expr.Type
                       then Dlr.Expr.field expr "Value" 
                       else expr
 
@@ -52,7 +52,7 @@ module Variables =
     let clrType ctx name = typeof<ClrObject>
 
     let value (ctx:Context) name = 
-      let expr = Js.Object.get ctx.Globals name
+      let expr = Object.getProperty ctx.Globals name
       if ctx.TemporaryTypes.ContainsKey name then 
         if expr.Type = typeof<Runtime.Box> then
           let value = Utils.Box.fieldByClrType expr ctx.TemporaryTypes.[name]
@@ -63,4 +63,4 @@ module Variables =
         expr
 
     let assign (ctx:Context) name value = 
-      Js.Object.set ctx.Globals name (Utils.Box.wrap value)
+      Object.setProperty ctx.Globals name (Utils.Box.wrap value)

@@ -89,7 +89,6 @@
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Tools.Dlr.Expr.fs" />
     <Compile Include="Tools.Dlr.Restrict.fs" />
-    <Compile Include="Tools.Js.fs" />
     <Compile Include="Tools.CSharp.fs" />
     <Compile Include="Ast.Types.fs" />
     <Compile Include="Ast.Utils.fs" />

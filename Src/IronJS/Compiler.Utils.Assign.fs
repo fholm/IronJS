@@ -10,7 +10,7 @@ open System.Dynamic
 module Assign = 
 
     let private expandStrongBox (expr:Et) =
-      if Js.isStrongBox expr.Type then (Dlr.Expr.field expr "Value") else expr
+      if Type.isStrongBox expr.Type then (Dlr.Expr.field expr "Value") else expr
 
     let value (left:Et) (right:Et) =
       let l = expandStrongBox left

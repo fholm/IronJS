@@ -36,13 +36,14 @@ module Box =
     fieldByJsType expr (Utils.Type.clrToJs typ)
 
   let fieldByClrTypeT<'a> (expr:Et) = 
-    fieldByJsType expr (Utils.Type.clrToJs typeof<'a>)
+    fieldByClrType expr typeof<'a>
 
   let typeField (target:Et) =
     Expr.field target "Type"
 
   let setType (target:Et) (typ:ClrType)  = 
-    Expr.assign (typeField target) (Expr.constant (Utils.Type.clrToJs typ))
+    let typ = Expr.constant (Utils.Type.clrToJs typ)
+    Expr.assign (typeField target) typ
 
   let setTypeT<'a> target = 
     setType target typeof<'a>

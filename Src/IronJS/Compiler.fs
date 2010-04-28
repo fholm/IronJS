@@ -92,7 +92,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |> Map.toSeq
       |> Seq.filter isProxied
       |> Seq.map (fun (_, Proxied(var, proxy)) ->
-           if Js.isStrongBox var.Type 
+           if Type.isStrongBox var.Type 
              then Expr.assign var (Expr.newArgs var.Type [proxy])
              else Expr.assign var (Expr.cast var.Type proxy)
          )

@@ -7,7 +7,7 @@ open IronJS.Compiler
 
 module Object =
   let getProperty (expr:Et) name = Dlr.Expr.call expr "Get" [Dlr.Expr.constant name]
-  let setProperty (expr:Et) name value = Dlr.Expr.call expr "Set" [Dlr.Expr.constant name; Js.box value]
+  let setProperty (expr:Et) name value = Dlr.Expr.call expr "Set" [Dlr.Expr.constant name; Utils.Box.wrap value]
 
   let create (ctx:Context) properties =
     match properties with

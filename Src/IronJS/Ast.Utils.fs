@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Aliases
 open IronJS.Monads
 open IronJS.Parser
+
 open Antlr.Runtime
 open Antlr.Runtime.Tree
 
@@ -67,8 +68,8 @@ module Utils =
       then scope 
       else setClosure scope name {
              Closure.New with 
-                Index               = scope.Closure.Count
-                DefinedInScopeLevel = level
+               Index = scope.Closure.Count
+               DefinedInScopeLevel = level
            }
 
   let internal setClosedOver (scope:Scope) name = 

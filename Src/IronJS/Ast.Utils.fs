@@ -52,7 +52,7 @@ module Utils =
 
   let internal ct (tree:obj) = tree :?> AstTree
   let internal child (tree:AstTree) index = if tree.ChildCount > index then (ct tree.Children.[index]) else null
-  let internal children (tree:AstTree) = Tools.CSharp.toList<AstTree> tree.Children
+  let internal children (tree:AstTree) = InterOp.toList<AstTree> tree.Children
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2

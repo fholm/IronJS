@@ -89,7 +89,7 @@
     <Compile Include="Tools.Type.fs" />
     <Compile Include="Tools.Dlr.Expr.fs" />
     <Compile Include="Tools.Dlr.Restrict.fs" />
-    <Compile Include="Tools.CSharp.fs" />
+    <Compile Include="Tools.InterOp.fs" />
     <Compile Include="Ast.Types.fs" />
     <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.Analyzer.fs" />

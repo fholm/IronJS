@@ -1,6 +1,6 @@
 ﻿namespace IronJS.Tools
 
-module CSharp = 
+module InterOp = 
 
   let toList<'a> (ilst:System.Collections.IList) =
     match ilst with
@@ -11,4 +11,5 @@ module CSharp =
                   else (lst.[n] :?> 'a) :: convert lst (n+1)
 
               convert ilst 0
+
 

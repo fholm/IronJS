@@ -10,6 +10,22 @@ open System.Runtime.InteropServices
 
 #nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
+type DelegateCell(astId:int, closureId:int, delegateType:ClrType) =
+  let hashCode = 37 * (37 * astId + closureId) + delegateType.GetHashCode()
+
+  member self.AstId = astId
+  member self.ClosureId = closureId
+  member self.DelegateType = delegateType
+
+  override self.GetHashCode() = hashCode
+  override self.Equals obj = 
+    match obj with
+    | :? DelegateCell as cell -> 
+         self.AstId = cell.AstId
+      && self.ClosureId = self.ClosureId
+      && self.DelegateType = self.DelegateType
+    | _ -> false
+
 (*The currently executing environment*)
 [<AllowNullLiteral>]
 type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
@@ -23,8 +39,8 @@ type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scop
   let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
 
   //Implementation of IEnvironment.GetDelegate
-  member x.GetDelegate func delegateType types =
-    let cell = new DelegateCell(func, delegateType)
+  member x.GetDelegate (func:Function) delegateType types =
+    let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
     let success, delegate' = delegateCache.TryGetValue(cell)
     if success then delegate'
     else
@@ -49,22 +65,6 @@ type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scop
     let env = new Environment(sa, eg)
     env.Globals <- new Object(env)
     env
-
-and DelegateCell(func:Function, delegateType:ClrType) =
-  let hashCode = 37 * (37 * func.AstId + func.ClosureId) + delegateType.GetHashCode()
-
-  member self.AstId = func.AstId
-  member self.ClosureId = func.ClosureId
-  member self.DelegateType = delegateType
-
-  override self.GetHashCode() = hashCode
-  override self.Equals obj = 
-    match obj with
-    | :? DelegateCell as cell -> 
-         self.AstId = cell.AstId
-      && self.ClosureId = self.ClosureId
-      && self.DelegateType = self.DelegateType
-    | _ -> false
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct

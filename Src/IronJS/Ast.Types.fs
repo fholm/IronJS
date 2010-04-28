@@ -26,7 +26,7 @@ type Node
   //Special
   | Arguments
   | This
-  | Eval of string
+  | Eval  of string
   | Quote of Et
 
   //Scopes
@@ -63,11 +63,11 @@ type Local = {
   UsedWithClosure: string Set
   AssignedFrom: Node list
 } with
-  member x.IsParameter    = x.Flags.Contains LocalFlags.Parameter
-  member x.IsClosedOver   = x.Flags.Contains LocalFlags.ClosedOver
   member x.InitUndefined  = x.Flags.Contains LocalFlags.InitToUndefined
   member x.TypeResolved   = x.Flags.Contains LocalFlags.TypeResolved
   member x.NeedsProxy     = x.Flags.Contains LocalFlags.NeedProxy
+  member x.IsParameter    = x.Flags.Contains LocalFlags.Parameter
+  member x.IsClosedOver   = x.Flags.Contains LocalFlags.ClosedOver
   member x.IsDynamic      = x.UsedAs = Types.Dynamic || not (System.Enum.IsDefined(typeof<Types>, x.UsedAs))
   member x.IsReadOnly     =    x.UsedWith.Count        = 0 
                             && x.UsedWithClosure.Count = 0 

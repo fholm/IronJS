@@ -13,7 +13,7 @@ module Core =
     | 0 | AntlrParser.BLOCK       -> parseBlock sr t
     | AntlrParser.VAR             -> parseVar sr t
     | AntlrParser.ASSIGN          -> parseAssign sr t
-    | AntlrParser.Identifier      -> Ast.Utils.getVariable sr t.Text
+    | AntlrParser.Identifier      -> State.getVariable sr t.Text
     | AntlrParser.OBJECT          -> parseObject sr t
     | AntlrParser.StringLiteral   -> parseString sr t
     | AntlrParser.DecimalLiteral  -> parseNumber sr t
@@ -87,7 +87,7 @@ module Core =
   and parseAssign sr t =
     let l = parse sr (child t 0)
     let r = parse sr (child t 1)
-    Ast.Utils.analyzeAssign sr l r
+    State.analyzeAssign sr l r
     Assign(l, r)
 
   and parseForStep sr head body =
@@ -132,7 +132,7 @@ module Core =
       then func
       else
         let name = parse sr (child t 0)
-        Ast.Utils.analyzeAssign sr name func
+        State.analyzeAssign sr name func
         Assign(name, func)
 
   let parseAst (ast:AntlrToken) scope funcMap =  

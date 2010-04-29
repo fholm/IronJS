@@ -79,9 +79,9 @@ module Core =
   and parseVar sr t =
     let c = child t 0 
     if isAssign c 
-      then Ast.Utils.createVar sr (child c 0).Text false //TODO: Remove magic constant
+      then State.createLocal sr (child c 0).Text false //TODO: Remove magic constant
            parse sr c
-      else Ast.Utils.createVar sr c.Text true
+      else State.createLocal sr c.Text true
            Pass
 
   and parseAssign sr t =
@@ -116,7 +116,7 @@ module Core =
     let bodyChild = if isAnon then 1 else 2
 
     if not isAnon then
-      Ast.Utils.createVar sr (child t 0).Text false
+      State.createLocal sr (child t 0).Text false
 
     //Enter Scope -> Parse Body -> Exit Scope
     State.enterScope sr (childrenOf t argsChild)

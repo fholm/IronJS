@@ -81,3 +81,11 @@ module State =
           GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel-1
           LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
       }
+
+  let createLocal sr name initUndefined =
+    match (!sr).ScopeChain with
+    | []    -> failwith "Empty scope chain"
+    | _::[] -> ()
+    | x::xs -> 
+      let newLocal = Local.setFlagIf LocalFlags.InitToUndefined initUndefined {LocalVar.New with Name = name}
+      sr := {!sr with ScopeChain = Scope.setLocal x name newLocal :: xs}

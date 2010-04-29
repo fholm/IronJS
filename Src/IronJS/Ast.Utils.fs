@@ -71,23 +71,11 @@ module Utils =
       | None -> 
         Global(name, fst sl)
 
-  let createVar2 name initUndefined s =
-    match s.ScopeChain with
-    | []    -> failwith "Empty scope chain"
-    | _::[] -> s
-    | x::xs -> 
-      let newLocal = Local.setFlagIf LocalFlags.InitToUndefined initUndefined {LocalVar.New with Name = name}
-      {s with ScopeChain = Scope.setLocal x name newLocal :: xs}
-
-  let createVar sr name initUndefined =
-    sr := createVar2 name initUndefined !sr
-     
-
   let assignedFrom sr name node =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.LocalVars.[name]
-               let x' = Scope.setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
+    | x::xs -> let lv = x.LocalVars.[name]
+               let x' = Scope.setLocal x name {lv with AssignedFrom = node :: lv.AssignedFrom}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedAs sr name typ =

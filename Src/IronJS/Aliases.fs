@@ -18,7 +18,6 @@ type ParmInfo   = System.Reflection.ParameterInfo
 type FieldInfo  = System.Reflection.FieldInfo
 type MethodInfo = System.Reflection.MethodInfo
 
-type AstTree    = Antlr.Runtime.Tree.CommonTree
 type AntlrToken = Antlr.Runtime.Tree.CommonTree
 
 type ClrType          = System.Type

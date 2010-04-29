@@ -137,7 +137,7 @@ module Core =
         Analyzer.assign sr name func
         Assign(name, func)
 
-  let parseAst (ast:AstTree) scope funcMap =  
+  let parseAst (ast:AntlrToken) scope funcMap =  
     let sr = ref {ParserState.New with ScopeChain = [scope]; FunctionMap = funcMap}
     let ast = parse sr ast
     (!sr).ScopeChain.[0], ast
@@ -145,4 +145,4 @@ module Core =
   let parseFile funcMap (fileName:string) =
     let lexer = new AntlrLexer(new Antlr.FileStream(fileName))
     let parser = new AntlrParser(new Antlr.TokenStream(lexer))
-    parseAst ((parser.program().Tree) :?> AstTree) Ast.FuncScope.New funcMap
+    parseAst ((parser.program().Tree) :?> AntlrToken) Ast.FuncScope.New funcMap

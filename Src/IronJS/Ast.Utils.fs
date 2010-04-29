@@ -82,7 +82,7 @@ module Utils =
   let createVar sr name initUndefined =
     sr := createVar2 name initUndefined !sr
 
-  let enterScope sr (parms:AstTree list) =
+  let enterScope sr (parms:AntlrToken list) =
     let rec createLocals parms index =
       match parms with
       | []       -> Map.empty

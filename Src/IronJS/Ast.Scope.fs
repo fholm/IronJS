@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Aliases
+open IronJS.Ast
 
 type LocalMap = Map<string, LocalVar>
 type ClosureMap = Map<string, ClosureVar>

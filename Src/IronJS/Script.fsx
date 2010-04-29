@@ -10,11 +10,18 @@
 #load "Utils.fs"
 #load "Monads.fs"
 #load "Aliases.fs"
+#load "Types.fs"
 #load "Tools.Type.fs"
 #load "Tools.Dlr.Expr.fs"
 #load "Tools.Dlr.Restrict.fs"
 #load "Tools.InterOp.fs"
-#load "Ast.Types.fs"
+#load "Tools.Antlr.fs"
+#load "Ast.Ops.fs"
+#load "Ast.Node.fs"
+#load "Ast.Local.fs"
+#load "Ast.Closure.fs"
+#load "Ast.Scope.fs"
+#load "Ast.State.fs"
 #load "Ast.Utils.fs"
 #load "Ast.Analyzer.fs"
 #load "Ast.fs"
@@ -52,8 +59,8 @@ open IronJS.Tools.Dlr
 open IronJS.Aliases
 open IronJS.Parser
 
-fsi.AddPrinter(fun (x:Ast.Local) -> x.DebugView)
-fsi.AddPrinter(fun (x:Ast.Closure) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.LocalVar) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.ClosureVar) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))

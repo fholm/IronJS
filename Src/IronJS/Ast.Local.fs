@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Aliases
+open IronJS.Ast
 
 type LocalFlags 
   = Parameter       = 1

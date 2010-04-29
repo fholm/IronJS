@@ -55,7 +55,7 @@ module Core =
     UnaryOp(PreInc, parse sr (child t 0))
 
   and parseBinary sr t op = 
-    BinaryOp(op, parse sr (child t 0), parse sr (child t 0))
+    BinaryOp(op, parse sr (child t 0), parse sr (child t 1))
 
   and parseNumber sr (t:AntlrToken) =
     Utils.strToNumber t.Text

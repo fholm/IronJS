@@ -51,6 +51,15 @@ module Scope =
   let internal hasClosure (scope:FuncScope) name = 
     Map.containsKey name scope.ClosureVars
 
+  let internal createClosure (scope:FuncScope) name level = 
+    if scope.ClosureVars.ContainsKey name 
+      then scope 
+      else setClosure scope name {
+             ClosureVar.New with 
+               Index = scope.ClosureVars.Count
+               DefinedInScopeLevel = level
+           }
+
   let internal setLocal (scope:FuncScope) (name:string) (lv:LocalVar) = 
     {scope with LocalVars = Map.add name lv scope.LocalVars}
 

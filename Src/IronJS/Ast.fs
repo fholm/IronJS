@@ -37,9 +37,7 @@ module Core =
     | _ -> Error(sprintf "No parser for token %s (%i)" AntlrParser.tokenNames.[t.Type] t.Type)
 
   and parseList (sr:ParserState ref) (tl:AntlrToken list) =
-    match tl with
-    | []    -> [] 
-    | x::xs -> parse sr x :: parseList sr xs
+    List.map (fun t -> parse sr t) tl
 
   and parseBlock sr t =
     Block(parseList sr (children t))

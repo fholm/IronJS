@@ -32,7 +32,7 @@ module State =
     ps.GlobalDynamicScopeLevel > 0
 
   let enterDynamicScope sr =
-      let sc  = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
+      let sc = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
       let lsc = (!sr).LocalDynamicScopeLevels
 
       sr := {

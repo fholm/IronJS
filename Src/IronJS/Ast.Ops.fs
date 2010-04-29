@@ -1,12 +1,21 @@
 ﻿namespace IronJS.Ast
 
 type BinaryOp 
-  = Lt        // <
-  | LtEq      // <=
-  | Gt        // >
-  | GtEq      // >=
-  | Eq        // ==
-  | NotEq     // !=
+  //Logical
+  = AndAlso     // &&
+  | OrElse      // ||
+  | Lt          // <
+  | LtEq        // <=
+  | Gt          // >
+  | GtEq        // >=
+  | Eq          // ==
+  | NotEq       // !=
+  | EqEq        // ===
+  | NotEqEq     // !==
+  | InstanceOf  // instanceof
+  | In          // in
+
+  //Math
   | Add       // +
   | AddAsn    // +=
   | Sub       // -
@@ -18,6 +27,27 @@ type BinaryOp
   | Mod       // %
   | ModAsn    // %=
 
+  //Bit
+  | And       // &
+  | AndAsn    // &=
+  | Or        // |
+  | OrAsn     // |=
+  | Xor       // ^
+  | XorAsn    // ^=
+  | LShift    // <<
+  | LShiftAsn // <<=
+  | RShift    // >>
+  | RShiftAsn // >>=
+  | UShift    // >>>
+  | UShiftAsn // >>>=
+
 type UnaryOp 
   = PreInc    // ++
   | PreDec    // --
+  | Plus      // +
+  | Minus     // -
+  | Not       // !
+  | Comp      // ~
+  | Void      // void
+  | Delete    // delete
+  | TypeOf    // typeof

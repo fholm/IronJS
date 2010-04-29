@@ -20,15 +20,6 @@ type LocalVar = {
   UsedWithClosure: string Set
   AssignedFrom: Node list
 } with
-  member x.InitUndefined  = x.Flags.Contains LocalFlags.InitToUndefined
-  member x.TypeResolved   = x.Flags.Contains LocalFlags.TypeResolved
-  member x.NeedsProxy     = x.Flags.Contains LocalFlags.NeedProxy
-  member x.IsParameter    = x.Flags.Contains LocalFlags.Parameter
-  member x.IsClosedOver   = x.Flags.Contains LocalFlags.ClosedOver
-  member x.IsDynamic      = x.UsedAs = Types.Dynamic || not (System.Enum.IsDefined(typeof<Types>, x.UsedAs))
-  member x.IsReadOnly     =    x.UsedWith.Count        = 0 
-                            && x.UsedWithClosure.Count = 0 
-                            && x.AssignedFrom.Length   = 0
 
   member x.DebugView = (
     sprintf 
@@ -56,3 +47,30 @@ module Local =
 
   let internal delFlag (f:LocalFlags) (l:LocalVar) =
     if l.Flags.Contains f then {l with Flags = l.Flags.Remove f} else l
+
+  let internal hasFlag (f:LocalFlags) (l:LocalVar) =
+    Set.contains f l.Flags
+
+  let internal isClosedOver (l:LocalVar) = 
+    hasFlag LocalFlags.ClosedOver l
+
+  let internal isParameter (l:LocalVar) = 
+    hasFlag LocalFlags.Parameter l
+
+  let internal typeIsResolved (l:LocalVar) = 
+    hasFlag LocalFlags.TypeResolved l
+
+  let internal needsProxy (l:LocalVar) = 
+    hasFlag LocalFlags.NeedProxy l
+
+  let internal initToUndefined (l:LocalVar) = 
+    hasFlag LocalFlags.InitToUndefined l
+
+  let internal isDynamic (l:LocalVar) =
+       l.UsedAs = Types.Dynamic 
+    || not (System.Enum.IsDefined(typeof<Types>, l.UsedAs))
+
+  let internal IsReadOnly (l:LocalVar) =
+       l.UsedWith.Count        = 0 
+    && l.UsedWithClosure.Count = 0 
+    && l.AssignedFrom.Length   = 0

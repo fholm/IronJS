@@ -6,8 +6,8 @@ open IronJS.Tools
 open IronJS.Compiler
 
 (*Checks if a local always will result in a Dynamic type*)
-let private isDynamic (loc:Ast.LocalVar) =
-  match loc.UsedAs with
+let private isDynamic (l:Ast.LocalVar) =
+  match l.UsedAs with
   | Types.Double 
   | Types.Integer
   | Types.Boolean
@@ -15,7 +15,7 @@ let private isDynamic (loc:Ast.LocalVar) =
   | Types.Undefined
   | Types.Array
   | Types.Function
-  | Types.Object -> true && loc.InitUndefined
+  | Types.Object -> true && Ast.Local.initToUndefined l
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
@@ -25,14 +25,14 @@ let private isNotAssignedTo (var:Ast.LocalVar) =
   && var.AssignedFrom.Length = 0
 
 (*Sets the Expr and UsedAs attributes of a variable*)
-let private setType name (var:Ast.LocalVar) typ =
-  let exprType = if var.IsClosedOver 
+let private setType name (l:Ast.LocalVar) typ =
+  let exprType = if Ast.Local.isClosedOver l
                    then Type.strongBoxType.MakeGenericType(Utils.Type.jsToClr typ) 
                    else Utils.Type.jsToClr typ
 
   let expr = Dlr.Expr.param name exprType
 
-  {Ast.Local.setFlag Ast.LocalFlags.TypeResolved var with UsedAs = typ }
+  {Ast.Local.setFlag Ast.LocalFlags.TypeResolved l with UsedAs = typ }
 
 (*Get the type of a variable, evaluating it if necessary*)
 let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
@@ -54,7 +54,7 @@ let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap
 
     if (!excluded).Contains name then Types.Nothing
     else  
-      if var.TypeResolved then var.UsedAs 
+      if Ast.Local.typeIsResolved var then var.UsedAs 
       else  
         excluded := (!excluded).Add name
 
@@ -104,15 +104,15 @@ let analyze (scope:Ast.FuncScope) closureType (types:ClrType list) =
 
       LocalVars =
         scope.LocalVars 
-          |> Map.map (fun name var -> 
-            if var.IsParameter then
-              if var.Index < types.Length
-                then {var with UsedAs = var.UsedAs ||| Utils.Type.clrToJs types.[var.Index]} // We got an argument for this parameter
-                else handleMissingArgument name var // We didn't, means make it dynamic
+          |> Map.map (fun name l -> 
+            if Ast.Local.isParameter l then
+              if l.Index < types.Length
+                then {l with UsedAs = l.UsedAs ||| Utils.Type.clrToJs types.[l.Index]} // We got an argument for this parameter
+                else handleMissingArgument name l // We didn't, means make it dynamic
             else 
-              if   isDynamic var       then setType name var Types.Dynamic // No need to resolve type, force it here
-              elif isNotAssignedTo var then setType name var var.UsedAs      // If it's not assigned to from any variables
-              else var // Needs to be resolved
+              if   isDynamic l       then setType name l Types.Dynamic // No need to resolve type, force it here
+              elif isNotAssignedTo l then setType name l l.UsedAs      // If it's not assigned to from any variables
+              else l // Needs to be resolved
             )
 
           |> resolveTypes

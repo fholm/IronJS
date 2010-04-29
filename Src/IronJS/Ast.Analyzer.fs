@@ -25,13 +25,13 @@ module Analyzer =
     | Local(name, _) ->
       match right with
       | Local(rightName, _) -> 
-        if s.InDynamicScope 
+        if State.isInsideDynamicScope s
           then do! usedAs name Types.Dynamic
                return! usedWith name rightName
           else return! usedWith name rightName
 
       | Closure(rightName, _) -> 
-        if s.InDynamicScope 
+        if State.isInsideDynamicScope s
           then do! usedAs name Types.Dynamic
                return! usedWithClosure name rightName
           else return! usedWithClosure name rightName

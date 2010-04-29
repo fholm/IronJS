@@ -26,7 +26,7 @@ module Utils =
     let success, result = System.Int32.TryParse(s)
     if success then Integer(result) else Number(double s) 
     #endif
-
+  
   let internal setClosure (scope:FuncScope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
   let internal hasClosure (scope:FuncScope) name = scope.ClosureVars.ContainsKey name

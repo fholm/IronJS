@@ -9,9 +9,6 @@ type ParserState = {
   LocalDynamicScopeLevels: int list
   FunctionMap : Dict<int, FuncScope * Node>
 } with
-  member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
-  member x.Scope = x.ScopeChain.Head
-  member x.ParentScopes = x.ScopeChain.Tail
   static member New = {
     ScopeChain = []
     GlobalDynamicScopeLevel = 0
@@ -24,5 +21,11 @@ module State =
   let internal getActiveScope (ps:ParserState) =
     ps.ScopeChain.Head
 
+  let internal getParentScopes (ps:ParserState) =
+    ps.ScopeChain.Tail
+
   let internal isInsideLocalDynamicScope (ps:ParserState) =
     ps.LocalDynamicScopeLevels.Head > 0
+
+  let internal isInsideDynamicScope (ps:ParserState) =
+    ps.GlobalDynamicScopeLevel > 0

@@ -14,11 +14,13 @@ module Restrict =
   let byType expr typ = BindingRestrictions.GetTypeRestriction(expr, typ)
   let byInstance expr instance = BindingRestrictions.GetInstanceRestriction(expr, instance)
 
-  let rec byArgs (args:MetaObj list) =
-    match args with
-    | [] -> BindingRestrictions.Empty
-    | x::xs -> 
-    (if x.HasValue && x.Value = null 
-        then BindingRestrictions.GetInstanceRestriction(x.Expression, Dlr.Expr.null')
-        else BindingRestrictions.GetTypeRestriction(x.Expression, x.LimitType)
-    ).Merge(x.Restrictions).Merge(byArgs xs)
+  let argRestrict (a:MetaObj) =
+    let restriction = 
+      if a.HasValue && a.Value = null 
+        then BindingRestrictions.GetInstanceRestriction(a.Expression, Dlr.Expr.null')
+        else BindingRestrictions.GetTypeRestriction(a.Expression, a.LimitType)
+
+    a.Restrictions.Merge(restriction)
+
+  let byArgs (args:MetaObj seq) =
+    Seq.fold (fun (s:Restrict) a -> s.Merge(argRestrict a)) BindingRestrictions.Empty args

@@ -91,7 +91,6 @@
     <Compile Include="Tools.InterOp.fs" />
     <Compile Include="Tools.Antlr.fs" />
     <Compile Include="Types.fs" />
-    <Compile Include="Types.Utils.fs" />
     <Compile Include="Ast.Ops.fs" />
     <Compile Include="Ast.Node.fs" />
     <Compile Include="Ast.Utils.fs" />

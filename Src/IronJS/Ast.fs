@@ -109,7 +109,6 @@ module Core =
     let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
     s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
     
-    do! setState {s with ScopeChain = setClosureAccessed s.ScopeChain}
     let func = Function(s.FunctionMap.Count-1)
 
     if isAnon 

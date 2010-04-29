@@ -75,8 +75,6 @@ type Scope = {
 } with
   member x.HasDS = x.Flags.Contains ScopeFlags.HasDS
   member x.InLocalDS = x.Flags.Contains ScopeFlags.InLocalDS
-  member x.NeedClosure = x.Flags.Contains ScopeFlags.NeedClosure
-  member x.NeedGlobals = x.Flags.Contains ScopeFlags.NeedGlobals
 
   static member New = { 
     Locals = Map.empty

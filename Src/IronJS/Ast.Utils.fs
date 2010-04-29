@@ -82,12 +82,6 @@ module Utils =
     return (s.GlobalDynamicScopeLevel, s.LocalDynamicScopeLevels.Head)
   }
 
-  let setClosureAccessed (scopeChain:Scope list) = 
-    setScopeFlag ScopeFlags.NeedClosure scopeChain.Head :: scopeChain.Tail
-
-  let setGlobalsAccessed (scopeChain:Scope list) =
-    setScopeFlag ScopeFlags.NeedGlobals scopeChain.Head :: scopeChain.Tail
-
   let internal getVariable name = state {
     let! s  = getState
     let! sl = scopeLevels
@@ -107,12 +101,10 @@ module Utils =
               then setClosedOver x name :: xs
               else createClosure x name level :: updateScopes xs
 
-        do! setState {s with ScopeChain = setClosureAccessed (updateScopes s.ScopeChain)}
         return Closure(name, fst sl)
 
       //Or not, it's a global
       | None -> 
-        do! setState {s with ScopeChain = (setGlobalsAccessed s.ScopeChain)}
         return Global(name, fst sl)}
 
   let internal createVar2 name initUndefined s =

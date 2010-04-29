@@ -92,6 +92,7 @@
     <Compile Include="Tools.Dlr.Restrict.fs" />
     <Compile Include="Tools.InterOp.fs" />
     <Compile Include="Ast.Ops.fs" />
+    <Compile Include="Ast.Node.fs" />
     <Compile Include="Ast.Types.fs" />
     <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.Analyzer.fs" />

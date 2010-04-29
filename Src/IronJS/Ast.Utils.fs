@@ -81,37 +81,6 @@ module Utils =
 
   let createVar sr name initUndefined =
     sr := createVar2 name initUndefined !sr
-
-  let enterScope sr (parms:AntlrToken list) =
-    let rec createLocals parms index =
-      match parms with
-      | []       -> Map.empty
-      | name::xs -> 
-        let newParam = Local.setFlag LocalFlags.Parameter {LocalVar.New with Name = name; Index = index}
-        Map.add name newParam (createLocals xs (index+1))
-
-    let scope = {
-      FuncScope.New with 
-        ScopeLevel  = (!sr).ScopeChain.Length;
-        LocalVars = createLocals [for c in parms -> c.Text] 0
-    }
-
-    sr := {
-      (!sr) with 
-        ScopeChain = (scope :: (!sr).ScopeChain)
-        LocalDynamicScopeLevels = (0 :: (!sr).LocalDynamicScopeLevels)
-    }
-
-  let exitScope sr =
-    match (!sr).ScopeChain with
-    | fs::tl -> sr := {
-                (!sr) with
-                  ScopeChain = tl
-                  LocalDynamicScopeLevels = (!sr).LocalDynamicScopeLevels.Tail
-                }
-
-                fs // return old top-scope
-    | _     -> failwith "Couldn't exit scope"
      
 
   let assignedFrom sr name node =
@@ -124,22 +93,22 @@ module Utils =
   let usedAs sr name typ =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.LocalVars.[name]
-               let x' = Scope.setLocal x name {l with UsedAs = l.UsedAs ||| typ}
+    | x::xs -> let lv = x.LocalVars.[name]
+               let x' = Scope.setLocal x name {lv with UsedAs = lv.UsedAs ||| typ}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedWith sr name rname =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.LocalVars.[name]
-               let x' = Scope.setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
+    | x::xs -> let lv = x.LocalVars.[name]
+               let x' = Scope.setLocal x name {lv with UsedWith = lv.UsedWith.Add(rname)}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedWithClosure sr name rname =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.LocalVars.[name]
-               let x' = Scope.setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
+    | x::xs -> let lv = x.LocalVars.[name]
+               let x' = Scope.setLocal x name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
                sr := {!sr with ScopeChain = x'::xs}
   
   let analyzeAssign sr left right =

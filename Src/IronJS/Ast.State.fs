@@ -31,6 +31,37 @@ module State =
   let internal isInsideDynamicScope (ps:ParserState) =
     ps.GlobalDynamicScopeLevel > 0
 
+  let enterScope sr (parms:AntlrToken list) =
+    let rec createLocals parms index =
+      match parms with
+      | []       -> Map.empty
+      | name::xs -> 
+        let newParam = Local.setFlag LocalFlags.Parameter {LocalVar.New with Name = name; Index = index}
+        Map.add name newParam (createLocals xs (index+1))
+
+    let scope = {
+      FuncScope.New with 
+        ScopeLevel  = (!sr).ScopeChain.Length;
+        LocalVars = createLocals [for c in parms -> c.Text] 0
+    }
+
+    sr := {
+      (!sr) with 
+        ScopeChain = (scope :: (!sr).ScopeChain)
+        LocalDynamicScopeLevels = (0 :: (!sr).LocalDynamicScopeLevels)
+    }
+
+  let exitScope sr =
+    match (!sr).ScopeChain with
+    | fs::tl -> sr := {
+                (!sr) with
+                  ScopeChain = tl
+                  LocalDynamicScopeLevels = (!sr).LocalDynamicScopeLevels.Tail
+                }
+
+                fs // return old top-scope
+    | _     -> failwith "Couldn't exit scope"
+
   let enterDynamicScope sr =
       let sc = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
       let lsc = (!sr).LocalDynamicScopeLevels

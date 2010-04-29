@@ -36,8 +36,8 @@ module Core =
     //Error handling
     | _ -> Error(sprintf "No parser for token %s (%i)" AntlrParser.tokenNames.[t.Type] t.Type)
 
-  and parseList (sr:ParserState ref) (tl:AntlrToken list) =
-    List.map (fun t -> parse sr t) tl
+  and parseList sr tlist =
+    List.map (fun t -> parse sr t) tlist
 
   and parseBlock sr t =
     Block(parseList sr (children t))
@@ -119,12 +119,12 @@ module Core =
       Ast.Utils.createVar sr (child t 0).Text false
 
     //Enter Scope -> Parse Body -> Exit Scope
-    Ast.Utils.enterScope sr (childrenOf t argsChild)
+    State.enterScope sr (childrenOf t argsChild)
     let body = parse sr (child t bodyChild)
-    let scope = Ast.Utils.exitScope sr
+    let scope = State.exitScope sr
 
     let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (State.isInsideLocalDynamicScope !sr) scope
-    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (funcScope,body))
+    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (funcScope, body))
     
     let func = Function((!sr).FunctionMap.Count-1)
 

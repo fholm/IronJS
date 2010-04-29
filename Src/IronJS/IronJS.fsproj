@@ -98,7 +98,6 @@
     <Compile Include="Ast.Scope.fs" />
     <Compile Include="Ast.State.fs" />
     <Compile Include="Ast.Utils.fs" />
-    <Compile Include="Ast.Analyzer.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Support.fs" />

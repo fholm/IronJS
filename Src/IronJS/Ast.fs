@@ -89,7 +89,7 @@ module Core =
   and parseAssign sr t =
     let l = parse sr (child t 0)
     let r = parse sr (child t 1)
-    Analyzer.assign sr l r
+    Ast.Utils.analyzeAssign sr l r
     Assign(l, r)
 
   and parseForStep sr head body =
@@ -134,7 +134,7 @@ module Core =
       then func
       else
         let name = parse sr (child t 0)
-        Analyzer.assign sr name func
+        Ast.Utils.analyzeAssign sr name func
         Assign(name, func)
 
   let parseAst (ast:AntlrToken) scope funcMap =  

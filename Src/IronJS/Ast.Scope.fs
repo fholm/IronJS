@@ -19,8 +19,6 @@ type FuncScope = {
   Flags: ScopeFlags Set
   ArgTypes: ClrType array
 } with
-  member x.HasDS = x.Flags.Contains ScopeFlags.HasDS
-  member x.InLocalDS = x.Flags.Contains ScopeFlags.InLocalDS
 
   static member New = { 
     Flags = Set.empty
@@ -40,3 +38,9 @@ module Scope =
 
   let internal delFlag (f:ScopeFlags) (s:FuncScope) =
     if s.Flags.Contains f then {s with Flags = s.Flags.Remove f} else s
+
+  let internal hasDynamicScope (s:FuncScope) =
+    s.Flags.Contains ScopeFlags.HasDS
+
+  let internal definedInLocalDynamicScope (s:FuncScope) =
+    s.Flags.Contains ScopeFlags.InLocalDS

@@ -12,12 +12,6 @@ open Antlr.Runtime.Tree
 
 module Utils =
 
-  let internal activeScope (ps:ParserState) =
-    ps.ScopeChain.Head
-
-  let internal insideLocalDS (ps:ParserState) =
-    ps.LocalDynamicScopeLevels.Head > 0
-
   let internal intAsNode (i:int) =
     #if ONLY_DOUBLE
     Number(double i)
@@ -33,12 +27,6 @@ module Utils =
     if success then Integer(result) else Number(double s) 
     #endif
 
-  let internal ct (tree:obj) = tree :?> AstTree
-  let internal child (tree:AstTree) index = if tree.ChildCount > index then (ct tree.Children.[index]) else null
-  let internal children (tree:AstTree) = InterOp.toList<AstTree> tree.Children
-  let internal childrenOf (tree:AstTree) n = children (child tree n)
-  let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
-  let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
   let internal setClosure (scope:FuncScope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
   let internal hasClosure (scope:FuncScope) name = scope.ClosureVars.ContainsKey name

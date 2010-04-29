@@ -39,7 +39,7 @@ module Function =
 
     (*Creates a new closure type and expression to create an instance of that type*)
     let internal create (ctx:Context) (scope:Ast.FuncScope) =
-      let scopesExpr = if scope.InLocalDS 
+      let scopesExpr = if Ast.Scope.definedInLocalDynamicScope scope
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
                               Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
                          else ctx.ClosureScopesExpr

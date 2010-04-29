@@ -20,4 +20,9 @@ type ParserState = {
   }
 
 module State =
-  ()
+
+  let internal getActiveScope (ps:ParserState) =
+    ps.ScopeChain.Head
+
+  let internal isInsideLocalDynamicScope (ps:ParserState) =
+    ps.LocalDynamicScopeLevels.Head > 0

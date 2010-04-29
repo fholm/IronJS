@@ -3,12 +3,11 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Antlr
 open IronJS.Monads
 open IronJS.Ast
 open IronJS.Ast.Utils
 open IronJS.Parser
-
-open Antlr.Runtime
 
 module Core = 
 
@@ -106,7 +105,7 @@ module Core =
     let! scope = exitScope()
     let! s = getState
 
-    let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
+    let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (State.isInsideLocalDynamicScope s) scope
     s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
     
     let func = Function(s.FunctionMap.Count-1)
@@ -140,6 +139,6 @@ module Core =
     state.ScopeChain.[0], ast
 
   let parseFile funcMap (fileName:string) =
-    let jsLexer = new ES3Lexer(new ANTLRFileStream(fileName))
-    let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
+    let jsLexer = new ES3Lexer(new Antlr.FileStream(fileName))
+    let jsParser = new ES3Parser(new Antlr.TokenStream(jsLexer))
     parseAst ((jsParser.program().Tree) :?> AstTree) Ast.FuncScope.New funcMap

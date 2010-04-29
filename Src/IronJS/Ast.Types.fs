@@ -36,8 +36,8 @@ type Local = {
       x.Name x.Flags x.Index x.UsedAs x.UsedWith x.UsedWithClosure x.AssignedFrom.Length
   )
 
-  static member New name = {
-    Name = name
+  static member New = {
+    Name = ""
     Flags = Set.empty
     Index = -1
     UsedAs = Types.Nothing

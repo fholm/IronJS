@@ -112,7 +112,7 @@ module Utils =
     | []    -> failwith "Empty scope chain"
     | _::[] -> s
     | x::xs -> 
-      let newLocal = setLocalFlagIf LocalFlags.InitToUndefined initUndefined (Local.New name)
+      let newLocal = setLocalFlagIf LocalFlags.InitToUndefined initUndefined {Local.New with Name = name}
       {s with ScopeChain = (setLocal x name newLocal :: xs)}
 
   let internal createVar name initUndefined = state {
@@ -126,7 +126,7 @@ module Utils =
       match parms with
       | []       -> Map.empty
       | name::xs -> 
-        let newParam = setLocalFlag LocalFlags.Parameter {Local.New name with Index = index}
+        let newParam = setLocalFlag LocalFlags.Parameter {Local.New with Name = name; Index = index}
         Map.add name newParam (createLocals xs (index+1))
 
     let scope = {

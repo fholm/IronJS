@@ -9,7 +9,6 @@ type IMetaObjProvider = System.Dynamic.IDynamicMetaObjectProvider
 type Et       = System.Linq.Expressions.Expression
 type EtParam  = System.Linq.Expressions.ParameterExpression
 type EtLambda = System.Linq.Expressions.LambdaExpression
-type Restrict = System.Dynamic.BindingRestrictions
 
 type AstUtils     = Microsoft.Scripting.Ast.Utils
 type DynamicUtils = Microsoft.Scripting.Utils.DynamicUtils

@@ -1,13 +1,6 @@
-﻿namespace IronJS.Compiler.Utils
+﻿namespace IronJS
 
-open IronJS
-open IronJS.Aliases
-open IronJS.Tools
-open IronJS.Compiler
-
-open System.Dynamic
-
-module Type = 
+module ConvertTypes =
 
   (*Converts a ClrType object to JsType enum*)
   let clrToJs typ = 
@@ -24,9 +17,15 @@ module Type =
 
   let normalizeJsType typ =
     match typ with
+    #if ONLY_DOUBLE
+    | Types.Number
+    | Types.Double    
+    | Types.Integer   -> Types.Double
+    #else
     | Types.Number
     | Types.Double    -> Types.Double
     | Types.Integer   -> Types.Integer
+    #endif
 
     | Types.Boolean   -> Types.Boolean
     
@@ -65,8 +64,13 @@ module Type =
   (*Converts a JsType enum to ClrType object*)
   let rec jsToClr typ =
     match typ with
+    #if ONLY_DOUBLE
+    | Types.Double 
+    | Types.Integer   -> typeof<double>
+    #else
     | Types.Double    -> typeof<double>
     | Types.Integer   -> typeof<int>
+    #endif
     | Types.Boolean   -> typeof<bool>
     | Types.String    -> typeof<string>
     | Types.Object    -> typeof<Runtime.Object>

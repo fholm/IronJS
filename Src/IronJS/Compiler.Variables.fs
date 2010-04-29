@@ -14,7 +14,7 @@ module Variables =
     let definingScopeLevel ctx name = ctx.Scope.ClosureVars.[name].DefinedInScopeLevel
     let fieldNameN n = sprintf "Item%i" n
     let fieldName ctx name = fieldNameN ctx.Scope.ClosureVars.[name].Index
-    let clrTypeN typ n = Utils.Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
+    let clrTypeN typ n = Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
       if Ast.Scope.hasClosure ctx.Scope name 

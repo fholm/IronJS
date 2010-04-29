@@ -1,5 +1,6 @@
 ﻿module IronJS.Tools.Type
 
+open IronJS
 open IronJS.Aliases
 
 (*Gets the FieldInfo object for a field on a type*)
@@ -25,6 +26,10 @@ let strongBoxType =
 (**)
 let isStrongBox (typ:System.Type) =
   typ.IsGenericType && typ.GetGenericTypeDefinition() = strongBoxType
+
+(*Gets the inner type of a strongbox Type object*)
+let strongBoxInnerType typ = 
+  genericArgumentN typ 0
 
 (**)
 let getCtor (typ:ClrType) (args:ClrType list) =

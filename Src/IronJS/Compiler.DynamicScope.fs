@@ -33,7 +33,7 @@ module DynamicScope =
     Expr.callStaticT<Runtime.Helpers.Variables.Globals> "Set" args
 
   let getClosureValue (ctx:Context) name = 
-    let closure = ctx.Scope.Closure.[name]
+    let closure = ctx.Scope.ClosureVars.[name]
     let tmp = Expr.paramT<Tuple<bool, ClrObject>> "~tmp"
 
     let getArgs = [
@@ -53,7 +53,7 @@ module DynamicScope =
     ]
 
   let setClosureValue (ctx:Context) name (value:Et) =
-    let closure = ctx.Scope.Closure.[name]
+    let closure = ctx.Scope.ClosureVars.[name]
     let tmp = Expr.param "~tmp" value.Type
 
     let setArgs = [

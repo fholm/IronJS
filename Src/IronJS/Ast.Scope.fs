@@ -13,8 +13,8 @@ type ScopeFlags
   | NeedClosure = 8
 
 type Scope = {
-  Locals: LocalMap
-  Closure: ClosureMap
+  LocalVars: LocalMap
+  ClosureVars: ClosureMap
   ScopeLevel: int
   Flags: ScopeFlags Set
   ArgTypes: ClrType array
@@ -23,9 +23,9 @@ type Scope = {
   member x.InLocalDS = x.Flags.Contains ScopeFlags.InLocalDS
 
   static member New = { 
-    Locals = Map.empty
-    Closure = Map.empty
     Flags = Set.empty
+    LocalVars = Map.empty
+    ClosureVars = Map.empty
     ScopeLevel = 0
     ArgTypes = null
   }

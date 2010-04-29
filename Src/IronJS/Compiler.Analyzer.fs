@@ -91,7 +91,7 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
 
   (*Resolves the type of a variable and updates the map with it*)
   let resolveType name (vars:Ast.LocalMap) =
-    Map.add name (setType name vars.[name] (getType name closureType scope.Closure vars)) vars
+    Map.add name (setType name vars.[name] (getType name closureType scope.ClosureVars vars)) vars
 
   (*Resolves types of all local variables*)
   let rec resolveTypes locals = 
@@ -102,8 +102,8 @@ let analyze (scope:Ast.Scope) closureType (types:ClrType list) =
   { scope with 
       ArgTypes = Array.ofList types
 
-      Locals =
-        scope.Locals 
+      LocalVars =
+        scope.LocalVars 
           |> Map.map (fun name var -> 
             if var.IsParameter then
               if var.Index < types.Length

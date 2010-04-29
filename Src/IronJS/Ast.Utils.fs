@@ -48,23 +48,23 @@ module Utils =
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
-  let internal setClosure (scope:Scope) (name:string) (clos:ClosureVar) = {scope with Closure = scope.Closure.Add(name, clos)}
+  let internal setClosure (scope:Scope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
-  let internal hasClosure (scope:Scope) name = scope.Closure.ContainsKey name
-  let internal hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
-  let internal setLocal (scope:Scope) (name:string) (loc:LocalVar) = {scope with Locals = scope.Locals.Add(name, loc)}
+  let internal hasClosure (scope:Scope) name = scope.ClosureVars.ContainsKey name
+  let internal hasLocal (scope:Scope) name = scope.LocalVars.ContainsKey name
+  let internal setLocal (scope:Scope) (name:string) (loc:LocalVar) = {scope with LocalVars = scope.LocalVars.Add(name, loc)}
 
   let internal createClosure (scope:Scope) name level = 
-    if scope.Closure.ContainsKey name 
+    if scope.ClosureVars.ContainsKey name 
       then scope 
       else setClosure scope name {
              ClosureVar.New with 
-               Index = scope.Closure.Count
+               Index = scope.ClosureVars.Count
                DefinedInScopeLevel = level
            }
 
   let internal setClosedOver (scope:Scope) name = 
-    let l   = scope.Locals.[name]
+    let l   = scope.LocalVars.[name]
     let l'  = if l.Flags.Contains LocalFlags.Parameter then Local.setFlag LocalFlags.NeedProxy l else l
     setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
 
@@ -123,7 +123,7 @@ module Utils =
     let scope = {
       Scope.New with 
         ScopeLevel  = s.ScopeChain.Length;
-        Locals = createLocals [for c in parms -> c.Text] 0
+        LocalVars = createLocals [for c in parms -> c.Text] 0
     }
 
     do! setState {
@@ -169,7 +169,7 @@ module Utils =
     let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
+    | x::xs -> let l  = x.LocalVars.[name]
                let x' = setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
                do! setState {s with ScopeChain = x'::xs}}
 
@@ -177,7 +177,7 @@ module Utils =
     let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
+    | x::xs -> let l  = x.LocalVars.[name]
                let x' = setLocal x name {l with UsedAs = l.UsedAs ||| typ}
                do! setState {s with ScopeChain = x'::xs}}
 
@@ -185,7 +185,7 @@ module Utils =
     let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
+    | x::xs -> let l  = x.LocalVars.[name]
                let x' = setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}
 
@@ -193,6 +193,6 @@ module Utils =
     let!  s = getState
     match s.ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let l  = x.Locals.[name]
+    | x::xs -> let l  = x.LocalVars.[name]
                let x' = setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}

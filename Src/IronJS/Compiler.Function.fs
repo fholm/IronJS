@@ -12,11 +12,11 @@ module Function =
     (*Resolves all item expressions for a closure*)
     let private resolveItems ctx (scope:Ast.Scope) =
       let expr name =
-        if ctx.Scope.Locals.ContainsKey name
+        if ctx.Scope.LocalVars.ContainsKey name
           then Variables.Local.expr ctx name   // Local closed over variable
           else Variables.Closure.expr ctx name // Variable that is a closure in parent also
 
-      scope.Closure 
+      scope.ClosureVars
         |> Map.toSeq
         |> Seq.sortBy (fun pair -> (snd pair).Index)
         |> Seq.map (fun pair -> expr (fst pair))
@@ -25,12 +25,12 @@ module Function =
     (*Creates a closure type*)
     let private createType ctx (scope:Ast.Scope) =
       let clrType name =
-        if ctx.Scope.Locals.ContainsKey name
+        if ctx.Scope.LocalVars.ContainsKey name
           then Variables.Local.clrType ctx name
           else Variables.Closure.clrType ctx name
 
       Runtime.Closures.createClosureType (
-        scope.Closure 
+        scope.ClosureVars 
           |> Map.toSeq
           |> Seq.fold (fun state pair -> (clrType (fst pair), (snd pair).Index) :: state) [] 
           |> Seq.sortBy (fun pair -> snd pair)

@@ -25,7 +25,7 @@ let private buildVarsMap (scope:Ast.Scope) =
   let createProxy (l:Ast.LocalVar) =
     Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
 
-  scope.Locals
+  scope.LocalVars
     |> Map.map(fun _ l -> 
                 match l with
                 | Parameter -> 
@@ -102,7 +102,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
 
   (*Initialize closed over variables and parameters*)
   let initClosedOver = 
-    ctx.Scope.Locals
+    ctx.Scope.LocalVars
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
       |> Seq.filter (fun l -> l.IsClosedOver)
@@ -117,7 +117,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
 
   (*Initialize variables that need to be set as undefined*)
   let initUndefined =
-    ctx.Scope.Locals
+    ctx.Scope.LocalVars
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
       |> Seq.filter (fun l -> l.InitUndefined)

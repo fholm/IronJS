@@ -33,9 +33,15 @@ module Expr =
   let blockWithLocals (parms:EtParam seq) (exprs:Et seq) = 
     if Seq.length exprs = 0 then void' else Et.Block(parms, exprs) :> Et
 
-  let block exprs = blockWithLocals [] exprs
-  let blockTmp typ (fn:EtParam -> Et list) = let tmp = Et.Parameter(typ, "~tmp") in blockWithLocals [tmp] (fn tmp)
-  let blockTmpT<'a> = blockTmp typeof<'a>
+  let block exprs = 
+    blockWithLocals [] exprs
+
+  let blockTmp typ (fn:EtParam -> Et list) = 
+    let tmp = Et.Parameter(typ, "~tmp")
+    blockWithLocals [tmp] (fn tmp)
+
+  let blockTmpT<'a> = 
+    blockTmp typeof<'a>
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
@@ -80,17 +86,26 @@ module Expr =
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>
 
-  let newGeneric (typ:System.Type) (types:ClrType seq) = new' (typ.MakeGenericType(Seq.toArray types))
-  let newGenericT<'a> = newGeneric typedefof<'a>
+  let newGeneric (typ:System.Type) (types:ClrType seq) = 
+    new' (typ.MakeGenericType(Seq.toArray types))
 
-  let newArgs (typ:System.Type) (args:Et seq) = Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
-  let newArgsT<'a> (args:Et seq) = newArgs typeof<'a>
+  let newGenericT<'a> = 
+    newGeneric typedefof<'a>
 
-  let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = newArgs (typ.MakeGenericType(Seq.toArray types)) args
-  let newGenericArgsT<'a> = newGenericArgs typedefof<'a> 
+  let newArgs (typ:System.Type) (args:Et seq) = 
+    Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
+
+  let newArgsT<'a> (args:Et seq) = 
+    newArgs typeof<'a>
+
+  let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = 
+    newArgs (typ.MakeGenericType(Seq.toArray types)) args
+
+  let newGenericArgsT<'a> = 
+    newGenericArgs typedefof<'a> 
 
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
-  let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)    
+  let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
 
   let dynamic typ binder (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
@@ -102,9 +117,9 @@ module Expr =
   let int1 = constant 1
 
   module Array =
-    let length target = Et.ArrayLength(target)
+    let length target = Et.ArrayLength(target) :> Et
     let index target (index:Et) = Et.ArrayIndex(target, index) :> Et
-    let access target (exprs:Et seq) = Et.ArrayAccess(target, exprs)
+    let access target (exprs:Et seq) = Et.ArrayAccess(target, exprs) :> Et
 
     let new' typ (bounds:Et seq) = Et.NewArrayBounds(typ, bounds) :> Et
     let newT<'a> = new' typeof<'a>
@@ -119,22 +134,22 @@ module Expr =
     let catchT<'a> = catch typeof<'a>
 
   module Bit =
-    let and' left right = Et.And(left, right)
-    let andAsn left right = Et.AndAssign(left, right)
+    let and' left right = Et.And(left, right) :> Et
+    let andAsn left right = Et.AndAssign(left, right) :> Et
 
-    let or' left right = Et.Or(left, right)
-    let orAsn left right = Et.OrAssign(left, right)
+    let or' left right = Et.Or(left, right) :> Et
+    let orAsn left right = Et.OrAssign(left, right) :> Et
 
-    let xor left right = Et.ExclusiveOr(left, right)
-    let xorAsn left right = Et.ExclusiveOrAssign(left, right)
+    let xor left right = Et.ExclusiveOr(left, right) :> Et
+    let xorAsn left right = Et.ExclusiveOrAssign(left, right) :> Et
 
-    let rhs left right = Et.RightShift(left, right)
-    let rhsAsn left right = Et.RightShiftAssign(left, right)
+    let rhs left right = Et.RightShift(left, right) :> Et
+    let rhsAsn left right = Et.RightShiftAssign(left, right) :> Et
 
-    let lhs left right = Et.LeftShift(left, right)
-    let lhsAsn left right = Et.LeftShiftAssign(left, right)
+    let lhs left right = Et.LeftShift(left, right) :> Et
+    let lhsAsn left right = Et.LeftShiftAssign(left, right) :> Et
 
-    let not target = Et.Not target
+    let not target = (Et.Not target) :> Et
 
   module Math =
     let sub left right = Et.Subtract(left, right) :> Et
@@ -170,6 +185,7 @@ module Expr =
   module Logic =
     let or' left right = Et.OrElse(left, right) :> Et
     let and' left right = Et.AndAlso(left, right) :> Et
+    let not target = Et.OnesComplement target :> Et
 
     let is' typ target = Et.TypeIs(target, typ) :> Et
     let isT<'a> = is' typeof<'a> 
@@ -190,5 +206,3 @@ module Expr =
 
     let gt left right = Et.GreaterThan(left, right) :> Et
     let gtEq left right = Et.GreaterThanOrEqual(left, right) :> Et
-
-    let not target = Et.OnesComplement target

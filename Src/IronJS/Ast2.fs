@@ -1,4 +1,4 @@
-﻿namespace IronJS.Ast2
+﻿namespace IronJS.Ast
 
 open IronJS
 open IronJS.Aliases
@@ -6,15 +6,37 @@ open IronJS.Tools
 open IronJS.Tools.Antlr
 open IronJS.Ast
 
-module Parser =
+module Core =
 
-  type private State = ParserState ref
-  
-  let rec parse (sr:State) (t:AntlrToken) =
+  let rec parse (sr:ParserState ref) (t:AntlrToken) =
     match t.Type with
     | 0 | AntlrParser.BLOCK -> parseBlock sr t
+    | AntlrParser.VAR             -> parseVar sr t
+    | AntlrParser.ASSIGN          -> parseAssign sr t
+    | AntlrParser.Identifier      -> Ast.Utils.getVariable sr t.Text
+    | AntlrParser.OBJECT          -> parseObject sr t
+    | AntlrParser.StringLiteral   -> parseString sr t
+    | AntlrParser.DecimalLiteral  -> parseNumber sr t
+    | AntlrParser.CALL            -> parseCall sr t
+    | AntlrParser.FUNCTION        -> parseFunction sr t
+    | AntlrParser.RETURN          -> parseReturn sr t
+    | AntlrParser.BYFIELD         -> parseByField sr t
+    | AntlrParser.WITH            -> parseWith sr t
+    | AntlrParser.FOR             -> parseFor sr t
+    | AntlrParser.EXPR            -> parseExpr sr t
 
-  and parseList (sr:State) (tl:AntlrToken list) =
+    //Binary Expressions
+    | AntlrParser.LT              -> parseBinary sr t Lt
+    | AntlrParser.ADD             -> parseBinary sr t Add
+
+    //Unary Expressions
+    | AntlrParser.INC             -> parseInc sr t
+    | AntlrParser.PINC            -> parsePreInc sr t
+
+    //Error handling
+    | _ -> Error(sprintf "No parser for token %s (%i)" AntlrParser.tokenNames.[t.Type] t.Type)
+
+  and parseList (sr:ParserState ref) (tl:AntlrToken list) =
     match tl with
     | []    -> [] 
     | x::xs -> parse sr x :: parseList sr xs
@@ -56,6 +78,14 @@ module Parser =
   and parseCall sr t =
     Invoke(parse sr (child t 0) , parseList sr (childrenOf t 1))
 
+  and private parseVar sr t =
+    let c = child t 0 
+    if isAssign c 
+      then Ast.Utils.createVar sr (child c 0).Text false //TODO: Remove magic constant
+           parse sr c
+      else Ast.Utils.createVar sr c.Text true
+           Pass
+
   and parseAssign sr t =
     let l = parse sr (child t 0)
     let r = parse sr (child t 1)
@@ -74,3 +104,45 @@ module Parser =
     match c0.Type with
     | AntlrParser.FORSTEP -> parseForStep sr c0 (child t 1)
     | _ -> Error("Only FORSTEP loops are supported currently")
+
+  and parseWith sr t =
+    let obj = parse sr (child t 0)
+    Ast.Utils.enterDynamicScope sr
+    let block = parse sr (child t 1)
+    Ast.Utils.exitDynamicScope sr
+    DynamicScope(obj, block)
+
+  and parseFunction sr t =
+    let isAnon = isAnonymous t
+    let bodyChild = if isAnon then 1 else 2
+    let argsChild = if isAnon then 0 else 1
+
+    if not isAnon then
+      Ast.Utils.createVar sr (child t 0).Text false
+
+    Ast.Utils.enterScope sr (childrenOf t argsChild)
+
+    let body = parse sr (child t bodyChild)
+    let scope = Ast.Utils.exitScope sr
+
+    let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (State.isInsideLocalDynamicScope !sr) scope
+    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (funcScope,body))
+    
+    let func = Function((!sr).FunctionMap.Count-1)
+
+    if isAnon 
+      then func
+      else
+        let name = parse sr (child t 0)
+        Analyzer.assign sr name func
+        Assign(name, func)
+
+  let parseAst (ast:AstTree) scope funcMap =  
+    let sr = ref {ParserState.New with ScopeChain = [scope]; FunctionMap = funcMap}
+    let ast = parse sr ast
+    (!sr).ScopeChain.[0], ast
+
+  let parseFile funcMap (fileName:string) =
+    let lexer = new AntlrLexer(new Antlr.FileStream(fileName))
+    let parser = new AntlrParser(new Antlr.TokenStream(lexer))
+    parseAst ((parser.program().Tree) :?> AstTree) Ast.FuncScope.New funcMap

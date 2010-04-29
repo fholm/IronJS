@@ -10,11 +10,11 @@ open IronJS.Compiler
 
 let private buildVarsMap (scope:Ast.FuncScope) =
 
-  let (|Parameter|Local|) (l:Ast.LocalVar) = 
-    if Ast.Local.isParameter l then Parameter else Local
+  let (|Parameter|Local|) (lv:Ast.LocalVar) = 
+    if Ast.Local.isParameter lv then Parameter else Local
 
-  let (|NeedProxy|Not|) (l:Ast.LocalVar) =
-    if Ast.Local.needsProxy l then NeedProxy else Not
+  let (|NeedProxy|Not|) (lv:Ast.LocalVar) =
+    if Ast.Local.needsProxy lv then NeedProxy else Not
 
   let createVar (l:Ast.LocalVar) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
@@ -26,14 +26,14 @@ let private buildVarsMap (scope:Ast.FuncScope) =
     Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
 
   scope.LocalVars
-    |> Map.map(fun _ l -> 
-                match l with
+    |> Map.map(fun _ lv -> 
+                match lv with
                 | Parameter -> 
-                  match l with
-                  | NeedProxy -> Proxied(createVar l, createProxy l)
-                  | Not -> Variable(createVar l, P)
+                  match lv with
+                  | NeedProxy -> Proxied(createVar lv, createProxy lv)
+                  | Not -> Variable(createVar lv, P)
                 | Local -> 
-                  Variable(createVar l, L)
+                  Variable(createVar lv, L)
               )
 
 let private isLocal (_, v:Var) =
@@ -105,10 +105,10 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.Scope.LocalVars
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun l -> Ast.Local.isClosedOver l)
-      |> Seq.filter (fun l -> not (Ast.Local.needsProxy l))
-      |> Seq.map (fun l -> 
-           let expr = ctx.LocalExpr l.Name
+      |> Seq.filter (fun lv -> Ast.Local.isClosedOver lv)
+      |> Seq.filter (fun lv -> not (Ast.Local.needsProxy lv))
+      |> Seq.map (fun lv -> 
+           let expr = ctx.LocalExpr lv.Name
            Expr.assign expr (Expr.new' expr.Type) 
          )
       #if DEBUG
@@ -120,9 +120,9 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.Scope.LocalVars
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun l -> Ast.Local.initToUndefined l)
-      |> Seq.map (fun l -> 
-           let expr = ctx.LocalExpr l.Name
+      |> Seq.filter (fun lv -> Ast.Local.initToUndefined lv)
+      |> Seq.map (fun lv -> 
+           let expr = ctx.LocalExpr lv.Name
            Utils.Assign.value expr Runtime.Undefined.InstanceExpr
          )
       #if DEBUG

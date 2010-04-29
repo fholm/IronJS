@@ -4,7 +4,6 @@ open IronJS
 open IronJS.Ast
 open IronJS.Tools
 open IronJS.Aliases
-open IronJS.Monads
 open IronJS.Parser
 
 open Antlr.Runtime

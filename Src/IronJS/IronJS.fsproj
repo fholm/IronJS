@@ -84,7 +84,6 @@
     <Compile Include="Fsi.fs" />
     <Compile Include="Attributes.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Monads.fs" />
     <Compile Include="Aliases.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Tools.Type.fs" />

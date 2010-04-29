@@ -3,7 +3,6 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
-open IronJS.Monads
 open IronJS.Ast
 open IronJS.Ast.Utils
 

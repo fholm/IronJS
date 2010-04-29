@@ -3,7 +3,6 @@
 open IronJS
 open IronJS.Tools
 open IronJS.Aliases
-open IronJS.Monads
 open IronJS.Parser
 
 open Antlr.Runtime

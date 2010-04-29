@@ -23,3 +23,4 @@ type IEnum<'a>        = System.Collections.Generic.IEnumerable<'a>
 type Dict<'a, 'b>     = System.Collections.Generic.Dictionary<'a, 'b>
 type SafeDict<'a, 'b> = System.Collections.Concurrent.ConcurrentDictionary<'a, 'b>
 type Delegate         = System.Delegate
+type DebuggerDisplayAttribute = System.Diagnostics.DebuggerDisplayAttribute

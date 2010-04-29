@@ -34,15 +34,15 @@ module Analyzer =
       let rec updateScopes sc =
         match sc with
         | [] -> []
-        | x::xs ->
-          if Scope.hasLocal x name
+        | fs::tl ->
+          if Scope.hasLocal fs name
             then let typ = if State.isInsideDynamicScope !sr 
                              then Types.Dynamic
                              else getNodeType right
-                 let l  = x.LocalVars.[name]
-                 let l' = {l with UsedAs = l.UsedAs ||| typ}
-                 {x with LocalVars = x.LocalVars.Add(name, l')} :: xs
-            else x :: updateScopes xs
+                 let lv  = fs.LocalVars.[name]
+                 let lv' = {lv with UsedAs = lv.UsedAs ||| typ}
+                 {fs with LocalVars = fs.LocalVars.Add(name, lv')} :: tl
+            else fs :: updateScopes tl
 
       sr := {!sr with ScopeChain = (updateScopes (!sr).ScopeChain)}
 

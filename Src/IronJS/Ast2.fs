@@ -56,7 +56,7 @@ module Parser =
   and parseCall sr t =
     Invoke(parse sr (child t 0) , parseList sr (childrenOf t 1))
 
-  and private parseAssign sr t =
+  and parseAssign sr t =
     let l = parse sr (child t 0)
     let r = parse sr (child t 1)
     Analyzer.assign sr l r

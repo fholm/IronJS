@@ -123,8 +123,8 @@ module Core =
     let body = parse sr (child t bodyChild)
     let scope = State.exitScope sr
 
-    let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (State.isInsideLocalDynamicScope !sr) scope
-    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (funcScope, body))
+    let Scope = Scope.setFlagIf Flags.Scope.InLocalDS (State.isInsideLocalDynamicScope !sr) scope
+    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (Scope, body))
     
     let func = Function((!sr).FunctionMap.Count-1)
 
@@ -143,4 +143,4 @@ module Core =
   let parseFile funcMap (fileName:string) =
     let lexer = new AntlrLexer(new Antlr.FileStream(fileName))
     let parser = new AntlrParser(new Antlr.TokenStream(lexer))
-    parseAst ((parser.program().Tree) :?> AntlrToken) Ast.FuncScope.New funcMap
+    parseAst ((parser.program().Tree) :?> AntlrToken) Ast.Types.Scope.New funcMap

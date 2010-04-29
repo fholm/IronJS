@@ -8,9 +8,9 @@ open System.Linq.Expressions
 type VarType = L | P
 
 type Var
-  = Expr of Et
+  = Expr     of Et
   | Variable of EtParam * VarType
-  | Proxied of EtParam * EtParam
+  | Proxied  of EtParam * EtParam
 
 type Context = {
   //Params
@@ -24,7 +24,7 @@ type Context = {
   Return: LabelTarget
 
   //Others
-  Scope: Ast.FuncScope
+  Scope: Ast.Types.Scope
   Locals: Map<string, Var>
   Builder: Context -> Ast.Node -> Et
   TemporaryTypes: SafeDict<string, ClrType>
@@ -33,7 +33,7 @@ type Context = {
   member x.Builder2           = x.Builder x
   member x.EnvironmentExpr    = Dlr.Expr.field x.Function "Environment"
   member x.ClosureScopesExpr  = Dlr.Expr.field x.Closure "Scopes"
-  member x.LocalScopesExpr    = if x.Scope.Flags.Contains Ast.ScopeFlags.HasDS 
+  member x.LocalScopesExpr    = if x.Scope.Flags.Contains Ast.Flags.Scope.HasDS 
                                   then x.LocalScopes :> Et 
                                   else Dlr.Expr.defaultT<Runtime.Object ResizeArray>
 
@@ -55,7 +55,7 @@ type Context = {
     Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
 
     //Others
-    Scope = Ast.FuncScope.New
+    Scope = Ast.Types.Scope.New
     Locals = Map.empty
     Builder = fun x a -> Dlr.Expr.null'
     TemporaryTypes = null

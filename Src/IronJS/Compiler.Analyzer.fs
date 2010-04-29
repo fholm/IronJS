@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Compiler
 
 (*Checks if a local always will result in a Dynamic type*)
-let private isDynamic (l:Ast.LocalVar) =
+let private isDynamic (l:Ast.Types.Variable) =
   match l.UsedAs with
   | Types.Double 
   | Types.Integer
@@ -19,23 +19,23 @@ let private isDynamic (l:Ast.LocalVar) =
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
-let private isNotAssignedTo (var:Ast.LocalVar) = 
+let private isNotAssignedTo (var:Ast.Types.Variable) = 
      var.UsedWith.Count = 0 
   && var.UsedWithClosure.Count = 0 
   && var.AssignedFrom.Length = 0
 
 (*Sets the Expr and UsedAs attributes of a variable*)
-let private setType name (l:Ast.LocalVar) typ =
+let private setType name (l:Ast.Types.Variable) typ =
   let exprType = if Ast.Local.isClosedOver l
                    then Type.strongBoxType.MakeGenericType(Utils.Type.jsToClr typ) 
                    else Utils.Type.jsToClr typ
 
   let expr = Dlr.Expr.param name exprType
 
-  {Ast.Local.setFlag Ast.LocalFlags.TypeResolved l with UsedAs = typ }
+  {Ast.Local.setFlag Ast.Flags.Variable.TypeResolved l with UsedAs = typ }
 
 (*Get the type of a variable, evaluating it if necessary*)
-let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
+let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Types.LocalMap) =
 
   let excluded = ref Set.empty
 
@@ -81,29 +81,29 @@ let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap
 
   getLocalType' name
 
-let private handleMissingArgument (name:string) (var:Ast.LocalVar) =
-  let removedParam = Ast.Local.delFlag Ast.LocalFlags.Parameter var
-  let removedParam = Ast.Local.delFlag Ast.LocalFlags.NeedProxy removedParam
-  {Ast.Local.setFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
+let private handleMissingArgument (name:string) (var:Ast.Types.Variable) =
+  let removedParam = Ast.Local.delFlag Ast.Flags.Variable.Parameter var
+  let removedParam = Ast.Local.delFlag Ast.Flags.Variable.NeedProxy removedParam
+  {Ast.Local.setFlag Ast.Flags.Variable.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
 
 (*Analyzes a scope*)
-let analyze (scope:Ast.FuncScope) closureType (types:ClrType list) = 
+let analyze (scope:Ast.Types.Scope) closureType (types:ClrType list) = 
 
   (*Resolves the type of a variable and updates the map with it*)
-  let resolveType name (vars:Ast.LocalMap) =
-    Map.add name (setType name vars.[name] (getType name closureType scope.ClosureVars vars)) vars
+  let resolveType name (vars:Ast.Types.LocalMap) =
+    Map.add name (setType name vars.[name] (getType name closureType scope.Closures vars)) vars
 
   (*Resolves types of all local variables*)
   let rec resolveTypes locals = 
-    match Map.tryFindKey (fun _ (var:Ast.LocalVar) -> not (var.Flags.Contains Ast.LocalFlags.TypeResolved)) locals with
+    match Map.tryFindKey (fun _ (var:Ast.Types.Variable) -> not (var.Flags.Contains Ast.Flags.Variable.TypeResolved)) locals with
     | None       -> locals // All variables have Exprs
     | Some(name) -> resolveTypes (resolveType name locals) // Key found, resolve its type
 
   { scope with 
       ArgTypes = Array.ofList types
 
-      LocalVars =
-        scope.LocalVars 
+      Variables =
+        scope.Variables 
           |> Map.map (fun name l -> 
             if Ast.Local.isParameter l then
               if l.Index < types.Length

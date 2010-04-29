@@ -10,27 +10,27 @@ module Function =
 
   module private Closure =
     (*Resolves all item expressions for a closure*)
-    let private resolveItems ctx (scope:Ast.FuncScope) =
+    let private resolveItems ctx (scope:Ast.Types.Scope) =
       let expr name =
-        if ctx.Scope.LocalVars.ContainsKey name
+        if ctx.Scope.Variables.ContainsKey name
           then Variables.Local.expr ctx name   // Local closed over variable
           else Variables.Closure.expr ctx name // Variable that is a closure in parent also
 
-      scope.ClosureVars
+      scope.Closures
         |> Map.toSeq
         |> Seq.sortBy (fun pair -> (snd pair).Index)
         |> Seq.map (fun pair -> expr (fst pair))
         |> List.ofSeq
 
     (*Creates a closure type*)
-    let private createType ctx (scope:Ast.FuncScope) =
+    let private createType ctx (scope:Ast.Types.Scope) =
       let clrType name =
-        if ctx.Scope.LocalVars.ContainsKey name
+        if ctx.Scope.Variables.ContainsKey name
           then Variables.Local.clrType ctx name
           else Variables.Closure.clrType ctx name
 
       Runtime.Closures.createClosureType (
-        scope.ClosureVars 
+        scope.Closures 
           |> Map.toSeq
           |> Seq.fold (fun state pair -> (clrType (fst pair), (snd pair).Index) :: state) [] 
           |> Seq.sortBy (fun pair -> snd pair)
@@ -38,7 +38,7 @@ module Function =
       )
 
     (*Creates a new closure type and expression to create an instance of that type*)
-    let internal create (ctx:Context) (scope:Ast.FuncScope) =
+    let internal create (ctx:Context) (scope:Ast.Types.Scope) =
       let scopesExpr = if Ast.Scope.definedInLocalDynamicScope scope
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
                               Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args

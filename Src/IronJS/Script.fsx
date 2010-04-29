@@ -57,8 +57,8 @@ open IronJS.Tools.Dlr
 open IronJS.Aliases
 open IronJS.Parser
 
-fsi.AddPrinter(fun (x:Ast.LocalVar) -> x.DebugView)
-fsi.AddPrinter(fun (x:Ast.ClosureVar) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.Types.Variable) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))

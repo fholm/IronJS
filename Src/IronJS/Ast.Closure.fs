@@ -1,11 +1,11 @@
-﻿namespace IronJS.Ast
+﻿namespace IronJS.Ast.Types
 
 open IronJS
 open IronJS.Aliases
 open IronJS.Ast
   
 [<DebuggerDisplay("{DebugView}")>]
-type ClosureVar = {
+type Closure = {
   Index: int
   DefinedInScopeLevel: int
 } with
@@ -16,6 +16,3 @@ type ClosureVar = {
     Index = -1
     DefinedInScopeLevel = -1
   }
-
-module Closure =
-  ()

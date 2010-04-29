@@ -11,14 +11,14 @@ module Variables =
 
   (*Helper functions for dealing with closure variables*)
   module Closure = 
-    let definingScopeLevel ctx name = ctx.Scope.ClosureVars.[name].DefinedInScopeLevel
+    let definingScopeLevel ctx name = ctx.Scope.Closures.[name].DefinedInScopeLevel
     let fieldNameN n = sprintf "Item%i" n
-    let fieldName ctx name = fieldNameN ctx.Scope.ClosureVars.[name].Index
+    let fieldName ctx name = fieldNameN ctx.Scope.Closures.[name].Index
     let clrTypeN typ n = Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
       if Ast.Scope.hasClosure ctx.Scope name 
-        then clrTypeN ctx.Closure.Type ctx.Scope.ClosureVars.[name].Index
+        then clrTypeN ctx.Closure.Type ctx.Scope.Closures.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
     let expr (ctx:Context) (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
@@ -45,7 +45,7 @@ module Variables =
     
     let clrType ctx name =
       if Ast.Scope.hasLocal ctx.Scope name
-        then Utils.Type.jsToClr ctx.Scope.LocalVars.[name].UsedAs
+        then Utils.Type.jsToClr ctx.Scope.Variables.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 
   module Global =

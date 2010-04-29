@@ -8,24 +8,24 @@ open IronJS.Compiler
 
 #nowarn "25"
 
-let private buildVarsMap (scope:Ast.FuncScope) =
+let private buildVarsMap (scope:Ast.Types.Scope) =
 
-  let (|Parameter|Local|) (lv:Ast.LocalVar) = 
+  let (|Parameter|Local|) (lv:Ast.Types.Variable) = 
     if Ast.Local.isParameter lv then Parameter else Local
 
-  let (|NeedProxy|Not|) (lv:Ast.LocalVar) =
+  let (|NeedProxy|Not|) (lv:Ast.Types.Variable) =
     if Ast.Local.needsProxy lv then NeedProxy else Not
 
-  let createVar (l:Ast.LocalVar) =
+  let createVar (l:Ast.Types.Variable) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
     if Ast.Local.isClosedOver l 
       then Expr.param l.Name (Type.strongBoxType.MakeGenericType([|clrTyp|]))
       else Expr.param l.Name clrTyp
 
-  let createProxy (l:Ast.LocalVar) =
+  let createProxy (l:Ast.Types.Variable) =
     Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
 
-  scope.LocalVars
+  scope.Variables
     |> Map.map(fun _ lv -> 
                 match lv with
                 | Parameter -> 
@@ -66,7 +66,7 @@ let private isProxied (_, v:Var) =
   | _ -> false
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.FuncScope) (ast:Ast.Node) =
+let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Types.Scope) (ast:Ast.Node) =
 
   let ctx = {
     Context.New with
@@ -102,7 +102,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
 
   (*Initialize closed over variables and parameters*)
   let initClosedOver = 
-    ctx.Scope.LocalVars
+    ctx.Scope.Variables
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
       |> Seq.filter (fun lv -> Ast.Local.isClosedOver lv)
@@ -117,7 +117,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
 
   (*Initialize variables that need to be set as undefined*)
   let initUndefined =
-    ctx.Scope.LocalVars
+    ctx.Scope.Variables
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
       |> Seq.filter (fun lv -> Ast.Local.initToUndefined lv)

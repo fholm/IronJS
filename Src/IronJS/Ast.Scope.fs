@@ -1,74 +1,83 @@
-﻿namespace IronJS.Ast
+﻿namespace IronJS.Ast.Flags
+  
+  type Scope
+    = HasDS = 1
+    | InLocalDS = 2
+    | NeedGlobals = 4
+    | NeedClosure = 8
 
-open IronJS
-open IronJS.Aliases
-open IronJS.Ast
+namespace IronJS.Ast.Types
 
-type LocalMap = Map<string, LocalVar>
-type ClosureMap = Map<string, ClosureVar>
+  open IronJS
+  open IronJS.Aliases
+  open IronJS.Ast
 
-type ScopeFlags 
-  = HasDS = 1
-  | InLocalDS = 2
-  | NeedGlobals = 4
-  | NeedClosure = 8
+  type LocalMap = Map<string, Types.Variable>
+  type ClosureMap = Map<string, Types.Closure>
 
-type FuncScope = {
-  LocalVars: LocalMap
-  ClosureVars: ClosureMap
-  ScopeLevel: int
-  Flags: ScopeFlags Set
-  ArgTypes: ClrType array
-} with
+  type Scope = {
+    Variables: LocalMap
+    Closures: ClosureMap
+    ScopeLevel: int
+    Flags: Flags.Scope Set
+    ArgTypes: ClrType array
+  } with
 
-  static member New = { 
-    Flags = Set.empty
-    LocalVars = Map.empty
-    ClosureVars = Map.empty
-    ScopeLevel = 0
-    ArgTypes = null
-  }
+    static member New = { 
+      Flags = Set.empty
+      Variables = Map.empty
+      Closures = Map.empty
+      ScopeLevel = 0
+      ArgTypes = null
+    }
 
-module Scope =
+namespace IronJS.Ast
 
-  let internal setFlag (f:ScopeFlags) (fs:FuncScope) =
-    if Set.contains f fs.Flags then fs else {fs with Flags = Set.add f fs.Flags}
+  open IronJS
+  open IronJS.Aliases
+  open IronJS.Ast
+  open IronJS.Ast.Types
 
-  let internal setFlagIf (f:ScopeFlags) (if':bool) (fs:FuncScope) =
-    if Set.contains f fs.Flags then fs elif if' then {fs with Flags = Set.add f fs.Flags} else fs
+  module Scope =
 
-  let internal delFlag (f:ScopeFlags) (fs:FuncScope) =
-    if Set.contains f fs.Flags then {fs with Flags = Set.remove f fs.Flags} else fs
+    let internal setFlag (f:Flags.Scope) (fs:Scope) =
+      if Set.contains f fs.Flags then fs else {fs with Flags = Set.add f fs.Flags}
 
-  let internal hasDynamicScope (fs:FuncScope) =
-    fs.Flags.Contains ScopeFlags.HasDS
+    let internal setFlagIf (f:Flags.Scope) (if':bool) (fs:Scope) =
+      if Set.contains f fs.Flags then fs elif if' then {fs with Flags = Set.add f fs.Flags} else fs
 
-  let internal definedInLocalDynamicScope (fs:FuncScope) =
-    fs.Flags.Contains ScopeFlags.InLocalDS
+    let internal delFlag (f:Flags.Scope) (fs:Scope) =
+      if Set.contains f fs.Flags then {fs with Flags = Set.remove f fs.Flags} else fs
 
-  let internal setClosure (fs:FuncScope) (name:string) (cv:ClosureVar) = 
-    {fs with ClosureVars = Map.add name cv fs.ClosureVars}
+    let internal hasDynamicScope (fs:Scope) =
+      fs.Flags.Contains Flags.Scope.HasDS
 
-  let internal hasClosure (scope:FuncScope) name = 
-    Map.containsKey name scope.ClosureVars
+    let internal definedInLocalDynamicScope (fs:Scope) =
+      fs.Flags.Contains Flags.Scope.InLocalDS
 
-  let internal createClosure (scope:FuncScope) name level = 
-    if scope.ClosureVars.ContainsKey name 
-      then scope 
-      else setClosure scope name {
-             ClosureVar.New with 
-               Index = scope.ClosureVars.Count
-               DefinedInScopeLevel = level
-           }
+    let internal setClosure (fs:Scope) (name:string) (cv:Types.Closure) = 
+      {fs with Closures = Map.add name cv fs.Closures}
 
-  let internal setLocal (fs:FuncScope) (name:string) (lv:LocalVar) = 
-    {fs with LocalVars = Map.add name lv fs.LocalVars}
+    let internal hasClosure (scope:Scope) name = 
+      Map.containsKey name scope.Closures
 
-  let internal hasLocal (fs:FuncScope) name = 
-    Map.containsKey name fs.LocalVars
+    let internal createClosure (scope:Scope) name level = 
+      if scope.Closures.ContainsKey name 
+        then scope 
+        else setClosure scope name {
+               Types.Closure.New with 
+                 Index = scope.Closures.Count
+                 DefinedInScopeLevel = level
+             }
 
-  let internal setClosedOver (fs:FuncScope) name = 
-    setLocal fs name (Local.setClosedOver fs.LocalVars.[name])
+    let internal setLocal (fs:Scope) (name:string) (lv:Types.Variable) = 
+      {fs with Variables = Map.add name lv fs.Variables}
 
-  let internal hasLocalOrClosure (fs:FuncScope) name =
-    hasLocal fs name || hasClosure fs name
+    let internal hasLocal (fs:Scope) name = 
+      Map.containsKey name fs.Variables
+
+    let internal setClosedOver (fs:Scope) name = 
+      setLocal fs name (Local.setClosedOver fs.Variables.[name])
+
+    let internal hasLocalOrClosure (fs:Scope) name =
+      hasLocal fs name || hasClosure fs name

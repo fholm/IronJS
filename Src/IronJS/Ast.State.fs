@@ -5,10 +5,10 @@ open IronJS.Aliases
 open IronJS.Ast
 
 type ParserState = { 
-  ScopeChain: FuncScope list
+  ScopeChain: Types.Scope list
   GlobalDynamicScopeLevel: int
   LocalDynamicScopeLevels: int list
-  FunctionMap : Dict<int, FuncScope * Node>
+  FunctionMap : Dict<int, Types.Scope * Node>
 } with
   static member New = {
     ScopeChain = []
@@ -36,13 +36,13 @@ module State =
       match parms with
       | []       -> Map.empty
       | name::xs -> 
-        let newParam = Local.setFlag LocalFlags.Parameter {LocalVar.New with Name = name; Index = index}
+        let newParam = Local.setFlag Flags.Variable.Parameter {Types.Variable.New with Name = name; Index = index}
         Map.add name newParam (createLocals xs (index+1))
 
     let scope = {
-      FuncScope.New with 
+      Types.Scope.New with 
         ScopeLevel  = (!sr).ScopeChain.Length;
-        LocalVars = createLocals [for c in parms -> c.Text] 0
+        Variables = createLocals [for c in parms -> c.Text] 0
     }
 
     sr := {
@@ -63,7 +63,7 @@ module State =
     | _     -> failwith "Couldn't exit scope"
 
   let enterDynamicScope sr =
-      let sc = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
+      let sc = Scope.setFlag Flags.Scope.HasDS (!sr).ScopeChain.Head
       let lsc = (!sr).LocalDynamicScopeLevels
 
       sr := {
@@ -87,7 +87,7 @@ module State =
     | []    -> failwith "Empty scope chain"
     | _::[] -> ()
     | x::xs -> 
-      let newLocal = Local.setFlagIf LocalFlags.InitToUndefined initUndefined {LocalVar.New with Name = name}
+      let newLocal = Local.setFlagIf Flags.Variable.InitToUndefined initUndefined {Types.Variable.New with Name = name}
       sr := {!sr with ScopeChain = Scope.setLocal x name newLocal :: xs}
 
   let getVariable sr name =
@@ -119,28 +119,28 @@ module State =
   let assignedFrom sr name node =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let lv = x.LocalVars.[name]
+    | x::xs -> let lv = x.Variables.[name]
                let x' = Scope.setLocal x name {lv with AssignedFrom = node :: lv.AssignedFrom}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedAs sr name typ =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let lv = x.LocalVars.[name]
+    | x::xs -> let lv = x.Variables.[name]
                let x' = Scope.setLocal x name {lv with UsedAs = lv.UsedAs ||| typ}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedWith sr name rname =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let lv = x.LocalVars.[name]
+    | x::xs -> let lv = x.Variables.[name]
                let x' = Scope.setLocal x name {lv with UsedWith = lv.UsedWith.Add(rname)}
                sr := {!sr with ScopeChain = x'::xs}
 
   let usedWithClosure sr name rname =
     match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
-    | x::xs -> let lv = x.LocalVars.[name]
+    | x::xs -> let lv = x.Variables.[name]
                let x' = Scope.setLocal x name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
                sr := {!sr with ScopeChain = x'::xs}
   
@@ -174,9 +174,9 @@ module State =
             then let typ = if isInsideDynamicScope !sr 
                              then Types.Dynamic
                              else Utils.getNodeType right
-                 let lv  = fs.LocalVars.[name]
+                 let lv  = fs.Variables.[name]
                  let lv' = {lv with UsedAs = lv.UsedAs ||| typ}
-                 {fs with LocalVars = fs.LocalVars.Add(name, lv')} :: tl
+                 {fs with Variables = fs.Variables.Add(name, lv')} :: tl
             else fs :: updateScopes tl
 
       sr := {!sr with ScopeChain = (updateScopes (!sr).ScopeChain)}

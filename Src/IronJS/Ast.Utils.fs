@@ -112,26 +112,6 @@ module Utils =
 
                 fs // return old top-scope
     | _     -> failwith "Couldn't exit scope"
-
-  let enterDynamicScope sr =
-      let sc  = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
-      let lsc = (!sr).LocalDynamicScopeLevels
-
-      sr := {
-        (!sr) with 
-          ScopeChain = sc :: (!sr).ScopeChain.Tail
-          GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel+1
-          LocalDynamicScopeLevels = lsc.Head+1 :: lsc.Tail
-      }
-
-  let exitDynamicScope sr =
-      let lsc = (!sr).LocalDynamicScopeLevels
-
-      sr :=  {
-        (!sr) with 
-          GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel-1
-          LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
-        }
      
 
   let assignedFrom sr name node =

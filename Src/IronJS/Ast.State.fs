@@ -30,3 +30,23 @@ module State =
 
   let internal isInsideDynamicScope (ps:ParserState) =
     ps.GlobalDynamicScopeLevel > 0
+
+  let enterDynamicScope sr =
+      let sc  = Scope.setFlag ScopeFlags.HasDS (!sr).ScopeChain.Head
+      let lsc = (!sr).LocalDynamicScopeLevels
+
+      sr := {
+        (!sr) with 
+          ScopeChain = sc :: (!sr).ScopeChain.Tail
+          GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel+1
+          LocalDynamicScopeLevels = lsc.Head+1 :: lsc.Tail
+      }
+
+  let exitDynamicScope sr =
+      let lsc = (!sr).LocalDynamicScopeLevels
+
+      sr :=  {
+        (!sr) with 
+          GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel-1
+          LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
+      }

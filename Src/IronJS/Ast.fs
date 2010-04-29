@@ -10,7 +10,7 @@ module Core =
 
   let rec parse (sr:ParserState ref) (t:AntlrToken) =
     match t.Type with
-    | 0 | AntlrParser.BLOCK -> parseBlock sr t
+    | 0 | AntlrParser.BLOCK       -> parseBlock sr t
     | AntlrParser.VAR             -> parseVar sr t
     | AntlrParser.ASSIGN          -> parseAssign sr t
     | AntlrParser.Identifier      -> Ast.Utils.getVariable sr t.Text
@@ -78,7 +78,7 @@ module Core =
   and parseCall sr t =
     Invoke(parse sr (child t 0) , parseList sr (childrenOf t 1))
 
-  and private parseVar sr t =
+  and parseVar sr t =
     let c = child t 0 
     if isAssign c 
       then Ast.Utils.createVar sr (child c 0).Text false //TODO: Remove magic constant
@@ -107,21 +107,21 @@ module Core =
 
   and parseWith sr t =
     let obj = parse sr (child t 0)
-    Ast.Utils.enterDynamicScope sr
+    State.enterDynamicScope sr
     let block = parse sr (child t 1)
-    Ast.Utils.exitDynamicScope sr
+    State.exitDynamicScope sr
     DynamicScope(obj, block)
 
   and parseFunction sr t =
     let isAnon = isAnonymous t
-    let bodyChild = if isAnon then 1 else 2
     let argsChild = if isAnon then 0 else 1
+    let bodyChild = if isAnon then 1 else 2
 
     if not isAnon then
       Ast.Utils.createVar sr (child t 0).Text false
 
+    //Enter Scope -> Parse Body -> Exit Scope
     Ast.Utils.enterScope sr (childrenOf t argsChild)
-
     let body = parse sr (child t bodyChild)
     let scope = Ast.Utils.exitScope sr
 

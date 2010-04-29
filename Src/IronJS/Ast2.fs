@@ -52,3 +52,25 @@ module Parser =
 
   and parsePossibleNull sr t = 
     if t = null then Null else parse sr t
+
+  and parseCall sr t =
+    Invoke(parse sr (child t 0) , parseList sr (childrenOf t 1))
+
+  and private parseAssign sr t =
+    let l = parse sr (child t 0)
+    let r = parse sr (child t 1)
+    Analyzer.assign sr l r
+    Assign(l, r)
+
+  and parseForStep sr head body =
+    let init = parse sr (child head 0)
+    let test = parse sr (child head 1)
+    let incr = parse sr (child head 2)
+    let body = parsePossibleNull sr body
+    ForIter(init, test, incr, body)
+
+  and parseFor sr t =
+    let c0 = child t 0
+    match c0.Type with
+    | AntlrParser.FORSTEP -> parseForStep sr c0 (child t 1)
+    | _ -> Error("Only FORSTEP loops are supported currently")

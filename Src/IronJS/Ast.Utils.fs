@@ -12,14 +12,14 @@ open Antlr.Runtime.Tree
 
 module Utils =
 
-  let internal intAsNode (i:int) =
+  let intAsNode (i:int) =
     #if ONLY_DOUBLE
     Number(double i)
     #else
     Integer(i)
     #endif
 
-  let internal strToNumber (s:string) =
+  let strToNumber (s:string) =
     #if ONLY_DOUBLE
     Number(double s)
     #else
@@ -27,7 +27,7 @@ module Utils =
     if success then Integer(result) else Number(double s) 
     #endif
   
-  let internal cleanString = function 
+  let cleanString = function 
     | null 
     | "" -> "" 
     | s  -> 
@@ -35,7 +35,7 @@ module Utils =
         then s.Trim('"') 
         else s.Trim('\'')
 
-  let internal getNodeType = function
+  let getNodeType = function
     | Number(_) -> Types.Double
     | Integer(_) -> Types.Integer
     | String(_) -> Types.String 
@@ -141,34 +141,30 @@ module Utils =
           LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
       }}
 
-  let internal assignedFrom name node = state {
-    let!  s = getState
-    match s.ScopeChain with
+  let internal assignedFrom sr name node =
+    match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
                let x' = Scope.setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
-               do! setState {s with ScopeChain = x'::xs}}
+               sr := {!sr with ScopeChain = x'::xs}
 
-  let internal usedAs name typ = state {
-    let!  s = getState
-    match s.ScopeChain with
+  let internal usedAs sr name typ =
+    match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
                let x' = Scope.setLocal x name {l with UsedAs = l.UsedAs ||| typ}
-               do! setState {s with ScopeChain = x'::xs}}
+               sr := {!sr with ScopeChain = x'::xs}
 
-  let internal usedWith name rname = state {
-    let!  s = getState
-    match s.ScopeChain with
+  let internal usedWith sr name rname =
+    match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
                let x' = Scope.setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
-               do! setState {s with ScopeChain = x'::xs}}
+               sr := {!sr with ScopeChain = x'::xs}
 
-  let internal usedWithClosure name rname = state {
-    let!  s = getState
-    match s.ScopeChain with
+  let internal usedWithClosure sr name rname =
+    match (!sr).ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
                let x' = Scope.setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
-               do! setState {s with ScopeChain = x'::xs}}
+               sr := {!sr with ScopeChain = x'::xs}

@@ -9,28 +9,25 @@ open IronJS.Ast.Utils
 
 module Analyzer =
   
-  let assign left right = state {
-    let! (s:ParserState) = getState 
-
+  let assign sr left right =
+    
     match left with
     | Local(name, _) ->
       match right with
       | Local(rightName, _) -> 
-        if State.isInsideDynamicScope s
-          then do! usedAs name Types.Dynamic
-               return! usedWith name rightName
-          else return! usedWith name rightName
+        if State.isInsideDynamicScope !sr
+          then usedAs sr name Types.Dynamic
+          else usedWith sr name rightName
 
       | Closure(rightName, _) -> 
-        if State.isInsideDynamicScope s
-          then do! usedAs name Types.Dynamic
-               return! usedWithClosure name rightName
-          else return! usedWithClosure name rightName
+        if State.isInsideDynamicScope !sr
+          then usedAs sr name Types.Dynamic
+          else usedWithClosure sr name rightName
 
       | _ ->
         match getNodeType right with
-        | Types.Dynamic -> return! assignedFrom name right
-        | typ           -> return! usedAs name typ
+        | Types.Dynamic -> assignedFrom sr name right
+        | typ           -> usedAs sr name typ
 
     | Closure(name, _) ->
 
@@ -39,7 +36,7 @@ module Analyzer =
         | [] -> []
         | x::xs ->
           if Scope.hasLocal x name
-            then let typ = if State.isInsideDynamicScope s 
+            then let typ = if State.isInsideDynamicScope !sr 
                              then Types.Dynamic
                              else getNodeType right
                  let l  = x.LocalVars.[name]
@@ -47,6 +44,6 @@ module Analyzer =
                  {x with LocalVars = x.LocalVars.Add(name, l')} :: xs
             else x :: updateScopes xs
 
-      do! setState {s with ScopeChain = (updateScopes s.ScopeChain)}
+      sr := {!sr with ScopeChain = (updateScopes (!sr).ScopeChain)}
 
-    | _ -> return ()}
+    | _ -> ()

@@ -9,7 +9,7 @@ module Restrict =
 
   type private BR = System.Dynamic.BindingRestrictions
   
-  let notAtAll = System.Dynamic.BindingRestrictions.Empty
+  let notAtAll = BR.Empty
   let byExpr expr = BR.GetExpressionRestriction(expr)
   let byType expr typ = BR.GetTypeRestriction(expr, typ)
   let byInstance expr instance = BR.GetInstanceRestriction(expr, instance)

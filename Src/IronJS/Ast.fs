@@ -142,4 +142,4 @@ module Core =
   let parseFile funcMap (fileName:string) =
     let jsLexer = new ES3Lexer(new ANTLRFileStream(fileName))
     let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
-    parseAst ((jsParser.program().Tree) :?> AstTree) Ast.Scope.Global funcMap
+    parseAst ((jsParser.program().Tree) :?> AstTree) Ast.Scope.New funcMap

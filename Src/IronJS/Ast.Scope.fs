@@ -65,3 +65,6 @@ module Scope =
 
   let internal hasLocal (scope:FuncScope) name = 
     Map.containsKey name scope.LocalVars
+
+  let internal setClosedOver (scope:FuncScope) name = 
+    setLocal scope name (Local.setClosedOver scope.LocalVars.[name])

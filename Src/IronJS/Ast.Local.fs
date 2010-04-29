@@ -74,3 +74,10 @@ module Local =
        lv.UsedWith.Count        = 0 
     && lv.UsedWithClosure.Count = 0 
     && lv.AssignedFrom.Length   = 0
+
+  let internal setClosedOver (lv:LocalVar) =
+    let lv' = if lv.Flags.Contains LocalFlags.Parameter 
+                then setFlag LocalFlags.NeedProxy lv
+                else lv
+
+    setFlag LocalFlags.ClosedOver lv'

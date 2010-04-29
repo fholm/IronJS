@@ -27,12 +27,13 @@ module Utils =
     if success then Integer(result) else Number(double s) 
     #endif
   
-  let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
-
-  let internal setClosedOver (scope:FuncScope) name = 
-    let l   = scope.LocalVars.[name]
-    let l'  = if l.Flags.Contains LocalFlags.Parameter then Local.setFlag LocalFlags.NeedProxy l else l
-    Scope.setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
+  let internal cleanString = function 
+    | null 
+    | "" -> "" 
+    | s  -> 
+      if s.[0] = '"' 
+        then s.Trim('"') 
+        else s.Trim('\'')
 
   let internal scopeLevels = state {
     let! s = getState
@@ -55,7 +56,7 @@ module Utils =
           | []    -> s
           | x::xs -> 
             if Scope.hasLocal x name 
-              then setClosedOver x name :: xs
+              then Scope.setClosedOver x name :: xs
               else Scope.createClosure x name level :: updateScopes xs
 
         return Closure(name, fst sl)

@@ -35,6 +35,15 @@ module Utils =
         then s.Trim('"') 
         else s.Trim('\'')
 
+  let internal getNodeType = function
+    | Number(_) -> Types.Double
+    | Integer(_) -> Types.Integer
+    | String(_) -> Types.String 
+    | Boolean(_) -> Types.Boolean
+    | Function(_) -> Types.Function
+    | Object(_) -> Types.Object
+    | _ -> Types.Dynamic
+
   let internal scopeLevels = state {
     let! s = getState
     return (s.GlobalDynamicScopeLevel, s.LocalDynamicScopeLevels.Head)

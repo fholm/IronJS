@@ -8,15 +8,6 @@ open IronJS.Ast
 open IronJS.Ast.Utils
 
 module Analyzer =
-
-  let private getType = function
-    | Number(_) -> Types.Double
-    | Integer(_) -> Types.Integer
-    | String(_) -> Types.String 
-    | Boolean(_) -> Types.Boolean
-    | Function(_) -> Types.Function
-    | Object(_) -> Types.Object
-    | _ -> Types.Dynamic
   
   let assign left right = state {
     let! (s:ParserState) = getState 
@@ -36,15 +27,10 @@ module Analyzer =
                return! usedWithClosure name rightName
           else return! usedWithClosure name rightName
 
-      | Number(_)   -> return! usedAs name Types.Double
-      | Integer(_)  -> return! usedAs name Types.Integer
-      | String(_)   -> return! usedAs name Types.String 
-      | Boolean(_)  -> return! usedAs name Types.Boolean
-      | Function(_) -> return! usedAs name Types.Function
-      | Object(_)   -> return! usedAs name Types.Object
-
-      //Anything we can't determine runtime types for
-      | _ -> return! assignedFrom name right
+      | _ ->
+        match getNodeType right with
+        | Types.Dynamic -> return! assignedFrom name right
+        | typ           -> return! usedAs name typ
 
     | Closure(name, _) ->
 
@@ -54,7 +40,7 @@ module Analyzer =
         | x::xs ->
           if Scope.hasLocal x name
             then let l  = x.LocalVars.[name]
-                 let l' = {l with UsedAs = l.UsedAs ||| (getType right)}
+                 let l' = {l with UsedAs = l.UsedAs ||| getNodeType right}
                  {x with LocalVars = x.LocalVars.Add(name, l')} :: xs
             else x :: updateScopes xs
 

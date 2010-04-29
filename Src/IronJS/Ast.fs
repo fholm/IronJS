@@ -8,7 +8,7 @@ open IronJS.Ast
 
 module Core =
 
-  let rec parse (sr:ParserState ref) (t:AntlrToken) =
+  let rec parse (sr:Types.State ref) (t:AntlrToken) =
     match t.Type with
     | 0 | AntlrParser.BLOCK       -> parseBlock sr t
     | AntlrParser.VAR             -> parseVar sr t
@@ -136,7 +136,7 @@ module Core =
         Assign(name, func)
 
   let parseAst (ast:AntlrToken) scope funcMap =  
-    let sr = ref {ParserState.New with ScopeChain = [scope]; FunctionMap = funcMap}
+    let sr = ref {Types.State.New with ScopeChain = [scope]; FunctionMap = funcMap}
     let ast = parse sr ast
     (!sr).ScopeChain.[0], ast
 

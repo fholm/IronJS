@@ -106,7 +106,7 @@ module Core =
     let! scope = exitScope()
     let! s = getState
 
-    let funcScope = setScopeFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
+    let funcScope = Scope.setFlagIf ScopeFlags.InLocalDS (insideLocalDS s) scope
     s.FunctionMap.Add(s.FunctionMap.Count, (funcScope,body))
     
     let func = Function(s.FunctionMap.Count-1)
@@ -142,4 +142,4 @@ module Core =
   let parseFile funcMap (fileName:string) =
     let jsLexer = new ES3Lexer(new ANTLRFileStream(fileName))
     let jsParser = new ES3Parser(new CommonTokenStream(jsLexer))
-    parseAst ((jsParser.program().Tree) :?> AstTree) Ast.FunctionScope.New funcMap
+    parseAst ((jsParser.program().Tree) :?> AstTree) Ast.FuncScope.New funcMap

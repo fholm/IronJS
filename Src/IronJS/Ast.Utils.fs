@@ -12,15 +12,6 @@ open Antlr.Runtime.Tree
 
 module Utils =
 
-  let internal setScopeFlag (f:ScopeFlags) (s:FunctionScope) =
-    if s.Flags.Contains f then s else {s with Flags = s.Flags.Add f}
-
-  let internal setScopeFlagIf (f:ScopeFlags) (if':bool) (s:FunctionScope) =
-    if s.Flags.Contains f then s elif if' then {s with Flags = s.Flags.Add f} else s
-
-  let internal removeScopeFlag (f:ScopeFlags) (s:FunctionScope) =
-    if s.Flags.Contains f then {s with Flags = s.Flags.Remove f} else s
-
   let internal activeScope (ps:ParserState) =
     ps.ScopeChain.Head
 
@@ -48,13 +39,13 @@ module Utils =
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
-  let internal setClosure (scope:FunctionScope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
+  let internal setClosure (scope:FuncScope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
-  let internal hasClosure (scope:FunctionScope) name = scope.ClosureVars.ContainsKey name
-  let internal hasLocal (scope:FunctionScope) name = scope.LocalVars.ContainsKey name
-  let internal setLocal (scope:FunctionScope) (name:string) (loc:LocalVar) = {scope with LocalVars = scope.LocalVars.Add(name, loc)}
+  let internal hasClosure (scope:FuncScope) name = scope.ClosureVars.ContainsKey name
+  let internal hasLocal (scope:FuncScope) name = scope.LocalVars.ContainsKey name
+  let internal setLocal (scope:FuncScope) (name:string) (loc:LocalVar) = {scope with LocalVars = scope.LocalVars.Add(name, loc)}
 
-  let internal createClosure (scope:FunctionScope) name level = 
+  let internal createClosure (scope:FuncScope) name level = 
     if scope.ClosureVars.ContainsKey name 
       then scope 
       else setClosure scope name {
@@ -63,7 +54,7 @@ module Utils =
                DefinedInScopeLevel = level
            }
 
-  let internal setClosedOver (scope:FunctionScope) name = 
+  let internal setClosedOver (scope:FuncScope) name = 
     let l   = scope.LocalVars.[name]
     let l'  = if l.Flags.Contains LocalFlags.Parameter then Local.setFlag LocalFlags.NeedProxy l else l
     setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
@@ -121,7 +112,7 @@ module Utils =
         Map.add name newParam (createLocals xs (index+1))
 
     let scope = {
-      FunctionScope.New with 
+      FuncScope.New with 
         ScopeLevel  = s.ScopeChain.Length;
         LocalVars = createLocals [for c in parms -> c.Text] 0
     }
@@ -145,7 +136,7 @@ module Utils =
 
   let internal enterDynamicScope = state {
       let! s  = getState
-      let sc  = setScopeFlag ScopeFlags.HasDS s.ScopeChain.Head
+      let sc  = Scope.setFlag ScopeFlags.HasDS s.ScopeChain.Head
       let lsc = s.LocalDynamicScopeLevels
 
       do! setState {

@@ -87,7 +87,7 @@ let private handleMissingArgument (name:string) (var:Ast.LocalVar) =
   {Ast.Local.setFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
 
 (*Analyzes a scope*)
-let analyze (scope:Ast.FunctionScope) closureType (types:ClrType list) = 
+let analyze (scope:Ast.FuncScope) closureType (types:ClrType list) = 
 
   (*Resolves the type of a variable and updates the map with it*)
   let resolveType name (vars:Ast.LocalMap) =

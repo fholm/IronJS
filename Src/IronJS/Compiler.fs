@@ -8,7 +8,7 @@ open IronJS.Compiler
 
 #nowarn "25"
 
-let private buildVarsMap (scope:Ast.FunctionScope) =
+let private buildVarsMap (scope:Ast.FuncScope) =
 
   let (|Parameter|Local|) (input:Ast.LocalVar) = 
     if input.IsParameter then Parameter else Local
@@ -66,7 +66,7 @@ let private isProxied (_, v:Var) =
   | _ -> false
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
-let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.FunctionScope) (ast:Ast.Node) =
+let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.FuncScope) (ast:Ast.Node) =
 
   let ctx = {
     Context.New with

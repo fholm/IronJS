@@ -93,10 +93,10 @@
     <Compile Include="Tools.Antlr.fs" />
     <Compile Include="Ast.Ops.fs" />
     <Compile Include="Ast.Node.fs" />
+    <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.Local.fs" />
     <Compile Include="Ast.Closure.fs" />
     <Compile Include="Ast.Scope.fs" />
-    <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.State.fs" />
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.fs" />

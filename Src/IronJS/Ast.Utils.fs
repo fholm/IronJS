@@ -42,3 +42,6 @@ module Utils =
     | Function(_) -> Types.Function
     | Object(_) -> Types.Object
     | _ -> Types.Dynamic
+
+  let antlrTokenName (t:AntlrToken) = 
+    AntlrParser.tokenNames.[t.Type]

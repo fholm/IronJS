@@ -34,7 +34,7 @@ module Core =
     | AntlrParser.PINC            -> parsePreInc sr t
 
     //Error handling
-    | _ -> Error(sprintf "No parser for token %s (%i)" AntlrParser.tokenNames.[t.Type] t.Type)
+    | _ -> Error(sprintf "No parser for token %s (%i)" (Utils.antlrTokenName t) t.Type)
 
   and parseList sr tlist =
     List.map (fun t -> parse sr t) tlist

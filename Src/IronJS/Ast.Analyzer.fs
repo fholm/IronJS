@@ -52,7 +52,7 @@ module Analyzer =
         match s with
         | [] -> []
         | x::xs ->
-          if hasLocal x name
+          if Scope.hasLocal x name
             then let l  = x.LocalVars.[name]
                  let l' = {l with UsedAs = l.UsedAs ||| (getType right)}
                  {x with LocalVars = x.LocalVars.Add(name, l')} :: xs

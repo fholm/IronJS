@@ -27,16 +27,12 @@ module Utils =
     if success then Integer(result) else Number(double s) 
     #endif
   
-  let internal setClosure (scope:FuncScope) (name:string) (clos:ClosureVar) = {scope with ClosureVars = scope.ClosureVars.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
-  let internal hasClosure (scope:FuncScope) name = scope.ClosureVars.ContainsKey name
-  let internal hasLocal (scope:FuncScope) name = scope.LocalVars.ContainsKey name
-  let internal setLocal (scope:FuncScope) (name:string) (loc:LocalVar) = {scope with LocalVars = scope.LocalVars.Add(name, loc)}
 
   let internal createClosure (scope:FuncScope) name level = 
     if scope.ClosureVars.ContainsKey name 
       then scope 
-      else setClosure scope name {
+      else Scope.setClosure scope name {
              ClosureVar.New with 
                Index = scope.ClosureVars.Count
                DefinedInScopeLevel = level
@@ -45,7 +41,7 @@ module Utils =
   let internal setClosedOver (scope:FuncScope) name = 
     let l   = scope.LocalVars.[name]
     let l'  = if l.Flags.Contains LocalFlags.Parameter then Local.setFlag LocalFlags.NeedProxy l else l
-    setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
+    Scope.setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
 
   let internal scopeLevels = state {
     let! s = getState
@@ -57,17 +53,17 @@ module Utils =
     let! sl = scopeLevels
 
     match s.ScopeChain with
-    | x::xs when hasLocal x name -> return Local(name, snd sl)
-    | x::xs when hasClosure x name -> return Closure(name, fst sl)
+    | x::xs when Scope.hasLocal x name -> return Local(name, snd sl)
+    | x::xs when Scope.hasClosure x name -> return Closure(name, fst sl)
     | _  -> 
-      match List.tryFindIndex (fun s -> hasLocal s name) s.ScopeChain with
+      match List.tryFindIndex (fun s -> Scope.hasLocal s name) s.ScopeChain with
       //We found a scope with a Local named 'name'
       | Some(level) -> 
         let rec updateScopes s =
           match s with
           | []    -> s
           | x::xs -> 
-            if hasLocal x name 
+            if Scope.hasLocal x name 
               then setClosedOver x name :: xs
               else createClosure x name level :: updateScopes xs
 
@@ -83,7 +79,7 @@ module Utils =
     | _::[] -> s
     | x::xs -> 
       let newLocal = Local.setFlagIf LocalFlags.InitToUndefined initUndefined {LocalVar.New with Name = name}
-      {s with ScopeChain = (setLocal x name newLocal :: xs)}
+      {s with ScopeChain = Scope.setLocal x name newLocal :: xs}
 
   let internal createVar name initUndefined = state {
     let! s = getState
@@ -149,7 +145,7 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
-               let x' = setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
+               let x' = Scope.setLocal x name {l with AssignedFrom = node :: l.AssignedFrom}
                do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedAs name typ = state {
@@ -157,7 +153,7 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
-               let x' = setLocal x name {l with UsedAs = l.UsedAs ||| typ}
+               let x' = Scope.setLocal x name {l with UsedAs = l.UsedAs ||| typ}
                do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWith name rname = state {
@@ -165,7 +161,7 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
-               let x' = setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
+               let x' = Scope.setLocal x name {l with UsedWith = l.UsedWith.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}
 
   let internal usedWithClosure name rname = state {
@@ -173,5 +169,5 @@ module Utils =
     match s.ScopeChain with
     | []    -> failwith "Global scope"
     | x::xs -> let l  = x.LocalVars.[name]
-               let x' = setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
+               let x' = Scope.setLocal x name {l with UsedWithClosure = l.UsedWithClosure.Add(rname)}
                do! setState {s with ScopeChain = x'::xs}}

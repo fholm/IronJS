@@ -30,17 +30,29 @@ type FuncScope = {
 
 module Scope =
 
-  let internal setFlag (f:ScopeFlags) (s:FuncScope) =
-    if s.Flags.Contains f then s else {s with Flags = s.Flags.Add f}
+  let internal setFlag (f:ScopeFlags) (fs:FuncScope) =
+    if Set.contains f fs.Flags then fs else {fs with Flags = Set.add f fs.Flags}
 
-  let internal setFlagIf (f:ScopeFlags) (if':bool) (s:FuncScope) =
-    if s.Flags.Contains f then s elif if' then {s with Flags = s.Flags.Add f} else s
+  let internal setFlagIf (f:ScopeFlags) (if':bool) (fs:FuncScope) =
+    if Set.contains f fs.Flags then fs elif if' then {fs with Flags = Set.add f fs.Flags} else fs
 
-  let internal delFlag (f:ScopeFlags) (s:FuncScope) =
-    if s.Flags.Contains f then {s with Flags = s.Flags.Remove f} else s
+  let internal delFlag (f:ScopeFlags) (fs:FuncScope) =
+    if Set.contains f fs.Flags then {fs with Flags = Set.remove f fs.Flags} else fs
 
-  let internal hasDynamicScope (s:FuncScope) =
-    s.Flags.Contains ScopeFlags.HasDS
+  let internal hasDynamicScope (fs:FuncScope) =
+    fs.Flags.Contains ScopeFlags.HasDS
 
-  let internal definedInLocalDynamicScope (s:FuncScope) =
-    s.Flags.Contains ScopeFlags.InLocalDS
+  let internal definedInLocalDynamicScope (fs:FuncScope) =
+    fs.Flags.Contains ScopeFlags.InLocalDS
+
+  let internal setClosure (fs:FuncScope) (name:string) (cv:ClosureVar) = 
+    {fs with ClosureVars = Map.add name cv fs.ClosureVars}
+
+  let internal hasClosure (scope:FuncScope) name = 
+    Map.containsKey name scope.ClosureVars
+
+  let internal setLocal (scope:FuncScope) (name:string) (lv:LocalVar) = 
+    {scope with LocalVars = Map.add name lv scope.LocalVars}
+
+  let internal hasLocal (scope:FuncScope) name = 
+    Map.containsKey name scope.LocalVars

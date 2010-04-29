@@ -17,7 +17,7 @@ module Variables =
     let clrTypeN typ n = Utils.Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
 
     let clrType ctx name =
-      if Ast.Utils.hasClosure ctx.Scope name 
+      if Ast.Scope.hasClosure ctx.Scope name 
         then clrTypeN ctx.Closure.Type ctx.Scope.ClosureVars.[name].Index
         else failwithf "No closure variable named '%s' exist" name
 
@@ -44,7 +44,7 @@ module Variables =
         else exprBox
     
     let clrType ctx name =
-      if Ast.Utils.hasLocal ctx.Scope name
+      if Ast.Scope.hasLocal ctx.Scope name
         then Utils.Type.jsToClr ctx.Scope.LocalVars.[name].UsedAs
         else failwithf "No local variable named '%s' exist" name
 

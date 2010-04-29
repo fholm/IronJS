@@ -9,6 +9,17 @@ open IronJS.Ast
 open IronJS.Ast.Utils
 open IronJS.Parser
 
+(*
+Variable abbreviations
+----------------------
+  cv = ClosureVar
+  lv = LocalVar
+  ps = ParserState
+  fs = FunctionScope
+  t = AstTree
+  n = Node
+*)
+
 module Core = 
 
   let rec private parse (t:AstTree) = state {

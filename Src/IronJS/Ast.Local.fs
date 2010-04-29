@@ -39,38 +39,38 @@ type LocalVar = {
 
 module Local =
 
-  let internal setFlag (f:LocalFlags) (l:LocalVar) =
-    if l.Flags.Contains f then l else {l with Flags = l.Flags.Add f}
+  let internal setFlag (f:LocalFlags) (lv:LocalVar) =
+    if lv.Flags.Contains f then lv else {lv with Flags = lv.Flags.Add f}
 
-  let internal setFlagIf (f:LocalFlags) (if':bool) (l:LocalVar) =
-    if l.Flags.Contains f then l elif if' then {l with Flags = l.Flags.Add f} else l
+  let internal setFlagIf (f:LocalFlags) (if':bool) (lv:LocalVar) =
+    if lv.Flags.Contains f then lv elif if' then {lv with Flags = lv.Flags.Add f} else lv
 
-  let internal delFlag (f:LocalFlags) (l:LocalVar) =
-    if l.Flags.Contains f then {l with Flags = l.Flags.Remove f} else l
+  let internal delFlag (f:LocalFlags) (lv:LocalVar) =
+    if lv.Flags.Contains f then {lv with Flags = lv.Flags.Remove f} else lv
 
-  let internal hasFlag (f:LocalFlags) (l:LocalVar) =
-    Set.contains f l.Flags
+  let internal hasFlag (f:LocalFlags) (lv:LocalVar) =
+    Set.contains f lv.Flags
 
-  let internal isClosedOver (l:LocalVar) = 
-    hasFlag LocalFlags.ClosedOver l
+  let internal isClosedOver (lv:LocalVar) = 
+    hasFlag LocalFlags.ClosedOver lv
 
-  let internal isParameter (l:LocalVar) = 
-    hasFlag LocalFlags.Parameter l
+  let internal isParameter (lv:LocalVar) = 
+    hasFlag LocalFlags.Parameter lv
 
-  let internal typeIsResolved (l:LocalVar) = 
-    hasFlag LocalFlags.TypeResolved l
+  let internal typeIsResolved (lv:LocalVar) = 
+    hasFlag LocalFlags.TypeResolved lv
 
-  let internal needsProxy (l:LocalVar) = 
-    hasFlag LocalFlags.NeedProxy l
+  let internal needsProxy (lv:LocalVar) = 
+    hasFlag LocalFlags.NeedProxy lv
 
-  let internal initToUndefined (l:LocalVar) = 
-    hasFlag LocalFlags.InitToUndefined l
+  let internal initToUndefined (lv:LocalVar) = 
+    hasFlag LocalFlags.InitToUndefined lv
 
-  let internal isDynamic (l:LocalVar) =
-       l.UsedAs = Types.Dynamic 
-    || not (System.Enum.IsDefined(typeof<Types>, l.UsedAs))
+  let internal isDynamic (lv:LocalVar) =
+       lv.UsedAs = Types.Dynamic 
+    || not (System.Enum.IsDefined(typeof<Types>, lv.UsedAs))
 
-  let internal IsReadOnly (l:LocalVar) =
-       l.UsedWith.Count        = 0 
-    && l.UsedWithClosure.Count = 0 
-    && l.AssignedFrom.Length   = 0
+  let internal IsReadOnly (lv:LocalVar) =
+       lv.UsedWith.Count        = 0 
+    && lv.UsedWithClosure.Count = 0 
+    && lv.AssignedFrom.Length   = 0

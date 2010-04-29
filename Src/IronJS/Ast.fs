@@ -136,7 +136,7 @@ module Core =
     return DynamicScope(obj, block)}
 
   and private parseNumber t = state { 
-    return toNumber t.Text}
+    return strToNumber t.Text}
     
   and private parseReturn  t = state { let! value = parse (child t 0) in return Return(value)}
   and private parsePossibleNull t = state{if t = null then return Null else return! parse t}

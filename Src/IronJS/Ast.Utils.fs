@@ -19,7 +19,7 @@ module Utils =
     Integer(i)
     #endif
 
-  let internal toNumber (s:string) =
+  let internal strToNumber (s:string) =
     #if ONLY_DOUBLE
     Number(double s)
     #else

@@ -60,11 +60,14 @@ module Scope =
                DefinedInScopeLevel = level
            }
 
-  let internal setLocal (scope:FuncScope) (name:string) (lv:LocalVar) = 
-    {scope with LocalVars = Map.add name lv scope.LocalVars}
+  let internal setLocal (fs:FuncScope) (name:string) (lv:LocalVar) = 
+    {fs with LocalVars = Map.add name lv fs.LocalVars}
 
-  let internal hasLocal (scope:FuncScope) name = 
-    Map.containsKey name scope.LocalVars
+  let internal hasLocal (fs:FuncScope) name = 
+    Map.containsKey name fs.LocalVars
 
-  let internal setClosedOver (scope:FuncScope) name = 
-    setLocal scope name (Local.setClosedOver scope.LocalVars.[name])
+  let internal setClosedOver (fs:FuncScope) name = 
+    setLocal fs name (Local.setClosedOver fs.LocalVars.[name])
+
+  let internal hasLocalOrClosure (fs:FuncScope) name =
+    hasLocal fs name || hasClosure fs name

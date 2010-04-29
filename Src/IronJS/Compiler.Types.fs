@@ -24,7 +24,7 @@ type Context = {
   Return: LabelTarget
 
   //Others
-  Scope: Ast.Scope
+  Scope: Ast.FunctionScope
   Locals: Map<string, Var>
   Builder: Context -> Ast.Node -> Et
   TemporaryTypes: SafeDict<string, ClrType>
@@ -55,7 +55,7 @@ type Context = {
     Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
 
     //Others
-    Scope = Ast.Scope.New
+    Scope = Ast.FunctionScope.New
     Locals = Map.empty
     Builder = fun x a -> Dlr.Expr.null'
     TemporaryTypes = null

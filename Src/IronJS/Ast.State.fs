@@ -4,10 +4,10 @@ open IronJS
 open IronJS.Aliases
 
 type ParserState = { 
-  ScopeChain: Scope list
+  ScopeChain: FunctionScope list
   GlobalDynamicScopeLevel: int
   LocalDynamicScopeLevels: int list
-  FunctionMap : Dict<int, Scope * Node>
+  FunctionMap : Dict<int, FunctionScope * Node>
 } with
   member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
   member x.Scope = x.ScopeChain.Head

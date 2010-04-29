@@ -10,7 +10,7 @@ module Function =
 
   module private Closure =
     (*Resolves all item expressions for a closure*)
-    let private resolveItems ctx (scope:Ast.Scope) =
+    let private resolveItems ctx (scope:Ast.FunctionScope) =
       let expr name =
         if ctx.Scope.LocalVars.ContainsKey name
           then Variables.Local.expr ctx name   // Local closed over variable
@@ -23,7 +23,7 @@ module Function =
         |> List.ofSeq
 
     (*Creates a closure type*)
-    let private createType ctx (scope:Ast.Scope) =
+    let private createType ctx (scope:Ast.FunctionScope) =
       let clrType name =
         if ctx.Scope.LocalVars.ContainsKey name
           then Variables.Local.clrType ctx name
@@ -38,7 +38,7 @@ module Function =
       )
 
     (*Creates a new closure type and expression to create an instance of that type*)
-    let internal create (ctx:Context) (scope:Ast.Scope) =
+    let internal create (ctx:Context) (scope:Ast.FunctionScope) =
       let scopesExpr = if scope.InLocalDS 
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
                               Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args

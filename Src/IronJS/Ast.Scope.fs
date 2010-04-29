@@ -12,7 +12,7 @@ type ScopeFlags
   | NeedGlobals = 4
   | NeedClosure = 8
 
-type Scope = {
+type FunctionScope = {
   LocalVars: LocalMap
   ClosureVars: ClosureMap
   ScopeLevel: int

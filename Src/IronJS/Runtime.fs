@@ -28,13 +28,13 @@ type DelegateCell(astId:int, closureId:int, delegateType:ClrType) =
 
 (*The currently executing environment*)
 [<AllowNullLiteral>]
-type Environment (scopeAnalyzer:Ast.Scope -> ClrType -> ClrType list -> Ast.Scope, 
-                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Scope -> Ast.Node -> EtLambda) =
+type Environment (scopeAnalyzer:Ast.FunctionScope -> ClrType -> ClrType list -> Ast.FunctionScope, 
+                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.FunctionScope -> Ast.Node -> EtLambda) =
 
   [<DefaultValue>] 
   val mutable Globals : Object
 
-  let astMap = new Dict<int, Ast.Scope * Ast.Node>()
+  let astMap = new Dict<int, Ast.FunctionScope * Ast.Node>()
   let closureMap = new SafeDict<ClrType, int>()
   let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
 

@@ -35,7 +35,7 @@ let private setType name (var:Ast.LocalVar) typ =
   {Ast.Local.setFlag Ast.LocalFlags.TypeResolved var with UsedAs = typ }
 
 (*Get the type of a variable, evaluating it if necessary*)
-let getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
+let private getType name closureType (closure:Ast.ClosureMap) (vars:Ast.LocalMap) =
 
   let excluded = ref Set.empty
 
@@ -87,7 +87,7 @@ let private handleMissingArgument (name:string) (var:Ast.LocalVar) =
   {Ast.Local.setFlag Ast.LocalFlags.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
 
 (*Analyzes a scope*)
-let analyze (scope:Ast.Scope) closureType (types:ClrType list) = 
+let analyze (scope:Ast.FunctionScope) closureType (types:ClrType list) = 
 
   (*Resolves the type of a variable and updates the map with it*)
   let resolveType name (vars:Ast.LocalMap) =

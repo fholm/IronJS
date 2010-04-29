@@ -21,15 +21,6 @@ module Utils =
   let internal removeScopeFlag (f:ScopeFlags) (s:Scope) =
     if s.Flags.Contains f then {s with Flags = s.Flags.Remove f} else s
 
-  let internal setLocalFlag (f:LocalFlags) (l:Local) =
-    if l.Flags.Contains f then l else {l with Flags = l.Flags.Add f}
-
-  let internal setLocalFlagIf (f:LocalFlags) (if':bool) (l:Local) =
-    if l.Flags.Contains f then l elif if' then {l with Flags = l.Flags.Add f} else l
-
-  let internal removeLocalFlag (f:LocalFlags) (l:Local) =
-    if l.Flags.Contains f then {l with Flags = l.Flags.Remove f} else l
-
   let internal activeScope (ps:ParserState) =
     ps.ScopeChain.Head
 
@@ -57,25 +48,25 @@ module Utils =
   let internal childrenOf (tree:AstTree) n = children (child tree n)
   let internal isAssign (tree:AstTree) = tree.Type = ES3Parser.ASSIGN
   let internal isAnonymous (tree:AstTree) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
-  let internal setClosure (scope:Scope) (name:string) (clos:Closure) = {scope with Closure = scope.Closure.Add(name, clos)}
+  let internal setClosure (scope:Scope) (name:string) (clos:ClosureVar) = {scope with Closure = scope.Closure.Add(name, clos)}
   let internal cleanString = function | null | "" -> "" | s  -> if s.[0] = '"' then s.Trim('"') else s.Trim('\'')
   let internal hasClosure (scope:Scope) name = scope.Closure.ContainsKey name
   let internal hasLocal (scope:Scope) name = scope.Locals.ContainsKey name
-  let internal setLocal (scope:Scope) (name:string) (loc:Local) = {scope with Locals = scope.Locals.Add(name, loc)}
+  let internal setLocal (scope:Scope) (name:string) (loc:LocalVar) = {scope with Locals = scope.Locals.Add(name, loc)}
 
   let internal createClosure (scope:Scope) name level = 
     if scope.Closure.ContainsKey name 
       then scope 
       else setClosure scope name {
-             Closure.New with 
+             ClosureVar.New with 
                Index = scope.Closure.Count
                DefinedInScopeLevel = level
            }
 
   let internal setClosedOver (scope:Scope) name = 
     let l   = scope.Locals.[name]
-    let l'  = if l.Flags.Contains LocalFlags.Parameter then setLocalFlag LocalFlags.NeedProxy l else l
-    setLocal scope name (setLocalFlag LocalFlags.ClosedOver l')
+    let l'  = if l.Flags.Contains LocalFlags.Parameter then Local.setFlag LocalFlags.NeedProxy l else l
+    setLocal scope name (Local.setFlag LocalFlags.ClosedOver l')
 
   let internal scopeLevels = state {
     let! s = getState
@@ -112,7 +103,7 @@ module Utils =
     | []    -> failwith "Empty scope chain"
     | _::[] -> s
     | x::xs -> 
-      let newLocal = setLocalFlagIf LocalFlags.InitToUndefined initUndefined {Local.New with Name = name}
+      let newLocal = Local.setFlagIf LocalFlags.InitToUndefined initUndefined {LocalVar.New with Name = name}
       {s with ScopeChain = (setLocal x name newLocal :: xs)}
 
   let internal createVar name initUndefined = state {
@@ -126,7 +117,7 @@ module Utils =
       match parms with
       | []       -> Map.empty
       | name::xs -> 
-        let newParam = setLocalFlag LocalFlags.Parameter {Local.New with Name = name; Index = index}
+        let newParam = Local.setFlag LocalFlags.Parameter {LocalVar.New with Name = name; Index = index}
         Map.add name newParam (createLocals xs (index+1))
 
     let scope = {

@@ -11,7 +11,7 @@ type LocalFlags
   | NeedProxy       = 16
 
 [<DebuggerDisplay("{DebugView}")>] 
-type Local = {
+type LocalVar = {
   Name: string
   Flags: LocalFlags Set
   Index: int
@@ -45,57 +45,14 @@ type Local = {
     UsedWithClosure = Set.empty
     AssignedFrom = List.empty
   }
-  
-[<DebuggerDisplay("{DebugView}")>]
-type Closure = {
-  Index: int
-  DefinedInScopeLevel: int
-} with
-  member x.DebugView = sprintf "index:%i/from:%i" x.Index x.DefinedInScopeLevel
-  static member New = {
-    Index = -1
-    DefinedInScopeLevel = -1
-  }
 
-type LocalMap = Map<string, Local>
-type ClosureMap = Map<string, Closure>
+module Local =
 
-type ScopeFlags 
-  = HasDS = 1
-  | InLocalDS = 2
-  | NeedGlobals = 4
-  | NeedClosure = 8
+  let internal setFlag (f:LocalFlags) (l:LocalVar) =
+    if l.Flags.Contains f then l else {l with Flags = l.Flags.Add f}
 
-type Scope = {
-  Locals: LocalMap
-  Closure: ClosureMap
-  ScopeLevel: int
-  Flags: ScopeFlags Set
-  ArgTypes: ClrType array
-} with
-  member x.HasDS = x.Flags.Contains ScopeFlags.HasDS
-  member x.InLocalDS = x.Flags.Contains ScopeFlags.InLocalDS
+  let internal setFlagIf (f:LocalFlags) (if':bool) (l:LocalVar) =
+    if l.Flags.Contains f then l elif if' then {l with Flags = l.Flags.Add f} else l
 
-  static member New = { 
-    Locals = Map.empty
-    Closure = Map.empty
-    Flags = Set.empty
-    ScopeLevel = 0
-    ArgTypes = null
-  }
-
-type ParserState = { 
-  ScopeChain: Scope list
-  GlobalDynamicScopeLevel: int
-  LocalDynamicScopeLevels: int list
-  FunctionMap : Dict<int, Scope * Node>
-} with
-  member x.InDynamicScope = x.GlobalDynamicScopeLevel > 0
-  member x.Scope = x.ScopeChain.Head
-  member x.ParentScopes = x.ScopeChain.Tail
-  static member New = {
-    ScopeChain = []
-    GlobalDynamicScopeLevel = 0
-    LocalDynamicScopeLevels = [0]
-    FunctionMap = null
-  }
+  let internal delFlag (f:LocalFlags) (l:LocalVar) =
+    if l.Flags.Contains f then {l with Flags = l.Flags.Remove f} else l

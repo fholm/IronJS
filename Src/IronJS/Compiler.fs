@@ -10,19 +10,19 @@ open IronJS.Compiler
 
 let private buildVarsMap (scope:Ast.Scope) =
 
-  let (|Parameter|Local|) (input:Ast.Local) = 
+  let (|Parameter|Local|) (input:Ast.LocalVar) = 
     if input.IsParameter then Parameter else Local
 
-  let (|NeedProxy|Not|) (input:Ast.Local) =
+  let (|NeedProxy|Not|) (input:Ast.LocalVar) =
     if input.NeedsProxy then NeedProxy else Not
 
-  let createVar (l:Ast.Local) =
+  let createVar (l:Ast.LocalVar) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
     if l.IsClosedOver 
       then Expr.param l.Name (Type.strongBoxType.MakeGenericType([|clrTyp|]))
       else Expr.param l.Name clrTyp
 
-  let createProxy (l:Ast.Local) =
+  let createProxy (l:Ast.LocalVar) =
     Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
 
   scope.Locals

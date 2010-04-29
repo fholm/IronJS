@@ -1,5 +1,8 @@
 ﻿namespace IronJS.Aliases
 
+type Lexer  = IronJS.Parser.ES3Lexer
+type Parser = IronJS.Parser.ES3Parser
+
 type MetaObj        = System.Dynamic.DynamicMetaObject
 
 type Et             = System.Linq.Expressions.Expression

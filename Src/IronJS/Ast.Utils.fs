@@ -43,11 +43,9 @@ module Utils =
     | Object(_) -> Types.Object
     | _ -> Types.Dynamic
 
-  let scopeLevels sr =
-    (!sr).GlobalDynamicScopeLevel, (!sr).LocalDynamicScopeLevels.Head
-
   let getVariable sr name =
-    let sl = scopeLevels sr
+    let sl = (!sr).GlobalDynamicScopeLevel, 
+             (!sr).LocalDynamicScopeLevels.Head
 
     match (!sr).ScopeChain with
     | x::xs when Scope.hasLocal x name -> Local(name, snd sl)

@@ -7,7 +7,7 @@ open IronJS.Tools
 (*Tools for working with the System.Dynamic.BindingRestrictions class*)
 module Restrict =
 
-  type private BR = System.Dynamic.BindingRestrictions
+  type BR = System.Dynamic.BindingRestrictions
   
   let notAtAll = BR.Empty
   let byExpr expr = BR.GetExpressionRestriction(expr)

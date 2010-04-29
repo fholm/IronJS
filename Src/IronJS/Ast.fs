@@ -118,7 +118,7 @@ module Core =
     if not isAnon then
       State.createLocal sr (child t 0).Text false
 
-    //Enter Scope -> Parse Body -> Exit Scope
+    //Enter Scope > Parse Body > Exit Scope
     State.enterScope sr (childrenOf t argsChild)
     let body = parse sr (child t bodyChild)
     let scope = State.exitScope sr

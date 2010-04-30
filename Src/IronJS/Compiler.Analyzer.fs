@@ -15,7 +15,7 @@ let private isDynamic (l:Ast.Types.Variable) =
   | Types.Undefined
   | Types.Array
   | Types.Function
-  | Types.Object -> true && Ast.Variable.initToUndefined l
+  | Types.Object -> false
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)

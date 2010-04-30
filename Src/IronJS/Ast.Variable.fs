@@ -48,45 +48,48 @@ namespace IronJS.Ast
 
   module Variable =
 
-    let internal setFlag (f:Flags.Variable) (lv:Variable) =
+    let setFlag (f:Flags.Variable) (lv:Variable) =
       if lv.Flags.Contains f then lv else {lv with Flags = lv.Flags.Add f}
 
-    let internal setFlagIf (f:Flags.Variable) (if':bool) (lv:Variable) =
+    let setFlagIf (f:Flags.Variable) (if':bool) (lv:Variable) =
       if lv.Flags.Contains f then lv elif if' then {lv with Flags = lv.Flags.Add f} else lv
 
-    let internal delFlag (f:Flags.Variable) (lv:Variable) =
+    let delFlag (f:Flags.Variable) (lv:Variable) =
       if lv.Flags.Contains f then {lv with Flags = lv.Flags.Remove f} else lv
 
-    let internal hasFlag (f:Flags.Variable) (lv:Variable) =
+    let hasFlag (f:Flags.Variable) (lv:Variable) =
       Set.contains f lv.Flags
 
-    let internal isClosedOver (lv:Variable) = 
+    let isClosedOver (lv:Variable) = 
       hasFlag Flags.Variable.ClosedOver lv
 
-    let internal isParameter (lv:Variable) = 
+    let isParameter (lv:Variable) = 
       hasFlag Flags.Variable.Parameter lv
 
-    let internal typeIsResolved (lv:Variable) = 
+    let typeIsResolved (lv:Variable) = 
       hasFlag Flags.Variable.TypeResolved lv
 
-    let internal needsProxy (lv:Variable) = 
+    let needsProxy (lv:Variable) = 
       hasFlag Flags.Variable.NeedProxy lv
 
-    let internal initToUndefined (lv:Variable) = 
+    let initToUndefined (lv:Variable) = 
       hasFlag Flags.Variable.InitToUndefined lv
 
-    let internal isDynamic (lv:Variable) =
+    let isDynamic (lv:Variable) =
          lv.UsedAs = Types.Dynamic 
       || not (System.Enum.IsDefined(typeof<Types>, lv.UsedAs))
 
-    let internal IsReadOnly (lv:Variable) =
+    let IsReadOnly (lv:Variable) =
          lv.UsedWith.Count        = 0 
       && lv.UsedWithClosure.Count = 0 
       && lv.AssignedFrom.Length   = 0
 
-    let internal setClosedOver (lv:Variable) =
+    let setClosedOver (lv:Variable) =
       let lv' = if lv.Flags.Contains Flags.Variable.Parameter 
                   then setFlag Flags.Variable.NeedProxy lv
                   else lv
 
       setFlag Flags.Variable.ClosedOver lv'
+
+    let setInitToUndefined (var:Variable) =
+      setFlag Flags.Variable.InitToUndefined {var with UsedAs = var.UsedAs ||| Types.Undefined}

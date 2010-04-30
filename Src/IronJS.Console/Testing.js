@@ -29,5 +29,3 @@ return a;
 return foo()();
 }
 */
-
-bench();

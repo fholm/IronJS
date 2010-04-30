@@ -94,8 +94,9 @@ namespace IronJS.Ast
       | []    -> failwith "Empty scope chain"
       | _::[] -> ()
       | x::xs -> 
-        let newLocal = Variable.setFlagIf Flags.Variable.InitToUndefined initUndefined {Types.Variable.New with Name = name}
-        sr := {!sr with ScopeChain = Scope.setLocal x name newLocal :: xs}
+        let var  = {Types.Variable.New with Name = name}
+        let var' = if initUndefined then Variable.setInitToUndefined var else var
+        sr := {!sr with ScopeChain = Scope.setLocal x name var' :: xs}
 
     let getVariable sr name =
       let sl = (!sr).GlobalDynamicScopeLevel, 

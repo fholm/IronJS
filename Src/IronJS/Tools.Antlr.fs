@@ -10,6 +10,10 @@ open Antlr.Runtime.Tree
 
 module Antlr =
 
+  type FileStream = ANTLRFileStream
+  type StringStream = ANTLRStringStream
+  type TokenStream = CommonTokenStream
+
   let ct (t:obj) = 
     t :?> AntlrToken
 
@@ -37,7 +41,3 @@ module Antlr =
 
   let isAnonymous (t:AntlrToken) = 
     t.Type = ES3Parser.FUNCTION && t.ChildCount = 2
-
-  type FileStream = ANTLRFileStream
-  type StringStream = ANTLRStringStream
-  type TokenStream = CommonTokenStream

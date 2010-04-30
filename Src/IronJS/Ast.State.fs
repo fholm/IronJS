@@ -88,7 +88,7 @@ namespace IronJS.Ast
                       DynamicScopeLevels = (!sr).DynamicScopeLevels.Tail
                   }
 
-                  fs // return old top-scope
+                  fs //Return old top-scope
 
       | _     -> failwith "Couldn't exit scope"
 
@@ -135,7 +135,7 @@ namespace IronJS.Ast
         | Some(level) -> 
           let rec updateScopes fsList =
             match fsList with
-            | []    -> fsList
+            | [] -> []
             | fs::tl -> 
               if Scope.hasLocal fs name 
                 then Scope.setClosedOver fs name :: tl

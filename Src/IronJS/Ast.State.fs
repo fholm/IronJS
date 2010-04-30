@@ -54,6 +54,9 @@ namespace IronJS.Ast
     let isInsideDynamicScope (ps:Types.State) =
       globalDynamicScopeLevel ps > 0
 
+    let inGlobalScope (ps:Types.State) =
+      ps.ScopeChain.Length = 1
+
     let modifyTopScope sr fn = 
       match getScopeChain !sr with
       | []     -> failwith "Empty scope-chain"
@@ -110,13 +113,13 @@ namespace IronJS.Ast
         }
 
     let createLocal sr name initUndefined =
-      match (!sr).ScopeChain with
-      | []    -> failwith "Empty scope chain"
-      | _::[] -> ()
-      | x::xs -> 
-        let var  = {Types.Variable.New with Name = name}
-        let var' = if initUndefined then Variable.setInitToUndefined var else var
-        sr := {!sr with ScopeChain = Scope.setLocal x name var' :: xs}
+      if inGlobalScope !sr then ()
+      else
+        modifyTopScope sr (fun fs ->
+          let var  = {Types.Variable.New with Name = name}
+          let var' = if initUndefined then Variable.setInitToUndefined var else var
+          Scope.setLocal fs name var'
+        )
 
     let getVariable sr name =
       let sl = (!sr).DynamicScopeLevels.Head

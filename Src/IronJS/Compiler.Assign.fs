@@ -19,7 +19,7 @@ module Assign =
                Variables.Global.assign ctx name value
           else DynamicScope.setGlobalValue ctx name value
 
-      | Ast.Local(name, localScopeLevel) -> 
+      | Ast.Variable(name, localScopeLevel) -> 
         if localScopeLevel = 0 
           then ctx.TemporaryTypes.[name] <- value.Type
                Variables.Local.assign ctx name value

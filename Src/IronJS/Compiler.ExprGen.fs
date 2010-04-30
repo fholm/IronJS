@@ -24,7 +24,7 @@ module ExprGen =
         then Variables.Closure.value ctx name
         else DynamicScope.getClosureValue ctx name
 
-    | Ast.Local(name, localScopeLevel)    -> 
+    | Ast.Variable(name, localScopeLevel)    -> 
       if localScopeLevel = 0 
         then Variables.Local.value ctx name
         else DynamicScope.getLocalValue ctx name

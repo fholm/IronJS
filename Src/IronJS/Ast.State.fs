@@ -102,7 +102,7 @@ namespace IronJS.Ast
                (!sr).LocalDynamicScopeLevels.Head
 
       match (!sr).ScopeChain with
-      | x::xs when Scope.hasLocal x name -> Local(name, snd sl)
+      | x::xs when Scope.hasLocal x name -> Variable(name, snd sl)
       | x::xs when Scope.hasClosure x name -> Closure(name, fst sl)
       | _  -> 
         match List.tryFindIndex (fun s -> Scope.hasLocal s name) (!sr).ScopeChain with
@@ -154,9 +154,9 @@ namespace IronJS.Ast
     let analyzeAssign sr left right =
     
       match left with
-      | Local(name, _) ->
+      | Variable(name, _) ->
         match right with
-        | Local(rightName, _) -> 
+        | Variable(rightName, _) -> 
           if isInsideDynamicScope !sr
             then usedAs sr name Types.Dynamic
             else usedWith sr name rightName

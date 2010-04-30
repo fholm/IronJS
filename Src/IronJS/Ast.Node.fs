@@ -18,7 +18,7 @@ type Node
   | Undefined
 
   //Identifiers
-  | Local     of string * int
+  | Variable  of string * int
   | Closure   of string * int
   | Global    of string * int
   | Property  of Node * string

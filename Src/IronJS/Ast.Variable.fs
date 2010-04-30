@@ -93,3 +93,6 @@ namespace IronJS.Ast
 
     let setInitToUndefined (var:Variable) =
       setFlag Flags.Variable.InitToUndefined {var with UsedAs = var.UsedAs ||| Types.Undefined}
+
+    let setParameter (var:Variable) =
+      setFlag Flags.Variable.Parameter var

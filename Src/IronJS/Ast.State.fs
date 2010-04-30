@@ -4,6 +4,11 @@
   open IronJS.Aliases
   open IronJS.Ast
 
+  type DynamicScopeLevels = {
+    Global: int
+    Local: int
+  }
+
   type State = { 
     ScopeChain: Types.Scope list
     GlobalDynamicScopeLevel: int
@@ -32,50 +37,54 @@ namespace IronJS.Ast
     let getParentScopes (ps:Types.State) =
       ps.ScopeChain.Tail
 
+    let getScopeLevel (ps:Types.State) =
+      ps.ScopeChain.Length
+
+    let getScopeChain (ps:Types.State) =
+      ps.ScopeChain
+
     let isInsideLocalDynamicScope (ps:Types.State) =
       ps.LocalDynamicScopeLevels.Head > 0
 
     let isInsideDynamicScope (ps:Types.State) =
       ps.GlobalDynamicScopeLevel > 0
 
-    let enterScope sr (parms:AntlrToken list) =
-      let rec createLocals parms index =
-        match parms with
-        | []       -> Map.empty
-        | name::xs -> 
-          let newParam = Variable.setFlag Flags.Variable.Parameter {Types.Variable.New with Name = name; Index = index}
-          Map.add name newParam (createLocals xs (index+1))
+    let enterScope sr (parms:AntlrToken seq) =
+      let variables = 
+        Seq.mapi (fun i (t:AntlrToken) -> 
+          (t.Text, Variable.setParameter {Types.Variable.New with Name = t.Text; Index = i})
+        ) parms
 
       let scope = {
         Types.Scope.New with 
-          ScopeLevel  = (!sr).ScopeChain.Length;
-          Variables = createLocals [for c in parms -> c.Text] 0
+          ScopeLevel  = getScopeLevel !sr;
+          Variables = Map.ofSeq variables
       }
 
       sr := {
-        (!sr) with 
-          ScopeChain = (scope :: (!sr).ScopeChain)
+        !sr with 
+          ScopeChain = (scope :: getScopeChain !sr)
           LocalDynamicScopeLevels = (0 :: (!sr).LocalDynamicScopeLevels)
       }
 
     let exitScope sr =
-      match (!sr).ScopeChain with
+      match getScopeChain !sr with
       | fs::tl -> sr := {
-                  (!sr) with
-                    ScopeChain = tl
-                    LocalDynamicScopeLevels = (!sr).LocalDynamicScopeLevels.Tail
+                    !sr with
+                      ScopeChain = tl
+                      LocalDynamicScopeLevels = (!sr).LocalDynamicScopeLevels.Tail
                   }
 
                   fs // return old top-scope
       | _     -> failwith "Couldn't exit scope"
 
     let enterDynamicScope sr =
-        let sc = Scope.setFlag Flags.Scope.HasDS (!sr).ScopeChain.Head
+        let sh = Scope.setFlag Flags.Scope.HasDS (getActiveScope !sr)
         let lsc = (!sr).LocalDynamicScopeLevels
 
         sr := {
-          (!sr) with 
-            ScopeChain = sc :: (!sr).ScopeChain.Tail
+          !sr with 
+            ScopeChain = sh :: getParentScopes !sr
             GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel+1
             LocalDynamicScopeLevels = lsc.Head+1 :: lsc.Tail
         }
@@ -84,7 +93,7 @@ namespace IronJS.Ast
         let lsc = (!sr).LocalDynamicScopeLevels
 
         sr :=  {
-          (!sr) with 
+          !sr with 
             GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel-1
             LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
         }
@@ -102,7 +111,7 @@ namespace IronJS.Ast
       let sl = (!sr).GlobalDynamicScopeLevel, 
                (!sr).LocalDynamicScopeLevels.Head
 
-      match (!sr).ScopeChain with
+      match getScopeChain !sr with
       | x::xs when Scope.hasLocal x name -> Variable(name, snd sl)
       | x::xs when Scope.hasClosure x name -> Closure(name, fst sl)
       | _  -> 
@@ -126,28 +135,28 @@ namespace IronJS.Ast
 
     let assignedFrom sr name node =
       match (!sr).ScopeChain with
-      | []    -> failwith "Global scope"
+      | []    -> failwith "Empty scope-chain"
       | x::xs -> let lv = x.Variables.[name]
                  let x' = Scope.setLocal x name {lv with AssignedFrom = node :: lv.AssignedFrom}
                  sr := {!sr with ScopeChain = x'::xs}
 
     let usedAs sr name typ =
       match (!sr).ScopeChain with
-      | []    -> failwith "Global scope"
+      | []    -> failwith "Empty scope-chain"
       | x::xs -> let lv = x.Variables.[name]
                  let x' = Scope.setLocal x name {lv with UsedAs = lv.UsedAs ||| typ}
                  sr := {!sr with ScopeChain = x'::xs}
 
     let usedWith sr name rname =
       match (!sr).ScopeChain with
-      | []    -> failwith "Global scope"
+      | []    -> failwith "Empty scope-chain"
       | x::xs -> let lv = x.Variables.[name]
                  let x' = Scope.setLocal x name {lv with UsedWith = lv.UsedWith.Add(rname)}
                  sr := {!sr with ScopeChain = x'::xs}
 
     let usedWithClosure sr name rname =
       match (!sr).ScopeChain with
-      | []    -> failwith "Global scope"
+      | []    -> failwith "Empty scope-chain"
       | x::xs -> let lv = x.Variables.[name]
                  let x' = Scope.setLocal x name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
                  sr := {!sr with ScopeChain = x'::xs}

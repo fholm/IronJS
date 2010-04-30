@@ -63,7 +63,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
-    env.Globals <- new Object(env)
+    env.Globals <- new Object()
     env
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
@@ -91,11 +91,9 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
 
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =
-  val mutable Environment : Environment
   val mutable Properties : Dict<string, Box>
 
-  new(env:Environment) = {
-    Environment = env
+  new() = {
     Properties = new Dictionary<string, Box>()
   }
 
@@ -157,12 +155,14 @@ and [<AllowNullLiteral>] Function =
   val mutable Closure : Closure
   val mutable AstId : int
   val mutable ClosureId : int
+  val mutable Environment : Environment
 
   new(astId, closureId, closure, env) = { 
-    inherit Object(env)
-    Closure = closure
+    inherit Object()
     AstId = astId
     ClosureId = closureId
+    Closure = closure
+    Environment = env
   }
 
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =

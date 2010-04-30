@@ -38,7 +38,7 @@ module ExprGen =
 
     //Objects
     | Ast.Object(properties)      -> Object.create ctx properties
-    | Ast.Property(target, name)  -> CallSites.getMember (ctx.Builder2 target) name
+    | Ast.Property(target, name)  -> CallSites.getMember ctx (ctx.Builder2 target) name
 
     //Functions
     | Ast.Function(astId)       -> Function.definition ctx astId

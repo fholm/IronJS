@@ -61,7 +61,7 @@ module Box =
 
     if right.Type = typeof<Runtime.Box> 
       then Expr.assign left right
-      else Expr.block [setValue left right; setType left right.Type]
+      else Expr.block [setValue left right; setType left right.Type; Expr.void']
 
   let wrap (expr:Et) =
     if isWrapped expr then expr 

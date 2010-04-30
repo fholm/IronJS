@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="Program.fs" />
     <Content Include="Testing.js" />
+    <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

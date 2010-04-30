@@ -170,7 +170,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars body)
   #endif
 
-  #if INTERACTIVE
+  #if DEBUG
   printf "%A" (Fsi.dbgViewProp.GetValue(lmb :> Et, null))
   #endif
 

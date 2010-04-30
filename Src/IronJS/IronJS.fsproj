@@ -93,6 +93,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Ast.Ops.fs" />
     <Compile Include="Ast.Node.fs" />
+    <Compile Include="Ast.Flags.fs" />
     <Compile Include="Ast.Utils.fs" />
     <Compile Include="Ast.Variable.fs" />
     <Compile Include="Ast.Closure.fs" />
@@ -123,7 +124,6 @@
     <Compile Include="Compiler.ExprGen.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.fs" />
-    <None Include="Script.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">

@@ -1,13 +1,4 @@
-﻿namespace IronJS.Ast.Flags
-
-  type Variable
-    = Parameter       = 1
-    | ClosedOver      = 2
-    | InitToUndefined = 4
-    | TypeResolved    = 8
-    | NeedProxy       = 16
-
-namespace IronJS.Ast.Types
+﻿namespace IronJS.Ast.Types
 
   open IronJS
   open IronJS.Aliases
@@ -44,6 +35,7 @@ namespace IronJS.Ast
 
   open IronJS
   open IronJS.Aliases
+  open IronJS.Ast
   open IronJS.Ast.Types
 
   module Variable =

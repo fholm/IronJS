@@ -52,7 +52,7 @@ module Variables =
     let clrType ctx name = typeof<ClrObject>
 
     let value (ctx:Context) name = 
-      let expr = Object.getProperty ctx.Globals name
+      let expr = Object.getProperty ctx ctx.Globals name
       if ctx.TemporaryTypes.ContainsKey name then 
         if expr.Type = typeof<Runtime.Box> then
           let value = Utils.Box.fieldByClrType expr ctx.TemporaryTypes.[name]
@@ -63,4 +63,4 @@ module Variables =
         expr
 
     let assign (ctx:Context) name value = 
-      Object.setProperty ctx.Globals name (Utils.Box.wrap value)
+      Object.setProperty ctx ctx.Globals name value

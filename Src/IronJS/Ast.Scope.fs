@@ -1,12 +1,4 @@
-﻿namespace IronJS.Ast.Flags
-  
-  type Scope
-    = HasDS = 1
-    | InLocalDS = 2
-    | NeedGlobals = 4
-    | NeedClosure = 8
-
-namespace IronJS.Ast.Types
+﻿namespace IronJS.Ast.Types
 
   open IronJS
   open IronJS.Aliases

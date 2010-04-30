@@ -31,5 +31,5 @@ module Assign =
                Variables.Local.assign ctx name value
           else DynamicScope.setLocalValue ctx name value
 
-      | Ast.Property(target, name) -> CallSites.setMember (ctx.Builder ctx target) name value
+      | Ast.Property(target, name) -> CallSites.setMember ctx (ctx.Builder ctx target) name value
       | _ -> failwith "Assignment for '%A' is not defined" left

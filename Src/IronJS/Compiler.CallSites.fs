@@ -26,14 +26,14 @@ module CallSites =
         else let binder = new Runtime.Binders.Convert(typeof<'a>, false) 
              Expr.dynamicT<Runtime.Object> binder [expr]
 
-  let setMember (expr:Et) name value = 
+  let setMember ctx (expr:Et) name value = 
     if Runtime.Utils.Type.isObject expr.Type 
-      then Object.setProperty expr name value
+      then Object.setProperty ctx expr name value
       else let binder = new Runtime.Binders.SetMember(name, false)
            Expr.dynamicT<ClrObject> binder (expr :: [value])
 
-  let getMember (expr:Et) name = 
+  let getMember ctx (expr:Et) name = 
     if Runtime.Utils.Type.isObject expr.Type 
-      then Object.getProperty expr name
+      then Object.getProperty ctx expr name
       else let binder = new Runtime.Binders.GetMember(name, false)
            Expr.dynamicT<ClrObject> binder [expr]

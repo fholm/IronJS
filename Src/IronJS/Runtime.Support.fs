@@ -8,16 +8,19 @@ open IronJS.Runtime
 type PrototypeFetcher = 
   delegate of Object * Box byref -> bool
 
-type Undefined() =
-  static let instance = new Undefined()
-  static member Instance = instance
-  static member InstanceExpr = Dlr.Expr.constant instance
-
 type PropertyCache =
   val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
+
+  [<DefaultValue>] 
   val mutable PrototypeFetcher : PrototypeFetcher
+
+  new(name) = {
+    Name = name
+    ClassId = -1
+    Index = -1
+  }
 
   member x.Update (obj:Object, env:Environment) =
     ()

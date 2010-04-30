@@ -1,4 +1,5 @@
-﻿var bench = function () {
+﻿/*
+var bench = function () {
     function f(x, y, z) {
         return x + y + z;
     }
@@ -28,6 +29,12 @@ return a;
 }
 return foo()();
 }
+
+bench();
 */
+bench = function () {
+    for (var i = 0; i < 3000000; ++i)
+        x = 2;
+}
 
 bench();

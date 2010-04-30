@@ -11,14 +11,12 @@
 
   type State = { 
     ScopeChain: Types.Scope list
-    GlobalDynamicScopeLevel: int
-    LocalDynamicScopeLevels: int list
+    DynamicScopeLevels : DynamicScopeLevels list
     FunctionMap : Dict<int, Types.Scope * Node>
   } with
     static member New = {
       ScopeChain = []
-      GlobalDynamicScopeLevel = 0
-      LocalDynamicScopeLevels = [0]
+      DynamicScopeLevels = [{Global = 0; Local = 0}]
       FunctionMap = null
     }
 
@@ -43,11 +41,14 @@ namespace IronJS.Ast
     let getScopeChain (ps:Types.State) =
       ps.ScopeChain
 
+    let globalDynamicScopeLevel (ps:Types.State) =
+      ps.DynamicScopeLevels.Head.Global
+
     let isInsideLocalDynamicScope (ps:Types.State) =
-      ps.LocalDynamicScopeLevels.Head > 0
+      ps.DynamicScopeLevels.Head.Local > 0
 
     let isInsideDynamicScope (ps:Types.State) =
-      ps.GlobalDynamicScopeLevel > 0
+      globalDynamicScopeLevel ps > 0
 
     let enterScope sr (parms:AntlrToken seq) =
       let variables = 
@@ -64,7 +65,7 @@ namespace IronJS.Ast
       sr := {
         !sr with 
           ScopeChain = (scope :: getScopeChain !sr)
-          LocalDynamicScopeLevels = (0 :: (!sr).LocalDynamicScopeLevels)
+          DynamicScopeLevels = {Global = globalDynamicScopeLevel !sr; Local = 0} :: (!sr).DynamicScopeLevels
       }
 
     let exitScope sr =
@@ -72,7 +73,7 @@ namespace IronJS.Ast
       | fs::tl -> sr := {
                     !sr with
                       ScopeChain = tl
-                      LocalDynamicScopeLevels = (!sr).LocalDynamicScopeLevels.Tail
+                      DynamicScopeLevels = (!sr).DynamicScopeLevels.Tail
                   }
 
                   fs // return old top-scope
@@ -80,22 +81,22 @@ namespace IronJS.Ast
 
     let enterDynamicScope sr =
         let sh = Scope.setFlag Flags.Scope.HasDS (getActiveScope !sr)
-        let lsc = (!sr).LocalDynamicScopeLevels
+        let ds = (!sr).DynamicScopeLevels
+        let sl = ds.Head
 
         sr := {
           !sr with 
             ScopeChain = sh :: getParentScopes !sr
-            GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel+1
-            LocalDynamicScopeLevels = lsc.Head+1 :: lsc.Tail
+            DynamicScopeLevels = {sl with Local = sl.Local+1; Global = sl.Global+1} :: ds.Tail
         }
 
     let exitDynamicScope sr =
-        let lsc = (!sr).LocalDynamicScopeLevels
+        let ds = (!sr).DynamicScopeLevels
+        let sl = ds.Head
 
         sr :=  {
           !sr with 
-            GlobalDynamicScopeLevel = (!sr).GlobalDynamicScopeLevel-1
-            LocalDynamicScopeLevels = lsc.Head-1 :: lsc.Tail
+            DynamicScopeLevels = {sl with Local = sl.Local-1; Global = sl.Global+1} :: ds.Tail
         }
 
     let createLocal sr name initUndefined =
@@ -108,12 +109,11 @@ namespace IronJS.Ast
         sr := {!sr with ScopeChain = Scope.setLocal x name var' :: xs}
 
     let getVariable sr name =
-      let sl = (!sr).GlobalDynamicScopeLevel, 
-               (!sr).LocalDynamicScopeLevels.Head
+      let sl = (!sr).DynamicScopeLevels.Head
 
       match getScopeChain !sr with
-      | x::xs when Scope.hasLocal x name -> Variable(name, snd sl)
-      | x::xs when Scope.hasClosure x name -> Closure(name, fst sl)
+      | x::xs when Scope.hasLocal x name -> Variable(name, sl.Local)
+      | x::xs when Scope.hasClosure x name -> Closure(name, sl.Global)
       | _  -> 
         match List.tryFindIndex (fun s -> Scope.hasLocal s name) (!sr).ScopeChain with
         //We found a scope with a Local named 'name'
@@ -127,11 +127,11 @@ namespace IronJS.Ast
                 else Scope.createClosure fs name level :: updateScopes tl
 
           sr := {!sr with ScopeChain = updateScopes (!sr).ScopeChain}
-          Closure(name, fst sl)
+          Closure(name, sl.Global)
 
         //Or not, it's a global
         | None -> 
-          Global(name, fst sl)
+          Global(name, sl.Global)
 
     let assignedFrom sr name node =
       match (!sr).ScopeChain with

@@ -29,7 +29,7 @@ type DelegateCell(astId:int, closureId:int, delegateType:ClrType) =
 (*The currently executing environment*)
 [<AllowNullLiteral>]
 type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
-                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
+                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) as x =
 
   [<DefaultValue>] 
   val mutable Globals : Object
@@ -39,6 +39,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
   let classId = 0
   let baseClass = new Class(0, new Dict<string, int>())
+  let functionBaseClass = baseClass.GetSubClass("length", x)
 
   //Implementation of IEnvironment.GetDelegate
   member x.GetDelegate (func:Function) delegateType types =
@@ -57,6 +58,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
 
   //
   member x.BaseClass = baseClass
+  member x.FunctionBaseClass = functionBaseClass
   
   //Implementation of IEnvironment.GetClosureId
   member x.GetClosureId clrType = 
@@ -110,16 +112,15 @@ and [<AllowNullLiteral>] Class =
 
   member x.GetSubClass (varName:string, env:Environment) =
     (*Note: I hate interfacing with C# code*)
-    let mutable cls:Class = null
-    if x.SubClasses.TryGetValue (varName, ref cls) 
-      then cls
-      else
-        let newVars = new Dict<string, int>(x.Variables)
-        newVars.Add(varName, newVars.Count)
-        let subClass = new Class(env.GetClassId(), newVars)
-        if x.SubClasses.TryAdd(varName, subClass) 
-          then subClass
-          else x.GetSubClass(varName, env)
+    let success, cls = x.SubClasses.TryGetValue varName
+    if success then cls
+    else
+      let newVars = new Dict<string, int>(x.Variables)
+      newVars.Add(varName, newVars.Count)
+      let subClass = new Class(env.GetClassId(), newVars)
+      if x.SubClasses.TryAdd(varName, subClass) 
+        then subClass
+        else x.GetSubClass(varName, env)
 
   member x.GetIndex (varName:string, index:int byref) =
     x.Variables.TryGetValue(varName, ref index)
@@ -179,8 +180,8 @@ and [<AllowNullLiteral>] Function =
   val mutable ClosureId : int
   val mutable Environment : Environment
 
-  new(astId, closureId, closure, env) = { 
-    inherit Object()
+  new(astId, closureId, closure, env:Environment) = { 
+    inherit Object(env.FunctionBaseClass)
     AstId = astId
     ClosureId = closureId
     Closure = closure

@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Runtime
 
 module Variables = 
+  (*
   type private ObjectList = Object ResizeArray
 
   let rec private scanScopes fnc (lst:Scope ResizeArray) topScope = 
@@ -35,8 +36,12 @@ module Variables =
             | None    -> false, Utils.Box.nullBox
             | Some(s) -> true, s.Get name
 
+  *)
+
   (**)
   type Locals = 
+    class end
+    (*
     static member Get(name:string, localScopes:ObjectList) =
       let pair = getFromObjects name localScopes
       if (fst pair)
@@ -45,9 +50,12 @@ module Variables =
 
     static member Set(name:string, value:Box, localScopes:ObjectList) =
       setInObjects name value localScopes
+    *)
 
   (**)
   type Closures =
+    class end
+    (*
     static member Get(name:string, localScopes:ObjectList, closure:Closure, maxScopeLevel:int) =
 
       let pair = getFromObjects name localScopes
@@ -63,9 +71,12 @@ module Variables =
         then  true
         else  let found, _ = scanScopes (fun (x:Scope) -> setInObjects name value x.Objects, Utils.Box.nullBox) closure.Scopes maxScopeLevel
               found
+    *)
 
   (**)
   type Globals =
+    class end
+    (*
     static member Get(name:string, localScopes:ObjectList, closure:Closure) = 
       let found, item = getFromObjects name localScopes
       if found 
@@ -80,4 +91,4 @@ module Variables =
         then if not (ResizeArray.exists (fun (x:Scope) -> setInObjects name value x.Objects) closure.Scopes)
              then failwith "Re-add support for globals inside with()"
       value
-  
+    *)

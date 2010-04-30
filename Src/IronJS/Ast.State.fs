@@ -70,7 +70,7 @@ namespace IronJS.Ast
 
       let scope = {
         Types.Scope.New with 
-          ScopeLevel  = getScopeLevel !sr;
+          ScopeLevel = getScopeLevel !sr;
           Variables = Map.ofSeq variables
       }
 
@@ -107,9 +107,9 @@ namespace IronJS.Ast
         let ds = (!sr).DynamicScopeLevels
         let sl = ds.Head
 
-        sr :=  {
+        sr := {
           !sr with 
-            DynamicScopeLevels = {sl with Local = sl.Local-1; Global = sl.Global+1} :: ds.Tail
+            DynamicScopeLevels = {sl with Local = sl.Local-1; Global = sl.Global-1} :: ds.Tail
         }
 
     let createUndefinedLocal sr name =
@@ -127,8 +127,8 @@ namespace IronJS.Ast
       let sl = (!sr).DynamicScopeLevels.Head
 
       match getScopeChain !sr with
-      | x::xs when Scope.hasLocal x name -> Variable(name, sl.Local)
-      | x::xs when Scope.hasClosure x name -> Closure(name, sl.Global)
+      | fs::_ when Scope.hasLocal fs name   -> Variable(name, sl.Local)
+      | fs::_ when Scope.hasClosure fs name -> Closure(name, sl.Global)
       | _  -> 
         match List.tryFindIndex (fun s -> Scope.hasLocal s name) (!sr).ScopeChain with
         //We found a scope with a Local named 'name'

@@ -4,15 +4,6 @@
   open IronJS.Aliases
   open IronJS.Ast
 
-  type DynamicScopeLevels = {
-    Global: int
-    Local: int
-  } with
-    static member New = {
-      Global = 0
-      Local = 0
-    }
-
   type State = { 
     ScopeChain: Types.Scope list
     DynamicScopeLevels : DynamicScopeLevels list
@@ -127,8 +118,8 @@ namespace IronJS.Ast
       let sl = (!sr).DynamicScopeLevels.Head
 
       match getScopeChain !sr with
-      | fs::_ when Scope.hasLocal fs name   -> Variable(name, sl.Local)
-      | fs::_ when Scope.hasClosure fs name -> Closure(name, sl.Global)
+      | fs::_ when Scope.hasLocal fs name   -> Variable(name, sl)
+      | fs::_ when Scope.hasClosure fs name -> Closure(name, sl)
       | _  -> 
 
         let found, body, tail = 
@@ -145,10 +136,10 @@ namespace IronJS.Ast
               ScopeChain = body @ (Scope.setClosedOver fs name :: tail)
           }
 
-          Closure(name, sl.Global)
+          Closure(name, sl)
           
         //Or not, it's a global
-        | None -> Global(name, sl.Global)
+        | None -> Global(name, sl)
 
     let assignedFrom sr name node =
       modifyTopScope sr (fun fs ->

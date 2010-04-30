@@ -1,4 +1,15 @@
-﻿namespace IronJS.Ast
+﻿namespace IronJS.Ast.Types
+
+  type DynamicScopeLevels = {
+    Global: int
+    Local: int
+  } with
+    static member New = {
+      Global = 0
+      Local = 0
+    }
+
+namespace IronJS.Ast
 
 open IronJS
 open IronJS.Aliases
@@ -18,9 +29,9 @@ type Node
   | Undefined
 
   //Identifiers
-  | Variable  of string * int
-  | Closure   of string * int
-  | Global    of string * int
+  | Variable  of string * Types.DynamicScopeLevels
+  | Closure   of string * Types.DynamicScopeLevels
+  | Global    of string * Types.DynamicScopeLevels
   | Property  of Node * string
 
   //Special

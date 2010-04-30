@@ -13,7 +13,6 @@
 #load "Tools.Type.fs"
 #load "Tools.Dlr.Expr.fs"
 #load "Tools.Dlr.Restrict.fs"
-#load "Tools.InterOp.fs"
 #load "Tools.Antlr.fs"
 #load "Ast.Ops.fs"
 #load "Ast.Node.fs"

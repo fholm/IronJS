@@ -14,18 +14,18 @@ module ExprGen =
     | Ast.Assign(left, right) -> Assign.build ctx left right
 
     //Variables
-    | Ast.Global(name, globalScopeLevel)  -> 
-      if globalScopeLevel = 0 
+    | Ast.Global(name, scopeLevels)  -> 
+      if scopeLevels.Global = 0 
         then Variables.Global.value ctx name
         else DynamicScope.getGlobalValue ctx name
 
-    | Ast.Closure(name, globalScopeLevel) -> 
-      if globalScopeLevel = 0 
+    | Ast.Closure(name, scopeLevels) -> 
+      if scopeLevels.Global = 0 
         then Variables.Closure.value ctx name
         else DynamicScope.getClosureValue ctx name
 
-    | Ast.Variable(name, localScopeLevel)    -> 
-      if localScopeLevel = 0 
+    | Ast.Variable(name, scopeLevels)    -> 
+      if scopeLevels.Local = 0 
         then Variables.Local.value ctx name
         else DynamicScope.getLocalValue ctx name
 

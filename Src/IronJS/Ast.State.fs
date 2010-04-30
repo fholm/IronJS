@@ -130,23 +130,19 @@ namespace IronJS.Ast
       | fs::_ when Scope.hasLocal fs name   -> Variable(name, sl.Local)
       | fs::_ when Scope.hasClosure fs name -> Closure(name, sl.Global)
       | _  -> 
-        match List.tryFindIndex (fun s -> Scope.hasLocal s name) (!sr).ScopeChain with
-        //We found a scope with a Local named 'name'
-        | Some(level) -> 
-          let rec updateScopes fsList =
-            match fsList with
-            | [] -> []
-            | fs::tl -> 
-              if Scope.hasLocal fs name 
-                then Scope.setClosedOver fs name :: tl
-                else Scope.createClosure fs name level :: updateScopes tl
 
-          sr := {!sr with ScopeChain = updateScopes (!sr).ScopeChain}
+        let found, body, tail = 
+          Tools.List.splitOn (fun s -> Scope.hasLocal s name) (getScopeChain !sr)
+
+        match found with
+        | Some(fs) -> 
+          let body = List.map (fun x -> Scope.createClosure x name fs.ScopeLevel) body
+          let defining = [Scope.setClosedOver fs name]
+          sr :=  {!sr with ScopeChain = body @ defining @ tail}
           Closure(name, sl.Global)
-
+          
         //Or not, it's a global
-        | None -> 
-          Global(name, sl.Global)
+        | None -> Global(name, sl.Global)
 
     let assignedFrom sr name node =
       modifyTopScope sr (fun fs ->

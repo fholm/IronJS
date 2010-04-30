@@ -14,11 +14,12 @@ type Undefined() =
   static member InstanceExpr = Dlr.Expr.constant instance
 
 type PropertyCache =
+  val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
   val mutable PrototypeFetcher : PrototypeFetcher
 
-  member x.Update (obj:Object) =
+  member x.Update (obj:Object, env:Environment) =
     ()
 
 type InvokeCache<'a> when 'a :> Delegate and 'a : null =

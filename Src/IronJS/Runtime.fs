@@ -91,16 +91,11 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
 
 (*Class representing a Javascript native object*)
 and [<AllowNullLiteral>] Object =
-  val mutable Properties : Dict<string, Box>
+  val mutable Properties : Box array
 
   new() = {
-    Properties = new Dictionary<string, Box>()
+    Properties = Array.zeroCreate<Box> 4
   }
-
-  member self.Get name = self.Properties.[name]
-  member self.TryGet name = self.Properties.TryGetValue name
-  member self.Has name = self.Properties.ContainsKey name
-  member self.Set name (value:Box) = self.Properties.[name] <- value
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
@@ -115,19 +110,7 @@ and ObjectMeta(expr, jsObj:Object) =
       let restrict = Dlr.Restrict.byType x.Expression x.LimitType
       new MetaObj(expr, restrict)
     else
-      failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"  
-
-  (*
-  override x.BindSetMember(binder, value) =
-    let expr = Js.box (Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Set" [Dlr.Expr.constant binder.Name; Js.box value.Expression])
-    let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
-    new MetaObj(expr, restrict)
-
-  override x.BindGetMember(binder) =
-    let expr = Dlr.Expr.call (Dlr.Expr.castT<Object> x.Expression) "Get" [Dlr.Expr.constant binder.Name]
-    let restrict = Dlr.Restrict.byType x.Expression typedefof<Object>
-    new MetaObj(expr, restrict)
-  *)
+      failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"
 
 and [<AllowNullLiteral>] Scope = 
   val mutable Objects : Object ResizeArray

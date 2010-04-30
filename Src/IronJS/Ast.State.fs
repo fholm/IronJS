@@ -136,9 +136,15 @@ namespace IronJS.Ast
 
         match found with
         | Some(fs) -> 
-          let body = List.map (fun x -> Scope.createClosure x name fs.ScopeLevel) body
-          let defining = [Scope.setClosedOver fs name]
-          sr :=  {!sr with ScopeChain = body @ defining @ tail}
+
+          let body = 
+            [for x in body -> Scope.createClosure x name fs.ScopeLevel]
+
+          sr := {
+            !sr with 
+              ScopeChain = body @ (Scope.setClosedOver fs name :: tail)
+          }
+
           Closure(name, sl.Global)
           
         //Or not, it's a global
@@ -195,14 +201,14 @@ namespace IronJS.Ast
 
         let scopeChain =
           match found with
-          | None -> failwithf "No local variable named '%s' found in parent scopes" name
+          | None -> failwithf "No local variable named '%s' found in any parent scope" name
           | Some(fs) ->
             let typ = if isInsideDynamicScope !sr 
                         then Types.Dynamic
                         else Utils.getNodeType right
             let lv  = fs.Variables.[name]
             let lv' = {lv with UsedAs = lv.UsedAs ||| typ}
-            body @ [{fs with Variables = fs.Variables.Add(name, lv')}] @ tail
+            body @ ({fs with Variables = fs.Variables.Add(name, lv')} :: tail)
 
         sr := {!sr with ScopeChain = scopeChain}
 

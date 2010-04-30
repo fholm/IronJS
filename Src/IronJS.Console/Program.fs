@@ -6,8 +6,8 @@ open IronJS.Parser
 
 open System
 
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
 let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 let ast = Ast.Core.parseFile env.AstMap "Testing.js"

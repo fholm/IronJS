@@ -7,7 +7,11 @@
   type DynamicScopeLevels = {
     Global: int
     Local: int
-  }
+  } with
+    static member New = {
+      Global = 0
+      Local = 0
+    }
 
   type State = { 
     ScopeChain: Types.Scope list
@@ -50,6 +54,11 @@ namespace IronJS.Ast
     let isInsideDynamicScope (ps:Types.State) =
       globalDynamicScopeLevel ps > 0
 
+    let modifyTopScope sr fn = 
+      match getScopeChain !sr with
+      | []     -> failwith "Empty scope-chain"
+      | fs::tl -> sr := {!sr with ScopeChain = fn fs::tl}
+
     let enterScope sr (parms:AntlrToken seq) =
       let variables = 
         Seq.mapi (fun i (t:AntlrToken) -> 
@@ -65,7 +74,7 @@ namespace IronJS.Ast
       sr := {
         !sr with 
           ScopeChain = (scope :: getScopeChain !sr)
-          DynamicScopeLevels = {Global = globalDynamicScopeLevel !sr; Local = 0} :: (!sr).DynamicScopeLevels
+          DynamicScopeLevels = {DynamicScopeLevels.New with Global = globalDynamicScopeLevel !sr} :: (!sr).DynamicScopeLevels
       }
 
     let exitScope sr =
@@ -77,6 +86,7 @@ namespace IronJS.Ast
                   }
 
                   fs // return old top-scope
+
       | _     -> failwith "Couldn't exit scope"
 
     let enterDynamicScope sr =
@@ -134,32 +144,28 @@ namespace IronJS.Ast
           Global(name, sl.Global)
 
     let assignedFrom sr name node =
-      match (!sr).ScopeChain with
-      | []    -> failwith "Empty scope-chain"
-      | x::xs -> let lv = x.Variables.[name]
-                 let x' = Scope.setLocal x name {lv with AssignedFrom = node :: lv.AssignedFrom}
-                 sr := {!sr with ScopeChain = x'::xs}
+      modifyTopScope sr (fun fs ->
+        let lv  = fs.Variables.[name]
+        Scope.setLocal fs name {lv with AssignedFrom = node :: lv.AssignedFrom}
+      )
 
     let usedAs sr name typ =
-      match (!sr).ScopeChain with
-      | []    -> failwith "Empty scope-chain"
-      | x::xs -> let lv = x.Variables.[name]
-                 let x' = Scope.setLocal x name {lv with UsedAs = lv.UsedAs ||| typ}
-                 sr := {!sr with ScopeChain = x'::xs}
+      modifyTopScope sr (fun fs ->
+        let lv = fs.Variables.[name]
+        Scope.setLocal fs name {lv with UsedAs = lv.UsedAs ||| typ}
+      )
 
     let usedWith sr name rname =
-      match (!sr).ScopeChain with
-      | []    -> failwith "Empty scope-chain"
-      | x::xs -> let lv = x.Variables.[name]
-                 let x' = Scope.setLocal x name {lv with UsedWith = lv.UsedWith.Add(rname)}
-                 sr := {!sr with ScopeChain = x'::xs}
+      modifyTopScope sr (fun fs ->
+        let lv = fs.Variables.[name]
+        Scope.setLocal fs name {lv with UsedWith = lv.UsedWith.Add(rname)}
+      )
 
     let usedWithClosure sr name rname =
-      match (!sr).ScopeChain with
-      | []    -> failwith "Empty scope-chain"
-      | x::xs -> let lv = x.Variables.[name]
-                 let x' = Scope.setLocal x name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
-                 sr := {!sr with ScopeChain = x'::xs}
+      modifyTopScope sr (fun fs ->
+        let lv = fs.Variables.[name]
+        Scope.setLocal fs name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
+      )
   
     let analyzeAssign sr left right =
     

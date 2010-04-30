@@ -13,7 +13,7 @@ module Core =
     | 0 | AntlrParser.BLOCK       -> parseBlock sr t
     | AntlrParser.VAR             -> parseVar sr t
     | AntlrParser.ASSIGN          -> parseAssign sr t
-    | AntlrParser.Identifier      -> State.getVariable sr t.Text
+    | AntlrParser.Identifier      -> parseIdentifier sr t
     | AntlrParser.OBJECT          -> parseObject sr t
     | AntlrParser.StringLiteral   -> parseString sr t
     | AntlrParser.DecimalLiteral  -> parseNumber sr t
@@ -45,6 +45,9 @@ module Core =
   and parseExpr sr t = 
     parse sr (child t 0)
 
+  and parseIdentifier sr t =
+    State.getVariable sr (text t)
+
   and parseInc sr t =
     let target = parse sr (child t 0)
     Assign(target, BinaryOp(Add, target, Utils.intAsNode 1))
@@ -56,10 +59,10 @@ module Core =
     BinaryOp(op, parse sr (child t 0), parse sr (child t 1))
 
   and parseNumber sr (t:AntlrToken) =
-    Utils.strToNumber t.Text
+    Utils.strToNumber (text t)
 
   and parseString sr (t:AntlrToken) = 
-    String(Utils.cleanString t.Text)
+    String(Utils.cleanString (text t))
 
   and parseObject sr (t:AntlrToken) = 
     if t.Children = null then Object(None) else Error("Not supported")
@@ -68,7 +71,7 @@ module Core =
     Return(parse sr (child t 0))
 
   and parseByField sr t = 
-    Property(parse sr (child t 0), (child t 1).Text)
+    Property(parse sr (child t 0), text (child t 1))
 
   and parsePossibleNull sr t = 
     if t = null then Null else parse sr t
@@ -79,9 +82,9 @@ module Core =
   and parseVar sr t =
     let c = child t 0 
     if isAssign c 
-      then State.createLocal sr (child c 0).Text false //TODO: Remove magic constant
+      then State.createLocal sr (text (child c 0))
            parse sr c
-      else State.createLocal sr c.Text true
+      else State.createUndefinedLocal sr (text c)
            Pass
 
   and parseAssign sr t =
@@ -116,7 +119,7 @@ module Core =
     let bodyChild = if isAnon then 1 else 2
 
     if not isAnon then
-      State.createLocal sr (child t 0).Text false
+      State.createLocal sr (text (child t 0))
 
     //Enter Scope > Parse Body > Exit Scope
     State.enterScope sr (childrenOf t argsChild)

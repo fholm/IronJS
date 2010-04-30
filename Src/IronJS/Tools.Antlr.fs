@@ -10,13 +10,33 @@ open Antlr.Runtime.Tree
 
 module Antlr =
 
-  let internal ct (tree:obj) = tree :?> AntlrToken
-  let internal hasChild (tree:AntlrToken) index = tree.ChildCount > index
-  let internal child (tree:AntlrToken) index = if hasChild tree index then ct tree.Children.[index] else null
-  let internal children (tree:AntlrToken) = InterOp.toList<AntlrToken> tree.Children
-  let internal childrenOf (tree:AntlrToken) n = children (child tree n)
-  let internal isAssign (tree:AntlrToken) = tree.Type = ES3Parser.ASSIGN
-  let internal isAnonymous (tree:AntlrToken) = tree.Type = ES3Parser.FUNCTION && tree.ChildCount = 2
+  let ct (t:obj) = 
+    t :?> AntlrToken
+
+  let text (t:AntlrToken) = 
+    t.Text
+
+  let hasChild (t:AntlrToken) index =
+    t.ChildCount > index
+
+  let child (t:AntlrToken) index = 
+    if hasChild t index then ct t.Children.[index] else null
+
+  let children (t:AntlrToken) = 
+    if t.Children = null then []
+    else
+      t.Children
+        |> Seq.cast<AntlrToken> 
+        |> Seq.toList
+
+  let childrenOf (t:AntlrToken) n = 
+    children (child t n)
+
+  let isAssign (t:AntlrToken) = 
+    t.Type = ES3Parser.ASSIGN
+
+  let isAnonymous (t:AntlrToken) = 
+    t.Type = ES3Parser.FUNCTION && t.ChildCount = 2
 
   type FileStream = ANTLRFileStream
   type StringStream = ANTLRStringStream

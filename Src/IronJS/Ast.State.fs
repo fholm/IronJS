@@ -112,14 +112,16 @@ namespace IronJS.Ast
             DynamicScopeLevels = {sl with Local = sl.Local-1; Global = sl.Global+1} :: ds.Tail
         }
 
-    let createLocal sr name initUndefined =
-      if inGlobalScope !sr then ()
-      else
+    let createUndefinedLocal sr name =
+      if not (inGlobalScope !sr) then
         modifyTopScope sr (fun fs ->
-          let var  = {Types.Variable.New with Name = name}
-          let var' = if initUndefined then Variable.setInitToUndefined var else var
-          Scope.setLocal fs name var'
+          let var = Variable.setInitToUndefined {Types.Variable.New with Name = name}
+          Scope.setLocal fs name var
         )
+
+    let createLocal sr name =
+      if not (inGlobalScope !sr) then
+        modifyTopScope sr (fun fs -> Scope.setLocal fs name {Types.Variable.New with Name = name})
 
     let getVariable sr name =
       let sl = (!sr).DynamicScopeLevels.Head
@@ -148,26 +150,26 @@ namespace IronJS.Ast
 
     let assignedFrom sr name node =
       modifyTopScope sr (fun fs ->
-        let lv  = fs.Variables.[name]
-        Scope.setLocal fs name {lv with AssignedFrom = node :: lv.AssignedFrom}
+        let var = fs.Variables.[name]
+        Scope.setLocal fs name {var with AssignedFrom = node :: var.AssignedFrom}
       )
 
     let usedAs sr name typ =
       modifyTopScope sr (fun fs ->
-        let lv = fs.Variables.[name]
-        Scope.setLocal fs name {lv with UsedAs = lv.UsedAs ||| typ}
+        let var = fs.Variables.[name]
+        Scope.setLocal fs name {var with UsedAs = var.UsedAs ||| typ}
       )
 
     let usedWith sr name rname =
       modifyTopScope sr (fun fs ->
-        let lv = fs.Variables.[name]
-        Scope.setLocal fs name {lv with UsedWith = lv.UsedWith.Add(rname)}
+        let var = fs.Variables.[name]
+        Scope.setLocal fs name {var with UsedWith = var.UsedWith.Add(rname)}
       )
 
     let usedWithClosure sr name rname =
       modifyTopScope sr (fun fs ->
-        let lv = fs.Variables.[name]
-        Scope.setLocal fs name {lv with UsedWithClosure = lv.UsedWithClosure.Add(rname)}
+        let var = fs.Variables.[name]
+        Scope.setLocal fs name {var with UsedWithClosure = var.UsedWithClosure.Add(rname)}
       )
   
     let analyzeAssign sr left right =

@@ -11,14 +11,14 @@ open IronJS.Compiler
 let private buildVarsMap (scope:Ast.Types.Scope) =
 
   let (|Parameter|Local|) (lv:Ast.Types.Variable) = 
-    if Ast.Local.isParameter lv then Parameter else Local
+    if Ast.Variable.isParameter lv then Parameter else Local
 
   let (|NeedProxy|Not|) (lv:Ast.Types.Variable) =
-    if Ast.Local.needsProxy lv then NeedProxy else Not
+    if Ast.Variable.needsProxy lv then NeedProxy else Not
 
   let createVar (l:Ast.Types.Variable) =
     let clrTyp = Utils.Type.jsToClr l.UsedAs
-    if Ast.Local.isClosedOver l 
+    if Ast.Variable.isClosedOver l 
       then Expr.param l.Name (Type.strongBoxType.MakeGenericType([|clrTyp|]))
       else Expr.param l.Name clrTyp
 
@@ -105,8 +105,8 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.Scope.Variables
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun lv -> Ast.Local.isClosedOver lv)
-      |> Seq.filter (fun lv -> not (Ast.Local.needsProxy lv))
+      |> Seq.filter (fun lv -> Ast.Variable.isClosedOver lv)
+      |> Seq.filter (fun lv -> not (Ast.Variable.needsProxy lv))
       |> Seq.map (fun lv -> 
            let expr = ctx.LocalExpr lv.Name
            Expr.assign expr (Expr.new' expr.Type) 
@@ -120,7 +120,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.Scope.Variables
       |> Map.toSeq
       |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun lv -> Ast.Local.initToUndefined lv)
+      |> Seq.filter (fun lv -> Ast.Variable.initToUndefined lv)
       |> Seq.map (fun lv -> 
            let expr = ctx.LocalExpr lv.Name
            Utils.Assign.value expr Runtime.Undefined.InstanceExpr

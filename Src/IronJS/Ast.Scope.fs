@@ -77,7 +77,7 @@ namespace IronJS.Ast
       Map.containsKey name fs.Variables
 
     let internal setClosedOver (fs:Scope) name = 
-      setLocal fs name (Local.setClosedOver fs.Variables.[name])
+      setLocal fs name (Variable.setClosedOver fs.Variables.[name])
 
     let internal hasLocalOrClosure (fs:Scope) name =
       hasLocal fs name || hasClosure fs name

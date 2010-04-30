@@ -17,7 +17,7 @@
 #load "Tools.Antlr.fs"
 #load "Ast.Ops.fs"
 #load "Ast.Node.fs"
-#load "Ast.Local.fs"
+#load "Ast.Variable.fs"
 #load "Ast.Closure.fs"
 #load "Ast.Scope.fs"
 #load "Ast.State.fs"
@@ -31,7 +31,7 @@
 #load "Runtime.Helpers.Function.fs"
 #load "Runtime.Binders.fs"
 #load "Runtime.Closures.fs"
-#load "Compiler.Types.fs"
+#load "Compiler.Context.fs"
 #load "Compiler.Utils.Type.fs"
 #load "Compiler.Utils.Box.fs"
 #load "Compiler.Utils.Assign.fs"
@@ -58,13 +58,13 @@ open IronJS.Aliases
 open IronJS.Parser
 
 fsi.AddPrinter(fun (x:Ast.Types.Variable) -> x.DebugView)
-fsi.AddPrinter(fun (x:Ast.Closure) -> x.DebugView)
+fsi.AddPrinter(fun (x:Ast.Types.Closure) -> x.DebugView)
 fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
 let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
 let ast = Ast.Core.parseFile env.AstMap "Testing.js"

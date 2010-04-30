@@ -15,7 +15,7 @@ let private isDynamic (l:Ast.Types.Variable) =
   | Types.Undefined
   | Types.Array
   | Types.Function
-  | Types.Object -> true && Ast.Local.initToUndefined l
+  | Types.Object -> true && Ast.Variable.initToUndefined l
   | _ -> true
 
 (*Checks if a local variable never is assigned to from another variable*)
@@ -26,13 +26,13 @@ let private isNotAssignedTo (var:Ast.Types.Variable) =
 
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (l:Ast.Types.Variable) typ =
-  let exprType = if Ast.Local.isClosedOver l
+  let exprType = if Ast.Variable.isClosedOver l
                    then Type.strongBoxType.MakeGenericType(Utils.Type.jsToClr typ) 
                    else Utils.Type.jsToClr typ
 
   let expr = Dlr.Expr.param name exprType
 
-  {Ast.Local.setFlag Ast.Flags.Variable.TypeResolved l with UsedAs = typ }
+  {Ast.Variable.setFlag Ast.Flags.Variable.TypeResolved l with UsedAs = typ }
 
 (*Get the type of a variable, evaluating it if necessary*)
 let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Types.LocalMap) =
@@ -54,7 +54,7 @@ let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Ty
 
     if (!excluded).Contains name then Types.Nothing
     else  
-      if Ast.Local.typeIsResolved var then var.UsedAs 
+      if Ast.Variable.typeIsResolved var then var.UsedAs 
       else  
         excluded := (!excluded).Add name
 
@@ -82,9 +82,9 @@ let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Ty
   getLocalType' name
 
 let private handleMissingArgument (name:string) (var:Ast.Types.Variable) =
-  let removedParam = Ast.Local.delFlag Ast.Flags.Variable.Parameter var
-  let removedParam = Ast.Local.delFlag Ast.Flags.Variable.NeedProxy removedParam
-  {Ast.Local.setFlag Ast.Flags.Variable.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
+  let removedParam = Ast.Variable.delFlag Ast.Flags.Variable.Parameter var
+  let removedParam = Ast.Variable.delFlag Ast.Flags.Variable.NeedProxy removedParam
+  {Ast.Variable.setFlag Ast.Flags.Variable.InitToUndefined removedParam with UsedAs = var.UsedAs ||| Types.Undefined}
 
 (*Analyzes a scope*)
 let analyze (scope:Ast.Types.Scope) closureType (types:ClrType list) = 
@@ -105,7 +105,7 @@ let analyze (scope:Ast.Types.Scope) closureType (types:ClrType list) =
       Variables =
         scope.Variables 
           |> Map.map (fun name l -> 
-            if Ast.Local.isParameter l then
+            if Ast.Variable.isParameter l then
               if l.Index < types.Length
                 then {l with UsedAs = l.UsedAs ||| Utils.Type.clrToJs types.[l.Index]} // We got an argument for this parameter
                 else handleMissingArgument name l // We didn't, means make it dynamic

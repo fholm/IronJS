@@ -43,7 +43,7 @@ namespace IronJS.Ast
         match parms with
         | []       -> Map.empty
         | name::xs -> 
-          let newParam = Local.setFlag Flags.Variable.Parameter {Types.Variable.New with Name = name; Index = index}
+          let newParam = Variable.setFlag Flags.Variable.Parameter {Types.Variable.New with Name = name; Index = index}
           Map.add name newParam (createLocals xs (index+1))
 
       let scope = {
@@ -94,7 +94,7 @@ namespace IronJS.Ast
       | []    -> failwith "Empty scope chain"
       | _::[] -> ()
       | x::xs -> 
-        let newLocal = Local.setFlagIf Flags.Variable.InitToUndefined initUndefined {Types.Variable.New with Name = name}
+        let newLocal = Variable.setFlagIf Flags.Variable.InitToUndefined initUndefined {Types.Variable.New with Name = name}
         sr := {!sr with ScopeChain = Scope.setLocal x name newLocal :: xs}
 
     let getVariable sr name =

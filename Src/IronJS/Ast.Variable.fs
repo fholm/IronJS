@@ -46,7 +46,7 @@ namespace IronJS.Ast
   open IronJS.Aliases
   open IronJS.Ast.Types
 
-  module Local =
+  module Variable =
 
     let internal setFlag (f:Flags.Variable) (lv:Variable) =
       if lv.Flags.Contains f then lv else {lv with Flags = lv.Flags.Add f}

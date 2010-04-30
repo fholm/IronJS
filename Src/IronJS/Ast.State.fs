@@ -26,16 +26,16 @@ namespace IronJS.Ast
 
   module State =
 
-    let internal getActiveScope (ps:Types.State) =
+    let getActiveScope (ps:Types.State) =
       ps.ScopeChain.Head
 
-    let internal getParentScopes (ps:Types.State) =
+    let getParentScopes (ps:Types.State) =
       ps.ScopeChain.Tail
 
-    let internal isInsideLocalDynamicScope (ps:Types.State) =
+    let isInsideLocalDynamicScope (ps:Types.State) =
       ps.LocalDynamicScopeLevels.Head > 0
 
-    let internal isInsideDynamicScope (ps:Types.State) =
+    let isInsideDynamicScope (ps:Types.State) =
       ps.GlobalDynamicScopeLevel > 0
 
     let enterScope sr (parms:AntlrToken list) =

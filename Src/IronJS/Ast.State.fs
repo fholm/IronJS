@@ -190,19 +190,20 @@ namespace IronJS.Ast
 
       | Closure(name, _) ->
 
-        let rec updateScopes sc =
-          match sc with
-          | [] -> []
-          | fs::tl ->
-            if Scope.hasLocal fs name
-              then let typ = if isInsideDynamicScope !sr 
-                               then Types.Dynamic
-                               else Utils.getNodeType right
-                   let lv  = fs.Variables.[name]
-                   let lv' = {lv with UsedAs = lv.UsedAs ||| typ}
-                   {fs with Variables = fs.Variables.Add(name, lv')} :: tl
-              else fs :: updateScopes tl
+        let found, body, tail = 
+          Tools.List.splitOn (fun fs -> Scope.hasLocal fs name) (getScopeChain !sr)
 
-        sr := {!sr with ScopeChain = (updateScopes (!sr).ScopeChain)}
+        let scopeChain =
+          match found with
+          | None -> failwithf "No local variable named '%s' found in parent scopes" name
+          | Some(fs) ->
+            let typ = if isInsideDynamicScope !sr 
+                        then Types.Dynamic
+                        else Utils.getNodeType right
+            let lv  = fs.Variables.[name]
+            let lv' = {lv with UsedAs = lv.UsedAs ||| typ}
+            body @ [{fs with Variables = fs.Variables.Add(name, lv')}] @ tail
+
+        sr := {!sr with ScopeChain = scopeChain}
 
       | _ -> ()

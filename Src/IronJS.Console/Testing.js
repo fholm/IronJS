@@ -33,5 +33,5 @@ return foo()();
 bench();
 */
 
-for (i = 0; i < 3000000; ++i)
-    x = 2;
+var foo = {};
+foo.bar = {}

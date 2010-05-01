@@ -65,3 +65,6 @@ namespace IronJS.Compiler
     let temporaryType ctx name =
       let success, type' = ctx.TemporaryTypes.TryGetValue name
       if success then Some(type') else None
+
+    let objectBaseClass ctx =
+      Expr.property (environmentExpr ctx) "BaseClass"

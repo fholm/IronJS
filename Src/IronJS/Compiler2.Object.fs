@@ -15,7 +15,7 @@ module Object =
   let classId expr = 
     Expr.field expr "ClassId"
 
-  let buildSet ctx name target value =
+  let private buildSet ctx name value target =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
     Stub.Expr(
       Expr.wrapInBlock target (fun obj -> 
@@ -29,7 +29,7 @@ module Object =
       )
     ) 
 
-  let buildGet ctx name (typ:ClrType option) target next =
+  let private buildGet ctx name (typ:ClrType option) target next =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
     Stub.Expr(
       Expr.wrapInBlock target (fun obj ->
@@ -50,11 +50,11 @@ module Object =
       )
     )
     
-  let unboundSet ctx name target value =
+  let unboundSet ctx name value target =
     match target, value with
     | Expr(target), Expr(value) -> 
       if Runtime.Utils.Type.isObject target.Et.Type 
-        then buildSet ctx name target value
+        then buildSet ctx name value target
         else failwith "Only typed objects supported"
     | _ -> failwith "Failed"
 
@@ -65,3 +65,17 @@ module Object =
         then buildGet ctx name typ target next
         else failwith "Only typed objects supported"
     | _ -> failwith "Failed"
+
+  let getProperty ctx target name =
+    let unbound = unboundGet ctx name None
+    Stub.combine (ctx.Build target) (Stub.third unbound)
+
+  let setProperty ctx name = 
+    unboundSet ctx name
+
+  let build (ctx:Context) properties =
+    match properties with
+    | Some(_) -> failwith "Objects with auto-properties not supported"
+    | None    -> 
+      let new' = Dlr.Expr.newArgsT<Runtime.Object> [Context.objectBaseClass ctx; Expr.constant 4]
+      Stub.expr (Expr.volatile' (new'))

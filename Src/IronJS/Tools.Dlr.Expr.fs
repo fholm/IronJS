@@ -106,7 +106,7 @@ module Expr =
   let newArgs (typ:System.Type) (args:Et seq) = 
     Et.New(Tools.Type.getCtor typ [for arg in args -> arg.Type], args) :> Et
 
-  let newArgsT<'a> (args:Et seq) = 
+  let newArgsT<'a> = 
     newArgs typeof<'a>
 
   let newGenericArgs (typ:System.Type) (types:ClrType seq) (args:Et seq) = 

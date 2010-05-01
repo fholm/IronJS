@@ -82,6 +82,10 @@ let private builder (ctx:Context) (ast:Ast.Node) =
       )
     )
 
+  //Objects
+  | Ast.Object(properties) -> Object.build ctx properties
+  | Ast.Property(object', name) -> Object.getProperty ctx object' name
+
   //Loops
   | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
   | Ast.BinaryOp(op, left, right) -> BinaryOp.build ctx op left right

@@ -19,6 +19,12 @@ namespace IronJS.Compiler
 
   module Stub = 
 
+    let third fn = 
+      Half(fun _0 -> Half(fn _0))
+
+    let fourth fn = 
+      Half(fun _0 -> Half(fun _1 -> Half(fn _0 _1)))
+
     let type' stub =
       match stub with
       | Expr(expr) -> true, expr.Type

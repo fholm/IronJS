@@ -10,9 +10,8 @@ open IronJS.Compiler.Types
 module Global =
 
   let set ctx name =
-    let unbound = Half(fun stub -> Half(Object.unboundSet ctx name stub))
-    Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) unbound
+    Stub.third (Object.unboundSet ctx name)
 
   let get ctx name (typ:ClrType option) =
-    let unbound = Half(fun stub -> Half(Object.unboundGet ctx name typ stub))
+    let unbound = Stub.third (Object.unboundGet ctx name typ)
     Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) unbound

@@ -32,9 +32,6 @@ return foo()();
 
 bench();
 */
-bench = function () {
-    for (var i = 0; i < 3000000; ++i)
-        x = 2;
-}
 
-bench();
+for (var i = 0; i < 3000000; ++i)
+    var y = 2;

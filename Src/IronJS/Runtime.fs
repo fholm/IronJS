@@ -34,7 +34,7 @@ type DelegateCell(astId:int, closureId:int, delegateType:ClrType) =
 (*The currently executing environment*)
 [<AllowNullLiteral>]
 type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
-                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) as x =
+                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
 
   [<DefaultValue>] 
   val mutable Globals : Object
@@ -144,13 +144,14 @@ and [<AllowNullLiteral>] Object =
     Properties = Array.zeroCreate<Box> initSize
   }
 
-  member x.Set (name:string, value:Box byref, env:Environment) =
-    let success, index = x.Class.GetIndex name
+  member x.Set (cache:PropertyCache, value:Box byref, env:Environment) =
+    let success, index = x.Class.GetIndex cache.Name
     if success then 
       x.Properties.[index] <- value
-      index
+      cache.ClassId <- x.ClassId
+      cache.Index <- index
     else 
-      x.Class   <- x.Class.GetSubClass(name, env.GetClassId())
+      x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
       x.ClassId <- x.Class.ClassId
 
       if x.Class.Variables.Count > x.Properties.Length then
@@ -158,15 +159,17 @@ and [<AllowNullLiteral>] Object =
         System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
         x.Properties <- newProperties
 
-      x.Set(name, ref value, env)
+      x.Set(cache, ref value, env)
 
-  member x.Get (name:string, refIndex:int byref, env:Environment) =
-    let success, index = x.Class.GetIndex name
+  member x.Get (cache:PropertyCache, env:Environment) =
+    let success, index = x.Class.GetIndex cache.Name
     if success then
-      refIndex <- index
+      cache.ClassId <- x.ClassId
+      cache.Index <- index
       x.Properties.[index]
     else
-      refIndex <- -1
+      cache.ClassId <- -1
+      cache.Index <- -1
       env.UndefinedBox
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
@@ -222,3 +225,30 @@ and [<AllowNullLiteral>] Function =
 
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
+
+and PrototypeFetcher = 
+  delegate of Object * Box byref -> bool
+
+and PropertyCache =
+  val mutable Name : string
+  val mutable ClassId : int
+  val mutable Index : int
+
+  [<DefaultValue>] 
+  val mutable PrototypeFetcher : PrototypeFetcher
+
+  new(name) = {
+    Name = name
+    ClassId = -1
+    Index = -1
+  }
+
+  member x.UpdateSet (obj:Object, value:Box byref, env:Environment) =
+    obj.Set(x, ref value, env)
+
+  member x.UpdateGet (obj:Object, env:Environment) =
+    obj.Get(x, env)
+
+  static member Create(name:string) =
+    let cache = Dlr.Expr.constant (new PropertyCache(name))
+    cache, Dlr.Expr.field cache "ClassId", Dlr.Expr.field cache "Index"

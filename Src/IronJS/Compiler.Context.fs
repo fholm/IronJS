@@ -1,63 +1,63 @@
-﻿namespace IronJS.Compiler
+﻿namespace IronJS.Compiler.Types
 
-open IronJS
-open IronJS.Aliases
-open IronJS.Tools
-open System.Linq.Expressions
+  open IronJS
+  open IronJS.Aliases
+  open IronJS.Tools
+  open IronJS.Compiler
+  open IronJS.Compiler.Types
 
-type VarType = L | P
+  type InternalVariables = {
+    This: EtParam
+    Closure: EtParam
+    Function: EtParam
+    Globals: EtParam
+  } with 
+    static member New = {
+      Closure = null
+      This = Dlr.Expr.param "~this" typeof<Runtime.Object>
+      Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
+      Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
+    }
 
-type Var
-  = Expr     of Et
-  | Variable of EtParam * VarType
-  | Proxied  of EtParam * EtParam
+  type Context = {
+    Return: Label
+    Scope: Ast.Types.Scope
+    Internal: InternalVariables
+    Variables: Map<string, Variable>
+    TemporaryTypes: SafeDict<string, ClrType>
+    Builder : Context -> Ast.Node -> Stub
+  } with
+    member x.Build = x.Builder x
+    static member New = {
+      Internal = InternalVariables.New
+      Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
+      Scope = Ast.Types.Scope.New
+      Variables = Map.empty
+      Builder = fun _ _ -> Expr(Expr.static' Dlr.Expr.void')
+      TemporaryTypes = null
+    }
 
-type Context = {
-  //Params
-  This: EtParam
-  Closure: EtParam
-  Function: EtParam
-  LocalScopes: EtParam
-  Globals: EtParam
+namespace IronJS.Compiler
 
-  //Labels
-  Return: LabelTarget
+  open IronJS
+  open IronJS.Aliases
+  open IronJS.Tools
+  open IronJS.Tools.Dlr
+  open IronJS.Compiler.Types
 
-  //Others
-  Scope: Ast.Types.Scope
-  Locals: Map<string, Var>
-  Builder: Context -> Ast.Node -> Et
-  TemporaryTypes: SafeDict<string, ClrType>
-  Environment: Runtime.Environment
-} with
-  member x.Builder2           = x.Builder x
-  member x.EnvironmentExpr    = Dlr.Expr.field x.Function "Environment"
-  member x.ClosureScopesExpr  = Dlr.Expr.field x.Closure "Scopes"
-  member x.LocalScopesExpr    = if x.Scope.Flags.Contains Ast.Flags.Scope.HasDS 
-                                  then x.LocalScopes :> Et 
-                                  else Dlr.Expr.defaultT<Runtime.Object ResizeArray>
+  module Context =
 
-  member x.LocalExpr name = 
-    match x.Locals.[name] with
-    | Expr(et) -> et
-    | Variable(p, _) -> p :> Et
-    | Proxied(p, _) -> p :> Et
+    let variableExpr ctx name =
+      match ctx.Variables.[name] with
+      | Variable.Expr(expr) -> expr
+      | Variable(expr, _)   -> expr :> Et
+      | Proxied(expr, _)    -> expr :> Et
+    
+    let environmentExpr ctx = 
+      Expr.field ctx.Internal.Function "Environment"
+      
+    let internalParams ctx =
+      [ctx.Internal.Function; ctx.Internal.This]
 
-  static member New = {
-    //Params
-    Closure = null
-    Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
-    Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
-    This = Dlr.Expr.param "~this" typeof<Runtime.Object>
-    LocalScopes = Dlr.Expr.param "~scopes" typeof<Runtime.Object ResizeArray>
-
-    //Labels
-    Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
-
-    //Others
-    Scope = Ast.Types.Scope.New
-    Locals = Map.empty
-    Builder = fun x a -> Dlr.Expr.null'
-    TemporaryTypes = null
-    Environment = null
-  }
+    let internalLocals ctx =
+      [ctx.Internal.Globals; ctx.Internal.Closure]

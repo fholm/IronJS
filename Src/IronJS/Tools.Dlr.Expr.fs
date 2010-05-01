@@ -16,6 +16,10 @@ module Expr =
   let varT<'a> name = var name typeof<'a>
   let param name typ = Et.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>
+  
+  let constant value = Et.Constant(value, value.GetType()) :> Et
+  let return' label (value:Et) = Et.Return(label, value) :> Et
+  let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
 
   let label (typ:ClrType) name = Et.Label(typ, name)
   let labelVoid = label typeof<System.Void>
@@ -36,12 +40,23 @@ module Expr =
   let block exprs = 
     blockWithLocals [] exprs
 
+  let mutable private tmpCounter = 0
+
   let blockTmp typ (fn:EtParam -> Et list) = 
-    let tmp = Et.Parameter(typ, "~tmp")
+    tmpCounter <- tmpCounter + 1
+    let tmp = Et.Parameter(typ, sprintf "~tmp_%i" tmpCounter)
     blockWithLocals [tmp] (fn tmp)
 
   let blockTmpT<'a> = 
     blockTmp typeof<'a>
+    
+  let blockTmpVarT<'a> (var:Et) fn = 
+    if var :? EtParam 
+      then block (fn var) 
+      else 
+        tmpCounter <- tmpCounter + 1
+        let tmp = Et.Parameter(typeof<'a>, sprintf "~tmp_%i" tmpCounter)
+        blockWithLocals [tmp] ([assign tmp var] @ (fn tmp))
 
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
@@ -78,10 +93,6 @@ module Expr =
 
   let castAs typ expr = Et.TypeAs(expr, typ) :> Et
   let castAsT<'a> = castAs typeof<'a> 
-  
-  let constant value = Et.Constant(value, value.GetType()) :> Et
-  let return' label (value:Et) = Et.Return(label, value) :> Et
-  let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
 
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>
@@ -180,6 +191,7 @@ module Expr =
     let if' test ifTrue = Et.IfThen(test, ifTrue) :> Et
     let ifElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
     let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
+    let ternaryPair test (ifTrue, ifFalse) = ternary test ifTrue ifFalse
     let for' init test incr body = block [init; AstUtils.Loop(test, incr, body, void')]
 
   module Logic =

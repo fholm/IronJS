@@ -10,7 +10,8 @@ open System.Dynamic
 module Assign = 
 
     let internal build (ctx:Context) left right =
-      let value = ctx.Builder2 right
+      let ctx2 = {ctx with AssignLevel = ctx.AssignLevel+1}
+      let value = ctx2.Builder2 right
 
       match left with
       | Ast.Global(name, scopeLevels) -> 

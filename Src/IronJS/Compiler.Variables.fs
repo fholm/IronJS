@@ -22,7 +22,7 @@ module Variables =
         else failwithf "No closure variable named '%s' exist" name
 
     let expr (ctx:Context) (name:string) = Dlr.Expr.field ctx.Closure (fieldName ctx name)
-    let assign ctx name value = Utils.Assign.value (expr ctx name) value
+    let assign ctx name value = Utils.Assign.value ctx (expr ctx name) value
     let value ctx name = 
       let expr = Dlr.Expr.field (expr ctx name) "Value"
       if ctx.TemporaryTypes.ContainsKey name
@@ -32,7 +32,7 @@ module Variables =
   (*Helper functions for dealing with local variables*)
   module Local = 
     let expr (ctx:Context) name = ctx.LocalExpr name
-    let assign ctx name value = Utils.Assign.value (expr ctx name) value
+    let assign ctx name value = Utils.Assign.value ctx (expr ctx name) value
     let value ctx name = 
       let expr = expr ctx name 
       let exprBox = if Type.isStrongBox expr.Type

@@ -33,7 +33,7 @@ module Box =
     | _ -> failwith "Invalid js type: '%A'" typeCode
 
   let fieldByClrType (expr:Et) typ = 
-    fieldByJsType expr (Utils.Type.clrToJs typ)
+    fieldByJsType expr (Runtime.Utils.Type.clrToJs typ)
 
   let fieldByClrTypeT<'a> (expr:Et) = 
     fieldByClrType expr typeof<'a>
@@ -42,25 +42,25 @@ module Box =
     Expr.field target "Type"
 
   let setType (target:Et) (typ:ClrType)  = 
-    let typ = Expr.constant (Utils.Type.clrToJs typ)
+    let typ = Expr.constant (Runtime.Utils.Type.clrToJs typ)
     Expr.assign (typeField target) typ
 
   let setTypeT<'a> target = 
     setType target typeof<'a>
 
   let setValue (target:Et) (value:Et) =
-    let jsType = Utils.Type.clrToJs value.Type
+    let jsType = Runtime.Utils.Type.clrToJs value.Type
     Expr.assign (fieldByJsType target jsType) value
   
   let isWrapped (expr:Et) = 
     expr.Type = typeof<Runtime.Box>
 
-  let assign (left:Et) (right:Et) =
+  let assign (ctx:Types.Context) (left:Et) (right:Et) =
     if not (left.Type = typeof<Runtime.Box>) then
       failwith "Left expression is not a Runtime.Box"
 
     if right.Type = typeof<Runtime.Box> 
-      then Expr.assign left right
+      then Expr.block [Expr.assign left right; Expr.void']
       else Expr.block [setValue left right; setType left right.Type; Expr.void']
 
   let wrap (expr:Et) =

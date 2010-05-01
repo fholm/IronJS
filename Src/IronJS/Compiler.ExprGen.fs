@@ -8,23 +8,31 @@ open IronJS.Compiler
 
 module ExprGen = 
 
+  let internal buildStub (ctx:Context) (ast:Ast.Node) =
+    match ast with
+    | Ast.String(value)  -> ctx.Stub (Expr.constant value)
+    | Ast.Number(value)  -> ctx.Stub (Expr.constant value)
+    | Ast.Integer(value) -> ctx.Stub (Expr.constant value)
+    | Ast.Null           -> ctx.Stub Expr.null'
+    | Ast.Quote(expr)    -> ctx.Stub expr
+
   //Builder function for expression generation
   let internal builder (ctx:Context) (ast:Ast.Node) =
     match ast with
     | Ast.Assign(left, right) -> Assign.build ctx left right
 
     //Variables
-    | Ast.Global(name, scopeLevels)  -> 
+    | Ast.Global(name, scopeLevels)   -> 
       if scopeLevels.Global = 0 
         then Variables.Global.value ctx name
         else DynamicScope.getGlobalValue ctx name
 
-    | Ast.Closure(name, scopeLevels) -> 
+    | Ast.Closure(name, scopeLevels)  -> 
       if scopeLevels.Global = 0 
         then Variables.Closure.value ctx name
         else DynamicScope.getClosureValue ctx name
 
-    | Ast.Variable(name, scopeLevels)    -> 
+    | Ast.Variable(name, scopeLevels) -> 
       if scopeLevels.Local = 0 
         then Variables.Local.value ctx name
         else DynamicScope.getLocalValue ctx name

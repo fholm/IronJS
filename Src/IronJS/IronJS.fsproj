@@ -108,20 +108,14 @@
     <Compile Include="Runtime.Helpers.Function.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
+    <Compile Include="Compiler.Types.fs" />
+    <Compile Include="Compiler.Expr.fs" />
+    <Compile Include="Compiler.Stub.fs" />
     <Compile Include="Compiler.Context.fs" />
-    <Compile Include="Compiler.Utils.Type.fs" />
     <Compile Include="Compiler.Utils.Box.fs" />
-    <Compile Include="Compiler.Utils.Assign.fs" />
-    <Compile Include="Compiler.Object.fs" />
-    <Compile Include="Compiler.Variables.fs" />
-    <Compile Include="Compiler.CallSites.fs" />
-    <Compile Include="Compiler.DynamicScope.fs" />
-    <Compile Include="Compiler.Assign.fs" />
-    <Compile Include="Compiler.Function.fs" />
-    <Compile Include="Compiler.Loops.fs" />
-    <Compile Include="Compiler.BinaryOp.fs" />
-    <Compile Include="Compiler.UnaryOp.fs" />
-    <Compile Include="Compiler.ExprGen.fs" />
+    <Compile Include="Compiler2.Object.fs" />
+    <Compile Include="Compiler2.Global.fs" />
+    <Compile Include="Compiler2.Assign.fs" />
     <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.fs" />
   </ItemGroup>

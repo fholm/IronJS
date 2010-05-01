@@ -5,169 +5,191 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
-
-#nowarn "25"
+open IronJS.Compiler.Types
 
 let private buildVarsMap (scope:Ast.Types.Scope) =
+  let createVar (var:Ast.Types.Variable) =
+    let clrTyp = Runtime.Utils.Type.jsToClr var.UsedAs
+    if Ast.Variable.isClosedOver var
+      then Expr.param var.Name (Type.strongBoxType.MakeGenericType([|clrTyp|]))
+      else Expr.param var.Name clrTyp
 
-  let (|Parameter|Local|) (lv:Ast.Types.Variable) = 
-    if Ast.Variable.isParameter lv then Parameter else Local
-
-  let (|NeedProxy|Not|) (lv:Ast.Types.Variable) =
-    if Ast.Variable.needsProxy lv then NeedProxy else Not
-
-  let createVar (l:Ast.Types.Variable) =
-    let clrTyp = Utils.Type.jsToClr l.UsedAs
-    if Ast.Variable.isClosedOver l 
-      then Expr.param l.Name (Type.strongBoxType.MakeGenericType([|clrTyp|]))
-      else Expr.param l.Name clrTyp
-
-  let createProxy (l:Ast.Types.Variable) =
-    Expr.param (sprintf "%s_proxy" l.Name) scope.ArgTypes.[l.Index]
+  let createProxy (var:Ast.Types.Variable) =
+    Expr.param (sprintf "%s_proxy" var.Name) scope.ArgTypes.[var.Index]
 
   scope.Variables
-    |> Map.map(fun _ lv -> 
-                match lv with
-                | Parameter -> 
-                  match lv with
-                  | NeedProxy -> Proxied(createVar lv, createProxy lv)
-                  | Not -> Variable(createVar lv, P)
-                | Local -> 
-                  Variable(createVar lv, L)
-              )
+    |> Map.map (
+      fun _ var -> 
+        match Ast.Variable.isParameter var with
+        | true -> 
+          match Ast.Variable.needsProxy var with
+          | true  -> Proxied(createVar var, createProxy var)
+          | false -> Variable(createVar var, Param)
+        | false -> 
+          Variable(createVar var, Local)
+      )
 
-let private isLocal (_, v:Var) =
-  match v with
-  | Variable(_, L) -> true
+let private isLocal (_, var:Variable) =
+  match var with
+  | Variable(_, Local) -> true
   | Proxied(_, _) -> true
   | _ -> false
 
-let private isParameter (_, v:Var) =
-  match v with
-  | Variable(_, P) -> true
+let private isParameter (_, var:Variable) =
+  match var with
+  | Variable(_, Param) -> true
   | Proxied(_, _) -> true
   | _ -> false
 
-let private toParm (_, v:Var) =
-  match v with
-  | Variable(p, P) -> p
+let private toParm (_, var:Variable) =
+  match var with
+  | Variable(p, Param) -> p
   | Proxied(_, p)  -> p
   | _ -> failwith "Que?"
 
-let private toLocal (_, v:Var) =
-  match v with
-  | Variable(p, L) -> p
+let private toLocal (_, var:Variable) =
+  match var with
+  | Variable(p, Local) -> p
   | Proxied(l, _)  -> l
   | _ -> failwith "Que?"
 
-let private isProxied (_, v:Var) =
-  match v with
+let private isProxied (_, var:Variable) =
+  match var with
   | Proxied(_, _) -> true
   | _ -> false
+
+let private builder (ctx:Context) (ast:Ast.Node) =
+  match ast with
+  //Simple
+  | Ast.String(value)  -> Stub.simple (Expr.static'(Expr.constant value))
+  | Ast.Number(value)  -> Stub.simple (Expr.static'(Expr.constant value))
+  | Ast.Integer(value) -> Stub.simple (Expr.static'(Expr.constant value))
+  | Ast.Null           -> Stub.simple (Expr.static'(Expr.null'))
+
+  //Assign
+  | Ast.Assign(left, right) -> Assign.build ctx left right
+
+  //Block
+  | Ast.Block(nodes) -> 
+    Stub.Expr(
+      Expr.volatile'(
+        Expr.block [
+          for n in nodes -> 
+            Expr.unwrap (
+              Stub.value (ctx.Build n)
+            )
+        ]
+      )
+    )
+
+  | Ast.Global(name, _) -> Global.get ctx name
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Types.Scope) (ast:Ast.Node) =
 
   let ctx = {
     Context.New with
-      Closure = Dlr.Expr.param "~closure" closureType
       Scope = scope
-      Builder = Compiler.ExprGen.builder
       TemporaryTypes = new SafeDict<string, ClrType>()
-      Environment = env
-      Locals = buildVarsMap scope
+      Variables = buildVarsMap scope
+      Builder = builder
+      Internal = 
+      {
+        Types.InternalVariables.New with 
+          Closure = Dlr.Expr.param "~closure" closureType
+      }
   }
 
   let initGlobals = 
-    let field = Expr.field ctx.EnvironmentExpr "Globals"
-    Expr.assign ctx.Globals field
+    let expr = Expr.field (Context.environmentExpr ctx) "Globals"
+    Expr.assign ctx.Internal.Globals expr
 
   let initClosure = 
-    let field = Expr.field ctx.Function "Closure"
-    Expr.assign ctx.Closure (Expr.cast closureType field)
+    let expr = Expr.field ctx.Internal.Function "Closure"
+    Expr.assign ctx.Internal.Closure (Expr.cast closureType expr)
 
   (*Initialize proxied parameters*)
   let initProxied = 
-    ctx.Locals
-      |> Map.toSeq
-      |> Seq.filter isProxied
-      |> Seq.map (fun (_, Proxied(var, proxy)) ->
-           if Type.isStrongBox var.Type 
-             then Expr.assign var (Expr.newArgs var.Type [proxy])
-             else Expr.assign var (Expr.cast var.Type proxy)
-         )
+    ctx.Variables
+      |>  Map.toSeq
+      |>  Seq.filter isProxied
+      |>  Seq.map (fun (_, Proxied(var, proxy)) ->
+            if Type.isStrongBox var.Type 
+              then Expr.assign var (Expr.newArgs var.Type [proxy])
+              else Expr.assign var (Expr.cast var.Type proxy)
+          )
       #if DEBUG
-      |> Seq.toArray
+      |>  Seq.toArray
       #endif
 
   (*Initialize closed over variables and parameters*)
   let initClosedOver = 
     ctx.Scope.Variables
-      |> Map.toSeq
-      |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun lv -> Ast.Variable.isClosedOver lv)
-      |> Seq.filter (fun lv -> not (Ast.Variable.needsProxy lv))
-      |> Seq.map (fun lv -> 
-           let expr = ctx.LocalExpr lv.Name
-           Expr.assign expr (Expr.new' expr.Type) 
-         )
+      |>  Map.toSeq
+      |>  Seq.map (fun pair -> snd pair)
+      |>  Seq.filter (fun lv -> Ast.Variable.isClosedOver lv)
+      |>  Seq.filter (fun lv -> not (Ast.Variable.needsProxy lv))
+      |>  Seq.map (fun lv -> 
+            let expr = Context.variableExpr ctx lv.Name
+            Expr.assign expr (Expr.new' expr.Type) 
+          )
       #if DEBUG
-      |> Seq.toArray
+      |>  Seq.toArray
       #endif
 
   (*Initialize variables that need to be set as undefined*)
   let initUndefined =
     ctx.Scope.Variables
-      |> Map.toSeq
-      |> Seq.map (fun pair -> snd pair)
-      |> Seq.filter (fun lv -> Ast.Variable.initToUndefined lv)
-      |> Seq.map (fun lv -> 
-           let expr = ctx.LocalExpr lv.Name
-           Utils.Assign.value expr Runtime.Undefined.InstanceExpr
-         )
+      |>  Map.toSeq
+      |>  Seq.map (fun pair -> snd pair)
+      |>  Seq.filter (fun lv -> Ast.Variable.initToUndefined lv)
+      |>  Seq.map (fun lv -> 
+            let expr = Context.variableExpr ctx lv.Name
+            Expr.assign expr Runtime.Undefined.InstanceExpr
+          )
       #if DEBUG
-      |> Seq.toArray
+      |>  Seq.toArray
       #endif
 
   (*Assemble the function body expression*)
   let body = 
-    (ctx.Builder2 ast :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
-      |> List.toSeq
-      |> Seq.append initUndefined
-      |> Seq.append initClosedOver
-      |> Seq.append initProxied
-      |> Seq.append (initGlobals :: initClosure :: [])
+    (Expr.unwrap (Stub.value (ctx.Build ast)) :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
+      |>  List.toSeq
+      |>  Seq.append initUndefined
+      |>  Seq.append initClosedOver
+      |>  Seq.append initProxied
+      |>  Seq.append (initGlobals :: initClosure :: [])
       #if DEBUG
-      |> Seq.toArray
-      |> fun x -> Expr.block x
+      |>  Seq.toArray
+      |>  fun x -> Expr.block x
       #endif
     
   (*Resolve all locals that are parameters*)
   let parms  = 
-    ctx.Locals
-      |> Map.toSeq
-      |> Seq.filter isParameter
-      |> Seq.map toParm
-      |> Seq.append (ctx.Function :: ctx.This :: [])
+    ctx.Variables
+      |>  Map.toSeq
+      |>  Seq.filter isParameter
+      |>  Seq.map toParm
+      |>  Seq.append (Context.internalParams ctx)
       #if DEBUG
-      |> Seq.toArray
+      |>  Seq.toArray
       #endif
 
   (*Resolve all locals that are normal variables*)
-  let vars = 
-    ctx.Locals
-      |> Map.toSeq
-      |> Seq.filter isLocal 
-      |> Seq.map toLocal
-      |> Seq.append (ctx.Globals :: ctx.Closure :: [])
+  let locals = 
+    ctx.Variables
+      |>  Map.toSeq
+      |>  Seq.filter isLocal 
+      |>  Seq.map toLocal
+      |>  Seq.append (Context.internalLocals ctx)
       #if DEBUG
-      |> Seq.toArray
+      |>  Seq.toArray
       #endif
 
   #if DEBUG
-  let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars [body])
+  let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals locals [body])
   #else
-  let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals vars body)
+  let lmb = Dlr.Expr.lambda delegateType parms (Dlr.Expr.blockWithLocals locals body)
   #endif
 
   #if DEBUG

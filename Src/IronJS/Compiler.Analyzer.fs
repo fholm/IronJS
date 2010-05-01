@@ -27,8 +27,8 @@ let private isNotAssignedTo (var:Ast.Types.Variable) =
 (*Sets the Expr and UsedAs attributes of a variable*)
 let private setType name (l:Ast.Types.Variable) typ =
   let exprType = if Ast.Variable.isClosedOver l
-                   then Type.strongBoxType.MakeGenericType(Utils.Type.jsToClr typ) 
-                   else Utils.Type.jsToClr typ
+                   then Type.strongBoxType.MakeGenericType(Runtime.Utils.Type.jsToClr typ) 
+                   else Runtime.Utils.Type.jsToClr typ
 
   let expr = Dlr.Expr.param name exprType
 
@@ -60,7 +60,7 @@ let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Ty
 
         let evaledWithClosures =
           Set.fold (fun state var -> 
-                 state ||| Utils.Type.clrToJs (Variables.Closure.clrTypeN closureType closure.[var].Index)
+                 state ||| Runtime.Utils.Type.clrToJs (Runtime.Utils.Closure.fieldTypeN closureType closure.[var].Index)
                ) var.UsedAs var.UsedWithClosure
 
         // Combine UsedAs + UsedWithClosure types with UsedWith types
@@ -107,7 +107,7 @@ let analyze (scope:Ast.Types.Scope) closureType (types:ClrType list) =
           |> Map.map (fun name l -> 
             if Ast.Variable.isParameter l then
               if l.Index < types.Length
-                then {l with UsedAs = l.UsedAs ||| Utils.Type.clrToJs types.[l.Index]} // We got an argument for this parameter
+                then {l with UsedAs = l.UsedAs ||| Runtime.Utils.Type.clrToJs types.[l.Index]} // We got an argument for this parameter
                 else handleMissingArgument name l // We didn't, means make it dynamic
             else 
               if   isDynamic l       then setType name l Types.Dynamic // No need to resolve type, force it here

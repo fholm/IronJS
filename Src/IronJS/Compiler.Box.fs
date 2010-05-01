@@ -38,6 +38,12 @@ module Box =
   let fieldByClrTypeT<'a> (expr:Et) = 
     fieldByClrType expr typeof<'a>
 
+  let fieldIfClrType (expr:Et) typ = 
+    match typ with
+    | None -> expr
+    | Some(typ) -> 
+      fieldByJsType expr (Runtime.Utils.Type.clrToJs typ)
+
   let typeField (target:Et) =
     Expr.field target "Type"
 

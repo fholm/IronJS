@@ -61,3 +61,7 @@ namespace IronJS.Compiler
 
     let internalLocals ctx =
       [ctx.Internal.Globals; ctx.Internal.Closure]
+
+    let temporaryType ctx name =
+      let success, type' = ctx.TemporaryTypes.TryGetValue name
+      if success then Some(type') else None

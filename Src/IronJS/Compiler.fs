@@ -61,10 +61,10 @@ let private isProxied (_, var:Variable) =
 let private builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   //Simple
-  | Ast.String(value)  -> Stub.simple (Expr.static'(Expr.constant value))
-  | Ast.Number(value)  -> Stub.simple (Expr.static'(Expr.constant value))
-  | Ast.Integer(value) -> Stub.simple (Expr.static'(Expr.constant value))
-  | Ast.Null           -> Stub.simple (Expr.static'(Expr.null'))
+  | Ast.String(value)  -> Stub.expr (Expr.static' (Expr.constant value))
+  | Ast.Number(value)  -> Stub.expr (Expr.static' (Expr.constant value))
+  | Ast.Integer(value) -> Stub.expr (Expr.static' (Expr.constant value))
+  | Ast.Null           -> Stub.expr (Expr.static' (Expr.null'))
 
   //Assign
   | Ast.Assign(left, right) -> Assign.build ctx left right
@@ -82,7 +82,14 @@ let private builder (ctx:Context) (ast:Ast.Node) =
       )
     )
 
-  | Ast.Global(name, _) -> Global.get ctx name
+  //Loops
+  | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
+  | Ast.BinaryOp(op, left, right) -> BinaryOp.build ctx op left right
+
+  //Value access
+  | Ast.Global(name, _) -> Global.get ctx name (Context.temporaryType ctx name)
+
+  | _ -> failwithf "No builder for '%A'" ast
 
 (*Compiles a Ast.Node tree into a DLR Expression-tree*)
 let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:ClrType) (scope:Ast.Types.Scope) (ast:Ast.Node) =
@@ -152,8 +159,10 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       #endif
 
   (*Assemble the function body expression*)
+  let bod = ctx.Build ast
+  let val' = Stub.value (ctx.Build ast)
   let body = 
-    (Expr.unwrap (Stub.value (ctx.Build ast)) :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
+    (Expr.unwrap val' :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
       |>  List.toSeq
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver

@@ -18,18 +18,28 @@ namespace IronJS.Compiler
   open IronJS.Compiler.Types
 
   module Stub = 
+
+    let type' stub =
+      match stub with
+      | Expr(expr) -> true, expr.Type
+      | _ -> false, null
+
+    let expr expr = 
+      Stub.Expr(expr)
     
-    let value stub =
+    let rec value stub =
       match stub with
       | Expr(expr) -> expr
+      | Half(_) -> value (combine stub Done)
       | _ -> failwith "failed"
 
-    let combine (half) (stub:Stub) =
-      match half with
+    and combine (recv:Stub) (stub:Stub) =
+      match recv with
       | Half(half) -> half stub 
+      | Expr(expr) -> combine (simple expr) stub
       | _ -> failwith "failed"
 
-    let simple expr = 
+    and simple expr = 
       Half(fun x -> combine x (Expr(expr))) 
 
     let combineExpr (expr:Expr) (stub:Stub) =

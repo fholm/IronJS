@@ -33,5 +33,5 @@ return foo()();
 bench();
 */
 
-for (var i = 0; i < 3000000; ++i)
-    var y = 2;
+for (i = 0; i < 3000000; ++i)
+    x = 2;

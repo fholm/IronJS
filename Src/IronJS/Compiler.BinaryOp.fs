@@ -3,23 +3,29 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Compiler.Types
 
 module BinaryOp = 
 
-  let private buildLt (left:Et) (right:Et) = Dlr.Expr.Logic.lt left right
+  let private buildLt (left:Et) (right:Et) = Expr.Logic.lt left right
   let private buildLtDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
-  let private buildAdd (left:Et) (right:Et) = Dlr.Expr.Math.add left right
+  let private buildAdd (left:Et) (right:Et) = Expr.Math.add left right
   let private buildAddDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
-  let private (===) (left:Et) (right:Et) = left.Type = right.Type
+  let private (===) (left:Expr) (right:Expr) = left.Type = right.Type
   
-  let build ctx left (op:Ast.BinaryOp) right = 
-    let lexpr = ctx.Builder ctx left
-    let rexpr = ctx.Builder ctx right
+  let build (ctx:Context) (op:Ast.BinaryOp) left right = 
+    let lexpr = Stub.value (ctx.Build left)
+    let rexpr = Stub.value (ctx.Build right)
 
-    match op with
-    | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr rexpr
-    | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr rexpr
-    | _ -> failwithf "BinaryOp: '%A' not supported" op
+    Stub.expr (
+      Expr.static' (
+        match op with
+        | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
+        | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
+        | _ -> failwithf "BinaryOp: '%A' not supported" op
+      )
+    )

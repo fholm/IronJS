@@ -29,13 +29,13 @@ module Object =
       )
     ) 
 
-  let buildGet ctx name target next =
+  let buildGet ctx name (typ:ClrType option) target next =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
     Stub.Expr(
       Expr.wrapInBlock target (fun obj ->
         let test   = Expr.Logic.eq (classId obj) cacheId
-        let cached = Expr.Array.access (properties obj) [cacheIndex]
-        let update = Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]
+        let cached = (Utils.Box.fieldIfClrType (Expr.Array.access (properties obj) [cacheIndex]) typ)
+        let update = (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
         match next with
         | Stub.Done -> [Expr.Flow.ternary test cached update]
         | Stub.Half(target) -> 
@@ -58,10 +58,10 @@ module Object =
         else failwith "Only typed objects supported"
     | _ -> failwith "Failed"
 
-  let unboundGet ctx name target next =
+  let unboundGet ctx name typ target next =
     match target with
     | Expr(target) -> 
       if Runtime.Utils.Type.isObject target.Et.Type 
-        then buildGet ctx name target next
+        then buildGet ctx name typ target next
         else failwith "Only typed objects supported"
     | _ -> failwith "Failed"

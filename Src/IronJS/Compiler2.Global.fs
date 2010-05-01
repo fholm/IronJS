@@ -13,6 +13,6 @@ module Global =
     let unbound = Half(fun stub -> Half(Object.unboundSet ctx name stub))
     Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) unbound
 
-  let get ctx name =
-    let unbound = Half(fun stub -> Half(Object.unboundGet ctx name stub))
+  let get ctx name (typ:ClrType option) =
+    let unbound = Half(fun stub -> Half(Object.unboundGet ctx name typ stub))
     Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) unbound

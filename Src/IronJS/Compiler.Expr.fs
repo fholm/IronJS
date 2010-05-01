@@ -7,7 +7,8 @@
     Et: Et
     IsStatic: bool
     RealType: ClrType
-  }
+  } with
+    member x.Type = x.Et.Type
 
 namespace IronJS.Compiler
 
@@ -24,6 +25,9 @@ namespace IronJS.Compiler
 
     let volatile' et =
       {Et = et; IsStatic = false; RealType = null}
+
+    let inherit' et parent = 
+      {Et = et; IsStatic = parent.IsStatic; RealType = null}
 
     let unwrap expr = 
       expr.Et

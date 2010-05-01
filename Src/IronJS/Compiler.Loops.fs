@@ -7,9 +7,19 @@ open IronJS.Compiler
 
 module Loops =
   
-  let forIter (ctx:Context) init test incr body =
-    let init = ctx.Builder ctx init
-    let test = CallSites.convert<bool> (ctx.Builder ctx test)
-    let incr = ctx.Builder ctx incr
-    let body = ctx.Builder ctx body
-    Dlr.Expr.Flow.for' init test incr body
+  let forIter (ctx:Types.Context) init test incr body =
+    let init = ctx.Build init
+    let test = CallSites.convert<bool> (Stub.value (ctx.Build test))
+    let incr = ctx.Build incr
+    let body = ctx.Build body
+
+    (Stub.expr 
+      (Expr.volatile'
+        (Dlr.Expr.Flow.for' 
+          (Stub.value init).Et 
+          (test.Et)
+          (Stub.value incr).Et 
+          (Stub.value body).Et
+        )
+      )
+    )

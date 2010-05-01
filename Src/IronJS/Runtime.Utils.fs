@@ -79,13 +79,9 @@ module Type =
     | Types.Clr       -> typeof<ClrObject>
     | _               -> jsToClr (normalizeJsType typ)
 
+  let isBox typ =
+    typ = typeof<Box>
+
 module Closure = 
   let fieldNameN n = sprintf "Item%i" n
   let fieldTypeN typ n = Type.strongBoxInnerType (Type.fieldType typ (fieldNameN n))
-
-module Box = 
-
-  let nullBox = 
-    let mutable box = new Box()
-    box.Type <- Types.Null
-    box

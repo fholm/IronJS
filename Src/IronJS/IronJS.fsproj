@@ -113,10 +113,11 @@
     <Compile Include="Compiler.Stub.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Box.fs" />
-    <Compile Include="Compiler.CallSites.fs" />
+    <Compile Include="Compiler.Dynamic.fs" />
     <Compile Include="Compiler2.Object.fs" />
     <Compile Include="Compiler2.Global.fs" />
     <Compile Include="Compiler2.Assign.fs" />
+    <Compile Include="Compiler.Function.fs" />
     <Compile Include="Compiler.Loops.fs" />
     <Compile Include="Compiler.BinaryOp.fs" />
     <Compile Include="Compiler.Analyzer.fs" />

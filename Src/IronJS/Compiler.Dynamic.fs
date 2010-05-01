@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 
-module CallSites = 
+module Dynamic = 
   
   let convert<'a> (expr:Types.Expr) =
     let typeDef = typeof<'a>

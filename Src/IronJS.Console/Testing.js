@@ -33,5 +33,18 @@ return foo()();
 bench();
 */
 
+/*
+foo = {};
+foo.a = {};
+foo.a.b = {};
+foo.a.b.c = {};
+foo.a.b.c.d = {};
+foo.a.b.c.d.e = {};
+*/
+
 var foo = {};
-foo.bar = {}
+for (var i = 0; i < 3000000; ++i) {
+    foo.bar = {};
+    foo.bar.baz = {};
+    foo.bar.baz.saz = {}
+}

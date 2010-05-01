@@ -25,5 +25,6 @@ module Assign =
       let value = ctx.Build right
       let threeStub = Stub.third (Object.setProperty ctx name)
       let twoStub = Stub.combine (Stub.simple (Stub.value value)) threeStub
-      Stub.combine (ctx.Build target) twoStub
+      let result = Stub.combine (Stub.expr (Stub.value (ctx.Build target))) twoStub
+      result
 

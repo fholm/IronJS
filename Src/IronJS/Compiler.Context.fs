@@ -26,6 +26,7 @@
     Variables: Map<string, Variable>
     TemporaryTypes: SafeDict<string, ClrType>
     Builder : Context -> Ast.Node -> Stub
+    Environment : Runtime.Environment
   } with
     member x.Build = x.Builder x
     static member New = {
@@ -35,6 +36,7 @@
       Variables = Map.empty
       Builder = fun _ _ -> Expr(Expr.static' Dlr.Expr.void')
       TemporaryTypes = null
+      Environment = null
     }
 
 namespace IronJS.Compiler

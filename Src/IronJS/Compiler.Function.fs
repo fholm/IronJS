@@ -5,11 +5,12 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Compiler.Types
 
 module Function =
 
-  module private Closure =
-    (*Resolves all item expressions for a closure*)
+  (*module private Closure =
+    Resolves all item expressions for a closure
     let private resolveItems ctx (scope:Ast.Types.Scope) =
       let expr name =
         if ctx.Scope.Variables.ContainsKey name
@@ -22,7 +23,7 @@ module Function =
         |> Seq.map (fun pair -> expr (fst pair))
         |> List.ofSeq
 
-    (*Creates a closure type*)
+    Creates a closure type
     let private createType ctx (scope:Ast.Types.Scope) =
       let clrType name =
         if ctx.Scope.Variables.ContainsKey name
@@ -37,7 +38,7 @@ module Function =
           |> Seq.map (fun pair -> fst pair)
       )
 
-    (*Creates a new closure type and expression to create an instance of that type*)
+    Creates a new closure type and expression to create an instance of that type
     let internal create (ctx:Context) (scope:Ast.Types.Scope) =
       let scopesExpr = if Ast.Scope.definedInLocalDynamicScope scope
                          then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
@@ -47,21 +48,27 @@ module Function =
       let closureType = createType ctx scope
       let dynScopesExpr = Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopesExpr]
       Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
+    *)
 
   (*Defines a new function*)
+
   let internal definition (ctx:Context) astId =
     let scope, _ = ctx.Environment.AstMap.[astId]
-    let closureExpr = Closure.create ctx scope
+    //let closureExpr = Closure.create ctx scope
     let functionArgs = [
-      Expr.constant astId
-      Expr.constant (ctx.Environment.GetClosureId (closureExpr.Type))
-      closureExpr
-      ctx.EnvironmentExpr
+      (Expr.constant astId)
+      (Expr.constant (ctx.Environment.GetClosureId (typeof<Runtime.Closure>)))
+      (Expr.newArgsT<Runtime.Closure> [Expr.newT<Runtime.Scope ResizeArray>])
+      (Context.environmentExpr ctx)
     ]
 
-    Expr.newArgs typeof<Runtime.Function> functionArgs
+    Stub.expr (
+      Expr.volatile' (
+        Expr.newArgs typeof<Runtime.Function> functionArgs
+      )
+    )
 
-  (*Invokes a function*)
+  (*Invokes a function
   let internal invoke (ctx:Context) target args (returnBox:Et) =
     //TODO: Wow this is ugly, redo.
     let targetExpr = ctx.Builder ctx target
@@ -109,3 +116,4 @@ module Function =
 
     else
       failwith "Can't call non-function"
+  *)

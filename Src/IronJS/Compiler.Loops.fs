@@ -9,7 +9,7 @@ module Loops =
   
   let forIter (ctx:Types.Context) init test incr body =
     let init = ctx.Build init
-    let test = CallSites.convert<bool> (Stub.value (ctx.Build test))
+    let test = Dynamic.convert<bool> (Stub.value (ctx.Build test))
     let incr = ctx.Build incr
     let body = ctx.Build body
 

@@ -82,6 +82,9 @@ let private builder (ctx:Context) (ast:Ast.Node) =
       )
     )
 
+  //Functions
+  | Ast.Function(astId) -> Function.definition ctx astId
+
   //Objects
   | Ast.Object(properties) -> Object.build ctx properties
   | Ast.Property(object', name) -> Object.getProperty ctx object' name
@@ -104,6 +107,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       TemporaryTypes = new SafeDict<string, ClrType>()
       Variables = buildVarsMap scope
       Builder = builder
+      Environment = env
       Internal = 
       {
         Types.InternalVariables.New with 

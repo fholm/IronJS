@@ -59,7 +59,7 @@ module Object =
     
   let unboundSet ctx name value target =
     match target, value with
-    | Expr(target), Expr(value) -> 
+    | Value(target), Value(value) -> 
       if Runtime.Utils.Type.isObject target.Type 
         then Stub.expr (buildSet ctx name value target)
         else 
@@ -84,7 +84,7 @@ module Object =
 
   let unboundGet ctx name typ target next =
     match target with
-    | Expr(target) -> 
+    | Value(target) -> 
       if Runtime.Utils.Type.isObject target.Et.Type 
         then Stub.expr (buildGet ctx name typ target next)
         else 

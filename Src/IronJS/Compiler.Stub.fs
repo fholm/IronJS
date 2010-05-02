@@ -5,7 +5,7 @@
 
   type Stub
     = Done 
-    | Expr of Wrapped
+    | Value of Wrapped
     | Half of (Stub -> Stub)
 
 namespace IronJS.Compiler
@@ -27,26 +27,26 @@ namespace IronJS.Compiler
 
     let type' stub =
       match stub with
-      | Expr(expr) -> true, expr.Type
+      | Value(expr) -> true, expr.Type
       | _ -> false, null
 
     let expr expr = 
-      Stub.Expr(expr)
+      Stub.Value(expr)
     
     let rec value stub =
       match stub with
-      | Expr(expr) -> expr
+      | Value(expr) -> expr
       | Half(_) -> value (combine stub Done)
       | _ -> failwith "failed"
 
     and combine (recv:Stub) (stub:Stub) =
       match recv with
       | Half(half) -> half stub 
-      | Expr(expr) -> combine (simple expr) stub
+      | Value(expr) -> combine (simple expr) stub
       | _ -> failwith "failed"
 
     and simple expr = 
-      Half(fun x -> combine x (Expr(expr))) 
+      Half(fun x -> combine x (Value(expr))) 
 
     let combineExpr (expr:Wrapped) (stub:Stub) =
       (value (combine (simple expr) stub)).Et

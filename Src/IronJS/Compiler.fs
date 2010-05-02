@@ -71,7 +71,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
 
   //Block
   | Ast.Block(nodes) -> 
-    Stub.Expr(
+    Stub.Value(
       Wrap.volatile'(
         Expr.block [
           for n in nodes -> 

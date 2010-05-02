@@ -8,9 +8,16 @@ which consists of several core classes
   * Environment - This is the runtime environment, which contains
     all common caches, global objects, etc.
 
-  * Box - Struct that is used to box types that need to be dynamic
-    this is used instead of the default .NET mechanic of casting everything
-    to object
+  * Box - Struct that is used to box types that need to be dynamic.
+    This is used instead of the default .NET mechanic of casting 
+    everything to object
+
+  * Class - Represents the hidden class of an javascript object,
+    used to speed up property access.
+
+  * Object - Class representing a plain old javascript object.
+
+  * ObjectMeta - DLR binder for Object
 
   =======================================================*)
 

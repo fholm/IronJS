@@ -434,8 +434,8 @@ type GetCache with
         //Else build a new one
         else
           //Parameters
-          let x' = Expr.paramT<GetCache> "~cache"
-          let obj' = Expr.paramT<Object> "~object"
+          let x' = Expr.paramT<GetCache> "~x"
+          let obj' = Expr.paramT<Object> "~obj"
           let env' = Expr.paramT<Environment> "~env"
 
           //Body differs
@@ -505,8 +505,8 @@ type SetCache with
           if success then cached
           else
             //Parameters
-            let x' = Expr.paramT<SetCache> "~cache"
-            let obj' = Expr.paramT<Object> "~object"
+            let x' = Expr.paramT<SetCache> "~x"
+            let obj' = Expr.paramT<Object> "~obj"
             let value' = Expr.param "~value" (typeof<Box>.MakeByRefType()) 
             let env' = Expr.paramT<Environment> "~env"
 

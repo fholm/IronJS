@@ -186,21 +186,26 @@ and [<AllowNullLiteral>] Object =
       cache.ClassId <- -1
       cache.Index   <- -1
       env.UndefinedBox
+
+  member x.Has name =
+    let success, index = x.Class.GetIndex name
+    if success && x.Properties.[index].Type <> Types.Nothing
+      then index
+      else -1
       
-  member x.PrototypeGet (cache:GetCache, env:Environment) =
+  member x.PrototypeHas (cache:GetCache, env:Environment) =
+    cache.Index <- -1
+
     let mutable found = false
-    let mutable result = new Box()
     let mutable classIds = []
     let mutable prototype = x.Prototype
 
-    while not found && prototype <> null do
-      result    <- prototype.Get(cache, env)
-      classIds  <- prototype.ClassId :: classIds
-      if cache.ClassId = prototype.ClassId 
-        then found      <- true
-        else prototype  <- prototype.Prototype
+    while cache.Index = -1 && prototype <> null do
+      cache.Index <- prototype.Has cache.Name
+      classIds    <- prototype.ClassId :: classIds
+      prototype   <- prototype.Prototype
 
-    found, classIds
+    classIds
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
@@ -284,7 +289,6 @@ and GetCache =
     if x.ClassId <> obj.ClassId then
       let found, classIds = obj.PrototypeGet(x, env)
       if found then
-
         let cache = Expr.paramT<GetCache> "~cache"
         let object' = Expr.paramT<Object> "~object"
         let env' = Expr.paramT<Environment> "~env"
@@ -320,7 +324,7 @@ and GetCache =
           )
 
         x.Crawler <- lambda.Compile()
-        x.ClassId <- -1
+        x.ClassId <- -1 //This makes sure we will hit the crawler next time
         x.Crawler.Invoke(x, obj, env)
       else
         env.UndefinedBox

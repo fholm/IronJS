@@ -118,6 +118,8 @@ module Expr =
   let castAs typ expr = Et.TypeAs(expr, typ) :> Et
   let castAsT<'a> = castAs typeof<'a> 
 
+  let castVoid expr = block [expr; void']
+
   //Object creation
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>

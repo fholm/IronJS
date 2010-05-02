@@ -510,25 +510,26 @@ type SetCache with
             let value = Expr.param "~value" (typeof<Box>.MakeByRefType()) 
             let env' = Expr.paramT<Environment> "~env"
 
-            //Body differs
-            //depending on if...
-            let body = 
-              (Expr.assign
-                (Expr.access 
-                  (Expr.field (Cache.crawlPrototypeChain object' (classIds.Length)) "Properties") 
-                  [Expr.field cache "index"]
-                )
-                (value)
-              )
-
             //Build lambda expression
             let lambda = 
               (Expr.lambdaT<SetCrawler> 
                 [cache; object'; value; env']
                 (Expr.ternary 
+                  //Condition: Object + All Prototypes must
+                  //not be null and have matching ClassIds
                   (Cache.buildCondition object' (obj.ClassId :: classIds))
+
                   //If condition holds, execute body
-                  (Expr.block [body; Expr.void'])
+                  (Expr.castVoid
+                    (Expr.assign
+                      (Expr.access 
+                        (Expr.field (Cache.crawlPrototypeChain object' (classIds.Length)) "Properties") 
+                        [Expr.field cache "index"]
+                      )
+                      (value)
+                    )
+                  )
+
                   //If condition fails, update
                   (Expr.call cache "Update" [object'; value; env'])
                 )

@@ -1,5 +1,19 @@
 ﻿namespace IronJS.Runtime
 
+(*=======================================================
+
+This file contains the core implementation of the IronJS runtime, 
+which consists of several core classes
+
+  * Environment - This is the runtime environment, which contains
+    all common caches, global objects, etc.
+
+  * Box - Struct that is used to box types that need to be dynamic
+    this is used instead of the default .NET mechanic of casting everything
+    to object
+
+  =======================================================*)
+
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
@@ -276,7 +290,7 @@ and [<AllowNullLiteral>] Function =
     (*==== Custom Delegates for Set/Get inline caches ====*)
 and GetCrawler =
   delegate of GetCache * Object * Environment -> Box
-
+  
 and SetCrawler =
   delegate of SetCache * Object * Box byref * Environment -> unit
   

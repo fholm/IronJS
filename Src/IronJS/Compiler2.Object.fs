@@ -14,16 +14,20 @@ module Object =
   let classId expr = 
     Expr.field expr "ClassId"
 
-  let private buildSet ctx name target value =
+  let private buildSet ctx name target (value:Wrapped) =
     let cache, cacheId, cacheIndex, fetcher = Runtime.SetCache.New(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
-        (Expr.debug (sprintf "Setting property '%s'" name))
-        (Expr.ternary
-          (Expr.eq (classId obj) cacheId)
-          (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value.Et)
-          (Expr.call cache "Update" [obj; Utils.Box.wrap value.Et; Context.environmentExpr ctx])
-        )
+        (Wrap.wrapInBlock value (fun value' -> 
+          [
+            (Expr.debug (sprintf "Setting property '%s'" name))
+            (Expr.ternary
+              (Expr.eq (classId obj) cacheId)
+              (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value')
+              (Expr.call cache "Update" [obj; Utils.Box.wrap value'; Context.environmentExpr ctx])
+            )
+          ]
+        )).Et
       ]
     )
 
@@ -50,7 +54,7 @@ module Object =
       else 
         if Runtime.Utils.Type.isBox target.Type then
           Wrap.wrapInBlock target (fun tmp -> 
-            let target = (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
+            let target = (Wrap.volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
             [
               (Expr.debug (sprintf "Type check for setting property '%s'" name))
               (Expr.ternary
@@ -96,7 +100,7 @@ module Object =
         ctx.ObjectCaches.Add(id, Expr.constant (Runtime.NewCache.New(ctx.Environment.ObjectClass)))
 
       let cache = ctx.ObjectCaches.[id]
-      let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class"; Expr.defaultT<Runtime.Object> ;Expr.field cache "InitSize"]
+      let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class" ; Expr.field (Context.environmentExpr ctx) "Object_prototype" ; Expr.field cache "InitSize"]
       let assn = Expr.assign (Expr.field cache "LastCreated") new'
 
       Wrap.volatile' (assn)

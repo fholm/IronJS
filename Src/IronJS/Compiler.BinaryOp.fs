@@ -20,10 +20,12 @@ module BinaryOp =
   let build (ctx:Context) (op:Ast.BinaryOp) left right = 
     let lexpr = ctx.Build left
     let rexpr = ctx.Build right
+    let expr  = 
+      Wrap.volatile' (
+        match op with
+        | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
+        | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
+        | _ -> failwithf "BinaryOp: '%A' not supported" op
+      )
 
-    Wrap.static' (
-      match op with
-      | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
-      | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
-      | _ -> failwithf "BinaryOp: '%A' not supported" op
-    )
+    Wrap.combine3 expr lexpr rexpr

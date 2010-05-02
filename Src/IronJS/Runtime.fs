@@ -10,51 +10,53 @@ open System.Dynamic
 open System.Collections.Generic
 open System.Runtime.InteropServices
 
-//#nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
+#nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
-(*The currently executing environment*)
+(*=======================================================
+  Runtime Environment
+  =======================================================*)
+
 [<AllowNullLiteral>]
 type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
                   exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
+                  
+  let classId = -1
+  let closureMap = new Dict<ClrType, int>()
+  let delegateCache = new Dict<DelegateCell, System.Delegate>()
 
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable UndefinedBox : Box
   [<DefaultValue>] val mutable ObjectClass : Class
   [<DefaultValue>] val mutable FunctionClass : Class
   [<DefaultValue>] val mutable Object_prototype : Object
+  [<DefaultValue>] val mutable Function_prototype : Object
+  [<DefaultValue>] val mutable AstMap : Dict<int, Ast.Types.Scope * Ast.Node>
 
-  let astMap = new Dict<int, Ast.Types.Scope * Ast.Node>()
-  let closureMap = new SafeDict<ClrType, int>()
-  let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
-  let classId = -1
-
-  //Implementation of IEnvironment.GetDelegate
   member x.GetDelegate (func:Function) delegateType types =
     let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
     let success, delegate' = delegateCache.TryGetValue(cell)
     if success then delegate'
     else
-      let scope, body = astMap.[func.AstId]
+      let scope, body = x.AstMap.[func.AstId]
       let closureType = func.Closure.GetType()
       let lambdaExpr  = exprGenerator x delegateType closureType (scopeAnalyzer scope closureType types) body
       delegateCache.[cell] <- lambdaExpr.Compile()
       delegateCache.[cell]
-      
-  member x.AstMap = astMap
   
-  //Implementation of IEnvironment.GetClosureId
   member x.GetClosureId clrType = 
     let success, id = closureMap.TryGetValue clrType
     if success 
       then id
-      else closureMap.GetOrAdd(clrType, closureMap.Count)
+      else closureMap.[clrType] <- closureMap.Count
+           closureMap.Count - 1
 
   member x.GetClassId () = 
     System.Threading.Interlocked.Increment(ref classId) 
 
-  //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
+    //Maps
+    env.AstMap <- new Dict<int, Ast.Types.Scope * Ast.Node>()
 
     //Base classes
     env.ObjectClass   <- new Class(env.GetClassId(), new Dict<string, int>())
@@ -62,6 +64,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
 
     //Object.prototype
     env.Object_prototype <- new Object(env.ObjectClass, null, 32)
+    env.Function_prototype <- new Object(env.ObjectClass, null, 32)
 
     //Globals
     env.Globals <- new Object(env.ObjectClass, null, 128)
@@ -71,6 +74,10 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     env.UndefinedBox.Clr  <- Undefined.Instance
 
     env
+
+(*=======================================================
+  Dynamic Box 
+  =======================================================*)
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
@@ -94,7 +101,12 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(12)>] val mutable Type   : Types
     #endif
   end
+    
+(*=======================================================
+  Object + Support objects
+  =======================================================*)
 
+    (* ==== Class representing an objects hidden class ==== *)
 and [<AllowNullLiteral>] Class =
   val mutable ClassId : int
   val mutable SubClasses : SafeDict<string, Class>
@@ -121,7 +133,7 @@ and [<AllowNullLiteral>] Class =
   member x.GetIndex varName =
     x.Variables.TryGetValue(varName)
 
-(*Class representing a Javascript native object*)
+    (* ==== A plain javascript object ==== *)
 and [<AllowNullLiteral>] Object =
   val mutable ClassId : int
   val mutable Class : Class
@@ -167,8 +179,8 @@ and [<AllowNullLiteral>] Object =
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
-
-(*DLR meta object for the above Object class*)
+    
+    (* ==== Object meta class for DLR bindings ==== *)
 and ObjectMeta(expr, jsObj:Object) =
   inherit System.Dynamic.DynamicMetaObject(expr, Dlr.Restrict.notAtAll, jsObj)
 
@@ -180,6 +192,11 @@ and ObjectMeta(expr, jsObj:Object) =
     else
       failwith "ObjectMeta.BindConvert not implemented for other types then Runtime.Core.Object"
 
+(*=======================================================
+  Function + Support objects
+  =======================================================*)
+  
+    (* ==== Scope class, representing a functions scope during runtime ==== *)
 and [<AllowNullLiteral>] Scope = 
   val mutable Objects : Object ResizeArray
   val mutable EvalObject : Object
@@ -191,7 +208,7 @@ and [<AllowNullLiteral>] Scope =
     ScopeLevel = scopeLevel
   } 
 
-(*Closure base class, representing a closure environment*)
+    (* ==== Closure environment base class ==== *)
 and Closure =
   val mutable Scopes : Scope ResizeArray
 
@@ -199,7 +216,7 @@ and Closure =
     Scopes = scopes
   }
 
-(*Javascript object that also is a function*)
+    (* ==== Class representing a javascript function ==== *)
 and [<AllowNullLiteral>] Function =
   inherit Object
 
@@ -219,6 +236,11 @@ and [<AllowNullLiteral>] Function =
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
 
+(*=======================================================
+  Inline Caches
+  =======================================================*)
+  
+    (* ==== Inline cache for property get operations ==== *)
 and GetCache =
   val mutable Name : string
   val mutable ClassId : int
@@ -243,7 +265,8 @@ and GetCache =
       Expr.field cache "Index", 
       Expr.field cache "Crawler"
     )
-
+    
+    (* ==== Inline cache for property set operations ==== *)
 and SetCache =
   val mutable Name : string
   val mutable ClassId : int
@@ -270,7 +293,8 @@ and SetCache =
       Expr.field cache "Index", 
       Expr.field cache "Crawler"
     )
-
+    
+    (* ==== Inline cache for object create options ==== *)
 and NewCache =
   val mutable Class : Class
   val mutable ClassId : int
@@ -286,3 +310,20 @@ and NewCache =
 
   static member New(class') =
     new NewCache(class')
+    
+    (* ==== Inline cache for function invocation ==== *)
+and InvokeCache<'a> when 'a :> Delegate and 'a : null =
+  val mutable AstId : int
+  val mutable ClosureId : int
+  val mutable Delegate : 'a
+  val mutable ArgTypes : ClrType list
+
+  new(argTypes) = {
+    AstId = -1
+    ClosureId = -1
+    Delegate = null
+    ArgTypes = argTypes
+  }
+
+  member x.Update (fnc:Function) =
+    x.Delegate <- fnc.Compile<'a>(x.ArgTypes) 

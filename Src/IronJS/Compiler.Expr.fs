@@ -36,6 +36,9 @@ namespace IronJS.Compiler
     let combine a b = 
       {Et = a.Et; Mode = a.Mode ||| b.Mode}
 
+    let combine3 a b c = 
+      {Et = a.Et; Mode = a.Mode ||| b.Mode ||| c.Mode}
+
     let unwrap expr = 
       expr.Et
 

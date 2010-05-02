@@ -53,17 +53,19 @@ module Expr =
   let labelContinue() = Et.Label(typeof<System.Void>, "~continue")
 
   //Blocks
+  let mutable private tmpCounter = 0L
+  let private tmpName() = 
+    tmpCounter <- tmpCounter + 1L
+    sprintf "~tmp_%x" tmpCounter
+
   let blockWithLocals (parms:EtParam seq) (exprs:Et seq) = 
     if Seq.length exprs = 0 then void' else Et.Block(parms, exprs) :> Et
 
   let block exprs = 
     blockWithLocals [] exprs
 
-  let mutable private tmpCounter = 0
-
   let blockTmp typ (fn:EtParam -> Et list) = 
-    tmpCounter <- tmpCounter + 1
-    let tmp = Et.Parameter(typ, sprintf "~tmp_%i" tmpCounter)
+    let tmp = Et.Parameter(typ, tmpName())
     blockWithLocals [tmp] (fn tmp)
 
   let blockTmpT<'a> = 
@@ -73,8 +75,7 @@ module Expr =
     if var :? EtParam 
       then block (fn var) 
       else 
-        tmpCounter <- tmpCounter + 1
-        let tmp = Et.Parameter(typeof<'a>, sprintf "~tmp_%i" tmpCounter)
+        let tmp = Et.Parameter(typeof<'a>, tmpName())
         blockWithLocals [tmp] ([assign tmp var] @ (fn tmp))
 
   //Object fields and properties

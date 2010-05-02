@@ -11,12 +11,14 @@
     Closure: EtParam
     Function: EtParam
     Globals: EtParam
+    Environment: EtParam
   } with 
     static member New = {
       Closure = null
       This = Dlr.Expr.param "~this" typeof<Runtime.Object>
       Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
       Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
+      Environment = Dlr.Expr.param "~env" typeof<Runtime.Environment>
     }
 
   type Context = {
@@ -58,13 +60,13 @@ namespace IronJS.Compiler
       | Proxied(expr, _)    -> expr :> Et
     
     let environmentExpr ctx = 
-      Expr.field ctx.Internal.Function "Environment"
+      ctx.Internal.Environment :> Et
       
     let internalParams ctx =
       [ctx.Internal.Function; ctx.Internal.This]
 
     let internalLocals ctx =
-      [ctx.Internal.Globals; ctx.Internal.Closure]
+      [ctx.Internal.Globals; ctx.Internal.Closure; ctx.Internal.Environment]
 
     let temporaryType ctx name =
       let success, type' = ctx.TemporaryTypes.TryGetValue name

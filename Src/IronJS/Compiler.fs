@@ -119,6 +119,10 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     let expr = Expr.field ctx.Internal.Function "Closure"
     Expr.assign ctx.Internal.Closure (Expr.cast closureType expr)
 
+  let initEnvironment = 
+    let expr = Expr.field ctx.Internal.Function "Environment"
+    Expr.assign ctx.Internal.Environment expr
+
   (*Initialize proxied parameters*)
   let initProxied = 
     ctx.Variables
@@ -187,7 +191,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied
-      |>  Seq.append (initGlobals :: initClosure :: [])
+      |>  Seq.append (initEnvironment :: initGlobals :: initClosure :: [])
       #if DEBUG
       |>  Seq.toArray
       |>  fun x -> Expr.block x

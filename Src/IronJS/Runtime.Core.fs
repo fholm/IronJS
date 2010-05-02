@@ -203,8 +203,8 @@ and [<AllowNullLiteral>] Object =
     x.Update(cache, ref value)
 
   member x.Get (cache:GetCache, env:Environment) =
-    let success, index = x.Class.GetIndex cache.Name
-    if success && x.Properties.[index].Type <> Types.Nothing then
+    let index = x.Has cache.Name
+    if index >= 0 then
       cache.ClassId <- x.ClassId
       cache.Index   <- index
       x.Properties.[index]

@@ -63,8 +63,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.GetClassId())
 
     //Object.prototype
-    env.Object_prototype <- new Object(env.ObjectClass, null, 32)
-    env.Function_prototype <- new Object(env.ObjectClass, null, 32)
+    env.Object_prototype    <- new Object(env.ObjectClass, null, 32)
+    env.Function_prototype  <- new Object(env.ObjectClass, env.Object_prototype, 32)
 
     //Globals
     env.Globals <- new Object(env.ObjectClass, null, 128)
@@ -106,34 +106,32 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
   Object + Support objects
   =======================================================*)
 
-    (* ==== Class representing an objects hidden class ==== *)
+    (*==== Class representing an objects hidden class ====*)
 and [<AllowNullLiteral>] Class =
   val mutable ClassId : int
-  val mutable SubClasses : SafeDict<string, Class>
+  val mutable SubClasses : Dict<string, Class>
   val mutable Variables : Dict<string, int>
 
   new(classId, variables) = {
     ClassId = classId
     Variables = variables
-    SubClasses = new SafeDict<string, Class>();
+    SubClasses = new Dict<string, Class>();
   }
 
-  member x.GetSubClass (varName:string, subClassId:int) =
-    (*Note: I hate interfacing with C# code*)
-    let success, cls = x.SubClasses.TryGetValue varName
+  member x.GetSubClass (name:string, newId:int) =
+    //Note: I hate interfacing with C# code
+    let success, cls = x.SubClasses.TryGetValue name
     if success then cls
     else
-      let newVars = new Dict<string, int>(x.Variables)
-      newVars.Add(varName, newVars.Count)
-      let subClass = new Class(subClassId, newVars)
-      if x.SubClasses.TryAdd(varName, subClass) 
-        then subClass
-        else x.GetSubClass(varName, subClassId)
+      let variables = new Dict<string, int>(x.Variables)
+      variables.Add(name, variables.Count)
+      x.SubClasses.Add(name, new Class(newId, variables)) 
+      x.SubClasses.[name]
 
   member x.GetIndex varName =
     x.Variables.TryGetValue(varName)
 
-    (* ==== A plain javascript object ==== *)
+    (*==== A plain javascript object ====*)
 and [<AllowNullLiteral>] Object =
   val mutable ClassId : int
   val mutable Class : Class
@@ -148,16 +146,9 @@ and [<AllowNullLiteral>] Object =
   }
 
   member x.Put (cache:SetCache, value:Box byref, env:Environment) =
+    x.Set (cache, ref value)
     if cache.ClassId <> x.ClassId then
-      x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
-      x.ClassId <- x.Class.ClassId
-
-      if x.Class.Variables.Count > x.Properties.Length then
-        let newProperties = Array.zeroCreate<Box> (x.Properties.Length * 2)
-        System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
-        x.Properties <- newProperties
-
-      x.Set(cache, ref value)
+      x.Create (cache, ref value, env)
 
   member x.Set (cache:SetCache, value:Box byref) =
     let success, index = x.Class.GetIndex cache.Name
@@ -165,6 +156,17 @@ and [<AllowNullLiteral>] Object =
       cache.ClassId <- x.ClassId
       cache.Index   <- index
       x.Properties.[index] <- value
+
+  member x.Create (cache:SetCache, value:Box byref, env:Environment) =
+    x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
+    x.ClassId <- x.Class.ClassId
+
+    if x.Class.Variables.Count > x.Properties.Length then
+      let newProperties = Array.zeroCreate<Box> (x.Properties.Length * 2)
+      System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
+      x.Properties <- newProperties
+
+    x.Set(cache, ref value)
 
   member x.Get (cache:GetCache, env:Environment) =
     let success, index = x.Class.GetIndex cache.Name
@@ -180,7 +182,7 @@ and [<AllowNullLiteral>] Object =
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
     
-    (* ==== Object meta class for DLR bindings ==== *)
+    (*==== Object meta class for DLR bindings ====*)
 and ObjectMeta(expr, jsObj:Object) =
   inherit System.Dynamic.DynamicMetaObject(expr, Dlr.Restrict.notAtAll, jsObj)
 
@@ -196,7 +198,7 @@ and ObjectMeta(expr, jsObj:Object) =
   Function + Support objects
   =======================================================*)
   
-    (* ==== Scope class, representing a functions scope during runtime ==== *)
+    (*==== Scope class, representing a functions scope during runtime ====*)
 and [<AllowNullLiteral>] Scope = 
   val mutable Objects : Object ResizeArray
   val mutable EvalObject : Object
@@ -208,7 +210,7 @@ and [<AllowNullLiteral>] Scope =
     ScopeLevel = scopeLevel
   } 
 
-    (* ==== Closure environment base class ==== *)
+    (*==== Closure environment base class ====*)
 and Closure =
   val mutable Scopes : Scope ResizeArray
 
@@ -216,7 +218,7 @@ and Closure =
     Scopes = scopes
   }
 
-    (* ==== Class representing a javascript function ==== *)
+    (*==== Class representing a javascript function ====*)
 and [<AllowNullLiteral>] Function =
   inherit Object
 
@@ -240,7 +242,7 @@ and [<AllowNullLiteral>] Function =
   Inline Caches
   =======================================================*)
   
-    (* ==== Inline cache for property get operations ==== *)
+    (*==== Inline cache for property get operations ====*)
 and GetCache =
   val mutable Name : string
   val mutable ClassId : int
@@ -259,14 +261,12 @@ and GetCache =
 
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))
-    (
-      cache, 
-      Expr.field cache "ClassId", 
-      Expr.field cache "Index", 
-      Expr.field cache "Crawler"
-    )
+    cache, 
+    Expr.field cache "ClassId", 
+    Expr.field cache "Index", 
+    Expr.field cache "Crawler"
     
-    (* ==== Inline cache for property set operations ==== *)
+    (*==== Inline cache for property set operations ====*)
 and SetCache =
   val mutable Name : string
   val mutable ClassId : int
@@ -281,20 +281,16 @@ and SetCache =
   }
 
   member x.Update (obj:Object, value:Box byref, env:Environment) =
-    obj.Set(x, ref value)
-    if x.ClassId <> obj.ClassId then
-      obj.Put(x, ref value, env)
+    obj.Put(x, ref value, env)
 
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new SetCache(name))
-    (
-      cache, 
-      Expr.field cache "ClassId", 
-      Expr.field cache "Index", 
-      Expr.field cache "Crawler"
-    )
+    cache, 
+    Expr.field cache "ClassId", 
+    Expr.field cache "Index", 
+    Expr.field cache "Crawler"
     
-    (* ==== Inline cache for object create options ==== *)
+    (*==== Inline cache for object create options ====*)
 and NewCache =
   val mutable Class : Class
   val mutable ClassId : int
@@ -311,7 +307,7 @@ and NewCache =
   static member New(class') =
     new NewCache(class')
     
-    (* ==== Inline cache for function invocation ==== *)
+    (*==== Inline cache for function invocation ====*)
 and InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable AstId : int
   val mutable ClosureId : int

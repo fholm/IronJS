@@ -252,3 +252,19 @@ and PropertyCache =
   static member Create(name:string) =
     let cache = Dlr.Expr.constant (new PropertyCache(name))
     cache, Dlr.Expr.field cache "ClassId", Dlr.Expr.field cache "Index"
+
+and ObjectCache =
+  val mutable Class : Class
+  val mutable ClassId : int
+  val mutable InitSize : int
+  val mutable LastCreated : Object
+
+  new(class') = {
+    Class = class'
+    ClassId = class'.ClassId
+    InitSize = 4
+    LastCreated = null
+  }
+
+  static member New(class') =
+    new ObjectCache(class')

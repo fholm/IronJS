@@ -37,7 +37,13 @@ module Object =
       let cached = (Utils.Box.fieldIfClrType (Expr.Array.access (properties obj) [cacheIndex]) typ)
       let update = (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
       match next with
-      | Stub.Done -> [Expr.Flow.ternary test cached update]
+      | Stub.Done -> 
+        [
+          #if DEBUG
+          (Expr.constant (sprintf "Getting property '%s'" name))
+          #endif
+          (Expr.Flow.ternary test cached update)
+        ]
       | Stub.Half(target) -> 
         [
           #if DEBUG
@@ -109,9 +115,15 @@ module Object =
   let setProperty ctx name = 
     unboundSet ctx name
 
-  let build (ctx:Context) properties =
+  let build (ctx:Context) properties id =
     match properties with
     | Some(_) -> failwith "Objects with auto-properties not supported"
     | None    -> 
-      let new' = Dlr.Expr.newArgsT<Runtime.Object> [Context.objectBaseClass ctx; Expr.constant 4]
-      Stub.expr (Expr.volatile' (new'))
+      if not (ctx.ObjectCaches.ContainsKey id) then
+        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.ObjectCache.New(ctx.Environment.BaseClass)))
+
+      let cache = ctx.ObjectCaches.[id]
+      let new' = Expr.newArgsT<Runtime.Object> [(Expr.field cache "Class"); (Expr.field cache "InitSize")]
+      let assn = Expr.assign (Expr.field cache "LastCreated") new'
+
+      Stub.expr (Expr.volatile' (assn))

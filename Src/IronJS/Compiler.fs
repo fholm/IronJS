@@ -86,7 +86,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Function(astId) -> Function.definition ctx astId
 
   //Objects
-  | Ast.Object(properties) -> Object.build ctx properties
+  | Ast.Object(properties, id) -> Object.build ctx properties id
   | Ast.Property(object', name) -> Object.getProperty ctx object' name
 
   //Loops
@@ -105,6 +105,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     Context.New with
       Scope = scope
       TemporaryTypes = new SafeDict<string, ClrType>()
+      ObjectCaches = new Dict<int, Et>()
       Variables = buildVarsMap scope
       Builder = builder
       Environment = env
@@ -166,12 +167,29 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.toArray
       #endif
 
+  let updatedObjectCaches oc =
+    let last = Expr.field oc "LastCreated"
+    (Expr.Flow.if'  
+      (Expr.Logic.andChain 
+      [
+        (Expr.Logic.notEq last Expr.defaultT<Runtime.Object>)
+        (Expr.Logic.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
+      ])
+      (Expr.block 
+      [
+        (Expr.assign (Expr.field oc "ClassId") (Expr.field last "ClassId"))
+        (Expr.assign (Expr.field oc "Class") (Expr.field last "Class"))
+        (Expr.assign (Expr.field oc "InitSize") (Expr.property (Expr.field last "Properties") "Length"))
+      ])
+    )
+
   (*Assemble the function body expression*)
   let bod = ctx.Build ast
   let val' = Stub.value (ctx.Build ast)
   let body = 
-    (Expr.unwrap val' :: Expr.labelExprT<Runtime.Box> ctx.Return :: [])
-      |>  List.toSeq
+    (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
+      |>  Seq.append (Seq.map updatedObjectCaches ctx.ObjectCaches.Values)
+      |>  Seq.append (Expr.unwrap val' :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

@@ -8,6 +8,8 @@ open IronJS.Ast
 
 module Core =
 
+  let private objectIdGen = new System.Random()
+
   let rec parse (sr:Types.State ref) (t:AntlrToken) =
     match t.Type with
     | 0 | AntlrParser.BLOCK       -> parseBlock sr t
@@ -65,7 +67,7 @@ module Core =
     String(Utils.cleanString (text t))
 
   and parseObject sr (t:AntlrToken) = 
-    if t.Children = null then Object(None) else Error("Not supported")
+    if t.Children = null then Object(None, objectIdGen.Next()) else Error("Not supported")
 
   and parseReturn sr t = 
     Return(parse sr (child t 0))

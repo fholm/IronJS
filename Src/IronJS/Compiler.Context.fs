@@ -27,6 +27,7 @@
     TemporaryTypes: SafeDict<string, ClrType>
     Builder : Context -> Ast.Node -> Stub
     Environment : Runtime.Environment
+    ObjectCaches: Dict<int, Et>
   } with
     member x.Build = x.Builder x
     static member New = {
@@ -37,6 +38,7 @@
       Builder = fun _ _ -> Expr(Expr.static' Dlr.Expr.void')
       TemporaryTypes = null
       Environment = null
+      ObjectCaches = null
     }
 
 namespace IronJS.Compiler

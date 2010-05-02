@@ -52,7 +52,7 @@ type Node
   | Invoke    of Node * Node list
   | Assign    of Node * Node
   | Return    of Node
-  | Object    of Map<string, Node> option
+  | Object    of Map<string, Node> option * int
   | Convert   of Node * Types
   | BinaryOp  of BinaryOp * Node * Node
   | UnaryOp   of UnaryOp * Node

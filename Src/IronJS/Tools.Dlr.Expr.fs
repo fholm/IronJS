@@ -196,7 +196,17 @@ module Expr =
 
   module Logic =
     let or' left right = Et.OrElse(left, right) :> Et
+    let orChain (c:Et list) = 
+      match c with
+      | [] -> true'
+      | _  -> List.foldBack (fun x s -> or' x s) c.Tail c.Head 
+
     let and' left right = Et.AndAlso(left, right) :> Et
+    let andChain (c:Et list) = 
+      match c with
+      | [] -> true'
+      | _  -> List.foldBack (fun x s -> and' x s) c.Tail c.Head 
+
     let not target = Et.OnesComplement target :> Et
 
     let is' typ target = Et.TypeIs(target, typ) :> Et
@@ -218,3 +228,5 @@ module Expr =
 
     let gt left right = Et.GreaterThan(left, right) :> Et
     let gtEq left right = Et.GreaterThanOrEqual(left, right) :> Et
+
+module Et = Expr

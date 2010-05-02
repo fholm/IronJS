@@ -13,18 +13,15 @@ module Assign =
     match left with
     | Ast.Global(name, _) -> 
       let value   = ctx.Build right
-      let setStub = Stub.combine value (Global.set ctx name)
-      let hasType, type' = Stub.type' value
+      let target  = Wrap.static' ctx.Internal.Globals
 
-      if hasType && type' <> typeof<Runtime.Box> then 
-        ctx.TemporaryTypes.AddOrUpdate(name, type', fun _ _ -> type') |> ignore
+      if value.Type <> typeof<Runtime.Box> then 
+        ctx.TemporaryTypes.AddOrUpdate(name, value.Type, fun _ _ -> value.Type) |> ignore
 
-      Stub.combine (Stub.simple (Wrap.static' ctx.Internal.Globals)) setStub
+      Object.setProperty ctx  name target value
 
     | Ast.Property(target, name) ->
       let value = ctx.Build right
-      let threeStub = Stub.third (Object.setProperty ctx name)
-      let twoStub = Stub.combine (Stub.simple (Stub.value value)) threeStub
-      let result = Stub.combine (Stub.simple (Stub.value (ctx.Build target))) twoStub
-      result
+      let target = ctx.Build target
+      Object.setProperty ctx name target value
 

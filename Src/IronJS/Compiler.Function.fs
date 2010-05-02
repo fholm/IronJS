@@ -62,10 +62,8 @@ module Function =
       (Context.environmentExpr ctx)
     ]
 
-    Stub.expr (
-      Wrap.volatile' (
-        Expr.newArgs typeof<Runtime.Function> functionArgs
-      )
+    Wrap.volatile' (
+      Expr.newArgs typeof<Runtime.Function> functionArgs
     )
 
   (*Invokes a function

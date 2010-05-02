@@ -25,7 +25,7 @@
     Internal: InternalVariables
     Variables: Map<string, Variable>
     TemporaryTypes: SafeDict<string, ClrType>
-    Builder : Context -> Ast.Node -> Stub
+    Builder : Context -> Ast.Node -> Wrapped
     Environment : Runtime.Environment
     ObjectCaches: Dict<int, Et>
   } with
@@ -35,7 +35,7 @@
       Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
       Scope = Ast.Types.Scope.New
       Variables = Map.empty
-      Builder = fun _ _ -> Value(Wrap.static' Dlr.Expr.void')
+      Builder = fun _ _ -> Wrap.static' Dlr.Expr.void'
       TemporaryTypes = null
       Environment = null
       ObjectCaches = null

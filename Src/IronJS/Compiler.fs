@@ -61,25 +61,20 @@ let private isProxied (_, var:Variable) =
 let private builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   //Simple
-  | Ast.String(value)  -> Stub.expr (Wrap.static' (Expr.constant value))
-  | Ast.Number(value)  -> Stub.expr (Wrap.static' (Expr.constant value))
-  | Ast.Integer(value) -> Stub.expr (Wrap.static' (Expr.constant value))
-  | Ast.Null           -> Stub.expr (Wrap.static' (Expr.null'))
+  | Ast.String(value)  -> Wrap.static' (Expr.constant value)
+  | Ast.Number(value)  -> Wrap.static' (Expr.constant value)
+  | Ast.Integer(value) -> Wrap.static' (Expr.constant value)
+  | Ast.Null           -> Wrap.static' (Expr.null')
 
   //Assign
   | Ast.Assign(left, right) -> Assign.build ctx left right
 
   //Block
   | Ast.Block(nodes) -> 
-    Stub.Value(
-      Wrap.volatile'(
-        Expr.block [
-          for n in nodes -> 
-            Wrap.unwrap (
-              Stub.value (ctx.Build n)
-            )
-        ]
-      )
+    Wrap.volatile'(
+      Expr.block [
+        for n in nodes -> Wrap.unwrap (ctx.Build n)
+      ]
     )
 
   //Functions
@@ -87,7 +82,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
 
   //Objects
   | Ast.Object(properties, id) -> Object.build ctx properties id
-  | Ast.Property(object', name) -> Object.getProperty ctx object' name
+  | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name
 
   //Loops
   | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
@@ -184,12 +179,11 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     )
 
   (*Assemble the function body expression*)
-  let bod = ctx.Build ast
-  let val' = Stub.value (ctx.Build ast)
+  let wrap = ctx.Build ast
   let body = 
     (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
       |>  Seq.append (Seq.map updatedObjectCaches ctx.ObjectCaches.Values)
-      |>  Seq.append (Wrap.unwrap val' :: [])
+      |>  Seq.append (Wrap.unwrap wrap :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

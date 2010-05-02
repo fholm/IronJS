@@ -110,7 +110,6 @@
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.Types.fs" />
     <Compile Include="Compiler.Expr.fs" />
-    <Compile Include="Compiler.Stub.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Box.fs" />
     <Compile Include="Compiler.Dynamic.fs" />

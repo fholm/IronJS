@@ -18,14 +18,12 @@ module BinaryOp =
   let private (===) (left:Wrapped) (right:Wrapped) = left.Type = right.Type
   
   let build (ctx:Context) (op:Ast.BinaryOp) left right = 
-    let lexpr = Stub.value (ctx.Build left)
-    let rexpr = Stub.value (ctx.Build right)
+    let lexpr = ctx.Build left
+    let rexpr = ctx.Build right
 
-    Stub.expr (
-      Wrap.static' (
-        match op with
-        | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
-        | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
-        | _ -> failwithf "BinaryOp: '%A' not supported" op
-      )
+    Wrap.static' (
+      match op with
+      | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
+      | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
+      | _ -> failwithf "BinaryOp: '%A' not supported" op
     )

@@ -10,17 +10,15 @@ module Loops =
   
   let forIter (ctx:Types.Context) init test incr body =
     let init = ctx.Build init
-    let test = Dynamic.convert<bool> (Stub.value (ctx.Build test))
+    let test = Dynamic.convert<bool> (ctx.Build test)
     let incr = ctx.Build incr
     let body = ctx.Build body
 
-    (Stub.expr 
-      (Wrap.volatile'
-        (Dlr.Expr.for' 
-          (Stub.value init).Et 
-          (test.Et)
-          (Stub.value incr).Et 
-          (Stub.value body).Et
-        )
+    (Wrap.volatile'
+      (Dlr.Expr.for' 
+        init.Et 
+        test.Et
+        incr.Et 
+        body.Et
       )
     )

@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 open IronJS.Compiler
 
 module Loops =
@@ -15,7 +16,7 @@ module Loops =
 
     (Stub.expr 
       (Expr.volatile'
-        (Dlr.Expr.Flow.for' 
+        (Dlr.Expr.for' 
           (Stub.value init).Et 
           (test.Et)
           (Stub.value incr).Et 

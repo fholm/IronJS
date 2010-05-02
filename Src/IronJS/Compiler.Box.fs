@@ -62,7 +62,7 @@ module Box =
     expr.Type = typeof<Runtime.Box>
 
   let typeIsT<'a> (expr:Et) =
-    Expr.Logic.eq (typeField expr) (Expr.constant (Runtime.Utils.Type.clrToJs typeof<'a>))
+    Expr.eq (typeField expr) (Expr.constant (Runtime.Utils.Type.clrToJs typeof<'a>))
 
   let assign (ctx:Types.Context) (left:Et) (right:Et) =
     if not (left.Type = typeof<Runtime.Box>) then

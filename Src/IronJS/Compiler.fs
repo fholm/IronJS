@@ -169,11 +169,11 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
 
   let updatedObjectCaches oc =
     let last = Expr.field oc "LastCreated"
-    (Expr.Flow.if'  
-      (Expr.Logic.andChain 
+    (Expr.if'  
+      (Expr.andChain 
       [
-        (Expr.Logic.notEq last Expr.defaultT<Runtime.Object>)
-        (Expr.Logic.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
+        (Expr.notEq last Expr.defaultT<Runtime.Object>)
+        (Expr.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
       ])
       (Expr.block 
       [

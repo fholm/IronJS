@@ -2,7 +2,6 @@
 
 open IronJS
 open IronJS.Aliases
-open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
@@ -22,9 +21,9 @@ module Object =
         #if DEBUG
         (Expr.constant (sprintf "Setting property '%s'" name))
         #endif
-        (Expr.Flow.ternary
-          (Expr.Logic.eq (classId obj) cacheId)
-          (Utils.Box.assign ctx (Expr.Array.access (properties obj) [cacheIndex]) value.Et)
+        (Expr.ternary
+          (Expr.eq (classId obj) cacheId)
+          (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value.Et)
           (Expr.call cache "UpdateSet" [obj; Utils.Box.wrap value.Et; Context.environmentExpr ctx])
         )
       ]
@@ -33,8 +32,8 @@ module Object =
   let private buildGet ctx name (typ:ClrType option) target next =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
     Expr.wrapInBlock target (fun obj ->
-      let test   = Expr.Logic.eq (classId obj) cacheId
-      let cached = (Utils.Box.fieldIfClrType (Expr.Array.access (properties obj) [cacheIndex]) typ)
+      let test   = Expr.eq (classId obj) cacheId
+      let cached = (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
       let update = (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
       match next with
       | Stub.Done -> 
@@ -42,14 +41,14 @@ module Object =
           #if DEBUG
           (Expr.constant (sprintf "Getting property '%s'" name))
           #endif
-          (Expr.Flow.ternary test cached update)
+          (Expr.ternary test cached update)
         ]
       | Stub.Half(target) -> 
         [
           #if DEBUG
           (Expr.constant (sprintf "Getting property '%s'" name))
           #endif
-          (Expr.Flow.ternary
+          (Expr.ternary
             (test)
             (Stub.combineExpr (Expr.static'   cached) next)
             (Stub.combineExpr (Expr.volatile' update) next)
@@ -66,14 +65,14 @@ module Object =
         else 
           if Runtime.Utils.Type.isBox target.Type then
             Stub.expr (
-              Expr.wrapInBlock target (fun obj -> 
+              Expr.wrapInBlock target (fun tmp -> 
                 [
                   #if DEBUG
                   (Expr.constant (sprintf "Type check for setting property '%s'" name))
                   #endif
-                  (Expr.Flow.ternary
-                    (Utils.Box.typeIsT<Runtime.Object> obj)
-                    (buildSet ctx name value (Expr.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))).Et
+                  (Expr.ternary
+                    (Utils.Box.typeIsT<Runtime.Object> tmp)
+                    (buildSet ctx name value (Expr.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))).Et
                     (Expr.void')
                   )
                 ]
@@ -96,7 +95,7 @@ module Object =
                   #if DEBUG
                   (Expr.constant (sprintf "Type check for getting property '%s'" name))
                   #endif
-                  (Expr.Flow.ternary
+                  (Expr.ternary
                     (Utils.Box.typeIsT<Runtime.Object> obj)
                     (buildGet ctx name None (Expr.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj)) Done).Et
                     (Expr.defaultT<Runtime.Box>)

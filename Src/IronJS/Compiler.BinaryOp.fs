@@ -9,10 +9,10 @@ open IronJS.Compiler.Types
 
 module BinaryOp = 
 
-  let private buildLt (left:Et) (right:Et) = Expr.Logic.lt left right
+  let private buildLt (left:Et) (right:Et) = Expr.lt left right
   let private buildLtDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
-  let private buildAdd (left:Et) (right:Et) = Expr.Math.add left right
+  let private buildAdd (left:Et) (right:Et) = Expr.add left right
   let private buildAddDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
   let private (===) (left:Expr) (right:Expr) = left.Type = right.Type

@@ -193,19 +193,17 @@ and [<AllowNullLiteral>] Object =
       then index
       else -1
       
-  member x.PrototypeHas (cache:GetCache, env:Environment) =
-    cache.Index <- -1
-
-    let mutable found = false
+  member x.PrototypeHas name =
+    let mutable index = -1
     let mutable classIds = []
     let mutable prototype = x.Prototype
 
-    while cache.Index = -1 && prototype <> null do
-      cache.Index <- prototype.Has cache.Name
+    while index = -1 && prototype <> null do
+      index       <- prototype.Has name
       classIds    <- prototype.ClassId :: classIds
       prototype   <- prototype.Prototype
 
-    classIds
+    index, classIds
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
@@ -271,63 +269,86 @@ and [<AllowNullLiteral>] Function =
   =======================================================*)
   
     (*==== Inline cache for property get operations ====*)
-and GetCache =
-  val mutable Name : string
-  val mutable ClassId : int
-  val mutable Index : int
-  val mutable Crawler : System.Func<GetCache, Object, Environment, Box>
+and GetCache(name) as x =
+  [<DefaultValue>] val mutable Name : string
+  [<DefaultValue>] val mutable ClassId : int
+  [<DefaultValue>] val mutable Index : int
+  [<DefaultValue>] val mutable Crawler : System.Func<GetCache, Object, Environment, Box>
+  [<DefaultValue>] val mutable ThrowOnMissing : bool
 
-  new(name) = {
-    Name = name
-    ClassId = -1
-    Index = -1
-    Crawler = null
-  }
+  static let lambdaCache = 
+    new SafeDict<int list, System.Func<GetCache, Object, Environment, Box>>()
+
+  do x.Name <- name
+  do x.ClassId <- -1
+  do x.Index <- -1
+  do x.Crawler <- null
+  do x.ThrowOnMissing <- false
 
   member x.Update (obj:Object, env:Environment) =
     let box = obj.Get(x, env)
     if x.ClassId <> obj.ClassId then
-      let found, classIds = obj.PrototypeGet(x, env)
-      if found then
-        let cache = Expr.paramT<GetCache> "~cache"
-        let object' = Expr.paramT<Object> "~object"
-        let env' = Expr.paramT<Environment> "~env"
+      let index, classIds = obj.PrototypeHas x.Name
 
-        let crawlPrototypeChain expr n = 
-          Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
+      let throwToggle = if x.ThrowOnMissing then -4 else -2
+      let wasFoundToggle = if index < 0 then -4 else -2
 
-        let classIdEq expr n =
-          Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+      let cacheKey = throwToggle :: wasFoundToggle :: obj.ClassId :: classIds
+      let success, cached = lambdaCache.TryGetValue cacheKey
 
-        let conditions object' = 
-          (Expr.andChain
-            (List.mapi 
-              (fun i x -> 
-                let prototype = crawlPrototypeChain object' i
-                (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
-              ) 
-              (obj.ClassId :: classIds)
+      let crawler = 
+        if success then cached
+        else
+          let cache = Expr.paramT<GetCache> "~cache"
+          let object' = Expr.paramT<Object> "~object"
+          let env' = Expr.paramT<Environment> "~env"
+
+          let crawlPrototypeChain expr n = 
+            Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
+
+          let classIdEq expr n =
+            Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+
+          let conditions = 
+            (Expr.andChain
+              (List.mapi 
+                (fun i x -> 
+                  let prototype = crawlPrototypeChain object' i
+                  (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
+                )
+                (obj.ClassId :: classIds)
+              )
             )
-          )
 
-        let lambda = 
-          (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
-            [cache; object'; env']
-            (Expr.ternary 
-              (conditions object')
+          let body = 
+            if index >= 0 then
               (Expr.access 
                 (Expr.field (crawlPrototypeChain object' (classIds.Length)) "Properties") 
                 [Expr.field cache "index"]
               )
-              (Expr.call cache "Update" [object'; env'])
-            )
-          )
+            else
+              (Expr.field env' "UndefinedBox")
 
-        x.Crawler <- lambda.Compile()
-        x.ClassId <- -1 //This makes sure we will hit the crawler next time
-        x.Crawler.Invoke(x, obj, env)
-      else
-        env.UndefinedBox
+          let lambda = 
+            (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
+              [cache; object'; env']
+              (Expr.ternary 
+                (conditions)
+                (body)
+                (Expr.call cache "Update" [object'; env'])
+              )
+            )
+
+          let compiled = lambda.Compile()
+          if lambdaCache.TryAdd(cacheKey, compiled) 
+            then compiled
+            else lambdaCache.[cacheKey]
+
+      x.Index   <- index
+      x.ClassId <- -1 //This makes sure we will hit the crawler next time
+      
+      x.Crawler <- crawler
+      x.Crawler.Invoke(x, obj, env)
     else
       box
 

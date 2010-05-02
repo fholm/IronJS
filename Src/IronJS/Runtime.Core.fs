@@ -30,7 +30,9 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable FunctionClass : Class
   [<DefaultValue>] val mutable Object_prototype : Object
   [<DefaultValue>] val mutable Function_prototype : Object
+
   [<DefaultValue>] val mutable AstMap : Dict<int, Ast.Types.Scope * Ast.Node>
+  [<DefaultValue>] val mutable GetCrawlers : Dict<int list, System.Func<GetCache, Object, Environment, Box>>
 
   member x.GetDelegate (func:Function) delegateType types =
     let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
@@ -58,6 +60,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     let env = new Environment(sa, eg)
     //Maps
     env.AstMap <- new Dict<int, Ast.Types.Scope * Ast.Node>()
+    env.GetCrawlers <- new Dict<int list, System.Func<GetCache, Object, Environment, Box>>()
 
     //Base classes
     env.ObjectClass   <- new Class(env.NextClassId, new Dict<string, int>())
@@ -277,9 +280,6 @@ and GetCache(name) as x =
   [<DefaultValue>] val mutable Crawler : System.Func<GetCache, Object, Environment, Box>
   [<DefaultValue>] val mutable ThrowOnMissing : bool
 
-  static let lambdaCache = 
-    new SafeDict<int list, System.Func<GetCache, Object, Environment, Box>>()
-
   do x.Name <- name
   do x.ClassId <- -1
   do x.Index <- -1
@@ -308,7 +308,7 @@ and GetCache(name) as x =
 
       //Build key and try to find an already cached crawler
       let cacheKey = throwToggle :: wasFoundToggle :: obj.ClassId :: classIds
-      let success, cached = lambdaCache.TryGetValue cacheKey
+      let success, cached = env.GetCrawlers.TryGetValue cacheKey
 
       let crawler = 
         //If we found a cached crawler use it
@@ -366,14 +366,9 @@ and GetCache(name) as x =
               )
             )
 
-          //Compile and try to add it
-          let compiled = lambda.Compile()
-          if lambdaCache.TryAdd(cacheKey, compiled) 
-            //It was added
-            then compiled
-            //Some other thread already created an identical
-            //crawler, so use that instead
-            else lambdaCache.[cacheKey]
+          //Compile and to add it to cache
+          env.GetCrawlers.[cacheKey] <- lambda.Compile()
+          env.GetCrawlers.[cacheKey]
 
       //Setup cache to be ready for next hit
       x.Index   <- index //Save index so we know which offset to look at

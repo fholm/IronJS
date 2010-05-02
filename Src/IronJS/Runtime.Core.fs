@@ -270,6 +270,7 @@ and [<AllowNullLiteral>] Function =
   
     (*==== Inline cache for property get operations ====*)
 and GetCache(name) as x =
+
   [<DefaultValue>] val mutable Name : string
   [<DefaultValue>] val mutable ClassId : int
   [<DefaultValue>] val mutable Index : int
@@ -287,18 +288,33 @@ and GetCache(name) as x =
 
   member x.Update (obj:Object, env:Environment) =
     let box = obj.Get(x, env)
-    if x.ClassId <> obj.ClassId then
+
+    //We found what we were looking for
+    if x.ClassId = obj.ClassId then
+      box
+
+    //If not...
+    else
+      //Check if a prototype has it
       let index, classIds = obj.PrototypeHas x.Name
 
+      //The constants -4 and -2 here could be anything
+      //They are used to differ types of configurations
+      //from eachother in the lambdaCache SafeDict key
       let throwToggle = if x.ThrowOnMissing then -4 else -2
       let wasFoundToggle = if index < 0 then -4 else -2
 
+      //Build key and try to find an already cached crawler
       let cacheKey = throwToggle :: wasFoundToggle :: obj.ClassId :: classIds
       let success, cached = lambdaCache.TryGetValue cacheKey
 
       let crawler = 
-        if success then cached
+        //If we found a cached crawler use it
+        if success then cached 
+
+        //Else build a new one
         else
+          //Parameters
           let cache = Expr.paramT<GetCache> "~cache"
           let object' = Expr.paramT<Object> "~object"
           let env' = Expr.paramT<Environment> "~env"
@@ -309,6 +325,8 @@ and GetCache(name) as x =
           let classIdEq expr n =
             Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
 
+          //Object + All Prototypes must not
+          //be null and have matching ClassIds
           let conditions = 
             (Expr.andChain
               (List.mapi 
@@ -320,37 +338,47 @@ and GetCache(name) as x =
               )
             )
 
+          //Body differs
+          //depending on if...
           let body = 
             if index >= 0 then
+              //... we found the property
               (Expr.access 
                 (Expr.field (crawlPrototypeChain object' (classIds.Length)) "Properties") 
                 [Expr.field cache "index"]
               )
             else
+              //... or not
               (Expr.field env' "UndefinedBox")
 
+          //Build lambda expression
           let lambda = 
             (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
               [cache; object'; env']
               (Expr.ternary 
                 (conditions)
+                //If condition holds, execute body
                 (body)
+                //If condition fails, update
                 (Expr.call cache "Update" [object'; env'])
               )
             )
 
+          //Compile and try to add it
           let compiled = lambda.Compile()
           if lambdaCache.TryAdd(cacheKey, compiled) 
+            //It was added
             then compiled
+            //Some other thread already created an identical
+            //crawler, so use that instead
             else lambdaCache.[cacheKey]
 
-      x.Index   <- index
+      //Setup cache to be ready for next hit
+      x.Index   <- index //Save index so we know which offset to look at
       x.ClassId <- -1 //This makes sure we will hit the crawler next time
       
-      x.Crawler <- crawler
-      x.Crawler.Invoke(x, obj, env)
-    else
-      box
+      x.Crawler <- crawler //Save crawler
+      x.Crawler.Invoke(x, obj, env) //Use crawler to get result
 
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))

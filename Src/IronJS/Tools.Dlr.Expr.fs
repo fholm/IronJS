@@ -223,13 +223,13 @@ module Expr =
   let orChain (c:Et list) = 
     match c with
     | [] -> true'
-    | _  -> List.foldBack (fun x s -> or' x s) c.Tail c.Head 
+    | _  -> List.fold (fun s x -> or' s x) c.Head c.Tail 
 
   let and' left right = Et.AndAlso(left, right) :> Et
   let andChain (c:Et list) = 
     match c with
     | [] -> true'
-    | _  -> List.foldBack (fun x s -> and' x s) c.Tail c.Head 
+    | _  -> List.fold (fun s x -> and' s x) c.Head c.Tail
 
   let is' typ target = Et.TypeIs(target, typ) :> Et
   let isT<'a> = is' typeof<'a> 

@@ -288,30 +288,39 @@ and GetCache =
         let cache = Expr.paramT<GetCache> "~cache"
         let object' = Expr.paramT<Object> "~object"
         let env' = Expr.paramT<Environment> "~env"
-        let return' = Expr.labelT<Box> "~return"
 
-        let rec buildPrototypeAccess expr n = 
-          if n = 0 
-            then expr
-            else (buildPrototypeAccess (Expr.field expr "Prototype") (n-1)) 
-        
-        let rec buildCondition cids n =
-          match cids with
-          | [] -> []
-          | x::xs -> 
-            Expr.eq (Expr.field (buildPrototypeAccess object' n) "ClassId") (Expr.constant x) :: buildCondition xs (n+1)
+        let crawlPrototypeChain expr n = 
+          Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
 
-        let cond = Expr.andChain (buildCondition (obj.ClassId :: classIds) 0)
-        let getPrototype = buildPrototypeAccess object' (classIds.Length)
-        let ifThenElse = 
-          (Expr.ternary 
-            (cond)
-            (Expr.access (Expr.field getPrototype "Properties") [Expr.field cache "index"])
-            (Expr.call cache "Update" [object'; env'])
+        let classIdEq expr n =
+          Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+
+        let conditions object' = 
+          (Expr.andChain
+            (List.mapi 
+              (fun i x -> 
+                let prototype = crawlPrototypeChain object' i
+                (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
+              ) 
+              (obj.ClassId :: classIds)
+            )
           )
 
-        let lambda = Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> [cache; object'; env'] ifThenElse
+        let lambda = 
+          (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
+            [cache; object'; env']
+            (Expr.ternary 
+              (conditions object')
+              (Expr.access 
+                (Expr.field (crawlPrototypeChain object' (classIds.Length)) "Properties") 
+                [Expr.field cache "index"]
+              )
+              (Expr.call cache "Update" [object'; env'])
+            )
+          )
+
         x.Crawler <- lambda.Compile()
+        x.ClassId <- -1
         x.Crawler.Invoke(x, obj, env)
       else
         env.UndefinedBox

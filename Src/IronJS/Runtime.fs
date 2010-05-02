@@ -262,7 +262,7 @@ and ObjectCache =
   new(class') = {
     Class = class'
     ClassId = class'.ClassId
-    InitSize = 4
+    InitSize = 1
     LastCreated = null
   }
 

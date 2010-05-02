@@ -270,6 +270,28 @@ and [<AllowNullLiteral>] Function =
 (*=======================================================
   Inline Caches
   =======================================================*)
+
+    (*==== Utility functions for dealing with inline caches ====*)
+and [<AbstractClass>] private CacheTools() =
+
+  static member classIdEq expr n =
+    Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+  
+  static member crawlPrototypeChain expr n = 
+    Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
+
+  //Object + All Prototypes must not
+  //be null and have matching ClassIds
+  static member buildCondition object' classIds = 
+    (Expr.andChain
+      (List.mapi 
+        (fun i x -> 
+          let prototype = CacheTools.crawlPrototypeChain object' i
+          (Expr.and' (Expr.notDefault prototype) (CacheTools.classIdEq prototype x))
+        )
+        (classIds)
+      )
+    )
   
     (*==== Inline cache for property get operations ====*)
 and GetCache(name) as x =
@@ -321,32 +343,13 @@ and GetCache(name) as x =
           let object' = Expr.paramT<Object> "~object"
           let env' = Expr.paramT<Environment> "~env"
 
-          let crawlPrototypeChain expr n = 
-            Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
-
-          let classIdEq expr n =
-            Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
-
-          //Object + All Prototypes must not
-          //be null and have matching ClassIds
-          let conditions = 
-            (Expr.andChain
-              (List.mapi 
-                (fun i x -> 
-                  let prototype = crawlPrototypeChain object' i
-                  (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
-                )
-                (obj.ClassId :: classIds)
-              )
-            )
-
           //Body differs
           //depending on if...
           let body = 
             if index >= 0 then
               //... we found the property
               (Expr.access 
-                (Expr.field (crawlPrototypeChain object' (classIds.Length)) "Properties") 
+                (Expr.field (CacheTools.crawlPrototypeChain object' (classIds.Length)) "Properties") 
                 [Expr.field cache "index"]
               )
             else
@@ -358,7 +361,7 @@ and GetCache(name) as x =
             (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
               [cache; object'; env']
               (Expr.ternary 
-                (conditions)
+                (CacheTools.buildCondition object' (obj.ClassId :: classIds))
                 //If condition holds, execute body
                 (body)
                 //If condition fails, update
@@ -386,10 +389,11 @@ and GetCache(name) as x =
     
     (*==== Inline cache for property set operations ====*)
 and SetCache =
+
   val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
-  val mutable Crawler : System.Func<SetCache, Object, unit>
+  val mutable Crawler : System.Action<SetCache, Object, Environment>
 
   new(name) = {
     Name = name

@@ -15,7 +15,7 @@ module Object =
     Expr.field expr "ClassId"
 
   let private buildSet ctx name target value =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.SetCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.SetCache.New(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
         (Expr.debug (sprintf "Setting property '%s'" name))
@@ -28,7 +28,7 @@ module Object =
     )
 
   let private buildGet ctx name (typ:ClrType option) target =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.GetCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.GetCache.New(name)
     Wrap.wrapInBlock target (fun obj ->
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
@@ -93,7 +93,7 @@ module Object =
     | Some(_) -> failwith "Objects with auto-properties not supported"
     | None    -> 
       if not (ctx.ObjectCaches.ContainsKey id) then
-        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.ObjectCache.New(ctx.Environment.ObjectClass)))
+        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.NewCache.New(ctx.Environment.ObjectClass)))
 
       let cache = ctx.ObjectCaches.[id]
       let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class"; Expr.defaultT<Runtime.Object> ;Expr.field cache "InitSize"]

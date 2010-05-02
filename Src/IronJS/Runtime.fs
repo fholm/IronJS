@@ -235,7 +235,7 @@ and GetCache =
   member x.Update (obj:Object, env:Environment) =
     obj.Get(x, env)
 
-  static member Create(name:string) =
+  static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))
     (
       cache, 
@@ -262,7 +262,7 @@ and SetCache =
     if x.ClassId <> obj.ClassId then
       obj.Put(x, ref value, env)
 
-  static member Create(name:string) =
+  static member New(name:string) =
     let cache = Dlr.Expr.constant (new SetCache(name))
     (
       cache, 
@@ -271,7 +271,7 @@ and SetCache =
       Expr.field cache "Crawler"
     )
 
-and ObjectCache =
+and NewCache =
   val mutable Class : Class
   val mutable ClassId : int
   val mutable InitSize : int
@@ -285,4 +285,4 @@ and ObjectCache =
   }
 
   static member New(class') =
-    new ObjectCache(class')
+    new NewCache(class')

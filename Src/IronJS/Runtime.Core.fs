@@ -285,7 +285,9 @@ and GetCache(name) as x =
   do x.Index <- -1
   do x.Crawler <- null
   do x.ThrowOnMissing <- false
-
+  
+  //This function handles the updating of
+  //the cache cell in case of a miss
   member x.Update (obj:Object, env:Environment) =
     let box = obj.Get(x, env)
 

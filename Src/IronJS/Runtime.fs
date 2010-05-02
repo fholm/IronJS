@@ -3,52 +3,30 @@
 open IronJS
 open IronJS.Aliases
 open IronJS.Tools
+open IronJS.Tools.Dlr
 
+open System
 open System.Dynamic
 open System.Collections.Generic
 open System.Runtime.InteropServices
 
-#nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
-
-type Undefined() =
-  static let instance = new Undefined()
-  static member Instance = instance
-  static member InstanceExpr = Dlr.Expr.constant instance
-
-type DelegateCell(astId:int, closureId:int, delegateType:ClrType) =
-  let hashCode = 37 * (37 * astId + closureId) + delegateType.GetHashCode()
-
-  member self.AstId = astId
-  member self.ClosureId = closureId
-  member self.DelegateType = delegateType
-
-  override self.GetHashCode() = hashCode
-  override self.Equals obj = 
-    match obj with
-    | :? DelegateCell as cell -> 
-         self.AstId = cell.AstId
-      && self.ClosureId = self.ClosureId
-      && self.DelegateType = self.DelegateType
-    | _ -> false
+//#nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
 (*The currently executing environment*)
 [<AllowNullLiteral>]
 type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
                   exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
 
-  [<DefaultValue>] 
-  val mutable Globals : Object
+  [<DefaultValue>] val mutable Globals : Object
+  [<DefaultValue>] val mutable UndefinedBox : Box
+  [<DefaultValue>] val mutable ObjectClass : Class
+  [<DefaultValue>] val mutable FunctionClass : Class
+  [<DefaultValue>] val mutable Object_prototype : Object
 
   let astMap = new Dict<int, Ast.Types.Scope * Ast.Node>()
   let closureMap = new SafeDict<ClrType, int>()
   let delegateCache = new SafeDict<DelegateCell, System.Delegate>()
-  let classId = 1
-  let baseClass = new Class(0, new Dict<string, int>())
-  let functionBaseClass = baseClass.GetSubClass("length", classId)
-
-  let mutable undefinedBox = new Box()
-  do undefinedBox.Type <- Types.Undefined
-  do undefinedBox.Clr <- Undefined.Instance
+  let classId = -1
 
   //Implementation of IEnvironment.GetDelegate
   member x.GetDelegate (func:Function) delegateType types =
@@ -63,9 +41,6 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
       delegateCache.[cell]
       
   member x.AstMap = astMap
-  member x.BaseClass = baseClass
-  member x.FunctionBaseClass = functionBaseClass
-  member x.UndefinedBox = undefinedBox
   
   //Implementation of IEnvironment.GetClosureId
   member x.GetClosureId clrType = 
@@ -80,7 +55,21 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
-    env.Globals <- new Object(env.BaseClass, null, 128)
+
+    //Base classes
+    env.ObjectClass   <- new Class(env.GetClassId(), new Dict<string, int>())
+    env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.GetClassId())
+
+    //Object.prototype
+    env.Object_prototype <- new Object(env.ObjectClass, null, 32)
+
+    //Globals
+    env.Globals <- new Object(env.ObjectClass, null, 128)
+
+    //Init undefined box
+    env.UndefinedBox.Type <- Types.Undefined
+    env.UndefinedBox.Clr  <- Undefined.Instance
+
     env
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
@@ -146,9 +135,7 @@ and [<AllowNullLiteral>] Object =
     Prototype = prototype
   }
 
-  member x.Put (cache:PropertyCache, value:Box byref, env:Environment) =
-    x.Set(cache, ref value)
-
+  member x.Put (cache:SetCache, value:Box byref, env:Environment) =
     if cache.ClassId <> x.ClassId then
       x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
       x.ClassId <- x.Class.ClassId
@@ -160,14 +147,14 @@ and [<AllowNullLiteral>] Object =
 
       x.Set(cache, ref value)
 
-  member x.Set (cache:PropertyCache, value:Box byref) =
+  member x.Set (cache:SetCache, value:Box byref) =
     let success, index = x.Class.GetIndex cache.Name
     if success then 
       cache.ClassId <- x.ClassId
       cache.Index   <- index
       x.Properties.[index] <- value
 
-  member x.Get (cache:PropertyCache, env:Environment) =
+  member x.Get (cache:GetCache, env:Environment) =
     let success, index = x.Class.GetIndex cache.Name
     if success then
       cache.ClassId <- x.ClassId
@@ -222,7 +209,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
-    inherit Object(env.FunctionBaseClass, null, 2)
+    inherit Object(env.FunctionClass, null, 2)
     AstId = astId
     ClosureId = closureId
     Closure = closure
@@ -232,32 +219,57 @@ and [<AllowNullLiteral>] Function =
   member x.Compile<'a when 'a :> Delegate and 'a : null> (types:ClrType list) =
      (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
 
-and PrototypeFetcher = 
-  delegate of PropertyCache * Object -> Box
-
-and PropertyCache =
+and GetCache =
   val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
-
-  [<DefaultValue>] 
-  val mutable PrototypeFetcher : PrototypeFetcher
+  val mutable Crawler : System.Func<GetCache, Object, Box>
 
   new(name) = {
     Name = name
     ClassId = -1
     Index = -1
+    Crawler = null
   }
 
-  member x.UpdateSet (obj:Object, value:Box byref, env:Environment) =
-    obj.Put(x, ref value, env)
-
-  member x.UpdateGet (obj:Object, env:Environment) =
+  member x.Update (obj:Object, env:Environment) =
     obj.Get(x, env)
 
   static member Create(name:string) =
-    let cache = Dlr.Expr.constant (new PropertyCache(name))
-    cache, Dlr.Expr.field cache "ClassId", Dlr.Expr.field cache "Index", Dlr.Expr.field cache "PrototypeFetcher"
+    let cache = Dlr.Expr.constant (new GetCache(name))
+    (
+      cache, 
+      Expr.field cache "ClassId", 
+      Expr.field cache "Index", 
+      Expr.field cache "Crawler"
+    )
+
+and SetCache =
+  val mutable Name : string
+  val mutable ClassId : int
+  val mutable Index : int
+  val mutable Crawler : System.Func<SetCache, Object, unit>
+
+  new(name) = {
+    Name = name
+    ClassId = -1
+    Index = -1
+    Crawler = null
+  }
+
+  member x.Update (obj:Object, value:Box byref, env:Environment) =
+    obj.Set(x, ref value)
+    if x.ClassId <> obj.ClassId then
+      obj.Put(x, ref value, env)
+
+  static member Create(name:string) =
+    let cache = Dlr.Expr.constant (new SetCache(name))
+    (
+      cache, 
+      Expr.field cache "ClassId", 
+      Expr.field cache "Index", 
+      Expr.field cache "Crawler"
+    )
 
 and ObjectCache =
   val mutable Class : Class

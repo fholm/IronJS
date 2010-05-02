@@ -15,20 +15,20 @@ module Object =
     Expr.field expr "ClassId"
 
   let private buildSet ctx name target value =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.PropertyCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.SetCache.Create(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
         (Expr.debug (sprintf "Setting property '%s'" name))
         (Expr.ternary
           (Expr.eq (classId obj) cacheId)
           (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value.Et)
-          (Expr.call cache "UpdateSet" [obj; Utils.Box.wrap value.Et; Context.environmentExpr ctx])
+          (Expr.call cache "Update" [obj; Utils.Box.wrap value.Et; Context.environmentExpr ctx])
         )
       ]
     )
 
   let private buildGet ctx name (typ:ClrType option) target =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.PropertyCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.GetCache.Create(name)
     Wrap.wrapInBlock target (fun obj ->
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
@@ -38,7 +38,7 @@ module Object =
           (Expr.ternary 
             (Expr.notDefault fetcher)
             (Utils.Box.fieldIfClrType (Expr.invoke fetcher [cache; obj]) typ)
-            (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
+            (Utils.Box.fieldIfClrType (Expr.call cache "Update" [obj; Context.environmentExpr ctx]) typ)
           )
         )
       ]
@@ -93,7 +93,7 @@ module Object =
     | Some(_) -> failwith "Objects with auto-properties not supported"
     | None    -> 
       if not (ctx.ObjectCaches.ContainsKey id) then
-        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.ObjectCache.New(ctx.Environment.BaseClass)))
+        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.ObjectCache.New(ctx.Environment.ObjectClass)))
 
       let cache = ctx.ObjectCaches.[id]
       let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class"; Expr.defaultT<Runtime.Object> ;Expr.field cache "InitSize"]

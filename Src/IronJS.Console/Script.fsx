@@ -38,3 +38,4 @@ let globals1 = env.Globals.Properties.[1].Double
 
 let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
 let globals2 = env.Globals.Properties.[1].Double
+

@@ -42,6 +42,4 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-var bar = {};
-var foo_val = bar.foo;
-var foo_val = bar.foo;
+foo = "lol";

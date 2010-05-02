@@ -73,8 +73,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ubench", "ubench", "{1B0D22
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Console", "IronJS.Console\IronJS.Console.fsproj", "{7A13E1FA-9045-4E9E-866C-B649C0FC030C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Runtime", "IronJS.Runtime\IronJS.Runtime.csproj", "{93807860-6E55-4EA3-A418-EB3648963AA3}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,18 +131,6 @@ Global
 		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x64.Build.0 = Release|x64
 		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x86.ActiveCfg = Release|x86
 		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x86.Build.0 = Release|x86
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|x64.ActiveCfg = Release|Any CPU
-		{93807860-6E55-4EA3-A418-EB3648963AA3}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

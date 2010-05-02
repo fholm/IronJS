@@ -32,7 +32,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable Function_prototype : Object
 
   [<DefaultValue>] val mutable AstMap : Dict<int, Ast.Types.Scope * Ast.Node>
-  [<DefaultValue>] val mutable GetCrawlers : Dict<int list, System.Func<GetCache, Object, Environment, Box>>
+  [<DefaultValue>] val mutable GetCrawlers : Dict<int list, GetCrawler>
+  [<DefaultValue>] val mutable SetCrawlers : Dict<int list, SetCrawler>
 
   member x.GetDelegate (func:Function) delegateType types =
     let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
@@ -60,7 +61,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     let env = new Environment(sa, eg)
     //Maps
     env.AstMap <- new Dict<int, Ast.Types.Scope * Ast.Node>()
-    env.GetCrawlers <- new Dict<int list, System.Func<GetCache, Object, Environment, Box>>()
+    env.GetCrawlers <- new Dict<int list, GetCrawler>()
+    env.SetCrawlers <- new Dict<int list, SetCrawler>()
 
     //Base classes
     env.ObjectClass   <- new Class(env.NextClassId, new Dict<string, int>())
@@ -271,27 +273,12 @@ and [<AllowNullLiteral>] Function =
   Inline Caches
   =======================================================*)
 
-    (*==== Utility functions for dealing with inline caches ====*)
-and [<AbstractClass>] private CacheTools() =
+    (*==== Custom Delegates for Set/Get inline caches ====*)
+and GetCrawler =
+  delegate of GetCache * Object * Environment -> Box
 
-  static member classIdEq expr n =
-    Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
-  
-  static member crawlPrototypeChain expr n = 
-    Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
-
-  //Object + All Prototypes must not
-  //be null and have matching ClassIds
-  static member buildCondition object' classIds = 
-    (Expr.andChain
-      (List.mapi 
-        (fun i x -> 
-          let prototype = CacheTools.crawlPrototypeChain object' i
-          (Expr.and' (Expr.notDefault prototype) (CacheTools.classIdEq prototype x))
-        )
-        (classIds)
-      )
-    )
+and SetCrawler =
+  delegate of SetCache * Object * Box byref * Environment -> unit
   
     (*==== Inline cache for property get operations ====*)
 and GetCache(name) as x =
@@ -299,7 +286,7 @@ and GetCache(name) as x =
   [<DefaultValue>] val mutable Name : string
   [<DefaultValue>] val mutable ClassId : int
   [<DefaultValue>] val mutable Index : int
-  [<DefaultValue>] val mutable Crawler : System.Func<GetCache, Object, Environment, Box>
+  [<DefaultValue>] val mutable Crawler : GetCrawler
   [<DefaultValue>] val mutable ThrowOnMissing : bool
 
   do x.Name <- name
@@ -308,6 +295,93 @@ and GetCache(name) as x =
   do x.Crawler <- null
   do x.ThrowOnMissing <- false
   
+  static member New(name:string) =
+    let cache = Dlr.Expr.constant (new GetCache(name))
+    cache, 
+    Expr.field cache "ClassId", 
+    Expr.field cache "Index", 
+    Expr.field cache "Crawler"
+    
+    (*==== Inline cache for property set operations ====*)
+and SetCache =
+
+  val mutable Name : string
+  val mutable ClassId : int
+  val mutable Index : int
+  val mutable Crawler : SetCrawler
+
+  new(name) = {
+    Name = name
+    ClassId = -1
+    Index = -1
+    Crawler = null
+  }
+
+  static member New(name:string) =
+    let cache = Dlr.Expr.constant (new SetCache(name))
+    cache, 
+    Expr.field cache "ClassId", 
+    Expr.field cache "Index", 
+    Expr.field cache "Crawler"
+    
+    (*==== Inline cache for object creation ====*)
+and NewCache =
+  val mutable Class : Class
+  val mutable ClassId : int
+  val mutable InitSize : int
+  val mutable LastCreated : Object
+
+  new(class') = {
+    Class = class'
+    ClassId = class'.ClassId
+    InitSize = 1
+    LastCreated = null
+  }
+
+  static member New(class') =
+    new NewCache(class')
+    
+    (*==== Inline cache for function invocation ====*)
+and InvokeCache<'a> when 'a :> Delegate and 'a : null =
+  val mutable AstId : int
+  val mutable ClosureId : int
+  val mutable Delegate : 'a
+  val mutable ArgTypes : ClrType list
+
+  new(argTypes) = {
+    AstId = -1
+    ClosureId = -1
+    Delegate = null
+    ArgTypes = argTypes
+  }
+
+  member x.Update (fnc:Function) =
+    x.Delegate <- fnc.Compile<'a>(x.ArgTypes) 
+
+module private Cache = 
+
+  let classIdEq expr n =
+    Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+  
+  let crawlPrototypeChain expr n = 
+    Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
+
+  //Object + All Prototypes must not
+  //be null and have matching ClassIds
+  let buildCondition object' classIds = 
+    (Expr.andChain
+      (List.mapi 
+        (fun i x -> 
+          let prototype = crawlPrototypeChain object' i
+          (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
+        )
+        (classIds)
+      )
+    )
+
+(*==== GetCache implementations ====*)
+type GetCache with
+
   //This function handles the updating of
   //the cache cell in case of a miss
   member x.Update (obj:Object, env:Environment) =
@@ -349,7 +423,7 @@ and GetCache(name) as x =
             if index >= 0 then
               //... we found the property
               (Expr.access 
-                (Expr.field (CacheTools.crawlPrototypeChain object' (classIds.Length)) "Properties") 
+                (Expr.field (Cache.crawlPrototypeChain object' (classIds.Length)) "Properties") 
                 [Expr.field cache "index"]
               )
             else
@@ -358,10 +432,10 @@ and GetCache(name) as x =
 
           //Build lambda expression
           let lambda = 
-            (Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> 
+            (Expr.lambdaT<GetCrawler> 
               [cache; object'; env']
               (Expr.ternary 
-                (CacheTools.buildCondition object' (obj.ClassId :: classIds))
+                (Cache.buildCondition object' (obj.ClassId :: classIds))
                 //If condition holds, execute body
                 (body)
                 //If condition fails, update
@@ -380,68 +454,72 @@ and GetCache(name) as x =
       x.Crawler <- crawler //Save crawler
       x.Crawler.Invoke(x, obj, env) //Use crawler to get result
 
-  static member New(name:string) =
-    let cache = Dlr.Expr.constant (new GetCache(name))
-    cache, 
-    Expr.field cache "ClassId", 
-    Expr.field cache "Index", 
-    Expr.field cache "Crawler"
-    
-    (*==== Inline cache for property set operations ====*)
-and SetCache =
-
-  val mutable Name : string
-  val mutable ClassId : int
-  val mutable Index : int
-  val mutable Crawler : System.Action<SetCache, Object, Environment>
-
-  new(name) = {
-    Name = name
-    ClassId = -1
-    Index = -1
-    Crawler = null
-  }
+(*==== SetCache implementations ====*)
+type SetCache with
 
   member x.Update (obj:Object, value:Box byref, env:Environment) =
-    obj.Set(x, ref value, env)
+    //First try to do a normal update
+    obj.Update(x, ref value)
 
-  static member New(name:string) =
-    let cache = Dlr.Expr.constant (new SetCache(name))
-    cache, 
-    Expr.field cache "ClassId", 
-    Expr.field cache "Index", 
-    Expr.field cache "Crawler"
-    
-    (*==== Inline cache for object create options ====*)
-and NewCache =
-  val mutable Class : Class
-  val mutable ClassId : int
-  val mutable InitSize : int
-  val mutable LastCreated : Object
+    //And if we don't succeed
+    if x.ClassId <> obj.ClassId then
+      
+      //Check if a prototype has it
+      let index, classIds = obj.PrototypeHas x.Name
 
-  new(class') = {
-    Class = class'
-    ClassId = class'.ClassId
-    InitSize = 1
-    LastCreated = null
-  }
+      //If we didn't find it in a Prototype
+      //means we should create it on our current object
+      if index < 0 then 
+        obj.Create(x, ref value, env)
 
-  static member New(class') =
-    new NewCache(class')
-    
-    (*==== Inline cache for function invocation ====*)
-and InvokeCache<'a> when 'a :> Delegate and 'a : null =
-  val mutable AstId : int
-  val mutable ClosureId : int
-  val mutable Delegate : 'a
-  val mutable ArgTypes : ClrType list
+      //If we actually did find it, we need to
+      //create a crawler that can set the property
+      //for us in the future
+      else
+        //Build key and try to find an already cached crawler
+        let cacheKey = obj.ClassId :: classIds
+        let success, cached = env.SetCrawlers.TryGetValue cacheKey
 
-  new(argTypes) = {
-    AstId = -1
-    ClosureId = -1
-    Delegate = null
-    ArgTypes = argTypes
-  }
+        let crawler =
+          if success then cached
+          else
+            //Parameters
+            let cache = Expr.paramT<SetCache> "~cache"
+            let object' = Expr.paramT<Object> "~object"
+            let value = Expr.param "~value" (typeof<Box>.MakeByRefType()) 
+            let env' = Expr.paramT<Environment> "~env"
 
-  member x.Update (fnc:Function) =
-    x.Delegate <- fnc.Compile<'a>(x.ArgTypes) 
+            //Body differs
+            //depending on if...
+            let body = 
+              (Expr.assign
+                (Expr.access 
+                  (Expr.field (Cache.crawlPrototypeChain object' (classIds.Length)) "Properties") 
+                  [Expr.field cache "index"]
+                )
+                (value)
+              )
+
+            //Build lambda expression
+            let lambda = 
+              (Expr.lambdaT<SetCrawler> 
+                [cache; object'; value; env']
+                (Expr.ternary 
+                  (Cache.buildCondition object' (obj.ClassId :: classIds))
+                  //If condition holds, execute body
+                  (Expr.block [body; Expr.void'])
+                  //If condition fails, update
+                  (Expr.call cache "Update" [object'; value; env'])
+                )
+              )
+
+            //Compile and to add it to cache
+            env.SetCrawlers.[cacheKey] <- lambda.Compile()
+            env.SetCrawlers.[cacheKey]
+
+        //Setup cache to be ready for next hit
+        x.Index   <- index //Same as GetCache
+        x.ClassId <- -1 //Same as GetCache
+      
+        x.Crawler <- crawler //Same as GetCache
+        x.Crawler.Invoke(x, obj, ref value, env) //Same as GetCache

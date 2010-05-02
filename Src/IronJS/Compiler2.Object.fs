@@ -15,16 +15,21 @@ module Object =
     Expr.field expr "ClassId"
 
   let private buildSet ctx name target (value:Wrapped) =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.SetCache.New(name)
+    let cache, cacheId, cacheIndex, crawler = Runtime.SetCache.New(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
         (Wrap.wrapInBlock value (fun value' -> 
+          let args = [obj; Utils.Box.wrap value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
             (Expr.ternary
               (Expr.eq (classId obj) cacheId)
               (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value')
-              (Expr.call cache "Update" [obj; Utils.Box.wrap value'; Context.environmentExpr ctx])
+              (Expr.ternary
+                (Expr.notDefault crawler)
+                (Expr.invoke crawler (cache :: args))
+                (Expr.call cache "Update" args)
+              )
             )
           ]
         )).Et
@@ -32,17 +37,18 @@ module Object =
     )
 
   let private buildGet ctx name (typ:ClrType option) target =
-    let cache, cacheId, cacheIndex, fetcher = Runtime.GetCache.New(name)
+    let cache, cacheId, cacheIndex, crawler = Runtime.GetCache.New(name)
     Wrap.wrapInBlock target (fun obj ->
+      let args = [obj; Context.environmentExpr ctx]
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
         (Expr.ternary
           (Expr.eq (classId obj) cacheId)
           (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
           (Expr.ternary 
-            (Expr.notDefault fetcher)
-            (Utils.Box.fieldIfClrType (Expr.invoke fetcher [cache; obj; Context.environmentExpr ctx]) typ)
-            (Utils.Box.fieldIfClrType (Expr.call cache "Update" [obj; Context.environmentExpr ctx]) typ)
+            (Expr.notDefault crawler)
+            (Utils.Box.fieldIfClrType (Expr.invoke crawler (cache :: args)) typ)
+            (Utils.Box.fieldIfClrType (Expr.call cache "Update" args) typ)
           )
         )
       ]

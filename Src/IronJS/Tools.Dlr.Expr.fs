@@ -24,6 +24,14 @@ module Expr =
   let return' label (value:Et) = Et.Return(label, value) :> Et
   let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
 
+  //DEBUG
+  let debug x =
+    #if DEBUG
+      constant x
+    #else
+      void'
+    #endif
+
   //Constants
   let true' = constant true
   let false' = constant false

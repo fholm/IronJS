@@ -18,9 +18,7 @@ module Object =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
-        #if DEBUG
-        (Expr.constant (sprintf "Setting property '%s'" name))
-        #endif
+        (Expr.debug (sprintf "Setting property '%s'" name))
         (Expr.ternary
           (Expr.eq (classId obj) cacheId)
           (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value.Et)
@@ -38,16 +36,12 @@ module Object =
       match next with
       | Stub.Done -> 
         [
-          #if DEBUG
-          (Expr.constant (sprintf "Getting property '%s'" name))
-          #endif
+          (Expr.debug (sprintf "Getting property '%s'" name))
           (Expr.ternary test cached update)
         ]
       | Stub.Half(target) -> 
         [
-          #if DEBUG
-          (Expr.constant (sprintf "Getting property '%s'" name))
-          #endif
+          (Expr.debug (sprintf "Getting property '%s'" name))
           (Expr.ternary
             (test)
             (Stub.combineExpr (Wrap.static'   cached) next)
@@ -67,9 +61,7 @@ module Object =
             Stub.expr (
               Wrap.wrapInBlock target (fun tmp -> 
                 [
-                  #if DEBUG
-                  (Expr.constant (sprintf "Type check for setting property '%s'" name))
-                  #endif
+                  (Expr.debug (sprintf "Type check for setting property '%s'" name))
                   (Expr.ternary
                     (Utils.Box.typeIsT<Runtime.Object> tmp)
                     (buildSet ctx name value (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))).Et
@@ -92,9 +84,7 @@ module Object =
             Stub.expr (
               Wrap.wrapInBlock target (fun obj -> 
                 [
-                  #if DEBUG
-                  (Expr.constant (sprintf "Type check for getting property '%s'" name))
-                  #endif
+                  (Expr.debug (sprintf "Type check for getting property '%s'" name))
                   (Expr.ternary
                     (Utils.Box.typeIsT<Runtime.Object> obj)
                     (buildGet ctx name None (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj)) Done).Et

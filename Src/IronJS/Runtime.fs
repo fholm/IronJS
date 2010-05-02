@@ -80,7 +80,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   //Static
   static member Create sa eg =
     let env = new Environment(sa, eg)
-    env.Globals <- new Object(env.BaseClass, 128)
+    env.Globals <- new Object(env.BaseClass, null, 128)
     env
 
 and [<StructLayout(LayoutKind.Explicit)>] Box =
@@ -137,20 +137,19 @@ and [<AllowNullLiteral>] Object =
   val mutable ClassId : int
   val mutable Class : Class
   val mutable Properties : Box array
+  val mutable Prototype : Object
 
-  new(cls:Class, initSize) = {
+  new(cls, prototype, initSize) = {
     Class = cls
     ClassId = cls.ClassId
     Properties = Array.zeroCreate<Box> initSize
+    Prototype = prototype
   }
 
-  member x.Set (cache:PropertyCache, value:Box byref, env:Environment) =
-    let success, index = x.Class.GetIndex cache.Name
-    if success then 
-      x.Properties.[index] <- value
-      cache.ClassId <- x.ClassId
-      cache.Index <- index
-    else 
+  member x.Put (cache:PropertyCache, value:Box byref, env:Environment) =
+    x.Set(cache, ref value)
+
+    if cache.ClassId <> x.ClassId then
       x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
       x.ClassId <- x.Class.ClassId
 
@@ -159,17 +158,24 @@ and [<AllowNullLiteral>] Object =
         System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
         x.Properties <- newProperties
 
-      x.Set(cache, ref value, env)
+      x.Set(cache, ref value)
+
+  member x.Set (cache:PropertyCache, value:Box byref) =
+    let success, index = x.Class.GetIndex cache.Name
+    if success then 
+      cache.ClassId <- x.ClassId
+      cache.Index   <- index
+      x.Properties.[index] <- value
 
   member x.Get (cache:PropertyCache, env:Environment) =
     let success, index = x.Class.GetIndex cache.Name
     if success then
       cache.ClassId <- x.ClassId
-      cache.Index <- index
+      cache.Index   <- index
       x.Properties.[index]
     else
       cache.ClassId <- -1
-      cache.Index <- -1
+      cache.Index   <- -1
       env.UndefinedBox
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
@@ -216,7 +222,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
-    inherit Object(env.FunctionBaseClass, 4)
+    inherit Object(env.FunctionBaseClass, null, 2)
     AstId = astId
     ClosureId = closureId
     Closure = closure
@@ -227,7 +233,7 @@ and [<AllowNullLiteral>] Function =
      (x.Environment.GetDelegate x typeof<'a> types) :?> 'a
 
 and PrototypeFetcher = 
-  delegate of Object * Box byref -> bool
+  delegate of PropertyCache * Object -> Box
 
 and PropertyCache =
   val mutable Name : string
@@ -244,14 +250,14 @@ and PropertyCache =
   }
 
   member x.UpdateSet (obj:Object, value:Box byref, env:Environment) =
-    obj.Set(x, ref value, env)
+    obj.Put(x, ref value, env)
 
   member x.UpdateGet (obj:Object, env:Environment) =
     obj.Get(x, env)
 
   static member Create(name:string) =
     let cache = Dlr.Expr.constant (new PropertyCache(name))
-    cache, Dlr.Expr.field cache "ClassId", Dlr.Expr.field cache "Index"
+    cache, Dlr.Expr.field cache "ClassId", Dlr.Expr.field cache "Index", Dlr.Expr.field cache "PrototypeFetcher"
 
 and ObjectCache =
   val mutable Class : Class

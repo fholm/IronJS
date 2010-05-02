@@ -15,7 +15,7 @@ module Object =
     Expr.field expr "ClassId"
 
   let private buildSet ctx name target value =
-    let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.PropertyCache.Create(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
         (Expr.debug (sprintf "Setting property '%s'" name))
@@ -28,14 +28,18 @@ module Object =
     )
 
   let private buildGet ctx name (typ:ClrType option) target =
-    let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
+    let cache, cacheId, cacheIndex, fetcher = Runtime.PropertyCache.Create(name)
     Wrap.wrapInBlock target (fun obj ->
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
         (Expr.ternary
           (Expr.eq (classId obj) cacheId)
           (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
-          (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
+          (Expr.ternary 
+            (Expr.notDefault fetcher)
+            (Utils.Box.fieldIfClrType (Expr.invoke fetcher [cache; obj]) typ)
+            (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
+          )
         )
       ]
     )
@@ -92,7 +96,7 @@ module Object =
         ctx.ObjectCaches.Add(id, Expr.constant (Runtime.ObjectCache.New(ctx.Environment.BaseClass)))
 
       let cache = ctx.ObjectCaches.[id]
-      let new' = Expr.newArgsT<Runtime.Object> [(Expr.field cache "Class"); (Expr.field cache "InitSize")]
+      let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class"; Expr.defaultT<Runtime.Object> ;Expr.field cache "InitSize"]
       let assn = Expr.assign (Expr.field cache "LastCreated") new'
 
       Wrap.volatile' (assn)

@@ -5,7 +5,7 @@
 
   type Stub
     = Done 
-    | Expr of Expr
+    | Expr of Wrapped
     | Half of (Stub -> Stub)
 
 namespace IronJS.Compiler
@@ -48,5 +48,5 @@ namespace IronJS.Compiler
     and simple expr = 
       Half(fun x -> combine x (Expr(expr))) 
 
-    let combineExpr (expr:Expr) (stub:Stub) =
+    let combineExpr (expr:Wrapped) (stub:Stub) =
       (value (combine (simple expr) stub)).Et

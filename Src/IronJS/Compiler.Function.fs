@@ -63,7 +63,7 @@ module Function =
     ]
 
     Stub.expr (
-      Expr.volatile' (
+      Wrap.volatile' (
         Expr.newArgs typeof<Runtime.Function> functionArgs
       )
     )

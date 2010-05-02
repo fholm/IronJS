@@ -35,7 +35,7 @@
       Return = Dlr.Expr.labelT<Runtime.Box> "~exit"
       Scope = Ast.Types.Scope.New
       Variables = Map.empty
-      Builder = fun _ _ -> Expr(Expr.static' Dlr.Expr.void')
+      Builder = fun _ _ -> Expr(Wrap.static' Dlr.Expr.void')
       TemporaryTypes = null
       Environment = null
       ObjectCaches = null

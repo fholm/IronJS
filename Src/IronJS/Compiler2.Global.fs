@@ -14,4 +14,4 @@ module Global =
 
   let get ctx name (typ:ClrType option) =
     let unbound = Stub.third (Object.unboundGet ctx name typ)
-    Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) unbound
+    Stub.combine (Stub.simple (Wrap.static' ctx.Internal.Globals)) unbound

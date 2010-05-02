@@ -15,7 +15,7 @@ module Loops =
     let body = ctx.Build body
 
     (Stub.expr 
-      (Expr.volatile'
+      (Wrap.volatile'
         (Dlr.Expr.for' 
           (Stub.value init).Et 
           (test.Et)

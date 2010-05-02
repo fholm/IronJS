@@ -19,7 +19,7 @@ module Assign =
       if hasType && type' <> typeof<Runtime.Box> then 
         ctx.TemporaryTypes.AddOrUpdate(name, type', fun _ _ -> type') |> ignore
 
-      Stub.combine (Stub.simple (Expr.static' ctx.Internal.Globals)) setStub
+      Stub.combine (Stub.simple (Wrap.static' ctx.Internal.Globals)) setStub
 
     | Ast.Property(target, name) ->
       let value = ctx.Build right

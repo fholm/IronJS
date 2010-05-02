@@ -16,7 +16,7 @@ module Object =
 
   let private buildSet ctx name value target =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
-    Expr.wrapInBlock target (fun obj -> 
+    Wrap.wrapInBlock target (fun obj -> 
       [
         #if DEBUG
         (Expr.constant (sprintf "Setting property '%s'" name))
@@ -31,7 +31,7 @@ module Object =
 
   let private buildGet ctx name (typ:ClrType option) target next =
     let cache, cacheId, cacheIndex = Runtime.PropertyCache.Create(name)
-    Expr.wrapInBlock target (fun obj ->
+    Wrap.wrapInBlock target (fun obj ->
       let test   = Expr.eq (classId obj) cacheId
       let cached = (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
       let update = (Utils.Box.fieldIfClrType (Expr.call cache "UpdateGet" [obj; Context.environmentExpr ctx]) typ)
@@ -50,8 +50,8 @@ module Object =
           #endif
           (Expr.ternary
             (test)
-            (Stub.combineExpr (Expr.static'   cached) next)
-            (Stub.combineExpr (Expr.volatile' update) next)
+            (Stub.combineExpr (Wrap.static'   cached) next)
+            (Stub.combineExpr (Wrap.volatile' update) next)
           )
         ]
       | _ -> failwith "Only Stub.Done and Stub.Half allowed"
@@ -65,14 +65,14 @@ module Object =
         else 
           if Runtime.Utils.Type.isBox target.Type then
             Stub.expr (
-              Expr.wrapInBlock target (fun tmp -> 
+              Wrap.wrapInBlock target (fun tmp -> 
                 [
                   #if DEBUG
                   (Expr.constant (sprintf "Type check for setting property '%s'" name))
                   #endif
                   (Expr.ternary
                     (Utils.Box.typeIsT<Runtime.Object> tmp)
-                    (buildSet ctx name value (Expr.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))).Et
+                    (buildSet ctx name value (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))).Et
                     (Expr.void')
                   )
                 ]
@@ -90,14 +90,14 @@ module Object =
         else 
           if Runtime.Utils.Type.isBox target.Type then
             Stub.expr (
-              Expr.wrapInBlock target (fun obj -> 
+              Wrap.wrapInBlock target (fun obj -> 
                 [
                   #if DEBUG
                   (Expr.constant (sprintf "Type check for getting property '%s'" name))
                   #endif
                   (Expr.ternary
                     (Utils.Box.typeIsT<Runtime.Object> obj)
-                    (buildGet ctx name None (Expr.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj)) Done).Et
+                    (buildGet ctx name None (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj)) Done).Et
                     (Expr.defaultT<Runtime.Box>)
                   )
                 ]
@@ -107,7 +107,7 @@ module Object =
             failwith "Dynamic-only object set not supported"
     | _ -> failwith "Failed"
 
-  let getProperty ctx target name =
+  let getProperty (ctx:Context) target name =
     let unbound = unboundGet ctx name None
     Stub.combine (ctx.Build target) (Stub.third unbound)
 
@@ -125,4 +125,4 @@ module Object =
       let new' = Expr.newArgsT<Runtime.Object> [(Expr.field cache "Class"); (Expr.field cache "InitSize")]
       let assn = Expr.assign (Expr.field cache "LastCreated") new'
 
-      Stub.expr (Expr.volatile' (assn))
+      Stub.expr (Wrap.volatile' (assn))

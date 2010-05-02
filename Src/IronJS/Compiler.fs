@@ -61,10 +61,10 @@ let private isProxied (_, var:Variable) =
 let private builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   //Simple
-  | Ast.String(value)  -> Stub.expr (Expr.static' (Expr.constant value))
-  | Ast.Number(value)  -> Stub.expr (Expr.static' (Expr.constant value))
-  | Ast.Integer(value) -> Stub.expr (Expr.static' (Expr.constant value))
-  | Ast.Null           -> Stub.expr (Expr.static' (Expr.null'))
+  | Ast.String(value)  -> Stub.expr (Wrap.static' (Expr.constant value))
+  | Ast.Number(value)  -> Stub.expr (Wrap.static' (Expr.constant value))
+  | Ast.Integer(value) -> Stub.expr (Wrap.static' (Expr.constant value))
+  | Ast.Null           -> Stub.expr (Wrap.static' (Expr.null'))
 
   //Assign
   | Ast.Assign(left, right) -> Assign.build ctx left right
@@ -72,10 +72,10 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   //Block
   | Ast.Block(nodes) -> 
     Stub.Expr(
-      Expr.volatile'(
+      Wrap.volatile'(
         Expr.block [
           for n in nodes -> 
-            Expr.unwrap (
+            Wrap.unwrap (
               Stub.value (ctx.Build n)
             )
         ]
@@ -189,7 +189,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   let body = 
     (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
       |>  Seq.append (Seq.map updatedObjectCaches ctx.ObjectCaches.Values)
-      |>  Seq.append (Expr.unwrap val' :: [])
+      |>  Seq.append (Wrap.unwrap val' :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

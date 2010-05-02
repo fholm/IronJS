@@ -20,7 +20,7 @@ open System.Runtime.InteropServices
 type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
                   exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
                   
-  let classId = -1
+  let mutable classId = 0
   let closureMap = new Dict<ClrType, int>()
   let delegateCache = new Dict<DelegateCell, System.Delegate>()
 
@@ -50,8 +50,9 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
       else closureMap.[clrType] <- closureMap.Count
            closureMap.Count - 1
 
-  member x.GetClassId () = 
-    System.Threading.Interlocked.Increment(ref classId) 
+  member x.NextClassId = 
+    classId <- classId + 1
+    classId
 
   static member Create sa eg =
     let env = new Environment(sa, eg)
@@ -59,15 +60,16 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     env.AstMap <- new Dict<int, Ast.Types.Scope * Ast.Node>()
 
     //Base classes
-    env.ObjectClass   <- new Class(env.GetClassId(), new Dict<string, int>())
-    env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.GetClassId())
+    env.ObjectClass   <- new Class(env.NextClassId, new Dict<string, int>())
+    env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.NextClassId)
 
     //Object.prototype
     env.Object_prototype    <- new Object(env.ObjectClass, null, 32)
     env.Function_prototype  <- new Object(env.ObjectClass, env.Object_prototype, 32)
+    env.Object_prototype.SetDouble("foo", 2.0, env)
 
     //Globals
-    env.Globals <- new Object(env.ObjectClass, null, 128)
+    env.Globals <- new Object(env.ObjectClass, env.Object_prototype, 128)
 
     //Init undefined box
     env.UndefinedBox.Type <- Types.Undefined
@@ -145,12 +147,18 @@ and [<AllowNullLiteral>] Object =
     Prototype = prototype
   }
 
-  member x.Put (cache:SetCache, value:Box byref, env:Environment) =
-    x.Set (cache, ref value)
+  member x.SetDouble (name:string, value:double, env:Environment) =
+    let mutable box = new Box()
+    box.Double <- value
+    box.Type <- Types.Double
+    x.Set(new SetCache(name), ref box, env)
+
+  member x.Set (cache:SetCache, value:Box byref, env:Environment) =
+    x.Update (cache, ref value)
     if cache.ClassId <> x.ClassId then
       x.Create (cache, ref value, env)
 
-  member x.Set (cache:SetCache, value:Box byref) =
+  member x.Update (cache:SetCache, value:Box byref) =
     let success, index = x.Class.GetIndex cache.Name
     if success then 
       cache.ClassId <- x.ClassId
@@ -158,7 +166,7 @@ and [<AllowNullLiteral>] Object =
       x.Properties.[index] <- value
 
   member x.Create (cache:SetCache, value:Box byref, env:Environment) =
-    x.Class   <- x.Class.GetSubClass(cache.Name, env.GetClassId())
+    x.Class   <- x.Class.GetSubClass(cache.Name, env.NextClassId)
     x.ClassId <- x.Class.ClassId
 
     if x.Class.Variables.Count > x.Properties.Length then
@@ -166,11 +174,11 @@ and [<AllowNullLiteral>] Object =
       System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
       x.Properties <- newProperties
 
-    x.Set(cache, ref value)
+    x.Update(cache, ref value)
 
   member x.Get (cache:GetCache, env:Environment) =
     let success, index = x.Class.GetIndex cache.Name
-    if success then
+    if success && x.Properties.[index].Type <> Types.Nothing then
       cache.ClassId <- x.ClassId
       cache.Index   <- index
       x.Properties.[index]
@@ -178,6 +186,21 @@ and [<AllowNullLiteral>] Object =
       cache.ClassId <- -1
       cache.Index   <- -1
       env.UndefinedBox
+      
+  member x.PrototypeGet (cache:GetCache, env:Environment) =
+    let mutable found = false
+    let mutable result = new Box()
+    let mutable classIds = []
+    let mutable prototype = x.Prototype
+
+    while not found && prototype <> null do
+      result    <- prototype.Get(cache, env)
+      classIds  <- prototype.ClassId :: classIds
+      if cache.ClassId = prototype.ClassId 
+        then found      <- true
+        else prototype  <- prototype.Prototype
+
+    found, classIds
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj
@@ -247,7 +270,7 @@ and GetCache =
   val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
-  val mutable Crawler : System.Func<GetCache, Object, Box>
+  val mutable Crawler : System.Func<GetCache, Object, Environment, Box>
 
   new(name) = {
     Name = name
@@ -257,7 +280,47 @@ and GetCache =
   }
 
   member x.Update (obj:Object, env:Environment) =
-    obj.Get(x, env)
+    let box = obj.Get(x, env)
+    if x.ClassId <> obj.ClassId then
+      let found, classIds = obj.PrototypeGet(x, env)
+      if found then
+
+        let cache = Expr.paramT<GetCache> "~cache"
+        let object' = Expr.paramT<Object> "~object"
+        let env' = Expr.paramT<Environment> "~env"
+        let return' = Expr.labelT<Box> "~return"
+
+        let rec buildPrototypeAccess expr n = 
+          if n = 0 
+            then expr
+            else (buildPrototypeAccess (Expr.field expr "Prototype") (n-1)) 
+        
+        let rec buildCondition cids n =
+          match cids with
+          | [] -> []
+          | x::xs -> 
+            Expr.eq (Expr.field (buildPrototypeAccess object' n) "ClassId") (Expr.constant x) :: buildCondition xs (n+1)
+
+        let cond = Expr.andChain (buildCondition (obj.ClassId :: classIds) 0)
+        let getPrototype = buildPrototypeAccess object' (classIds.Length)
+
+        let ifThenElse = 
+          (Expr.ternary 
+            (cond)
+            (Expr.access (Expr.field getPrototype "Properties") [Expr.field cache "index"])
+            (Expr.call cache "Update" [object'; env'])
+          )
+
+        x.Crawler <- (
+          Expr.lambda typeof<System.Func<GetCache, Object, Environment, Box>> [cache; object'; env'] ifThenElse
+        ).Compile() :?> System.Func<GetCache, Object, Environment, Box>
+
+        let result = x.Crawler.Invoke(x, obj, env)
+        result
+      else
+        env.UndefinedBox
+    else
+      box
 
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))
@@ -281,7 +344,7 @@ and SetCache =
   }
 
   member x.Update (obj:Object, value:Box byref, env:Environment) =
-    obj.Put(x, ref value, env)
+    obj.Set(x, ref value, env)
 
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new SetCache(name))

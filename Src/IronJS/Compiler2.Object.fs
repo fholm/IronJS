@@ -41,7 +41,7 @@ module Object =
           (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
           (Expr.ternary 
             (Expr.notDefault fetcher)
-            (Utils.Box.fieldIfClrType (Expr.invoke fetcher [cache; obj]) typ)
+            (Utils.Box.fieldIfClrType (Expr.invoke fetcher [cache; obj; Context.environmentExpr ctx]) typ)
             (Utils.Box.fieldIfClrType (Expr.call cache "Update" [obj; Context.environmentExpr ctx]) typ)
           )
         )

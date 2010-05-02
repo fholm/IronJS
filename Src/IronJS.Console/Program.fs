@@ -20,7 +20,10 @@ let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
 let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let globals1 = env.Globals
+
 let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let globals2 = env.Globals
 
 Console.WriteLine(sprintf "compile: %f, hot: %f" timeCompile time)
 Console.ReadLine() |> ignore

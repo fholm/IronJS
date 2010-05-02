@@ -34,4 +34,7 @@ let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())
 let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
 
 let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let globals1 = env.Globals.Properties.[1].Double
+
 let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let globals2 = env.Globals.Properties.[1].Double

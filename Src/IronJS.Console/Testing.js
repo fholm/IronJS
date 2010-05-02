@@ -42,7 +42,5 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-var foo = {};
-for (var i = 0; i < 3000000; ++i) {
-    foo.bar = {};
-}
+var bar = {};
+var foo_val = bar.foo;

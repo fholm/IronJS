@@ -303,7 +303,6 @@ and GetCache =
 
         let cond = Expr.andChain (buildCondition (obj.ClassId :: classIds) 0)
         let getPrototype = buildPrototypeAccess object' (classIds.Length)
-
         let ifThenElse = 
           (Expr.ternary 
             (cond)
@@ -311,12 +310,9 @@ and GetCache =
             (Expr.call cache "Update" [object'; env'])
           )
 
-        x.Crawler <- (
-          Expr.lambda typeof<System.Func<GetCache, Object, Environment, Box>> [cache; object'; env'] ifThenElse
-        ).Compile() :?> System.Func<GetCache, Object, Environment, Box>
-
-        let result = x.Crawler.Invoke(x, obj, env)
-        result
+        let lambda = Expr.lambdaT<System.Func<GetCache, Object, Environment, Box>> [cache; object'; env'] ifThenElse
+        x.Crawler <- lambda.Compile()
+        x.Crawler.Invoke(x, obj, env)
       else
         env.UndefinedBox
     else

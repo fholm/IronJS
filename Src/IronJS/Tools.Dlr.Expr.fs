@@ -142,7 +142,10 @@ module Expr =
 
   //Delegates
   let delegateType (types:ClrType seq) = Et.GetDelegateType(Seq.toArray types)
+
   let lambda (typ:ClrType) (parms:EtParam seq) (body:Et) = Et.Lambda(typ, body, parms)
+  let lambdaT<'a> (parms:EtParam seq) (body:Et) = Et.Lambda<'a>(body, parms)
+
   let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
 
   //Dynamic

@@ -46,7 +46,7 @@ let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Ty
       | Ast.Add -> getExprType' left ||| getExprType' right
       | _ -> failwith "not supported"
     | Ast.Variable(name, _) -> getLocalType' name
-    | Ast.Invoke(_, _) -> Types.Dynamic
+    | Ast.Invoke(_, _, _) -> Types.Dynamic
     | _ -> failwith "not supported"
 
   and getLocalType' name =

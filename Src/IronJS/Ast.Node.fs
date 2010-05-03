@@ -48,7 +48,7 @@ type Node
   
   //
   | Block     of Node list
-  | Invoke    of Node * Node list
+  | Invoke    of Node * Node list * Types.DynamicScopeLevels
   | Assign    of Node * Node
   | Return    of Node
   | Object    of Map<string, Node> option * int

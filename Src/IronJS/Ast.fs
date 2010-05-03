@@ -79,7 +79,7 @@ module Core =
     if t = null then Null else parse sr t
 
   and parseCall sr t =
-    Invoke(parse sr (child t 0) , parseList sr (childrenOf t 1))
+    Invoke(parse sr (child t 0), parseList sr (childrenOf t 1), (!sr).DynamicScopeLevels.Head)
 
   and parseVar sr t =
     let c = child t 0 
@@ -135,7 +135,7 @@ module Core =
       !sr with
         AstMap = Map.add astId (Scope, body) (!sr).AstMap
     }
-    
+
     let func = Function(astId)
 
     if isAnon 

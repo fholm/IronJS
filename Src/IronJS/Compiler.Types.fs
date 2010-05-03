@@ -3,11 +3,11 @@
 open IronJS
 open IronJS.Aliases
 
-type VarType
+type VariableType
   = Local
   | Param
 
 type Variable
   = Expr     of Et
-  | Variable of EtParam * VarType
+  | Variable of EtParam * VariableType
   | Proxied  of EtParam * EtParam

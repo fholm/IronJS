@@ -42,8 +42,6 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-var count = 6000000;
-var sum = 0;
-for (var i = 0; i < count; i = i+1) {
-    sum = i + count;
+var boo = function () {
+    
 }

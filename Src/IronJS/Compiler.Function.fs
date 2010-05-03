@@ -62,9 +62,7 @@ module Function =
       (Context.environmentExpr ctx)
     ]
 
-    Wrap.volatile' (
-      Expr.newArgs typeof<Runtime.Function> functionArgs
-    )
+    Wrap.volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
 
   (*Invokes a function
   let internal invoke (ctx:Context) target args (returnBox:Et) =

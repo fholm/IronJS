@@ -37,8 +37,7 @@ type Node
   //Special
   | Arguments
   | This
-  | Eval  of string
-  | Quote of Et
+  | Eval of string
 
   //Scopes
   | DynamicScope  of Node * Node

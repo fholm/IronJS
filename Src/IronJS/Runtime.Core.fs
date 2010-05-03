@@ -33,6 +33,11 @@ open System.Runtime.InteropServices
 
 #nowarn "9" //Disables warning about "generation of unverifiable .NET IL code"  
 
+type Undefined() =
+  static let instance = new Undefined()
+  static member Instance = instance
+  static member InstanceExpr = Dlr.Expr.constant instance
+
 (*=======================================================
   Runtime Environment
   =======================================================*)

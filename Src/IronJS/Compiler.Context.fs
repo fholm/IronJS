@@ -35,7 +35,7 @@
     Scope: Ast.Types.Scope
     Internal: InternalVariables
     Variables: Map<string, Variable>
-    Builder : Context -> Ast.Node -> Wrapped
+    Builder : Context -> Ast.Node -> ES
     Environment : Runtime.Environment
 
     mutable TemporaryTypes: Map<string, ClrType>

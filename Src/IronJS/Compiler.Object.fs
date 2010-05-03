@@ -14,7 +14,7 @@ module Object =
   let classId expr = 
     Expr.field expr "ClassId"
 
-  let private buildSet ctx name target (value:Wrapped) =
+  let private buildSet ctx name target (value:ES) =
     let cache, cacheId, cacheIndex, crawler = Runtime.SetCache.New(name)
     Wrap.wrapInBlock target (fun obj -> 
       [
@@ -54,7 +54,7 @@ module Object =
       ]
     )
     
-  let setProperty ctx (target:Wrapped) name (value:Wrapped) =
+  let setProperty ctx (target:ES) name (value:ES) =
     if Runtime.Utils.Type.isObject target.Type 
       then buildSet ctx name target value
       else 
@@ -73,7 +73,7 @@ module Object =
         else
           failwith "Dynamic-only object set not supported"
 
-  let getProperty ctx (target:Wrapped) name typ =
+  let getProperty ctx (target:ES) name typ =
     if Runtime.Utils.Type.isObject target.Type 
       then buildGet ctx name typ target
       else 

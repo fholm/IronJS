@@ -57,7 +57,7 @@ module Box =
     let jsType = Runtime.Utils.Type.clrToJs value.Type
     Expr.assign (fieldByJsType target jsType) value
   
-  let isWrapped (expr:Et) = 
+  let isES (expr:Et) = 
     expr.Type = typeof<Runtime.Box>
 
   let typeIsT<'a> (expr:Et) =
@@ -72,7 +72,7 @@ module Box =
       else Expr.block [setValue left right; setType left right.Type; Expr.void']
 
   let wrap (expr:Et) =
-    if isWrapped expr then expr 
+    if isES expr then expr 
     else
       Expr.blockTmpT<Runtime.Box> (
         fun tmp -> [setValue tmp expr; setType tmp expr.Type; tmp]

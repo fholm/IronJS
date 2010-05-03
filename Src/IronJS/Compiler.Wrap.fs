@@ -7,7 +7,7 @@
     = Static   = 1
     | Volatile = 2
 
-  type Wrapped = {
+  type ES = {
     Et: Et
     Mode: Mode
   } with
@@ -49,7 +49,7 @@ namespace IronJS.Compiler
     let forceVolatile expr =
       {Et = expr.Et; Mode = Mode.Volatile}
 
-    let wrapInBlock (expr:Wrapped) fn =
+    let wrapInBlock (expr:ES) fn =
       volatile' ( 
         if expr.IsStatic then
           Expr.block (fn expr.Et)

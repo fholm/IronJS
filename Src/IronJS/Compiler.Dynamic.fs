@@ -8,7 +8,7 @@ open IronJS.Compiler
 
 module Dynamic = 
   
-  let convert<'a> (expr:Types.Wrapped) =
+  let convert<'a> (expr:Types.ES) =
     let typeDef = typeof<'a>
 
     //First, check exception for Runtime.Object type

@@ -15,7 +15,7 @@ module BinaryOp =
   let private buildAdd (left:Et) (right:Et) = Expr.add left right
   let private buildAddDynamic (left:Et) (right:Et) = failwith "nu-uh"
 
-  let private (===) (left:Wrapped) (right:Wrapped) = left.Type = right.Type
+  let private (===) (left:ES) (right:ES) = left.Type = right.Type
   
   let build (ctx:Context) (op:Ast.BinaryOp) left right = 
     let lexpr = ctx.Build left

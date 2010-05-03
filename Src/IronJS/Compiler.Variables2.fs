@@ -13,4 +13,4 @@ module Variables =
     Object.setProperty ctx (Wrap.static' ctx.Internal.Globals) name value
 
   let getGlobal ctx name (typ:ClrType option) =
-    Wrap.forceVolatile (Object.getProperty ctx (Wrap.static' ctx.Internal.Globals) name typ )
+    Wrap.forceVolatile (Object.getProperty ctx (Wrap.static' ctx.Internal.Globals) name typ)

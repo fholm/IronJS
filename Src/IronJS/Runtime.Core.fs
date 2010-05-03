@@ -43,7 +43,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
                   
   let mutable classId = 0
   let closureMap = new Dict<ClrType, int>()
-  let mutable delegateCache2 = Map.empty<int * int * nativeint, System.Delegate>
+  let mutable delegateCache = Map.empty<int * int * nativeint, System.Delegate>
 
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable UndefinedBox : Box
@@ -58,7 +58,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
 
   member x.GetDelegate (func:Function) (delegateType:ClrType) types =
     let cacheKey = (func.AstId, func.ClosureId, delegateType.TypeHandle.Value)
-    match Map.tryFind cacheKey delegateCache2 with
+    match Map.tryFind cacheKey delegateCache with
     | Some(cached) -> cached
     | None -> 
       let scope, ast  = x.AstMap.[func.AstId]
@@ -66,7 +66,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
       let scope       = scopeAnalyzer scope closureType types
       let lambdaExpr  = exprGenerator x delegateType closureType scope ast
       let compiled    = lambdaExpr.Compile()
-      delegateCache2 <- Map.add cacheKey compiled delegateCache2
+
+      delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
   
   member x.GetClosureId clrType = 

@@ -46,6 +46,9 @@ namespace IronJS.Compiler
     let forceStatic expr =
       {Et = expr.Et; Mode = Mode.Static}
 
+    let forceVolatile expr =
+      {Et = expr.Et; Mode = Mode.Dynamic}
+
     let wrapInBlock (expr:Wrapped) fn =
       volatile' ( 
         if expr.IsStatic then

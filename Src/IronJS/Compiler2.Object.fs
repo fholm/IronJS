@@ -101,7 +101,11 @@ module Object =
         ctx.ObjectCaches <- Map.add id newCache ctx.ObjectCaches
 
       let cache = ctx.ObjectCaches.[id]
-      let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class" ; Expr.field (Context.environmentExpr ctx) "Object_prototype" ; Expr.field cache "InitSize"]
-      let assn = Expr.assign (Expr.field cache "LastCreated") new'
 
-      Wrap.volatile' (assn)
+      let class' = Expr.field cache "Class"
+      let prototype = Expr.field (Context.environmentExpr ctx) "Object_prototype"
+      let initSize = Expr.field cache "InitSize"
+
+      let new' = Expr.newArgsT<Runtime.Object> [class'; prototype; initSize]
+
+      Wrap.volatile' (Expr.assign (Expr.field cache "LastCreated") new')

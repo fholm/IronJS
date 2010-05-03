@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Assign =
   
@@ -13,7 +14,7 @@ module Assign =
     match left with
     | Ast.Global(name, _) -> 
       let value   = ctx.Build right
-      let target  = ExpressionState.static' ctx.Internal.Globals
+      let target  = static' ctx.Internal.Globals
 
       if value.Type <> typeof<Runtime.Box> then 
         ctx.TemporaryTypes <- Map.add name value.Type ctx.TemporaryTypes

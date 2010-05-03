@@ -5,6 +5,8 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Dynamic = 
   
@@ -15,9 +17,9 @@ module Dynamic =
     if typeDef = typeof<Runtime.Object> && Runtime.Utils.Type.isObject expr.Type then
       if expr.Type = typeof<Runtime.Object> 
         then expr
-        else ExpressionState.inherit' (Expr.castT<Runtime.Object> expr.Et) expr
+        else inherit' (Expr.castT<Runtime.Object> expr.Et) expr
     else  
       if typeDef = expr.Type
         then expr
         else let binder = new Runtime.Binders.Convert(typeof<'a>, false) 
-             ExpressionState.volatile' (Expr.dynamicT<Runtime.Object> binder [expr.Et])
+             volatile' (Expr.dynamicT<Runtime.Object> binder [expr.Et])

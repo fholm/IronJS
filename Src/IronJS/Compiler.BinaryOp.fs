@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module BinaryOp = 
 
@@ -21,11 +22,11 @@ module BinaryOp =
     let lexpr = ctx.Build left
     let rexpr = ctx.Build right
     let expr  = 
-      ExpressionState.volatile' (
+      volatile' (
         match op with
         | Ast.Lt  -> (if lexpr === rexpr then buildLt else buildLtDynamic) lexpr.Et rexpr.Et
         | Ast.Add -> (if lexpr === rexpr then buildAdd else buildAddDynamic) lexpr.Et rexpr.Et
         | _ -> failwithf "BinaryOp: '%A' not supported" op
       )
 
-    ExpressionState.combine3 expr lexpr rexpr
+    combine3 expr lexpr rexpr

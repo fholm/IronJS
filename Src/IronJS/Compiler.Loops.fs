@@ -5,6 +5,8 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Loops =
   
@@ -14,7 +16,7 @@ module Loops =
     let incr = ctx.Build incr
     let body = ctx.Build body
 
-    (ExpressionState.volatile'
+    (volatile'
       (Dlr.Expr.for' 
         init.Et 
         test.Et

@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Function =
 
@@ -62,7 +63,7 @@ module Function =
       (Context.environmentExpr ctx)
     ]
 
-    ExpressionState.volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
+    volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
 
   let invoke (ctx:Context) targetNode argNodes =
     let function' = ctx.Build targetNode
@@ -76,7 +77,7 @@ module Function =
     let functionType = Runtime.Delegate.getFor argumentTypes typeof<Runtime.Box>
     let invokeCache = Runtime.InvokeCache<_>.New functionType argumentTypes
 
-    ExpressionState.wrapInBlock function' (fun func ->
+    wrapInBlock function' (fun func ->
       //Checks for .AstId and .ClosureId
       let checkAstId = Expr.notEq (Expr.field func "AstId") (Expr.field invokeCache "AstId")
       let checkClosureId = Expr.notEq (Expr.field func "ClosureId") (Expr.field invokeCache "ClosureId")

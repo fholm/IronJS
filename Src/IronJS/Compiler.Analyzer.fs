@@ -16,7 +16,7 @@ let private isDynamic (l:Ast.Types.Variable) =
   | Types.Array
   | Types.Function
   | Types.Object -> false
-  | _ -> true
+  | _ -> true && (Ast.Variable.IsReadOnly l)
 
 (*Checks if a local variable never is assigned to from another variable*)
 let private isNotAssignedTo (var:Ast.Types.Variable) = 

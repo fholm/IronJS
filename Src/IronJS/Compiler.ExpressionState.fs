@@ -34,6 +34,9 @@ namespace IronJS.Compiler
     let inherit' et parent = 
       {Et = et; Mode = parent.Mode}
 
+    let inherit2 et a b = 
+      {Et = et; Mode = a.Mode ||| b.Mode}
+
     let combine a b = 
       {Et = a.Et; Mode = a.Mode ||| b.Mode}
 

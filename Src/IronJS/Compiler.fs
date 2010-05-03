@@ -91,7 +91,11 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.BinaryOp(op, left, right) -> BinaryOp.build ctx op left right
 
   //Variable access
-  | Ast.Global(name, _) -> Variables.getGlobal ctx name (Context.temporaryType ctx name)
+  | Ast.Global(name, _) -> 
+    let typ = Context.temporaryType ctx name
+    forceVolatile (Object.getProperty ctx (static' ctx.Internal.Globals) name typ)
+
+  | Ast.Variable(name, _) -> static' (Context.variableExpr ctx name)
 
   | _ -> failwithf "No builder for '%A'" ast
 

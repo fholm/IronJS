@@ -110,6 +110,7 @@
     <Compile Include="Compiler.ExpressionState.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Box.fs" />
+    <Compile Include="Compiler.Utils.fs" />
     <Compile Include="Compiler.Dynamic.fs" />
     <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.Variables2.fs" />

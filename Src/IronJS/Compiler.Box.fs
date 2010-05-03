@@ -5,6 +5,8 @@ open IronJS.Aliases
 open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
+open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Box =
 

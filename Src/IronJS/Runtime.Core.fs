@@ -502,7 +502,12 @@ type SetCache with
         let success, cached = env.SetCrawlers.TryGetValue cacheKey
 
         let crawler =
+          //Yay we found one, so 
+          //let's use it
           if success then cached
+
+          //Or not... we have to
+          //build a new one
           else
             //Parameters
             let x' = Expr.paramT<SetCache> "~x"

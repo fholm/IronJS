@@ -102,7 +102,6 @@
     <Compile Include="Ast.fs" />
     <Compile Include="Runtime.Simple.fs" />
     <Compile Include="Runtime.Core.fs" />
-    <Compile Include="Runtime.Support.fs" />
     <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Utils.fs" />
     <Compile Include="Runtime.Helpers.Variables.fs" />

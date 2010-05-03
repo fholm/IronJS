@@ -53,8 +53,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable Function_prototype : Object
 
   [<DefaultValue>] val mutable AstMap : Map<int, Ast.Types.Scope * Ast.Node>
-  [<DefaultValue>] val mutable GetCrawlers : Dict<int list, GetCrawler>
-  [<DefaultValue>] val mutable SetCrawlers : Dict<int list, SetCrawler>
+  [<DefaultValue>] val mutable GetCrawlers : Map<int list, GetCrawler>
+  [<DefaultValue>] val mutable SetCrawlers : Map<int list, SetCrawler>
 
   member x.GetDelegate (func:Function) delegateType types =
     let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
@@ -84,8 +84,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     let env = new Environment(sa, eg)
     //Maps
     env.AstMap <- Map.empty
-    env.GetCrawlers <- new Dict<int list, GetCrawler>()
-    env.SetCrawlers <- new Dict<int list, SetCrawler>()
+    env.GetCrawlers <- Map.empty
+    env.SetCrawlers <- Map.empty
 
     //Base classes
     env.ObjectClass   <- new Class(env.NextClassId, new Dict<string, int>())
@@ -425,14 +425,11 @@ type GetCache with
 
       //Build key and try to find an already cached crawler
       let cacheKey = throwToggle :: wasFoundToggle :: obj.ClassId :: classIds
-      let success, cached = env.GetCrawlers.TryGetValue cacheKey
 
       let crawler = 
-        //If we found a cached crawler use it
-        if success then cached 
-
-        //Else build a new one
-        else
+        match Map.tryFind cacheKey env.GetCrawlers with
+        | Some(cached) -> cached
+        | None -> 
           //Parameters
           let x' = Expr.paramT<GetCache> "~x"
           let obj' = Expr.paramT<Object> "~obj"
@@ -465,7 +462,7 @@ type GetCache with
             )
 
           //Compile and to add it to cache
-          env.GetCrawlers.[cacheKey] <- lambda.Compile()
+          env.GetCrawlers <- Map.add cacheKey (lambda.Compile()) env.GetCrawlers
           env.GetCrawlers.[cacheKey]
 
       //Setup cache to be ready for next hit
@@ -499,16 +496,11 @@ type SetCache with
       else
         //Build key and try to find an already cached crawler
         let cacheKey = obj.ClassId :: classIds
-        let success, cached = env.SetCrawlers.TryGetValue cacheKey
 
         let crawler =
-          //Yay we found one, so 
-          //let's use it
-          if success then cached
-
-          //Or not... we have to
-          //build a new one
-          else
+          match Map.tryFind cacheKey env.SetCrawlers with
+          | Some(cached) -> cached
+          | None ->
             //Parameters
             let x' = Expr.paramT<SetCache> "~x"
             let obj' = Expr.paramT<Object> "~obj"
@@ -541,7 +533,7 @@ type SetCache with
               )
 
             //Compile and to add it to cache
-            env.SetCrawlers.[cacheKey] <- lambda.Compile()
+            env.SetCrawlers <- Map.add cacheKey (lambda.Compile()) env.SetCrawlers
             env.SetCrawlers.[cacheKey]
 
         //Setup cache to be ready for next hit

@@ -540,8 +540,8 @@ type SetCache with
             env.SetCrawlers.[cacheKey]
 
         //Setup cache to be ready for next hit
-        x.Index   <- index //Same as GetCache
-        x.ClassId <- -1 //Same as GetCache
+        x.Index   <- index
+        x.ClassId <- -1
       
-        x.Crawler <- crawler //Same as GetCache
-        x.Crawler.Invoke(x, obj, ref value, env) //Same as GetCache
+        x.Crawler <- crawler
+        x.Crawler.Invoke(x, obj, ref value, env)

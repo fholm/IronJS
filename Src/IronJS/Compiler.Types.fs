@@ -11,4 +11,3 @@ type Variable
   = Expr     of Et
   | Variable of EtParam * VarType
   | Proxied  of EtParam * EtParam
-  | Closure  of Et

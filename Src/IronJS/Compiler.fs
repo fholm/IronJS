@@ -30,11 +30,6 @@ let private buildVarsMap (scope:Ast.Types.Scope) =
           Variable(createVar var, Local)
       )
 
-let private isClosure (_, var:Variable) =
-  match var with
-  | Closure(_) -> true
-  | _ -> false
-
 let private isLocal (_, var:Variable) =
   match var with
   | Variable(_, Local) -> true

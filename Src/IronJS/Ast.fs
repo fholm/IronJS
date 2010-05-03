@@ -145,12 +145,15 @@ module Core =
         State.analyzeAssign sr name func
         Assign(name, func)
 
-  let private translateAntlrToken astMap scope (ast:AntlrToken) =  
+  let private translateAntlrStream astMap scope stream =  
+    let lexer = new AntlrLexer(stream)
+    let parser = new AntlrParser(new Antlr.TokenStream(lexer))
+    let antlrAst = parser.program().Tree :?> AntlrToken
+
     let sr = ref {Types.State.New with ScopeChain = [scope]; AstMap = astMap}
-    let ast = parse sr ast
+    let ast = parse sr antlrAst
+
     (!sr).ScopeChain.[0], ast, (!sr).AstMap
 
   let parseFile astMap (fileName:string) =
-    let lexer = new AntlrLexer(new Antlr.FileStream(fileName))
-    let parser = new AntlrParser(new Antlr.TokenStream(lexer))
-    translateAntlrToken astMap Ast.Types.Scope.New ((parser.program().Tree) :?> AntlrToken) 
+    translateAntlrStream astMap Ast.Types.Scope.New (new Antlr.FileStream(fileName))

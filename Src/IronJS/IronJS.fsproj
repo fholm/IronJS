@@ -111,7 +111,7 @@
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Box.fs" />
     <Compile Include="Compiler.Dynamic.fs" />
-    <Compile Include="Compiler.Object2.fs" />
+    <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.Variables2.fs" />
     <Compile Include="Compiler.Assign2.fs" />
     <Compile Include="Compiler.Function.fs" />

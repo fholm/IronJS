@@ -92,7 +92,7 @@ module Object =
         else
           failwith "Dynamic-only object set not supported"
 
-  let build (ctx:Context) properties id =
+  let new' (ctx:Context) properties id =
     match properties with
     | Some(_) -> failwith "Objects with auto-properties not supported"
     | None    -> 

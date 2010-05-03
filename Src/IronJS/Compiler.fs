@@ -83,7 +83,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Invoke(target, args, scopeLevels) -> Function.invoke ctx target args
 
   //Objects
-  | Ast.Object(properties, id) -> Object.build ctx properties id
+  | Ast.Object(properties, id) -> Object.new' ctx properties id
   | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name None 
 
   //Loops

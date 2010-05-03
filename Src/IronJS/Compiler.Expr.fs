@@ -18,6 +18,7 @@ namespace IronJS.Compiler
 
   open IronJS
   open IronJS.Tools
+  open IronJS.Tools.Dlr
   open IronJS.Aliases
   open IronJS.Compiler
   open IronJS.Compiler.Types
@@ -48,9 +49,9 @@ namespace IronJS.Compiler
     let wrapInBlock (expr:Wrapped) fn =
       volatile' ( 
         if expr.IsStatic then
-          Dlr.Expr.block (fn expr.Et)
+          Expr.block (fn expr.Et)
         else
-          Dlr.Expr.blockTmp expr.Et.Type (fun tmp ->
-            [Dlr.Expr.assign tmp expr.Et] @ (fn tmp)
+          Expr.blockTmp expr.Et.Type (fun tmp ->
+            [Expr.assign tmp expr.Et] @ (fn tmp)
           )
       )

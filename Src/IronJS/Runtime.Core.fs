@@ -68,8 +68,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     | None -> 
       let scope, ast  = x.AstMap.[func.AstId]
       let closureType = func.Closure.GetType()
-      let scope       = scopeAnalyzer scope closureType types
-      let lambdaExpr  = exprGenerator x delegateType closureType scope ast
+      let typedScope  = scopeAnalyzer scope closureType types
+      let lambdaExpr  = exprGenerator x delegateType closureType typedScope ast
       let compiled    = lambdaExpr.Compile()
 
       delegateCache <- Map.add cacheKey compiled delegateCache
@@ -384,6 +384,11 @@ and InvokeCache<'a> when 'a :> Delegate and 'a : null =
 
   member x.Update (fnc:Function) =
     x.Delegate <- fnc.Compile<'a>(x.ArgTypes) 
+
+  static member New funcType (argTypes:ClrType seq) =
+    let cacheType = typedefof<InvokeCache<_>>.MakeGenericType([|funcType|])
+    let cacheInst = cacheType.GetConstructors().[0].Invoke([|Seq.toArray argTypes|])
+    Expr.constant cacheInst
 
 module private Cache = 
 

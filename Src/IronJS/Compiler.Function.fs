@@ -52,7 +52,7 @@ module Function =
 
   (*Defines a new function*)
 
-  let internal definition (ctx:Context) astId =
+  let define (ctx:Context) astId =
     let scope, _ = ctx.Environment.AstMap.[astId]
     //let closureExpr = Closure.create ctx scope
     let functionArgs = [
@@ -63,6 +63,24 @@ module Function =
     ]
 
     Wrap.volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
+
+  let invoke (ctx:Context) targetNode argNodes =
+    let function' = ctx.Build targetNode
+    let arguments = [for arg in argNodes -> ctx.Build arg]
+
+    //Clear temporary types
+    ctx.TemporaryTypes <- Map.empty
+
+    //Build list of argument types, create function delegate type and new invoke cache instance
+    let argumentTypes = List.map (fun (x:Wrapped) -> x.Type) arguments
+    let functionType = Runtime.Delegate.getFor argumentTypes typeof<Runtime.Box>
+    let invokeCache = Runtime.InvokeCache<_>.New functionType argumentTypes
+
+    //Checks for .AstId and .ClosureId
+    let checkAstId = Expr.notEq (Expr.field tmp "AstId") (Expr.field invokeCache "AstId")
+    let checkClosureId = Expr.notEq (Expr.field tmp "ClosureId") (Expr.field invokeCache "ClosureId")
+
+    Wrap.volatile' Expr.void'
 
   (*Invokes a function
   let internal invoke (ctx:Context) target args (returnBox:Et) =

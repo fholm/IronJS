@@ -16,9 +16,9 @@ module Object =
 
   let private buildSet ctx name target (value:ES) =
     let cache, cacheId, cacheIndex, crawler = Runtime.SetCache.New(name)
-    ExpressionState.ExpressionStateInBlock target (fun obj -> 
+    ExpressionState.wrapInBlock target (fun obj -> 
       [
-        (ExpressionState.ExpressionStateInBlock value (fun value' -> 
+        (ExpressionState.wrapInBlock value (fun value' -> 
           let args = [obj; Utils.Box.ExpressionState value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
@@ -38,7 +38,7 @@ module Object =
 
   let private buildGet ctx name (typ:ClrType option) target =
     let cache, cacheId, cacheIndex, crawler = Runtime.GetCache.New(name)
-    ExpressionState.ExpressionStateInBlock target (fun obj ->
+    ExpressionState.wrapInBlock target (fun obj ->
       let args = [obj; Context.environmentExpr ctx]
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
@@ -59,7 +59,7 @@ module Object =
       then buildSet ctx name target value
       else 
         if Runtime.Utils.Type.isBox target.Type then
-          ExpressionState.ExpressionStateInBlock target (fun tmp -> 
+          ExpressionState.wrapInBlock target (fun tmp -> 
             let target = (ExpressionState.volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
             [
               (Expr.debug (sprintf "Type check for setting property '%s'" name))
@@ -78,7 +78,7 @@ module Object =
       then buildGet ctx name typ target
       else 
         if Runtime.Utils.Type.isBox target.Type then
-            ExpressionState.ExpressionStateInBlock target (fun obj -> 
+            ExpressionState.wrapInBlock target (fun obj -> 
               let target = (ExpressionState.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
               [
                 (Expr.debug (sprintf "Type check for getting property '%s'" name))

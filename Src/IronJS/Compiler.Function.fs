@@ -76,7 +76,7 @@ module Function =
     let functionType = Runtime.Delegate.getFor argumentTypes typeof<Runtime.Box>
     let invokeCache = Runtime.InvokeCache<_>.New functionType argumentTypes
 
-    ExpressionState.ExpressionStateInBlock function' (fun func ->
+    ExpressionState.wrapInBlock function' (fun func ->
       //Checks for .AstId and .ClosureId
       let checkAstId = Expr.notEq (Expr.field func "AstId") (Expr.field invokeCache "AstId")
       let checkClosureId = Expr.notEq (Expr.field func "ClosureId") (Expr.field invokeCache "ClosureId")

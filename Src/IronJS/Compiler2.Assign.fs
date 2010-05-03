@@ -18,10 +18,7 @@ module Assign =
       if value.Type <> typeof<Runtime.Box> then 
         ctx.TemporaryTypes.AddOrUpdate(name, value.Type, fun _ _ -> value.Type) |> ignore
 
-      Object.setProperty ctx  name target value
+      Global.set ctx name value
 
     | Ast.Property(target, name) ->
-      let value = ctx.Build right
-      let target = ctx.Build target
-      Object.setProperty ctx name target value
-
+      Object.setProperty ctx (ctx.Build target) name (ctx.Build right)

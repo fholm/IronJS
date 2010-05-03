@@ -87,7 +87,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
 
   //Objects
   | Ast.Object(properties, id) -> Object.build ctx properties id
-  | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name
+  | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name None 
 
   //Loops
   | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body

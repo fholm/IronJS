@@ -10,7 +10,7 @@ open IronJS.Compiler.Types
 module Global =
 
   let set ctx name value =
-    Object.unboundSet ctx name value
+    Object.setProperty ctx (Wrap.static' ctx.Internal.Globals) name value
 
   let get ctx name (typ:ClrType option) =
-    Object.unboundGet ctx name typ (Wrap.static' ctx.Internal.Globals)
+    Object.getProperty ctx (Wrap.static' ctx.Internal.Globals) name typ 

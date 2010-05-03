@@ -54,7 +54,7 @@ module Object =
       ]
     )
     
-  let unboundSet ctx name (target:Wrapped) (value:Wrapped) =
+  let setProperty ctx (target:Wrapped) name (value:Wrapped) =
     if Runtime.Utils.Type.isObject target.Type 
       then buildSet ctx name target value
       else 
@@ -73,7 +73,7 @@ module Object =
         else
           failwith "Dynamic-only object set not supported"
 
-  let unboundGet ctx name typ (target:Wrapped) =
+  let getProperty ctx (target:Wrapped) name typ =
     if Runtime.Utils.Type.isObject target.Type 
       then buildGet ctx name typ target
       else 
@@ -91,12 +91,6 @@ module Object =
             )
         else
           failwith "Dynamic-only object set not supported"
-
-  let getProperty ctx target name =
-    unboundGet ctx name None target
-
-  let setProperty ctx name target value = 
-    unboundSet ctx name target value
 
   let build (ctx:Context) properties id =
     match properties with

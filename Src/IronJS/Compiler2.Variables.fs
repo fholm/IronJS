@@ -7,10 +7,10 @@ open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
 
-module Global =
+module Variables =
 
-  let set ctx name value =
+  let setGlobal ctx name value =
     Object.setProperty ctx (Wrap.static' ctx.Internal.Globals) name value
 
-  let get ctx name (typ:ClrType option) =
+  let getGlobal ctx name (typ:ClrType option) =
     Wrap.forceVolatile (Object.getProperty ctx (Wrap.static' ctx.Internal.Globals) name typ )

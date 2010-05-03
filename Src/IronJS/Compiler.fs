@@ -6,6 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
+open IronJS.Compiler.Wrap
 
 let private buildVarsMap (scope:Ast.Types.Scope) =
   let createVar (var:Ast.Types.Variable) =
@@ -66,19 +67,19 @@ let private isProxied (_, var:Variable) =
 let private builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   //Simple
-  | Ast.String(value)  -> Wrap.static' (Expr.constant value)
-  | Ast.Number(value)  -> Wrap.static' (Expr.constant value)
-  | Ast.Integer(value) -> Wrap.static' (Expr.constant value)
-  | Ast.Null           -> Wrap.static' (Expr.null')
+  | Ast.String(value)  -> static' (Expr.constant value)
+  | Ast.Number(value)  -> static' (Expr.constant value)
+  | Ast.Integer(value) -> static' (Expr.constant value)
+  | Ast.Null           -> static' (Expr.null')
 
   //Assign
   | Ast.Assign(left, right) -> Assign.build ctx left right
 
   //Block
   | Ast.Block(nodes) -> 
-    Wrap.volatile'(
+    volatile'(
       Expr.block [
-        for n in nodes -> Wrap.unwrap (ctx.Build n)
+        for n in nodes -> unwrap (ctx.Build n)
       ]
     )
 
@@ -94,8 +95,8 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
   | Ast.BinaryOp(op, left, right) -> BinaryOp.build ctx op left right
 
-  //Value access
-  | Ast.Global(name, _) -> Global.get ctx name (Context.temporaryType ctx name)
+  //Variable access
+  | Ast.Global(name, _) -> Variables.getGlobal ctx name (Context.temporaryType ctx name)
 
   | _ -> failwithf "No builder for '%A'" ast
 
@@ -198,7 +199,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   let body = 
     (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
       |>  Seq.append objectCacheUpdateExpressions
-      |>  Seq.append (Wrap.unwrap wrap :: [])
+      |>  Seq.append (unwrap wrap :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

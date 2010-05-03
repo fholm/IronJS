@@ -18,7 +18,7 @@ module Assign =
       if value.Type <> typeof<Runtime.Box> then 
         ctx.TemporaryTypes <- Map.add name value.Type ctx.TemporaryTypes
 
-      Global.set ctx name value
+      Variables.setGlobal ctx name value
 
     | Ast.Property(target, name) ->
       Object.setProperty ctx (ctx.Build target) name (ctx.Build right)

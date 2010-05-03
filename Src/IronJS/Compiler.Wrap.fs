@@ -4,8 +4,8 @@
   open IronJS.Aliases
 
   type Mode
-    = Static  = 1
-    | Dynamic = 2
+    = Static   = 1
+    | Volatile = 2
 
   type Wrapped = {
     Et: Et
@@ -29,7 +29,7 @@ namespace IronJS.Compiler
       {Et = et; Mode = Mode.Static}
 
     let volatile' et =
-      {Et = et; Mode = Mode.Dynamic}
+      {Et = et; Mode = Mode.Volatile}
 
     let inherit' et parent = 
       {Et = et; Mode = parent.Mode}
@@ -47,7 +47,7 @@ namespace IronJS.Compiler
       {Et = expr.Et; Mode = Mode.Static}
 
     let forceVolatile expr =
-      {Et = expr.Et; Mode = Mode.Dynamic}
+      {Et = expr.Et; Mode = Mode.Volatile}
 
     let wrapInBlock (expr:Wrapped) fn =
       volatile' ( 

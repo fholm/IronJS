@@ -6,6 +6,15 @@
   open IronJS.Compiler
   open IronJS.Compiler.Types
 
+  type VariableType
+    = Local
+    | Param
+
+  type Variable
+    = Expr     of Et
+    | Variable of EtParam * VariableType
+    | Proxied  of EtParam * EtParam
+
   type InternalVariables = {
     This: EtParam
     Closure: EtParam
@@ -56,9 +65,9 @@ namespace IronJS.Compiler
 
     let variableExpr ctx name =
       match ctx.Variables.[name] with
-      | Variable.Expr(expr) -> expr
-      | Variable(expr, _)   -> expr :> Et
-      | Proxied(expr, _)    -> expr :> Et
+      | Expr(expr)        -> expr
+      | Variable(expr, _) -> expr :> Et
+      | Proxied(expr, _)  -> expr :> Et
     
     let environmentExpr ctx = 
       ctx.Internal.Environment :> Et
@@ -71,6 +80,3 @@ namespace IronJS.Compiler
 
     let temporaryType ctx name =
       Map.tryFind name ctx.TemporaryTypes  
-
-    let objectBaseClass ctx =
-      Expr.property (environmentExpr ctx) "BaseClass"

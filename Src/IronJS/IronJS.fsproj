@@ -107,7 +107,7 @@
     <Compile Include="Runtime.Helpers.Function.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
-    <Compile Include="Compiler.Wrap.fs" />
+    <Compile Include="Compiler.ExpressionState.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Box.fs" />
     <Compile Include="Compiler.Dynamic.fs" />

@@ -47,7 +47,7 @@
       Return = Dlr.Expr.labelT<Runtime.Box> "~return"
       Scope = Ast.Types.Scope.New
       Variables = Map.empty
-      Builder = fun _ _ -> Wrap.static' Dlr.Expr.void'
+      Builder = fun _ _ -> ExpressionState.static' Dlr.Expr.void'
       Environment = null
       ObjectCaches = Map.empty
       TemporaryTypes = Map.empty

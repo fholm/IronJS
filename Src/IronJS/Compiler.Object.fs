@@ -16,10 +16,10 @@ module Object =
 
   let private buildSet ctx name target (value:ES) =
     let cache, cacheId, cacheIndex, crawler = Runtime.SetCache.New(name)
-    Wrap.wrapInBlock target (fun obj -> 
+    ExpressionState.ExpressionStateInBlock target (fun obj -> 
       [
-        (Wrap.wrapInBlock value (fun value' -> 
-          let args = [obj; Utils.Box.wrap value'; Context.environmentExpr ctx]
+        (ExpressionState.ExpressionStateInBlock value (fun value' -> 
+          let args = [obj; Utils.Box.ExpressionState value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
             (Expr.ternary
@@ -38,7 +38,7 @@ module Object =
 
   let private buildGet ctx name (typ:ClrType option) target =
     let cache, cacheId, cacheIndex, crawler = Runtime.GetCache.New(name)
-    Wrap.wrapInBlock target (fun obj ->
+    ExpressionState.ExpressionStateInBlock target (fun obj ->
       let args = [obj; Context.environmentExpr ctx]
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
@@ -59,8 +59,8 @@ module Object =
       then buildSet ctx name target value
       else 
         if Runtime.Utils.Type.isBox target.Type then
-          Wrap.wrapInBlock target (fun tmp -> 
-            let target = (Wrap.volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
+          ExpressionState.ExpressionStateInBlock target (fun tmp -> 
+            let target = (ExpressionState.volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
             [
               (Expr.debug (sprintf "Type check for setting property '%s'" name))
               (Expr.ternary
@@ -78,8 +78,8 @@ module Object =
       then buildGet ctx name typ target
       else 
         if Runtime.Utils.Type.isBox target.Type then
-            Wrap.wrapInBlock target (fun obj -> 
-              let target = (Wrap.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
+            ExpressionState.ExpressionStateInBlock target (fun obj -> 
+              let target = (ExpressionState.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
               [
                 (Expr.debug (sprintf "Type check for getting property '%s'" name))
                 (Expr.ternary
@@ -108,4 +108,4 @@ module Object =
 
       let new' = Expr.newArgsT<Runtime.Object> [class'; prototype; initSize]
 
-      Wrap.volatile' (Expr.assign (Expr.field cache "LastCreated") new')
+      ExpressionState.volatile' (Expr.assign (Expr.field cache "LastCreated") new')

@@ -71,7 +71,7 @@ module Box =
       then Expr.block [Expr.assign left right; Expr.void']
       else Expr.block [setValue left right; setType left right.Type; Expr.void']
 
-  let wrap (expr:Et) =
+  let ExpressionState (expr:Et) =
     if isES expr then expr 
     else
       Expr.blockTmpT<Runtime.Box> (

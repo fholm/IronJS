@@ -6,7 +6,7 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
-open IronJS.Compiler.Wrap
+open IronJS.Compiler.ExpressionState
 
 let private buildVarsMap (scope:Ast.Types.Scope) =
   let createVar (var:Ast.Types.Variable) =
@@ -74,7 +74,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Block(nodes) -> 
     volatile'(
       Expr.block [
-        for n in nodes -> unwrap (ctx.Build n)
+        for n in nodes -> unExpressionState (ctx.Build n)
       ]
     )
 
@@ -190,11 +190,11 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
         )
         
   (*Assemble the function body expression*)
-  let wrap = ctx.Build ast
+  let ExpressionState = ctx.Build ast
   let body = 
     (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
       |>  Seq.append objectCacheUpdateExpressions
-      |>  Seq.append (unwrap wrap :: [])
+      |>  Seq.append (unExpressionState ExpressionState :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

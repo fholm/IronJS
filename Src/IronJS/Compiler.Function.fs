@@ -62,7 +62,7 @@ module Function =
       (Context.environmentExpr ctx)
     ]
 
-    Wrap.volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
+    ExpressionState.volatile' (Expr.newArgs typeof<Runtime.Function> functionArgs)
 
   let invoke (ctx:Context) targetNode argNodes =
     let function' = ctx.Build targetNode
@@ -76,7 +76,7 @@ module Function =
     let functionType = Runtime.Delegate.getFor argumentTypes typeof<Runtime.Box>
     let invokeCache = Runtime.InvokeCache<_>.New functionType argumentTypes
 
-    Wrap.wrapInBlock function' (fun func ->
+    ExpressionState.ExpressionStateInBlock function' (fun func ->
       //Checks for .AstId and .ClosureId
       let checkAstId = Expr.notEq (Expr.field func "AstId") (Expr.field invokeCache "AstId")
       let checkClosureId = Expr.notEq (Expr.field func "ClosureId") (Expr.field invokeCache "ClosureId")

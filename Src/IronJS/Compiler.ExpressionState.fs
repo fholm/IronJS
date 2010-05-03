@@ -23,7 +23,7 @@ namespace IronJS.Compiler
   open IronJS.Compiler
   open IronJS.Compiler.Types
 
-  module Wrap =
+  module ExpressionState =
 
     let static' et =
       {Et = et; Mode = Mode.Static}
@@ -40,7 +40,7 @@ namespace IronJS.Compiler
     let combine3 a b c = 
       {Et = a.Et; Mode = a.Mode ||| b.Mode ||| c.Mode}
 
-    let unwrap expr = 
+    let unExpressionState expr = 
       expr.Et
 
     let forceStatic expr =
@@ -49,7 +49,7 @@ namespace IronJS.Compiler
     let forceVolatile expr =
       {Et = expr.Et; Mode = Mode.Volatile}
 
-    let wrapInBlock (expr:ES) fn =
+    let ExpressionStateInBlock (expr:ES) fn =
       volatile' ( 
         if expr.IsStatic then
           Expr.block (fn expr.Et)

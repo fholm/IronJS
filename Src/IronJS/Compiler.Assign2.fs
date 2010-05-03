@@ -13,7 +13,7 @@ module Assign =
     match left with
     | Ast.Global(name, _) -> 
       let value   = ctx.Build right
-      let target  = Wrap.static' ctx.Internal.Globals
+      let target  = ExpressionState.static' ctx.Internal.Globals
 
       if value.Type <> typeof<Runtime.Box> then 
         ctx.TemporaryTypes <- Map.add name value.Type ctx.TemporaryTypes

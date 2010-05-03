@@ -14,7 +14,7 @@ module Loops =
     let incr = ctx.Build incr
     let body = ctx.Build body
 
-    (Wrap.volatile'
+    (ExpressionState.volatile'
       (Dlr.Expr.for' 
         init.Et 
         test.Et

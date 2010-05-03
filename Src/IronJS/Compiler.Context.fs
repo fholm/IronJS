@@ -74,7 +74,20 @@ namespace IronJS.Compiler
 
     let variableType ctx name =
       (Expr.expandStrongBox (variableExpr ctx name)).Type
-    
+
+    let hasClosure ctx name =
+      Map.containsKey name ctx.Scope.Closures
+
+    let closureExpr ctx name =
+      match Map.tryFind name ctx.Scope.Closures with
+      | None -> failwithf "No closure named %s" name
+      | Some(closure) ->  
+        let fieldName = sprintf "Item%i" closure.Index
+        Expr.field (ctx.Internal.Closure) fieldName
+
+    let closureType ctx name =
+      (Expr.expandStrongBox (closureExpr ctx name)).Type
+
     let environmentExpr ctx = 
       ctx.Internal.Environment :> Et
       
@@ -85,4 +98,4 @@ namespace IronJS.Compiler
       [ctx.Internal.Globals; ctx.Internal.Closure; ctx.Internal.Environment]
 
     let temporaryType ctx name =
-      Map.tryFind name ctx.TemporaryTypes  
+      Map.tryFind name ctx.TemporaryTypes

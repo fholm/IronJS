@@ -42,13 +42,16 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-var boo = function () {
+var boo = function (a) {
     var x = 2;
     var y = x;
 
     function foo() {
         var z = x;
+        var _ = a;
     };
+
+    foo();
 }
 
-boo();
+boo(2);

@@ -80,7 +80,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
 
   //Functions
   | Ast.Function(astId) -> Function.define ctx astId
-  | Ast.Invoke(target, args, scopeLevels) -> Function.invoke ctx target args
+  | Ast.Invoke(target, args, _) -> Function.invoke ctx target args
 
   //Objects
   | Ast.Object(properties, id) -> Object.new' ctx properties id
@@ -95,6 +95,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
     let typ = Context.temporaryType ctx name
     forceVolatile (Object.getProperty ctx (static' ctx.Internal.Globals) name typ)
 
+  | Ast.Closure(name, _) -> static' (Context.closureExpr ctx name)
   | Ast.Variable(name, _) -> static' (Context.variableExpr ctx name)
 
   | _ -> failwithf "No builder for '%A'" ast

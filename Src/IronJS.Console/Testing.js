@@ -43,15 +43,12 @@ foo.a.b.c.d.e = {};
 */
 
 var boo = function (a) {
-    var x = 2;
-    var y = x;
+    function f(x, y, z) {
+        return x + y + z;
+    }
 
-    function foo() {
-        var z = x;
-        var _ = a;
-    };
-
-    foo();
+    for (var i = 0; i < 2500000; ++i)
+        f(1, 2, 3);
 }
 
 boo(2);

@@ -81,6 +81,21 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   //Functions
   | Ast.Function(astId) -> Function.define ctx astId
   | Ast.Invoke(target, args, _) -> Function.invoke ctx target args
+  | Ast.Return(value)         -> 
+    let value = ctx.Build value
+    if Utils.Box.isWrapped value.Et
+      then volatile' (Expr.return' ctx.Return value.Et)
+      else
+        volatile'(
+          Expr.blockTmpT<Runtime.Box> (
+            fun tmp -> 
+            [
+              Utils.Box.setValue tmp value.Et
+              Utils.Box.setType  tmp value.Type
+              Expr.return' ctx.Return tmp
+            ]
+          )
+        )
 
   //Objects
   | Ast.Object(properties, id) -> Object.new' ctx properties id

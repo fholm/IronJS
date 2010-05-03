@@ -18,6 +18,11 @@ module Assign =
         ctx.TemporaryTypes <- Map.add name value.Type ctx.TemporaryTypes
       Object.setProperty ctx (static' ctx.Internal.Globals) name value
 
+    | Ast.Closure(name, _) ->
+      let value = ctx.Build right
+      let target = static' (Context.closureExpr ctx name)
+      inherit2 (Utils.Utils.assign ctx target.Et value.Et) target value
+
     | Ast.Variable(name, _) ->
       let value = ctx.Build right
       let target = static' (Context.variableExpr ctx name)

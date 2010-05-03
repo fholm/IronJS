@@ -64,8 +64,9 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
       let scope, body = x.AstMap.[func.AstId]
       let closureType = func.Closure.GetType()
       let lambdaExpr  = exprGenerator x delegateType closureType (scopeAnalyzer scope closureType types) body
-      delegateCache.[cell] <- lambdaExpr.Compile()
-      delegateCache.[cell]
+      let compiled    = lambdaExpr.Compile()
+      delegateCache.[cell] <- compiled
+      compiled
   
   member x.GetClosureId clrType = 
     let success, id = closureMap.TryGetValue clrType
@@ -280,7 +281,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
-    inherit Object(env.FunctionClass, null, 2)
+    inherit Object(env.FunctionClass, env.Function_prototype, 2)
     AstId = astId
     ClosureId = closureId
     Closure = closure
@@ -303,7 +304,6 @@ and SetCrawler =
   
     (*==== Inline cache for property get operations ====*)
 and GetCache(name) as x =
-
   [<DefaultValue>] val mutable Name : string
   [<DefaultValue>] val mutable ClassId : int
   [<DefaultValue>] val mutable Index : int
@@ -325,7 +325,6 @@ and GetCache(name) as x =
     
     (*==== Inline cache for property set operations ====*)
 and SetCache =
-
   val mutable Name : string
   val mutable ClassId : int
   val mutable Index : int
@@ -419,7 +418,7 @@ type GetCache with
 
       //The constants -4 and -2 here could be anything
       //They are used to differ types of configurations
-      //from eachother in the lambdaCache SafeDict key
+      //from eachother in the env.GetCrawlers Dict key
       let throwToggle = if x.ThrowOnMissing then -4 else -2
       let wasFoundToggle = if index < 0 then -4 else -2
 

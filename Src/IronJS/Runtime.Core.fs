@@ -43,7 +43,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
                   
   let mutable classId = 0
   let closureMap = new Dict<ClrType, int>()
-  let delegateCache = new Dict<DelegateCell, System.Delegate>()
+  let mutable delegateCache2 = Map.empty<int * int * nativeint, System.Delegate>
 
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable UndefinedBox : Box
@@ -56,17 +56,17 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable GetCrawlers : Map<int list, GetCrawler>
   [<DefaultValue>] val mutable SetCrawlers : Map<int list, SetCrawler>
 
-  member x.GetDelegate (func:Function) delegateType types =
-    let cell = new DelegateCell(func.AstId, func.ClosureId, delegateType)
-    let success, delegate' = delegateCache.TryGetValue(cell)
-    if success then delegate'
-    else
-      let scope, body = x.AstMap.[func.AstId]
+  member x.GetDelegate (func:Function) (delegateType:ClrType) types =
+    let cacheKey = (func.AstId, func.ClosureId, delegateType.TypeHandle.Value)
+    match Map.tryFind cacheKey delegateCache2 with
+    | Some(cached) -> cached
+    | None -> 
+      let scope, ast  = x.AstMap.[func.AstId]
       let closureType = func.Closure.GetType()
-      let analScope   = scopeAnalyzer scope closureType types
-      let lambdaExpr  = exprGenerator x delegateType closureType analScope body
+      let scope       = scopeAnalyzer scope closureType types
+      let lambdaExpr  = exprGenerator x delegateType closureType scope ast
       let compiled    = lambdaExpr.Compile()
-      delegateCache.[cell] <- compiled
+      delegateCache2 <- Map.add cacheKey compiled delegateCache2
       compiled
   
   member x.GetClosureId clrType = 

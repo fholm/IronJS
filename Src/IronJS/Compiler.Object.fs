@@ -5,6 +5,7 @@ open IronJS.Aliases
 open IronJS.Tools.Dlr
 open IronJS.Compiler
 open IronJS.Compiler.Types
+open IronJS.Compiler.ExpressionState
 
 module Object =
 
@@ -16,10 +17,10 @@ module Object =
 
   let private buildSet ctx name target (value:ES) =
     let cache, cacheId, cacheIndex, crawler = Runtime.SetCache.New(name)
-    ExpressionState.wrapInBlock target (fun obj -> 
+    wrapInBlock target (fun obj -> 
       [
-        (ExpressionState.wrapInBlock value (fun value' -> 
-          let args = [obj; Utils.Box.ExpressionState value'; Context.environmentExpr ctx]
+        (wrapInBlock value (fun value' -> 
+          let args = [obj; Utils.Box.wrap value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
             (Expr.ternary
@@ -38,7 +39,7 @@ module Object =
 
   let private buildGet ctx name (typ:ClrType option) target =
     let cache, cacheId, cacheIndex, crawler = Runtime.GetCache.New(name)
-    ExpressionState.wrapInBlock target (fun obj ->
+    wrapInBlock target (fun obj ->
       let args = [obj; Context.environmentExpr ctx]
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
@@ -59,8 +60,8 @@ module Object =
       then buildSet ctx name target value
       else 
         if Runtime.Utils.Type.isBox target.Type then
-          ExpressionState.wrapInBlock target (fun tmp -> 
-            let target = (ExpressionState.volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp))
+          wrapInBlock target (fun tmp -> 
+            let target = volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp)
             [
               (Expr.debug (sprintf "Type check for setting property '%s'" name))
               (Expr.ternary
@@ -78,8 +79,8 @@ module Object =
       then buildGet ctx name typ target
       else 
         if Runtime.Utils.Type.isBox target.Type then
-            ExpressionState.wrapInBlock target (fun obj -> 
-              let target = (ExpressionState.static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
+            wrapInBlock target (fun obj -> 
+              let target = (static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
               [
                 (Expr.debug (sprintf "Type check for getting property '%s'" name))
                 (Expr.ternary

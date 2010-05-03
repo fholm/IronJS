@@ -43,7 +43,7 @@ foo.a.b.c.d.e = {};
 */
 
 var boo = function () {
-
+    
 }
 
 boo();

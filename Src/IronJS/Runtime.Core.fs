@@ -387,7 +387,7 @@ and InvokeCache<'a> when 'a :> Delegate and 'a : null =
 
   static member New funcType (argTypes:ClrType seq) =
     let cacheType = typedefof<InvokeCache<_>>.MakeGenericType([|funcType|])
-    let cacheInst = cacheType.GetConstructors().[0].Invoke([|Seq.toArray argTypes|])
+    let cacheInst = cacheType.GetConstructors().[0].Invoke([|Seq.toList argTypes|])
     Expr.constant cacheInst
 
 module private Cache = 

@@ -66,68 +66,30 @@ module Function =
 
   let invoke (ctx:Context) targetNode argNodes =
     let function' = ctx.Build targetNode
-    let arguments = [for arg in argNodes -> ctx.Build arg]
+    let arguments = [for arg in argNodes -> (ctx.Build arg).Et]
 
     //Clear temporary types
     ctx.TemporaryTypes <- Map.empty
 
     //Build list of argument types, create function delegate type and new invoke cache instance
-    let argumentTypes = List.map (fun (x:Wrapped) -> x.Type) arguments
+    let argumentTypes = List.map (fun (x:Et) -> x.Type) arguments
     let functionType = Runtime.Delegate.getFor argumentTypes typeof<Runtime.Box>
     let invokeCache = Runtime.InvokeCache<_>.New functionType argumentTypes
 
-    //Checks for .AstId and .ClosureId
-    let checkAstId = Expr.notEq (Expr.field tmp "AstId") (Expr.field invokeCache "AstId")
-    let checkClosureId = Expr.notEq (Expr.field tmp "ClosureId") (Expr.field invokeCache "ClosureId")
-
-    Wrap.volatile' Expr.void'
-
-  (*Invokes a function
-  let internal invoke (ctx:Context) target args (returnBox:Et) =
-    //TODO: Wow this is ugly, redo.
-    let targetExpr = ctx.Builder ctx target
-    let argExprs = [for arg in args -> ctx.Builder ctx arg]
-
-    ctx.TemporaryTypes.Clear()
-
-    let funcType = Runtime.Delegate.getFor (List.map (fun (x:Et) -> x.Type) argExprs) typeof<Runtime.Box>
-    let cacheType = typedefof<Runtime.InvokeCache<_>>.MakeGenericType(funcType)
-    let cacheInst = cacheType.GetConstructors().[0].Invoke([|[for x in argExprs -> x.Type]|])
-    let cacheConst = Expr.constant cacheInst
-
-    let tmp = Expr.paramT<Runtime.Function> "~target"
-
-    let checkAstId = Expr.Logic.notEq (Expr.field tmp "AstId") (Expr.field cacheConst "AstId")
-    let checkClosureId = Expr.Logic.notEq (Expr.field tmp "ClosureId") (Expr.field cacheConst "ClosureId")
-    let body = 
+    Wrap.wrapInBlock function' (fun func ->
+      //Checks for .AstId and .ClosureId
+      let checkAstId = Expr.notEq (Expr.field func "AstId") (Expr.field invokeCache "AstId")
+      let checkClosureId = Expr.notEq (Expr.field func "ClosureId") (Expr.field invokeCache "ClosureId")
       [
-        (Expr.Flow.if'
-          (Expr.Logic.or' checkAstId checkClosureId)
+        (Expr.if'
+          (Expr.or' checkAstId checkClosureId)
+          //If either AstId or ClosureId doesn't match, we need to update
           (Expr.block[
-            (Expr.call cacheConst "Update" [tmp])
-            (Expr.assign (Expr.field cacheConst "AstId") (Expr.field tmp "AstId"))
-            (Expr.assign (Expr.field cacheConst "ClosureId") (Expr.field tmp "ClosureId"))
+            (Expr.call invokeCache "Update" [func])
+            (Expr.assign (Expr.field invokeCache "AstId") (Expr.field func "AstId"))
+            (Expr.assign (Expr.field invokeCache "ClosureId") (Expr.field func "ClosureId"))
           ])
         )
-        (Expr.invoke (Expr.field cacheConst "Delegate") (tmp:>Et :: (ctx.Globals:>Et) :: argExprs))
+        (Expr.invoke (Expr.field invokeCache "Delegate") (func :: (ctx.Internal.Globals:>Et) :: arguments))
       ]
-
-    if targetExpr.Type = typeof<Runtime.Box> then
-
-      Expr.blockTmpT<Runtime.Box> (fun dynTmp ->
-        [
-          (Expr.assign dynTmp targetExpr)
-          (Expr.Flow.ternary
-            (Expr.Logic.eq (Expr.field dynTmp "Type") (Expr.constant Types.Function))
-            (Expr.blockWithLocals [tmp] ((Expr.assign tmp (Expr.castT<Runtime.Function> (Expr.field dynTmp "Clr"))) :: body))
-            (Expr.defaultT<Runtime.Box>)
-          )
-        ]
-      )
-
-    elif targetExpr.Type = typeof<Runtime.Function> then
-      Expr.blockWithLocals [tmp] (Expr.assign tmp targetExpr :: body)
-
-    else
-      failwith "Can't call non-function"
-  *)
+    )

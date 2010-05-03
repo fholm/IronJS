@@ -32,4 +32,4 @@ type Delegate         = System.Delegate
 type DebuggerDisplayAttribute = System.Diagnostics.DebuggerDisplayAttribute
 
 type ClassId   = int64
-type ClosureId = int64
+type ClosureId = nativeint

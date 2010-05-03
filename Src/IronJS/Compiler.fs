@@ -65,7 +65,8 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.String(value)  -> static' (Expr.constant value)
   | Ast.Number(value)  -> static' (Expr.constant value)
   | Ast.Integer(value) -> static' (Expr.constant value)
-  | Ast.Null           -> static' (Expr.null')
+  | Ast.Null           -> static' Expr.null'
+  | Ast.Pass           -> static' Expr.void'
 
   //Assign
   | Ast.Assign(left, right) -> Assign.build ctx left right

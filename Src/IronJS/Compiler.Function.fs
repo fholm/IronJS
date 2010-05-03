@@ -16,7 +16,7 @@ module Function =
     let expr name =
       if Context.hasVariable ctx name
         then Context.variableExpr ctx name // Local closed over variable
-        else failwith "Not implemented" // Variable that is a closure in parent also
+        else Context.closureExpr ctx name // Variable that is a closure in parent also
 
     scope.Closures
       |> Map.toSeq
@@ -29,7 +29,7 @@ module Function =
     let type' name =
       if Context.hasVariable ctx name
         then Context.variableType ctx name
-        else failwith "Not implemented"
+        else Context.closureType ctx name
 
     Runtime.Closures.createClosureType (
       scope.Closures 

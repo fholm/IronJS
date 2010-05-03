@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Aliases
+open IronJS.Tools
 open System.Linq.Expressions
 
 (*Tools for working with DLR expressions*)
@@ -255,3 +256,9 @@ module Expr =
 
   let not target = Et.OnesComplement target :> Et
   let notDefault target = notEq target (default' target.Type)
+
+  //Custom
+  let expandStrongBox (expr:Et) =
+    if Type.isStrongBox expr.Type 
+      then field expr "Value"
+      else expr

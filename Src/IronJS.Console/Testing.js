@@ -45,6 +45,10 @@ foo.a.b.c.d.e = {};
 var boo = function () {
     var x = 2;
     var y = x;
+
+    function foo() {
+        var z = x;
+    };
 }
 
 boo();

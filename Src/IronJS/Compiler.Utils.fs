@@ -10,14 +10,9 @@ open IronJS.Compiler.ExpressionState
 
 module Utils = 
 
-    let expandStrongBox (expr:Et) =
-      if Type.isStrongBox expr.Type 
-        then Expr.field expr "Value"
-        else expr
-
     let assign ctx (left:Et) (right:Et) =
-      let l = expandStrongBox left
-      let r = expandStrongBox right
+      let l = Expr.expandStrongBox left
+      let r = Expr.expandStrongBox right
 
       if l.Type = r.Type then Expr.assign l r
       else

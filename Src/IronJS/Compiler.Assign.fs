@@ -26,3 +26,4 @@ module Assign =
     | Ast.Property(target, name) ->
       Object.setProperty ctx (ctx.Build target) name (ctx.Build right)
 
+    | _ -> failwith "Unsupported"

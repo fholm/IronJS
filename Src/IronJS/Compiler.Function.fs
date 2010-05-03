@@ -10,56 +10,52 @@ open IronJS.Compiler.ExpressionState
 
 module Function =
 
-  (*module private Closure =
-    Resolves all item expressions for a closure
-    let private resolveItems ctx (scope:Ast.Types.Scope) =
-      let expr name =
-        if ctx.Scope.Variables.ContainsKey name
-          then Variables.Local.expr ctx name   // Local closed over variable
-          else Variables.Closure.expr ctx name // Variable that is a closure in parent also
+  //Resolves all item expressions for a closure
+  let closureItemsList ctx (scope:Ast.Types.Scope) =
 
-      scope.Closures
+    let expr name =
+      if Context.hasVariable ctx name
+        then Context.variableExpr ctx name // Local closed over variable
+        else failwith "Not implemented" // Variable that is a closure in parent also
+
+    scope.Closures
+      |> Map.toSeq
+      |> Seq.sortBy (fun pair -> (snd pair).Index)
+      |> Seq.map (fun pair -> expr (fst pair))
+
+  //Creates a closure type
+  let closureType ctx (scope:Ast.Types.Scope) =
+
+    let type' name =
+      if Context.hasVariable ctx name
+        then Context.variableType ctx name
+        else failwith "Not implemented"
+
+    Runtime.Closures.createClosureType (
+      scope.Closures 
         |> Map.toSeq
-        |> Seq.sortBy (fun pair -> (snd pair).Index)
-        |> Seq.map (fun pair -> expr (fst pair))
-        |> List.ofSeq
+        |> Seq.map (fun pair -> type' (fst pair), (snd pair).Index)
+        |> Seq.sortBy (fun pair -> snd pair)
+        |> Seq.map (fun pair -> fst pair)
+    )
 
-    Creates a closure type
-    let private createType ctx (scope:Ast.Types.Scope) =
-      let clrType name =
-        if ctx.Scope.Variables.ContainsKey name
-          then Variables.Local.clrType ctx name
-          else Variables.Closure.clrType ctx name
-
-      Runtime.Closures.createClosureType (
-        scope.Closures 
-          |> Map.toSeq
-          |> Seq.fold (fun state pair -> (clrType (fst pair), (snd pair).Index) :: state) [] 
-          |> Seq.sortBy (fun pair -> snd pair)
-          |> Seq.map (fun pair -> fst pair)
+  //Creates a new closure type and expression to create an instance of that type
+  let newClosure (ctx:Context) (scope:Ast.Types.Scope) =
+    let args = 
+      (Seq.append 
+        [Expr.field ctx.Internal.Closure "Scopes"]
+        (closureItemsList ctx scope)
       )
-
-    Creates a new closure type and expression to create an instance of that type
-    let internal create (ctx:Context) (scope:Ast.Types.Scope) =
-      let scopesExpr = if Ast.Scope.definedInLocalDynamicScope scope
-                         then let args = [ctx.Closure :> Et; ctx.LocalScopes :> Et; Expr.constant ctx.Scope.ScopeLevel]
-                              Expr.callStaticT<Runtime.Helpers.Closures> "BuildScopes" args
-                         else ctx.ClosureScopesExpr
-  
-      let closureType = createType ctx scope
-      let dynScopesExpr = Expr.newArgs typeof<Runtime.Scope ResizeArray> [ctx.ClosureScopesExpr]
-      Expr.newArgs closureType (scopesExpr :: resolveItems ctx scope)
-    *)
+    Expr.newArgs (closureType ctx scope) args
 
   (*Defines a new function*)
-
   let define (ctx:Context) astId =
     let scope, _ = ctx.Environment.AstMap.[astId]
-    //let closureExpr = Closure.create ctx scope
+    let closureExpr = newClosure ctx scope
     let functionArgs = [
       (Expr.constant astId)
       (Expr.constant (ctx.Environment.GetClosureId (typeof<Runtime.Closure>)))
-      (Expr.newArgsT<Runtime.Closure> [Expr.newT<Runtime.Scope ResizeArray>])
+      (closureExpr)
       (Context.environmentExpr ctx)
     ]
 

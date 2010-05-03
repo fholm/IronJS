@@ -260,7 +260,7 @@ and ObjectMeta(expr, jsObj:Object) =
   
     (*==== Scope class, representing a functions scope during runtime ====*)
 and [<AllowNullLiteral>] Scope = 
-  val mutable Objects : Object ResizeArray
+  val mutable Objects : Object list
   val mutable EvalObject : Object
   val mutable ScopeLevel : int
 
@@ -272,7 +272,7 @@ and [<AllowNullLiteral>] Scope =
 
     (*==== Closure environment base class ====*)
 and Closure =
-  val mutable Scopes : Scope ResizeArray
+  val mutable Scopes : Scope list
 
   new(scopes) = {
     Scopes = scopes
@@ -390,7 +390,7 @@ and InvokeCache<'a> when 'a :> Delegate and 'a : null =
     let cacheInst = cacheType.GetConstructors().[0].Invoke([|Seq.toList argTypes|])
     Expr.constant cacheInst
 
-module private Cache = 
+module Cache = 
 
   let classIdEq expr n =
     Expr.eq (Expr.field expr "ClassId") (Expr.constant n)

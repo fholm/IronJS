@@ -63,11 +63,17 @@ namespace IronJS.Compiler
 
   module Context =
 
+    let hasVariable ctx name =
+      Map.containsKey name ctx.Variables
+
     let variableExpr ctx name =
       match ctx.Variables.[name] with
       | Expr(expr)        -> expr
       | Variable(expr, _) -> expr :> Et
       | Proxied(expr, _)  -> expr :> Et
+
+    let variableType ctx name =
+      (Expr.expandStrongBox (variableExpr ctx name)).Type
     
     let environmentExpr ctx = 
       ctx.Internal.Environment :> Et

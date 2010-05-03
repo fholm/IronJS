@@ -7,12 +7,12 @@
   type State = { 
     ScopeChain: Types.Scope list
     DynamicScopeLevels : DynamicScopeLevels list
-    FunctionMap : Dict<int, Types.Scope * Node>
+    AstMap : Map<int, Types.Scope * Node>
   } with
     static member New = {
       ScopeChain = []
       DynamicScopeLevels = [{Global = 0; Local = 0}]
-      FunctionMap = null
+      AstMap = Map.empty
     }
 
 namespace IronJS.Ast

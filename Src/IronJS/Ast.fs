@@ -129,9 +129,14 @@ module Core =
     let scope = State.exitScope sr
 
     let Scope = Scope.setFlagIf Flags.Scope.InLocalDS (State.isInsideLocalDynamicScope !sr) scope
-    (!sr).FunctionMap.Add((!sr).FunctionMap.Count, (Scope, body))
+    let astId = (!sr).AstMap.Count
+
+    sr := {
+      !sr with
+        AstMap = Map.add astId (Scope, body) (!sr).AstMap
+    }
     
-    let func = Function((!sr).FunctionMap.Count-1)
+    let func = Function(astId)
 
     if isAnon 
       then func
@@ -140,12 +145,12 @@ module Core =
         State.analyzeAssign sr name func
         Assign(name, func)
 
-  let parseAst (ast:AntlrToken) scope funcMap =  
-    let sr = ref {Types.State.New with ScopeChain = [scope]; FunctionMap = funcMap}
+  let private translateAntlrToken astMap scope (ast:AntlrToken) =  
+    let sr = ref {Types.State.New with ScopeChain = [scope]; AstMap = astMap}
     let ast = parse sr ast
-    (!sr).ScopeChain.[0], ast
+    (!sr).ScopeChain.[0], ast, (!sr).AstMap
 
-  let parseFile funcMap (fileName:string) =
+  let parseFile astMap (fileName:string) =
     let lexer = new AntlrLexer(new Antlr.FileStream(fileName))
     let parser = new AntlrParser(new Antlr.TokenStream(lexer))
-    parseAst ((parser.program().Tree) :?> AntlrToken) Ast.Types.Scope.New funcMap
+    translateAntlrToken astMap Ast.Types.Scope.New ((parser.program().Tree) :?> AntlrToken) 

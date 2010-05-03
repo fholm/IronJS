@@ -20,14 +20,15 @@ fsi.AddPrinter(fun (x:EtParam) -> sprintf "EtParam:%A" x.Type)
 fsi.AddPrinter(fun (x:Et) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 
-//System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
-System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
+System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
+//System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
 let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
-let ast = Ast.Core.parseFile env.AstMap "Testing.js"
+let scope, ast, astMap = Ast.Core.parseFile env.AstMap "Testing.js"
+env.AstMap <- astMap
 
 let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
-let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> (fst ast) (snd ast)
+let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> scope ast
 
 let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>
 let globalClosure = new Runtime.Closure(new ResizeArray<Runtime.Scope>())

@@ -2,7 +2,7 @@
 
 (*=======================================================
 
-This file contains the core implementation of the IronJS runtime, 
+This file contains the implementation of the IronJS runtime, 
 which consists of several core classes
 
   * Environment - This is the runtime environment, which contains
@@ -52,7 +52,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable Object_prototype : Object
   [<DefaultValue>] val mutable Function_prototype : Object
 
-  [<DefaultValue>] val mutable AstMap : Dict<int, Ast.Types.Scope * Ast.Node>
+  [<DefaultValue>] val mutable AstMap : Map<int, Ast.Types.Scope * Ast.Node>
   [<DefaultValue>] val mutable GetCrawlers : Dict<int list, GetCrawler>
   [<DefaultValue>] val mutable SetCrawlers : Dict<int list, SetCrawler>
 
@@ -63,7 +63,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     else
       let scope, body = x.AstMap.[func.AstId]
       let closureType = func.Closure.GetType()
-      let lambdaExpr  = exprGenerator x delegateType closureType (scopeAnalyzer scope closureType types) body
+      let analScope   = scopeAnalyzer scope closureType types
+      let lambdaExpr  = exprGenerator x delegateType closureType analScope body
       let compiled    = lambdaExpr.Compile()
       delegateCache.[cell] <- compiled
       compiled
@@ -82,7 +83,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   static member Create sa eg =
     let env = new Environment(sa, eg)
     //Maps
-    env.AstMap <- new Dict<int, Ast.Types.Scope * Ast.Node>()
+    env.AstMap <- Map.empty
     env.GetCrawlers <- new Dict<int list, GetCrawler>()
     env.SetCrawlers <- new Dict<int list, SetCrawler>()
 

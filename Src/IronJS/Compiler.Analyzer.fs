@@ -63,13 +63,13 @@ let private getType name closureType (closure:Ast.Types.ClosureMap) (vars:Ast.Ty
                  state ||| Runtime.Utils.Type.clrToJs (Runtime.Utils.Closure.fieldTypeN closureType closure.[var].Index)
                ) var.UsedAs var.UsedWithClosure
 
-        // Combine UsedAs + UsedWithClosure types with UsedWith types
+        //Combine UsedAs + UsedWithClosure types with UsedWith types
         let evaledWithVariables = 
           var.UsedWith 
             |> Set.map  (fun var -> getLocalType' var)
             |> Set.fold (fun state typ -> state ||| typ) evaledWithClosures
 
-        // Eval any expression values we're assigned to from
+        //Eval any expression values we're assigned to from
         let result = 
           var.AssignedFrom 
             |> Seq.ofList

@@ -104,8 +104,6 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   let ctx = {
     Context.New with
       Scope = scope
-      TemporaryTypes = new SafeDict<string, ClrType>()
-      ObjectCaches = new Dict<int, Et>()
       Variables = buildVarsMap scope
       Builder = builder
       Environment = env
@@ -171,27 +169,34 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.toArray
       #endif
 
-  let updatedObjectCaches oc =
-    let last = Expr.field oc "LastCreated"
-    (Expr.if'  
-      (Expr.andChain 
-      [
-        (Expr.notEq last Expr.defaultT<Runtime.Object>)
-        (Expr.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
-      ])
-      (Expr.block 
-      [
-        (Expr.assign (Expr.field oc "ClassId") (Expr.field last "ClassId"))
-        (Expr.assign (Expr.field oc "Class") (Expr.field last "Class"))
-        (Expr.assign (Expr.field oc "InitSize") (Expr.property (Expr.field last "Properties") "Length"))
-      ])
-    )
-
+  (*Builds the if-statements and the end of each
+  function that updates the object caches*)
+  let objectCacheUpdateExpressions = 
+    ctx.ObjectCaches 
+    |>  Map.toSeq 
+    |>  Seq.map (fun pair ->
+          let oc = snd pair
+          let last = Expr.field oc "LastCreated"
+          (Expr.if'  
+            (Expr.andChain 
+            [
+              (Expr.notEq last Expr.defaultT<Runtime.Object>)
+              (Expr.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
+            ])
+            (Expr.block 
+            [
+              (Expr.assign (Expr.field oc "ClassId") (Expr.field last "ClassId"))
+              (Expr.assign (Expr.field oc "Class") (Expr.field last "Class"))
+              (Expr.assign (Expr.field oc "InitSize") (Expr.property (Expr.field last "Properties") "Length"))
+            ])
+          )
+        )
+        
   (*Assemble the function body expression*)
   let wrap = ctx.Build ast
   let body = 
     (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
-      |>  Seq.append (Seq.map updatedObjectCaches ctx.ObjectCaches.Values)
+      |>  Seq.append objectCacheUpdateExpressions
       |>  Seq.append (Wrap.unwrap wrap :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver

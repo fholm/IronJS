@@ -97,7 +97,8 @@ module Object =
     | Some(_) -> failwith "Objects with auto-properties not supported"
     | None    -> 
       if not (ctx.ObjectCaches.ContainsKey id) then
-        ctx.ObjectCaches.Add(id, Expr.constant (Runtime.NewCache.New(ctx.Environment.ObjectClass)))
+        let newCache = Expr.constant (Runtime.NewCache.New(ctx.Environment.ObjectClass))
+        ctx.ObjectCaches <- Map.add id newCache ctx.ObjectCaches
 
       let cache = ctx.ObjectCaches.[id]
       let new' = Expr.newArgsT<Runtime.Object> [Expr.field cache "Class" ; Expr.field (Context.environmentExpr ctx) "Object_prototype" ; Expr.field cache "InitSize"]

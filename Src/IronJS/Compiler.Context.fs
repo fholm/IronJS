@@ -26,10 +26,11 @@
     Scope: Ast.Types.Scope
     Internal: InternalVariables
     Variables: Map<string, Variable>
-    TemporaryTypes: SafeDict<string, ClrType>
     Builder : Context -> Ast.Node -> Wrapped
     Environment : Runtime.Environment
-    ObjectCaches: Dict<int, Et>
+
+    mutable TemporaryTypes: Map<string, ClrType>
+    mutable ObjectCaches: Map<int, Et>
   } with
     member x.Build = x.Builder x
     static member New = {
@@ -38,9 +39,9 @@
       Scope = Ast.Types.Scope.New
       Variables = Map.empty
       Builder = fun _ _ -> Wrap.static' Dlr.Expr.void'
-      TemporaryTypes = null
       Environment = null
-      ObjectCaches = null
+      ObjectCaches = Map.empty
+      TemporaryTypes = Map.empty
     }
 
 namespace IronJS.Compiler
@@ -69,8 +70,7 @@ namespace IronJS.Compiler
       [ctx.Internal.Globals; ctx.Internal.Closure; ctx.Internal.Environment]
 
     let temporaryType ctx name =
-      let success, type' = ctx.TemporaryTypes.TryGetValue name
-      if success then Some(type') else None
+      Map.tryFind name ctx.TemporaryTypes  
 
     let objectBaseClass ctx =
       Expr.property (environmentExpr ctx) "BaseClass"

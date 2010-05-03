@@ -16,7 +16,7 @@ module Assign =
       let target  = Wrap.static' ctx.Internal.Globals
 
       if value.Type <> typeof<Runtime.Box> then 
-        ctx.TemporaryTypes.AddOrUpdate(name, value.Type, fun _ _ -> value.Type) |> ignore
+        ctx.TemporaryTypes <- Map.add name value.Type ctx.TemporaryTypes
 
       Global.set ctx name value
 

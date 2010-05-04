@@ -20,12 +20,12 @@ module Object =
     wrapInBlock target (fun obj -> 
       [
         (wrapInBlock value (fun value' -> 
-          let args = [obj; Utils.Box.wrap value'; Context.environmentExpr ctx]
+          let args = [obj; Box.wrap value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
             (Expr.ternary
               (Expr.eq (classId obj) cacheId)
-              (Utils.Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value')
+              (Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value')
               (Expr.ternary
                 (Expr.notDefault crawler)
                 (Expr.invoke crawler (cache :: args))
@@ -45,11 +45,11 @@ module Object =
         (Expr.debug (sprintf "Getting property '%s'" name))
         (Expr.ternary
           (Expr.eq (classId obj) cacheId)
-          (Utils.Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
+          (Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
           (Expr.ternary 
             (Expr.notDefault crawler)
-            (Utils.Box.fieldIfClrType (Expr.invoke crawler (cache :: args)) typ)
-            (Utils.Box.fieldIfClrType (Expr.call cache "Update" args) typ)
+            (Box.fieldIfClrType (Expr.invoke crawler (cache :: args)) typ)
+            (Box.fieldIfClrType (Expr.call cache "Update" args) typ)
           )
         )
       ]
@@ -61,11 +61,11 @@ module Object =
       else 
         if Runtime.Utils.Type.isBox target.Type then
           wrapInBlock target (fun tmp -> 
-            let target = volatile' (Utils.Box.fieldByClrTypeT<Runtime.Object> tmp)
+            let target = volatile' (Box.fieldByClrTypeT<Runtime.Object> tmp)
             [
               (Expr.debug (sprintf "Type check for setting property '%s'" name))
               (Expr.ternary
-                (Utils.Box.typeIsT<Runtime.Object> tmp)
+                (Box.typeIsT<Runtime.Object> tmp)
                 (buildSet ctx name target value).Et
                 (Expr.void')
               )
@@ -80,11 +80,11 @@ module Object =
       else 
         if Runtime.Utils.Type.isBox target.Type then
           wrapInBlock target (fun obj -> 
-            let target = (static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
+            let target = (static' (Box.fieldByClrTypeT<Runtime.Object> obj))
             [
               (Expr.debug (sprintf "Type check for getting property '%s'" name))
               (Expr.ternary
-                (Utils.Box.typeIsT<Runtime.Object> obj)
+                (Box.typeIsT<Runtime.Object> obj)
                 (buildGet ctx name None target).Et
                 (Expr.defaultT<Runtime.Box>)
               )

@@ -17,5 +17,5 @@ module Utils =
       if l.Type = r.Type then Expr.assign l r
       else
         if l.Type = typeof<Runtime.Box> 
-          then Utils.Box.assign ctx l r
+          then Box.assign ctx l r
           else failwith "Odd case not handled yet"

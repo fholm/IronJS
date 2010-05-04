@@ -88,7 +88,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Invoke(target, args, _) -> Function.invoke ctx target args
   | Ast.Return(value)         -> 
     let value = ctx.Build value
-    if Utils.Box.isWrapped value.Et
+    if Box.isWrapped value.Et
       then 
         volatile' (
           (Expr.block
@@ -101,8 +101,8 @@ let private builder (ctx:Context) (ast:Ast.Node) =
         volatile' (
           (Expr.block
           [
-            (Utils.Box.setValue (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
-            (Utils.Box.setType (Expr.field ctx.Internal.Environment "ReturnBox") value.Type)
+            (Box.setValue (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
+            (Box.setType (Expr.field ctx.Internal.Environment "ReturnBox") value.Type)
             (Expr.returnVoid ctx.Return)
           ])
         )

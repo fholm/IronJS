@@ -74,6 +74,9 @@ type Environment (fileCompiler:Environment -> string -> (unit -> unit),
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
 
+  member x.CompileFile name = 
+    fileCompiler x name
+
   member x.NextClassId = 
     classId <- classId + 1
     classId

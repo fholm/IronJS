@@ -9,11 +9,12 @@ open System
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
-let env = Runtime.Environment.Create Compiler.Core.compileFile Compiler.Core.compileAst2
-let compiled = Compiler.Core.compileFile env "Testing.js"
+let env = 
+  (Runtime.Environment.Create 
+    Compiler.Core.compileFile 
+    Compiler.Core.compileAst2)
 
-let timeCold = Utils.time(compiled).TotalMilliseconds
-let timeHot = Utils.time(compiled).TotalMilliseconds
+let compiled = env.CompileFile "Testing.js"
 
-Console.WriteLine(sprintf "cold: %f, hot: %f" timeCold timeHot)
-Console.ReadLine() |> ignore
+let timeCompile = Utils.time(compiled).TotalMilliseconds
+let time = Utils.time(compiled).TotalMilliseconds

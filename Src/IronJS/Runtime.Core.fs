@@ -252,12 +252,10 @@ and ObjectMeta(expr, jsObj:Object) =
     (*==== Scope class, representing a functions scope during runtime ====*)
 and [<AllowNullLiteral>] Scope = 
   val mutable Objects : Object list
-  val mutable EvalObject : Object
   val mutable ScopeLevel : int
 
-  new(objects, evalObject, scopeLevel) = {
+  new(objects, scopeLevel) = {
     Objects = objects
-    EvalObject = evalObject
     ScopeLevel = scopeLevel
   } 
 

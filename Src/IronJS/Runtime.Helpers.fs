@@ -26,9 +26,17 @@ module Cache =
     )
 
 [<AbstractClass>]
+type DynamicScope =
+  static member GetGlobalVariable (name:string, globals:Object, scopes:Object list, closure:Closure) =
+    ()
+
+  static member SetGlobalVariable (name:string, value:Box, globals:Object, scopes:Object list, closure:Closure) =
+    ()
+
+[<AbstractClass>]
 type Helpers =
-  static member BuildClosureScopes (closure:Closure, evalObject, localScopes, scopeLevel) =
-    new Scope(localScopes, evalObject, scopeLevel) :: closure.Scopes
+  static member BuildClosureScopes (closure:Closure, localScopes, scopeLevel) =
+    new Scope(localScopes, scopeLevel) :: closure.Scopes
 
   //This function handles the updating of
   //the cache cell in case of a miss

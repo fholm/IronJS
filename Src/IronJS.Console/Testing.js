@@ -42,6 +42,7 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
+/*
 var boo = function () {
     function f(x, y, z) {
         var a = {}
@@ -54,3 +55,11 @@ var boo = function () {
 }
 
 boo();
+*/
+
+
+var foo = function (x) {
+    x = 2;
+}
+
+foo("break");

@@ -43,9 +43,6 @@ namespace IronJS.Compiler
     let combine3 a b c = 
       {Et = a.Et; Mode = a.Mode ||| b.Mode ||| c.Mode}
 
-    let unExpressionState expr = 
-      expr.Et
-
     let forceStatic expr =
       {Et = expr.Et; Mode = Mode.Static}
 

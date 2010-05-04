@@ -23,9 +23,12 @@ let private buildVarsMap (scope:Ast.Types.Scope) =
       fun _ var -> 
         match Ast.Variable.isParameter var with
         | true -> 
-          match Ast.Variable.needsProxy var with
-          | true  -> Proxied(createVar var, createProxy var)
-          | false -> Variable(createVar var, Param)
+          if scope.ArgTypes.[var.Index] <> Runtime.Utils.Type.jsToClr var.UsedAs then
+            Proxied(createVar var, createProxy var)
+          else
+            match Ast.Variable.needsProxy var with
+            | true  -> Proxied(createVar var, createProxy var)
+            | false -> Variable(createVar var, Param)
         | false -> 
           Variable(createVar var, Local)
       )
@@ -75,7 +78,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Block(nodes) -> 
     volatile'(
       Expr.block [
-        for n in nodes -> unExpressionState (ctx.Build n)
+        for n in nodes -> (ctx.Build n).Et
       ]
     )
 
@@ -155,9 +158,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Map.toSeq
       |>  Seq.filter isProxied
       |>  Seq.map (fun (_, Proxied(var, proxy)) ->
-            if Type.isStrongBox var.Type 
-              then Expr.assign var (Expr.newArgs var.Type [proxy])
-              else Expr.assign var (Expr.cast var.Type proxy)
+            Utils.Utils.assign ctx var proxy
           )
       #if DEBUG
       |>  Seq.toArray
@@ -226,7 +227,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     (Expr.field ctx.Internal.Environment "ReturnBox" :: [])
       |>  Seq.append objectCacheUpdateExpressions
       |>  Seq.append [Expr.labelExprVoid ctx.Return]
-      |>  Seq.append (unExpressionState mainBody :: [])
+      |>  Seq.append (mainBody.Et :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

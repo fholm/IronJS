@@ -8,12 +8,12 @@
 
   type VariableType
     = Local
-    | Param
+    | Param of int
 
   type Variable
     = Expr     of Et
     | Variable of EtParam * VariableType
-    | Proxied  of EtParam * EtParam
+    | Proxied  of EtParam * EtParam * int
 
   type InternalVariables = {
     This: EtParam
@@ -68,9 +68,9 @@ namespace IronJS.Compiler
 
     let variableExpr ctx name =
       match ctx.Variables.[name] with
-      | Expr(expr)        -> expr
-      | Variable(expr, _) -> expr :> Et
-      | Proxied(expr, _)  -> expr :> Et
+      | Expr(expr)          -> expr
+      | Variable(expr, _)   -> expr :> Et
+      | Proxied(expr, _, _) -> expr :> Et
 
     let variableType ctx name =
       (Expr.expandStrongBox (variableExpr ctx name)).Type

@@ -19,48 +19,61 @@ let private buildVarsMap (scope:Ast.Types.Scope) =
   let createProxy (var:Ast.Types.Variable) =
     Expr.param (sprintf "%s_proxy" var.Name) scope.ArgTypes.[var.Index]
 
-  scope.Variables
-    |>  Map.map (
-          fun _ var -> 
-            match Ast.Variable.isParameter var with
-            | true -> 
-              if scope.ArgTypes.[var.Index] <> Runtime.Utils.Type.jsToClr var.UsedAs then
-                Proxied(createVar var, createProxy var)
-              else
-                match Ast.Variable.needsProxy var with
-                | true  -> Proxied(createVar var, createProxy var)
-                | false -> Variable(createVar var, Param)
-            | false -> 
-              Variable(createVar var, Local)
-        )
+  let paramCount = ref 0
+  let variables = 
+    scope.Variables
+      |>  Map.map (
+            fun _ var -> 
+              match Ast.Variable.isParameter var with
+              | true -> 
+                paramCount := !paramCount + 1
+                if scope.ArgTypes.[var.Index] <> Runtime.Utils.Type.jsToClr var.UsedAs then
+                  Proxied(createVar var, createProxy var, var.Index)
+                else
+                  match Ast.Variable.needsProxy var with
+                  | true  -> Proxied(createVar var, createProxy var, var.Index)
+                  | false -> Variable(createVar var, Param(var.Index))
+              | false -> 
+                Variable(createVar var, Local)
+          )
+
+  if scope.ArgTypes <> null && !paramCount < scope.ArgTypes.Length then
+    let extraArgs = Seq.skip !paramCount scope.ArgTypes
+    Seq.fold (fun s a -> 
+      let name = sprintf "%i" !paramCount
+      paramCount := !paramCount + 1
+      Map.add name (Variable(Expr.param name a, Param(!paramCount-1))) s
+    ) variables extraArgs
+  else
+    variables
 
 let private isLocal (_, var:Variable) =
   match var with
   | Variable(_, Local) -> true
-  | Proxied(_, _) -> true
+  | Proxied(_, _, _) -> true
   | _ -> false
 
 let private isParameter (_, var:Variable) =
   match var with
-  | Variable(_, Param) -> true
-  | Proxied(_, _) -> true
+  | Variable(_, Param(_)) -> true
+  | Proxied(_, _, _) -> true
   | _ -> false
 
 let private toParm (_, var:Variable) =
   match var with
-  | Variable(p, Param) -> p
-  | Proxied(_, p)  -> p
+  | Variable(p, Param(i)) -> p, i
+  | Proxied(_, p, i)  -> p, i
   | _ -> failwith "Que?"
 
 let private toLocal (_, var:Variable) =
   match var with
   | Variable(p, Local) -> p
-  | Proxied(l, _)  -> l
+  | Proxied(l, _, _)  -> l
   | _ -> failwith "Que?"
 
 let private isProxied (_, var:Variable) =
   match var with
-  | Proxied(_, _) -> true
+  | Proxied(_, _, _) -> true
   | _ -> false
 
 let private builder (ctx:Context) (ast:Ast.Node) =
@@ -134,7 +147,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.Variables
       |>  Map.toSeq
       |>  Seq.filter isProxied
-      |>  Seq.map (fun (_, Proxied(var, proxy)) ->
+      |>  Seq.map (fun (_, Proxied(var, proxy, _)) ->
             Utils.assign ctx var proxy
           )
       #if DEBUG
@@ -150,7 +163,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.filter (fun lv -> not (Ast.Variable.needsProxy lv))
       |>  Seq.map (fun lv -> 
             let expr = Context.variableExpr ctx lv.Name
-            Expr.assign expr (Expr.new' expr.Type) 
+            Utils.assign ctx expr (Expr.new' expr.Type) 
           )
       #if DEBUG
       |>  Seq.toArray
@@ -164,7 +177,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.filter (fun lv -> Ast.Variable.initToUndefined lv)
       |>  Seq.map (fun lv -> 
             let expr = Context.variableExpr ctx lv.Name
-            Expr.assign expr Runtime.Undefined.InstanceExpr
+            Utils.assign ctx expr Runtime.Undefined.InstanceExpr
           )
       #if DEBUG
       |>  Seq.toArray
@@ -220,6 +233,8 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Map.toSeq
       |>  Seq.filter isParameter
       |>  Seq.map toParm
+      |>  Seq.sortBy (fun pair -> snd pair)
+      |>  Seq.map (fun pair -> fst pair)
       |>  Seq.append (Context.internalParams ctx)
       #if DEBUG
       |>  Seq.toArray

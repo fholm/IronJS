@@ -192,19 +192,17 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
     ctx.ObjectCaches 
     |>  Map.toSeq 
     |>  Seq.map (fun pair ->
-          let oc = snd pair
-          let last = Expr.field oc "LastCreated"
+          let cache = snd pair
+          let last = Expr.field cache "LastCreated"
           (Expr.if'  
-            (Expr.andChain 
-            [
+            (Expr.and' 
               (Expr.notEq last Expr.defaultT<Runtime.Object>)
-              (Expr.notEq (Expr.field last "ClassId") (Expr.field oc "ClassId"))
-            ])
-            (Expr.block 
-            [
-              (Expr.assign (Expr.field oc "ClassId") (Expr.field last "ClassId"))
-              (Expr.assign (Expr.field oc "Class") (Expr.field last "Class"))
-              (Expr.assign (Expr.field oc "InitSize") (Expr.property (Expr.field last "Properties") "Length"))
+              (Expr.notEq (Expr.field last "ClassId") (Expr.field cache "ClassId"))
+            )
+            (Expr.block [
+              (Expr.assign (Expr.field cache "ClassId") (Expr.field last "ClassId"))
+              (Expr.assign (Expr.field cache "Class") (Expr.field last "Class"))
+              (Expr.assign (Expr.field cache "InitSize") (Expr.property (Expr.field last "Properties") "Length"))
             ])
           )
         )

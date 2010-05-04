@@ -24,15 +24,7 @@ System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects 
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
 let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
-let scope, ast, astMap = Ast.Core.parseFile env.AstMap "Testing.js"
-env.AstMap <- astMap
+let compiled = Compiler.Core.compileFile env "Testing.js"
 
-let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
-let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> scope ast
-
-let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>
-let globalClosure = new Runtime.Closure(List.empty)
-let globalFunc = new Runtime.Function(-1, nativeint -1, globalClosure, env)
-
-let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
-let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
+let timeCompile = Utils.time(compiled).TotalMilliseconds
+let time = Utils.time(compiled).TotalMilliseconds

@@ -261,3 +261,16 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   #endif
 
   lmb
+
+let compileFile (env:Runtime.Environment) fileName =
+  let scope, ast, astMap = Ast.Core.parseFile env.AstMap fileName
+  env.AstMap <- astMap
+
+  let globalType = Runtime.Delegate.getFor [] typeof<Runtime.Box>
+  let exprTree = compileAst env globalType typeof<Runtime.Closure> scope ast
+  let compiled = exprTree.Compile() :?> System.Func<Runtime.Function, Runtime.Object, Runtime.Box>
+
+  let globalClosure = new Runtime.Closure(List.empty)
+  let globalFunc = new Runtime.Function(-1, nativeint -1, globalClosure, env)
+
+  fun () -> compiled.Invoke(globalFunc, env.Globals) |> ignore

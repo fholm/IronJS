@@ -89,3 +89,24 @@ module Function =
         (Expr.invoke (Expr.field invokeCache "Delegate") (func :: (ctx.Internal.Globals:>Et) :: arguments))
       ]
     )
+
+  let return' (ctx:Context) value = 
+    let value = ctx.Build value
+    if Box.isWrapped value.Et
+      then 
+        volatile' (
+          (Expr.block
+          [
+            (Expr.assign (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
+            (Expr.returnVoid ctx.Return)
+          ])
+        )
+      else
+        volatile' (
+          (Expr.block
+          [
+            (Box.setValue (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
+            (Box.setType (Expr.field ctx.Internal.Environment "ReturnBox") value.Type)
+            (Expr.returnVoid ctx.Return)
+          ])
+        )

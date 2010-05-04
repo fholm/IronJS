@@ -92,7 +92,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
     env.SetCrawlers <- Map.empty
 
     //Base classes
-    env.ObjectClass   <- new Class(env.NextClassId, new Dict<string, int>())
+    env.ObjectClass   <- new Class(env.NextClassId, Map.empty)
     env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.NextClassId)
 
     //Object.prototype
@@ -142,27 +142,30 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
     (*==== Class representing an objects hidden class ====*)
 and [<AllowNullLiteral>] Class =
   val mutable ClassId : int
-  val mutable SubClasses : Dict<string, Class>
-  val mutable Variables : Dict<string, int>
+  val mutable SubClasses : Map<string, Class>
+  val mutable Variables : Map<string, int>
 
-  new(classId, variables) = {
+  new(classId, variables:Map<string, int>) = {
     ClassId = classId
     Variables = variables
-    SubClasses = new Dict<string, Class>();
+    SubClasses = Map.empty
   }
 
   member x.GetSubClass (name:string, newId:int) =
-    //Note: I hate interfacing with C# code
-    let success, cls = x.SubClasses.TryGetValue name
-    if success then cls
-    else
-      let variables = new Dict<string, int>(x.Variables)
-      variables.Add(name, variables.Count)
-      x.SubClasses.Add(name, new Class(newId, variables)) 
+    match Map.tryFind name x.SubClasses with
+    | Some(cls) -> cls
+    | None ->
+      x.SubClasses <- (
+        Map.add name (
+          new Class(newId, 
+            Map.add name x.Variables.Count x.Variables
+          )
+        ) x.SubClasses
+      )
       x.SubClasses.[name]
 
   member x.GetIndex varName =
-    x.Variables.TryGetValue(varName)
+    Map.tryFind varName x.Variables
 
     (*==== A plain javascript object ====*)
 and [<AllowNullLiteral>] Object =
@@ -184,8 +187,9 @@ and [<AllowNullLiteral>] Object =
       x.Create (cache, ref value, env)
 
   member x.Update (cache:SetCache, value:Box byref) =
-    let success, index = x.Class.GetIndex cache.Name
-    if success then 
+    match x.Class.GetIndex cache.Name with
+    | None -> ()
+    | Some(index) ->
       cache.ClassId <- x.ClassId
       cache.Index   <- index
       x.Properties.[index] <- value
@@ -213,10 +217,9 @@ and [<AllowNullLiteral>] Object =
       env.UndefinedBox
 
   member x.Has name =
-    let success, index = x.Class.GetIndex name
-    if success && x.Properties.[index].Type <> Types.Nothing
-      then index
-      else -1
+    match x.Class.GetIndex name with
+    | Some(index) when x.Properties.[index].Type <> Types.Nothing -> index
+    | _ -> -1
       
   member x.PrototypeHas name =
     let mutable index = -1

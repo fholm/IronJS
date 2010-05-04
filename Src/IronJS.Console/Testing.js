@@ -44,6 +44,8 @@ foo.a.b.c.d.e = {};
 
 var boo = function () {
     function f(x, y, z) {
+        var a = {}
+        a.z = "asd";
         return x + y + z;
     }
 

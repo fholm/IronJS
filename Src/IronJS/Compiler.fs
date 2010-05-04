@@ -192,6 +192,9 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.toArray
       #endif
 
+  (*The function main body*)
+  let mainBody = ctx.Build ast
+
   (*Builds the if-statements and the end of each
   function that updates the object caches*)
   let objectCacheUpdateExpressions = 
@@ -214,14 +217,16 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
             ])
           )
         )
+    #if DEBUG
+    |> Seq.toArray
+    #endif
         
   (*Assemble the function body expression*)
-  let ExpressionState = ctx.Build ast
   let body = 
     (Expr.field ctx.Internal.Environment "ReturnBox" :: [])
       |>  Seq.append objectCacheUpdateExpressions
       |>  Seq.append [Expr.labelExprVoid ctx.Return]
-      |>  Seq.append (unExpressionState ExpressionState :: [])
+      |>  Seq.append (unExpressionState mainBody :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied

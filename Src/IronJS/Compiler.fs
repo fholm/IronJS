@@ -8,7 +8,7 @@ open IronJS.Compiler
 open IronJS.Compiler.Types
 open IronJS.Compiler.ExpressionState
 
-let private buildVarsMap (scope:Ast.Types.Scope) =
+let buildVarsMap (scope:Ast.Types.Scope) =
 
   let createVar (var:Ast.Types.Variable) =
     let clrTyp = Runtime.Utils.Type.jsToClr var.UsedAs
@@ -47,36 +47,36 @@ let private buildVarsMap (scope:Ast.Types.Scope) =
   else
     variables
 
-let private isLocal (_, var:Variable) =
+let isLocal (_, var:Variable) =
   match var with
   | Variable(_, Local) -> true
   | Proxied(_, _, _) -> true
   | _ -> false
 
-let private isParameter (_, var:Variable) =
+let isParameter (_, var:Variable) =
   match var with
   | Variable(_, Param(_)) -> true
   | Proxied(_, _, _) -> true
   | _ -> false
 
-let private toParm (_, var:Variable) =
+let toParm (_, var:Variable) =
   match var with
   | Variable(p, Param(i)) -> p, i
   | Proxied(_, p, i)  -> p, i
   | _ -> failwith "Que?"
 
-let private toLocal (_, var:Variable) =
+let toLocal (_, var:Variable) =
   match var with
   | Variable(p, Local) -> p
   | Proxied(l, _, _)  -> l
   | _ -> failwith "Que?"
 
-let private isProxied (_, var:Variable) =
+let isProxied (_, var:Variable) =
   match var with
   | Proxied(_, _, _) -> true
   | _ -> false
 
-let private builder (ctx:Context) (ast:Ast.Node) =
+let builder (ctx:Context) (ast:Ast.Node) =
   match ast with
   //Simple
   | Ast.String(value)  -> static' (Expr.constant value)
@@ -261,6 +261,11 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   #endif
 
   lmb
+
+let compileAst2 (env:Runtime.Environment) (scope:Ast.Types.Scope) (ast:Ast.Node) (closure:ClrType) (delegate':ClrType) (argTypes:ClrType list) =
+  let analyzedScope = Analyzer.analyze scope closure argTypes
+  let lambdaExpr = compileAst env delegate' closure analyzedScope ast
+  lambdaExpr.Compile()
 
 let compileFile (env:Runtime.Environment) fileName =
   let scope, ast, astMap = Ast.Core.parseFile env.AstMap fileName

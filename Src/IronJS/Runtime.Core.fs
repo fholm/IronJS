@@ -43,8 +43,8 @@ type Undefined() =
   =======================================================*)
 
 [<AllowNullLiteral>]
-type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> Ast.Types.Scope, 
-                  exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
+type Environment (fileCompiler:Environment -> string -> (unit -> unit), 
+                  astCompiler:Environment -> Ast.Types.Scope -> Ast.Node -> ClrType -> ClrType -> ClrType list -> Delegate) =
                   
   let mutable classId = 0
   let mutable delegateCache = Map.empty<int * nativeint * nativeint, System.Delegate>
@@ -62,16 +62,14 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
 
   [<DefaultValue>] val mutable ReturnBox : Box
 
-  member x.GetDelegate (func:Function) (delegateType:ClrType) types =
-    let cacheKey = (func.AstId, func.ClosureId, delegateType.TypeHandle.Value)
+  member x.GetDelegate (func:Function) (delegate':ClrType) argTypes =
+    let cacheKey = (func.AstId, func.ClosureId, delegate'.TypeHandle.Value)
     match Map.tryFind cacheKey delegateCache with
     | Some(cached) -> cached
     | None -> 
       let scope, ast  = x.AstMap.[func.AstId]
-      let closureType = func.Closure.GetType()
-      let typedScope  = scopeAnalyzer scope closureType types
-      let lambdaExpr  = exprGenerator x delegateType closureType typedScope ast
-      let compiled    = lambdaExpr.Compile()
+      let closure     = func.Closure.GetType()
+      let compiled    = astCompiler x scope ast closure delegate' argTypes
 
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled

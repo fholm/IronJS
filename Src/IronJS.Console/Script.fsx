@@ -23,7 +23,7 @@ fsi.AddPrinter(fun (x:EtLambda) -> sprintf "%A" (dbgViewProp.GetValue(x, null)))
 System.IO.Directory.SetCurrentDirectory(@"C:\Users\fredrikhm.CPBEUROPE\Projects - Personal\IronJS\Src\IronJS.Console")
 //System.IO.Directory.SetCurrentDirectory(@"C:\Users\Fredrik\Projects\IronJS\Src\IronJS.Console")
 
-let env = Runtime.Environment.Create Compiler.Analyzer.analyze Compiler.Core.compileAst
+let env = Runtime.Environment.Create Compiler.Core.compileFile Compiler.Core.compileAst2
 let compiled = Compiler.Core.compileFile env "Testing.js"
 
 let timeCompile = Utils.time(compiled).TotalMilliseconds

@@ -1,5 +1,6 @@
 ﻿open IronJS
 open IronJS.Fsi
+open IronJS.Aliases
 open IronJS.Runtime
 
 open System

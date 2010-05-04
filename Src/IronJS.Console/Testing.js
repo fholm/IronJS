@@ -44,4 +44,7 @@ foo.a.b.c.d.e = {};
 
 var foo = {}
 foo.bar = 2;
-var bar = 3;
+
+with (foo) {
+    bar = 3;
+}

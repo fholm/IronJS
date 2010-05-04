@@ -99,6 +99,7 @@ let builder (ctx:Context) (ast:Ast.Node) =
   //Objects
   | Ast.Object(properties, id) -> Object.new' ctx properties id
   | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name None 
+  | Ast.DynamicScope(target, body) -> Scopes.dynamicScope ctx target body
 
   //Loops
   | Ast.ForIter(init, test, incr, body) -> Loops.forIter ctx init test incr body
@@ -142,6 +143,9 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   let initEnvironment = 
     let expr = Expr.field ctx.Internal.Function "Environment"
     Expr.assign ctx.Internal.Environment expr
+
+  let initScopes =
+    Expr.assign ctx.Internal.Scopes (Expr.propertyStaticT<List<Runtime.Object>> "Empty")
 
   (*Initialize proxied parameters*)
   let initProxied = 
@@ -220,7 +224,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver
       |>  Seq.append initProxied
-      |>  Seq.append (initEnvironment :: initGlobals :: initClosure :: [])
+      |>  Seq.append (initEnvironment :: initGlobals :: initClosure :: initScopes :: [])
       #if DEBUG
       |>  Seq.toArray
       |>  fun x -> Expr.block x

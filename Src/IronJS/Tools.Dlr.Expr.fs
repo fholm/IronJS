@@ -83,6 +83,7 @@ module Expr =
   //Object fields and properties
   let field expr (name:string) = Et.Field(expr, name) :> Et
   let property expr (name:string) = Et.Property(expr, name) :> Et
+  let propertyStaticT<'a> name = Et.Property(null, typeof<'a>, name)
   let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Et
 
   //Static function call

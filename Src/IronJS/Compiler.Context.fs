@@ -21,13 +21,15 @@
     Function: EtParam
     Globals: EtParam
     Environment: EtParam
+    Scopes: EtParam
   } with 
     static member New = {
       Closure = null
-      This = Dlr.Expr.param "~this" typeof<Runtime.Object>
-      Globals = Dlr.Expr.param "~globals" typeof<Runtime.Object>
-      Function = Dlr.Expr.param "~func" typeof<Runtime.Function>
-      Environment = Dlr.Expr.param "~env" typeof<Runtime.Environment>
+      This = Dlr.Expr.paramT<Runtime.Object> "~this"
+      Globals = Dlr.Expr.paramT<Runtime.Object> "~globals"
+      Function = Dlr.Expr.paramT<Runtime.Function> "~func"
+      Environment = Dlr.Expr.paramT<Runtime.Environment> "~env" 
+      Scopes = Dlr.Expr.paramT<Runtime.Object list> "~scopes"
     }
 
   type Context = {
@@ -97,7 +99,9 @@ namespace IronJS.Compiler
       [ctx.Internal.Function; ctx.Internal.This]
 
     let internalLocals ctx =
-      [ctx.Internal.Globals; ctx.Internal.Closure; ctx.Internal.Environment]
+      [ctx.Internal.Globals; ctx.Internal.Closure; 
+       ctx.Internal.Environment; ctx.Internal.Scopes
+      ]
 
     let temporaryType ctx name =
       Map.tryFind name ctx.TemporaryTypes

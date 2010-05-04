@@ -16,16 +16,19 @@ module Core =
     | AntlrParser.VAR             -> parseVar sr t
     | AntlrParser.ASSIGN          -> parseAssign sr t
     | AntlrParser.Identifier      -> parseIdentifier sr t
-    | AntlrParser.OBJECT          -> parseObject sr t
     | AntlrParser.StringLiteral   -> parseString sr t
     | AntlrParser.DecimalLiteral  -> parseNumber sr t
     | AntlrParser.CALL            -> parseCall sr t
     | AntlrParser.FUNCTION        -> parseFunction sr t
     | AntlrParser.RETURN          -> parseReturn sr t
-    | AntlrParser.BYFIELD         -> parseByField sr t
-    | AntlrParser.WITH            -> parseWith sr t
     | AntlrParser.FOR             -> parseFor sr t
     | AntlrParser.EXPR            -> parseExpr sr t
+
+    //Objects
+    | AntlrParser.BYINDEX         -> parseByIndex sr t
+    | AntlrParser.BYFIELD         -> parseByField sr t
+    | AntlrParser.WITH            -> parseWith sr t
+    | AntlrParser.OBJECT          -> parseObject sr t
 
     //Binary Expressions
     | AntlrParser.LT              -> parseBinary sr t Lt
@@ -36,7 +39,7 @@ module Core =
     | AntlrParser.PINC            -> parsePreInc sr t
 
     //Error handling
-    | _ -> Error(sprintf "No parser for token %s (%i)" (Utils.antlrTokenName t) t.Type)
+    | _ -> failwithf "No parser for token %s (%i)" (Utils.antlrTokenName t) t.Type
 
   and parseList sr tlist =
     List.map (fun t -> parse sr t) tlist
@@ -74,6 +77,9 @@ module Core =
 
   and parseByField sr t = 
     Property(parse sr (child t 0), text (child t 1))
+
+  and parseByIndex sr t =
+    Index(parse sr (child t 0), parse sr (child t 1))
 
   and parsePossibleNull sr t = 
     if t = null then Null else parse sr t

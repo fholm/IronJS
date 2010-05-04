@@ -27,31 +27,32 @@ type Node
   | Pass
   | Null
   | Undefined
+  
+  //Object
+  | This
+  | Arguments
+  | Property      of Node * string
+  | Index         of Node * Node
+  | Object        of Map<string, Node> option * int
+  | DynamicScope  of Node * Node
 
   //Identifiers
   | Variable  of string * Types.DynamicScopeLevels
   | Closure   of string * Types.DynamicScopeLevels
   | Global    of string * Types.DynamicScopeLevels
-  | Property  of Node * string
 
-  //Special
-  | Arguments
-  | This
-  | Eval of string
-
-  //Scopes
-  | DynamicScope  of Node * Node
-  | Function      of int
+  //Function
+  | Function  of int
+  | Invoke    of Node * Node list * Types.DynamicScopeLevels
 
   //Loops
   | ForIter of Node * Node * Node * Node // init * test * incr * body
   
   //
+  | Eval of string
   | Block     of Node list
-  | Invoke    of Node * Node list * Types.DynamicScopeLevels
   | Assign    of Node * Node
   | Return    of Node
-  | Object    of Map<string, Node> option * int
   | Convert   of Node * Types
   | BinaryOp  of BinaryOp * Node * Node
   | UnaryOp   of UnaryOp * Node

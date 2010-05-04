@@ -86,6 +86,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
 
   static member Create compilers =
     let env = new Environment(compilers)
+
     //Maps
     env.AstMap <- Map.empty
     env.GetCrawlers <- Map.empty
@@ -106,6 +107,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
     env.UndefinedBox.Type <- Types.Undefined
     env.UndefinedBox.Clr  <- Undefined.Instance
 
+    //And return it
     env
 
 (*=======================================================

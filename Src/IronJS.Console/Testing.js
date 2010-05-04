@@ -43,8 +43,4 @@ foo.a.b.c.d.e = {};
 */
 
 var foo = {}
-foo.bar = 2;
-
-with (foo) {
-    bar = 3;
-}
+foo["bar"] = 1;

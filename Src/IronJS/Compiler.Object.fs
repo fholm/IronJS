@@ -40,7 +40,7 @@ module Object =
   let private buildGet ctx name (typ:ClrType option) target =
     let cache, cacheId, cacheIndex, crawler = Runtime.GetCache.New(name)
     wrapInBlock target (fun obj ->
-      let args = [obj; Context.environmentExpr ctx]
+      let args = [cache; obj; Context.environmentExpr ctx]
       [
         (Expr.debug (sprintf "Getting property '%s'" name))
         (Expr.ternary
@@ -48,8 +48,8 @@ module Object =
           (Box.fieldIfClrType (Expr.access (properties obj) [cacheIndex]) typ)
           (Expr.ternary 
             (Expr.notDefault crawler)
-            (Box.fieldIfClrType (Expr.invoke crawler (cache :: args)) typ)
-            (Box.fieldIfClrType (Expr.call cache "Update" args) typ)
+            (Box.fieldIfClrType (Expr.invoke crawler args) typ)
+            (Box.fieldIfClrType (Expr.callStaticT<Runtime.Helpers> "UpdateGetCache" args) typ)
           )
         )
       ]

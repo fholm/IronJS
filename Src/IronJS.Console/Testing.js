@@ -42,11 +42,8 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-/*
 var boo = function () {
     function f(x, y, z) {
-        var a = {}
-        a.z = "asd";
         return x + y + z;
     }
 
@@ -55,16 +52,9 @@ var boo = function () {
 }
 
 boo();
+
+/*
+var foo = {}
+foo.bar = 2;
+var bar = 3;
 */
-
-
-var foo = function () {
-    function f(x0, x1, x2, x3, x4) {
-    }
-
-    for (var i = 0; i < 3000000; ++i)
-        f(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-
-}
-
-foo();

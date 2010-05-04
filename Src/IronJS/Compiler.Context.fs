@@ -37,9 +37,10 @@
     Variables: Map<string, Variable>
     Builder : Context -> Ast.Node -> ES
     Environment : Runtime.Environment
-
     mutable TemporaryTypes: Map<string, ClrType>
     mutable ObjectCaches: Map<int, Et>
+    mutable Finalizers: Et list
+
   } with
     member x.Build = x.Builder x
     static member New = {
@@ -51,6 +52,7 @@
       Environment = null
       ObjectCaches = Map.empty
       TemporaryTypes = Map.empty
+      Finalizers = List.empty
     }
 
 namespace IronJS.Compiler

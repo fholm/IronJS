@@ -51,10 +51,11 @@ module Function =
 
   (*Defines a new function*)
   let define (ctx:Context) astId =
+    let closureExpr = newClosure ctx (fst ctx.Environment.AstMap.[astId])
     let functionArgs = [
       (Expr.constant astId)
-      (Expr.constant (ctx.Environment.GetClosureId (typeof<Runtime.Closure>)))
-      (newClosure ctx (fst ctx.Environment.AstMap.[astId]))
+      (Expr.constant closureExpr.Type.TypeHandle.Value)
+      (closureExpr)
       (Context.environmentExpr ctx)
     ]
 

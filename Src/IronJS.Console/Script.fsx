@@ -32,7 +32,7 @@ let exprTree = Compiler.Core.compileAst env globalType typeof<Runtime.Closure> s
 
 let compiledFunc = exprTree.Compile() :?> Func<Runtime.Function, Runtime.Object, Runtime.Box>
 let globalClosure = new Runtime.Closure(List.empty)
-let globalFunc = new Runtime.Function(-1, -1, globalClosure, env)
+let globalFunc = new Runtime.Function(-1, nativeint -1, globalClosure, env)
 
 let timeCompile = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds
 let time = Utils.time(fun () -> compiledFunc.Invoke(globalFunc, env.Globals) |> ignore).TotalMilliseconds

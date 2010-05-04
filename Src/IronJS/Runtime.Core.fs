@@ -47,8 +47,7 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
                   exprGenerator:Environment -> ClrType -> ClrType -> Ast.Types.Scope -> Ast.Node -> EtLambda) =
                   
   let mutable classId = 0
-  let closureMap = new Dict<ClrType, int>()
-  let mutable delegateCache = Map.empty<int * int * nativeint, System.Delegate>
+  let mutable delegateCache = Map.empty<int * nativeint * nativeint, System.Delegate>
 
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable UndefinedBox : Box
@@ -76,13 +75,6 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
 
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
-  
-  member x.GetClosureId clrType = 
-    let success, id = closureMap.TryGetValue clrType
-    if success 
-      then id
-      else closureMap.[clrType] <- closureMap.Count
-           closureMap.Count - 1
 
   member x.NextClassId = 
     classId <- classId + 1
@@ -279,7 +271,7 @@ and [<AllowNullLiteral>] Function =
 
   val mutable Closure : Closure
   val mutable AstId : int
-  val mutable ClosureId : int
+  val mutable ClosureId : nativeint
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
@@ -366,13 +358,13 @@ and NewCache =
     (*==== Inline cache for function invocation ====*)
 and InvokeCache<'a> when 'a :> Delegate and 'a : null =
   val mutable AstId : int
-  val mutable ClosureId : int
+  val mutable ClosureId : nativeint
   val mutable Delegate : 'a
   val mutable ArgTypes : ClrType list
 
   new(argTypes) = {
     AstId = -1
-    ClosureId = -1
+    ClosureId = nativeint -1
     Delegate = null
     ArgTypes = argTypes
   }

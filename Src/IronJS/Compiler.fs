@@ -111,6 +111,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
 
   | Ast.Closure(name, _) -> static' (Context.closureExpr ctx name)
   | Ast.Variable(name, _) -> static' (Context.variableExpr ctx name)
+  | Ast.This -> static' ctx.Internal.This
 
   | _ -> failwithf "No builder for '%A'" ast
 

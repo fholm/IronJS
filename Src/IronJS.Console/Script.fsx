@@ -31,3 +31,4 @@ let compiled = env.CompileFile "Testing.js"
 
 let timeCompile = Utils.time(compiled).TotalMilliseconds
 let time = Utils.time(compiled).TotalMilliseconds
+

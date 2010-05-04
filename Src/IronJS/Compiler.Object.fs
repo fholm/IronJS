@@ -93,6 +93,9 @@ module Object =
         else
           failwith "Dynamic-only object set not supported"
 
+  let getIndex ctx (target:ES) (index:ES) = 
+    static' Expr.void'
+
   let new' (ctx:Context) properties id =
     match properties with
     | Some(_) -> failwith "Objects with auto-properties not supported"

@@ -99,6 +99,7 @@ let builder (ctx:Context) (ast:Ast.Node) =
   //Objects
   | Ast.Object(properties, id) -> Object.new' ctx properties id
   | Ast.Property(object', name) -> Object.getProperty ctx (ctx.Build object') name None 
+  | Ast.Index(object', index) -> Object.getIndex ctx (ctx.Build object') (ctx.Build index)
   | Ast.DynamicScope(target, body) -> Scopes.dynamicScope ctx target body
 
   //Loops
@@ -106,13 +107,12 @@ let builder (ctx:Context) (ast:Ast.Node) =
   | Ast.BinaryOp(op, left, right) -> BinaryOp.build ctx op left right
 
   //Variable access
+  | Ast.This -> static' ctx.Internal.This
+  | Ast.Variable(name, _) -> static' (Context.variableExpr ctx name)
+  | Ast.Closure(name, _) -> static' (Context.closureExpr ctx name)
   | Ast.Global(name, _) -> 
     let typ = Context.temporaryType ctx name
     forceVolatile (Object.getProperty ctx (static' ctx.Internal.Globals) name typ)
-
-  | Ast.Closure(name, _) -> static' (Context.closureExpr ctx name)
-  | Ast.Variable(name, _) -> static' (Context.variableExpr ctx name)
-  | Ast.This -> static' ctx.Internal.This
 
   | _ -> failwithf "No builder for '%A'" ast
 

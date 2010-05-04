@@ -42,5 +42,6 @@ foo.a.b.c.d = {};
 foo.a.b.c.d.e = {};
 */
 
-var foo = {}
-foo["bar"] = 1;
+var foo = {};
+foo.bar = 1;
+bar = foo["bar"];

@@ -297,18 +297,20 @@ and SetCrawler =
   delegate of SetCache * Object * Box byref * Environment -> unit
   
     (*==== Inline cache for property get operations ====*)
-and GetCache(name) as x =
-  [<DefaultValue>] val mutable Name : string
-  [<DefaultValue>] val mutable ClassId : int
-  [<DefaultValue>] val mutable Index : int
-  [<DefaultValue>] val mutable Crawler : GetCrawler
-  [<DefaultValue>] val mutable ThrowOnMissing : bool
+and GetCache =
+  val mutable Name : string
+  val mutable ClassId : int
+  val mutable Index : int
+  val mutable Crawler : GetCrawler
+  val mutable ThrowOnMissing : bool
 
-  do x.Name <- name
-  do x.ClassId <- -1
-  do x.Index <- -1
-  do x.Crawler <- null
-  do x.ThrowOnMissing <- false
+  new(name) = {
+    Name = name
+    ClassId = -1
+    Index = -1
+    Crawler = null
+    ThrowOnMissing = false
+  }
   
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))

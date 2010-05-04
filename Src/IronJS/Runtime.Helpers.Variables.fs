@@ -1,4 +1,4 @@
-﻿namespace IronJS.Runtime.Helpers
+﻿namespace IronJS.Runtime
 
 open IronJS
 open IronJS.Aliases

@@ -42,9 +42,12 @@ type Undefined() =
   Runtime Environment
   =======================================================*)
 
-[<AllowNullLiteral>]
-type Environment (fileCompiler:Environment -> string -> (unit -> unit), 
-                  astCompiler:Environment -> Ast.Types.Scope -> Ast.Node -> ClrType -> ClrType -> ClrType list -> Delegate) =
+type Compilers = {
+  File: Environment -> string -> (unit -> unit)
+  Ast: Environment -> Ast.Types.Scope -> Ast.Node -> ClrType -> ClrType -> ClrType list -> Delegate
+}
+
+and [<AllowNullLiteral>] Environment (compilers:Compilers) =
                   
   let mutable classId = 0
   let mutable delegateCache = Map.empty<int * nativeint * nativeint, System.Delegate>
@@ -69,20 +72,20 @@ type Environment (fileCompiler:Environment -> string -> (unit -> unit),
     | None -> 
       let scope, ast  = x.AstMap.[func.AstId]
       let closure     = func.Closure.GetType()
-      let compiled    = astCompiler x scope ast closure delegate' argTypes
+      let compiled    = compilers.Ast x scope ast closure delegate' argTypes
 
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
 
   member x.CompileFile name = 
-    fileCompiler x name
+    compilers.File x name
 
   member x.NextClassId = 
     classId <- classId + 1
     classId
 
-  static member Create sa eg =
-    let env = new Environment(sa, eg)
+  static member Create compilers =
+    let env = new Environment(compilers)
     //Maps
     env.AstMap <- Map.empty
     env.GetCrawlers <- Map.empty

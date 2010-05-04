@@ -103,8 +103,7 @@
     <Compile Include="Runtime.Core.fs" />
     <Compile Include="Runtime.Delegate.fs" />
     <Compile Include="Runtime.Utils.fs" />
-    <Compile Include="Runtime.Helpers.Variables.fs" />
-    <Compile Include="Runtime.Helpers.Function.fs" />
+    <Compile Include="Runtime.Helpers.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Runtime.Closures.fs" />
     <Compile Include="Compiler.ExpressionState.fs" />

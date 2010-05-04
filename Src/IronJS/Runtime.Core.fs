@@ -100,7 +100,6 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
     //Object.prototype
     env.Object_prototype    <- new Object(env.ObjectClass, null, 32)
     env.Function_prototype  <- new Object(env.ObjectClass, env.Object_prototype, 32)
-    env.Object_prototype.SetDouble("foo", 2.0, env)
 
     //Globals
     env.Globals <- new Object(env.ObjectClass, env.Object_prototype, 128)
@@ -180,12 +179,6 @@ and [<AllowNullLiteral>] Object =
     Properties = Array.zeroCreate<Box> initSize
     Prototype = prototype
   }
-
-  member x.SetDouble (name:string, value:double, env:Environment) =
-    let mutable box = new Box()
-    box.Double <- value
-    box.Type <- Types.Double
-    x.Set(new SetCache(name), ref box, env)
 
   member x.Set (cache:SetCache, value:Box byref, env:Environment) =
     x.Update (cache, ref value)

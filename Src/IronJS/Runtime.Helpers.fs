@@ -10,4 +10,3 @@ type Helpers =
   static member BuildClosureScopes (closure:Closure, evalObject, localScopes, scopeLevel) =
     new Scope(localScopes, evalObject, scopeLevel) :: closure.Scopes
 
-

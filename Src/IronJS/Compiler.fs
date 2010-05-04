@@ -9,6 +9,7 @@ open IronJS.Compiler.Types
 open IronJS.Compiler.ExpressionState
 
 let private buildVarsMap (scope:Ast.Types.Scope) =
+
   let createVar (var:Ast.Types.Variable) =
     let clrTyp = Runtime.Utils.Type.jsToClr var.UsedAs
     if Ast.Variable.isClosedOver var

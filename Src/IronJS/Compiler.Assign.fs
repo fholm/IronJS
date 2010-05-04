@@ -21,12 +21,12 @@ module Assign =
     | Ast.Closure(name, _) ->
       let value = ctx.Build right
       let target = static' (Context.closureExpr ctx name)
-      inherit2 (Utils.Utils.assign ctx target.Et value.Et) target value
+      inherit2 (Utils.assign ctx target.Et value.Et) target value
 
     | Ast.Variable(name, _) ->
       let value = ctx.Build right
       let target = static' (Context.variableExpr ctx name)
-      inherit2 (Utils.Utils.assign ctx target.Et value.Et) target value
+      inherit2 (Utils.assign ctx target.Et value.Et) target value
 
     | Ast.Property(target, name) ->
       Object.setProperty ctx (ctx.Build target) name (ctx.Build right)

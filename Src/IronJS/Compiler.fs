@@ -20,19 +20,19 @@ let private buildVarsMap (scope:Ast.Types.Scope) =
     Expr.param (sprintf "%s_proxy" var.Name) scope.ArgTypes.[var.Index]
 
   scope.Variables
-    |> Map.map (
-      fun _ var -> 
-        match Ast.Variable.isParameter var with
-        | true -> 
-          if scope.ArgTypes.[var.Index] <> Runtime.Utils.Type.jsToClr var.UsedAs then
-            Proxied(createVar var, createProxy var)
-          else
-            match Ast.Variable.needsProxy var with
-            | true  -> Proxied(createVar var, createProxy var)
-            | false -> Variable(createVar var, Param)
-        | false -> 
-          Variable(createVar var, Local)
-      )
+    |>  Map.map (
+          fun _ var -> 
+            match Ast.Variable.isParameter var with
+            | true -> 
+              if scope.ArgTypes.[var.Index] <> Runtime.Utils.Type.jsToClr var.UsedAs then
+                Proxied(createVar var, createProxy var)
+              else
+                match Ast.Variable.needsProxy var with
+                | true  -> Proxied(createVar var, createProxy var)
+                | false -> Variable(createVar var, Param)
+            | false -> 
+              Variable(createVar var, Local)
+        )
 
 let private isLocal (_, var:Variable) =
   match var with
@@ -76,12 +76,7 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Assign(left, right) -> Assign.build ctx left right
 
   //Block
-  | Ast.Block(nodes) -> 
-    volatile'(
-      Expr.block [
-        for n in nodes -> (ctx.Build n).Et
-      ]
-    )
+  | Ast.Block(nodes) -> volatile' (Expr.block [for n in nodes -> (ctx.Build n).Et])
 
   //Functions
   | Ast.Function(astId) -> Function.define ctx astId
@@ -140,7 +135,7 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
       |>  Map.toSeq
       |>  Seq.filter isProxied
       |>  Seq.map (fun (_, Proxied(var, proxy)) ->
-            Utils.Utils.assign ctx var proxy
+            Utils.assign ctx var proxy
           )
       #if DEBUG
       |>  Seq.toArray

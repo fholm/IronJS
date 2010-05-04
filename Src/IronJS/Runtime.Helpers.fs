@@ -6,6 +6,25 @@ open IronJS.Tools
 open IronJS.Tools.Dlr
 open IronJS.Runtime
 
+module Cache = 
+
+  let classIdEq expr n =
+    Expr.eq (Expr.field expr "ClassId") (Expr.constant n)
+  
+  let crawlPrototypeChain expr n = 
+    Seq.fold (fun s _ -> Expr.field expr "Prototype") expr (seq{0..n-1})
+
+  let buildCondition object' classIds = 
+    (Expr.andChain
+      (List.mapi 
+        (fun i x -> 
+          let prototype = crawlPrototypeChain object' i
+          (Expr.and' (Expr.notDefault prototype) (classIdEq prototype x))
+        )
+        (classIds)
+      )
+    )
+
 [<AbstractClass>]
 type Helpers =
   static member BuildClosureScopes (closure:Closure, evalObject, localScopes, scopeLevel) =
@@ -79,3 +98,71 @@ type Helpers =
       
       x.Crawler <- crawler //Save crawler
       x.Crawler.Invoke(x, obj, env) //Use crawler to get result
+
+  static member UpdateSetCache (x:SetCache, obj:Object, value:Box byref, env:Environment) =
+    //First try to do a normal update
+    obj.Update(x, ref value)
+
+    //And if we don't succeed
+    if x.ClassId <> obj.ClassId then
+      
+      //Check if a prototype has it
+      let index, classIds = obj.PrototypeHas x.Name
+
+      //If we didn't find it in a Prototype
+      //means we should create it on our current object
+      if index < 0 then 
+        obj.Create(x, ref value, env)
+
+      //If we actually did find it, we need to
+      //create a crawler that can set the property
+      //for us in the future
+      else
+        //Build key and try to find an already cached crawler
+        let cacheKey = obj.ClassId :: classIds
+
+        let crawler =
+          match Map.tryFind cacheKey env.SetCrawlers with
+          | Some(cached) -> cached
+          | None ->
+            //Parameters
+            let x' = Expr.paramT<SetCache> "~x"
+            let obj' = Expr.paramT<Object> "~obj"
+            let value' = Expr.param "~value" (typeof<Box>.MakeByRefType()) 
+            let env' = Expr.paramT<Environment> "~env"
+
+            //Build lambda expression
+            let lambda = 
+              (Expr.lambdaT<SetCrawler> 
+                [x'; obj'; value'; env']
+                (Expr.ternary 
+                  //Condition: Object + All Prototypes must
+                  //not be null and have matching ClassIds
+                  (Cache.buildCondition obj' (obj.ClassId :: classIds))
+
+                  //If condition holds, execute body
+                  (Expr.castVoid
+                    (Expr.assign
+                      (Expr.access 
+                        (Expr.field (Cache.crawlPrototypeChain obj' (classIds.Length)) "Properties") 
+                        [Expr.field x' "index"]
+                      )
+                      (value')
+                    )
+                  )
+
+                  //If condition fails, update
+                  (Expr.callStaticT<Helpers> "UpdateSetCache" [x'; obj'; value'; env'])
+                )
+              )
+
+            //Compile and to add it to cache
+            env.SetCrawlers <- Map.add cacheKey (lambda.Compile()) env.SetCrawlers
+            env.SetCrawlers.[cacheKey]
+
+        //Setup cache to be ready for next hit
+        x.Index   <- index
+        x.ClassId <- -1
+      
+        x.Crawler <- crawler
+        x.Crawler.Invoke(x, obj, ref value, env)

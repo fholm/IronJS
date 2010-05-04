@@ -20,7 +20,7 @@ module Object =
     wrapInBlock target (fun obj -> 
       [
         (wrapInBlock value (fun value' -> 
-          let args = [obj; Box.wrap value'; Context.environmentExpr ctx]
+          let args = [cache; obj; Box.wrap value'; Context.environmentExpr ctx]
           [
             (Expr.debug (sprintf "Setting property '%s'" name))
             (Expr.ternary
@@ -28,8 +28,8 @@ module Object =
               (Box.assign ctx (Expr.access (properties obj) [cacheIndex]) value')
               (Expr.ternary
                 (Expr.notDefault crawler)
-                (Expr.invoke crawler (cache :: args))
-                (Expr.call cache "Update" args)
+                (Expr.invoke crawler args)
+                (Expr.callStaticT<Runtime.Helpers> "UpdateSetCache" args)
               )
             )
           ]

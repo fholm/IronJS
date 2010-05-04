@@ -79,17 +79,17 @@ module Object =
       then buildGet ctx name typ target
       else 
         if Runtime.Utils.Type.isBox target.Type then
-            wrapInBlock target (fun obj -> 
-              let target = (static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
-              [
-                (Expr.debug (sprintf "Type check for getting property '%s'" name))
-                (Expr.ternary
-                  (Utils.Box.typeIsT<Runtime.Object> obj)
-                  (buildGet ctx name None target).Et
-                  (Expr.defaultT<Runtime.Box>)
-                )
-              ]
-            )
+          wrapInBlock target (fun obj -> 
+            let target = (static' (Utils.Box.fieldByClrTypeT<Runtime.Object> obj))
+            [
+              (Expr.debug (sprintf "Type check for getting property '%s'" name))
+              (Expr.ternary
+                (Utils.Box.typeIsT<Runtime.Object> obj)
+                (buildGet ctx name None target).Et
+                (Expr.defaultT<Runtime.Box>)
+              )
+            ]
+          )
         else
           failwith "Dynamic-only object set not supported"
 

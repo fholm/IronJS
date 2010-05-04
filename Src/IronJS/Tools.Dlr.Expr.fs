@@ -23,6 +23,7 @@ module Expr =
   //Values
   let constant value = Et.Constant(value, value.GetType()) :> Et
   let return' label (value:Et) = Et.Return(label, value) :> Et
+  let returnVoid label = Et.Return(label) :> Et
   let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
 
   //DEBUG

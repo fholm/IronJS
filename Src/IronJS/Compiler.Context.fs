@@ -44,7 +44,7 @@
     member x.Build = x.Builder x
     static member New = {
       Internal = InternalVariables.New
-      Return = Dlr.Expr.labelT<Runtime.Box> "~return"
+      Return = Dlr.Expr.labelVoid "~return"
       Scope = Ast.Types.Scope.New
       Variables = Map.empty
       Builder = fun _ _ -> ExpressionState.static' Dlr.Expr.void'

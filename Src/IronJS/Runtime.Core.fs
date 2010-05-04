@@ -61,6 +61,8 @@ type Environment (scopeAnalyzer:Ast.Types.Scope -> ClrType -> ClrType list -> As
   [<DefaultValue>] val mutable GetCrawlers : Map<int list, GetCrawler>
   [<DefaultValue>] val mutable SetCrawlers : Map<int list, SetCrawler>
 
+  [<DefaultValue>] val mutable ReturnBox : Box
+
   member x.GetDelegate (func:Function) (delegateType:ClrType) types =
     let cacheKey = (func.AstId, func.ClosureId, delegateType.TypeHandle.Value)
     match Map.tryFind cacheKey delegateCache with

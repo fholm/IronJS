@@ -49,7 +49,6 @@ var boo = function () {
 
     for (var i = 0; i < 2500000; ++i)
         f(1, 2, 3);
-
 }
 
 boo();

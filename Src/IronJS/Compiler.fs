@@ -85,17 +85,22 @@ let private builder (ctx:Context) (ast:Ast.Node) =
   | Ast.Return(value)         -> 
     let value = ctx.Build value
     if Utils.Box.isWrapped value.Et
-      then volatile' (Expr.return' ctx.Return value.Et)
+      then 
+        volatile' (
+          (Expr.block
+          [
+            (Expr.assign (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
+            (Expr.returnVoid ctx.Return)
+          ])
+        )
       else
-        volatile'(
-          Expr.blockTmpT<Runtime.Box> (
-            fun tmp -> 
-            [
-              Utils.Box.setValue tmp value.Et
-              Utils.Box.setType  tmp value.Type
-              Expr.return' ctx.Return tmp
-            ]
-          )
+        volatile' (
+          (Expr.block
+          [
+            (Utils.Box.setValue (Expr.field ctx.Internal.Environment "ReturnBox") value.Et)
+            (Utils.Box.setType (Expr.field ctx.Internal.Environment "ReturnBox") value.Type)
+            (Expr.returnVoid ctx.Return)
+          ])
         )
 
   //Objects
@@ -213,8 +218,9 @@ let compileAst (env:Runtime.Environment) (delegateType:ClrType) (closureType:Clr
   (*Assemble the function body expression*)
   let ExpressionState = ctx.Build ast
   let body = 
-    (Expr.labelExprT<Runtime.Box> ctx.Return :: [])
+    (Expr.field ctx.Internal.Environment "ReturnBox" :: [])
       |>  Seq.append objectCacheUpdateExpressions
+      |>  Seq.append [Expr.labelExprVoid ctx.Return]
       |>  Seq.append (unExpressionState ExpressionState :: [])
       |>  Seq.append initUndefined
       |>  Seq.append initClosedOver

@@ -171,16 +171,21 @@ and [<AllowNullLiteral>] Class =
 
     (*==== A plain javascript object ====*)
 and [<AllowNullLiteral>] Object =
-  val mutable ClassId : int
   val mutable Class : Class
-  val mutable Properties : Box array
+  val mutable ClassId : int
   val mutable Prototype : Object
+
+  val mutable Properties : Box array
+  val mutable HashMap : Dict<string, Box>
+  val mutable Array : Box array
 
   new(cls, prototype, initSize) = {
     Class = cls
     ClassId = cls.ClassId
-    Properties = Array.zeroCreate<Box> initSize
     Prototype = prototype
+    Properties = Array.zeroCreate<Box> initSize
+    HashMap = null
+    Array = null
   }
 
   member x.Set (cache:SetCache, value:Box byref, env:Environment) =

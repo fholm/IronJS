@@ -70,9 +70,9 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
     match Map.tryFind cacheKey delegateCache with
     | Some(cached) -> cached
     | None -> 
-      let scope, ast  = x.AstMap.[func.AstId]
-      let closure     = func.Closure.GetType()
-      let compiled    = compilers.Ast x scope ast closure delegate' argTypes
+      let scope, ast = x.AstMap.[func.AstId]
+      let closure    = func.Closure.GetType()
+      let compiled   = compilers.Ast x scope ast closure delegate' argTypes
 
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
@@ -171,74 +171,78 @@ and [<AllowNullLiteral>] Class =
 
     (*==== A plain javascript object ====*)
 and [<AllowNullLiteral>] Object =
-  val mutable Class : Class
-  val mutable ClassId : int
+  //Array
+  val mutable Array : Box array
+  
+  //Prototype
   val mutable Prototype : Object
 
-  val mutable Array : Box array
+  //Properties
+  val mutable MapId : int
+  val mutable IndexMap : Map<string, int>
   val mutable Properties : Box array
-  val mutable PropertyMap : Map<string, int>
 
-  new(cls, prototype, initSize) = {
-    Class = cls
-    ClassId = cls.ClassId
+  new(mapId, indexMap, prototype, initSize) = {
+    Array = null
+    MapId = mapId
+    IndexMap = indexMap
     Prototype = prototype
     Properties = Array.zeroCreate<Box> initSize
-    Array = null
-    PropertyMap = cls.Variables
   }
 
   member x.Set (cache:SetCache, value:Box byref, env:Environment) =
-    x.Update (cache, ref value)
-    if cache.ClassId <> x.ClassId then
+    if not (x.Update (cache, ref value)) then
       x.Create (cache, ref value, env)
 
   member x.Update (cache:SetCache, value:Box byref) =
-    match Map.tryFind cache.Name x.PropertyMap with
-    | None -> ()
-    | Some(index) ->
-      cache.ClassId <- x.ClassId
-      cache.Index   <- index
+    let index = x.Has cache.Name
+
+    if index >= 0 then
+      cache.Index <- index
+      cache.MapId <- x.MapId
       x.Properties.[index] <- value
 
-  member x.Create (cache:SetCache, value:Box byref, env:Environment) =
-    x.Class   <- x.Class.GetSubClass(cache.Name, env.NextClassId)
-    x.ClassId <- x.Class.ClassId
+    index >= 0
 
-    if x.Class.Variables.Count > x.Properties.Length then
+  member x.Create (cache:SetCache, value:Box byref, env:Environment) =
+    let newMap, newId = env.GetSubMap x.MapId cache.Name
+
+    x.MapId <- newId
+    x.IndexMap <- newMap
+
+    if x.IndexMap.Count > x.Properties.Length then
       let newProperties = Array.zeroCreate<Box> (x.Properties.Length * 2)
       System.Array.Copy(x.Properties, newProperties, x.Properties.Length)
       x.Properties <- newProperties
 
     x.Update(cache, ref value)
 
-  member x.Get (cache:GetCache, env:Environment) =
+  member x.Get (cache:GetCache, env:Environment, out:Box byref) =
     let index = x.Has cache.Name
+
     if index >= 0 then
-      cache.ClassId <- x.ClassId
-      cache.Index   <- index
-      x.Properties.[index]
-    else
-      cache.ClassId <- -1
-      cache.Index   <- -1
-      env.UndefinedBox
+      cache.Index <- index
+      cache.MapId <- x.MapId
+      out <- x.Properties.[index]
+
+    index >= 0
 
   member x.Has name =
-    match Map.tryFind name x.PropertyMap with
+    match Map.tryFind name x.IndexMap with
     | Some(index) when x.Properties.[index].Type <> Types.Nothing -> index
     | _ -> -1
       
   member x.PrototypeHas name =
     let mutable index = -1
-    let mutable classIds = []
+    let mutable mapIds = []
     let mutable prototype = x.Prototype
 
     while index = -1 && prototype <> null do
-      index       <- prototype.Has name
-      classIds    <- prototype.ClassId :: classIds
-      prototype   <- prototype.Prototype
+      index     <- prototype.Has name
+      mapIds    <- prototype.MapId :: mapIds
+      prototype <- prototype.Prototype
 
-    index, classIds
+    index, mapIds
 
   interface System.Dynamic.IDynamicMetaObjectProvider with
     member self.GetMetaObject expr = new ObjectMeta(expr, self) :> MetaObj

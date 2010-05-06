@@ -175,12 +175,14 @@ and [<AllowNullLiteral>] Object =
   val mutable Class : Class
   val mutable Properties : Box array
   val mutable Prototype : Object
+  val mutable PropertyMap : Map<string, int>
 
   new(cls, prototype, initSize) = {
     Class = cls
     ClassId = cls.ClassId
     Properties = Array.zeroCreate<Box> initSize
     Prototype = prototype
+    PropertyMap = cls.Variables
   }
 
   member x.Set (cache:SetCache, value:Box byref, env:Environment) =
@@ -189,7 +191,7 @@ and [<AllowNullLiteral>] Object =
       x.Create (cache, ref value, env)
 
   member x.Update (cache:SetCache, value:Box byref) =
-    match x.Class.GetIndex cache.Name with
+    match Map.tryFind cache.Name x.PropertyMap with
     | None -> ()
     | Some(index) ->
       cache.ClassId <- x.ClassId
@@ -219,7 +221,7 @@ and [<AllowNullLiteral>] Object =
       env.UndefinedBox
 
   member x.Has name =
-    match x.Class.GetIndex name with
+    match Map.tryFind name x.PropertyMap with
     | Some(index) when x.Properties.[index].Type <> Types.Nothing -> index
     | _ -> -1
       

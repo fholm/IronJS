@@ -47,6 +47,12 @@ type Compilers = {
   Ast: Environment -> Ast.Types.Scope -> Ast.Node -> ClrType -> ClrType -> ClrType list -> Delegate
 }
 
+and PropertyMap = {
+  MapId : int
+  IndexMap : Map<string, int>
+  mutable SubMaps : Map<string, PropertyMap>
+}
+
 and [<AllowNullLiteral>] Environment (compilers:Compilers) =
                   
   let mutable classId = 0
@@ -62,6 +68,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
   [<DefaultValue>] val mutable AstMap : Map<int, Ast.Types.Scope * Ast.Node>
   [<DefaultValue>] val mutable GetCrawlers : Map<int list, GetCrawler>
   [<DefaultValue>] val mutable SetCrawlers : Map<int list, SetCrawler>
+  [<DefaultValue>] val mutable PropertyMaps : Map<int, PropertyMap>
 
   [<DefaultValue>] val mutable ReturnBox : Box
 
@@ -77,6 +84,22 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
       delegateCache <- Map.add cacheKey compiled delegateCache
       compiled
 
+  member x.GetSubMap (mapId:int) (name:string) =
+    match Map.tryFind mapId x.PropertyMaps with
+    | None when mapId >= 0 -> failwithf "Invalid MapId: %i" mapId
+    | Some(map) ->
+      match Map.tryFind name map.SubMaps with
+      | Some(subMap) -> subMap
+      | None ->
+        let subMap = {
+          MapId = x.PropertyMaps.Count
+          IndexMap = Map.add name (map.IndexMap.Count) map.IndexMap
+          SubMaps = Map.empty
+        }
+        x.PropertyMaps <- Map.add subMap.MapId subMap x.PropertyMaps
+        subMap
+    | _ -> failwith "Can't create a sub map for a map with < 0 in MapId"
+
   member x.CompileFile name = 
     compilers.File x name
 
@@ -91,6 +114,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
     env.AstMap <- Map.empty
     env.GetCrawlers <- Map.empty
     env.SetCrawlers <- Map.empty
+    env.PropertyMaps <- Map.empty
 
     //Base classes
     env.ObjectClass   <- new Class(env.NextClassId, Map.empty)
@@ -140,34 +164,6 @@ and [<StructLayout(LayoutKind.Explicit)>] Box =
 (*=======================================================
   Object + Support objects
   =======================================================*)
-
-    (*==== Class representing an objects hidden class ====*)
-and [<AllowNullLiteral>] Class =
-  val mutable ClassId : int
-  val mutable SubClasses : Map<string, Class>
-  val mutable Variables : Map<string, int>
-
-  new(classId, variables:Map<string, int>) = {
-    ClassId = classId
-    Variables = variables
-    SubClasses = Map.empty
-  }
-
-  member x.GetSubClass (name:string, newId:int) =
-    match Map.tryFind name x.SubClasses with
-    | Some(cls) -> cls
-    | None ->
-      x.SubClasses <- (
-        Map.add name (
-          new Class(newId, 
-            Map.add name x.Variables.Count x.Variables
-          )
-        ) x.SubClasses
-      )
-      x.SubClasses.[name]
-
-  member x.GetIndex varName =
-    Map.tryFind varName x.Variables
 
     (*==== A plain javascript object ====*)
 and [<AllowNullLiteral>] Object =
@@ -291,7 +287,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
-    inherit Object(env.FunctionClass, env.Function_prototype, 2)
+    inherit Object(env.FunctionClass.ClassId,  env.FunctionClass.Variables, env.Function_prototype, 2)
     AstId = astId
     ClosureId = closureId
     Closure = closure
@@ -315,14 +311,14 @@ and SetCrawler =
     (*==== Inline cache for property get operations ====*)
 and GetCache =
   val mutable Name : string
-  val mutable ClassId : int
+  val mutable MapId : int
   val mutable Index : int
   val mutable Crawler : GetCrawler
   val mutable ThrowOnMissing : bool
 
   new(name) = {
     Name = name
-    ClassId = -1
+    MapId = -1
     Index = -1
     Crawler = null
     ThrowOnMissing = false
@@ -331,20 +327,20 @@ and GetCache =
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new GetCache(name))
     cache, 
-    Expr.field cache "ClassId", 
+    Expr.field cache "MapId", 
     Expr.field cache "Index", 
     Expr.field cache "Crawler"
     
     (*==== Inline cache for property set operations ====*)
 and SetCache =
   val mutable Name : string
-  val mutable ClassId : int
+  val mutable MapId : int
   val mutable Index : int
   val mutable Crawler : SetCrawler
 
   new(name) = {
     Name = name
-    ClassId = -1
+    MapId = -1
     Index = -1
     Crawler = null
   }
@@ -352,20 +348,20 @@ and SetCache =
   static member New(name:string) =
     let cache = Dlr.Expr.constant (new SetCache(name))
     cache, 
-    Expr.field cache "ClassId", 
+    Expr.field cache "MapId", 
     Expr.field cache "Index", 
     Expr.field cache "Crawler"
     
     (*==== Inline cache for object creation ====*)
 and NewCache =
-  val mutable Class : Class
-  val mutable ClassId : int
+  val mutable MapId : int
+  val mutable IndexMap : Map<string, int>
   val mutable InitSize : int
   val mutable LastCreated : Object
 
-  new(class') = {
-    Class = class'
-    ClassId = class'.ClassId
+  new(mapId, indexMap) = {
+    MapId = mapId
+    IndexMap = indexMap
     InitSize = 1
     LastCreated = null
   }

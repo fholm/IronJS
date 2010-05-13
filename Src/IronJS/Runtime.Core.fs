@@ -60,10 +60,11 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
 
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable UndefinedBox : Box
-  [<DefaultValue>] val mutable ObjectClass : Class
-  [<DefaultValue>] val mutable FunctionClass : Class
   [<DefaultValue>] val mutable Object_prototype : Object
   [<DefaultValue>] val mutable Function_prototype : Object
+
+  [<DefaultValue>] val mutable ObjectPropertyMap : PropertyMap
+  [<DefaultValue>] val mutable FunctionPropertyMap : PropertyMap
 
   [<DefaultValue>] val mutable AstMap : Map<int, Ast.Types.Scope * Ast.Node>
   [<DefaultValue>] val mutable GetCrawlers : Map<int list, GetCrawler>
@@ -98,6 +99,7 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
         }
         x.PropertyMaps <- Map.add subMap.MapId subMap x.PropertyMaps
         subMap
+
     | _ -> failwith "Can't create a sub map for a map with < 0 in MapId"
 
   member x.CompileFile name = 
@@ -114,18 +116,18 @@ and [<AllowNullLiteral>] Environment (compilers:Compilers) =
     env.AstMap <- Map.empty
     env.GetCrawlers <- Map.empty
     env.SetCrawlers <- Map.empty
-    env.PropertyMaps <- Map.empty
+    env.PropertyMaps <- Map.ofList [(0, {MapId = 0; IndexMap = Map.empty; SubMaps = Map.empty})]
 
     //Base classes
-    env.ObjectClass   <- new Class(env.NextClassId, Map.empty)
-    env.FunctionClass <- env.ObjectClass.GetSubClass("length", env.NextClassId)
+    env.ObjectPropertyMap   <- env.PropertyMaps.[0]
+    env.FunctionPropertyMap <- env.GetSubMap env.ObjectPropertyMap.MapId "length"
 
     //Object.prototype
-    env.Object_prototype    <- new Object(env.ObjectClass, null, 32)
-    env.Function_prototype  <- new Object(env.ObjectClass, env.Object_prototype, 32)
+    env.Object_prototype    <- new Object(env.ObjectPropertyMap, null, 32)
+    env.Function_prototype  <- new Object(env.FunctionPropertyMap, env.Object_prototype, 32)
 
     //Globals
-    env.Globals <- new Object(env.ObjectClass, env.Object_prototype, 128)
+    env.Globals <- new Object(env.ObjectPropertyMap, env.Object_prototype, 128)
 
     //Init undefined box
     env.UndefinedBox.Type <- Types.Undefined
@@ -186,6 +188,9 @@ and [<AllowNullLiteral>] Object =
     Properties = Array.zeroCreate<Box> initSize
   }
 
+  new(map, prototype, initSize) = 
+    Object(map.MapId, map.IndexMap, prototype, initSize)
+
   member x.Set (cache:SetCache, value:Box byref, env:Environment) =
     if not (x.Update (cache, ref value)) then
       x.Create (cache, ref value, env)
@@ -201,10 +206,10 @@ and [<AllowNullLiteral>] Object =
     index >= 0
 
   member x.Create (cache:SetCache, value:Box byref, env:Environment) =
-    let newMap, newId = env.GetSubMap x.MapId cache.Name
+    let map = env.GetSubMap x.MapId cache.Name
 
-    x.MapId <- newId
-    x.IndexMap <- newMap
+    x.MapId <- map.MapId
+    x.IndexMap <- map.IndexMap
 
     if x.IndexMap.Count > x.Properties.Length then
       let newProperties = Array.zeroCreate<Box> (x.Properties.Length * 2)
@@ -287,7 +292,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Environment : Environment
 
   new(astId, closureId, closure, env:Environment) = { 
-    inherit Object(env.FunctionClass.ClassId,  env.FunctionClass.Variables, env.Function_prototype, 2)
+    inherit Object(env.FunctionPropertyMap, env.Function_prototype, 2)
     AstId = astId
     ClosureId = closureId
     Closure = closure

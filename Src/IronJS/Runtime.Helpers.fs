@@ -59,7 +59,7 @@ type Helpers =
       let wasFoundToggle = if index < 0 then -4 else -2
 
       //Build key and try to find an already cached crawler
-      let cacheKey = throwToggle :: wasFoundToggle :: obj.ClassId :: classIds
+      let cacheKey = throwToggle :: wasFoundToggle :: obj.MapId :: classIds
 
       let crawler = 
         match Map.tryFind cacheKey env.GetCrawlers with
@@ -88,7 +88,7 @@ type Helpers =
             (Expr.lambdaT<GetCrawler> 
               [x'; obj'; env']
               (Expr.ternary 
-                (Cache.buildCondition obj' (obj.ClassId :: classIds))
+                (Cache.buildCondition obj' (obj.MapId :: classIds))
                 //If condition holds, execute body
                 (body)
                 //If condition fails, update
@@ -102,7 +102,7 @@ type Helpers =
 
       //Setup cache to be ready for next hit
       x.Index   <- index //Save index so we know which offset to look at
-      x.ClassId <- -1 //This makes sure we will hit the crawler next time
+      x.MapId <- -1 //This makes sure we will hit the crawler next time
       
       x.Crawler <- crawler //Save crawler
       x.Crawler.Invoke(x, obj, env) //Use crawler to get result

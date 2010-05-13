@@ -264,3 +264,13 @@ module Expr =
     if Type.isStrongBox expr.Type 
       then field expr "Value"
       else expr
+
+  type Static(expr:Et) =
+    inherit Et()
+
+    override x.Type = expr.Type
+    override x.CanReduce = true
+    override x.NodeType = ExpressionType.Extension
+    override x.Reduce() = expr
+
+  let static' expr = new Static(expr) :> Et

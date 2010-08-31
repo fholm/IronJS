@@ -1,0 +1,7 @@
+C:\Users\fredrikhm\Personal\IronJS\Build\x64\Debug\testing.js
+C:\Users\fredrikhm\Personal\IronJS\Build\x64\Debug\IronJS.REPL.exe.config
+C:\Users\fredrikhm\Personal\IronJS\Build\x64\Debug\IronJS.REPL.exe
+C:\Users\fredrikhm\Personal\IronJS\Build\x64\Debug\IronJS.REPL.pdb
+C:\Users\fredrikhm\Personal\IronJS\Src\IronJS.REPL\obj\x64\Debug\ResolveAssemblyReference.cache
+C:\Users\fredrikhm\Personal\IronJS\Src\IronJS.REPL\obj\x64\Debug\IronJS.REPL.exe
+C:\Users\fredrikhm\Personal\IronJS\Src\IronJS.REPL\obj\x64\Debug\IronJS.REPL.pdb

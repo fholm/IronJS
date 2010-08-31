@@ -28,7 +28,7 @@ module Expr =
 
   //DEBUG
   let debug x =
-    #if DEBUG
+    #if DEBUG 
       constant x
     #else
       void'

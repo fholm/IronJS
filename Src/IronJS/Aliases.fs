@@ -3,7 +3,7 @@
 module Version =
   let Major = 0
   let Minor = 1
-  let Build = 9
+  let Build = 90
   let Tag = "preview"
   let Tupled = Major, Minor, Build, Tag
   let String = sprintf "%i.%i.%i-%s" Major Minor Build Tag

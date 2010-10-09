@@ -100,6 +100,10 @@ module ConstructorModes =
   let [<Literal>] Constructor = 1uy
   let [<Literal>] CalledAsConstructor = 2uy
 
+module DefaultValue =
+  let [<Literal>] String = 0uy
+  let [<Literal>] Number = 1uy
+
 module Classes =
   let [<Literal>] Object    = 1uy
   let [<Literal>] Function  = 2uy
@@ -436,7 +440,7 @@ and [<AllowNullLiteral>] Environment =
   val mutable private _nextFunctionId : int64
 
   //
-  val mutable Return : Box
+  [<DefaultValue>] val mutable Return : Box
   val mutable Compilers : MutableDict<FunId, ICompiler>
 
   //Objects
@@ -444,6 +448,9 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Object_prototype : Object
   [<DefaultValue>] val mutable Array_prototype : Object
   [<DefaultValue>] val mutable Function_prototype : Object
+  [<DefaultValue>] val mutable String_prototype : Object
+  [<DefaultValue>] val mutable Number_prototype : Object
+  [<DefaultValue>] val mutable Boolean_prototype : Object
 
   //Property Classes
   [<DefaultValue>] val mutable Base_Class : PropertyClass
@@ -452,23 +459,23 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Prototype_Class : PropertyClass
 
   //Boxes
-  val mutable Boxed_NegOne : Box
-  val mutable Boxed_Zero : Box
-  val mutable Boxed_One : Box
-  val mutable Boxed_NaN : Box
-  val mutable Boxed_Undefined : Box
-  val mutable Boxed_EmptyString : Box
-  val mutable Boxed_False : Box
-  val mutable Boxed_True : Box
-  val mutable Boxed_Null : Box
-  val mutable Boxed_Temp : Box
+  [<DefaultValue>] val mutable Boxed_NegOne : Box
+  [<DefaultValue>] val mutable Boxed_Zero : Box
+  [<DefaultValue>] val mutable Boxed_One : Box
+  [<DefaultValue>] val mutable Boxed_NaN : Box
+  [<DefaultValue>] val mutable Boxed_Undefined : Box
+  [<DefaultValue>] val mutable Boxed_EmptyString : Box
+  [<DefaultValue>] val mutable Boxed_False : Box
+  [<DefaultValue>] val mutable Boxed_True : Box
+  [<DefaultValue>] val mutable Boxed_Null : Box
+  [<DefaultValue>] val mutable Boxed_Temp : Box
     
-  val mutable Temp_Bool : Box
-  val mutable Temp_Number : Box
-  val mutable Temp_Clr : Box
-  val mutable Temp_String : Box
-  val mutable Temp_Object : Box
-  val mutable Temp_Function : Box
+  [<DefaultValue>] val mutable Temp_Bool : Box
+  [<DefaultValue>] val mutable Temp_Number : Box
+  [<DefaultValue>] val mutable Temp_Clr : Box
+  [<DefaultValue>] val mutable Temp_String : Box
+  [<DefaultValue>] val mutable Temp_Object : Box
+  [<DefaultValue>] val mutable Temp_Function : Box
 
   member x.nextPropertyClassId = 
     x._nextPropertyClassId <- x._nextPropertyClassId + 1L
@@ -481,28 +488,7 @@ and [<AllowNullLiteral>] Environment =
   new () = {
     _nextFunctionId = 0L
     _nextPropertyClassId = 0L
-
-    Return = Box()
     Compilers = new MutableDict<FunId, ICompiler>()
-
-    //Boxes
-    Boxed_NegOne = Box()
-    Boxed_Zero = Box()
-    Boxed_One = Box()
-    Boxed_NaN = Box()
-    Boxed_Undefined = Box()
-    Boxed_EmptyString  = Box()
-    Boxed_False  = Box()
-    Boxed_True = Box()
-    Boxed_Null = Box()
-    Boxed_Temp = Box()
-      
-    Temp_Bool     = Box()
-    Temp_Number   = Box()
-    Temp_Clr      = Box()
-    Temp_String   = Box()
-    Temp_Object   = Box()
-    Temp_Function = Box()
   }
 
 

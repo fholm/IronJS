@@ -23,7 +23,7 @@ module Main =
     console |> Seq.find (fun cmd ->
       match cmd with
       | "#exit" -> true
-      | _ -> printfn "%s" (toString(Utils.box (ctx.Execute cmd))); false
+      | _ -> printfn "%s" (toString (Utils.box (ctx.Execute cmd))); false
     )
 
   main() |> ignore

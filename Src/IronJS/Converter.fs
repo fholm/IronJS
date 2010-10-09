@@ -10,9 +10,7 @@ open System.Runtime.InteropServices
 open System.Globalization
 
 //------------------------------------------------------------------------------
-//
 // Static class containing all type conversions
-//
 //------------------------------------------------------------------------------
 type TypeConverter =
 

@@ -63,13 +63,9 @@ type PropertyClass =
   //-----------------------------------------------------------------------
   static member getIndex (x:IronJS.PropertyClass, name) =
     x.PropertyMap.[name]
-          
-
     
 //-------------------------------------------------------------------------
-//
 // Environment API
-//
 //-------------------------------------------------------------------------
 and Environment =
   static member addCompiler (x:IjsEnv, funId, compiler) =
@@ -78,13 +74,46 @@ and Environment =
   
   static member hasCompiler (x:IjsEnv, funcId) =
     x.Compilers.ContainsKey funcId
-
-        
     
 //-------------------------------------------------------------------------
-//
+// Function API
+//-------------------------------------------------------------------------
+and Function =
+
+  static member call (f:IjsFunc, t) =
+    let c = f.Compiler.compileAs<Func<IjsFunc, IjsObj, IjsBox>>()
+    c.Invoke(f, t)
+
+  static member call (f:IjsFunc, t, a0:'a) =
+    let c = f.Compiler.compileAs<Func<IjsFunc, IjsObj, 'a, IjsBox>>()
+    c.Invoke(f, t, a0)
+
+  static member call (f:IjsFunc, t, a0:'a, a1:'b) =
+    let c = f.Compiler.compileAs<Func<IjsFunc, IjsObj, 'a, 'b, IjsBox>>()
+    c.Invoke(f, t, a0, a1)
+
+  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc, IjsObj, 'a, 'b, 'c, IjsBox>>()
+    c.Invoke(f, t, a0, a1, a2)
+
+  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc, IjsObj, 'a, 'b, 'c, 'd, IjsBox>>()
+    c.Invoke(f, t, a0, a1, a2, a3)
+
+  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc, IjsObj, 'a, 'b, 'c, 'd, 'e, IjsBox>>()
+    c.Invoke(f, t, a0, a1, a2, a3, a4)
+
+  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e, a5:'f) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc, IjsObj, 'a, 'b, 'c, 'd, 'e, IjsBox>>()
+    c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
+    
+//-------------------------------------------------------------------------
 // Delegate Function API
-//
 //-------------------------------------------------------------------------
 and DelegateFunction<'a when 'a :> Delegate> =
   
@@ -259,26 +288,44 @@ and PutPropertyCache =
         
 
       
-//-------------------------------------------------------------------------
-//
+//------------------------------------------------------------------------------
 // Object API
-//
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and Object() =
-    
-  //-------------------------------------------------------------------------
-  //
-  // Methods that deal with property access
-  //
-  //-------------------------------------------------------------------------
 
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  static member defaultValue (x:IjsObj) =
+    match x.Class with
+    | Classes.Date -> Object.defaultValue(x, DefaultValue.String)
+    | _ -> Object.defaultValue(x, DefaultValue.Number)
+    
+  //----------------------------------------------------------------------------
+  static member defaultValue (x:IjsObj, hint:byte) =
+    let valueOf = Object.getProperty(x, "valueOf")
+    let toString = Object.getProperty(x, "toString")
+
+    match hint with
+    | DefaultValue.Number ->
+      match valueOf.Type with
+      | TypeCodes.Function -> 
+        let v = Function.call(valueOf.Func, x)
+
+
+    | DefaultValue.String ->
+
+    | _ -> Errors.runtime "Invalid hint"
+    
+  //----------------------------------------------------------------------------
+  // Methods that deal with property access
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
   //Makes the Object and its PropertyClass dynamic
   static member makeDynamic (x:IjsObj) =
     x.PropertyClass <- PropertyClass.makeDynamic x.PropertyClass
     x.PropertyClassId <- x.PropertyClass.Id
 
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   //Expands PropertyValue array size
   static member expandPropertyStorage (x:IjsObj) =
     let newPropertyValues = 
@@ -289,7 +336,7 @@ and Object() =
 
     x.PropertyValues <- newPropertyValues
 
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   //Creates a property index for 'name' if one doesn't exist
   static member createPropertyIndex (x:IjsObj, name:string) =
     let mutable i = -1
@@ -308,7 +355,7 @@ and Object() =
       if x.isFull then Object.expandPropertyStorage x
     i
       
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   //Checks for a property, including Prototype chain
   static member hasProperty (x, name, obj:IjsObj byref, index:int byref) =
     obj <- x
@@ -321,14 +368,14 @@ and Object() =
 
     not continue'
       
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   //Checks for a property, including Prototype chain
   static member hasProperty (x:IjsObj, name:string) =
     let mutable o = null
     let mutable i = -1
     Object.hasProperty(x, name, &o, &i)
       
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   //Gets a property value, including Prototype chain
   static member getProperty (x:IjsObj, name:string) =
     let mutable h = null
@@ -473,7 +520,7 @@ and Object() =
   //-------------------------------------------------------------------------
   //Changes the index storage to be more efficient for sparse indexes
   static member initSparse (x:IjsObj) =
-    if Object.ReferenceEquals(x.IndexSparse, null) then
+    if Utils.isDense x then
       x.IndexSparse <- new MutableSorted<uint32, Box>()
 
       for i = 0 to (int (x.IndexLength-1u)) do

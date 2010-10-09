@@ -1,77 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS", "IronJS\IronJS.fsproj", "{FA738790-5B9B-4977-8C6B-EF487F24E435}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.REPL", "IronJS.REPL\IronJS.REPL.fsproj", "{0F78334F-EA74-4C5C-8232-B7D329BE2226}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{C0A32756-56FB-4C5A-9324-A006E99980DF}"
-	ProjectSection(SolutionItems) = preProject
-		..\LICENSE.txt = ..\LICENSE.txt
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS", "IronJS\IronJS.fsproj", "{9E257324-94E7-49AF-AE83-718288E925D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Parser", "IronJS.Parser\IronJS.Parser.csproj", "{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Tests", "IronJS.Tests\IronJS.Tests.fsproj", "{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{A4648719-B034-4F27-94AD-96B398C11663}"
-	ProjectSection(SolutionItems) = preProject
-		Examples\DLR_ByRef.fsx = Examples\DLR_ByRef.fsx
-	EndProjectSection
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Compiler", "IronJS.Compiler\IronJS.Compiler.fsproj", "{81BFB688-1621-42D6-9062-093865A185D3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Runtime", "IronJS.Runtime\IronJS.Runtime.fsproj", "{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sunspider-0.9.1", "sunspider-0.9.1", "{60A31C26-C669-4BDB-86E6-CF9DF36BB7C5}"
-	ProjectSection(SolutionItems) = preProject
-		Benchmarks\sunspider-0.9.1\3d-cube.js = Benchmarks\sunspider-0.9.1\3d-cube.js
-		Benchmarks\sunspider-0.9.1\3d-morph.js = Benchmarks\sunspider-0.9.1\3d-morph.js
-		Benchmarks\sunspider-0.9.1\3d-raytrace.js = Benchmarks\sunspider-0.9.1\3d-raytrace.js
-		Benchmarks\sunspider-0.9.1\access-binary-trees.js = Benchmarks\sunspider-0.9.1\access-binary-trees.js
-		Benchmarks\sunspider-0.9.1\access-fannkuch.js = Benchmarks\sunspider-0.9.1\access-fannkuch.js
-		Benchmarks\sunspider-0.9.1\access-nbody.js = Benchmarks\sunspider-0.9.1\access-nbody.js
-		Benchmarks\sunspider-0.9.1\access-nsieve.js = Benchmarks\sunspider-0.9.1\access-nsieve.js
-		Benchmarks\sunspider-0.9.1\bitops-3bit-bits-in-byte.js = Benchmarks\sunspider-0.9.1\bitops-3bit-bits-in-byte.js
-		Benchmarks\sunspider-0.9.1\bitops-bits-in-byte.js = Benchmarks\sunspider-0.9.1\bitops-bits-in-byte.js
-		Benchmarks\sunspider-0.9.1\bitops-bitwise-and.js = Benchmarks\sunspider-0.9.1\bitops-bitwise-and.js
-		Benchmarks\sunspider-0.9.1\bitops-nsieve-bits.js = Benchmarks\sunspider-0.9.1\bitops-nsieve-bits.js
-		Benchmarks\sunspider-0.9.1\controlflow-recursive.js = Benchmarks\sunspider-0.9.1\controlflow-recursive.js
-		Benchmarks\sunspider-0.9.1\crypto-aes.js = Benchmarks\sunspider-0.9.1\crypto-aes.js
-		Benchmarks\sunspider-0.9.1\crypto-md5.js = Benchmarks\sunspider-0.9.1\crypto-md5.js
-		Benchmarks\sunspider-0.9.1\crypto-sha1.js = Benchmarks\sunspider-0.9.1\crypto-sha1.js
-		Benchmarks\sunspider-0.9.1\date-format-tofte.js = Benchmarks\sunspider-0.9.1\date-format-tofte.js
-		Benchmarks\sunspider-0.9.1\date-format-xparb.js = Benchmarks\sunspider-0.9.1\date-format-xparb.js
-		Benchmarks\sunspider-0.9.1\math-cordic.js = Benchmarks\sunspider-0.9.1\math-cordic.js
-		Benchmarks\sunspider-0.9.1\math-partial-sums.js = Benchmarks\sunspider-0.9.1\math-partial-sums.js
-		Benchmarks\sunspider-0.9.1\math-spectral-norm.js = Benchmarks\sunspider-0.9.1\math-spectral-norm.js
-		Benchmarks\sunspider-0.9.1\regexp-dna.js = Benchmarks\sunspider-0.9.1\regexp-dna.js
-		Benchmarks\sunspider-0.9.1\string-base64.js = Benchmarks\sunspider-0.9.1\string-base64.js
-		Benchmarks\sunspider-0.9.1\string-fasta.js = Benchmarks\sunspider-0.9.1\string-fasta.js
-		Benchmarks\sunspider-0.9.1\string-tagcloud.js = Benchmarks\sunspider-0.9.1\string-tagcloud.js
-		Benchmarks\sunspider-0.9.1\string-unpack-code.js = Benchmarks\sunspider-0.9.1\string-unpack-code.js
-		Benchmarks\sunspider-0.9.1\string-validate-input.js = Benchmarks\sunspider-0.9.1\string-validate-input.js
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{618021F9-119A-4D63-8665-6706D3AA4B66}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "v8-v4", "v8-v4", "{4AE05184-796A-4800-A58E-310653D8F23B}"
-	ProjectSection(SolutionItems) = preProject
-		Benchmarks\v8-v4\v8-crypto.js = Benchmarks\v8-v4\v8-crypto.js
-		Benchmarks\v8-v4\v8-deltablue.js = Benchmarks\v8-v4\v8-deltablue.js
-		Benchmarks\v8-v4\v8-earley-boyer.js = Benchmarks\v8-v4\v8-earley-boyer.js
-		Benchmarks\v8-v4\v8-raytrace.js = Benchmarks\v8-v4\v8-raytrace.js
-		Benchmarks\v8-v4\v8-regexp.js = Benchmarks\v8-v4\v8-regexp.js
-		Benchmarks\v8-v4\v8-richards.js = Benchmarks\v8-v4\v8-richards.js
-		Benchmarks\v8-v4\v8-splay.js = Benchmarks\v8-v4\v8-splay.js
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ubench", "ubench", "{1B0D22B3-1885-44F8-89DA-85771E68CBEC}"
-	ProjectSection(SolutionItems) = preProject
-		Benchmarks\ubench\function-closure.js = Benchmarks\ubench\function-closure.js
-		Benchmarks\ubench\function-correct-args.js = Benchmarks\ubench\function-correct-args.js
-		Benchmarks\ubench\function-empty.js = Benchmarks\ubench\function-empty.js
-		Benchmarks\ubench\function-excess-args.js = Benchmarks\ubench\function-excess-args.js
-		Benchmarks\ubench\function-missing-args.js = Benchmarks\ubench\function-missing-args.js
-		Benchmarks\ubench\function-sum.js = Benchmarks\ubench\function-sum.js
-		Benchmarks\ubench\loop-empty-resolve.js = Benchmarks\ubench\loop-empty-resolve.js
-		Benchmarks\ubench\loop-empty.js = Benchmarks\ubench\loop-empty.js
-		Benchmarks\ubench\loop-sum.js = Benchmarks\ubench\loop-sum.js
-	EndProjectSection
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Console", "IronJS.Console\IronJS.Console.fsproj", "{7A13E1FA-9045-4E9E-866C-B649C0FC030C}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.Dev", "IronJS.Dev\IronJS.Dev.fsproj", "{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,59 +27,104 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x64.ActiveCfg = Debug|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x64.Build.0 = Debug|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x86.ActiveCfg = Debug|x86
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Debug|x86.Build.0 = Debug|x86
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|Mixed Platforms.Build.0 = Release|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x64.ActiveCfg = Release|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x64.Build.0 = Release|x64
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.ActiveCfg = Release|x86
-		{FA738790-5B9B-4977-8C6B-EF487F24E435}.Release|x86.Build.0 = Release|x86
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|x64.Build.0 = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Debug|x86.Build.0 = Debug|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x64.ActiveCfg = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x64.Build.0 = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x86.ActiveCfg = Release|Any CPU
-		{FA54CAC0-57BD-4AD0-B5FB-4E743BFD4D73}.Release|x86.Build.0 = Release|Any CPU
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|x64.ActiveCfg = Debug|x64
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|x64.Build.0 = Debug|x64
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|x86.ActiveCfg = Debug|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Debug|x86.Build.0 = Debug|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|Any CPU.ActiveCfg = Release|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|Mixed Platforms.Build.0 = Release|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x64.ActiveCfg = Release|x64
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x64.Build.0 = Release|x64
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x86.ActiveCfg = Release|x86
-		{7A13E1FA-9045-4E9E-866C-B649C0FC030C}.Release|x86.Build.0 = Release|x86
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|x64.ActiveCfg = Debug|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|x64.Build.0 = Debug|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|x86.ActiveCfg = Debug|x86
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|x86.Build.0 = Debug|x86
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|Any CPU.ActiveCfg = Release|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|Mixed Platforms.Build.0 = Release|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|x64.ActiveCfg = Release|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|x64.Build.0 = Release|x64
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|x86.ActiveCfg = Release|x86
+		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|x86.Build.0 = Release|x86
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|x64.ActiveCfg = Debug|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|x64.Build.0 = Debug|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|x86.ActiveCfg = Debug|x86
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Debug|x86.Build.0 = Debug|x86
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|Mixed Platforms.Build.0 = Release|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|x64.ActiveCfg = Release|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|x64.Build.0 = Release|x64
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|x86.ActiveCfg = Release|x86
+		{9E257324-94E7-49AF-AE83-718288E925D8}.Release|x86.Build.0 = Release|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|x64.ActiveCfg = Debug|x64
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|x64.Build.0 = Debug|x64
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|x86.ActiveCfg = Debug|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Debug|x86.Build.0 = Debug|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|Any CPU.ActiveCfg = Release|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|Mixed Platforms.Build.0 = Release|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|x64.ActiveCfg = Release|x64
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|x64.Build.0 = Release|x64
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|x86.ActiveCfg = Release|x86
+		{F5B7A320-BE95-4CEF-9169-0A84B9F6C60B}.Release|x86.Build.0 = Release|x86
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|x64.ActiveCfg = Debug|x64
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|x64.Build.0 = Debug|x64
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|x86.ActiveCfg = Debug|x86
+		{81BFB688-1621-42D6-9062-093865A185D3}.Debug|x86.Build.0 = Debug|x86
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|x64.ActiveCfg = Release|x64
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|x64.Build.0 = Release|x64
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|x86.ActiveCfg = Release|x86
+		{81BFB688-1621-42D6-9062-093865A185D3}.Release|x86.Build.0 = Release|x86
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|x64.ActiveCfg = Debug|x64
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|x64.Build.0 = Debug|x64
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|x86.ActiveCfg = Debug|x86
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Debug|x86.Build.0 = Debug|x86
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|x64.ActiveCfg = Release|x64
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|x64.Build.0 = Release|x64
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|x86.ActiveCfg = Release|x86
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}.Release|x86.Build.0 = Release|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|x64.ActiveCfg = Debug|x64
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|x64.Build.0 = Debug|x64
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|x86.ActiveCfg = Debug|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Debug|x86.Build.0 = Debug|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|Any CPU.ActiveCfg = Release|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|Mixed Platforms.Build.0 = Release|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|x64.ActiveCfg = Release|x64
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|x64.Build.0 = Release|x64
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|x86.ActiveCfg = Release|x86
+		{DE1CD6AE-3829-4546-B46A-AFD6DEE78EE1}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{60A31C26-C669-4BDB-86E6-CF9DF36BB7C5} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
-		{4AE05184-796A-4800-A58E-310653D8F23B} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
-		{1B0D22B3-1885-44F8-89DA-85771E68CBEC} = {EC7320A5-5D2D-4D65-B852-C7C08AF1FE62}
+		{81BFB688-1621-42D6-9062-093865A185D3} = {618021F9-119A-4D63-8665-6706D3AA4B66}
+		{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E} = {618021F9-119A-4D63-8665-6706D3AA4B66}
+		{9E257324-94E7-49AF-AE83-718288E925D8} = {618021F9-119A-4D63-8665-6706D3AA4B66}
 	EndGlobalSection
 EndGlobal

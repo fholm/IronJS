@@ -195,10 +195,10 @@
 
     //==
     let eq_Box_Number = logical_Box_Number Dlr.eq Api.Operators.eq
-    let eq_Number_Number = logical_Number_Number Dlr.eq
+    let eq_Number_Number = logical_Number_Number Dlr.eq // also ===
 
-    //inequality operators
-    let notSame_Number_Number = failwithf "NotSame operator not implemented"
+    //!==
+    let notEq_Number_Number = logical_Number_Number Dlr.notEq // also !==
     
     //-------------------------------------------------------------------------
     //+
@@ -243,8 +243,7 @@
         ((Ast.BinaryOp.Eq, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)
 
         ((Ast.BinaryOp.Same, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)
-
-        ((Ast.BinaryOp.NotEq, TypeCodes.Number, TypeCodes.Number), notSame_Number_Number)
+        ((Ast.BinaryOp.NotSame, TypeCodes.Number, TypeCodes.Number), notEq_Number_Number)
 
         ((Ast.BinaryOp.Add, TypeCodes.Number, TypeCodes.Box), add_Number_Box)
         ((Ast.BinaryOp.Add, TypeCodes.Box, TypeCodes.Box), add_Box_Box)

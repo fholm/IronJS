@@ -84,13 +84,12 @@ module Hosting =
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.InvokeCompiled (compiled:Delegate) =
-      compiled.DynamicInvoke(globalFunc, env.Globals)
+      Utils.unboxObj(compiled.DynamicInvoke(globalFunc, env.Globals))
 
-    member x.ExecuteFile fileName =
-      x.InvokeCompiled (x.CompileFile fileName)
-
-    member x.Execute source =
-      x.InvokeCompiled (x.CompileSource source)
+    member x.ExecuteFile fileName = x.InvokeCompiled (x.CompileFile fileName)
+    member x.ExecuteFileT<'a> fileName = x.ExecuteFile fileName :?> 'a
+    member x.Execute source = x.InvokeCompiled (x.CompileSource source)
+    member x.ExecuteT<'a> source = x.Execute source :?> 'a
 
     member x.PutGlobal (name, value) =
       Api.Object.putProperty(env.Globals, name, value, PropertyAttrs.All)

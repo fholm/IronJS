@@ -44,7 +44,7 @@
                   (Dlr.dbl0)
                 )
               )
-              (Dlr.callStaticT<TypeConverter> "toBoolean" [value])
+              (Dlr.callStaticT<Api.TypeConverter> "toBoolean" [value])
             )
           )
           [expr]

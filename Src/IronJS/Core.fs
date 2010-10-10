@@ -101,8 +101,9 @@ module ConstructorModes =
   let [<Literal>] CalledAsConstructor = 2uy
 
 module DefaultValue =
-  let [<Literal>] String = 0uy
-  let [<Literal>] Number = 1uy
+  let [<Literal>] None = 0uy
+  let [<Literal>] String = 1uy
+  let [<Literal>] Number = 2uy
 
 module Classes =
   let [<Literal>] Object    = 1uy

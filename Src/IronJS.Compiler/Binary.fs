@@ -101,7 +101,7 @@
           (Dlr.ternary
             (Expr.containsNumber b)
             (op (Expr.unboxNumber b) n)
-            (fallback (seq[|b; n|]))
+            (fallback(b, n))
           )
         ]
       )
@@ -113,7 +113,7 @@
           (Dlr.ternary
             (Expr.containsNumber b)
             (op n (Expr.unboxNumber b))
-            (Dlr.false')
+            (fallback(n, b))
           )
         ]
       )
@@ -132,7 +132,7 @@
               (Expr.containsNumber r)
             )
             (op (Expr.unboxNumber l) (Expr.unboxNumber r))
-            (Dlr.false')
+            (fallback(l, r))
           )
         ]
       )
@@ -195,20 +195,20 @@
     //-------------------------------------------------------------------------
     //<
     let lt_Number_Number = logical_Number_Number Dlr.lt
-    let lt_Box_Number = logical_Box_Number Dlr.lt Operators.ltExpr
+    let lt_Box_Number = logical_Box_Number Dlr.lt Api.Operators.lt
 
     //<=
     let ltEq_Number_Number = logical_Number_Number Dlr.ltEq
-    let ltEq_Box_Number = logical_Box_Number Dlr.ltEq Operators.ltEqExpr
-    let ltEq_Number_Box = logical_Number_Box Dlr.ltEq Operators.ltEqExpr
-    let ltEq_Box_Box = logical_Box_Box Dlr.ltEq Operators.ltEqExpr
+    let ltEq_Box_Number = logical_Box_Number Dlr.ltEq Api.Operators.ltEq
+    let ltEq_Number_Box = logical_Number_Box Dlr.ltEq Api.Operators.ltEq
+    let ltEq_Box_Box = logical_Box_Box Dlr.ltEq Api.Operators.ltEq
 
     //>=
-    let gtEq_Box_Box = logical_Box_Box Dlr.gtEq Operators.gtEqExpr
+    let gtEq_Box_Box = logical_Box_Box Dlr.gtEq Api.Operators.gtEq
     let gtEq_Number_Number = logical_Number_Number Dlr.gtEq
 
     //==
-    let eq_Box_Number = logical_Box_Number Dlr.eq Operators.eqExpr
+    let eq_Box_Number = logical_Box_Number Dlr.eq Api.Operators.eq
     let eq_Number_Number = logical_Number_Number Dlr.eq
     
     //-------------------------------------------------------------------------

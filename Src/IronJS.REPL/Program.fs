@@ -15,7 +15,7 @@ module Main =
     let ctx = 
       Hosting.Context.Create()
 
-    let toString : Box -> string = TypeConverter.toString
+    let toString : Box -> string = Api.TypeConverter.toString
 
     printfn "IronJS v%s" IronJS.Version.String
     printfn "Type #exit to quit"

@@ -238,25 +238,3 @@ module Expr =
     match tc with
     | None -> Dlr.indexInt expr i
     | Some tc -> Dlr.field (Dlr.indexInt expr i) (Utils.tc2bf tc) 
-            
-  //-------------------------------------------------------------------------
-  let convert (expr:Dlr.Expr) (t:System.Type) =
-    if Object.ReferenceEquals(expr.Type, t) then expr
-    elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
-    else 
-      if t = typeof<double> then 
-        Dlr.callStaticT<TypeConverter> "toNumber" [expr]
-
-      elif t = typeof<string> then 
-        Dlr.callStaticT<TypeConverter> "toString" [expr]
-
-      elif t = typeof<bool> then 
-        Dlr.callStaticT<TypeConverter> "toBoolean" [expr]
-
-      elif t = typeof<IjsBox> 
-        then Dlr.callStaticT<TypeConverter> "toBox" [expr]
-
-      elif t = typeof<IjsObj> 
-        then Dlr.callStaticT<TypeConverter> "toObject" [expr]
-
-      else Dlr.cast t expr

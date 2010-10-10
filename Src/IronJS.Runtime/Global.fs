@@ -47,7 +47,7 @@ module Global =
 
   //15.1.2.3
   let parseFloat (str:IjsStr) =
-    Utils.boxDouble (TypeConverter.toNumber str)
+    Utils.boxDouble (Api.TypeConverter.toNumber str)
 
   //15.1.2.4
   let isNaN (number:IjsNum) =

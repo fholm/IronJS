@@ -26,19 +26,15 @@ module Utils =
       | Some v -> v
       | _ -> failwith "No value"
 
-  let inline retype (x:'a) : 'b = 
-    (# "" x : 'b #)
+  let asRef (x:HostType) = x.MakeByRefType()
+  let isVoid t = typeof<System.Void> = t
+  let isStringIndex (str:string, out:uint32 byref) = 
+    str.Length > 0 
+    && (str.[0] >= '0' || str.[0] <= '9') 
+    && System.UInt32.TryParse(str, &out)
 
-  let inline asRef (x:HostType) = x.MakeByRefType()
-
-  let isStringIndex (str:string, out:uint32 byref) =
-    System.UInt32.TryParse(str, &out)
-
-  let inline isVoid t = 
-    typeof<System.Void> = t
-
-  let inline refEquals (a:obj) (b:obj) = 
-    System.Object.ReferenceEquals(a, b)
+  let inline retype (x:'a) : 'b = (# "" x : 'b #)
+  let inline refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
 
   let type2tc (t:System.Type) =   
     if   refEquals TypeObjects.Bool t         then TypeCodes.Bool
@@ -132,6 +128,11 @@ module Utils =
   let inline isDense (x:IjsObj) =
     Object.ReferenceEquals(x.IndexSparse, null)
 
+  let inline isPrimitive (b:Box byref) =
+    b.Type = TypeCodes.Number
+    || b.Type = TypeCodes.String
+    || b.Type = TypeCodes.Bool
+
   let box (o:obj) =
     if o :? Box then unbox o
     else
@@ -145,6 +146,17 @@ module Utils =
 
       box.Type <- tc
       box
+
+  let unbox (b:Box) =
+    match b.Type with
+    | TypeCodes.Bool -> b.Bool :> obj
+    | TypeCodes.Number -> b.Double :> obj
+    | _ -> b.Clr
+
+  let unboxObj (o:obj) =
+    if o :? Box 
+      then unbox (o :?> Box)
+      else o
 
   let boxedUndefined =
     let mutable box = new Box()

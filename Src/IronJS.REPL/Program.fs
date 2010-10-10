@@ -15,7 +15,7 @@ module Main =
     let ctx = 
       Hosting.Context.Create()
 
-    let toString : Box -> string = TypeConverter.toString
+    let toString : Box -> string = Api.TypeConverter.toString
 
     printfn "IronJS v%s" IronJS.Version.String
     printfn "Type #exit to quit"
@@ -23,7 +23,7 @@ module Main =
     console |> Seq.find (fun cmd ->
       match cmd with
       | "#exit" -> true
-      | _ -> printfn "%s" (toString(Utils.box (ctx.Execute cmd))); false
+      | _ -> printfn "%s" (toString (Utils.box (ctx.Execute cmd))); false
     )
 
   main() |> ignore

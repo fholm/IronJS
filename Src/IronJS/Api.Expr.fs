@@ -27,45 +27,59 @@ module Expr =
         )
       ]
     )
+    
+  //----------------------------------------------------------------------------
+  let jsObjectPutLength expr value =
+    Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+      [
+        (Dlr.callStaticT<Api.Object> "putLength" [tmp; value])
+      ]
+    )
       
   //----------------------------------------------------------------------------
   let jsObjectPutProperty expr name value = 
-    let cache = Dlr.const' (new IronJS.PutPropertyCache(name))
-    let propertyIndex, propertyClassId = _jsObjectPropertyCacheExprs cache
-    Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
-      [
-        (Dlr.ternary
-          (Dlr.eq propertyClassId (Dlr.field tmp "PropertyClassId"))
-          (Dlr.blockTmpT<int> (fun index ->
-            [
-              (Dlr.assign index propertyIndex)
-              (Expr.assignBoxValue
-                (Expr.propertyValue tmp index)
-                (value)
-              )
-            ] |> Seq.ofList
-          ))
-          (Dlr.callStaticT<Api.PutPropertyCache> "update" [cache; tmp; value])
-        )
-      ]
-    )
+    match name with
+    | "length" -> jsObjectPutLength expr value
+    | _ ->
+      let cache = Dlr.const' (new IronJS.PutPropertyCache(name))
+      let propertyIndex, propertyClassId = _jsObjectPropertyCacheExprs cache
+      Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+        [
+          (Dlr.ternary
+            (Dlr.eq propertyClassId (Dlr.field tmp "PropertyClassId"))
+            (Dlr.blockTmpT<int> (fun index ->
+              [
+                (Dlr.assign index propertyIndex)
+                (Expr.assignBoxValue
+                  (Expr.propertyValue tmp index)
+                  (value)
+                )
+              ] |> Seq.ofList
+            ))
+            (Dlr.callStaticT<Api.PutPropertyCache> "update" [cache; tmp; value])
+          )
+        ]
+      )
       
   //----------------------------------------------------------------------------
   let jsObjectUpdateProperty expr name value = 
-    let cache = Dlr.const' (new IronJS.PutPropertyCache(name))
-    let propertyIndex, propertyClassId = _jsObjectPropertyCacheExprs cache
-    Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
-      [
-        (Dlr.ternary
-          (Dlr.eq propertyClassId (Dlr.field tmp "PropertyClassId"))
-          (Expr.updateBoxValue 
-            (Expr.propertyValue tmp propertyIndex)
-            (value)
+    match name with
+    | "length" -> jsObjectPutLength expr value
+    | _ ->
+      let cache = Dlr.const' (new IronJS.PutPropertyCache(name))
+      let propertyIndex, propertyClassId = _jsObjectPropertyCacheExprs cache
+      Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+        [
+          (Dlr.ternary
+            (Dlr.eq propertyClassId (Dlr.field tmp "PropertyClassId"))
+            (Expr.updateBoxValue 
+              (Expr.propertyValue tmp propertyIndex)
+              (value)
+            )
+            (Dlr.callStaticT<Api.PutPropertyCache> "update" [cache; tmp; value])
           )
-          (Dlr.callStaticT<Api.PutPropertyCache> "update" [cache; tmp; value])
-        )
-      ]
-    )
+        ]
+      )
 
   let isIndex (casted:Dlr.Expr) (original:Dlr.Expr) =
     if original.Type = typeof<uint32> 

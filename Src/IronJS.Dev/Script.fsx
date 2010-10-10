@@ -12,7 +12,7 @@ open System
 open IronJS
 
 IO.Directory.SetCurrentDirectory(
-  @"C:\Users\fredrikhm\Personal\IronJS\Src\IronJS.REPL")
+  @"C:\Users\fredrikhm\Personal\IronJS\Src\IronJS.Dev")
 
 let ctx = IronJS.Hosting.Context.Create()
 

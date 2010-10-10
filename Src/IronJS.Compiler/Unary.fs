@@ -32,6 +32,7 @@ module Unary =
       if Identifier.isGlobal ctx name 
         then deleteProperty ctx.Globals name
         else Dlr.false'
-
-  let typeOf expr =
-    Dlr.callStaticT<Operators> "typeOf" [expr]
+        
+  //----------------------------------------------------------------------------
+  let typeOf (expr:Dlr.Expr) = 
+    Api.Operators.typeOf expr

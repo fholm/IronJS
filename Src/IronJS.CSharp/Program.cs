@@ -36,12 +36,12 @@ function Book(name) {
 var book = new Book('IronJS in Action');
 
 ");
-            dynamic book = ctx.Execute("book.Name();");
-            Console.WriteLine(book.String);
+            dynamic book = ctx.ExecuteT<string>("book.Name();");
+            Console.WriteLine(book);
             Console.ReadLine();
 
             book = ctx.Execute("book.Name('IronJS to C#');");
-            Console.WriteLine(book.String);
+            Console.WriteLine(book);
             Console.ReadLine();
         }
     }

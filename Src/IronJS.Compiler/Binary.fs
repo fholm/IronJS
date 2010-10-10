@@ -210,6 +210,9 @@
     //==
     let eq_Box_Number = logical_Box_Number Dlr.eq Api.Operators.eq
     let eq_Number_Number = logical_Number_Number Dlr.eq
+
+    //inequality operators
+    let notSame_Number_Number = failwithf "NotSame operator not implemented"
     
     //-------------------------------------------------------------------------
     //+
@@ -236,6 +239,7 @@
     let bitShiftLeft_Number_Number = bitwise_Number_Number Dlr.lhs
       
     //-------------------------------------------------------------------------
+    //contains a list of all the supported binary and bitwise operators
     let private compilerMap = 
       Map.ofList<Ast.BinaryOp * TypeCode * TypeCode, Ctx -> Dlr.Expr -> Dlr.Expr -> Dlr.Expr> [
         ((Ast.BinaryOp.Lt, TypeCodes.Box, TypeCodes.Number), lt_Box_Number)
@@ -251,6 +255,10 @@
 
         ((Ast.BinaryOp.Eq, TypeCodes.Box, TypeCodes.Number), eq_Box_Number)
         ((Ast.BinaryOp.Eq, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)
+
+        ((Ast.BinaryOp.Same, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)
+
+        ((Ast.BinaryOp.NotEq, TypeCodes.Number, TypeCodes.Number), notSame_Number_Number)
 
         ((Ast.BinaryOp.Add, TypeCodes.Number, TypeCodes.Box), add_Number_Box)
         ((Ast.BinaryOp.Add, TypeCodes.Box, TypeCodes.Box), add_Box_Box)

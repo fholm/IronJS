@@ -16,7 +16,9 @@ module Ast =
     | Mul = 3
     | Div = 4
     | Eq = 100
+    | Same = 200
     | NotEq = 101
+    | NotSame = 201
     | Lt = 102
     | LtEq = 103 
     | Gt = 104
@@ -826,6 +828,8 @@ module Ast =
         
         | ES3Parser.AND -> binary BinaryOp.BitAnd tok // foo | bar
         | ES3Parser.EQ -> binary BinaryOp.Eq tok // 1 = 1
+        | ES3Parser.SAME -> binary BinaryOp.Same tok // 1 === 1
+        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok
         | ES3Parser.ADD -> binary BinaryOp.Add tok // 1 + 1
         | ES3Parser.SUB -> binary BinaryOp.Sub tok // 1 - 1
         | ES3Parser.LT -> binary BinaryOp.Lt tok // 1 < 1

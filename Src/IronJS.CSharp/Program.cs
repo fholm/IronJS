@@ -43,6 +43,8 @@ var book = new Book('IronJS in Action');
             book = ctx.Execute("book.Name('IronJS to C#');");
             Console.WriteLine(book);
             Console.ReadLine();
+
+            ctx.Execute("1 === 1");
         }
     }
 }

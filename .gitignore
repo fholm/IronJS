@@ -13,3 +13,7 @@ Build/**/*
 *.txt
 *.cache
 *.cs
+*.force
+*.baml
+*.resources
+*.tlog

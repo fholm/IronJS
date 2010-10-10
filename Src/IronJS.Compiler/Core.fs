@@ -82,11 +82,11 @@ module Core =
       (compileAst ctx tree)
       (Dlr.labelExprVoid target)
     ]
-      
+
   //----------------------------------------------------------------------------
   and _compileWhile ctx label test body =
     let break', continue' = ControlFlow.loopLabels()
-    let test = Convert.toBool (compileAst ctx test)
+    let test = Api.TypeConverter.toBoolean (compileAst ctx test)
     let body = compileAst (ctx.AddLoopLabels label break' continue') body
     Dlr.whileL test body break' continue'
 
@@ -101,7 +101,7 @@ module Core =
       
   //----------------------------------------------------------------------------
   and _compileIf ctx test ifTrue ifFalse =
-    let test = Convert.toBool (compileAst ctx test)
+    let test = Api.TypeConverter.toBoolean (compileAst ctx test)
     let ifTrue = Dlr.castVoid (compileAst ctx ifTrue)
     match compileTreeOption ctx ifFalse with
     | None -> Dlr.if' test ifTrue

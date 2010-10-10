@@ -123,7 +123,7 @@ module Expr =
       Dlr.block [tmp] (Dlr.assign tmp expr :: f (Dlr.Ext.static' tmp))
         
   //-------------------------------------------------------------------------
-  let blockTmpType (type':System.Type) (expr:Dlr.Expr) (f) =
+  let blockTmpType (type':System.Type) (expr:Dlr.Expr) f =
     if expr.Type = type' then
       if Dlr.Ext.isStatic expr then
         let exprs : Dlr.Expr list = f expr

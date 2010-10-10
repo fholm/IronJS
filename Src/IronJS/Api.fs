@@ -631,7 +631,7 @@ and Object() =
         true //We managed to delete the property
 
       else false
-    else false
+    else true
 
   //----------------------------------------------------------------------------
   //Special method for "length"-property due to arrays

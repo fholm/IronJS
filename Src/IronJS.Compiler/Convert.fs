@@ -8,7 +8,7 @@
 
   module Convert =
 
-    let toBool (expr:Dlr.Expr) =
+    let toBool2 (expr:Dlr.Expr) =
       match Utils.expr2tc expr with
       | TypeCodes.Bool -> expr
       | TypeCodes.Undefined -> Dlr.false'

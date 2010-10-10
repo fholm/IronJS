@@ -4,6 +4,8 @@
 	* static typing
 	* objects
 	* wrapping .net delegates in js objects
+	* switch
+	* for ... in ...
 
 DONE:
 	* delete

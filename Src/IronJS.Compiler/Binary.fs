@@ -126,6 +126,10 @@
     //-------------------------------------------------------------------------
     let math_Number_Number op (ctx:Ctx) l r =
       binaryTempBlock ctx l r (fun (l, r) -> [op l r])
+      
+    //-------------------------------------------------------------------------
+    let math_String_String op (ctx:Ctx) l r =
+      binaryTempBlock ctx l r (fun (l, r) -> [op l r])
 
     //-------------------------------------------------------------------------
     let math_Number_Box op fallback (ctx:Ctx) n b =
@@ -206,6 +210,7 @@
     let add_Number_Number = math_Number_Number Dlr.add
     let add_Box_Number = math_Box_Number Dlr.add dummyFallback
     let add_Box_Box = math_Box_Box Dlr.add dummyFallback
+    let add_String_String = math_String_String Dlr.concat
 
     //-
     let sub_Box_Number = math_Box_Number Dlr.sub dummyFallback
@@ -249,6 +254,7 @@
         ((Ast.BinaryOp.Add, TypeCodes.Box, TypeCodes.Box), add_Box_Box)
         ((Ast.BinaryOp.Add, TypeCodes.Box, TypeCodes.Number), add_Box_Number)
         ((Ast.BinaryOp.Add, TypeCodes.Number, TypeCodes.Number), add_Number_Number)
+        ((Ast.BinaryOp.Add, TypeCodes.String, TypeCodes.String), add_String_String)
 
         ((Ast.BinaryOp.Sub, TypeCodes.Box, TypeCodes.Number), sub_Box_Number)
         ((Ast.BinaryOp.Sub, TypeCodes.Number, TypeCodes.Number), sub_Number_Number)
@@ -269,4 +275,4 @@
       let rtc = Utils.expr2tc rexpr
       match compilerMap.TryFind (op, ltc, rtc) with
       | Some f -> f ctx lexpr rexpr
-      | None -> failwithf "Failed to compile %A %i %i" op ltc rtc
+      | None -> Errors.Compiler.binaryFailed op ltc rtc

@@ -282,6 +282,8 @@ module Dlr =
   let addAsn left right = Et.AddAssign(left, right) :> Et
   let addAsnChk left right = Et.AddAssignChecked(left, right) :> Et
 
+  let concat left right = callStaticT<System.String> "Concat" [left; right]
+
   let mul left right = Et.Multiply(left, right) :> Et
   let mulChk left right = Et.MultiplyChecked(left, right) :> Et
   let mulAsn left right = Et.MultiplyAssign(left, right) :> Et

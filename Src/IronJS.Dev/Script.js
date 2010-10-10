@@ -1,6 +1,4 @@
 ﻿
-if (false) {
-    
-} else {
-    print("lol");
-}
+
+print("asd");
+params(1, 2, 3);

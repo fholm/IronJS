@@ -22,3 +22,7 @@ module Errors =
     
     let notImplemented () =
       raise (NotImplementedException("Missing feature"))
+
+  module Compiler =
+    let binaryFailed op (l:int16) (r:int16) =
+      compiler (sprintf "Failed to compile operator %A for types %i %i" op l r)

@@ -100,6 +100,11 @@ module ConstructorModes =
   let [<Literal>] Constructor = 1uy
   let [<Literal>] CalledAsConstructor = 2uy
 
+module ParamsModes =
+  let [<Literal>] NoParams = 0uy
+  let [<Literal>] ObjectParams = 1uy
+  let [<Literal>] BoxParams = 2uy
+
 module DefaultValue =
   let [<Literal>] None = 0uy
   let [<Literal>] String = 1uy
@@ -131,6 +136,10 @@ module Classes =
       (Error,     "Error")
     ]
 
+module MarshalModes =
+  let [<Literal>] Default = 2
+  let [<Literal>] This = 1
+  let [<Literal>] Function = 0
 
 module Index =
   let [<Literal>] Min = 0u
@@ -195,9 +204,7 @@ type [<Struct>] Box =
 
 
 //-------------------------------------------------------------------------
-//
 // Class used to represent the javascript 'undefined' value
-//
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
@@ -206,9 +213,7 @@ and [<AllowNullLiteral>] Undefined() =
 
 
 //-------------------------------------------------------------------------
-//
 // Class used for the the implementation of hidden classes
-//
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] PropertyClass =
   val mutable Id : int64
@@ -242,10 +247,8 @@ and [<AllowNullLiteral>] PropertyClass =
 
 
 //------------------------------------------------------------------------------
-//
 // Base class used to represent all objects that are exposed as native
 // javascript objects to user code.
-//
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte
@@ -380,29 +383,47 @@ and [<AllowNullLiteral>] Function =
     ScopeChain = null
     DynamicChain = List.empty
   }
-    
-
 
 //-------------------------------------------------------------------------
-//
 // Class used to represent a .NET delegate wrapped as a javascript function
-//
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] DelegateFunction<'a when 'a :> Delegate> =
   inherit Function
 
   val mutable Delegate : 'a
+  val mutable ParamsMode : byte
+  val mutable MarshalMode : int
+
   val mutable ArgTypes : System.Type array
   val mutable ReturnType : System.Type
 
-  new (env:IjsEnv, delegate':'a) = {
-    inherit Function(env, env.Base_Class)
-    Delegate = delegate'
-    ArgTypes = Reflection.getDelegateArgTypesT<'a>
-    ReturnType = Reflection.getDelegateReturnTypeT<'a>
-  }
-    
+  new (env:IjsEnv, delegate':'a) as x = 
+    {
+      inherit Function(env, env.Function_Class)
+      Delegate = delegate'
+      ParamsMode = ParamsModes.NoParams
+      MarshalMode = MarshalModes.Default
 
+      ArgTypes = Reflection.getDelegateArgTypesT<'a>
+      ReturnType = Reflection.getDelegateReturnTypeT<'a>
+    } then
+      let length = x.ArgTypes.Length
+
+      if length >= 2 && x.ArgTypes.[0] = typeof<IjsFunc>
+        then x.MarshalMode <- MarshalModes.Function
+        elif length >= 1 && x.ArgTypes.[0] = typeof<IjsObj>
+          then x.MarshalMode <- MarshalModes.This
+          else x.MarshalMode <- MarshalModes.Default
+
+      if length > 0 then
+        let lastArg = x.ArgTypes.[length-1]
+        if lastArg = typeof<Box array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.BoxParams
+
+        if lastArg = typeof<obj array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.ObjectParams
 
 //-------------------------------------------------------------------------
 //
@@ -458,6 +479,9 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Array_Class : PropertyClass
   [<DefaultValue>] val mutable Function_Class : PropertyClass
   [<DefaultValue>] val mutable Prototype_Class : PropertyClass
+  [<DefaultValue>] val mutable String_Class : PropertyClass
+  [<DefaultValue>] val mutable Number_Class : PropertyClass
+  [<DefaultValue>] val mutable Boolean_Class : PropertyClass
 
   //Boxes
   [<DefaultValue>] val mutable Boxed_NegOne : Box

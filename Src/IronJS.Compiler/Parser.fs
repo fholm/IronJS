@@ -824,12 +824,16 @@ module Ast =
           
         // (foo)
         | ES3Parser.PAREXPR
-        | ES3Parser.EXPR -> translate (child tok 0)
-        
-        | ES3Parser.AND -> binary BinaryOp.BitAnd tok // foo | bar
-        | ES3Parser.EQ -> binary BinaryOp.Eq tok // 1 = 1
+        | ES3Parser.EXPR -> translate (child tok 0) // (foo)
+
+        | ES3Parser.AND -> binary BinaryOp.BitAnd tok // foo & bar
+        | ES3Parser.OR -> binary BinaryOp.BitOr tok // foo | bar
+
+        | ES3Parser.EQ -> binary BinaryOp.Eq tok // 1 == 1
+        | ES3Parser.NEQ -> binary BinaryOp.NotEq tok // 1 != 1
         | ES3Parser.SAME -> binary BinaryOp.Same tok // 1 === 1
-        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok
+        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok // 1 !== 1
+
         | ES3Parser.ADD -> binary BinaryOp.Add tok // 1 + 1
         | ES3Parser.SUB -> binary BinaryOp.Sub tok // 1 - 1
         | ES3Parser.LT -> binary BinaryOp.Lt tok // 1 < 1

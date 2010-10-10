@@ -8,13 +8,9 @@ module Main =
   open IronJS.Compiler.Core
 
   let main () =
-
-    let console = 
-      Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())
-
-    let ctx = 
-      Hosting.Context.Create()
-
+  
+    let ctx = Hosting.Context.Create()
+    let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())
     let toString : Box -> string = Api.TypeConverter.toString
 
     printfn "IronJS v%s" IronJS.Version.String

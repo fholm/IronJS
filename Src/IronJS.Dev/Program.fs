@@ -11,29 +11,17 @@ module Main =
 
     let ctx = IronJS.Hosting.Context.Create()
 
+    let params' (f:IjsFunc) (t:IjsObj) (n:IjsNum) (p:obj array) =
+      ()
+
+    ctx.PutGlobal("params", 
+      ctx.CreateDelegateFunction(
+        new Action<IjsFunc, IjsObj, IjsNum, obj array>(params')))
+
     ctx.PutGlobal("print", 
       ctx.CreateDelegateFunction(
         new Action<string>(Console.WriteLine)))
 
-    //ctx.ExecuteFile @"Script.js"
-    (ctx.Execute @"
-      function Book(name) {
-          var _name = name;
-
-          this.Name = function(n) {
-              if(n) {
-                  _name = n;
-              }
-              return _name;
-          };
-      };
-
-      var book = new Book('IronJS in Action');
-    ") |> ignore
-
-    let bookName = ctx.ExecuteT<string>("book.Name();");
-    Console.WriteLine(bookName);
-
-    Console.ReadLine() |> ignore
+    ctx.ExecuteFile @"Script.js"
 
   main() |> ignore

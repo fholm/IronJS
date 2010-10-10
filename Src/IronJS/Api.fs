@@ -19,6 +19,28 @@ type TypeConverter =
   static member toBox(c:HostObject) = Utils.boxClr c
   static member toBox(expr:Dlr.Expr) = 
     Dlr.callStaticT<TypeConverter> "toBox" [expr]
+    
+  //----------------------------------------------------------------------------
+  static member toHostObject(d:double) = box d
+  static member toHostObject(b:bool) = box b
+  static member toHostObject(s:string) = box s
+  static member toHostObject(o:IjsObj) = box o
+  static member toHostObject(f:IjsFunc) = box f
+  static member toHostObject(c:HostObject) = c
+  static member toHostObject(b:Box byref) =
+    match b.Type with
+    | TypeCodes.Empty -> box Undefined.Instance
+    | TypeCodes.String -> box b.String
+    | TypeCodes.Bool -> box b.Bool
+    | TypeCodes.Number -> box b.Double
+    | TypeCodes.Clr -> box b.Clr
+    | TypeCodes.Undefined -> box Undefined.Instance
+    | TypeCodes.Object -> box b.Object
+    | TypeCodes.Function -> box b.Func
+    | _ -> Errors.Generic.invalidTypeCode b.Type
+
+  static member toHostObject (expr:Dlr.Expr) =
+    Dlr.callStaticT<TypeConverter> "toHostObject" [expr]
 
   //----------------------------------------------------------------------------
   static member toString (b:bool) = if b then "true" else "false"
@@ -39,14 +61,14 @@ type TypeConverter =
   static member toString (o:IjsObj) = 
     TypeConverter.toString(Object.defaultValue(o, DefaultValue.String))
 
-  static member toString (expr:Dlr.Expr) =
-    Dlr.callStaticT<TypeConverter> "toString" [expr]
-
   static member toString (d:double) = 
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
 
   static member toString (c:HostObject) = 
     if c = null then "null" else c.ToString()
+
+  static member toString (expr:Dlr.Expr) =
+    Dlr.callStaticT<TypeConverter> "toString" [expr]
       
   //----------------------------------------------------------------------------
   static member toPrimitive (b:bool, _:byte) = Utils.boxBool b
@@ -112,25 +134,31 @@ type TypeConverter =
     | TypeCodes.Function -> TypeConverter.toNumber(b.Object)
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
-  static member toNumber (expr:Dlr.Expr) = 
-    Dlr.callStaticT<TypeConverter> "toNumber" [expr]
-
   static member toNumber (s:string) = 
     let mutable d = 0.0
     if Double.TryParse(s, anyNumber, invariantCulture, &d) 
       then d
       else NaN
+
+  static member toNumber (expr:Dlr.Expr) = 
+    Dlr.callStaticT<TypeConverter> "toNumber" [expr]
         
   //----------------------------------------------------------------------------
-  static member toObject (o:IjsObj) = o
-  static member toObject (b:Box byref) =
+  static member toObject (env:IjsEnv, o:IjsObj) = o
+  static member toObject (env:IjsEnv, b:Box byref) =
     match b.Type with
     | TypeCodes.Function
     | TypeCodes.Object -> b.Object
+    | TypeCodes.Empty
+    | TypeCodes.Undefined
+    | TypeCodes.Clr -> Errors.Generic.notImplemented()
+    | TypeCodes.String -> Environment.createObject(env, b.String)
+    | TypeCodes.Number -> Environment.createObject(env, b.Double)
+    | TypeCodes.Bool -> Environment.createObject(env, b.Bool)
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
-  static member toObject (expr:Dlr.Expr) =
-    Dlr.callStaticT<TypeConverter> "toObject" [expr]
+  static member toObject (env:Dlr.Expr, expr:Dlr.Expr) =
+    Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
   //----------------------------------------------------------------------------
   static member toInt32 (d:double) = int d
@@ -144,7 +172,7 @@ type TypeConverter =
         else double (Math.Sign(d)) * Math.Floor(Math.Abs(d))
                 
   //-------------------------------------------------------------------------
-  static member convertTo (expr:Dlr.Expr) (t:System.Type) =
+  static member convertTo (env:Dlr.Expr) (expr:Dlr.Expr) (t:System.Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
     elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
     else 
@@ -152,12 +180,16 @@ type TypeConverter =
       elif t = typeof<IjsStr> then TypeConverter.toString expr
       elif t = typeof<IjsBool> then TypeConverter.toBoolean expr
       elif t = typeof<IjsBox> then TypeConverter.toBox expr
-      elif t = typeof<IjsObj> then TypeConverter.toObject expr
+      elif t = typeof<IjsObj> then TypeConverter.toObject(env, expr)
+      elif t = typeof<HostObject> then TypeConverter.toHostObject expr
       else Errors.Generic.noConversion expr.Type t
 
-  static member convertToT<'a> expr = 
-    TypeConverter.convertTo expr typeof<'a>
-
+  static member convertToT<'a> env expr = 
+    TypeConverter.convertTo env expr typeof<'a>
+    
+//------------------------------------------------------------------------------
+// Operators
+//------------------------------------------------------------------------------
 and Operators =
 
   static member add_String_Number (s:string, n:Number) =
@@ -211,16 +243,24 @@ and PropertyClass =
         
   //-----------------------------------------------------------------------
   static member subClass (x:IronJS.PropertyClass, name) = 
-    if x.Id < 0L then failwith "Can't subclass dynamic PropertyClasses"
-    let mutable subClass = null
-      
-    if not(x.SubClasses.TryGetValue(name, &subClass)) then
-      let newMap = new MutableDict<string, int>(x.PropertyMap)
-      newMap.Add(name, newMap.Count)
-      subClass <- IronJS.PropertyClass(x.Env, newMap)
-      x.SubClasses.Add(name, subClass)
+    if x.isDynamic then 
+      let index = 
+        if x.FreeIndexes.Count > 0 then x.FreeIndexes.Pop()
+        else x.NextIndex <- x.NextIndex + 1; x.NextIndex - 1
 
-    subClass
+      x.PropertyMap.Add(name, index)
+      x
+
+    else
+      let mutable subClass = null
+      
+      if not(x.SubClasses.TryGetValue(name, &subClass)) then
+        let newMap = new MutableDict<string, int>(x.PropertyMap)
+        newMap.Add(name, newMap.Count)
+        subClass <- IronJS.PropertyClass(x.Env, newMap)
+        x.SubClasses.Add(name, subClass)
+
+      subClass
 
   //-----------------------------------------------------------------------
   static member subClass (x:IronJS.PropertyClass, names:string seq) =
@@ -228,32 +268,21 @@ and PropertyClass =
         
   //-----------------------------------------------------------------------
   static member makeDynamic (x:IronJS.PropertyClass) =
-    if x.Id < 0L then failwith "PropertyClass is already dynamic"
-    let pc = new IronJS.PropertyClass(null)
-    pc.Id <- -1L
-    pc.NextIndex <- x.NextIndex
-    pc.FreeIndexes <- new MutableStack<int>()
-    pc.PropertyMap <- new MutableDict<string, int>(x.PropertyMap)
-    pc
-        
-  //-----------------------------------------------------------------------
-  static member addDynamic (x:IronJS.PropertyClass, name) =
-    if x.Id >= 0L then 
-      failwith "Can't add dynamic name to a non-dynamic PropertyClass"
-
-    let index = 
-      if x.FreeIndexes.Count > 0 then x.FreeIndexes.Pop()
-      else x.NextIndex <- x.NextIndex + 1; x.NextIndex - 1
-
-    x.PropertyMap.Add(name, index)
-    index
+    if x.isDynamic then x
+    else
+      let pc = new IronJS.PropertyClass(null)
+      pc.Id <- -1L
+      pc.NextIndex <- x.NextIndex
+      pc.FreeIndexes <- new MutableStack<int>()
+      pc.PropertyMap <- new MutableDict<string, int>(x.PropertyMap)
+      pc
         
   //-----------------------------------------------------------------------
   static member delete (x:IronJS.PropertyClass, name) =
-    let pc = if x.Id >= 0L then PropertyClass.makeDynamic x else x
-    let index = pc.PropertyMap.[name]
+    let pc = if not x.isDynamic then PropertyClass.makeDynamic x else x
+    let mutable index = 0
 
-    if pc.PropertyMap.Remove name then 
+    if pc.PropertyMap.TryGetValue(name, &index) then 
       pc.FreeIndexes.Push index
 
     pc
@@ -262,53 +291,82 @@ and PropertyClass =
   static member getIndex (x:IronJS.PropertyClass, name) =
     x.PropertyMap.[name]
     
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Environment API
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and Environment =
+
+  //----------------------------------------------------------------------------
   static member addCompiler (x:IjsEnv, funId, compiler) =
     if not (x.Compilers.ContainsKey funId) then
       x.Compilers.Add(funId, CachedCompiler compiler)
   
+  //----------------------------------------------------------------------------
   static member hasCompiler (x:IjsEnv, funcId) =
     x.Compilers.ContainsKey funcId
     
-//-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  static member createObject (x:IjsEnv) =
+    IjsObj(x.Base_Class, x.Object_prototype, Classes.String, 0u)
+    
+  //----------------------------------------------------------------------------
+  static member createObject (x:IjsEnv, s:IjsStr) =
+    let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
+    Object.putProperty(o, "length", double s.Length) |> ignore
+    o.Value.Type <- TypeCodes.String
+    o.Value.String <-s
+    o
+    
+  //----------------------------------------------------------------------------
+  static member createObject (x:IjsEnv, n:IjsNum) =
+    let o = IjsObj(x.Number_Class, x.Number_prototype, Classes.Number, 0u)
+    o.Value.Type <- TypeCodes.Number
+    o.Value.Double <- n
+    o
+    
+  //----------------------------------------------------------------------------
+  static member createObject (x:IjsEnv, b:IjsBool) =
+    let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Number, 0u)
+    o.Value.Type <- TypeCodes.Bool
+    o.Value.Bool <- b
+    o
+    
+//------------------------------------------------------------------------------
 // Function API
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and Function =
 
-  static member call (f:IjsFunc, t) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
-    c.Invoke(f, t)
+    static member call (f:IjsFunc, t) =
+      let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
+      c.Invoke(f, t)
 
-  static member call (f:IjsFunc, t, a0:'a) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
-    c.Invoke(f, t, a0)
+    static member call (f:IjsFunc, t, a0:'a) =
+      let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
+      c.Invoke(f, t, a0)
 
-  static member call (f:IjsFunc, t, a0:'a, a1:'b) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,'b,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1)
+    static member call (f:IjsFunc, t, a0:'a, a1:'b) =
+      let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,'b,IjsBox>>(f)
+      c.Invoke(f, t, a0, a1)
 
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c) =
-    let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2)
+    static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c) =
+      let c = f.Compiler
+      let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,IjsBox>>(f)
+      c.Invoke(f, t, a0, a1, a2)
 
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d) =
-    let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3)
+    static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d) =
+      let c = f.Compiler
+      let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,IjsBox>>(f)
+      c.Invoke(f, t, a0, a1, a2, a3)
 
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e) =
-    let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3, a4)
+    static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e) =
+      let c = f.Compiler
+      let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,IjsBox>>(f)
+      c.Invoke(f, t, a0, a1, a2, a3, a4)
 
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e, a5:'f) =
-    let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
+    static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e, a5:'f) =
+      let c = f.Compiler
+      let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
+      c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
     
 //-------------------------------------------------------------------------
 // Delegate Function API
@@ -318,28 +376,42 @@ and DelegateFunction<'a when 'a :> Delegate> =
   //-----------------------------------------------------------------------
   static member compile (x:IjsFunc) (type':System.Type) =
     let f = x :?> IronJS.DelegateFunction<'a>
+
     let argTypes = Reflection.getDelegateArgTypes type'
-    let args = 
-      argTypes |> Array.mapi (fun i x -> Dlr.param (sprintf "~parm%i" i) x) 
+    let args = argTypes |> Array.mapi (fun i x -> Dlr.param (sprintf "a%i" i) x) 
+    let marshalled = args |> Seq.skip f.MarshalMode |> Array.ofSeq
+      
+    let env = Dlr.field args.[0] "Env"
+    let convert = TypeConverter.convertTo
+    let converted = 
+      f.ArgTypes |> Seq.mapi (
+        fun i t -> 
+          if i < marshalled.Length 
+            then convert env marshalled.[i] t
+            else Dlr.default' t
+      ) 
 
-    let realArgs =
-      if f.ArgTypes.Length >= 2 
-        && f.ArgTypes.[0] = TypeObjects.Function
-        && f.ArgTypes.[1] = TypeObjects.Object then
-        args |> Array.ofSeq
+    let converted = 
+      if marshalled.Length <= f.ArgTypes.Length
+        then converted
+        else
+          match f.ParamsMode with
+          | ParamsModes.BoxParams ->
+            marshalled
+            |> Seq.skip f.ArgTypes.Length
+            |> Seq.map Expr.boxValue
+            |> fun x -> Seq.append converted [Dlr.newArrayItemsT<IjsBox> x]
 
-      elif f.ArgTypes.Length >= 1
-        && f.ArgTypes.[0] = TypeObjects.Object then
-        args |> Seq.skip 1 |> Array.ofSeq
+          | ParamsModes.ObjectParams ->
+            marshalled
+            |> Seq.skip f.ArgTypes.Length
+            |> Seq.map TypeConverter.toHostObject
+            |> fun x -> Seq.append converted [Dlr.newArrayItemsT<HostObject> x]
+            
+          | _ -> converted
 
-      else
-        args |> Seq.skip 2 |> Array.ofSeq
-
-    let convertedArgs = 
-      f.ArgTypes |> Seq.mapi (fun i t -> TypeConverter.convertTo realArgs.[i] t)
-        
     let casted = Dlr.castT<IronJS.DelegateFunction<'a>> args.[0]
-    let invoke = Dlr.invoke (Dlr.field casted "Delegate") convertedArgs
+    let invoke = Dlr.invoke (Dlr.field casted "Delegate") converted
 
     let body = 
       if Utils.isBox f.ReturnType then invoke
@@ -353,28 +425,19 @@ and DelegateFunction<'a when 'a :> Delegate> =
           ] |> Seq.ofList
         )
             
-    let lambda = Dlr.lambda type' args body
-    #if INTERACTIVE
-    Dlr.Utils.printDebugView lambda
-    #else
-    #if DEBUG
-    Dlr.Utils.printDebugView lambda
-    #endif
-    #endif
-    lambda.Compile()
+    (Dlr.lambda type' args body).Compile()
       
   //-----------------------------------------------------------------------
   static member create (env:IronJS.Environment, delegate':'a) =
     let x = IronJS.DelegateFunction<'a>(env, delegate')
+    let f = x :> IjsFunc
 
     Environment.addCompiler(
-      env, (x :> IjsFunc).FunctionId, (DelegateFunction<'a>.compile)
+      env, f.FunctionId, (DelegateFunction<'a>.compile)
     )
 
-    (x :> IjsFunc).Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
-    x
-
-
+    f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
+    f
         
 //------------------------------------------------------------------------------
 // GetPropertyCache API
@@ -553,17 +616,9 @@ and Object() =
   static member createPropertyIndex (x:IjsObj, name:string) =
     let mutable i = -1
     if not (Object.getOwnPropertyIndex(x, name, &i)) then
-      i <- ( 
-        if x.PropertyClassId >= 0L then
-          x.PropertyClass <- PropertyClass.subClass(x.PropertyClass, name)
-          x.PropertyClassId <- x.PropertyClass.Id
-          x.PropertyClass.PropertyMap.[name]
-
-        //Dynamic
-        else
-          PropertyClass.addDynamic(x.PropertyClass, name)
-      )
-
+      x.PropertyClass <- PropertyClass.subClass(x.PropertyClass, name)
+      x.PropertyClassId <- x.PropertyClass.Id
+      i <- x.PropertyClass.PropertyMap.[name]
       if x.isFull then Object.expandPropertyStorage x
     i
       

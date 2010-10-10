@@ -10,6 +10,10 @@ Src/IronJS.REPL/bin/**/*
 Src/IronJS.REPL/obj/**/*
 Src/IronJS.Tests/bin/**/*
 Src/IronJS.Tests/obj/**/*
+Src/IronJS.DlrDebug/bin/**/*
+Src/IronJS.DlrDebug/obj/**/*
+Src/IronJS.CSharp/bin/**/*
+Src/IronJS.CSharp/obj/**/*
 Src/TestResults/**/*
 Build/**/*
 *.dia~

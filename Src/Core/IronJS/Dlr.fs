@@ -380,8 +380,11 @@ module Dlr =
           System.Reflection.BindingFlags.NonPublic 
             ||| System.Reflection.BindingFlags.Instance)
 
-    let printDebugView (obj:Expr) =
-      printf "%s" (string (_dbgViewProp.GetValue(obj, null)))
+    let debugView (expr:Expr) =
+      string (_dbgViewProp.GetValue(expr, null))
+
+    let printDebugView (expr:Expr) =
+      printf "%s" (debugView expr)
 
   module Ext =
 

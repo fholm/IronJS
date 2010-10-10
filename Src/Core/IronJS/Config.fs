@@ -7,6 +7,7 @@ module Version =
   let Tag = "preview"
   let Tupled = Major, Minor, Build, Tag
   let String = sprintf "%i.%i.%i-%s" Major Minor Build Tag
+  let FullName = sprintf "IronJS %s" String
 
 module Ops = 
   //Same as |> but for refs

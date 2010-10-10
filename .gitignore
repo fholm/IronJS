@@ -17,3 +17,5 @@ Build/**/*
 *.baml
 *.resources
 *.tlog
+*.manifest
+*.config

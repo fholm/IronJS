@@ -539,12 +539,8 @@ module Core =
       | Some d -> Dlr.lambda d allParameters functionBody
       | _ -> Dlr.lambdaAuto allParameters functionBody
       
-    #if INTERACTIVE    
-    Dlr.Utils.printDebugView lambda
-    #else
     #if DEBUG
-    Dlr.Utils.printDebugView lambda  
-    #endif
+    IronJS.Printer.print.Invoke(lambda)
     #endif
 
     lambda.Compile()

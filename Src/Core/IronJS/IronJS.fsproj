@@ -90,6 +90,7 @@
     <Compile Include="Config.fs" />
     <Compile Include="Reflection.fs" />
     <Compile Include="Dlr.fs" />
+    <Compile Include="Printer.fs" />
     <Compile Include="Errors.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Utils.fs" />

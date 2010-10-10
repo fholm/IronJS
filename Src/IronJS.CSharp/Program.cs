@@ -21,7 +21,6 @@ namespace IronJS.CSharp
             //IronJS.Api.Object.putProperty(env, "test2", fn);
 
             ctx.Execute(@"
-
 function Book(name) {
     var _name = name;
 

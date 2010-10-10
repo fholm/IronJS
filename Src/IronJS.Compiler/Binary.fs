@@ -23,20 +23,6 @@
           var :: vars, (exprs, var :> Dlr.Expr), inits @ [Dlr.assign var r]
 
       Dlr.block vars (inits @ f exprs)
-  
-    //-------------------------------------------------------------------------
-    let binaryMathTempBlock (ctx:Ctx) (l:Dlr.Expr) (r:Dlr.Expr) f = 
-      if Dlr.Ext.isStatic l && Dlr.Ext.isStatic r then
-        f(l, r)
-
-      else
-        let _l = Dlr.paramRef "l" l.Type
-        let _r = Dlr.paramRef "r" r.Type
-
-        (Dlr.invoke 
-          (Dlr.lambdaAuto [_l; _r] (f(_l, _r)))
-          [l; r]
-        )
     
     //-------------------------------------------------------------------------
     let bitwise_Box_Box op fallback (ctx:Ctx) l r =
@@ -285,37 +271,3 @@
       match compilerMap.TryFind (op, ltc, rtc) with
       | Some f -> f ctx lexpr rexpr
       | None -> failwithf "Failed to compile %A %i %i" op ltc rtc
-      
-    //--------------------------------------------------------------------------
-    let binaryMathTempStorageBlock (ctx:Ctx) (l:Dlr.Expr) (r:Dlr.Expr) f (s:Dlr.Expr) = 
-      if Dlr.Ext.isStatic l && Dlr.Ext.isStatic r then
-        f(l, r, s)
-
-      else
-        let _l = Dlr.paramRef "l" l.Type
-        let _r = Dlr.paramRef "r" r.Type
-        let _s = Dlr.paramRef "s" s.Type
-
-        (Dlr.invoke 
-          (Dlr.lambdaAuto [_l; _r; _s] (f(_l, _r, _s)))
-          [l; r; s]
-        )
-
-    let math_Box_Box_Store op ctx l r =
-      binaryMathTempStorageBlock ctx l r (fun (l, r, s) ->
-        (Dlr.ifElse
-          (Dlr.and'
-            (Expr.containsNumber l)
-            (Expr.containsNumber r)
-          )
-          (Expr.assignValue
-            (s)
-            (op (Expr.unboxNumber l) (Expr.unboxNumber r))
-          )
-          (Dlr.void')
-        )
-      )
-
-    let compileAssign ctx lexpr rexpr =
-      math_Box_Box_Store Dlr.add ctx lexpr rexpr
-      

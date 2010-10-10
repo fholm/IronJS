@@ -309,7 +309,9 @@ and Object() =
       match valueOf.Type with
       | TypeCodes.Function -> 
         let v = Function.call(valueOf.Func, x)
-
+        if Utils.isPrimitive v then v
+        else
+          
 
     | DefaultValue.String ->
 

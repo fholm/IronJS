@@ -26,19 +26,12 @@ module Utils =
       | Some v -> v
       | _ -> failwith "No value"
 
-  let inline retype (x:'a) : 'b = 
-    (# "" x : 'b #)
+  let asRef (x:HostType) = x.MakeByRefType()
+  let isVoid t = typeof<System.Void> = t
+  let isStringIndex (str, out:uint32 byref) = System.UInt32.TryParse(str, &out)
 
-  let inline asRef (x:HostType) = x.MakeByRefType()
-
-  let isStringIndex (str:string, out:uint32 byref) =
-    System.UInt32.TryParse(str, &out)
-
-  let inline isVoid t = 
-    typeof<System.Void> = t
-
-  let inline refEquals (a:obj) (b:obj) = 
-    System.Object.ReferenceEquals(a, b)
+  let inline retype (x:'a) : 'b = (# "" x : 'b #)
+  let inline refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
 
   let type2tc (t:System.Type) =   
     if   refEquals TypeObjects.Bool t         then TypeCodes.Bool
@@ -132,7 +125,10 @@ module Utils =
   let inline isDense (x:IjsObj) =
     Object.ReferenceEquals(x.IndexSparse, null)
 
-  let 
+  let inline isPrimitive (b:Box byref) =
+    b.Type = TypeCodes.Number
+    || b.Type = TypeCodes.String
+    || b.Type = TypeCodes.Bool
 
   let box (o:obj) =
     if o :? Box then unbox o

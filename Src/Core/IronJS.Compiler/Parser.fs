@@ -352,7 +352,6 @@ module Ast =
     | Block trees -> Block [for t in trees -> f t]
     | Var tree -> Var (f tree)
     | LocalScope(scope, body) -> LocalScope(scope, f body)
-
       
 
 
@@ -696,14 +695,10 @@ module Ast =
 
 
 
-  //-------------------------------------------------------------------------
-  //
-  //                          PARSERS
-  //
-  //-------------------------------------------------------------------------
-
+  //----------------------------------------------------------------------------
   module Parsers =
-
+  
+    //--------------------------------------------------------------------------
     module Ecma3 = 
 
       open IronJS
@@ -715,31 +710,41 @@ module Ast =
       let private _funId () = 
         _funIdCounter := !_funIdCounter + 1L
         !_funIdCounter
-
+        
+      //------------------------------------------------------------------------
       let private children (tok:AntlrToken) = 
         if tok.Children = null then []
         else
           tok.Children |> Seq.cast<AntlrToken> 
                        |> Seq.toList
               
+      //------------------------------------------------------------------------
       let private cast (tok:obj) = tok :?> AntlrToken
+
+      //------------------------------------------------------------------------
       let private hasChild (tok:AntlrToken) index = tok.ChildCount > index
           
+      //------------------------------------------------------------------------
       let private child (tok:AntlrToken) index = 
         if hasChild tok index then cast tok.Children.[index] else null
           
+      //------------------------------------------------------------------------
       let private text (tok:AntlrToken) = tok.Text
+      
+      //------------------------------------------------------------------------
       let private jsString (tok:AntlrToken) = 
         let str = text tok
         str.Substring(1, str.Length - 2)
-
-      let rec binary stream op tok =
+        
+      //------------------------------------------------------------------------
+      let rec private binary stream op tok =
         let translate = translate stream
         let left = translate (child tok 0)
         let right = translate (child tok 1)
         Binary(op, left, right)
-
-      and for' stream label tok =
+        
+      //------------------------------------------------------------------------
+      and private for' stream label tok =
         let type' = child tok 0 
         let translate = translate stream
         match type'.Type with
@@ -755,32 +760,37 @@ module Ast =
           let body = translate (child tok 1)
           ForIn(label, name, init, body)
 
-        | _ -> Errors.compiler "Should be FORSTEP or FORITER"
-
-      and while' stream label tok =
+        | _ -> Errors.compiler "Token should be FORSTEP or FORITER"
+        
+      //------------------------------------------------------------------------
+      and private while' stream label tok =
         let translate = translate stream
         While(label, translate (child tok 0), translate (child tok 1))
-
-      and doWhile stream label tok =
+        
+      //------------------------------------------------------------------------
+      and private doWhile stream label tok =
         let translate = translate stream
         DoWhile(label, translate (child tok 0), translate (child tok 1))
-
-      and binaryAsn stream op tok =
+        
+      //------------------------------------------------------------------------
+      and private binaryAsn stream op tok =
         let translate = translate stream
         let target = translate (child tok 0)
         let op = Binary(op, target, translate (child tok 1))
         Assign(target, op)
-
-      and unary stream op tok =
+        
+      //------------------------------------------------------------------------
+      and private unary stream op tok =
         Unary(op, translate stream (child tok 0))
-
+        
+      //------------------------------------------------------------------------
       and translate (stream:CommonTokenStream) (tok:AntlrToken) =
         let translate = translate stream
 
         if tok = null then Pass else
         match tok.Type with
         // Nil
-        | 0 
+        | 0 when tok.IsNil -> Block [for x in children tok -> translate x]
 
         // { }
         | ES3Parser.BLOCK -> Block [for x in children tok -> translate x]
@@ -812,7 +822,12 @@ module Ast =
 
         // 0xFF
         | ES3Parser.HexIntegerLiteral ->
-          let n = System.Convert.ToInt32(text tok, 16)
+          let n = System.Convert.ToInt64(text tok, 16)
+          Tree.Number(double n)
+
+        // 07
+        | ES3Parser.OctalIntegerLiteral ->
+          let n = System.Convert.ToInt64(text tok, 8)
           Tree.Number(double n)
 
         // x(y)
@@ -1051,20 +1066,31 @@ module Ast =
           Switch(translate value, cases)
 
         | _ -> 
-          let name = (ES3Parser.tokenNames.[tok.Type])
-          failwithf "No parser for token %s (%i)" name tok.Type
+          match tok with
+          | :? CommonErrorNode as error ->
+            let errorTok = stream.Get(error.TokenStopIndex)
+            let line = errorTok.Line 
+            let col = errorTok.CharPositionInLine + 1
+            failwithf "Syntax Error at line %d after column %d" line col
 
-
+          | _ -> 
+            let name = ES3Parser.tokenNames.[tok.Type]
+            failwithf "No parser for token %s (%i)" name tok.Type
+          
+      //------------------------------------------------------------------------
       let parse source = 
         let stringStream = new Antlr.Runtime.ANTLRStringStream(source)
         let lexer = new Xebic.ES3.ES3Lexer(stringStream)
         let tokenStream = new Antlr.Runtime.CommonTokenStream(lexer)
         let parser = new Xebic.ES3.ES3Parser(tokenStream)
-
-        translate tokenStream (parser.program().Tree :?> AntlrToken)
-
+        let program = parser.program()
+        translate tokenStream (program.Tree :?> AntlrToken)
+        
+      //------------------------------------------------------------------------
       let parseFile path = parse (System.IO.File.ReadAllText(path))
+
+      //------------------------------------------------------------------------
       let parseGlobalFile path = LocalScope(Scope.NewGlobal, parseFile path)
+
+      //------------------------------------------------------------------------
       let parseGlobalSource source = LocalScope(Scope.NewGlobal, parse source)
-
-

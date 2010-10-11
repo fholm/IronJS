@@ -63,16 +63,29 @@ namespace IronJS.DevUI {
         }
 
         void RunCode_Click(object sender, RoutedEventArgs e) {
-            System.IO.File.WriteAllText("ironjs_devgui.cache", Input.Text);
+            try {
+                System.IO.File.WriteAllText("ironjs_devgui.cache", Input.Text);
 
-            stopWatch.Restart();
-            Debug.Text = "";
-            var result = ijsCtx.Execute(Input.Text);
-            stopWatch.Stop();
-            ExecutionTime.Content = stopWatch.ElapsedMilliseconds + "ms";
-            Result.Text = IronJS.Api.TypeConverter.toString(result);
+                stopWatch.Restart();
+                Debug.Text = "";
+                var result = ijsCtx.Execute(Input.Text);
+                stopWatch.Stop();
+                Result.Text = IronJS.Api.TypeConverter.toString(result);
 
-            RenderEnvironment();
+            } catch(Exception ex) {
+                stopWatch.Stop();
+
+                while (ex.InnerException != null) {
+                    ex = ex.InnerException;
+                }
+
+                Result.Text = ex.Message;
+
+            } finally {
+                RenderEnvironment();
+                ExecutionTime.Content = stopWatch.ElapsedMilliseconds + "ms";
+            }
+
         }
 
         List<TreeViewItem> RenderIronJSPropertyValues(IronJS.Object obj, bool isGlobal) {

@@ -46,7 +46,7 @@ type TypeConverter =
   static member toString (b:bool) = if b then "true" else "false"
   static member toString (s:string) = s
   static member toString (u:Undefined) = "undefined"
-  static member toString (b:Box) =
+  static member toString (b:Box byref) =
     match b.Type with
     | TypeCodes.Empty -> "undefined"
     | TypeCodes.String -> b.String
@@ -76,7 +76,8 @@ type TypeConverter =
   static member toPrimitive (s:string, _:byte) = Utils.boxString s
   static member toPrimitive (u:Undefined, _:byte) = Utils.boxUndefined u
   static member toPrimitive (o:IjsObj, h:byte) = Object.defaultValue(o, h)
-  static member toPrimitive (b:Box, h:byte) =
+  static member toPrimitive (o:IjsObj) = Object.defaultValue(o)
+  static member toPrimitive (b:Box byref, h:byte) =
     match b.Type with
     | TypeCodes.Bool
     | TypeCodes.Number
@@ -101,7 +102,7 @@ type TypeConverter =
   static member toBoolean (s:string) = s.Length > 0
   static member toBoolean (u:Undefined) = false
   static member toBoolean (o:IjsObj) = true
-  static member toBoolean (b:Box) =
+  static member toBoolean (b:Box byref) =
     match b.Type with 
     | TypeCodes.Bool -> b.Bool
     | TypeCodes.Number -> TypeConverter.toBoolean b.Double
@@ -196,27 +197,11 @@ type TypeConverter =
 //------------------------------------------------------------------------------
 and Operators =
 
-  static member add_String_Number (s:string, n:Number) =
-    s + TypeConverter.toString(n)
-
-  static member add_Box_Number (b:Box byref, n:Number) =
-    let mutable r = Box()
-    match b.Type with
-    | TypeCodes.String -> 
-      r.Type <- TypeCodes.String
-      r.String <- Operators.add_String_Number(b.String, n)
-
-    | _ ->
-      let b = TypeConverter.toNumber(&b)
-      r.Type <- TypeCodes.Number
-      r.Double <- b + n
-    r
-
-  static member typeOf (b:Box) = TypeCodes.Names.[b.Type]
+  // typeof
+  static member typeOf (b:Box byref) = TypeCodes.Names.[b.Type]
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
 
-  static member lt (b:Box byref, n:Number) = TypeConverter.toNumber(&b) < n
-  static member lt (n:Number, b:Box byref) = n < TypeConverter.toNumber(&b)
+  // <
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
   static member lt (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
@@ -225,8 +210,7 @@ and Operators =
         then l.String < r.String
         else TypeConverter.toNumber l < TypeConverter.toNumber r
 
-  static member ltEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) <= n
-  static member ltEq (n:Number, b:Box byref) = n <= TypeConverter.toNumber(&b)
+  // <=
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
   static member ltEq (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
@@ -235,8 +219,7 @@ and Operators =
         then l.String <= r.String
         else TypeConverter.toNumber l <= TypeConverter.toNumber r
 
-  static member gt (b:Box byref, n:Number) = TypeConverter.toNumber(&b) > n
-  static member gt (n:Number, b:Box byref) = n > TypeConverter.toNumber(&b)
+  // >
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
   static member gt (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
@@ -245,8 +228,7 @@ and Operators =
         then l.String > r.String
         else TypeConverter.toNumber l > TypeConverter.toNumber r
 
-  static member gtEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) >= n
-  static member gtEq (n:Number, b:Box byref) = n >= TypeConverter.toNumber(&b)
+  // >=
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
   static member gtEq (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
@@ -255,8 +237,7 @@ and Operators =
         then l.String >= r.String
         else TypeConverter.toNumber l >= TypeConverter.toNumber r
 
-  static member eq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) = n
-  static member eq (n:Number, b:Box byref) = n = TypeConverter.toNumber(&b)
+  // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:Box byref, r:Box byref) = 
     if l.Type = r.Type then
@@ -272,7 +253,6 @@ and Operators =
       | _ -> false
 
     else
-      
       if l.Type = TypeCodes.Clr 
         && l.Clr = null 
         && (r.Type = TypeCodes.Undefined 
@@ -283,13 +263,183 @@ and Operators =
         && (l.Type = TypeCodes.Undefined 
             || l.Type = TypeCodes.Empty) then true
 
+      elif l.Type = TypeCodes.Number && r.Type = TypeCodes.String then
+        l.Double = TypeConverter.toNumber r.String
+        
+      elif r.Type = TypeCodes.String && r.Type = TypeCodes.Number then
+        TypeConverter.toNumber l.String = r.Double
+
+      elif l.Type = TypeCodes.Bool then
+        let mutable l = Utils.boxDouble(TypeConverter.toNumber &l)
+        Operators.eq(&l, &r)
+
+      elif r.Type = TypeCodes.Bool then
+        let mutable r = Utils.boxDouble(TypeConverter.toNumber &r)
+        Operators.eq(&l, &r)
+
+      elif r.Type >= TypeCodes.Object then
+        match l.Type with
+        | TypeCodes.Number
+        | TypeCodes.String -> 
+          let mutable r = TypeConverter.toPrimitive(r.Object)
+          Operators.eq(&l, &r)
+        | _ -> false
+
+      elif l.Type >= TypeCodes.Object then
+        match r.Type with
+        | TypeCodes.Number
+        | TypeCodes.String -> 
+          let mutable l = TypeConverter.toPrimitive(l.Object)
+          Operators.eq(&l, &r)
+        | _ -> false
+
       else
         false
 
-  static member notEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) <> n
-  static member notEq (n:Number, b:Box byref) = n <> TypeConverter.toNumber(&b)
+  // !=
   static member notEq (l, r) = Dlr.callStaticT<Operators> "notEq" [l; r]
   static member notEq (l:Box byref, r:Box byref) = not (Operators.eq(&l, &r))
+
+  // ===
+  static member same (l, r) = Dlr.callStaticT<Operators> "same" [l; r]
+  static member same (l:Box byref, r:Box byref) = 
+    if l.Type = r.Type then
+      match l.Type with
+      | TypeCodes.Empty
+      | TypeCodes.Undefined -> true
+      | TypeCodes.Clr -> Object.ReferenceEquals(l.Clr, r.Clr)
+      | TypeCodes.Number -> l.Double = r.Double
+      | TypeCodes.String -> l.String = r.String
+      | TypeCodes.Bool -> l.Bool = r.Bool
+      | TypeCodes.Function
+      | TypeCodes.Object -> Object.ReferenceEquals(l.Object, r.Object)
+      | _ -> false
+
+    else
+      false
+
+  // !==
+  static member notSame (l, r) = Dlr.callStaticT<Operators> "notSame" [l; r]
+  static member notSame (l:Box byref, r:Box byref) =
+    not (Operators.same(&l, &r))
+
+  // +
+  static member add (l:Box byref, r:Box byref) = 
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
+      Utils.boxDouble (l.Double + r.Double)
+
+    elif l.Type = TypeCodes.String || r.Type = TypeCodes.String then
+      Utils.boxString (TypeConverter.toString(&l) + TypeConverter.toString(&r))
+
+    else
+      Utils.boxDouble (TypeConverter.toNumber(&l) + TypeConverter.toNumber(&r))
+
+  // -
+  static member sub (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
+      Utils.boxDouble (l.Double - r.Double)
+
+    else
+      Utils.boxDouble (TypeConverter.toNumber(&l) - TypeConverter.toNumber(&r))
+
+  // /
+  static member div (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
+      Utils.boxDouble (l.Double / r.Double)
+
+    else
+      Utils.boxDouble (TypeConverter.toNumber(&l) / TypeConverter.toNumber(&r))
+
+  // *
+  static member mul (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
+      Utils.boxDouble (l.Double * r.Double)
+
+    else
+      Utils.boxDouble (TypeConverter.toNumber(&l) * TypeConverter.toNumber(&r))
+
+  // %
+  static member mod' (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
+      Utils.boxDouble (l.Double % r.Double)
+
+    else
+      Utils.boxDouble (TypeConverter.toNumber &l % TypeConverter.toNumber &r)
+
+  // + (unary)
+  static member plus (o:Box byref) =
+    Utils.boxDouble (TypeConverter.toNumber &o)
+
+  // - (unary)
+  static member minus (o:Box byref) =
+    Utils.boxDouble ((TypeConverter.toNumber &o) * -1.0)
+
+  // &
+  static member bitAnd (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toInt32 l
+    let r = TypeConverter.toInt32 r
+    Utils.boxDouble (double (l &&& r))
+
+  // |
+  static member bitOr (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toInt32 l
+    let r = TypeConverter.toInt32 r
+    Utils.boxDouble (double (l ||| r))
+
+  // ^
+  static member bitXOr (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toInt32 l
+    let r = TypeConverter.toInt32 r
+    Utils.boxDouble (double (l ^^^ r))
+
+  // <<
+  static member bitLhs (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toInt32 l
+    let r = TypeConverter.toUInt32 r &&& 0x1Fu
+    Utils.boxDouble (double (l <<< int r))
+
+  // >>
+  static member bitRhs (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toInt32 l
+    let r = TypeConverter.toUInt32 r &&& 0x1Fu
+    Utils.boxDouble (double (l >>> int r))
+
+  // >>>
+  static member bitURhs (l:Box byref, r:Box byref) =
+    let l = TypeConverter.toNumber &l
+    let r = TypeConverter.toNumber &r
+    let l = TypeConverter.toUInt32 l
+    let r = TypeConverter.toUInt32 r &&& 0x1Fu
+    Utils.boxDouble (double (l >>> int r))
+
+  // ~
+  static member bitCmpl (o:Box byref) =
+    let o = TypeConverter.toNumber &o
+    let o = TypeConverter.toInt32 o
+    Utils.boxDouble (double (~~~ o))
+
+  // &&
+  static member and' (l:Box byref, r:Box byref) =
+    if not (TypeConverter.toBoolean &l) then l else r
+
+  // ||
+  static member or' (l:Box byref, r:Box byref) =
+    if TypeConverter.toBoolean &l then l else r
+
+  // !
+  static member not (o:Box byref) =
+    not (TypeConverter.toBoolean &o)
+      
 
 
 //-------------------------------------------------------------------------

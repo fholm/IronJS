@@ -54,25 +54,20 @@ module Reflection =
   let getMethodT<'a> = getMethod typeof<'a>
 
   let getMethodGeneric (type':System.Type) name (typeArgs:System.Type seq) (args:System.Type seq) =
-    let args = Array.ofSeq args
-    let typeArgs = Array.ofSeq typeArgs
-    let methods = 
-      getMethods type'
-        |> Seq.filter (fun x -> x.Name = name && x.ContainsGenericParameters)
-        |> Seq.map (fun x -> let x = x.MakeGenericMethod(typeArgs) in x, x.GetParameters()) 
-        |> Seq.filter (_sndLength args.Length)
-        |> Array.ofSeq
-
-    let methods2 = 
-      getMethods type'
-        |> Seq.filter (fun x -> x.Name = name && x.ContainsGenericParameters)
-        |> Seq.map (fun x -> let x = x.MakeGenericMethod(typeArgs) in x, x.GetParameters()) 
-        //|> Seq.filter (_sndLength args.Length)
-        |> Array.ofSeq
+    if Seq.length typeArgs = 0 then getMethodArgs type' name args
+    else
+      let args = Array.ofSeq args
+      let typeArgs = Array.ofSeq typeArgs
+      let methods = 
+        getMethods type'
+          |> Seq.filter (fun x -> x.Name = name && x.ContainsGenericParameters && x.GetGenericArguments().Length = typeArgs.Length)
+          |> Seq.map (fun x -> let x = x.MakeGenericMethod(typeArgs) in x, x.GetParameters()) 
+          |> Seq.filter (_sndLength args.Length)
+          |> Array.ofSeq
             
-    match _findExactMatch methods args with
-    | None -> _findMatch methods args
-    | x -> x
+      match _findExactMatch methods args with
+      | None -> _findMatch methods args
+      | x -> x
 
   let getMethodGenericT<'a> = getMethodGeneric typeof<'a>
 

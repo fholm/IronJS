@@ -9,35 +9,52 @@ module Ast =
 
   open System.Globalization
 
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // Binary Operators
+  //----------------------------------------------------------------------------
   type BinaryOp 
-    = Add = 1
-    | Sub = 2
-    | Mul = 3
-    | Div = 4
-    | Eq = 100
-    | Same = 200
-    | NotEq = 101
-    | NotSame = 201
-    | Lt = 102
-    | LtEq = 103 
-    | Gt = 104
-    | GtEq = 105
+    = Add = 1 // foo + bar
+    | Sub = 2 // foo - bar
+    | Div = 3 // foo / bar
+    | Mul = 4 // foo * bar
+    | Mod = 5 // foo % bar
 
-    | BitAnd = 50
-    | BitOr = 51
-    | BitShiftLeft = 52
-    | BitShiftRight = 53
+    | And = 25
+    | Or = 26
+
+    | BitAnd = 50 // foo & bar
+    | BitOr = 51 // foo | bar
+    | BitXor = 53 // foo ^ bar
+    | BitShiftLeft = 54 // foo << bar
+    | BitShiftRight = 55 // foo >> bar
+    | BitUShiftRight = 56 // foo >>> bar
+
+    | Eq = 100 // foo == bar
+    | NotEq = 101 // foo != bar
+    | Same = 102 // foo === bar
+    | NotSame = 103 // foo !== bar
+    | Lt = 104 // foo < bar
+    | LtEq = 105 // foo <= bar
+    | Gt = 106 // foo > bar
+    | GtEq = 107 // foo >= bar
       
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // Unary Operators
+  //----------------------------------------------------------------------------
   type UnaryOp 
-    = Inc
-    | Dec
-    | PostInc
-    | PostDec
-    | Void
-    | Delete
-    | TypeOf
+    = Inc // ++foo
+    | Dec // --foo
+    | PostInc // foo++
+    | PostDec // foo--
+    | Plus // +foo
+    | Minus // -foo
+    
+    | Not // !foo
+    | BitCmpl // ~foo
+
+    | Void // void foo
+    | Delete // delete foo.bar
+    | TypeOf // typeof foo
     
   //-------------------------------------------------------------------------
   type ScopeType
@@ -95,7 +112,9 @@ module Ast =
     | InstanceOf  of Tree * Tree
 
     | For         of string option * Tree * Tree * Tree * Tree
+    | ForIn       of string option * Tree * Tree * Tree
     | While       of string option * Tree * Tree
+    | DoWhile     of string option * Tree * Tree
 
     | Break       of string option
     | Continue    of string option
@@ -270,7 +289,7 @@ module Ast =
         
   let private _walk f tree = 
     match tree with
-    //Simple nodes
+    // Simple
     | Identifier _
     | Boolean _
     | String _
@@ -283,43 +302,51 @@ module Ast =
     | This
     | Undefined -> tree
     
+    // Operators
+    | Assign(left, right) -> Assign(f left, f right)
     | Unary(op, tree) -> Unary(op, f tree)
     | Binary(op, ltree, rtree) -> Binary(op, f ltree, f rtree)
     
+    // Objects
     | Array indexes -> Array [for t in indexes -> f t]
     | Object properties -> Object [for t in properties -> f t]
+    | Property(object', name) -> Property(f object', name)
+    | Index(object', index) -> Index(f object', f index)
+    | With(object', body) -> With(f object', f body)
+    | In(property, object') -> In(f property,  object')
+    | InstanceOf(object', func) -> InstanceOf(f object', f func)
+
+    //Functions
+    | Function(id, tree) -> Function(id, f tree) 
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
-        
-    | Eval(tree)              -> Eval (f tree)
-    | Property(object', name) -> Property(f object', name)
-    | Index(object', index)   -> Index(f object', f index)
-    | Assign(left, right)     -> Assign(f left, f right)
-    | Block(trees)            -> Block([for t in trees -> f t])
-    | Var tree                -> Var(f tree)
-    | Return(value)           -> Return(f value)
-    | With(object', body)     -> With(f object', f body)
-    | Function(id, tree)      -> Function(id, f tree) 
-    | LocalScope(scope, body) -> LocalScope(scope, f body)
+    | Return value -> Return(f value)
+    | Eval tree -> Eval(f tree)
     
+    // Control Flow
     | Label(label, tree) -> Label(label, f tree)
+    | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
+    | Case(tests, body) -> Case([for t in tests -> f t], f body)
+    | Default body -> Default (f body)
     | If(test, ifTrue, ifFalse) -> If(f test, f ifTrue, (f >? ifFalse))
-    | While(label, tree, body) -> While(label, f tree, f body)
+    | While(label, test, body) -> While(label, f test, f body)
+    | DoWhile(label, test, body) -> DoWhile(label, f test, f body)
+    | ForIn(label, name, init, body) -> ForIn(label, f name, f init, f body)
     | For(label, init, test, incr, body) ->
       For(label, f init, f test, f incr, f body)
 
-    | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
-    | Case(tests, body) -> Case([for t in tests -> f t], f body)
-    | Default(body) -> Default (f body)
-
-    //Exception Stuff
-    | Try(body, catch, finally') -> 
-      let finally' = match finally' with Some t -> Some (f t) |x->x
-      Try(f body, [for x in catch -> f x], finally')
-
-    | Catch tree   -> Catch (f tree)
+    // Exceptions
+    | Catch tree -> Catch (f tree)
     | Finally body -> Finally (f body)
-    | Throw tree   -> Throw (f tree)
+    | Throw tree -> Throw (f tree)
+    | Try(body, catch, finally') -> 
+      Try(f body, [for x in catch -> f x], f >? finally')
+
+    // Others
+    | Block trees -> Block [for t in trees -> f t]
+    | Var tree -> Var (f tree)
+    | LocalScope(scope, body) -> LocalScope(scope, f body)
+
       
 
 
@@ -712,7 +739,13 @@ module Ast =
           let incr = translate (child type' 2)
           For(label, init, test, incr, translate (child tok 1))
 
-        | _ -> failwith "Que?"
+        | ES3Parser.FORITER -> 
+          let name = translate (child type' 0)
+          let init = translate (child type' 1)
+          let body = translate (child tok 1)
+          ForIn(label, name, init, body)
+
+        | _ -> Errors.compiler "Should be FORSTEP or FORITER"
 
       and while' label tok =
         While(label, translate (child tok 0), translate (child tok 1))
@@ -735,13 +768,13 @@ module Ast =
         // { }
         | ES3Parser.BLOCK -> Block [for x in children tok -> translate x]
 
-        // var foo
+        // var x
         | ES3Parser.VAR   -> 
           if tok.ChildCount > 1 
             then Block [for x in children tok -> Var(translate x)]
             else Var(translate (child tok 0))
 
-        // foo = 1
+        // x = 1
         | ES3Parser.ASSIGN -> 
           Assign(translate (child tok 0), translate (child tok 1))
 
@@ -751,10 +784,10 @@ module Ast =
         // false
         | ES3Parser.FALSE -> Boolean false
 
-        // foo
+        // x
         | ES3Parser.Identifier -> Identifier(text tok)
 
-        // "foo"
+        // "x"
         | ES3Parser.StringLiteral -> String(jsString tok)
 
         // 1
@@ -765,7 +798,7 @@ module Ast =
           let n = System.Convert.ToInt32(text tok, 16)
           Tree.Number(double n)
 
-        // foo(1, 2, 3)
+        // x(y)
         | ES3Parser.CALL -> 
           let child0 = child tok 0
           let args = [for x in children (child tok 1) -> translate x]
@@ -773,17 +806,17 @@ module Ast =
             then New(translate (child child0 0), args)
             else Invoke(translate child0, args)
 
-        // foo.bar
+        // x.y
         | ES3Parser.BYFIELD -> 
           Property (translate (child tok 0), text (child tok 1))
 
-        // return foo
+        // return x
         | ES3Parser.RETURN -> Return (translate (child tok 0))
 
         // this
         | ES3Parser.THIS -> This
 
-        // {foo: 1}
+        // {x: 1}
         | ES3Parser.OBJECT -> 
           Tree.Object [for x in children tok -> translate x]
 
@@ -806,17 +839,17 @@ module Ast =
         // finally { }
         | ES3Parser.FINALLY -> Finally(translate (child tok 0))
 
-        // foo[0]
+        // x[0]
         | ES3Parser.BYINDEX -> 
           Index(translate (child tok 0), translate (child tok 1))
 
-        // delete foo.bar
+        // delete x.y
         | ES3Parser.DELETE -> Unary(UnaryOp.Delete, translate (child tok 0))
 
-        // typeof foo
+        // typeof x
         | ES3Parser.TYPEOF -> Unary(UnaryOp.TypeOf, translate (child tok 0))
 
-        // {foo: 1}
+        // {x: 1}
         | ES3Parser.NAMEDVALUE -> 
           Assign(String(text (child tok 0)), translate (child tok 1))
 
@@ -824,30 +857,71 @@ module Ast =
         | ES3Parser.IF ->
           let test = translate (child tok 0)
           let ifTrue = translate (child tok 1)
-          If(test, ifTrue, None)
+          let ifFalse =
+            if tok.ChildCount > 2 
+              then Some (translate (child tok 2))
+              else None
+
+          If(test, ifTrue, ifFalse)
           
-        // (foo)
+        // (x)
         | ES3Parser.PAREXPR
         | ES3Parser.EXPR -> translate (child tok 0) // (foo)
 
-        // Operators
-        | ES3Parser.AND -> binary BinaryOp.BitAnd tok // foo & bar
-        | ES3Parser.OR -> binary BinaryOp.BitOr tok // foo | bar
-        | ES3Parser.EQ -> binary BinaryOp.Eq tok // 1 == 1
-        | ES3Parser.NEQ -> binary BinaryOp.NotEq tok // 1 != 1
-        | ES3Parser.SAME -> binary BinaryOp.Same tok // 1 === 1
-        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok // 1 !== 1
-        | ES3Parser.ADD -> binary BinaryOp.Add tok // 1 + 1
-        | ES3Parser.SUB -> binary BinaryOp.Sub tok // 1 - 1
-        | ES3Parser.LT -> binary BinaryOp.Lt tok // 1 < 1
-        | ES3Parser.LTE -> binary BinaryOp.LtEq tok // 1 <= 1
-        | ES3Parser.GT -> binary BinaryOp.Gt tok // 1 > 1
-        | ES3Parser.GTE -> binary BinaryOp.GtEq tok // 1 >= 1
-        | ES3Parser.MUL -> binary BinaryOp.Mul tok // 1 * 1
-        | ES3Parser.SHL -> binary BinaryOp.BitShiftLeft tok // 1 << 1
-        | ES3Parser.SHR -> binary BinaryOp.BitShiftRight tok // 1 >> 1
-        | ES3Parser.ADDASS -> binaryAsn BinaryOp.Add tok // foo += 1
-        | ES3Parser.PINC -> unary UnaryOp.PostInc tok // foo+
+        // Math operators
+        | ES3Parser.ADD -> binary BinaryOp.Add tok // x + y
+        | ES3Parser.ADDASS -> binaryAsn BinaryOp.Add tok // x += y
+        | ES3Parser.SUB -> binary BinaryOp.Sub tok // x - y
+        | ES3Parser.SUBASS -> binaryAsn BinaryOp.Sub tok // x -= y
+        | ES3Parser.DIV -> binary BinaryOp.Div tok // x / y
+        | ES3Parser.DIVASS -> binaryAsn BinaryOp.Div tok // x /= y
+        | ES3Parser.MUL -> binary BinaryOp.Mul tok // x * y
+        | ES3Parser.MULASS -> binaryAsn BinaryOp.Mul tok // x *= y
+        | ES3Parser.MOD -> binary BinaryOp.Mod tok // x % y
+        | ES3Parser.MODASS -> binaryAsn BinaryOp.Mod tok // x %= y
+
+        // Bit operators
+        | ES3Parser.AND -> binary BinaryOp.BitAnd tok // x & y
+        | ES3Parser.ANDASS -> binaryAsn BinaryOp.BitAnd tok // x &= y
+        | ES3Parser.OR  -> binary BinaryOp.BitOr tok // x | y
+        | ES3Parser.ORASS -> binaryAsn BinaryOp.BitOr tok // x |= y
+        | ES3Parser.XOR -> binary BinaryOp.BitXor tok // x ^ y
+        | ES3Parser.XORASS -> binaryAsn BinaryOp.BitXor tok // x ^= y
+        | ES3Parser.SHL -> binary BinaryOp.BitShiftLeft tok // x << y
+        | ES3Parser.SHLASS -> binaryAsn BinaryOp.BitShiftLeft tok // x <<= y
+        | ES3Parser.SHR -> binary BinaryOp.BitShiftRight tok // x >> y
+        | ES3Parser.SHRASS -> binaryAsn BinaryOp.BitShiftRight tok // x >>= y
+        | ES3Parser.SHU -> binary BinaryOp.BitUShiftRight tok // x >>> y
+        | ES3Parser.SHUASS -> binaryAsn BinaryOp.BitUShiftRight tok // x >>>= y
+
+        // Logical operators
+        | ES3Parser.EQ -> binary BinaryOp.Eq tok // x == y
+        | ES3Parser.NEQ -> binary BinaryOp.NotEq tok // x != y
+        | ES3Parser.SAME -> binary BinaryOp.Same tok // x === y
+        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok // x !== y
+        | ES3Parser.LT -> binary BinaryOp.Lt tok // x < y
+        | ES3Parser.LTE -> binary BinaryOp.LtEq tok // x <= y
+        | ES3Parser.GT -> binary BinaryOp.Gt tok // x > y
+        | ES3Parser.GTE -> binary BinaryOp.GtEq tok // x >= y
+        | ES3Parser.LAND -> binary BinaryOp.And  tok // x && y
+        | ES3Parser.LOR -> binary BinaryOp.Or tok // x || y
+
+        // Unary operators
+        | ES3Parser.PINC -> unary UnaryOp.PostInc tok // x++
+        | ES3Parser.PDEC -> unary UnaryOp.PostDec tok // x--
+        | ES3Parser.INC -> unary UnaryOp.Inc tok // ++x
+        | ES3Parser.DEC -> unary UnaryOp.Dec tok // --x
+        | ES3Parser.NOT -> unary UnaryOp.Not tok // !x
+        | ES3Parser.INV -> unary UnaryOp.BitCmpl tok // ~x
+        | ES3Parser.NEG -> unary UnaryOp.Minus tok // -x
+        | ES3Parser.POS -> unary UnaryOp.Plus tok // +x
+
+        // x in y
+        | ES3Parser.IN -> In(translate (child tok 0), translate (child tok 1))
+
+        // x instanceof y
+        | ES3Parser.INSTANCEOF -> 
+          InstanceOf(translate (child tok 0), translate (child tok 1))
 
         // for(;;) 
         | ES3Parser.FOR -> for' None tok
@@ -862,7 +936,8 @@ module Ast =
           Catch(LocalScope(Scope.NewCatch varName, body))
 
         // with() { }
-        | ES3Parser.WITH -> With(translate (child tok 0), translate (child tok 1))
+        | ES3Parser.WITH -> 
+          With(translate (child tok 0), translate (child tok 1))
 
         // break
         | ES3Parser.BREAK ->
@@ -876,7 +951,7 @@ module Ast =
             then Continue (Some(text (child tok 0)))
             else Continue None
 
-        // foo: if () {}
+        // x: if () {}
         | ES3Parser.LABELLED ->
           let child1 = child tok 1
           let label = text (child tok 0)
@@ -899,12 +974,13 @@ module Ast =
             let name = text (child tok 0)
             Var(Assign(Identifier name, func)) 
 
-        | ES3Parser.CASE ->
-          Pass
-
+        // switch() {}
         | ES3Parser.SWITCH ->
 
-          let value::cases = children tok
+          let value, cases =
+            match children tok with
+            | [] -> Errors.parser "Empty list"
+            | x::xs -> x, xs
 
           let _, cases =
             List.fold (fun (tests, cases) (case:AntlrToken) ->
@@ -918,11 +994,14 @@ module Ast =
                 let children = children case
 
                 match children with
+                | [] -> Errors.parser "Empty list"
                 | test::[] -> test :: tests, cases
                 | test::body ->
                   let body = Block [for x in body -> translate x]
                   let tests = [for t in test :: tests -> translate t]
                   [], Case(tests, body) :: cases
+
+              | _ -> Errors.parser "Should be CASE or DEFAULT"
 
             ) ([], []) cases
 

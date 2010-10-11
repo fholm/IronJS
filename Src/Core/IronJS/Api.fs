@@ -121,7 +121,11 @@ type TypeConverter =
   static member toNumber (d:double) = d
   static member toNumber (c:HostObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = Number.NaN
-  static member toNumber (o:IjsObj) : Number = Errors.Generic.notImplemented()
+  static member toNumber (o:IjsObj) : Number = 
+    TypeConverter.toNumber(
+      Object.defaultValue(o, DefaultValue.Number)
+    )
+
   static member toNumber (b:Box byref) =
     match b.Type with
     | TypeCodes.Number -> b.Double
@@ -214,27 +218,78 @@ and Operators =
   static member lt (b:Box byref, n:Number) = TypeConverter.toNumber(&b) < n
   static member lt (n:Number, b:Box byref) = n < TypeConverter.toNumber(&b)
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
+  static member lt (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
+      then l.Double < r.Double
+      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+        then l.String < r.String
+        else TypeConverter.toNumber l < TypeConverter.toNumber r
 
   static member ltEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) <= n
   static member ltEq (n:Number, b:Box byref) = n <= TypeConverter.toNumber(&b)
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
+  static member ltEq (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
+      then l.Double <= r.Double
+      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+        then l.String <= r.String
+        else TypeConverter.toNumber l <= TypeConverter.toNumber r
 
   static member gt (b:Box byref, n:Number) = TypeConverter.toNumber(&b) > n
   static member gt (n:Number, b:Box byref) = n > TypeConverter.toNumber(&b)
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
+  static member gt (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
+      then l.Double > r.Double
+      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+        then l.String > r.String
+        else TypeConverter.toNumber l > TypeConverter.toNumber r
 
   static member gtEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) >= n
   static member gtEq (n:Number, b:Box byref) = n >= TypeConverter.toNumber(&b)
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
+  static member gtEq (l:Box byref, r:Box byref) =
+    if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number 
+      then l.Double >= r.Double
+      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+        then l.String >= r.String
+        else TypeConverter.toNumber l >= TypeConverter.toNumber r
 
   static member eq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) = n
   static member eq (n:Number, b:Box byref) = n = TypeConverter.toNumber(&b)
-  static member eq (l:Box byref, r:Box byref) = false
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
+  static member eq (l:Box byref, r:Box byref) = 
+    if l.Type = r.Type then
+      match l.Type with
+      | TypeCodes.Empty
+      | TypeCodes.Undefined -> true
+      | TypeCodes.Clr -> Object.ReferenceEquals(l.Clr, r.Clr)
+      | TypeCodes.Number -> l.Double = r.Double
+      | TypeCodes.String -> l.String = r.String
+      | TypeCodes.Bool -> l.Bool = r.Bool
+      | TypeCodes.Function
+      | TypeCodes.Object -> Object.ReferenceEquals(l.Object, r.Object)
+      | _ -> false
+
+    else
+      
+      if l.Type = TypeCodes.Clr 
+        && l.Clr = null 
+        && (r.Type = TypeCodes.Undefined 
+            || r.Type = TypeCodes.Empty) then true
+      
+      elif r.Type = TypeCodes.Clr 
+        && r.Clr = null 
+        && (l.Type = TypeCodes.Undefined 
+            || l.Type = TypeCodes.Empty) then true
+
+      else
+        false
 
   static member notEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) <> n
   static member notEq (n:Number, b:Box byref) = n <> TypeConverter.toNumber(&b)
   static member notEq (l, r) = Dlr.callStaticT<Operators> "notEq" [l; r]
+  static member notEq (l:Box byref, r:Box byref) = not (Operators.eq(&l, &r))
 
 
 //-------------------------------------------------------------------------

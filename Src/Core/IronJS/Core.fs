@@ -84,7 +84,6 @@ module PropertyAttrs =
   let [<Literal>] DontDelete  = 4s
   let [<Literal>] Immutable   = 5s //1s ||| 4s
   let [<Literal>] All         = 7s //1s ||| 2s ||| 4s
-  let [<Literal>] NoDelNoEnum = 6s
 
   let inline canDelete attr = (attr &&& DontDelete) = 0s
   let inline canEnum attr   = (attr &&& DontEnum) = 0s
@@ -124,16 +123,16 @@ module Classes =
 
   let Names = 
     Map.ofList [
-      (Object,    "Object")
-      (Function,  "Function")
-      (Array,     "Array")
-      (String,    "String")
-      (Regexp,    "Regexp")
-      (Boolean,   "Boolean")
-      (Number,    "Number")
-      (Math,      "Math")
-      (Date,      "Date")
-      (Error,     "Error")
+      (Object, "Object")
+      (Function, "Function")
+      (Array, "Array")
+      (String, "String")
+      (Regexp, "Regexp")
+      (Boolean, "Boolean")
+      (Number, "Number")
+      (Math, "Math")
+      (Date, "Date")
+      (Error, "Error")
     ]
 
 module MarshalModes =

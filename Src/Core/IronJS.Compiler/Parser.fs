@@ -91,6 +91,8 @@ module Ast =
     | Switch      of Tree * Tree list
     | Case        of Tree list * Tree
     | Default     of Tree
+    | In          of Tree * Tree
+    | InstanceOf  of Tree * Tree
 
     | For         of string option * Tree * Tree * Tree * Tree
     | While       of string option * Tree * Tree

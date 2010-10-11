@@ -197,10 +197,34 @@ type TypeConverter =
 //------------------------------------------------------------------------------
 and Operators =
 
-  // typeof
-  static member typeOf (b:Box byref) = TypeCodes.Names.[b.Type]
-  static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
+  //----------------------------------------------------------------------------
+  // Unary
+  //----------------------------------------------------------------------------
 
+  //----------------------------------------------------------------------------
+  // typeof
+  static member typeOf (o:Box byref) = TypeCodes.Names.[o.Type]
+  static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
+  
+  //----------------------------------------------------------------------------
+  // !
+  static member not (o) = Dlr.callStaticT<Operators> "not" [o]
+  static member not (o:Box byref) =
+    not (TypeConverter.toBoolean &o)
+    
+  //----------------------------------------------------------------------------
+  // ~
+  static member bitCmpl (o) = Dlr.callStaticT<Operators> "bitCmpl" [o]
+  static member bitCmpl (o:Box byref) =
+    let o = TypeConverter.toNumber &o
+    let o = TypeConverter.toInt32 o
+    Utils.boxDouble (double (~~~ o))
+
+  //----------------------------------------------------------------------------
+  // Binary
+  //----------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   // <
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
   static member lt (l:Box byref, r:Box byref) =
@@ -209,7 +233,8 @@ and Operators =
       elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
         then l.String < r.String
         else TypeConverter.toNumber l < TypeConverter.toNumber r
-
+        
+  //----------------------------------------------------------------------------
   // <=
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
   static member ltEq (l:Box byref, r:Box byref) =
@@ -218,7 +243,8 @@ and Operators =
       elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
         then l.String <= r.String
         else TypeConverter.toNumber l <= TypeConverter.toNumber r
-
+        
+  //----------------------------------------------------------------------------
   // >
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
   static member gt (l:Box byref, r:Box byref) =
@@ -227,7 +253,8 @@ and Operators =
       elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
         then l.String > r.String
         else TypeConverter.toNumber l > TypeConverter.toNumber r
-
+        
+  //----------------------------------------------------------------------------
   // >=
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
   static member gtEq (l:Box byref, r:Box byref) =
@@ -236,7 +263,8 @@ and Operators =
       elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
         then l.String >= r.String
         else TypeConverter.toNumber l >= TypeConverter.toNumber r
-
+        
+  //----------------------------------------------------------------------------
   // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:Box byref, r:Box byref) = 
@@ -295,11 +323,13 @@ and Operators =
 
       else
         false
-
+        
+  //----------------------------------------------------------------------------
   // !=
   static member notEq (l, r) = Dlr.callStaticT<Operators> "notEq" [l; r]
   static member notEq (l:Box byref, r:Box byref) = not (Operators.eq(&l, &r))
-
+  
+  //----------------------------------------------------------------------------
   // ===
   static member same (l, r) = Dlr.callStaticT<Operators> "same" [l; r]
   static member same (l:Box byref, r:Box byref) = 
@@ -317,13 +347,16 @@ and Operators =
 
     else
       false
-
+      
+  //----------------------------------------------------------------------------
   // !==
   static member notSame (l, r) = Dlr.callStaticT<Operators> "notSame" [l; r]
   static member notSame (l:Box byref, r:Box byref) =
     not (Operators.same(&l, &r))
-
+    
+  //----------------------------------------------------------------------------
   // +
+  static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
   static member add (l:Box byref, r:Box byref) = 
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
       Utils.boxDouble (l.Double + r.Double)
@@ -333,121 +366,139 @@ and Operators =
 
     else
       Utils.boxDouble (TypeConverter.toNumber(&l) + TypeConverter.toNumber(&r))
-
+      
+  //----------------------------------------------------------------------------
   // -
+  static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
       Utils.boxDouble (l.Double - r.Double)
 
     else
       Utils.boxDouble (TypeConverter.toNumber(&l) - TypeConverter.toNumber(&r))
-
+      
+  //----------------------------------------------------------------------------
   // /
+  static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
       Utils.boxDouble (l.Double / r.Double)
 
     else
       Utils.boxDouble (TypeConverter.toNumber(&l) / TypeConverter.toNumber(&r))
-
+      
+  //----------------------------------------------------------------------------
   // *
+  static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
       Utils.boxDouble (l.Double * r.Double)
 
     else
       Utils.boxDouble (TypeConverter.toNumber(&l) * TypeConverter.toNumber(&r))
-
+      
+  //----------------------------------------------------------------------------
   // %
+  static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:Box byref, r:Box byref) =
     if l.Type = TypeCodes.Number && r.Type = TypeCodes.Number then
       Utils.boxDouble (l.Double % r.Double)
 
     else
       Utils.boxDouble (TypeConverter.toNumber &l % TypeConverter.toNumber &r)
-
+      
+  //----------------------------------------------------------------------------
   // + (unary)
+  static member plus (l, r) = Dlr.callStaticT<Operators> "plus" [l; r]
   static member plus (o:Box byref) =
     Utils.boxDouble (TypeConverter.toNumber &o)
-
+    
+  //----------------------------------------------------------------------------
   // - (unary)
+  static member minus (l, r) = Dlr.callStaticT<Operators> "minus" [l; r]
   static member minus (o:Box byref) =
     Utils.boxDouble ((TypeConverter.toNumber &o) * -1.0)
-
+    
+  //----------------------------------------------------------------------------
   // &
+  static member bitAnd (l, r) = Dlr.callStaticT<Operators> "bitAnd" [l; r]
   static member bitAnd (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
     Utils.boxDouble (double (l &&& r))
-
+    
+  //----------------------------------------------------------------------------
   // |
+  static member bitOr (l, r) = Dlr.callStaticT<Operators> "bitOr" [l; r]
   static member bitOr (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
     Utils.boxDouble (double (l ||| r))
-
+    
+  //----------------------------------------------------------------------------
   // ^
+  static member bitXOr (l, r) = Dlr.callStaticT<Operators> "bitXOr" [l; r]
   static member bitXOr (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
     Utils.boxDouble (double (l ^^^ r))
-
+    
+  //----------------------------------------------------------------------------
   // <<
+  static member bitLhs (l, r) = Dlr.callStaticT<Operators> "bitLhs" [l; r]
   static member bitLhs (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
     Utils.boxDouble (double (l <<< int r))
-
+    
+  //----------------------------------------------------------------------------
   // >>
+  static member bitRhs (l, r) = Dlr.callStaticT<Operators> "bitRhs" [l; r]
   static member bitRhs (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
     Utils.boxDouble (double (l >>> int r))
-
+    
+  //----------------------------------------------------------------------------
   // >>>
+  static member bitURhs (l, r) = Dlr.callStaticT<Operators> "bitURhs" [l; r]
   static member bitURhs (l:Box byref, r:Box byref) =
     let l = TypeConverter.toNumber &l
     let r = TypeConverter.toNumber &r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
     Utils.boxDouble (double (l >>> int r))
-
-  // ~
-  static member bitCmpl (o:Box byref) =
-    let o = TypeConverter.toNumber &o
-    let o = TypeConverter.toInt32 o
-    Utils.boxDouble (double (~~~ o))
-
+    
+  //----------------------------------------------------------------------------
   // &&
+  static member and' (l, r) = Dlr.callStaticT<Operators> "and'" [l; r]
   static member and' (l:Box byref, r:Box byref) =
     if not (TypeConverter.toBoolean &l) then l else r
-
+    
+  //----------------------------------------------------------------------------
   // ||
+  static member or' (l, r) = Dlr.callStaticT<Operators> "or'" [l; r]
   static member or' (l:Box byref, r:Box byref) =
     if TypeConverter.toBoolean &l then l else r
-
-  // !
-  static member not (o:Box byref) =
-    not (TypeConverter.toBoolean &o)
       
 
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // PropertyClass API
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and PropertyClass =
         
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member subClass (x:IronJS.PropertyClass, name) = 
     if x.isDynamic then 
       let index = 
@@ -468,11 +519,11 @@ and PropertyClass =
 
       subClass
 
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member subClass (x:IronJS.PropertyClass, names:string seq) =
     Seq.fold (fun c (n:string) -> PropertyClass.subClass(c, n)) x names
         
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member makeDynamic (x:IronJS.PropertyClass) =
     if x.isDynamic then x
     else
@@ -483,7 +534,7 @@ and PropertyClass =
       pc.PropertyMap <- new MutableDict<string, int>(x.PropertyMap)
       pc
         
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member delete (x:IronJS.PropertyClass, name) =
     let pc = if not x.isDynamic then PropertyClass.makeDynamic x else x
     let mutable index = 0
@@ -493,7 +544,7 @@ and PropertyClass =
 
     pc
       
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member getIndex (x:IronJS.PropertyClass, name) =
     x.PropertyMap.[name]
     
@@ -588,25 +639,32 @@ and DispatchTarget = {
 //------------------------------------------------------------------------------
 and HostFunction() =
 
+  //----------------------------------------------------------------------------
   static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
     if i < passedArgs.Length 
       then TypeConverter.convertTo env passedArgs.[i] t
       else Dlr.default' t
-
-  static let marshalBoxParams (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+      
+  //----------------------------------------------------------------------------
+  static let marshalBoxParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
     passed
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map Expr.boxValue
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
-
-  static let marshalObjectParams (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+    
+  //----------------------------------------------------------------------------
+  static let marshalObjectParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
     passed
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map TypeConverter.toHostObject
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
-
+    
+  //----------------------------------------------------------------------------
   static let createParam i t = Dlr.param (sprintf "a%i" i) t
-
+  
+  //----------------------------------------------------------------------------
   static member compileDispatcher (target:DispatchTarget) = 
     let f = target.Function
 
@@ -646,12 +704,17 @@ and HostFunction() =
     lambda.Compile()
 
     
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // DelegateFunction API
-//-------------------------------------------------------------------------
-and DelegateFunction<'a when 'a :> Delegate> =
+//------------------------------------------------------------------------------
+and DelegateFunction<'a when 'a :> Delegate>() =
 
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  static let invokeCompiler f args =
+    let casted = Dlr.castT<IjsDelFunc<'a>> f
+    Dlr.invoke (Dlr.field casted "Delegate") args
+    
+  //----------------------------------------------------------------------------
   static member create (env:IjsEnv, delegate':'a) =
     let x = IjsDelFunc<'a>(env, delegate')
     let f = x :> IjsFunc
@@ -659,50 +722,52 @@ and DelegateFunction<'a when 'a :> Delegate> =
     let h = x :> IjsHostFunc
 
     Environment.addCompiler(
-      env, f.FunctionId, (DelegateFunction<'a>.compile)
+      env, f.FunctionId, DelegateFunction<'a>.compile
     )
     
     Object.putLength(o, double h.ArgTypes.Length) |> ignore
     f.Compiler <- env.Compilers.[f.FunctionId]
     f
   
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member compile (x:IjsFunc) (delegate':System.Type) =
     HostFunction.compileDispatcher {
       Delegate = delegate'
       Function = x :?> IjsHostFunc
-      Invoke =
-        fun f args -> 
-          let casted = Dlr.castT<IjsDelFunc<'a>> f
-          Dlr.invoke (Dlr.field casted "Delegate") args
+      Invoke = invokeCompiler
     }
 
     
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // ClrFunction API
-//-------------------------------------------------------------------------
-and ClrFunction =
+//------------------------------------------------------------------------------
+and ClrFunction() =
   
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
+    Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
+
+  //----------------------------------------------------------------------------
   static member create (env:IjsEnv, method') =
     let x = IjsClrFunc(env, method')
     let f = x :> IjsFunc
+    let o = x :> IjsObj
+    let h = x :> IjsHostFunc
 
     Environment.addCompiler(
-      env, f.FunctionId, (ClrFunction.compile)
+      env, f.FunctionId, ClrFunction.compile
     )
-
+    
+    Object.putLength(o, double h.ArgTypes.Length) |> ignore
     f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
     f
 
-  //-----------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   static member compile (x:IjsFunc) (delegate':System.Type) =
     HostFunction.compileDispatcher {
       Delegate = delegate'
       Function = x :?> IjsHostFunc
-      Invoke =
-        fun _ args -> 
-          Dlr.Expr.Call(null, (x :?> IjsClrFunc).Method, args) :> Dlr.Expr
+      Invoke = invokeCompiler (x :?> IjsClrFunc)
     }
 
         
@@ -954,12 +1019,11 @@ and Object() =
 
       else false
     else true
-
+    
   //----------------------------------------------------------------------------
-  //Special method for "length"-property due to arrays
-  static member putLength (x:IjsObj, value:double) =
+  // Special method that updates an arrays length property if needed
+  static member updateLength (x:IjsObj, value:IjsNum) =
     if x.Class = Classes.Array then
-
       let newLength = TypeConverter.toUInt32 value
 
       if (double newLength) = value then
@@ -976,7 +1040,44 @@ and Object() =
 
       else
         failwith "RangeError"
+        
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsBox byref) =
+    Object.updateLength(x, TypeConverter.toNumber &value)
+    Object.putProperty(x, "length", value)
+    
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsBool) =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsNum) : IjsNum =
+    Object.updateLength(x, value)
+    Object.putProperty(x, "length", value)
 
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:HostObject) =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+    
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsStr) =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:Undefined) =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsObj) =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsFunc) =
+    Object.updateLength(x, TypeConverter.toNumber value)
     Object.putProperty(x, "length", value)
 
   //----------------------------------------------------------------------------
@@ -1065,10 +1166,10 @@ and Object() =
 
   //-------------------------------------------------------------------------
   //Box Indexers
-  static member putIndex (x:IjsObj, index:Box byref, value:Box) = 
+  static member putIndex (x:IjsObj, index:Box byref, v:IjsBox byref) : IjsBox = 
     match index.Type with
-    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
-    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, &v)
+    | TypeCodes.String -> Object.putIndex(x, index.String, &v)
     | _ -> failwith "Que?"
 
   static member putIndex (x:IjsObj, index:Box byref, value:bool) = 
@@ -1092,25 +1193,25 @@ and Object() =
   //-------------------------------------------------------------------------
   //String Indexers
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:Box) = 
+  static member putIndex (x:IjsObj, index:IjsStr, v:IjsBox byref) : IjsBox = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, &v)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, &v)
+          else Object.putProperty(x, index, v)
+
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsBool) : IjsBool = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.putIndex(x, i, value)
       else 
         if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
+          then Object.putLength(x, value)
           else Object.putProperty(x, index, value)
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:bool) = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsNum) = 
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsNum) : IjsNum = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.putIndex(x, i, value)
@@ -1119,64 +1220,64 @@ and Object() =
           then Object.putLength(x, TypeConverter.toNumber value)
           else Object.putProperty(x, index, value)
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:HostObject) = 
+  static member putIndex (x:IjsObj, index:IjsStr, v:HostObject) : HostObject = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, v)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, v)
+          else Object.putProperty(x, index, v)
+
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsStr) : IjsStr = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.putIndex(x, i, value)
       else 
         if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
+          then Object.putLength(x, value)
           else Object.putProperty(x, index, value)
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsStr) = 
+  static member putIndex (x:IjsObj, index:IjsStr, value:Undefined) : Undefined = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.putIndex(x, i, value)
       else 
         if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
+          then Object.putLength(x, value)
           else Object.putProperty(x, index, value)
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:Undefined) = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsObj) = 
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsObj) : IjsObj = 
     let mutable i = Index.Min
     if Utils.isStringIndex (index, &i) 
       then Object.putIndex(x, i, value)
       else 
         if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
+          then Object.putLength(x, value)
           else Object.putProperty(x, index, value)
 
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsFunc) = 
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsFunc) : IjsFunc = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.putIndex(x, i, value)
       else 
         if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value); value
+          then Object.putLength(x, value)
           else Object.putProperty(x, index, value)
 
-  static member getIndex (x:IjsObj, index:IjsStr) = 
+  static member getIndex (x:IjsObj, index:IjsStr) : IjsBox = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.getIndex(x, i)
       else Object.getProperty(x, index)
 
-  static member hasIndex (x:IjsObj, index:IjsStr) = 
+  static member hasIndex (x:IjsObj, index:IjsStr) : IjsBool = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
       then Object.hasIndex(x, i)
       else Object.hasProperty(x, index)
 
-  static member deleteIndex (x:IjsObj, index:IjsStr) =
+  static member deleteIndex (x:IjsObj, index:IjsStr) : IjsBool =
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i)
       then Object.deleteIndex(x, i)
@@ -1185,67 +1286,67 @@ and Object() =
   //----------------------------------------------------------------------------
   // IjsNum indexers
   //----------------------------------------------------------------------------
-  static member putIndex (x:IjsObj, index:IjsNum, value:Box) = 
+  static member putIndex (x:IjsObj, index:IjsNum, v:IjsBox byref) : IjsBox = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, &v)
+      else Object.putProperty(x, TypeConverter.toString index, v)
+
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsBool) : IjsBool = 
     let i = uint32 index
     if double i = index
       then Object.putIndex(x, i, value)
       else Object.putProperty(x, TypeConverter.toString index, value)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsBool) = 
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsNum) : IjsNum = 
     let i = uint32 index
     if double i = index
       then Object.putIndex(x, i, value)
       else Object.putProperty(x, TypeConverter.toString index, value)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsNum) = 
+  static member putIndex (x:IjsObj, index:IjsNum, v:HostObject) : HostObject = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, v)
+      else Object.putProperty(x, string index, v)
+
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsStr) : IjsStr = 
     let i = uint32 index
     if double i = index
       then Object.putIndex(x, i, value)
       else Object.putProperty(x, TypeConverter.toString index, value)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:HostObject) = 
+  static member putIndex (x:IjsObj, index:IjsNum, v:Undefined) : Undefined = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, string index, value)
+      then Object.putIndex(x, i, v)
+      else Object.putProperty(x, TypeConverter.toString index, v)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsStr) = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:Undefined) = 
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsObj) : IjsObj = 
     let i = uint32 index
     if double i = index
       then Object.putIndex(x, i, value)
       else Object.putProperty(x, TypeConverter.toString index, value)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsObj) = 
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsFunc) : IjsFunc = 
     let i = uint32 index
     if double i = index
       then Object.putIndex(x, i, value)
       else Object.putProperty(x, TypeConverter.toString index, value)
 
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsFunc) = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member getIndex (x:IjsObj, index:IjsNum) = 
+  static member getIndex (x:IjsObj, index:IjsNum) : IjsBox = 
     let i = uint32 index
     if double i = index
       then Object.getIndex(x, i)
       else Object.getProperty(x, TypeConverter.toString index)
 
-  static member hasIndex (x:IjsObj, index:IjsNum) = 
+  static member hasIndex (x:IjsObj, index:IjsNum) : IjsBool = 
     let i = uint32 index
     if double i = index
       then Object.hasIndex(x, i)
       else Object.hasProperty(x, TypeConverter.toString index)
 
-  static member deleteIndex (x:IjsObj, index:IjsNum) =
+  static member deleteIndex (x:IjsObj, index:IjsNum) : IjsBool =
     let i = uint32 index
     if double i = index
       then Object.deleteIndex(x, i)
@@ -1253,7 +1354,35 @@ and Object() =
 
   //-------------------------------------------------------------------------
   //UInt32 Indexers
-  static member putIndex (x:IjsObj, ui:uint32, value:Box) = 
+  static member putIndex2 (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui >= x.IndexLength then
+        Object.updateLength(x, double x.IndexLength)
+
+        if ui > 255u && ui/2u >= x.IndexLength then
+          Object.initSparse x
+          Object.putIndex2(x, ui, &value)
+
+        else
+          Object.expandIndexStorage(x, int ui)
+          x.IndexLength <- ui + 1u
+          x.IndexValues.[int ui] <- value
+          value
+
+      else
+        x.IndexValues.[int ui] <- value
+        value
+
+    else
+      if ui >= x.IndexLength then 
+        x.IndexLength <- ui + 1u
+        Object.updateLength(x, double x.IndexLength)
+
+      x.IndexSparse.[ui] <- value
+      value
+
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- value
@@ -1265,14 +1394,14 @@ and Object() =
           Object.putProperty(x, "length", double x.IndexLength) |> ignore
         if ui >= 255u && ui/2u >= x.IndexLength then
           Object.initSparse x
-          Object.putIndex(x, ui, value)
+          Object.putIndex(x, ui, &value)
         else
           x.IndexLength <- ui + 1u
           Object.expandIndexStorage(x, int ui)
           x.IndexValues.[int ui] <- value; value
       else x.IndexValues.[int ui] <- value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:bool) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsBool) : IjsBool= 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxBool value
@@ -1291,7 +1420,7 @@ and Object() =
           Utils.setBoolInArray x.IndexValues (int ui) value; value
       else Utils.setBoolInArray x.IndexValues (int ui) value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:double) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsNum) : IjsNum = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxDouble value
@@ -1330,7 +1459,7 @@ and Object() =
           Utils.setClrInArray x.IndexValues (int ui) value; value
       else Utils.setClrInArray x.IndexValues (int ui) value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:string) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsStr) : IjsStr = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxString value
@@ -1349,7 +1478,7 @@ and Object() =
           Utils.setStringInArray x.IndexValues (int ui) value; value
       else Utils.setStringInArray x.IndexValues (int ui) value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:Undefined) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:Undefined) : Undefined = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxedUndefined
@@ -1368,7 +1497,7 @@ and Object() =
           Utils.setUndefinedInArray x.IndexValues (int ui) value; value
       else Utils.setUndefinedInArray x.IndexValues (int ui) value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsObj) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsObj) : IjsObj = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxObject value
@@ -1387,7 +1516,7 @@ and Object() =
           Utils.setObjectInArray x.IndexValues (int ui) value; value
       else Utils.setObjectInArray x.IndexValues (int ui) value; value
 
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsFunc) = 
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsFunc) : IjsFunc = 
     if ui > Index.Max then Object.initSparse x
     if not (Object.ReferenceEquals(x.IndexSparse, null)) then
       x.IndexSparse.[ui] <- Utils.boxFunction value

@@ -17,19 +17,10 @@
       ]
 
     let returnBoxedNumber (ctx:Ctx) number =
-      Dlr.blockTmpT<Box> (fun tmp ->
-        [
-          (Expr.setBoxType tmp TypeCodes.Number)
-          (Expr.setBoxValue tmp number)
-          (tmp :> Dlr.Expr)
-        ] |> Seq.ofList
-      )
-      (*
       Dlr.blockSimple [
         (Dlr.assign (Expr.unboxNumber ctx.Env_Temp_Number) number)
         (ctx.Env_Temp_Number)
       ]
-      *)
 
     let returnBoxedClr (ctx:Ctx) clr =
       Dlr.blockSimple [

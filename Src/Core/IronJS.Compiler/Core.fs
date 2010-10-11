@@ -466,7 +466,6 @@ module Core =
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
   and private _compileEval (ctx:Context) evalTree =
-
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
     

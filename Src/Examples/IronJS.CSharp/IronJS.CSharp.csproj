@@ -80,6 +80,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\IronJS.Compiler\IronJS.Compiler.fsproj">
       <Project>{81BFB688-1621-42D6-9062-093865A185D3}</Project>
       <Name>IronJS.Compiler</Name>
@@ -92,9 +95,6 @@
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

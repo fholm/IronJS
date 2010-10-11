@@ -102,7 +102,7 @@
   <ItemGroup>
     <Reference Include="FSharp.PowerPack, Version=1.9.9.9, Culture=neutral, PublicKeyToken=a19089b1c74d0809" />
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\Lib\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>..\..\..\Lib\Microsoft.Dynamic.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />

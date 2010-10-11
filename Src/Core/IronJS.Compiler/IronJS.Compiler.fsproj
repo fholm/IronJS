@@ -76,10 +76,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime">
-      <HintPath>..\..\Lib\Antlr3.Runtime.dll</HintPath>
+      <HintPath>..\..\..\Lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\Lib\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>..\..\..\Lib\Microsoft.Dynamic.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
@@ -87,7 +87,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="Xebic.ES3">
-      <HintPath>..\..\Lib\Xebic.ES3.dll</HintPath>
+      <HintPath>..\..\..\Lib\Xebic.ES3.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,22 @@
+﻿TODO:
+	* eval
+	* arguments object
+	* static typing
+	* objects
+	* wrapping .net delegates in js objects
+	* switch
+	* for ... in ...
+
+DONE:
+	* delete
+	* with
+	* this
+	* arrays
+	* new operator
+	* to many/to few args invocation
+	* array .length property
+	* passing Box byref
+	* try/catch, exceptions
+	* StaticExpr for Dlr.Expr
+	* break/continue and labels
+	  

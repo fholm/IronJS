@@ -14,7 +14,7 @@
                  Width="400" />
         
         <TextBox Height="51" 
-                 Margin="418,12,12,0" 
+                 Margin="418,29,12,0" 
                  VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap"
                  FontFamily="Consolas"
@@ -22,12 +22,13 @@
                  IsReadOnly="True"
                  VerticalAlignment="Top" />
         
-        <TextBox Margin="418,69,12,12" 
+        <TextBox Margin="418,102,12,12" 
                  Name="Debug" 
                  VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap"
                  FontFamily="Consolas"
                  IsReadOnly="True"
+                 Visibility="Visible"
                  />
         
         <Button Content="Run" 
@@ -41,5 +42,9 @@
         <Button Content="Reset Environment" Margin="218,0,0,12" 
                 Name="ResetEnv" HorizontalAlignment="Left" 
                 Width="113" Height="23" VerticalAlignment="Bottom" />
+        <Label Content="Result (last statement executed):" Height="28" HorizontalAlignment="Left" Margin="413,5,0,0" Name="ResultLabel" VerticalAlignment="Top" />
+        <Label Content="Debug Output:" Height="28" HorizontalAlignment="Left" Margin="413,78,0,0" Name="label2" VerticalAlignment="Top" />
+        <Label Content="Execution Time:" Height="28" Margin="12,0,0,7" Name="label3" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="93" />
+        <Label Content="" HorizontalAlignment="Left" Margin="111,0,0,7" Name="ExecutionTime" Height="28" VerticalAlignment="Bottom" />
     </Grid>
 </Window>

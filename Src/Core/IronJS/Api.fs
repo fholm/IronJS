@@ -451,6 +451,10 @@ and DelegateFunction<'a when 'a :> Delegate> =
       
   //-----------------------------------------------------------------------
   static member create (env:IjsEnv, delegate':'a) =
+    DelegateFunction<_>.create(env, delegate', env.Object_prototype)
+
+  //-----------------------------------------------------------------------
+  static member create (env:IjsEnv, delegate':'a, prototype) =
     let x = IjsDelFunc<'a>(env, delegate')
     let f = x :> IjsFunc
 
@@ -459,6 +463,7 @@ and DelegateFunction<'a when 'a :> Delegate> =
     )
 
     f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
+    (f :> IjsObj).Prototype <- prototype
     f
   
   //-----------------------------------------------------------------------

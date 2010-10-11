@@ -167,39 +167,6 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
     //TypeCode
     [<FieldOffset(16)>] val mutable Type : int16
   end
-(*
-type [<Struct>] Box =
-  struct
-    val mutable Clr : obj 
-    val mutable Double : IjsNum
-    val mutable Type : int
-
-    member x.String 
-      with get ()  = Index.retype x.Clr : IjsStr
-       and set (v) = x.Clr <- v
-
-    member x.Scope
-      with get ()  = Index.retype x.Clr : Scope
-       and set (v) = x.Clr <- v
-
-    member x.Undefined 
-      with get ()  = Index.retype x.Clr : Undefined
-       and set (v) = x.Clr <- v
-
-    member x.Object 
-      with get ()  = Index.retype x.Clr : Object
-       and set (v) = x.Clr <- v
-
-    member x.Func 
-      with get ()  = Index.retype x.Clr : Function
-       and set (v) = x.Clr <- v
-
-    member x.Bool 
-      with get ()  = x.Double > 0.0
-      and  set (v) = x.Double <- if v then 1.0 else 0.0
-
-  end
-*)
     
 
 
@@ -333,10 +300,8 @@ and [<AllowNullLiteral>] CachedCompiler(compiler:IjsFunc -> DelegateType -> Dele
 
       
 //------------------------------------------------------------------------------
-//
 // Base class used to represent all functions exposed as native javascript
 // functions to user code.
-//
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Function = 
   inherit Object
@@ -351,7 +316,7 @@ and [<AllowNullLiteral>] Function =
      
   new (env:IjsEnv, funcId, scopeChain, dynamicChain) = { 
     inherit Object(
-      env.Function_Class, env.Function_prototype, Classes.Function, 0u)
+      env.Function_Class, env.Object_prototype, Classes.Function, 0u)
 
     Env = env
     Compiler = env.Compilers.[funcId]

@@ -48,32 +48,32 @@ module Object =
     Api.Object.putProperty(
       o, "toString", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toString)), PropertyAttrs.All)
+        env, new Func<IjsObj, IjsStr>(toString), o), PropertyAttrs.All)
 
     //15.2.4.3
     Api.Object.putProperty(
       o, "toLocaleString", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toLocaleString)), PropertyAttrs.All)
+        env, new Func<IjsObj, IjsStr>(toLocaleString), o), PropertyAttrs.All)
 
     //15.2.4.4
     Api.Object.putProperty(
       o, "valueOf", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj>(valueOf)), PropertyAttrs.All)
+        env, new Func<IjsObj, IjsObj>(valueOf), o), PropertyAttrs.All)
 
     //15.2.4.5
     Api.Object.putProperty(
       o, "hasOwnProperty", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)), 
+        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty), o), 
       PropertyAttrs.All)
 
     //15.2.4.6
     Api.Object.putProperty(
       o, "isPrototypeOf", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)), 
+        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf), o), 
       PropertyAttrs.All)
 
     o

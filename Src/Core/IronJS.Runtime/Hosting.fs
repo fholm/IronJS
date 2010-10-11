@@ -23,7 +23,7 @@ module Hosting =
 
     x.Object_prototype <- Native.Object.createObjectPrototype(x)
     x.Globals <- Native.Global.create x
-      
+
     //Boxed bools
     x.Boxed_False.Bool  <- false
     x.Boxed_False.Type  <- TypeCodes.Bool

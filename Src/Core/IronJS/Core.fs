@@ -316,7 +316,7 @@ and [<AllowNullLiteral>] Function =
      
   new (env:IjsEnv, funcId, scopeChain, dynamicChain) = { 
     inherit Object(
-      env.Function_Class, env.Object_prototype, Classes.Function, 0u)
+      env.Function_Class, env.Function_prototype, Classes.Function, 0u)
 
     Env = env
     Compiler = env.Compilers.[funcId]
@@ -328,7 +328,7 @@ and [<AllowNullLiteral>] Function =
   }
 
   new (env:IjsEnv, propertyClass) = {
-    inherit Object(propertyClass, env.Object_prototype, Classes.Function, 0u)
+    inherit Object(propertyClass, env.Function_prototype, Classes.Function, 0u)
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId

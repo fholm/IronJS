@@ -436,11 +436,7 @@ and HostFunction() =
         )
             
     let lambda = Dlr.lambda target.Delegate args body
-
-    #if DEBUG
-    Dlr.Utils.printDebugView lambda
-    #endif
-
+    Debug.printExpr lambda
     lambda.Compile()
 
     
@@ -448,22 +444,20 @@ and HostFunction() =
 // DelegateFunction API
 //-------------------------------------------------------------------------
 and DelegateFunction<'a when 'a :> Delegate> =
-      
-  //-----------------------------------------------------------------------
-  static member create (env:IjsEnv, delegate':'a) =
-    DelegateFunction<_>.create(env, delegate', env.Object_prototype)
 
   //-----------------------------------------------------------------------
-  static member create (env:IjsEnv, delegate':'a, prototype) =
+  static member create (env:IjsEnv, delegate':'a) =
     let x = IjsDelFunc<'a>(env, delegate')
     let f = x :> IjsFunc
+    let o = x :> IjsObj
+    let h = x :> IjsHostFunc
 
     Environment.addCompiler(
       env, f.FunctionId, (DelegateFunction<'a>.compile)
     )
-
-    f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
-    (f :> IjsObj).Prototype <- prototype
+    
+    Object.putLength(o, double h.ArgTypes.Length) |> ignore
+    f.Compiler <- env.Compilers.[f.FunctionId]
     f
   
   //-----------------------------------------------------------------------

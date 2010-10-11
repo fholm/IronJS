@@ -14,6 +14,164 @@ using System.Windows.Shapes;
 using System.Reflection;
 
 namespace IronJS.DevUI {
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window {
+
+        IronJS.Hosting.Context ijsCtx;
+        System.Diagnostics.Stopwatch stopWatch;
+        Dictionary<IronJS.Object, TreeViewItem> printedObjects;
+
+        public MainWindow() {
+            InitializeComponent();
+            Title = IronJS.Version.FullName + " DevUI";
+            stopWatch = new System.Diagnostics.Stopwatch();
+            printedObjects = new Dictionary<Object, TreeViewItem>();
+
+            RunCode.Click += new RoutedEventHandler(RunCode_Click);
+            ResetEnv.Click += new RoutedEventHandler(ResetEnv_Click);
+
+            ResetEnv_Click(null, null);
+
+            IronJS.Debug.exprPrinters.Add(Print);
+
+            if (System.IO.File.Exists("ironjs_devgui.cache")) {
+                Input.Text = System.IO.File.ReadAllText("ironjs_devgui.cache");
+            }
+        }
+
+        void Print(System.Linq.Expressions.Expression expr) {
+            Debug.Text += IronJS.Dlr.Utils.debugView(expr);
+        }
+
+        void ResetEnv_Click(object sender, RoutedEventArgs e) {
+            ijsCtx = IronJS.Hosting.Context.Create();
+
+            if (sender != null)
+                RenderEnvironment();
+        }
+
+        void RenderEnvironment() {
+            Variables.Items.Clear();
+
+            var globals = RenderIronJSPropertyValues(ijsCtx.Environment.Globals, true);
+
+            foreach (var item in globals) {
+                Variables.Items.Add(item);
+            }
+        }
+
+        void RunCode_Click(object sender, RoutedEventArgs e) {
+            System.IO.File.WriteAllText("ironjs_devgui.cache", Input.Text);
+
+            stopWatch.Restart();
+            Debug.Text = "";
+            var result = ijsCtx.Execute(Input.Text);
+            stopWatch.Stop();
+            ExecutionTime.Content = stopWatch.ElapsedMilliseconds + "ms";
+            Result.Text = IronJS.Api.TypeConverter.toString(result);
+
+            RenderEnvironment();
+        }
+
+        List<TreeViewItem> RenderIronJSPropertyValues(IronJS.Object obj, bool isGlobal) {
+            var items = new List<TreeViewItem>();
+
+            if (obj != null) {
+                foreach (var kvp in obj.PropertyClass.PropertyMap) {
+                    if (isGlobal) {
+                        printedObjects.Clear();
+                    }
+
+                    items.Add(
+                            RenderIronJSValue(
+                                kvp.Key, obj.PropertyValues[kvp.Value]));
+                }
+
+                if (Utils.isDense(obj)) {
+                    for (var i = 0u; i < obj.IndexLength; ++i) {
+                        if (isGlobal) {
+                            printedObjects.Clear();
+                        }
+
+                        items.Add(RenderIronJSValue("[" + i + "]", obj.IndexValues[(int)i]));
+                    }
+                } else {
+                    foreach (var kvp in obj.IndexSparse) {
+                        if (isGlobal) {
+                            printedObjects.Clear();
+                        }
+
+                        items.Add(RenderIronJSValue("[" + kvp.Key + "]", kvp.Value));
+                    }
+                }
+            }
+
+            return items;
+        }
+
+        TreeViewItem RenderIronJSValue(string name, IronJS.Box box) {
+            var item = new TreeViewItem();
+            var header = item as HeaderedItemsControl;
+            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
+
+            switch (box.Type) {
+                case IronJS.TypeCodes.Undefined:
+                case IronJS.TypeCodes.Empty:
+                    item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
+                    break;
+
+                case IronJS.TypeCodes.Number:
+                    item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
+                    break;
+
+                case IronJS.TypeCodes.String:
+                    item.Foreground = new SolidColorBrush(Colors.Brown);
+                    break;
+
+                case IronJS.TypeCodes.Object:
+                case IronJS.TypeCodes.Function:
+                    item.Foreground = new SolidColorBrush(Colors.DarkGreen);
+                    if (printedObjects.ContainsKey(box.Object)) {
+                        item = new TreeViewItem();
+                        header = item as HeaderedItemsControl;
+                        header.Header = name + ": <recursive>";
+                        var obj = printedObjects[box.Object];
+                        item.MouseUp += new MouseButtonEventHandler((s, e) => {
+                            Variables.SetSelectedItem(obj);
+                        });
+
+                        item.Foreground = new SolidColorBrush(Colors.DarkGreen);
+
+                        return item;
+
+                    } else {
+                        printedObjects.Add(box.Object, item);
+
+                        if (box.Object.Prototype != null) {
+                            item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
+                        }
+
+                        if (box.Object.Value.Type != TypeCodes.Empty) {
+                            item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value));
+                        }
+
+                        foreach (var child in RenderIronJSPropertyValues(box.Object, false)) {
+                            item.Items.Add(child);
+                        }
+                    }
+                    break;
+            }
+
+            return item;
+        }
+
+        void QuitButton_Click(object sender, RoutedEventArgs e) {
+            Application.Current.Shutdown();
+        }
+    }
+
     public static class Ext {
         static public bool SetSelectedItem(this TreeView treeView, object item) {
             return SetSelected(treeView, item);
@@ -48,113 +206,6 @@ namespace IronJS.DevUI {
             }
 
             return false;
-        }
-    }
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window {
-
-        IronJS.Hosting.Context ijsCtx;
-        System.Diagnostics.Stopwatch stopWatch;
-        Dictionary<IronJS.Object, TreeViewItem> printedObjects;
-
-        public MainWindow() {
-            InitializeComponent();
-            Title = IronJS.Version.FullName + " DevUI";
-            stopWatch = new System.Diagnostics.Stopwatch();
-            printedObjects = new Dictionary<Object, TreeViewItem>();
-
-            RunCode.Click += new RoutedEventHandler(RunCode_Click);
-            ResetEnv.Click += new RoutedEventHandler(ResetEnv_Click);
-
-            ResetEnv_Click(null, null);
-
-            IronJS.Printer.print = new IronJS.Print(Print);
-
-            if (System.IO.File.Exists("ironjs_devgui.cache")) {
-                Input.Text = System.IO.File.ReadAllText("ironjs_devgui.cache");
-            }
-        }
-
-        void Print(System.Linq.Expressions.Expression expr) {
-            Debug.Text += IronJS.Dlr.Utils.debugView(expr);
-        }
-
-        void ResetEnv_Click(object sender, RoutedEventArgs e) {
-            ijsCtx = IronJS.Hosting.Context.Create();
-        }
-
-        void RunCode_Click(object sender, RoutedEventArgs e) {
-            System.IO.File.WriteAllText("ironjs_devgui.cache", Input.Text);
-
-            stopWatch.Restart();
-            Debug.Text = "";
-            var result = ijsCtx.Execute(Input.Text);
-            stopWatch.Stop();
-            ExecutionTime.Content = stopWatch.ElapsedMilliseconds + "ms";
-            Result.Text = IronJS.Api.TypeConverter.toString(result);
-
-            printedObjects.Clear();
-            Variables.Items.Clear();
-
-            var globals = RenderIronJSObjectValues(ijsCtx.Environment.Globals);
-
-            foreach (var item in globals) {
-                Variables.Items.Add(item);
-            }
-        }
-
-        List<TreeViewItem> RenderIronJSObjectValues(IronJS.Object obj) {
-            var items = new List<TreeViewItem>();
-
-            if (obj != null) {
-                foreach (var kvp in obj.PropertyClass.PropertyMap) {
-                    items.Add(
-                            RenderIronJSValue(
-                                kvp.Key, obj.PropertyValues[kvp.Value]));
-                }
-            }
-
-            return items;
-        }
-
-        TreeViewItem RenderIronJSValue(string name, IronJS.Box box) {
-            var item = new TreeViewItem();
-            var header = item as HeaderedItemsControl;
-            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
-
-            switch (box.Type) {
-                case IronJS.TypeCodes.Object:
-                case IronJS.TypeCodes.Function:
-                    if (printedObjects.ContainsKey(box.Object)) {
-                        item = new TreeViewItem();
-                        header = item as HeaderedItemsControl;
-                        header.Header = name + ": <recursive>";
-
-                        item.MouseUp += new MouseButtonEventHandler((s, e) => {
-                            Variables.SetSelectedItem(printedObjects[box.Object]);
-                        });
-
-                        return item;
-
-                    } else {
-                        printedObjects.Add(box.Object, item);
-
-                        if (box.Object.Prototype != null) {
-                            item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
-                        }
-
-                        item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value));
-
-                        foreach (var child in RenderIronJSObjectValues(box.Object)) {
-                            item.Items.Add(child);
-                        }
-                    }
-                    break;
-            }
-
-            return item;
         }
     }
 }

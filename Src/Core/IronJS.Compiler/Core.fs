@@ -539,10 +539,7 @@ module Core =
       | Some d -> Dlr.lambda d allParameters functionBody
       | _ -> Dlr.lambdaAuto allParameters functionBody
       
-    #if DEBUG
-    IronJS.Printer.print.Invoke(lambda)
-    #endif
-
+    Debug.printExpr lambda
     lambda.Compile()
       
   let compileAsGlobal env tree =

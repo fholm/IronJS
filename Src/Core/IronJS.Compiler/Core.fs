@@ -47,11 +47,11 @@ module Core =
     //Functions
     | Ast.Invoke(func, args)  -> _compileInvoke ctx func args
     | Ast.New(func, args) -> _compileNew ctx func args
-    | Ast.Function(id, body) -> Function.create ctx compile id body
+    | Ast.Function(id, _, body) -> Function.create ctx compile id body
     | Ast.Return tree -> _compileReturn ctx tree
 
     //Control Flow
-    | Ast.If(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
+    | Ast.IfElse(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
     | Ast.Switch(test, cases) -> _compileSwitch ctx test cases
     | Ast.While(label, test, body) -> _compileWhile ctx label test body
     | Ast.For(label, i, t, incr, b) -> _compileFor ctx label i t incr b

@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Compiler
 
+//------------------------------------------------------------------------------
 module Scope =
 
   //----------------------------------------------------------------------------
@@ -23,8 +24,6 @@ module Scope =
     ]
     
   //----------------------------------------------------------------------------
-  //
-  //----------------------------------------------------------------------------
   module Function =
   
     //--------------------------------------------------------------------------
@@ -41,31 +40,8 @@ module Scope =
         else vars
         
     //--------------------------------------------------------------------------
-    let resolveParamType ctx (var:Ast.Variable) =
-      let i = Utils.Option.unwrap var.ParamIndex
-      let tc = Utils.expr2tc ctx.ParameterExprs.[i]
-      if tc > TypeCodes.Empty then {var with Type=Some tc} else var
-      
-    //--------------------------------------------------------------------------
-    let resolveNonParamType ctx (var:Ast.Variable) =
-      let tree = Utils.Seq.first var.AssignedFrom
-      let type' = match tree with
-                  | Ast.Typed(tc, Ast.Pass) -> Some tc
-                  | _ -> None
-
-      {var with Type=type'}
-        
-    //--------------------------------------------------------------------------
     let resolveVariableTypes ctx vars =
-      vars |> Set.map (fun (var:Ast.Variable) -> var
-        (*
-        if var.IsParameter 
-          then resolveParamType ctx var
-          elif var.AssignedFrom.Count = 1 
-            then resolveNonParamType ctx var
-            else var
-        *)
-      )
+      vars |> Set.map (fun (var:Ast.Variable) -> var)
       
     //--------------------------------------------------------------------------
     let storageExpr ctx (var:Ast.Variable) =
@@ -92,7 +68,7 @@ module Scope =
       
     //--------------------------------------------------------------------------
     let initVariables ctx (vars:Ast.Variable Set) =
-      let params', nonParams = vars |> Set.partition (fun var -> var.IsParameter)
+      let params',nonParams = vars |> Set.partition (fun var -> var.IsParameter)
       initParams ctx params', initNonParams ctx nonParams
         
     //--------------------------------------------------------------------------

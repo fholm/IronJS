@@ -6,6 +6,7 @@ module Ast =
   open IronJS.Utils
   open IronJS.Aliases
   open IronJS.Ops
+  open Antlr.Runtime
 
   open System.Globalization
 
@@ -13,48 +14,48 @@ module Ast =
   // Binary Operators
   //----------------------------------------------------------------------------
   type BinaryOp 
-    = Add = 1 // foo + bar
-    | Sub = 2 // foo - bar
-    | Div = 3 // foo / bar
-    | Mul = 4 // foo * bar
-    | Mod = 5 // foo % bar
+    = Add = 1 // x + y
+    | Sub = 2 // x - y
+    | Div = 3 // x / y
+    | Mul = 4 // x * y
+    | Mod = 5 // x % y
 
-    | And = 25
-    | Or = 26
+    | And = 25 // x && y
+    | Or = 26 // x || y
 
-    | BitAnd = 50 // foo & bar
-    | BitOr = 51 // foo | bar
-    | BitXor = 53 // foo ^ bar
-    | BitShiftLeft = 54 // foo << bar
-    | BitShiftRight = 55 // foo >> bar
-    | BitUShiftRight = 56 // foo >>> bar
+    | BitAnd = 50 // x & y
+    | BitOr = 51 // x | y
+    | BitXor = 53 // x ^ y
+    | BitShiftLeft = 54 // x << y
+    | BitShiftRight = 55 // x >> y
+    | BitUShiftRight = 56 // x >>> y
 
-    | Eq = 100 // foo == bar
-    | NotEq = 101 // foo != bar
-    | Same = 102 // foo === bar
-    | NotSame = 103 // foo !== bar
-    | Lt = 104 // foo < bar
-    | LtEq = 105 // foo <= bar
-    | Gt = 106 // foo > bar
-    | GtEq = 107 // foo >= bar
+    | Eq = 100 // x == y
+    | NotEq = 101 // x != y
+    | Same = 102 // x === y
+    | NotSame = 103 // x !== y
+    | Lt = 104 // x < y
+    | LtEq = 105 // x <= y
+    | Gt = 106 // x > y
+    | GtEq = 107 // x >= y
       
   //----------------------------------------------------------------------------
   // Unary Operators
   //----------------------------------------------------------------------------
   type UnaryOp 
-    = Inc // ++foo
-    | Dec // --foo
-    | PostInc // foo++
-    | PostDec // foo--
-    | Plus // +foo
-    | Minus // -foo
+    = Inc // ++x
+    | Dec // --x
+    | PostInc // x++
+    | PostDec // x--
+    | Plus // +x
+    | Minus // -x
     
-    | Not // !foo
-    | BitCmpl // ~foo
+    | Not // !x
+    | BitCmpl // ~x
 
-    | Void // void foo
-    | Delete // delete foo.bar
-    | TypeOf // typeof foo
+    | Void // void x
+    | Delete // delete x.y
+    | TypeOf // typeof x
     
   //-------------------------------------------------------------------------
   type ScopeType
@@ -67,10 +68,10 @@ module Ast =
     = Clean
     | Contains
     | Effected
-    
+
   //-------------------------------------------------------------------------
-  and Tree
-    //Constants
+  type Tree
+    // Simple
     = String of string
     | Number of double
     | Boolean of bool
@@ -79,49 +80,53 @@ module Ast =
     | Null
     | Undefined
 
-    //Ops
+    // Operators
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
+    | Assign of Tree * Tree
+    | In of Tree * Tree
+    | InstanceOf of Tree * Tree
 
+    // Object
     | Object of Tree list
     | Array of Tree list
+    | With of Tree * Tree
+    | Property of Tree * string
+    | Index of Tree * Tree
+
+    // Function
+    | Eval of Tree
     | New of Tree * Tree list
+    | Return of Tree
+    | Function of int64 * string option * Tree
+    | Invoke of Tree * Tree list
 
-    //
-    | Eval        of Tree
-    | Var         of Tree
-    | Return      of Tree
-    | Identifier  of string
-    | Block       of Tree list
-    | Assign      of Tree * Tree
-    | With        of Tree * Tree
-    | Function    of int64 * Tree
-    | Property    of Tree * string
-    | Index       of Tree * Tree
-    | Invoke      of Tree * Tree list
-    | Typed       of TypeCode * Tree
-    | Try         of Tree * Tree list * Tree option
-    | Catch       of Tree
-    | Finally     of Tree
-    | Throw       of Tree
-    | If          of Tree * Tree * Tree option
-    | Switch      of Tree * Tree list
-    | Case        of Tree list * Tree
-    | Default     of Tree
-    | In          of Tree * Tree
-    | InstanceOf  of Tree * Tree
+    // Control Flow
+    | Label of string * Tree
+    | For of string option * Tree * Tree * Tree * Tree
+    | ForIn of string option * Tree * Tree * Tree
+    | While of string option * Tree * Tree
+    | DoWhile of string option * Tree * Tree
+    | Break of string option
+    | Continue of string option
+    | IfElse of Tree * Tree * Tree option
+    | Ternary of Tree * Tree * Tree
+    | Switch of Tree * Tree list
+    | Case of Tree list * Tree
+    | Default of Tree
 
-    | For         of string option * Tree * Tree * Tree * Tree
-    | ForIn       of string option * Tree * Tree * Tree
-    | While       of string option * Tree * Tree
-    | DoWhile     of string option * Tree * Tree
-
-    | Break       of string option
-    | Continue    of string option
-    | Label       of string * Tree
+    // Exception
+    | Try of Tree * Tree list * Tree option
+    | Catch of Tree
+    | Finally of Tree
+    | Throw of Tree
 
     //
     | LocalScope of Scope * Tree
+    | Var of Tree
+    | Identifier of string
+    | Block of Tree list
+    | Type of TypeCode
     
   //-------------------------------------------------------------------------
   and [<CustomEquality>] [<CustomComparison>] Variable = {
@@ -296,7 +301,7 @@ module Ast =
     | Number _
     | Break _
     | Continue _
-    | Typed (_, _)
+    | Type _
     | Pass
     | Null
     | This
@@ -317,7 +322,7 @@ module Ast =
     | InstanceOf(object', func) -> InstanceOf(f object', f func)
 
     //Functions
-    | Function(id, tree) -> Function(id, f tree) 
+    | Function(id, source, tree) -> Function(id, source, f tree) 
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
     | Return value -> Return(f value)
@@ -328,7 +333,8 @@ module Ast =
     | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
     | Case(tests, body) -> Case([for t in tests -> f t], f body)
     | Default body -> Default (f body)
-    | If(test, ifTrue, ifFalse) -> If(f test, f ifTrue, (f >? ifFalse))
+    | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, f >? ifFalse)
+    | Ternary(test, ifTrue, ifFalse) -> Ternary(f test, f ifTrue, f ifFalse)
     | While(label, test, body) -> While(label, f test, f body)
     | DoWhile(label, test, body) -> DoWhile(label, f test, f body)
     | ForIn(label, name, init, body) -> ForIn(label, f name, f init, f body)
@@ -622,7 +628,7 @@ module Ast =
   let expressionType tree =
     match tree with
     | Tree.Number _ -> Some TypeCodes.Number
-    | Tree.Function (_, _) -> Some TypeCodes.Function
+    | Tree.Function (_, _, _) -> Some TypeCodes.Function
     | Tree.Object _ -> Some TypeCodes.Object
     | Tree.Binary (op, l, r) ->
       match op with
@@ -652,7 +658,7 @@ module Ast =
           let from = 
             match expressionType value with
             | None -> value
-            | Some tc -> Tree.Typed(tc, Pass)
+            | Some tc -> Tree.Type tc
 
           let var' = var.AddAssignedFrom from
           modifyScope (fun (s:Scope) -> s.ReplaceVar var var') sc
@@ -727,11 +733,15 @@ module Ast =
         let str = text tok
         str.Substring(1, str.Length - 2)
 
-      let rec binary op tok =
-        Binary(op, translate (child tok 0), translate (child tok 1))
+      let rec binary stream op tok =
+        let translate = translate stream
+        let left = translate (child tok 0)
+        let right = translate (child tok 1)
+        Binary(op, left, right)
 
-      and for' label tok =
+      and for' stream label tok =
         let type' = child tok 0 
+        let translate = translate stream
         match type'.Type with
         | ES3Parser.FORSTEP ->
           let init = translate (child type' 0)
@@ -747,19 +757,26 @@ module Ast =
 
         | _ -> Errors.compiler "Should be FORSTEP or FORITER"
 
-      and while' label tok =
+      and while' stream label tok =
+        let translate = translate stream
         While(label, translate (child tok 0), translate (child tok 1))
 
-      and binaryAsn op tok =
-          Assign(
-            translate (child tok 0),
-            Binary(op, translate (child tok 0), translate (child tok 1))
-          )
+      and doWhile stream label tok =
+        let translate = translate stream
+        DoWhile(label, translate (child tok 0), translate (child tok 1))
 
-      and unary op tok =
-        Unary(op, translate (child tok 0))
+      and binaryAsn stream op tok =
+        let translate = translate stream
+        let target = translate (child tok 0)
+        let op = Binary(op, target, translate (child tok 1))
+        Assign(target, op)
 
-      and translate (tok:AntlrToken) =
+      and unary stream op tok =
+        Unary(op, translate stream (child tok 0))
+
+      and translate (stream:CommonTokenStream) (tok:AntlrToken) =
+        let translate = translate stream
+
         if tok = null then Pass else
         match tok.Type with
         // Nil
@@ -853,7 +870,7 @@ module Ast =
         | ES3Parser.NAMEDVALUE -> 
           Assign(String(text (child tok 0)), translate (child tok 1))
 
-        // if { }
+        // if { } else { }
         | ES3Parser.IF ->
           let test = translate (child tok 0)
           let ifTrue = translate (child tok 1)
@@ -862,59 +879,71 @@ module Ast =
               then Some (translate (child tok 2))
               else None
 
-          If(test, ifTrue, ifFalse)
+          IfElse(test, ifTrue, ifFalse)
+
+        // x = y ? t : f
+        | ES3Parser.QUE ->
+          let test = translate (child tok 0)
+          let ifTrue = translate (child tok 1)
+          let ifFalse = translate (child tok 2)
+          Ternary(test, ifTrue, ifFalse)
           
         // (x)
         | ES3Parser.PAREXPR
         | ES3Parser.EXPR -> translate (child tok 0) // (foo)
 
         // Math operators
-        | ES3Parser.ADD -> binary BinaryOp.Add tok // x + y
-        | ES3Parser.ADDASS -> binaryAsn BinaryOp.Add tok // x += y
-        | ES3Parser.SUB -> binary BinaryOp.Sub tok // x - y
-        | ES3Parser.SUBASS -> binaryAsn BinaryOp.Sub tok // x -= y
-        | ES3Parser.DIV -> binary BinaryOp.Div tok // x / y
-        | ES3Parser.DIVASS -> binaryAsn BinaryOp.Div tok // x /= y
-        | ES3Parser.MUL -> binary BinaryOp.Mul tok // x * y
-        | ES3Parser.MULASS -> binaryAsn BinaryOp.Mul tok // x *= y
-        | ES3Parser.MOD -> binary BinaryOp.Mod tok // x % y
-        | ES3Parser.MODASS -> binaryAsn BinaryOp.Mod tok // x %= y
+        | ES3Parser.ADD -> binary stream BinaryOp.Add tok // x + y
+        | ES3Parser.ADDASS -> binaryAsn stream BinaryOp.Add tok // x += y
+        | ES3Parser.SUB -> binary stream BinaryOp.Sub tok // x - y
+        | ES3Parser.SUBASS -> binaryAsn stream BinaryOp.Sub tok // x -= y
+        | ES3Parser.DIV -> binary stream BinaryOp.Div tok // x / y
+        | ES3Parser.DIVASS -> binaryAsn stream BinaryOp.Div tok // x /= y
+        | ES3Parser.MUL -> binary stream BinaryOp.Mul tok // x * y
+        | ES3Parser.MULASS -> binaryAsn stream BinaryOp.Mul tok // x *= y
+        | ES3Parser.MOD -> binary stream BinaryOp.Mod tok // x % y
+        | ES3Parser.MODASS -> binaryAsn stream BinaryOp.Mod tok // x %= y
 
         // Bit operators
-        | ES3Parser.AND -> binary BinaryOp.BitAnd tok // x & y
-        | ES3Parser.ANDASS -> binaryAsn BinaryOp.BitAnd tok // x &= y
-        | ES3Parser.OR  -> binary BinaryOp.BitOr tok // x | y
-        | ES3Parser.ORASS -> binaryAsn BinaryOp.BitOr tok // x |= y
-        | ES3Parser.XOR -> binary BinaryOp.BitXor tok // x ^ y
-        | ES3Parser.XORASS -> binaryAsn BinaryOp.BitXor tok // x ^= y
-        | ES3Parser.SHL -> binary BinaryOp.BitShiftLeft tok // x << y
-        | ES3Parser.SHLASS -> binaryAsn BinaryOp.BitShiftLeft tok // x <<= y
-        | ES3Parser.SHR -> binary BinaryOp.BitShiftRight tok // x >> y
-        | ES3Parser.SHRASS -> binaryAsn BinaryOp.BitShiftRight tok // x >>= y
-        | ES3Parser.SHU -> binary BinaryOp.BitUShiftRight tok // x >>> y
-        | ES3Parser.SHUASS -> binaryAsn BinaryOp.BitUShiftRight tok // x >>>= y
+        | ES3Parser.AND -> binary stream BinaryOp.BitAnd tok // x & y
+        | ES3Parser.ANDASS -> binaryAsn stream BinaryOp.BitAnd tok // x &= y
+        | ES3Parser.OR  -> binary stream BinaryOp.BitOr tok // x | y
+        | ES3Parser.ORASS -> binaryAsn stream BinaryOp.BitOr tok // x |= y
+        | ES3Parser.XOR -> binary stream BinaryOp.BitXor tok // x ^ y
+        | ES3Parser.XORASS -> binaryAsn stream BinaryOp.BitXor tok // x ^= y
+        | ES3Parser.SHL -> binary stream BinaryOp.BitShiftLeft tok // x << y
+        | ES3Parser.SHLASS -> 
+          binaryAsn stream BinaryOp.BitShiftLeft tok // x <<= y
+
+        | ES3Parser.SHR -> binary stream BinaryOp.BitShiftRight tok // x >> y
+        | ES3Parser.SHRASS -> 
+          binaryAsn stream BinaryOp.BitShiftRight tok // x >>= y
+
+        | ES3Parser.SHU -> binary stream BinaryOp.BitUShiftRight tok // x >>> y
+        | ES3Parser.SHUASS -> 
+          binaryAsn stream BinaryOp.BitUShiftRight tok // x >>>= y
 
         // Logical operators
-        | ES3Parser.EQ -> binary BinaryOp.Eq tok // x == y
-        | ES3Parser.NEQ -> binary BinaryOp.NotEq tok // x != y
-        | ES3Parser.SAME -> binary BinaryOp.Same tok // x === y
-        | ES3Parser.NSAME -> binary BinaryOp.NotSame tok // x !== y
-        | ES3Parser.LT -> binary BinaryOp.Lt tok // x < y
-        | ES3Parser.LTE -> binary BinaryOp.LtEq tok // x <= y
-        | ES3Parser.GT -> binary BinaryOp.Gt tok // x > y
-        | ES3Parser.GTE -> binary BinaryOp.GtEq tok // x >= y
-        | ES3Parser.LAND -> binary BinaryOp.And  tok // x && y
-        | ES3Parser.LOR -> binary BinaryOp.Or tok // x || y
+        | ES3Parser.EQ -> binary stream BinaryOp.Eq tok // x == y
+        | ES3Parser.NEQ -> binary stream BinaryOp.NotEq tok // x != y
+        | ES3Parser.SAME -> binary stream BinaryOp.Same tok // x === y
+        | ES3Parser.NSAME -> binary stream BinaryOp.NotSame tok // x !== y
+        | ES3Parser.LT -> binary stream BinaryOp.Lt tok // x < y
+        | ES3Parser.LTE -> binary stream BinaryOp.LtEq tok // x <= y
+        | ES3Parser.GT -> binary stream BinaryOp.Gt tok // x > y
+        | ES3Parser.GTE -> binary stream BinaryOp.GtEq tok // x >= y
+        | ES3Parser.LAND -> binary stream BinaryOp.And  tok // x && y
+        | ES3Parser.LOR -> binary stream BinaryOp.Or tok // x || y
 
         // Unary operators
-        | ES3Parser.PINC -> unary UnaryOp.PostInc tok // x++
-        | ES3Parser.PDEC -> unary UnaryOp.PostDec tok // x--
-        | ES3Parser.INC -> unary UnaryOp.Inc tok // ++x
-        | ES3Parser.DEC -> unary UnaryOp.Dec tok // --x
-        | ES3Parser.NOT -> unary UnaryOp.Not tok // !x
-        | ES3Parser.INV -> unary UnaryOp.BitCmpl tok // ~x
-        | ES3Parser.NEG -> unary UnaryOp.Minus tok // -x
-        | ES3Parser.POS -> unary UnaryOp.Plus tok // +x
+        | ES3Parser.PINC -> unary stream UnaryOp.PostInc tok // x++
+        | ES3Parser.PDEC -> unary stream UnaryOp.PostDec tok // x--
+        | ES3Parser.INC -> unary stream UnaryOp.Inc tok // ++x
+        | ES3Parser.DEC -> unary stream UnaryOp.Dec tok // --x
+        | ES3Parser.NOT -> unary stream UnaryOp.Not tok // !x
+        | ES3Parser.INV -> unary stream UnaryOp.BitCmpl tok // ~x
+        | ES3Parser.NEG -> unary stream UnaryOp.Minus tok // -x
+        | ES3Parser.POS -> unary stream UnaryOp.Plus tok // +x
 
         // x in y
         | ES3Parser.IN -> In(translate (child tok 0), translate (child tok 1))
@@ -924,10 +953,13 @@ module Ast =
           InstanceOf(translate (child tok 0), translate (child tok 1))
 
         // for(;;) 
-        | ES3Parser.FOR -> for' None tok
+        | ES3Parser.FOR -> for' stream None tok
 
         // while() {}
-        | ES3Parser.WHILE -> while' None tok
+        | ES3Parser.WHILE -> while' stream None tok
+
+        // do { } while ();
+        | ES3Parser.DO -> doWhile stream None tok
           
         // catch() { }
         | ES3Parser.CATCH ->        
@@ -956,20 +988,31 @@ module Ast =
           let child1 = child tok 1
           let label = text (child tok 0)
           match child1.Type with
-          | ES3Parser.FOR -> for' (Some label) child1
-          | ES3Parser.WHILE -> while' (Some label) child1
+          | ES3Parser.FOR -> for' stream (Some label) child1
+          | ES3Parser.WHILE -> while' stream (Some label) child1
+          | ES3Parser.DO -> doWhile stream (Some label) child1
           | _ -> Label(label, translate child1)
 
         // function() {}
         | ES3Parser.FUNCTION -> 
-          let pc, bc = if tok.ChildCount = 3 then (1, 2) else (0, 1)
+          // Source representation that is used 
+          // in Function.prototype.toString
+          let source = 
+            stream.GetTokens(tok.TokenStartIndex, tok.TokenStopIndex)
+            |> Seq.cast<CommonToken> 
+            |> Seq.map (fun x -> x.Text)
+            |> String.concat ""
+
+          let named = tok.ChildCount = 3
+          let pc, bc = if named then (1, 2) else (0, 1)
           let id = _funId() + 1000000L
           let parms = [for x in children (child tok pc) -> text x]
           let scope = Scope.NewFunction parms
           let body = translate (child tok bc)
-          let func = Tree.Function(id, LocalScope(scope, body))
+          let scope = LocalScope(scope, body)
+          let func = Tree.Function(id, Some source, scope)
 
-          if tok.ChildCount < 3 then func
+          if named then func
           else
             let name = text (child tok 0)
             Var(Assign(Identifier name, func)) 
@@ -982,7 +1025,7 @@ module Ast =
             | [] -> Errors.parser "Empty list"
             | x::xs -> x, xs
 
-          let _, cases =
+          let cases =
             List.fold (fun (tests, cases) (case:AntlrToken) ->
               
               match case.Type with
@@ -1003,16 +1046,22 @@ module Ast =
 
               | _ -> Errors.parser "Should be CASE or DEFAULT"
 
-            ) ([], []) cases
+            ) ([], []) cases |> snd
 
           Switch(translate value, cases)
 
-        | _ -> failwithf "No parser for token %s (%i)" (ES3Parser.tokenNames.[tok.Type]) tok.Type
-  
+        | _ -> 
+          let name = (ES3Parser.tokenNames.[tok.Type])
+          failwithf "No parser for token %s (%i)" name tok.Type
+
+
       let parse source = 
-        let lexer = new Xebic.ES3.ES3Lexer(new Antlr.Runtime.ANTLRStringStream(source))
-        let parser = new Xebic.ES3.ES3Parser(new Antlr.Runtime.CommonTokenStream(lexer))
-        translate (parser.program().Tree :?> AntlrToken)
+        let stringStream = new Antlr.Runtime.ANTLRStringStream(source)
+        let lexer = new Xebic.ES3.ES3Lexer(stringStream)
+        let tokenStream = new Antlr.Runtime.CommonTokenStream(lexer)
+        let parser = new Xebic.ES3.ES3Parser(tokenStream)
+
+        translate tokenStream (parser.program().Tree :?> AntlrToken)
 
       let parseFile path = parse (System.IO.File.ReadAllText(path))
       let parseGlobalFile path = LocalScope(Scope.NewGlobal, parseFile path)

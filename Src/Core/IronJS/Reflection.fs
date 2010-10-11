@@ -1,6 +1,7 @@
 ﻿namespace IronJS
 
 open System
+open System.Reflection
 
 module Reflection =
 
@@ -86,9 +87,23 @@ module Reflection =
 
   let getCtorT<'a> = getCtor typeof<'a>
 
-  let getFields (type':System.Type) = type'.GetFields()
+  let getFields (type':System.Type) = 
+    type'.GetFields(
+      BindingFlags.Public 
+      ||| BindingFlags.NonPublic
+      ||| BindingFlags.Instance
+      ||| BindingFlags.Static
+    )
+
   let getFieldsT<'a> = getFields typeof<'a>
-  let getField (type':System.Type) name = type'.GetField(name)
+  let getField (type':System.Type) name = 
+    type'.GetField(name, 
+      BindingFlags.Public 
+      ||| BindingFlags.NonPublic
+      ||| BindingFlags.Instance
+      ||| BindingFlags.Static
+    )
+
   let getFieldT<'a> = getField typeof<'a>
 
   let getProperties (type':System.Type) = type'.GetProperties()

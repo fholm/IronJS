@@ -19,10 +19,12 @@ namespace IronJS.DevUI {
     public partial class MainWindow : Window {
 
         IronJS.Hosting.Context ijsCtx;
+        System.Diagnostics.Stopwatch stopWatch;
 
         public MainWindow() {
             InitializeComponent();
             Title = IronJS.Version.FullName + " DevUI";
+            stopWatch = new System.Diagnostics.Stopwatch();
 
             RunCode.Click += new RoutedEventHandler(RunCode_Click);
             ResetEnv.Click += new RoutedEventHandler(ResetEnv_Click);
@@ -41,8 +43,12 @@ namespace IronJS.DevUI {
         }
 
         void RunCode_Click(object sender, RoutedEventArgs e) {
+            stopWatch.Restart();
             Debug.Text = "";
-            Result.Text = IronJS.Api.TypeConverter.toString(ijsCtx.Execute(Input.Text));
+            var result = ijsCtx.Execute(Input.Text);
+            stopWatch.Stop();
+            ExecutionTime.Content = stopWatch.ElapsedMilliseconds + "ms";
+            Result.Text = IronJS.Api.TypeConverter.toString(result);
         }
     }
 }

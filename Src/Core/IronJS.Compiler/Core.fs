@@ -52,6 +52,7 @@ module Core =
 
     //Control Flow
     | Ast.If(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
+    | Ast.Switch(test, cases) -> _compileSwitch ctx test cases
     | Ast.While(label, test, body) -> _compileWhile ctx label test body
     | Ast.For(label, i, t, incr, b) -> _compileFor ctx label i t incr b
     | Ast.Break label -> ControlFlow.break' ctx label
@@ -62,6 +63,7 @@ module Core =
     | Ast.Try(body, catch, finally') -> _compileTry ctx body catch finally'
     | Ast.Throw tree -> Exception.throw (compileAst ctx tree)
     | Ast.Finally body -> Exception.finally' (compileAst ctx body)
+
       
     | _ -> failwithf "Failed to compile %A" tree
       
@@ -74,7 +76,14 @@ module Core =
   //----------------------------------------------------------------------------
   and compileTreeAsVoid ctx tree =
     Dlr.castVoid (compileAst ctx tree)
-
+      
+  //----------------------------------------------------------------------------
+  and compileTreeOptionVoid ctx tree =
+    match tree with
+    | None -> Dlr.void'
+    | Some t -> compileTreeAsVoid ctx t
+    
+  //----------------------------------------------------------------------------
   and _compileLabel (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
     let ctx = ctx.AddLabel label target
@@ -82,6 +91,37 @@ module Core =
       (compileAst ctx tree)
       (Dlr.labelExprVoid target)
     ]
+    
+  //----------------------------------------------------------------------------
+  and _compileCase ctx value case =
+    match case with
+    | Ast.Case(tests, body) -> 
+
+      let tests = 
+        Dlr.orChain [
+          for t in tests -> 
+            let t = compileAst ctx t
+            Binary.compile ctx Ast.BinaryOp.Eq t value
+        ]
+
+      Dlr.if' tests (compileAst ctx body)
+
+    | Ast.Default body -> compileAst ctx body
+    | _ -> failwith "Que?"
+    
+  //----------------------------------------------------------------------------
+  and _compileSwitch (ctx:Ctx) value cases =
+    let value = compileAst ctx value
+    let break' = Dlr.labelBreak()
+    let ctx = ctx.AddDefaultLabel break'
+    
+    Dlr.blockTmp value.Type (fun tmp ->
+      [
+        Dlr.assign tmp value
+        Dlr.blockSimple [for c in cases -> _compileCase ctx tmp c]
+        Dlr.labelExprVoid break'
+      ] |> Seq.ofList
+    )
 
   //----------------------------------------------------------------------------
   and _compileWhile ctx label test body =

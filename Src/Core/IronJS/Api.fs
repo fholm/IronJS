@@ -229,6 +229,7 @@ and Operators =
 
   static member eq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) = n
   static member eq (n:Number, b:Box byref) = n = TypeConverter.toNumber(&b)
+  static member eq (l:Box byref, r:Box byref) = false
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
 
   static member notEq (b:Box byref, n:Number) = TypeConverter.toNumber(&b) <> n

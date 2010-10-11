@@ -88,6 +88,9 @@ module Ast =
     | Finally     of Tree
     | Throw       of Tree
     | If          of Tree * Tree * Tree option
+    | Switch      of Tree * Tree list
+    | Case        of Tree list * Tree
+    | Default     of Tree
 
     | For         of string option * Tree * Tree * Tree * Tree
     | While       of string option * Tree * Tree
@@ -205,7 +208,6 @@ module Ast =
 
     member x.ClosedOverSize = x.ClosedOverCount + 1
 
-
     member x.MakeVarClosedOver var = 
       if var.IsClosedOver then 
         failwith "Variable is already closed over"
@@ -229,7 +231,6 @@ module Ast =
 
       //Return new scope
       {x with Variables = variables}
-
 
     static member NewDynamic = {Scope.New with DynamicLookup = true}
     static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
@@ -262,9 +263,7 @@ module Ast =
 
 
   //-------------------------------------------------------------------------
-  //
-  //                          ANALYZERS
-  //
+  // ANALYZERS
   //-------------------------------------------------------------------------
         
   let private _walk f tree = 
@@ -281,31 +280,35 @@ module Ast =
     | Null
     | This
     | Undefined -> tree
-
-    | Binary(op, ltree, rtree) -> Binary(op, f ltree, f rtree)
+    
     | Unary(op, tree) -> Unary(op, f tree)
+    | Binary(op, ltree, rtree) -> Binary(op, f ltree, f rtree)
     
     | Array indexes -> Array [for t in indexes -> f t]
     | Object properties -> Object [for t in properties -> f t]
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
         
-    | Eval(tree)                -> Eval (f tree)
-    | Property(tree, name)      -> Property(f tree, name)
-    | Index(target, tree)       -> Index(f target, f tree)
-    | Assign(ltree, rtree)      -> Assign(f ltree, f rtree)
-    | Block(trees)              -> Block([for t in trees -> f t])
-    | Var(tree)                 -> Var(f tree)
-    | Return(tree)              -> Return(f tree)
-    | With(target, tree)        -> With(f target, f tree)
-    | Function(id, tree)        -> Function(id, f tree) 
-    | LocalScope(scope, tree)   -> LocalScope(scope, f tree)
+    | Eval(tree)              -> Eval (f tree)
+    | Property(object', name) -> Property(f object', name)
+    | Index(object', index)   -> Index(f object', f index)
+    | Assign(left, right)     -> Assign(f left, f right)
+    | Block(trees)            -> Block([for t in trees -> f t])
+    | Var tree                -> Var(f tree)
+    | Return(value)           -> Return(f value)
+    | With(object', body)     -> With(f object', f body)
+    | Function(id, tree)      -> Function(id, f tree) 
+    | LocalScope(scope, body) -> LocalScope(scope, f body)
     
     | Label(label, tree) -> Label(label, f tree)
     | If(test, ifTrue, ifFalse) -> If(f test, f ifTrue, (f >? ifFalse))
     | While(label, tree, body) -> While(label, f tree, f body)
     | For(label, init, test, incr, body) ->
       For(label, f init, f test, f incr, f body)
+
+    | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
+    | Case(tests, body) -> Case([for t in tests -> f t], f body)
+    | Default(body) -> Default (f body)
 
     //Exception Stuff
     | Try(body, catch, finally') -> 
@@ -319,7 +322,6 @@ module Ast =
 
 
   //-------------------------------------------------------------------------
-    
   let varByName n (v:Variable) = n = v.Name
   let clsByName n (v:Closure) = n = v.Name
 
@@ -894,6 +896,35 @@ module Ast =
           else
             let name = text (child tok 0)
             Var(Assign(Identifier name, func)) 
+
+        | ES3Parser.CASE ->
+          Pass
+
+        | ES3Parser.SWITCH ->
+
+          let value::cases = children tok
+
+          let _, cases =
+            List.fold (fun (tests, cases) (case:AntlrToken) ->
+              
+              match case.Type with
+              | ES3Parser.DEFAULT -> 
+                let default' = translate (child case 0)
+                [], Default default' :: cases
+
+              | ES3Parser.CASE -> 
+                let children = children case
+
+                match children with
+                | test::[] -> test :: tests, cases
+                | test::body ->
+                  let body = Block [for x in body -> translate x]
+                  let tests = [for t in test :: tests -> translate t]
+                  [], Case(tests, body) :: cases
+
+            ) ([], []) cases
+
+          Switch(translate value, cases)
 
         | _ -> failwithf "No parser for token %s (%i)" (ES3Parser.tokenNames.[tok.Type]) tok.Type
   

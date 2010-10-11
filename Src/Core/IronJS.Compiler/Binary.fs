@@ -200,6 +200,7 @@
     //==
     let eq_Box_Number = logical_Box_Number Dlr.eq Api.Operators.eq
     let eq_Number_Number = logical_Number_Number Dlr.eq // also ===
+    let eq_Box_Box = logical_Box_Box Dlr.eq Api.Operators.eq
 
     //!==
     let notEq_Number_Number = logical_Number_Number Dlr.notEq // also !==
@@ -245,6 +246,7 @@
         ((Ast.BinaryOp.GtEq, TypeCodes.Number, TypeCodes.Number), gtEq_Number_Number)
 
         ((Ast.BinaryOp.Eq, TypeCodes.Box, TypeCodes.Number), eq_Box_Number)
+        ((Ast.BinaryOp.Eq, TypeCodes.Box, TypeCodes.Box), eq_Box_Box)
         ((Ast.BinaryOp.Eq, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)
 
         ((Ast.BinaryOp.Same, TypeCodes.Number, TypeCodes.Number), eq_Number_Number)

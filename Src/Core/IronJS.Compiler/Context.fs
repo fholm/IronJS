@@ -110,6 +110,9 @@ type Context = {
   member x.DynamicLookup = x.Scope.DynamicLookup || x.InsideWith
   member x.TopScope = x.ScopeChain.[x.ScopeChain.Length - 1]
 
+  member x.AddDefaultLabel break' =
+    {x with Break=Some break'}
+
   member x.AddLoopLabels label break' continue' =
     let y = {x with Break=Some break'; Continue=Some continue'}
     match label with

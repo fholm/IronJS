@@ -29,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{E1FD7E34
 	ProjectSection(SolutionItems) = preProject
 		..\Docs\E262-3.pdf = ..\Docs\E262-3.pdf
 		..\LICENSE.txt = ..\LICENSE.txt
+		Files\Script.fsx = Files\Script.fsx
 		Files\Testing.html = Files\Testing.html
 		Files\TODO.txt = Files\TODO.txt
 	EndProjectSection

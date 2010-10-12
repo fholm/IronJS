@@ -96,8 +96,9 @@ module PropertyClassTypes =
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
-  let [<Literal>] Constructor = 1uy
-  let [<Literal>] CalledAsConstructor = 2uy
+  let [<Literal>] User = 1uy
+  let [<Literal>] Host = 2uy
+  let [<Literal>] Called = 3uy
 
 module ParamsModes =
   let [<Literal>] NoParams = 0uy
@@ -242,7 +243,7 @@ and [<AllowNullLiteral>] Object =
     IndexValues = 
       if indexSize <= (Index.Max+1u) && indexSize > 0u
         then Array.zeroCreate (int indexSize) 
-        else null
+        else Array.zeroCreate 0
 
     IndexSparse = 
       if indexSize > (Index.Max+1u) && indexSize > 0u

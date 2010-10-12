@@ -105,19 +105,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, &value)
     | TypeCodes.String -> Object.putIndex(x, index.String, &value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", &value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, &value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", &value)
-        else Object.putProperty(x, index.Clr.ToString(), &value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, &value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, &value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, &value)
 
     | _ -> failwith "Que?"
 
@@ -127,19 +124,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -149,19 +143,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -171,19 +162,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -193,19 +181,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -215,19 +200,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -237,19 +219,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -259,19 +238,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -429,7 +405,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -451,7 +427,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -473,7 +449,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -495,7 +471,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -517,7 +493,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -539,7 +515,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -561,7 +537,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -583,7 +559,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 

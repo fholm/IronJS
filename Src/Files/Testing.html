@@ -1,15 +1,24 @@
 ﻿<html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <script type="text/javascript">
-            var x = new Number(12.25);
-            var y = {}
+            var x = 1
+            var r;
+            var foo = function () { };
 
-            y[x] = "lol";
-            y[0] = "ehm";
+            switch (x) {
+                case foo():
+                    break;
+                case 2:
+                    r = "lol";
 
-            for (a in y) {
-                alert(a);
+                case 3:
+                    r = "lol3";
             }
+
+            alert(r);
+
+            alert(parseFloat.prototype);
+
         </script>
     </head>
     <body>

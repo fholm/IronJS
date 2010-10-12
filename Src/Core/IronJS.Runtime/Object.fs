@@ -3,6 +3,8 @@
 open System
 open IronJS
 
+//------------------------------------------------------------------------------
+//15.2
 module Object =
 
   //----------------------------------------------------------------------------
@@ -37,14 +39,23 @@ module Object =
   //15.2.4.6
   let isPrototypeOf (o:IjsObj) (v:IjsObj) =
     v.Prototype = o
+
+  //----------------------------------------------------------------------------
+  //15.2.4.7
+  let propertyIsEnumerable (o:IjsObj) (n:IjsStr) =
+    Errors.Generic.notImplemented()
       
   //----------------------------------------------------------------------------
   //15.2.4
-  let createObjectPrototype (env:IjsEnv) =
+  let createPrototype (env:IjsEnv) =
     
     let o = IjsObj(env.Base_Class, null, Classes.Object, 0u)
+    env.Object_prototype <- o
     env.Function_prototype <- o
     env.Array_prototype <- o
+    env.Number_prototype <- o
+    env.String_prototype <- o
+    env.Boolean_prototype <- o
 
     //15.2.4.2
     Api.Object.putProperty(
@@ -78,6 +89,32 @@ module Object =
         env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)), 
       PropertyAttrs.All)
 
-    o
-      
+    //15.2.4.6
+    Api.Object.putProperty(
+      o, "propertyIsEnumerable", 
+      Api.DelegateFunction<_>.create(
+        env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)), 
+      PropertyAttrs.All)
 
+  let objectConstructor (f:IjsFunc) _ (v:IjsBox) =
+    let mutable v = v
+    let o = Api.TypeConverter.toObject(f.Env, &v)
+    o
+
+  //----------------------------------------------------------------------------
+  //15.2.1
+  let createConstructor (env:IjsEnv) =
+    
+    let objectCtor = 
+      Api.DelegateFunction<_>.create(
+        env, new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor))
+
+    objectCtor.ConstructorMode <- 
+      ConstructorModes.Host
+
+    Api.Object.putProperty(
+      objectCtor, "prototype", env.Object_prototype, PropertyAttrs.All
+    )
+
+    Api.Object.putProperty(
+      env.Globals, "Object", objectCtor, PropertyAttrs.All)

@@ -29,14 +29,14 @@ type TypeConverter =
   static member toHostObject(c:HostObject) = c
   static member toHostObject(b:Box byref) =
     match b.Type with
-    | TypeCodes.Empty -> box Undefined.Instance
-    | TypeCodes.String -> box b.String
-    | TypeCodes.Bool -> box b.Bool
-    | TypeCodes.Number -> box b.Double
-    | TypeCodes.Clr -> box b.Clr
-    | TypeCodes.Undefined -> box Undefined.Instance
-    | TypeCodes.Object -> box b.Object
-    | TypeCodes.Function -> box b.Func
+    | TypeCodes.Empty -> null
+    | TypeCodes.Undefined -> null
+    | TypeCodes.String -> b.String :> HostObject
+    | TypeCodes.Bool -> b.Bool :> HostObject
+    | TypeCodes.Number -> b.Double :> HostObject
+    | TypeCodes.Clr -> b.Clr
+    | TypeCodes.Object -> b.Object :> HostObject
+    | TypeCodes.Function -> b.Func :> HostObject
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toHostObject (expr:Dlr.Expr) =
@@ -48,18 +48,19 @@ type TypeConverter =
   static member toString (u:Undefined) = "undefined"
   static member toString (b:Box byref) =
     match b.Type with
-    | TypeCodes.Empty -> "undefined"
+    | TypeCodes.Empty
+    | TypeCodes.Undefined -> "undefined"
     | TypeCodes.String -> b.String
     | TypeCodes.Bool -> TypeConverter.toString b.Bool
     | TypeCodes.Number -> TypeConverter.toString b.Double
     | TypeCodes.Clr -> TypeConverter.toString b.Clr
-    | TypeCodes.Undefined -> TypeConverter.toString b.Undefined
     | TypeCodes.Object -> TypeConverter.toString b.Object
     | TypeCodes.Function -> TypeConverter.toString (b.Func :> IjsObj)
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toString (o:IjsObj) = 
-    TypeConverter.toString(Object.defaultValue(o, DefaultValue.String))
+    let mutable v = Object.defaultValue(o, DefaultValue.String)
+    TypeConverter.toString(&v)
 
   static member toString (d:double) = 
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
@@ -105,10 +106,10 @@ type TypeConverter =
   static member toBoolean (b:Box byref) =
     match b.Type with 
     | TypeCodes.Bool -> b.Bool
-    | TypeCodes.Number -> TypeConverter.toBoolean b.Double
-    | TypeCodes.String -> b.String.Length > 0
     | TypeCodes.Empty
     | TypeCodes.Undefined -> false
+    | TypeCodes.Number -> TypeConverter.toBoolean b.Double
+    | TypeCodes.String -> b.String.Length > 0
     | TypeCodes.Clr -> TypeConverter.toBoolean b.Clr
     | TypeCodes.Object 
     | TypeCodes.Function -> true
@@ -123,9 +124,7 @@ type TypeConverter =
   static member toNumber (c:HostObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = Number.NaN
   static member toNumber (o:IjsObj) : Number = 
-    TypeConverter.toNumber(
-      Object.defaultValue(o, DefaultValue.Number)
-    )
+    TypeConverter.toNumber(Object.defaultValue(o, DefaultValue.Number))
 
   static member toNumber (b:Box byref) =
     match b.Type with
@@ -133,7 +132,7 @@ type TypeConverter =
     | TypeCodes.Bool -> if b.Bool then 1.0 else 0.0
     | TypeCodes.String -> TypeConverter.toNumber(b.String)
     | TypeCodes.Empty
-    | TypeCodes.Undefined -> System.Double.NaN
+    | TypeCodes.Undefined -> NaN
     | TypeCodes.Clr -> TypeConverter.toNumber b.Clr
     | TypeCodes.Object 
     | TypeCodes.Function -> TypeConverter.toNumber(b.Object)
@@ -557,6 +556,12 @@ and Environment =
   static member addCompiler (x:IjsEnv, funId, compiler) =
     if not (x.Compilers.ContainsKey funId) then
       x.Compilers.Add(funId, CachedCompiler compiler)
+
+  //----------------------------------------------------------------------------
+  static member addCompiler (x:IjsEnv, f:IjsFunc, compiler) =
+    if not (x.Compilers.ContainsKey f.FunctionId) then
+      f.Compiler <- CachedCompiler compiler
+      x.Compilers.Add(f.FunctionId, f.Compiler)
   
   //----------------------------------------------------------------------------
   static member hasCompiler (x:IjsEnv, funcId) =
@@ -564,12 +569,12 @@ and Environment =
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv) =
-    IjsObj(x.Base_Class, x.Object_prototype, Classes.String, 0u)
+    IjsObj(x.Base_Class, x.Object_prototype, Classes.Object, 0u)
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, s:IjsStr) =
     let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
-    //Object.putProperty(o, "length", double s.Length) |> ignore
+    Object.putProperty(o, "length", double s.Length) |> ignore
     o.Value.Type <- TypeCodes.String
     o.Value.String <-s
     o
@@ -624,6 +629,166 @@ and Function =
     let c = f.Compiler
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
     c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
+
+  static member construct (f:IjsFunc, t, a0:'a) =
+    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
+    let ctorMode = f.ConstructorMode
+    let result = 
+      f.ConstructorMode <- ConstructorModes.Called
+
+      match ctorMode with
+      | ConstructorModes.Host -> c.Invoke(f, t, a0)
+      | ConstructorModes.User -> 
+        let o = Environment.createObject(f.Env)
+        let prototype = Object.getProperty(f, "prototype")
+        let prototype = 
+          match prototype.Type with
+          | TypeCodes.Function
+          | TypeCodes.Object -> prototype.Object
+          | _ -> f.Env.Object_prototype
+
+        o.Prototype <- prototype
+        c.Invoke(f, o, a0)
+
+      | _ -> failwith "Que?"
+      
+    f.ConstructorMode <- ctorMode
+    result
+
+//------------------------------------------------------------------------------
+// DispatchTarget
+//------------------------------------------------------------------------------
+and DispatchTarget = {
+  Delegate : HostType
+  Function : IjsHostFunc
+  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
+}
+
+//------------------------------------------------------------------------------
+// HostFunction API
+//------------------------------------------------------------------------------
+and HostFunction() =
+
+  //----------------------------------------------------------------------------
+  static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
+    if i < passedArgs.Length 
+      then TypeConverter.convertTo env passedArgs.[i] t
+      else Dlr.default' t
+      
+  //----------------------------------------------------------------------------
+  static let marshalBoxParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+    passed
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map Expr.boxValue
+    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
+    
+  //----------------------------------------------------------------------------
+  static let marshalObjectParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+    passed
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map TypeConverter.toHostObject
+    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
+    
+  //----------------------------------------------------------------------------
+  static let createParam i t = Dlr.param (sprintf "a%i" i) t
+  
+  //----------------------------------------------------------------------------
+  static member compileDispatcher (target:DispatchTarget) = 
+    let f = target.Function
+
+    let argTypes = Reflection.getDelegateArgTypes target.Delegate
+    let args = argTypes |> Array.mapi createParam
+    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
+
+    let env = Dlr.field args.[0] "Env"
+    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
+    let marshalled = 
+      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
+
+      match f.ParamsMode with
+      | ParamsModes.BoxParams when paramsExist -> 
+        marshalBoxParams f passedArgs marshalled
+
+      | ParamsModes.ObjectParams when paramsExist -> 
+        marshalObjectParams f passedArgs marshalled
+
+      | _ -> marshalled
+
+    let invoke = target.Invoke (args.[0] :> Dlr.Expr) marshalled
+    let body = 
+      if Utils.isBox f.ReturnType then invoke
+      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
+      else
+        Dlr.blockTmpT<Box> (fun tmp ->
+          [
+            (Expr.setBoxTypeOf tmp invoke)
+            (Expr.setBoxValue tmp invoke)
+            (tmp :> Dlr.Expr)
+          ] |> Seq.ofList
+        )
+            
+    let lambda = Dlr.lambda target.Delegate args body
+    Debug.printExpr lambda
+    lambda.Compile()
+
+    
+//------------------------------------------------------------------------------
+// DelegateFunction API
+//------------------------------------------------------------------------------
+and DelegateFunction<'a when 'a :> Delegate>() =
+
+  //----------------------------------------------------------------------------
+  static let invokeCompiler f args =
+    let casted = Dlr.castT<IjsDelFunc<'a>> f
+    Dlr.invoke (Dlr.field casted "Delegate") args
+    
+  //----------------------------------------------------------------------------
+  static member create (env:IjsEnv, delegate':'a) =
+    let h = IjsDelFunc<'a>(env, delegate') :> IjsHostFunc
+    let f = h :> IjsFunc
+
+    Object.putLength(f, double h.ArgTypes.Length) |> ignore
+    Environment.addCompiler(env, f, DelegateFunction<'a>.compile)
+
+    f
+  
+  //----------------------------------------------------------------------------
+  static member compile (x:IjsFunc) (delegate':System.Type) =
+    HostFunction.compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> IjsHostFunc
+      Invoke = invokeCompiler
+    }
+
+    
+//------------------------------------------------------------------------------
+// ClrFunction API
+//------------------------------------------------------------------------------
+and ClrFunction() =
+  
+  //----------------------------------------------------------------------------
+  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
+    Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
+
+  //----------------------------------------------------------------------------
+  static member compile (x:IjsFunc) (delegate':System.Type) =
+    HostFunction.compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> IjsHostFunc
+      Invoke = invokeCompiler (x :?> IjsClrFunc)
+    }
+
+  //----------------------------------------------------------------------------
+  static member create (env:IjsEnv, method') =
+    let h = IjsClrFunc(env, method') :> IjsHostFunc
+    let f = h :> IjsFunc
+    
+    Object.putLength(f, double h.ArgTypes.Length) |> ignore
+    Environment.addCompiler(env, f, ClrFunction.compile)
+
+    f
 
         
 //------------------------------------------------------------------------------
@@ -757,22 +922,6 @@ and Object() =
     not continue'
       
   //----------------------------------------------------------------------------
-  //Checks for a property, including Prototype chain
-  static member hasProperty (x:IjsObj, name:string) =
-    let mutable o = null
-    let mutable i = -1
-    Object.hasProperty(x, name, &o, &i)
-      
-  //----------------------------------------------------------------------------
-  //Gets a property value, including Prototype chain
-  static member getProperty (x:IjsObj, name:string) =
-    let mutable h = null
-    let mutable i = -1
-    if Object.hasProperty(x, name, &h, &i) 
-      then h.PropertyValues.[i]
-      else Utils.boxedUndefined
-      
-  //----------------------------------------------------------------------------
   //Gets the index for a property named 'name'
   static member getOwnPropertyIndex (x:IjsObj, name:string, out:int byref) =
     x.PropertyClass.PropertyMap.TryGetValue(name, &out)
@@ -789,6 +938,22 @@ and Object() =
       x.PropertyAttributes.[i]
     else
       0s
+      
+  //----------------------------------------------------------------------------
+  //Checks for a property, including Prototype chain
+  static member hasProperty (x:IjsObj, name:string) : IjsBool =
+    let mutable o = null
+    let mutable i = -1
+    Object.hasProperty(x, name, &o, &i)
+      
+  //----------------------------------------------------------------------------
+  //Gets a property value, including Prototype chain
+  static member getProperty (x:IjsObj, name:string) : IjsBox =
+    let mutable h = null
+    let mutable i = -1
+    if Object.hasProperty(x, name, &h, &i) 
+      then h.PropertyValues.[i]
+      else Utils.boxedUndefined
       
   //----------------------------------------------------------------------------
   //Deletes a property on the object, making it dynamic in the process
@@ -841,12 +1006,6 @@ and Object() =
     | _ -> x.PropertyValues.[i].Clr <- value
 
     x.PropertyValues.[i].Type <- tc
-        
-  //-------------------------------------------------------------------------
-  //
-  // Methods that deal with the indexing operators: foo[0], foo["bar"], etc.
-  //
-  //-------------------------------------------------------------------------
       
   //-------------------------------------------------------------------------
   //Expands IndexValues array size
@@ -872,23 +1031,55 @@ and Object() =
 
       x.IndexValues <- null
 
-  //-------------------------------------------------------------------------
-  //Box Indexers
+  //----------------------------------------------------------------------------
+  // Box get/has/delete index
+  //----------------------------------------------------------------------------
   static member getIndex (x:IjsObj, index:Box byref) =
     match index.Type with
     | TypeCodes.Number -> Object.getIndex(x, index.Double)
     | TypeCodes.String -> Object.getIndex(x, index.String)
+    | TypeCodes.Bool -> Object.getProperty(x, TypeConverter.toString index.Bool)
+    | TypeCodes.Clr -> Object.getProperty(x, TypeConverter.toString index.Clr)
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.getIndex(x, &v)
+
     | _ -> failwith "Que?"
 
   static member hasIndex (x:IjsObj, index:Box byref) =
     match index.Type with
     | TypeCodes.Number -> Object.hasIndex(x, index.Double)
     | TypeCodes.String -> Object.hasIndex(x, index.String)
+    | TypeCodes.Bool -> Object.hasProperty(x, TypeConverter.toString index.Bool)
+    | TypeCodes.Clr -> Object.hasProperty(x, TypeConverter.toString index.Clr)
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.hasIndex(x, &v)
+
+    | _ -> failwith "Que?"
+
+  static member deleteIndex (x:IjsObj, index:Box byref) =
+    match index.Type with
+    | TypeCodes.Number -> Object.deleteIndex(x, index.Double)
+    | TypeCodes.String -> Object.deleteIndex(x, index.String)
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.deleteIndex(x, &v)
+
+    | TypeCodes.Bool ->
+      Object.deleteOwnProperty(x, TypeConverter.toString index.Bool)
+
+    | TypeCodes.Clr -> 
+      Object.deleteOwnProperty(x, TypeConverter.toString index.Clr)
+
     | _ -> failwith "Que?"
       
-  //-------------------------------------------------------------------------
-  //String Indexers
-
+  //----------------------------------------------------------------------------
+  // IjsStr get/has/delete index
+  //----------------------------------------------------------------------------
   static member getIndex (x:IjsObj, index:IjsStr) : IjsBox = 
     let mutable i = Index.Min
     if Utils.isStringIndex(index, &i) 
@@ -908,7 +1099,7 @@ and Object() =
       else Object.deleteOwnProperty(x, index)
         
   //----------------------------------------------------------------------------
-  // IjsNum indexers
+  // IjsNum get/has/delete index
   //----------------------------------------------------------------------------
   static member getIndex (x:IjsObj, index:IjsNum) : IjsBox = 
     let i = uint32 index
@@ -929,7 +1120,7 @@ and Object() =
       else Object.deleteOwnProperty(x, TypeConverter.toString index)
       
   //----------------------------------------------------------------------------
-  // int32 indexers
+  // UInt32 get/has/delete index
   //----------------------------------------------------------------------------
   static member getIndex (x:IjsObj, ui:uint32) = 
     let mutable o = null
@@ -1085,19 +1276,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, &value)
     | TypeCodes.String -> Object.putIndex(x, index.String, &value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", &value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, &value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", &value)
-        else Object.putProperty(x, index.Clr.ToString(), &value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, &value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, &value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, &value)
 
     | _ -> failwith "Que?"
 
@@ -1107,19 +1295,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1129,19 +1314,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1151,19 +1333,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1173,19 +1352,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1195,19 +1371,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1217,19 +1390,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1239,19 +1409,16 @@ and Object() =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
     | TypeCodes.String -> Object.putIndex(x, index.String, value)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, value)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", value)
-        else Object.putProperty(x, index.Clr.ToString(), value)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, value)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, value)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, value)
 
     | _ -> failwith "Que?"
 
@@ -1409,7 +1576,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1431,7 +1598,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1453,7 +1620,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1475,7 +1642,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1497,7 +1664,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1519,7 +1686,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1541,7 +1708,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 
@@ -1563,7 +1730,7 @@ and Object() =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
     
@@ -1576,146 +1743,3 @@ and Object() =
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// DispatchTarget
-//------------------------------------------------------------------------------
-and DispatchTarget = {
-  Delegate : HostType
-  Function : IjsHostFunc
-  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
-}
-
-//------------------------------------------------------------------------------
-// HostFunction API
-//------------------------------------------------------------------------------
-and HostFunction() =
-
-  //----------------------------------------------------------------------------
-  static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
-    if i < passedArgs.Length 
-      then TypeConverter.convertTo env passedArgs.[i] t
-      else Dlr.default' t
-      
-  //----------------------------------------------------------------------------
-  static let marshalBoxParams 
-    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map Expr.boxValue
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
-    
-  //----------------------------------------------------------------------------
-  static let marshalObjectParams 
-    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map TypeConverter.toHostObject
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
-    
-  //----------------------------------------------------------------------------
-  static let createParam i t = Dlr.param (sprintf "a%i" i) t
-  
-  //----------------------------------------------------------------------------
-  static member compileDispatcher (target:DispatchTarget) = 
-    let f = target.Function
-
-    let argTypes = Reflection.getDelegateArgTypes target.Delegate
-    let args = argTypes |> Array.mapi createParam
-    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
-
-    let env = Dlr.field args.[0] "Env"
-    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
-    let marshalled = 
-      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
-
-      match f.ParamsMode with
-      | ParamsModes.BoxParams when paramsExist -> 
-        marshalBoxParams f passedArgs marshalled
-
-      | ParamsModes.ObjectParams when paramsExist -> 
-        marshalObjectParams f passedArgs marshalled
-
-      | _ -> marshalled
-
-    let invoke = target.Invoke (args.[0] :> Dlr.Expr) marshalled
-    let body = 
-      if Utils.isBox f.ReturnType then invoke
-      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
-      else
-        Dlr.blockTmpT<Box> (fun tmp ->
-          [
-            (Expr.setBoxTypeOf tmp invoke)
-            (Expr.setBoxValue tmp invoke)
-            (tmp :> Dlr.Expr)
-          ] |> Seq.ofList
-        )
-            
-    let lambda = Dlr.lambda target.Delegate args body
-    Debug.printExpr lambda
-    lambda.Compile()
-
-    
-//------------------------------------------------------------------------------
-// DelegateFunction API
-//------------------------------------------------------------------------------
-and DelegateFunction<'a when 'a :> Delegate>() =
-
-  //----------------------------------------------------------------------------
-  static let invokeCompiler f args =
-    let casted = Dlr.castT<IjsDelFunc<'a>> f
-    Dlr.invoke (Dlr.field casted "Delegate") args
-    
-  //----------------------------------------------------------------------------
-  static member create (env:IjsEnv, delegate':'a) =
-    let x = IjsDelFunc<'a>(env, delegate')
-    let f = x :> IjsFunc
-    let o = x :> IjsObj
-    let h = x :> IjsHostFunc
-
-    Environment.addCompiler(
-      env, f.FunctionId, DelegateFunction<'a>.compile
-    )
-    
-    f.Compiler <- env.Compilers.[f.FunctionId]
-    f
-  
-  //----------------------------------------------------------------------------
-  static member compile (x:IjsFunc) (delegate':System.Type) =
-    HostFunction.compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler
-    }
-
-    
-//------------------------------------------------------------------------------
-// ClrFunction API
-//------------------------------------------------------------------------------
-and ClrFunction() =
-  
-  //----------------------------------------------------------------------------
-  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
-    Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
-
-  //----------------------------------------------------------------------------
-  static member compile (x:IjsFunc) (delegate':System.Type) =
-    HostFunction.compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler (x :?> IjsClrFunc)
-    }
-
-  //----------------------------------------------------------------------------
-  static member create (env:IjsEnv, method') =
-    let x = IjsClrFunc(env, method')
-    let f = x :> IjsFunc
-    let o = x :> IjsObj
-    let h = x :> IjsHostFunc
-
-    Environment.addCompiler(
-      env, f.FunctionId, ClrFunction.compile
-    )
-    
-    f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
-    f

@@ -67,6 +67,8 @@ module Global =
     //It's a g-thing.
     let g = IjsObj(env.Base_Class, env.Object_prototype, Classes.Object, 0u)
 
+    env.Globals <- g
+
     //15.1.1.1
     Api.Object.putProperty(g, "NaN", 
       NaN, PropertyAttrs.DontDelete ||| PropertyAttrs.DontEnum)
@@ -108,5 +110,3 @@ module Global =
       g, "isFinite", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsNum, IjsBox>(isFinite)), PropertyAttrs.All)
-
-    g

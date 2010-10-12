@@ -369,38 +369,14 @@ module Core =
     (Expr.testIsFunction
       (func)
       (fun f ->
+        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         (Dlr.ternary
           (Expr.isConstructor f)
-          (Dlr.blockTmpT<IjsObj> (fun obj ->
-            [
-              (Dlr.assign obj (_compileObject ctx []))
-              (Dlr.assign
-                (Expr.constructorMode f)
-                (Dlr.const' ConstructorModes.CalledAsConstructor)
-              )
-              (Api.Expr.jsFunctionInvoke f obj args)
-              (Dlr.assign
-                (Expr.constructorMode f)
-                (Dlr.const' ConstructorModes.Constructor)
-              )
-              (Dlr.assign
-                (Expr.prototype obj)
-                (Dlr.ternary
-                  (Expr.testBoxType 
-                    (Expr.propertyValue f Dlr.int1) 
-                    (TypeCodes.Object)
-                  )
-                  (Expr.unboxObject (Expr.propertyValue f Dlr.int1))
-                  (ctx.Env_Object_prototype)
-                )
-              )
-              (obj :> Dlr.Expr)
-            ] |> Seq.ofList
-          ))
-          (Dlr.defaultT<IjsObj>)
+          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes (f :: ctx.Globals :: args))
+          (ctx.Env_Boxed_Undefined)
         )
       )
-      (fun _ -> Dlr.defaultT<IjsObj>)
+      (fun _ -> ctx.Env_Boxed_Undefined)
     )
       
   //----------------------------------------------------------------------------

@@ -206,7 +206,7 @@ module Expr =
   let constructorMode expr = Dlr.field expr "ConstructorMode"
 
   let isConstructor expr =
-    Dlr.gtEq (constructorMode expr) (Dlr.const' ConstructorModes.Constructor)
+    Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
     
   //-------------------------------------------------------------------------
   let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox (*ifOther*) =

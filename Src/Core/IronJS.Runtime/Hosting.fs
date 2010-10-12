@@ -21,8 +21,16 @@ module Hosting =
     x.Function_Class <-
       Api.PropertyClass.subClass(x.Base_Class, ["length"; "prototype"])
 
-    x.Object_prototype <- Native.Object.createObjectPrototype(x)
-    x.Globals <- Native.Global.create x
+    x.String_Class <-
+      Api.PropertyClass.subClass(x.Base_Class, ["length"])
+
+    x.Number_Class <- x.Base_Class
+    x.Boolean_Class <- x.Base_Class
+
+    Native.Object.createPrototype x
+    Native.Global.create x
+    Native.Object.createConstructor x
+
 
     //Boxed bools
     x.Boxed_False.Bool  <- false

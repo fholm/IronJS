@@ -86,6 +86,7 @@
     <Compile Include="Global.fs" />
     <Compile Include="Math.fs" />
     <Compile Include="Object.fs" />
+    <Compile Include="Function.fs" />
     <Compile Include="Hosting.fs" />
   </ItemGroup>
   <ItemGroup>

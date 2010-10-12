@@ -68,9 +68,9 @@ namespace IronJS.DevUI {
 
                 stopWatch.Restart();
                 Debug.Text = "";
-                var result = ijsCtx.Execute(Input.Text);
+                var result = Utils.box(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
-                Result.Text = IronJS.Api.TypeConverter.toString(result);
+                Result.Text = IronJS.Api.TypeConverter.toString(ref result);
 
             } catch(Exception ex) {
                 stopWatch.Stop();
@@ -103,7 +103,8 @@ namespace IronJS.DevUI {
                 }
 
                 if (Utils.isDense(obj)) {
-                    for (var i = 0u; i < obj.IndexLength; ++i) {
+                  var length = obj.IndexLength;
+                    for (var i = 0u; i < length; ++i) {
                         if (isGlobal) {
                             printedObjects.Clear();
                         }
@@ -127,24 +128,27 @@ namespace IronJS.DevUI {
         TreeViewItem RenderIronJSValue(string name, IronJS.Box box) {
             var item = new TreeViewItem();
             var header = item as HeaderedItemsControl;
-            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
 
             switch (box.Type) {
                 case IronJS.TypeCodes.Undefined:
                 case IronJS.TypeCodes.Empty:
                     item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
+                    header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
                     break;
 
                 case IronJS.TypeCodes.Number:
+                    header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
                     item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
                     break;
 
                 case IronJS.TypeCodes.String:
                     item.Foreground = new SolidColorBrush(Colors.Brown);
+                    header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(ref box) + "\"";
                     break;
 
                 case IronJS.TypeCodes.Object:
                 case IronJS.TypeCodes.Function:
+                    header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
                     item.Foreground = new SolidColorBrush(Colors.DarkGreen);
                     if (printedObjects.ContainsKey(box.Object)) {
                         item = new TreeViewItem();

@@ -60,19 +60,16 @@ type [<Sealed>] Object =
     | TypeCodes.Number -> Object.putIndex(x, index.Double, <#= printVal(type) #>)
     | TypeCodes.String -> Object.putIndex(x, index.String, <#= printVal(type) #>)
     | TypeCodes.Undefined -> Object.putProperty(x, "undefined", <#= printVal(type) #>)
-    | TypeCodes.Bool ->
-      let name = if index.Bool then "true" else "false"
-      Object.putProperty(x, name, <#= printVal(type) #>)
-  
-    | TypeCodes.Clr -> 
-      if index.Clr = null 
-        then Object.putProperty(x, "null", <#= printVal(type) #>)
-        else Object.putProperty(x, index.Clr.ToString(), <#= printVal(type) #>)
-
     | TypeCodes.Object
     | TypeCodes.Function ->
       let mutable v = Object.defaultValue(index.Object)
       Object.putIndex(x, &v, <#= printVal(type) #>)
+
+    | TypeCodes.Bool ->
+      Object.putProperty(x, TypeConverter.toString index.Bool, <#= printVal(type) #>)
+
+    | TypeCodes.Clr -> 
+      Object.putProperty(x, TypeConverter.toString index.Clr, <#= printVal(type) #>)
 
     | _ -> failwith "Que?"
 <# } #>
@@ -117,7 +114,7 @@ type [<Sealed>] Object =
 
     if ui > x.IndexLength then
       x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
+      Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
 <# } #>

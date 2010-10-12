@@ -14,7 +14,8 @@ namespace CSharpHosting {
       var ctx = Hosting.Context.Create();
       var env = ctx.Environment;
 
-      //var fn = IronJS.Api.DelegateFunction<int>.create(env, new Action<IronJS.Box, IronJS.Box, int>(test));
+      var fn = IronJS.Api.DelegateFunction<Action<IronJS.Box, IronJS.Box, int>>.create(env, test);
+
       //IronJS.Api.Object.putProperty(env, "test2", fn);
 
       ctx.Execute(@"

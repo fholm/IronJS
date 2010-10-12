@@ -230,12 +230,6 @@ module Utils =
     box.Type <- TypeCodes.String
     box
 
-  let inline boxUndefined (u:Undefined) =
-    let mutable box = Box()
-    box.Clr <- u
-    box.Type <- TypeCodes.Undefined
-    box
-
   let inline boxObject (o:Object) =
     let mutable box = Box()
     box.Clr <- o
@@ -266,15 +260,85 @@ module Utils =
     arr.[i].Type  <- TypeCodes.String
     arr.[i].Clr   <- value
 
-  let inline setUndefinedInArray (arr:Box array) i (value:Undefined) =
-    arr.[i].Type  <- TypeCodes.Undefined
-    arr.[i].Clr   <- value
-
   let inline setObjectInArray (arr:Box array) i (value:Object) =
     arr.[i].Type  <- TypeCodes.Object
     arr.[i].Clr   <- value
 
   let inline setFunctionInArray (arr:Box array) i (value:Function) =
+    arr.[i].Type  <- TypeCodes.Function
+    arr.[i].Clr   <- value
+
+
+
+  let inline boxIjsBool (b:bool) =
+    let mutable box = Box()
+    box.Bool <- b
+    box.Type <- TypeCodes.Bool
+    box
+
+  let inline boxIjsNum (d:double) =
+    let mutable box = Box()
+    box.Double <- d
+    box.Type <- TypeCodes.Number
+    box
+
+  let inline boxHostObject (c:HostObject) =
+    let mutable box = Box()
+    box.Clr <- c
+    box.Type <- TypeCodes.Clr
+    box
+
+  let inline boxIjsStr (s:String) =
+    let mutable box = Box()
+    box.Clr <- s
+    box.Type <- TypeCodes.String
+    box
+
+  let inline boxUndefined (u:Undefined) =
+    let mutable box = Box()
+    box.Clr <- u
+    box.Type <- TypeCodes.Undefined
+    box
+
+  let inline boxIjsObj (o:Object) =
+    let mutable box = Box()
+    box.Clr <- o
+    box.Type <- TypeCodes.Object
+    box
+
+  let inline boxIjsFunc (f:Function) =
+    let mutable box = Box()
+    box.Clr <- f
+    box.Type <- TypeCodes.Function
+    box
+      
+  let inline setIjsBoolInArray (arr:Box array) i value =
+    arr.[i].Type  <- TypeCodes.Bool
+    arr.[i].Bool  <- value
+    arr.[i].Clr   <- null
+
+  let inline setIjsNumInArray (arr:Box array) i value =
+    arr.[i].Type    <- TypeCodes.Number
+    arr.[i].Double  <- value
+    arr.[i].Clr     <- null
+
+  let inline setHostObjectInArray (arr:Box array) i (value:HostObject) =
+    arr.[i].Type  <- TypeCodes.Clr
+    arr.[i].Clr   <- value
+
+  let inline setIjsStrInArray (arr:Box array) i (value:string) =
+    arr.[i].Type  <- TypeCodes.String
+    arr.[i].Clr   <- value
+
+  let inline setUndefinedInArray (arr:Box array) i (value:Undefined) =
+    arr.[i].Type  <- TypeCodes.Undefined
+    arr.[i].Clr   <- value
+
+  let inline setIjsObjInArray (arr:Box array) i (value:Object) =
+    arr.[i].Type  <- TypeCodes.Object
+    arr.[i].Clr   <- value
+
+  let inline setIjsFuncInArray (arr:Box array) i (value:Function) =
     arr.[i].Type  <- TypeCodes.Function
     arr.[i].Clr   <- value
       

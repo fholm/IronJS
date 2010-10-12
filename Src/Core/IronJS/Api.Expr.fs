@@ -7,13 +7,13 @@ module Expr =
   //----------------------------------------------------------------------------
   let jsObjectGetProperty expr name = 
     let name = Dlr.const' name
-    Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
       [Dlr.callStaticT<Api.Object> "getProperty" [tmp; name]]
     )
     
   //----------------------------------------------------------------------------
   let jsObjectPutLength expr value =
-    Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
       [Dlr.callStaticT<Api.Object> "putLength" [tmp; value]]
     )
       
@@ -25,7 +25,7 @@ module Expr =
 
     | _ ->
       let name = Dlr.const' name
-      Expr.blockTmpT<IronJS.Object> expr (fun tmp -> 
+      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [Dlr.callStaticT<Api.Object> "putProperty" [tmp; name; value]]
       )
       
@@ -37,7 +37,7 @@ module Expr =
         
   //----------------------------------------------------------------------------
   let jsObjectPutIndex expr index value =
-    Expr.blockTmpT<IronJS.Object> expr (fun tmp ->
+    Expr.blockTmpT<IjsObj> expr (fun tmp ->
       [Dlr.callStaticT<Api.Object> "putIndex" [tmp; index; value]]
     )
       

@@ -27,6 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.DevUI", "Tools\IronJ
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{E1FD7E34-0226-4F0F-A1AA-725194A9A73A}"
 	ProjectSection(SolutionItems) = preProject
+		..\Docs\E262-3.pdf = ..\Docs\E262-3.pdf
 		..\LICENSE.txt = ..\LICENSE.txt
 		Files\Testing.html = Files\Testing.html
 		Files\TODO.txt = Files\TODO.txt

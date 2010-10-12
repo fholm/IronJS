@@ -569,7 +569,7 @@ and Environment =
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, s:IjsStr) =
     let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
-    Object.putProperty(o, "length", double s.Length) |> ignore
+    //Object.putProperty(o, "length", double s.Length) |> ignore
     o.Value.Type <- TypeCodes.String
     o.Value.String <-s
     o
@@ -625,151 +625,6 @@ and Function =
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
     c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
 
-//------------------------------------------------------------------------------
-// DispatchTarget
-//------------------------------------------------------------------------------
-and DispatchTarget = {
-  Delegate : HostType
-  Function : IjsHostFunc
-  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
-}
-
-//------------------------------------------------------------------------------
-// HostFunction API
-//------------------------------------------------------------------------------
-and HostFunction() =
-
-  //----------------------------------------------------------------------------
-  static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
-    if i < passedArgs.Length 
-      then TypeConverter.convertTo env passedArgs.[i] t
-      else Dlr.default' t
-      
-  //----------------------------------------------------------------------------
-  static let marshalBoxParams 
-    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map Expr.boxValue
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
-    
-  //----------------------------------------------------------------------------
-  static let marshalObjectParams 
-    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map TypeConverter.toHostObject
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
-    
-  //----------------------------------------------------------------------------
-  static let createParam i t = Dlr.param (sprintf "a%i" i) t
-  
-  //----------------------------------------------------------------------------
-  static member compileDispatcher (target:DispatchTarget) = 
-    let f = target.Function
-
-    let argTypes = Reflection.getDelegateArgTypes target.Delegate
-    let args = argTypes |> Array.mapi createParam
-    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
-
-    let env = Dlr.field args.[0] "Env"
-    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
-    let marshalled = 
-      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
-
-      match f.ParamsMode with
-      | ParamsModes.BoxParams when paramsExist -> 
-        marshalBoxParams f passedArgs marshalled
-
-      | ParamsModes.ObjectParams when paramsExist -> 
-        marshalObjectParams f passedArgs marshalled
-
-      | _ -> marshalled
-
-    let invoke = target.Invoke (args.[0] :> Dlr.Expr) marshalled
-    let body = 
-      if Utils.isBox f.ReturnType then invoke
-      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
-      else
-        Dlr.blockTmpT<Box> (fun tmp ->
-          [
-            (Expr.setBoxTypeOf tmp invoke)
-            (Expr.setBoxValue tmp invoke)
-            (tmp :> Dlr.Expr)
-          ] |> Seq.ofList
-        )
-            
-    let lambda = Dlr.lambda target.Delegate args body
-    Debug.printExpr lambda
-    lambda.Compile()
-
-    
-//------------------------------------------------------------------------------
-// DelegateFunction API
-//------------------------------------------------------------------------------
-and DelegateFunction<'a when 'a :> Delegate>() =
-
-  //----------------------------------------------------------------------------
-  static let invokeCompiler f args =
-    let casted = Dlr.castT<IjsDelFunc<'a>> f
-    Dlr.invoke (Dlr.field casted "Delegate") args
-    
-  //----------------------------------------------------------------------------
-  static member create (env:IjsEnv, delegate':'a) =
-    let x = IjsDelFunc<'a>(env, delegate')
-    let f = x :> IjsFunc
-    let o = x :> IjsObj
-    let h = x :> IjsHostFunc
-
-    Environment.addCompiler(
-      env, f.FunctionId, DelegateFunction<'a>.compile
-    )
-    
-    Object.putLength(o, double h.ArgTypes.Length) |> ignore
-    f.Compiler <- env.Compilers.[f.FunctionId]
-    f
-  
-  //----------------------------------------------------------------------------
-  static member compile (x:IjsFunc) (delegate':System.Type) =
-    HostFunction.compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler
-    }
-
-    
-//------------------------------------------------------------------------------
-// ClrFunction API
-//------------------------------------------------------------------------------
-and ClrFunction() =
-  
-  //----------------------------------------------------------------------------
-  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
-    Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
-
-  //----------------------------------------------------------------------------
-  static member create (env:IjsEnv, method') =
-    let x = IjsClrFunc(env, method')
-    let f = x :> IjsFunc
-    let o = x :> IjsObj
-    let h = x :> IjsHostFunc
-
-    Environment.addCompiler(
-      env, f.FunctionId, ClrFunction.compile
-    )
-    
-    Object.putLength(o, double h.ArgTypes.Length) |> ignore
-    f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
-    f
-
-  //----------------------------------------------------------------------------
-  static member compile (x:IjsFunc) (delegate':System.Type) =
-    HostFunction.compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler (x :?> IjsClrFunc)
-    }
-
         
 //------------------------------------------------------------------------------
 // GetPropertyCache API
@@ -793,7 +648,6 @@ and GetPropertyCache =
 
       else
         Utils.boxedUndefined
-
         
 //------------------------------------------------------------------------------
 // InvokeCache API
@@ -809,71 +663,6 @@ and InvokeCache =
       .MakeGenericType([|t|])
       .GetConstructor([||])
       .Invoke([||])
-
-
-            
-//------------------------------------------------------------------------------
-// PutPropertyCache API
-//------------------------------------------------------------------------------
-and PutPropertyCache =
-  static member update (x:IronJS.PutPropertyCache, o:IjsObj, value:Box) =
-    match o.PropertyClassId with
-    | PropertyClassTypes.Dynamic -> 
-      Object.putProperty(o, x.PropertyName, value)
-    | _   -> 
-      let mutable i = -1
-      if Object.getOwnPropertyIndex(o, x.PropertyName, &i) then
-        x.PropertyIndex   <- i
-        x.PropertyClassId <- o.PropertyClassId
-      Object.putProperty(o, x.PropertyName, value)
-
-  static member update (x:IronJS.PutPropertyCache, o:IjsObj, value:IjsNum) =
-    match o.PropertyClassId with
-    | PropertyClassTypes.Dynamic -> 
-      Object.putProperty(o, x.PropertyName, value)
-    | _   -> 
-      let mutable i = -1
-      if Object.getOwnPropertyIndex(o, x.PropertyName, &i) then
-        x.PropertyIndex   <- i
-        x.PropertyClassId <- o.PropertyClassId
-      Object.putProperty(o, x.PropertyName, value)
-
-  static member update (x:IronJS.PutPropertyCache, o:IjsObj, value:IjsStr) =
-    match o.PropertyClassId with
-    | PropertyClassTypes.Dynamic -> 
-      Object.putProperty(o, x.PropertyName, value)
-    | _   -> 
-      let mutable i = -1
-      if Object.getOwnPropertyIndex(o, x.PropertyName, &i) then
-        x.PropertyIndex   <- i
-        x.PropertyClassId <- o.PropertyClassId
-      Object.putProperty(o, x.PropertyName, value)
-
-  static member update (x:IronJS.PutPropertyCache, o:IjsObj, value:IjsObj) =
-    match o.PropertyClassId with
-    | PropertyClassTypes.Dynamic -> 
-      Object.putProperty(o, x.PropertyName, value)
-
-    | _   -> 
-      let mutable i = -1
-      if Object.getOwnPropertyIndex(o, x.PropertyName, &i) then
-        x.PropertyIndex   <- i
-        x.PropertyClassId <- o.PropertyClassId
-      Object.putProperty(o, x.PropertyName, value)
-
-  static member update (x:IronJS.PutPropertyCache, o:IjsObj, value:IjsFunc) =
-    match o.PropertyClassId with
-    | PropertyClassTypes.Dynamic -> 
-      Object.putProperty(o, x.PropertyName, value)
-
-    | _   -> 
-      let mutable i = -1
-      if Object.getOwnPropertyIndex(o, x.PropertyName, &i) then
-        x.PropertyIndex   <- i
-        x.PropertyClassId <- o.PropertyClassId
-      Object.putProperty(o, x.PropertyName, value)
-        
-
       
 //------------------------------------------------------------------------------
 // Object API
@@ -1040,45 +829,6 @@ and Object() =
 
       else
         failwith "RangeError"
-        
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsBox byref) =
-    Object.updateLength(x, TypeConverter.toNumber &value)
-    Object.putProperty(x, "length", value)
-    
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsBool) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsNum) : IjsNum =
-    Object.updateLength(x, value)
-    Object.putProperty(x, "length", value)
-
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:HostObject) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
-    
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsStr) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
-
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:Undefined) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
-
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsObj) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
-
-  //----------------------------------------------------------------------------
-  static member putLength (x:IjsObj, value:IjsFunc) =
-    Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
 
   //----------------------------------------------------------------------------
   static member putProperty(x:IjsObj, n:string, value:obj, attrs:int16) =
@@ -1091,48 +841,6 @@ and Object() =
     | _ -> x.PropertyValues.[i].Clr <- value
 
     x.PropertyValues.[i].Type <- tc
-
-  //----------------------------------------------------------------------------
-  //Puts a property value
-  static member putProperty (x:IjsObj, name:string, value:Box) =
-    let i = Object.createPropertyIndex(x, name)
-    x.PropertyValues.[i] <- value
-    value //Return
-      
-  static member putProperty (x:IjsObj, name:string, value:bool) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setBoolInArray x.PropertyValues index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:double) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setNumberInArray (x.PropertyValues) index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:HostObject) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setClrInArray x.PropertyValues index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:string) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setStringInArray x.PropertyValues index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:Undefined) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setUndefinedInArray x.PropertyValues index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:IjsObj) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setObjectInArray x.PropertyValues index value
-    value //Return
-
-  static member putProperty (x:IjsObj, name:string, value:IjsFunc) =
-    let index = Object.createPropertyIndex(x, name)
-    Utils.setFunctionInArray x.PropertyValues index value
-    value //Return
         
   //-------------------------------------------------------------------------
   //
@@ -1166,18 +874,6 @@ and Object() =
 
   //-------------------------------------------------------------------------
   //Box Indexers
-  static member putIndex (x:IjsObj, index:Box byref, v:IjsBox byref) : IjsBox = 
-    match index.Type with
-    | TypeCodes.Number -> Object.putIndex(x, index.Double, &v)
-    | TypeCodes.String -> Object.putIndex(x, index.String, &v)
-    | _ -> failwith "Que?"
-
-  static member putIndex (x:IjsObj, index:Box byref, value:bool) = 
-    match index.Type with
-    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
-    | TypeCodes.String -> Object.putIndex(x, index.String, value)
-    | _ -> failwith "Que?"
-
   static member getIndex (x:IjsObj, index:Box byref) =
     match index.Type with
     | TypeCodes.Number -> Object.getIndex(x, index.Double)
@@ -1192,78 +888,6 @@ and Object() =
       
   //-------------------------------------------------------------------------
   //String Indexers
-
-  static member putIndex (x:IjsObj, index:IjsStr, v:IjsBox byref) : IjsBox = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, &v)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, &v)
-          else Object.putProperty(x, index, v)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsBool) : IjsBool = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, value)
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsNum) : IjsNum = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, TypeConverter.toNumber value)
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, v:HostObject) : HostObject = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, v)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, v)
-          else Object.putProperty(x, index, v)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsStr) : IjsStr = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, value)
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:Undefined) : Undefined = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, value)
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsObj) : IjsObj = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex (index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, value)
-          else Object.putProperty(x, index, value)
-
-  static member putIndex (x:IjsObj, index:IjsStr, value:IjsFunc) : IjsFunc = 
-    let mutable i = Index.Min
-    if Utils.isStringIndex(index, &i) 
-      then Object.putIndex(x, i, value)
-      else 
-        if x.Class=Classes.Array && index="length" 
-          then Object.putLength(x, value)
-          else Object.putProperty(x, index, value)
 
   static member getIndex (x:IjsObj, index:IjsStr) : IjsBox = 
     let mutable i = Index.Min
@@ -1286,54 +910,6 @@ and Object() =
   //----------------------------------------------------------------------------
   // IjsNum indexers
   //----------------------------------------------------------------------------
-  static member putIndex (x:IjsObj, index:IjsNum, v:IjsBox byref) : IjsBox = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, &v)
-      else Object.putProperty(x, TypeConverter.toString index, v)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsBool) : IjsBool = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsNum) : IjsNum = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member putIndex (x:IjsObj, index:IjsNum, v:HostObject) : HostObject = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, v)
-      else Object.putProperty(x, string index, v)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsStr) : IjsStr = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member putIndex (x:IjsObj, index:IjsNum, v:Undefined) : Undefined = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, v)
-      else Object.putProperty(x, TypeConverter.toString index, v)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsObj) : IjsObj = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
-  static member putIndex (x:IjsObj, index:IjsNum, value:IjsFunc) : IjsFunc = 
-    let i = uint32 index
-    if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
-
   static member getIndex (x:IjsObj, index:IjsNum) : IjsBox = 
     let i = uint32 index
     if double i = index
@@ -1351,194 +927,10 @@ and Object() =
     if double i = index
       then Object.deleteIndex(x, i)
       else Object.deleteOwnProperty(x, TypeConverter.toString index)
-
-  //-------------------------------------------------------------------------
-  //UInt32 Indexers
-  static member putIndex2 (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox =
-    //If over max index, init a sparse array
-    if ui > Index.Max then Object.initSparse x
-
-    //If we're dense
-    if Utils.isDense x then
-
-      //Space already exists, good.
-      if ui < uint32 x.IndexValues.Length then
-        x.IndexValues.[int ui] <- value
-
-      else
-        if ui > 255u && ui/2u > x.IndexLength then
-          Object.initSparse x
-          x.IndexSparse.[ui] <- value
-
-        else
-          Object.expandIndexStorage(x, int ui)
-          x.IndexValues.[int ui] <- value
-
-    //We're sparse
-    else
-      x.IndexSparse.[ui] <- value
-
-    //Update length if needed
-    if ui > x.IndexLength then
-      x.IndexLength <- ui + 1u
-      Object.updateLength(x, double ui)
-
-    //return value
-    value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, &value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          x.IndexValues.[int ui] <- value; value
-      else x.IndexValues.[int ui] <- value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsBool) : IjsBool= 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxBool value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setBoolInArray x.IndexValues (int ui) value; value
-      else Utils.setBoolInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsNum) : IjsNum = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxDouble value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setNumberInArray x.IndexValues (int ui) value; value
-      else Utils.setNumberInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:HostObject) : HostObject = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxClr value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setClrInArray x.IndexValues (int ui) value; value
-      else Utils.setClrInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsStr) : IjsStr = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxString value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setStringInArray x.IndexValues (int ui) value; value
-      else Utils.setStringInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:Undefined) : Undefined = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxedUndefined
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setUndefinedInArray x.IndexValues (int ui) value; value
-      else Utils.setUndefinedInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsObj) : IjsObj = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxObject value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setObjectInArray x.IndexValues (int ui) value; value
-      else Utils.setObjectInArray x.IndexValues (int ui) value; value
-
-  static member putIndex (x:IjsObj, ui:uint32, value:IjsFunc) : IjsFunc = 
-    if ui > Index.Max then Object.initSparse x
-    if not (Object.ReferenceEquals(x.IndexSparse, null)) then
-      x.IndexSparse.[ui] <- Utils.boxFunction value
-      if ui >= x.IndexLength then x.IndexLength <- ui + 1u
-      value
-    else
-      if ui >= x.IndexLength then 
-        if x.Class = Classes.Array then
-          Object.putProperty(x, "length", double x.IndexLength) |> ignore
-        if ui >= 255u && ui/2u >= x.IndexLength then
-          Object.initSparse x
-          Object.putIndex(x, ui, value)
-        else
-          x.IndexLength <- ui + 1u
-          Object.expandIndexStorage(x, int ui)
-          Utils.setFunctionInArray x.IndexValues (int ui) value; value
-      else Utils.setFunctionInArray x.IndexValues (int ui) value; value
-
+      
+  //----------------------------------------------------------------------------
+  // int32 indexers
+  //----------------------------------------------------------------------------
   static member getIndex (x:IjsObj, ui:uint32) = 
     let mutable o = null
     if Object.hasIndex(x, &o, ui) then
@@ -1588,3 +980,742 @@ and Object() =
       true
     else
       false
+    
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // GENERATED OBJECT METHODS
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsBox byref) =
+    let index = Object.createPropertyIndex(x, name)
+    x.PropertyValues.[index] <- value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsBool) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setIjsBoolInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsNum) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setIjsNumInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:HostObject) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setHostObjectInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:Undefined) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setUndefinedInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsStr) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setIjsStrInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsObj) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setIjsObjInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putProperty (x:IjsObj, name:IjsStr, value:IjsFunc) =
+    let index = Object.createPropertyIndex(x, name)
+    Utils.setIjsFuncInArray x.PropertyValues index value
+    value
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsBox byref) : IjsBox =
+    Object.updateLength(x, TypeConverter.toNumber &value)
+    Object.putProperty(x, "length", &value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsBool) : IjsBool =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsNum) : IjsNum =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:HostObject) : HostObject =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:Undefined) : Undefined =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsStr) : IjsStr =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsObj) : IjsObj =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putLength (x:IjsObj, value:IjsFunc) : IjsFunc =
+    Object.updateLength(x, TypeConverter.toNumber value)
+    Object.putProperty(x, "length", value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsBox byref) : IjsBox = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, &value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, &value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", &value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, &value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", &value)
+        else Object.putProperty(x, index.Clr.ToString(), &value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, &value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsBool) : IjsBool = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsNum) : IjsNum = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:HostObject) : HostObject = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:Undefined) : Undefined = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsStr) : IjsStr = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsObj) : IjsObj = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:Box byref, value:IjsFunc) : IjsFunc = 
+    match index.Type with
+    | TypeCodes.Number -> Object.putIndex(x, index.Double, value)
+    | TypeCodes.String -> Object.putIndex(x, index.String, value)
+    | TypeCodes.Undefined -> Object.putProperty(x, "undefined", value)
+    | TypeCodes.Bool ->
+      let name = if index.Bool then "true" else "false"
+      Object.putProperty(x, name, value)
+  
+    | TypeCodes.Clr -> 
+      if index.Clr = null 
+        then Object.putProperty(x, "null", value)
+        else Object.putProperty(x, index.Clr.ToString(), value)
+
+    | TypeCodes.Object
+    | TypeCodes.Function ->
+      let mutable v = Object.defaultValue(index.Object)
+      Object.putIndex(x, &v, value)
+
+    | _ -> failwith "Que?"
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsBox byref) : IjsBox = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, &value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, &value)
+          else Object.putProperty(x, index, &value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsBool) : IjsBool = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsNum) : IjsNum = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:HostObject) : HostObject = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:Undefined) : Undefined = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsStr) : IjsStr = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsObj) : IjsObj = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsStr, value:IjsFunc) : IjsFunc = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object.putIndex(x, i, value)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object.putLength(x, value)
+          else Object.putProperty(x, index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsBox byref) : IjsBox = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, &value)
+      else Object.putProperty(x, TypeConverter.toString index, &value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsBool) : IjsBool = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsNum) : IjsNum = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:HostObject) : HostObject = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:Undefined) : Undefined = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsStr) : IjsStr = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsObj) : IjsObj = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, index:IjsNum, value:IjsFunc) : IjsFunc = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, value)
+      else Object.putProperty(x, TypeConverter.toString index, value)
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        x.IndexValues.[(int ui)] <- value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- value
+        else
+          Object.expandIndexStorage(x, int ui)
+          x.IndexValues.[(int ui)] <- value
+    else
+      x.IndexSparse.[ui] <- value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsBool) : IjsBool =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setIjsBoolInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxIjsBool value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setIjsBoolInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxIjsBool value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsNum) : IjsNum =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setIjsNumInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxIjsNum value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setIjsNumInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxIjsNum value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:HostObject) : HostObject =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setHostObjectInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxHostObject value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setHostObjectInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxHostObject value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:Undefined) : Undefined =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setUndefinedInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxUndefined value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setUndefinedInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxUndefined value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsStr) : IjsStr =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setIjsStrInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxIjsStr value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setIjsStrInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxIjsStr value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsObj) : IjsObj =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setIjsObjInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxIjsObj value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setIjsObjInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxIjsObj value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+
+  //----------------------------------------------------------------------------
+  static member putIndex (x:IjsObj, ui:uint32, value:IjsFunc) : IjsFunc =
+    if ui > Index.Max then Object.initSparse x
+    if Utils.isDense x then
+      if ui < uint32 x.IndexValues.Length then
+        Utils.setIjsFuncInArray x.IndexValues (int ui) value
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
+          Object.initSparse x
+          x.IndexSparse.[ui] <- Utils.boxIjsFunc value
+        else
+          Object.expandIndexStorage(x, int ui)
+          Utils.setIjsFuncInArray x.IndexValues (int ui) value
+    else
+      x.IndexSparse.[ui] <- Utils.boxIjsFunc value
+
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    value
+    
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // GENERATED OBJECT METHODS
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// DispatchTarget
+//------------------------------------------------------------------------------
+and DispatchTarget = {
+  Delegate : HostType
+  Function : IjsHostFunc
+  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
+}
+
+//------------------------------------------------------------------------------
+// HostFunction API
+//------------------------------------------------------------------------------
+and HostFunction() =
+
+  //----------------------------------------------------------------------------
+  static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
+    if i < passedArgs.Length 
+      then TypeConverter.convertTo env passedArgs.[i] t
+      else Dlr.default' t
+      
+  //----------------------------------------------------------------------------
+  static let marshalBoxParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+    passed
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map Expr.boxValue
+    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
+    
+  //----------------------------------------------------------------------------
+  static let marshalObjectParams 
+    (f:IjsHostFunc) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
+    passed
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map TypeConverter.toHostObject
+    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
+    
+  //----------------------------------------------------------------------------
+  static let createParam i t = Dlr.param (sprintf "a%i" i) t
+  
+  //----------------------------------------------------------------------------
+  static member compileDispatcher (target:DispatchTarget) = 
+    let f = target.Function
+
+    let argTypes = Reflection.getDelegateArgTypes target.Delegate
+    let args = argTypes |> Array.mapi createParam
+    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
+
+    let env = Dlr.field args.[0] "Env"
+    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
+    let marshalled = 
+      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
+
+      match f.ParamsMode with
+      | ParamsModes.BoxParams when paramsExist -> 
+        marshalBoxParams f passedArgs marshalled
+
+      | ParamsModes.ObjectParams when paramsExist -> 
+        marshalObjectParams f passedArgs marshalled
+
+      | _ -> marshalled
+
+    let invoke = target.Invoke (args.[0] :> Dlr.Expr) marshalled
+    let body = 
+      if Utils.isBox f.ReturnType then invoke
+      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
+      else
+        Dlr.blockTmpT<Box> (fun tmp ->
+          [
+            (Expr.setBoxTypeOf tmp invoke)
+            (Expr.setBoxValue tmp invoke)
+            (tmp :> Dlr.Expr)
+          ] |> Seq.ofList
+        )
+            
+    let lambda = Dlr.lambda target.Delegate args body
+    Debug.printExpr lambda
+    lambda.Compile()
+
+    
+//------------------------------------------------------------------------------
+// DelegateFunction API
+//------------------------------------------------------------------------------
+and DelegateFunction<'a when 'a :> Delegate>() =
+
+  //----------------------------------------------------------------------------
+  static let invokeCompiler f args =
+    let casted = Dlr.castT<IjsDelFunc<'a>> f
+    Dlr.invoke (Dlr.field casted "Delegate") args
+    
+  //----------------------------------------------------------------------------
+  static member create (env:IjsEnv, delegate':'a) =
+    let x = IjsDelFunc<'a>(env, delegate')
+    let f = x :> IjsFunc
+    let o = x :> IjsObj
+    let h = x :> IjsHostFunc
+
+    Environment.addCompiler(
+      env, f.FunctionId, DelegateFunction<'a>.compile
+    )
+    
+    f.Compiler <- env.Compilers.[f.FunctionId]
+    f
+  
+  //----------------------------------------------------------------------------
+  static member compile (x:IjsFunc) (delegate':System.Type) =
+    HostFunction.compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> IjsHostFunc
+      Invoke = invokeCompiler
+    }
+
+    
+//------------------------------------------------------------------------------
+// ClrFunction API
+//------------------------------------------------------------------------------
+and ClrFunction() =
+  
+  //----------------------------------------------------------------------------
+  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
+    Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
+
+  //----------------------------------------------------------------------------
+  static member compile (x:IjsFunc) (delegate':System.Type) =
+    HostFunction.compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> IjsHostFunc
+      Invoke = invokeCompiler (x :?> IjsClrFunc)
+    }
+
+  //----------------------------------------------------------------------------
+  static member create (env:IjsEnv, method') =
+    let x = IjsClrFunc(env, method')
+    let f = x :> IjsFunc
+    let o = x :> IjsObj
+    let h = x :> IjsHostFunc
+
+    Environment.addCompiler(
+      env, f.FunctionId, ClrFunction.compile
+    )
+    
+    f.Compiler <- env.Compilers.[(x :> IjsFunc).FunctionId]
+    f

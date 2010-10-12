@@ -40,12 +40,12 @@ type ScopeHelpers() =
     | _ -> if s = null then Object.getProperty(g, name) else s.[i]
       
   //----------------------------------------------------------------------------
-  static member DynamicSet (name, value:IjsBox, dc, stop, g, s:Scope, i) =
+  static member DynamicSet (name, value:IjsBox byref, dc, stop, g, s:Scope, i) =
     match findObject name dc stop with
-    | Some o -> Object.putProperty(o, name, value)
+    | Some o -> Object.putProperty(o, name, &value)
     | _ -> 
       if s = null 
-        then Object.putProperty(g, name, value) 
+        then Object.putProperty(g, name, &value) 
         else s.[i] <- value; value
           
   //----------------------------------------------------------------------------

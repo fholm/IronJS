@@ -96,7 +96,6 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Api.fs" />
-    <Compile Include="CodeGen/Api_Gen.fs" />
     <Compile Include="Api.Expr.fs" />
     <Compile Include="Helpers.fs" />
   </ItemGroup>

@@ -45,13 +45,13 @@ type Object_Gen =
 
   static member putLength (x:IjsObj, value:<#= printArg(type) #>) : <#= type #> =
     Object.updateLength(x, TypeConverter.toNumber <#= printVal(type) #>)
-    Object.putProperty(x, "length", <#= printVal(type) #>)
+    Object_Gen.putProperty(x, "length", <#= printVal(type) #>)
 <# } #>
 <# foreach(var type in typesWithBox) { #>
 
   static member putIndex (x:IjsObj, index:IjsNum, value:<#= printArg(type) #>) : <#= type #> = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, <#= printVal(type) #>)
-      else Object.putProperty(x, TypeConverter.toString index, <#= printVal(type) #>)
+      then Object_Gen.putIndex(x, i, <#= printVal(type) #>)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, <#= printVal(type) #>)
 <# } #>

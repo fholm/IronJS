@@ -1355,32 +1355,36 @@ and Object() =
   //-------------------------------------------------------------------------
   //UInt32 Indexers
   static member putIndex2 (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox =
+    //If over max index, init a sparse array
     if ui > Index.Max then Object.initSparse x
-    if Utils.isDense x then
-      if ui >= x.IndexLength then
-        Object.updateLength(x, double x.IndexLength)
 
-        if ui > 255u && ui/2u >= x.IndexLength then
+    //If we're dense
+    if Utils.isDense x then
+
+      //Space already exists, good.
+      if ui < uint32 x.IndexValues.Length then
+        x.IndexValues.[int ui] <- value
+
+      else
+        if ui > 255u && ui/2u > x.IndexLength then
           Object.initSparse x
-          Object.putIndex2(x, ui, &value)
+          x.IndexSparse.[ui] <- value
 
         else
           Object.expandIndexStorage(x, int ui)
-          x.IndexLength <- ui + 1u
           x.IndexValues.[int ui] <- value
-          value
 
-      else
-        x.IndexValues.[int ui] <- value
-        value
-
+    //We're sparse
     else
-      if ui >= x.IndexLength then 
-        x.IndexLength <- ui + 1u
-        Object.updateLength(x, double x.IndexLength)
-
       x.IndexSparse.[ui] <- value
-      value
+
+    //Update length if needed
+    if ui > x.IndexLength then
+      x.IndexLength <- ui + 1u
+      Object.updateLength(x, double ui)
+
+    //return value
+    value
 
   static member putIndex (x:IjsObj, ui:uint32, value:IjsBox byref) : IjsBox = 
     if ui > Index.Max then Object.initSparse x

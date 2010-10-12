@@ -111,80 +111,80 @@ type Object_Gen =
 
   static member putLength (x:IjsObj, value:IjsBox byref) : IjsBox =
     Object.updateLength(x, TypeConverter.toNumber &value)
-    Object.putProperty(x, "length", &value)
+    Object_Gen.putProperty(x, "length", &value)
 
   static member putLength (x:IjsObj, value:IjsBool) : IjsBool =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:IjsNum) : IjsNum =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:HostObject) : HostObject =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:Undefined) : Undefined =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:IjsStr) : IjsStr =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:IjsObj) : IjsObj =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putLength (x:IjsObj, value:IjsFunc) : IjsFunc =
     Object.updateLength(x, TypeConverter.toNumber value)
-    Object.putProperty(x, "length", value)
+    Object_Gen.putProperty(x, "length", value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsBox byref) : IjsBox = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, &value)
-      else Object.putProperty(x, TypeConverter.toString index, &value)
+      then Object_Gen.putIndex(x, i, &value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, &value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsBool) : IjsBool = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsNum) : IjsNum = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:HostObject) : HostObject = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:Undefined) : Undefined = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsStr) : IjsStr = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsObj) : IjsObj = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)
 
   static member putIndex (x:IjsObj, index:IjsNum, value:IjsFunc) : IjsFunc = 
     let i = uint32 index
     if double i = index
-      then Object.putIndex(x, i, value)
-      else Object.putProperty(x, TypeConverter.toString index, value)
+      then Object_Gen.putIndex(x, i, value)
+      else Object_Gen.putProperty(x, TypeConverter.toString index, value)

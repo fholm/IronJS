@@ -96,18 +96,26 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Api.fs" />
+    <Compile Include="CodeGen/Api_Gen.fs" />
     <Compile Include="Api.Expr.fs" />
     <Compile Include="Helpers.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.PowerPack, Version=1.9.9.9, Culture=neutral, PublicKeyToken=a19089b1c74d0809" />
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\Lib\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>..\..\..\Lib\Microsoft.Dynamic.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="CodeGen\CodeGen.csproj">
+      <Name>CodeGen</Name>
+      <Project>{90e51379-f4de-4af0-a0ce-1465892d31e9}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,0 +1,57 @@
+﻿<#@ template debug="true" hostSpecific="true" #>
+<#@ output extension=".fs" #>
+<#@ Assembly Name="System.Core.dll" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.IO" #>
+<# 
+var types = new [] { "IjsBool", "IjsNum", "HostObject", "Undefined", "IjsStr", "IjsObj", "IjsFunc" }; 
+var typesWithBox = new [] { "IjsBox", "IjsBool", "IjsNum", "HostObject", "Undefined", "IjsStr", "IjsObj", "IjsFunc" }; 
+Func<string, string> printArg = (x) => x == "IjsBox" ? "IjsBox byref" : x;
+Func<string, string, string, string, string> arraySetter = (typ, array, index, value) => 
+{
+	if(typ == "IjsBox") {
+		return array + ".[" + index + "] <- " + value;
+	} else {
+		return "Utils.arraySet" + typ + " " + array + " " + index + " " + value;
+	}
+};
+
+Func<string, string> printVal = (x) => x == "IjsBox" ? "&value" : "value";
+#>
+namespace IronJS.Api
+
+open System
+open IronJS
+
+type Object_Gen = 
+<# foreach(var type in typesWithBox) { #>
+
+  static member putProperty (x:IjsObj, name:IjsStr, value:<#= printArg(type) #>) =
+    let index = Object.createPropertyIndex(x, name)
+    value
+<# } #>
+<# foreach(var type in typesWithBox) { #>
+
+  static member putIndex (x:IjsObj, index:IjsStr, value:<#= printArg(type) #>) : <#= type #> = 
+    let mutable i = Index.Min
+    if Utils.isStringIndex(index, &i) 
+      then Object_Gen.putIndex(x, i, <#= printVal(type) #>)
+      else 
+        if x.Class=Classes.Array && index="length" 
+          then Object_Gen.putLength(x, <#= printVal(type) #>)
+          else Object_Gen.putProperty(x, index, <#= printVal(type) #>)
+<# } #>
+<# foreach(var type in typesWithBox) { #>
+
+  static member putLength (x:IjsObj, value:<#= printArg(type) #>) : <#= type #> =
+    Object.updateLength(x, TypeConverter.toNumber <#= printVal(type) #>)
+    Object.putProperty(x, "length", <#= printVal(type) #>)
+<# } #>
+<# foreach(var type in typesWithBox) { #>
+
+  static member putIndex (x:IjsObj, index:IjsNum, value:<#= printArg(type) #>) : <#= type #> = 
+    let i = uint32 index
+    if double i = index
+      then Object.putIndex(x, i, <#= printVal(type) #>)
+      else Object.putProperty(x, TypeConverter.toString index, <#= printVal(type) #>)
+<# } #>

@@ -268,8 +268,6 @@ module Utils =
     arr.[i].Type  <- TypeCodes.Function
     arr.[i].Clr   <- value
 
-
-
   let inline boxIjsBool (b:bool) =
     let mutable box = Box()
     box.Bool <- b

@@ -1027,7 +1027,7 @@ module Ast =
           let scope = LocalScope(scope, body)
           let func = Tree.Function(id, Some source, scope)
 
-          if named then func
+          if not named then func
           else
             let name = text (child tok 0)
             Var(Assign(Identifier name, func)) 

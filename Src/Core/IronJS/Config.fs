@@ -9,9 +9,14 @@ module Version =
   let String = sprintf "%i.%i.%i-%s" Major Minor Build Tag
   let FullName = sprintf "IronJS %s" String
 
+module Ops2 =
+  let inline (|!>) a b = b !a 
+  let inline (<==) a b = a := b !a
+  let inline (|?>) a b = match a with Some x -> Some(b x) | _ -> None
+
 module Ops = 
   //Same as |> but for refs
-  let (%>) a b = b (!a) 
+  let (%>) a b = b !a 
 
   //Applies b to a and stores result in a
   let (<!) a b = a := b !a
@@ -22,6 +27,7 @@ module Ops =
   //'Unwraps' an Option<'a> if it has  a value otherwise throws an exception
   let (!?) opt = match opt with | Some v -> v | _ -> failwith "No value"
 
+[<CompiledName("AliasesModule")>]
 module Aliases = 
   open System
     

@@ -39,7 +39,6 @@ type Class = byte
 
 
 
-
 //-------------------------------------------------------------------------
 //
 // Constants
@@ -99,7 +98,6 @@ module ConstructorModes =
   let [<Literal>] Function = 0uy
   let [<Literal>] User = 1uy
   let [<Literal>] Host = 2uy
-  let [<Literal>] Called = 3uy
 
 module ParamsModes =
   let [<Literal>] NoParams = 0uy

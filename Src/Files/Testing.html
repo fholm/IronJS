@@ -1,23 +1,11 @@
 ﻿<html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <script type="text/javascript">
-            var x = 1
-            var r;
-            var foo = function () { };
+            var foo = function () {
+                alert(arguments.hasOwnProperty("length"));
+            };
 
-            switch (x) {
-                case foo():
-                    break;
-                case 2:
-                    r = "lol";
-
-                case 3:
-                    r = "lol3";
-            }
-
-            alert(r);
-
-            alert(parseFloat.prototype);
+            foo();
 
         </script>
     </head>

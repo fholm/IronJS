@@ -31,7 +31,7 @@ Func<int, string> buildArgList = (n) => {
 		return "";
 	} else {
 		var lst = new List<string>();
-		for(var i = 0; i <= n; ++i) {
+		for(var i = 0; i < n; ++i) { 
 			lst.Add(String.Format("a{0}:'a{0}", i));
 		}
 		return "," + String.Join(",", lst);
@@ -162,6 +162,7 @@ type [<Sealed>] Object =
 and [<Sealed>] Function_Gen =
 <# for(var i = 0; i <= 8; ++i) { #>
   
+  //----------------------------------------------------------------------------
   static member call (f:IjsFunc,t<#= buildArgList(i) #>) =
     let c = f.Compiler
     let c = c.compileAs<Func<IjsFunc,IjsObj<#= buildTypeList(i) #>,IjsBox>>(f)
@@ -169,6 +170,7 @@ and [<Sealed>] Function_Gen =
 <# } #>
 <# for(var i = 0; i <= 8; ++i) { #>
 
+  //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj<#= buildArgList(i) #>) =
     let c = f.Compiler
     let c = c.compileAs<Func<IjsFunc,IjsObj<#= buildTypeList(i) #>,IjsBox>>(f)
@@ -177,14 +179,7 @@ and [<Sealed>] Function_Gen =
     | ConstructorModes.Host -> c.Invoke(f,null<#= buildCallList(i) #>)
     | ConstructorModes.User -> 
       let o = Environment.createObject(f.Env)
-      let prototype = Object.getProperty(f, "prototype")
-      let prototype = 
-        match prototype.Type with
-        | TypeCodes.Function
-        | TypeCodes.Object -> prototype.Object
-        | _ -> f.Env.Object_prototype
-
-      o.Prototype <- prototype
+      o.Prototype <- getPrototype f
       c.Invoke(f,o<#= buildCallList(i) #>)
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"

@@ -95,8 +95,10 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.1
   let private objectConstructor (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
-    match t with
-    | null -> Api.TypeConverter.toObject(f.Env, v)
+    match v.Type with
+    | TypeCodes.Empty
+    | TypeCodes.Undefined -> Api.Environment.createObject(f.Env)
+    | TypeCodes.Clr when v.Clr = null -> Api.Environment.createObject(f.Env)
     | _ -> Api.TypeConverter.toObject(f.Env, v)
 
   //----------------------------------------------------------------------------
@@ -111,6 +113,10 @@ module Object =
 
     Api.Object.putProperty(
       objectCtor, "prototype", env.Object_prototype, PropertyAttrs.All
+    )
+
+    Api.Object.putProperty(
+      env.Object_prototype, "constructor", objectCtor, PropertyAttrs.None
     )
 
     Api.Object.putProperty(

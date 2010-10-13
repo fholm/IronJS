@@ -565,6 +565,235 @@ type [<Sealed>] Object =
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+and [<Sealed>] Function_Gen =
+  
+  static member call (f:IjsFunc,t) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
+    c.Invoke(f,t)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,IjsBox>>(f)
+    c.Invoke(f,t,a0)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5,a6)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7,a8:'a8) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,'a7,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5,a6,a7)
+
+  static member construct (f:IjsFunc,t:IjsObj) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7,a8:'a8) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,'a7,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6,a7)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and [<Sealed>] PutPropertyCache_Gen =
 
   //----------------------------------------------------------------------------

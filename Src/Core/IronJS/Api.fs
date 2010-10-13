@@ -610,45 +610,67 @@ and Environment =
 //------------------------------------------------------------------------------
 and Function =
 
-  static member call (f:IjsFunc, t) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
-    c.Invoke(f, t)
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // GENERATED FUNCTION METHODS
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
 
-  static member call (f:IjsFunc, t, a0:'a) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
-    c.Invoke(f, t, a0)
-
-  static member call (f:IjsFunc, t, a0:'a, a1:'b) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,'b,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1)
-
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c) =
+  static member call (f:IjsFunc,t) =
     let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2)
-
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d) =
+    let c = c.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
+    c.Invoke(f,t)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1) =
     let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3)
-
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e) =
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,IjsBox>>(f)
+    c.Invoke(f,t,a0)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2) =
     let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3, a4)
-
-  static member call (f:IjsFunc, t, a0:'a, a1:'b, a2:'c, a3:'d, a4:'e, a5:'f) =
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
     let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
-    c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
-
-  static member construct (f:IjsFunc, t:IjsObj, a0:'a) =
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
     let c = f.Compiler
-    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5,a6)
+  
+  static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7,a8:'a8) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,'a7,IjsBox>>(f)
+    c.Invoke(f,t,a0,a1,a2,a3,a4,a5,a6,a7)
+
+  static member construct (f:IjsFunc,t:IjsObj) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,IjsBox>>(f)
+
     match f.ConstructorMode with
-    | ConstructorModes.Host -> 
-      c.Invoke(f, null, a0)
-
+    | ConstructorModes.Host -> c.Invoke(f,null)
     | ConstructorModes.User -> 
       let o = Environment.createObject(f.Env)
       let prototype = Object.getProperty(f, "prototype")
@@ -659,10 +681,179 @@ and Function =
         | _ -> f.Env.Object_prototype
 
       o.Prototype <- prototype
-      c.Invoke(f, o, a0)
+      c.Invoke(f,o)
 
-    | _ -> failwith "Que?"
-      
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7,a8:'a8) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,'a7,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6,a7)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  // GENERATED FUNCTION METHODS
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // DispatchTarget
@@ -691,7 +882,6 @@ and HostFunction() =
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map Expr.boxValue
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
-    |> Array.ofSeq
     
   //----------------------------------------------------------------------------
   static let marshalObjectParams 
@@ -700,7 +890,6 @@ and HostFunction() =
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map TypeConverter.toHostObject
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
-    |> Array.ofSeq
     
   //----------------------------------------------------------------------------
   static let createParam i t = Dlr.param (sprintf "a%i" i) t
@@ -713,8 +902,10 @@ and HostFunction() =
     let args = argTypes |> Array.mapi createParam
     let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
 
-    let env = Dlr.field args.[0] "Env"
-    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env) |> Array.ofSeq
+    let func = args.[0] :> Dlr.Expr
+    let env = Dlr.field func "Env"
+
+    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
     let marshalled = 
       let paramsExist = f.ArgTypes.Length < passedArgs.Length 
 
@@ -727,7 +918,7 @@ and HostFunction() =
 
       | _ -> marshalled
 
-    let invoke = target.Invoke (args.[0] :> Dlr.Expr) (Seq.ofArray marshalled)
+    let invoke = target.Invoke func marshalled
     let body = 
       if Utils.isBox f.ReturnType then invoke
       elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
@@ -745,13 +936,14 @@ and HostFunction() =
     lambda.Compile()
 
     
+
 //------------------------------------------------------------------------------
 // DelegateFunction API
 //------------------------------------------------------------------------------
 and DelegateFunction<'a when 'a :> Delegate>() =
 
   //----------------------------------------------------------------------------
-  static let invokeCompiler f args =
+  static let generateInvoke f args =
     let casted = Dlr.castT<IjsDelFunc<'a>> f
     Dlr.invoke (Dlr.field casted "Delegate") args
     
@@ -760,7 +952,7 @@ and DelegateFunction<'a when 'a :> Delegate>() =
     let h = IjsDelFunc<'a>(env, delegate') :> IjsHostFunc
     let f = h :> IjsFunc
 
-    Object.putLength(f, double h.ArgTypes.Length) |> ignore
+    Object.putLength(f, double h.jsArgsLength) |> ignore
     Environment.addCompiler(env, f, DelegateFunction<'a>.compile)
 
     f
@@ -770,17 +962,18 @@ and DelegateFunction<'a when 'a :> Delegate>() =
     HostFunction.compileDispatcher {
       Delegate = delegate'
       Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler
+      Invoke = generateInvoke
     }
 
     
+
 //------------------------------------------------------------------------------
 // ClrFunction API
 //------------------------------------------------------------------------------
 and ClrFunction() =
   
   //----------------------------------------------------------------------------
-  static let invokeCompiler (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
+  static let generateInvoke (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
     Dlr.Expr.Call(null, x.Method, args) :> Dlr.Expr
 
   //----------------------------------------------------------------------------
@@ -788,7 +981,7 @@ and ClrFunction() =
     HostFunction.compileDispatcher {
       Delegate = delegate'
       Function = x :?> IjsHostFunc
-      Invoke = invokeCompiler (x :?> IjsClrFunc)
+      Invoke = generateInvoke (x :?> IjsClrFunc)
     }
 
   //----------------------------------------------------------------------------
@@ -796,7 +989,7 @@ and ClrFunction() =
     let h = IjsClrFunc(env, method') :> IjsHostFunc
     let f = h :> IjsFunc
     
-    Object.putLength(f, double h.ArgTypes.Length) |> ignore
+    Object.putLength(f, double h.jsArgsLength) |> ignore
     Environment.addCompiler(env, f, ClrFunction.compile)
 
     f

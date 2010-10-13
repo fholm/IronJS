@@ -3,6 +3,7 @@
 <#@ Assembly Name="System.Core.dll" #>
 <#@ import namespace="System" #>
 <#@ import namespace="System.IO" #>
+<#@ import namespace="System.Collections.Generic" #>
 <# 
 var types = new [] { "IjsBool", "IjsNum", "HostObject", "Undefined", "IjsStr", "IjsObj", "IjsFunc" }; 
 var typesWithBox = new [] { "IjsBox", "IjsBool", "IjsNum", "HostObject", "Undefined", "IjsStr", "IjsObj", "IjsFunc" }; 
@@ -24,6 +25,43 @@ Func<string, string, string> box = (type, value) => {
 };
 
 Func<string, string> printVal = (x) => x == "IjsBox" ? "&value" : "value";
+
+Func<int, string> buildArgList = (n) => {
+	if(n == 0) {
+		return "";
+	} else {
+		var lst = new List<string>();
+		for(var i = 0; i <= n; ++i) {
+			lst.Add(String.Format("a{0}:'a{0}", i));
+		}
+		return "," + String.Join(",", lst);
+	}
+};
+
+Func<int, string> buildCallList = (n) => {
+	if(n == 0) {
+		return "";
+	} else {
+		var lst = new List<string>();
+		for(var i = 0; i < n; ++i) {
+			lst.Add(String.Format("a{0}", i));
+		}
+		return "," + String.Join(",", lst);
+		}
+};
+
+Func<int, string> buildTypeList = (n) => {
+	if(n == 0) {
+		return "";
+	} else {
+		var lst = new List<string>();
+		for(var i = 0; i < n; ++i) {
+			lst.Add(String.Format("'a{0}", i));
+		}
+		return "," + String.Join(",", lst);
+	}
+};
+
 #>
 namespace IronJS.Api
 
@@ -117,6 +155,39 @@ type [<Sealed>] Object =
       Object.putLength(x, double (ui + 1u)) |> ignore
 
     value
+<# } #>
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+and [<Sealed>] Function_Gen =
+<# for(var i = 0; i <= 8; ++i) { #>
+  
+  static member call (f:IjsFunc,t<#= buildArgList(i) #>) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj<#= buildTypeList(i) #>,IjsBox>>(f)
+    c.Invoke(f,t<#= buildCallList(i) #>)
+<# } #>
+<# for(var i = 0; i <= 8; ++i) { #>
+
+  static member construct (f:IjsFunc,t:IjsObj<#= buildArgList(i) #>) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj<#= buildTypeList(i) #>,IjsBox>>(f)
+
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> c.Invoke(f,null<#= buildCallList(i) #>)
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
+
+      o.Prototype <- prototype
+      c.Invoke(f,o<#= buildCallList(i) #>)
+
+    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 <# } #>
 
 //------------------------------------------------------------------------------

@@ -79,6 +79,7 @@ module BoxFields =
   let [<Literal>] Function  = "Func"
 
 module PropertyAttrs =
+  let [<Literal>] None        = 0s
   let [<Literal>] ReadOnly    = 1s
   let [<Literal>] DontEnum    = 2s
   let [<Literal>] DontDelete  = 4s
@@ -349,9 +350,9 @@ and [<AllowNullLiteral>] Function =
     DynamicChain = List.empty
   }
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] HostFunction =
   inherit Function
 
@@ -370,7 +371,8 @@ and [<AllowNullLiteral>] HostFunction =
     ParamsMode = ParamsModes.NoParams
     MarshalMode = MarshalModes.Default
   }
-
+  
+  //----------------------------------------------------------------------------
   member internal x.resolveModes () =
     let length = x.ArgTypes.Length
 
@@ -389,10 +391,17 @@ and [<AllowNullLiteral>] HostFunction =
       if lastArg = typeof<obj array> then
         x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
         x.ParamsMode <- ParamsModes.ObjectParams
+        
+  //----------------------------------------------------------------------------
+  member x.jsArgsLength =
+    match x.MarshalMode with
+    | MarshalModes.Function -> x.ArgTypes.Length - 2
+    | MarshalModes.This -> x.ArgTypes.Length - 1 
+    | _ -> x.ArgTypes.Length
   
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] DelegateFunction<'a when 'a :> Delegate> =
   inherit HostFunction
 

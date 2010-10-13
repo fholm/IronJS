@@ -79,7 +79,8 @@ namespace IronJS.DevUI {
                     ex = ex.InnerException;
                 }
 
-                Result.Text = ex.Message;
+                Result.Text = ex.Message + "\n\n";
+                Result.Text += ex.StackTrace;
 
             } finally {
                 RenderEnvironment();

@@ -9,28 +9,23 @@ module Hosting =
     let x = IjsEnv()
     x.Base_Class <- PropertyClass(x)
 
-    //.prototype Property class
-    x.Prototype_Class <-
-      Api.PropertyClass.subClass(x.Base_Class, "constructor")
-
-    //Array property class
-    x.Array_Class <-
-      Api.PropertyClass.subClass(x.Base_Class, ["length"])
-
-    //Function property class
-    x.Function_Class <-
-      Api.PropertyClass.subClass(x.Base_Class, ["length"; "prototype"])
-
-    x.String_Class <-
-      Api.PropertyClass.subClass(x.Base_Class, ["length"])
-
+    x.Prototype_Class <- Api.PropertyClass.subClass(x.Base_Class, "constructor")
+    x.Function_Class <- Api.PropertyClass.subClass(x.Base_Class, ["length"; "prototype"])
+    x.Array_Class <- Api.PropertyClass.subClass(x.Base_Class, "length")
+    x.String_Class <- Api.PropertyClass.subClass(x.Base_Class, "length")
     x.Number_Class <- x.Base_Class
     x.Boolean_Class <- x.Base_Class
 
-    Native.Object.createPrototype x
-    Native.Global.create x
-    Native.Object.createConstructor x
-
+    x.Object_prototype <- Native.Object.createPrototype x
+    x.Function_prototype <- Native.Function.createPrototype x
+    x.Array_prototype <- Native.Array.createPrototype x
+    x.String_prototype <- Native.String.createPrototype x
+    x.Number_prototype <- Native.Number.createPrototype x
+    x.Boolean_prototype <- Native.Boolean.createPrototype x
+    
+    Native.Global.setup x
+    Native.Object.setupPrototype x
+    Native.Object.setupConstructor x
 
     //Boxed bools
     x.Boxed_False.Bool  <- false

@@ -63,7 +63,7 @@ module Global =
     ))
 
   //15.1.1
-  let create (env:IjsEnv) =
+  let setup (env:IjsEnv) =
     //It's a g-thing.
     let g = IjsObj(env.Base_Class, env.Object_prototype, Classes.Object, 0u)
 

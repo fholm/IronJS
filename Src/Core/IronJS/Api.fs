@@ -161,6 +161,18 @@ type TypeConverter =
     | TypeCodes.Bool -> Environment.createObject(env, b.Bool)
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
+  static member toObject (env:IjsEnv, b:Box) =
+    match b.Type with
+    | TypeCodes.Function
+    | TypeCodes.Object -> b.Object
+    | TypeCodes.Empty
+    | TypeCodes.Undefined
+    | TypeCodes.Clr -> Errors.Generic.notImplemented()
+    | TypeCodes.String -> Environment.createObject(env, b.String)
+    | TypeCodes.Number -> Environment.createObject(env, b.Double)
+    | TypeCodes.Bool -> Environment.createObject(env, b.Bool)
+    | _ -> Errors.Generic.invalidTypeCode b.Type
+
   static member toObject (env:Dlr.Expr, expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
@@ -588,7 +600,7 @@ and Environment =
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, b:IjsBool) =
-    let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Number, 0u)
+    let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Boolean, 0u)
     o.Value.Type <- TypeCodes.Bool
     o.Value.Bool <- b
     o
@@ -630,30 +642,27 @@ and Function =
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a,'b,'c,'d,'e,'f,IjsBox>>(f)
     c.Invoke(f, t, a0, a1, a2, a3, a4, a5)
 
-  static member construct (f:IjsFunc, t, a0:'a) =
-    let c = f.Compiler.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
-    let ctorMode = f.ConstructorMode
-    let result = 
-      f.ConstructorMode <- ConstructorModes.Called
+  static member construct (f:IjsFunc, t:IjsObj, a0:'a) =
+    let c = f.Compiler
+    let c = c.compileAs<Func<IjsFunc,IjsObj,'a,IjsBox>>(f)
+    match f.ConstructorMode with
+    | ConstructorModes.Host -> 
+      c.Invoke(f, null, a0)
 
-      match ctorMode with
-      | ConstructorModes.Host -> c.Invoke(f, t, a0)
-      | ConstructorModes.User -> 
-        let o = Environment.createObject(f.Env)
-        let prototype = Object.getProperty(f, "prototype")
-        let prototype = 
-          match prototype.Type with
-          | TypeCodes.Function
-          | TypeCodes.Object -> prototype.Object
-          | _ -> f.Env.Object_prototype
+    | ConstructorModes.User -> 
+      let o = Environment.createObject(f.Env)
+      let prototype = Object.getProperty(f, "prototype")
+      let prototype = 
+        match prototype.Type with
+        | TypeCodes.Function
+        | TypeCodes.Object -> prototype.Object
+        | _ -> f.Env.Object_prototype
 
-        o.Prototype <- prototype
-        c.Invoke(f, o, a0)
+      o.Prototype <- prototype
+      c.Invoke(f, o, a0)
 
-      | _ -> failwith "Que?"
+    | _ -> failwith "Que?"
       
-    f.ConstructorMode <- ctorMode
-    result
 
 //------------------------------------------------------------------------------
 // DispatchTarget
@@ -682,6 +691,7 @@ and HostFunction() =
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map Expr.boxValue
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
+    |> Array.ofSeq
     
   //----------------------------------------------------------------------------
   static let marshalObjectParams 
@@ -690,6 +700,7 @@ and HostFunction() =
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map TypeConverter.toHostObject
     |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
+    |> Array.ofSeq
     
   //----------------------------------------------------------------------------
   static let createParam i t = Dlr.param (sprintf "a%i" i) t
@@ -703,7 +714,7 @@ and HostFunction() =
     let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
 
     let env = Dlr.field args.[0] "Env"
-    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
+    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env) |> Array.ofSeq
     let marshalled = 
       let paramsExist = f.ArgTypes.Length < passedArgs.Length 
 
@@ -716,7 +727,7 @@ and HostFunction() =
 
       | _ -> marshalled
 
-    let invoke = target.Invoke (args.[0] :> Dlr.Expr) marshalled
+    let invoke = target.Invoke (args.[0] :> Dlr.Expr) (Seq.ofArray marshalled)
     let body = 
       if Utils.isBox f.ReturnType then invoke
       elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
@@ -833,6 +844,11 @@ and InvokeCache =
 // Object API
 //------------------------------------------------------------------------------
 and Object() =
+
+  //----------------------------------------------------------------------------
+  static member setPropertyClass (x:IjsObj, pc) =
+    x.PropertyClass <- pc
+    x.PropertyClassId <- pc.Id
 
   //----------------------------------------------------------------------------
   // 8.6.2.6 - [[DefaultValue]]

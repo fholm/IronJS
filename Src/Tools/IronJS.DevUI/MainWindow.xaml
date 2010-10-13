@@ -13,7 +13,7 @@
                  Name="Input" 
                  Width="400" />
         
-        <TextBox Height="51" 
+        <TextBox Height="147" 
                  Margin="704,29,12,0" 
                  VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap"
@@ -22,7 +22,7 @@
                  IsReadOnly="True"
                  VerticalAlignment="Top" />
         
-        <TextBox Margin="704,102,12,12" 
+        <TextBox Margin="704,195,12,12" 
                  Name="Debug" 
                  VerticalScrollBarVisibility="Auto"
                  HorizontalScrollBarVisibility="Auto"
@@ -51,7 +51,7 @@
         <Label Content="Debug Output:" 
                Height="28" 
                HorizontalAlignment="Left" 
-               Margin="699,80,0,0" 
+               Margin="699,172,0,0" 
                Name="DebugOutputLabel" 
                VerticalAlignment="Top" />
         

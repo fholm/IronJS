@@ -14,7 +14,8 @@ module Debug =
     for printer in exprPrinters do
       printer.Invoke(expr)
     #else
-    ()
+    for printer in exprPrinters do
+      printer.Invoke(expr)
     #endif
 
   let printString string =

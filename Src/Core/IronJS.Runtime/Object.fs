@@ -48,63 +48,60 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4
   let createPrototype (env:IjsEnv) =
+    Api.Environment.createObject(env)
     
-    let o = IjsObj(env.Base_Class, null, Classes.Object, 0u)
-    env.Object_prototype <- o
-    env.Function_prototype <- o
-    env.Array_prototype <- o
-    env.Number_prototype <- o
-    env.String_prototype <- o
-    env.Boolean_prototype <- o
-
+  //----------------------------------------------------------------------------
+  //15.2.4
+  let setupPrototype (env:IjsEnv) =
     //15.2.4.2
     Api.Object.putProperty(
-      o, "toString", 
+      env.Object_prototype, "toString", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr>(toString)), PropertyAttrs.All)
 
     //15.2.4.3
     Api.Object.putProperty(
-      o, "toLocaleString", 
+      env.Object_prototype, "toLocaleString", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr>(toLocaleString)), PropertyAttrs.All)
 
     //15.2.4.4
     Api.Object.putProperty(
-      o, "valueOf", 
+      env.Object_prototype, "valueOf", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsObj>(valueOf)), PropertyAttrs.All)
 
     //15.2.4.5
     Api.Object.putProperty(
-      o, "hasOwnProperty", 
+      env.Object_prototype, "hasOwnProperty", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)), 
       PropertyAttrs.All)
 
     //15.2.4.6
     Api.Object.putProperty(
-      o, "isPrototypeOf", 
+      env.Object_prototype, "isPrototypeOf", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)), 
       PropertyAttrs.All)
 
     //15.2.4.6
     Api.Object.putProperty(
-      o, "propertyIsEnumerable", 
+      env.Object_prototype, "propertyIsEnumerable", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)), 
       PropertyAttrs.All)
-
-  let objectConstructor (f:IjsFunc) _ (v:IjsBox) =
-    let mutable v = v
-    let o = Api.TypeConverter.toObject(f.Env, &v)
-    o
+      
+  //----------------------------------------------------------------------------
+  //15.2.1
+  let private objectConstructor (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
+    match t with
+    | null -> Api.TypeConverter.toObject(f.Env, v)
+    | _ -> Api.TypeConverter.toObject(f.Env, v)
 
   //----------------------------------------------------------------------------
   //15.2.1
-  let createConstructor (env:IjsEnv) =
-    
+  let setupConstructor (env:IjsEnv) =
     let objectCtor = 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor))

@@ -12,7 +12,8 @@ module Version =
 module Ops2 =
   let inline (|!>) a b = b !a 
   let inline (<==) a b = a := b !a
-  let inline (|?>) a b = match a with Some x -> Some(b x) | _ -> None
+  let inline (|?>) a b = Option.map b a
+  let inline (|?) a b = match a with Some x -> x | _ -> b()
 
 module Ops = 
   //Same as |> but for refs

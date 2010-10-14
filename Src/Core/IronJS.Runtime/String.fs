@@ -9,8 +9,9 @@ module String =
     let prototype = Api.Environment.createObject(env)
     Api.Object.putLength(prototype, 0.0) |> ignore
     prototype.Class <- Classes.String
-    prototype.Value.String <- ""
-    prototype.Value.Type <- TypeCodes.String
+    prototype.Value.Box.String <- ""
+    prototype.Value.Box.Type <- TypeCodes.String
+    prototype.Value.Attributes <- DescriptorAttrs.HasValue
     prototype.Prototype <- env.Object_prototype
     prototype
 

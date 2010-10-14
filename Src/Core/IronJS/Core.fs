@@ -23,7 +23,7 @@ open System.Globalization
 //-------------------------------------------------------------------------
 type FunId        = int64
 type ClassId      = int64
-type TypeCode     = int16
+type TypeCode     = uint32
 type BoxField     = string
 type Number       = double
 type DelegateType = System.Type
@@ -31,6 +31,8 @@ type HostObject   = System.Object
 type HostType     = System.Type
 type ConstructorMode = byte
 type PropertyAttr = int16
+type BoxTag = uint16
+type DescriptorAttr = uint16
 
 type IjsNum = double
 type IjsStr = string
@@ -45,15 +47,15 @@ type Class = byte
 //
 //-------------------------------------------------------------------------
 module TypeCodes =
-  let [<Literal>] Box       = -1s
-  let [<Literal>] Empty     = 0s
-  let [<Literal>] Bool      = 1s
-  let [<Literal>] Number    = 2s
-  let [<Literal>] Clr       = 4s
-  let [<Literal>] String    = 8s
-  let [<Literal>] Undefined = 16s
-  let [<Literal>] Object    = 32s
-  let [<Literal>] Function  = 64s
+  let [<Literal>] Box        = 0x00000000u
+  let [<Literal>] Empty      = 0xFFFFFF00u
+  let [<Literal>] Bool       = 0xFFFFFF01u
+  let [<Literal>] Number     = 0xFFFFFF02u
+  let [<Literal>] Clr        = 0xFFFFFF03u
+  let [<Literal>] String     = 0xFFFFFF04u
+  let [<Literal>] Undefined  = 0xFFFFFF05u
+  let [<Literal>] Object     = 0xFFFFFF06u
+  let [<Literal>] Function   = 0xFFFFFF07u
 
   let Names = 
     Map.ofList [
@@ -76,6 +78,13 @@ module BoxFields =
   let [<Literal>] String    = "String"
   let [<Literal>] Object    = "Object"
   let [<Literal>] Function  = "Func"
+
+module DescriptorAttrs =
+  let [<Literal>] None = 0us
+  let [<Literal>] HasValue = 1us
+  let [<Literal>] ReadOnly = 2us
+  let [<Literal>] DontEnum = 4us
+  let [<Literal>] DontDelete = 8us
 
 module PropertyAttrs =
   let [<Literal>] None        = 0s
@@ -144,10 +153,26 @@ module Index =
   let [<Literal>] Min = 0u
   let [<Literal>] Max = 2147483646u
 
+module TaggedBools =
+  let True = 
+    let bytes = BitKit.double2bytes 0.0
+    bytes.[0] <- 0x1uy
+    bytes.[4] <- 0x1uy
+    bytes.[5] <- 0xFFuy
+    bytes.[6] <- 0xFFuy
+    bytes.[7] <- 0xFFuy
+    BitKit.bytes2double bytes
+
+  let False = 
+    let bytes = BitKit.double2bytes 0.0
+    bytes.[4] <- 0x1uy
+    bytes.[5] <- 0xFFuy
+    bytes.[6] <- 0xFFuy
+    bytes.[7] <- 0xFFuy
+    BitKit.bytes2double bytes
+
 //-------------------------------------------------------------------------
-//
 // Struct used to represent a value whos type is unknown at runtime
-//
 //-------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
@@ -163,11 +188,20 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
     [<FieldOffset(8)>]  val mutable Double : IjsNum
 
-    //TypeCode
-    [<FieldOffset(16)>] val mutable Type : int16
+    //Type & Tag
+    [<FieldOffset(12)>] val mutable Type : TypeCode
+    [<FieldOffset(14)>] val mutable Tag : BoxTag
   end
-    
-
+  
+//-------------------------------------------------------------------------
+// Property descriptor
+//-------------------------------------------------------------------------
+and [<StructuralEquality>] [<NoComparison>] Descriptor =
+  struct
+    val mutable Box : Box
+    val mutable Attributes : uint16
+    val mutable HasValue : bool
+  end
 
 //-------------------------------------------------------------------------
 // Class used to represent the javascript 'undefined' value
@@ -209,7 +243,36 @@ and [<AllowNullLiteral>] PropertyClass =
 
   member x.isDynamic = 
     x.Id < 0L
+
+
+    
+//------------------------------------------------------------------------------
+// Record used to represent internal operations
+//------------------------------------------------------------------------------
+and [<ReferenceEquality>] InternalMethods = {
+  GetProperty : GetProperty
+  HasProperty : HasProperty
+  DeleteProperty : DeleteProperty
+  PutBoxProperty : PutBoxProperty
+  PutValProperty : PutValProperty
+  PutRefProperty : PutRefProperty
   
+  GetIndex : Func<IjsObj, uint32, IjsBox>
+  DeleteIndex : Func<IjsObj, uint32, IjsBool>
+  PutBoxIndex : Func<IjsObj, uint32, IjsBox>
+  PutValIndex : Func<IjsObj, uint32, IjsNum>
+  PutRefIndex : Func<IjsObj, uint32, HostObject, TypeCode>
+
+  DefaultValue : Func<IjsObj, byte, IjsBox>
+}
+
+and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
+and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
+and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
+and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
+and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * HostObject * TypeCode -> unit
+
 
 
 //------------------------------------------------------------------------------
@@ -218,7 +281,7 @@ and [<AllowNullLiteral>] PropertyClass =
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte
-  val mutable Value : Box
+  val mutable Value : Descriptor
   val mutable Prototype : Object
 
   val mutable IndexLength : uint32
@@ -230,12 +293,17 @@ and [<AllowNullLiteral>] Object =
   val mutable PropertyClassId : ClassId
   val mutable PropertyAttributes : PropertyAttr array
   
+  val mutable PropertyValues2 : Descriptor array
+
+  [<DefaultValue>]
+  val mutable Methods : InternalMethods
+  
   member x.count = x.PropertyClass.PropertyMap.Count
   member x.isFull = x.count >= x.PropertyValues.Length
 
   new (propertyClass, prototype, class', indexSize) = {
     Class = class'
-    Value = Box()
+    Value = Descriptor()
     Prototype = prototype
 
     IndexLength = indexSize
@@ -250,14 +318,17 @@ and [<AllowNullLiteral>] Object =
         else null
 
     PropertyClass = propertyClass
+
     PropertyValues = Array.zeroCreate (propertyClass.PropertyMap.Count)
+    PropertyValues2 = Array.zeroCreate (propertyClass.PropertyMap.Count)
+
     PropertyClassId = propertyClass.Id
     PropertyAttributes = null
   }
 
   new () = {
     Class = Classes.Object
-    Value = Box()
+    Value = Descriptor()
     Prototype = null
 
     IndexLength = Index.Min
@@ -266,6 +337,7 @@ and [<AllowNullLiteral>] Object =
 
     PropertyClass = null
     PropertyValues = null
+    PropertyValues2 = null
     PropertyClassId = PropertyClassTypes.Global
     PropertyAttributes = null
   }

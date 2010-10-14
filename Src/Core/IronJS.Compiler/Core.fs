@@ -322,13 +322,11 @@ module Core =
 
     //New object
     let newArgs = [
+      ctx.Env;
       Dlr.const' pc; 
-      ctx.Env_Object_prototype; 
-      Dlr.const' Classes.Object; 
-      Dlr.const' 0u
     ]
 
-    let newExpr = Dlr.newArgsT<IjsObj> newArgs
+    let newExpr = Dlr.callStaticT<Api.Environment> "createObject" newArgs
 
     //Set properties
     Dlr.blockTmpT<IjsObj> (fun tmp -> 

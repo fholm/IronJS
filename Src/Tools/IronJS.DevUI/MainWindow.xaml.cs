@@ -130,61 +130,63 @@ namespace IronJS.DevUI {
       var item = new TreeViewItem();
       var header = item as HeaderedItemsControl;
 
-      switch (box.Type) {
-        case IronJS.TypeCodes.Undefined:
-        case IronJS.TypeCodes.Empty:
-          header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
-          item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
-          break;
+      if (IronJS.Utils.Box.isNumber(box.Tag)) {
+        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+        item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
 
-        case IronJS.TypeCodes.Bool:
-          header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
-          item.Foreground = new SolidColorBrush(Colors.DarkBlue);
-          break;
+      } else {
 
-        case IronJS.TypeCodes.Number:
-          header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
-          item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
-          break;
+        switch (box.Type) {
+          case IronJS.TypeCodes.Undefined:
+          case IronJS.TypeCodes.Empty:
+            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+            item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
+            break;
 
-        case IronJS.TypeCodes.String:
-          item.Foreground = new SolidColorBrush(Colors.Brown);
-          header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(ref box) + "\"";
-          break;
+          case IronJS.TypeCodes.Bool:
+            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+            item.Foreground = new SolidColorBrush(Colors.DarkBlue);
+            break;
 
-        case IronJS.TypeCodes.Object:
-        case IronJS.TypeCodes.Function:
-          header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
-          item.Foreground = new SolidColorBrush(Colors.DarkGreen);
-          if (printedObjects.ContainsKey(box.Object)) {
-            item = new TreeViewItem();
-            header = item as HeaderedItemsControl;
-            header.Header = name + ": <recursive>";
-            var obj = printedObjects[box.Object];
-            item.MouseUp += new MouseButtonEventHandler((s, e) => {
-              Variables.SetSelectedItem(obj);
-            });
+          case IronJS.TypeCodes.String:
+            item.Foreground = new SolidColorBrush(Colors.Brown);
+            header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(ref box) + "\"";
+            break;
 
+          case IronJS.TypeCodes.Object:
+          case IronJS.TypeCodes.Function:
+            header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
             item.Foreground = new SolidColorBrush(Colors.DarkGreen);
+            if (printedObjects.ContainsKey(box.Object)) {
+              item = new TreeViewItem();
+              header = item as HeaderedItemsControl;
+              header.Header = name + ": <recursive>";
+              var obj = printedObjects[box.Object];
+              item.MouseUp += new MouseButtonEventHandler((s, e) => {
+                Variables.SetSelectedItem(obj);
+              });
 
-            return item;
+              item.Foreground = new SolidColorBrush(Colors.DarkGreen);
 
-          } else {
-            printedObjects.Add(box.Object, item);
+              return item;
 
-            if (box.Object.Prototype != null) {
-              item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
+            } else {
+              printedObjects.Add(box.Object, item);
+
+              if (box.Object.Prototype != null) {
+                item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
+              }
+
+              if (IronJS.Utils.Descriptor.hasValue(ref box.Object.Value)) {
+                item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value.Box));
+              }
+
+              foreach (var child in RenderIronJSPropertyValues(box.Object, false)) {
+                item.Items.Add(child);
+              }
             }
-
-            if (box.Object.Value.Type != TypeCodes.Empty) {
-              item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value));
-            }
-
-            foreach (var child in RenderIronJSPropertyValues(box.Object, false)) {
-              item.Items.Add(child);
-            }
-          }
-          break;
+            break;
+        }
       }
 
       return item;

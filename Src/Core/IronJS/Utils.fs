@@ -26,6 +26,30 @@ module Utils =
       | Some v -> v
       | _ -> failwith "No value"
 
+  module Utils =
+    let isNull (o:obj) = Object.ReferenceEquals(o, null)
+    let isNotNull o = o |> isNull |> not
+
+  module Box = 
+    let isNumber tag = tag < 0xFFF9us
+    let isTagged tag = tag > 0xFFF8us
+
+  module Descriptor = 
+    let hasValue (desc:Descriptor byref) =
+      if Box.isTagged desc.Box.Tag 
+        then true
+        else desc.Attributes > 0us
+
+    let inline missingAttr attrs attr = attrs &&& attr = 0us
+    let inline hasAttr attrs attr = attrs &&& attr > 0us
+
+    let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
+    let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
+    let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
+
+  module TypeCode =
+    ()
+
   let asRef (x:HostType) = x.MakeByRefType()
   let isVoid t = typeof<System.Void> = t
   let isStringIndex (str:string, out:uint32 byref) = 
@@ -72,7 +96,6 @@ module Utils =
     elif t.IsSubclassOf(TypeObjects.Object)   then BoxFields.Object
                                               else BoxFields.Clr
 
-
   let type2bfT<'a> = type2bf
   let obj2bf (o:obj) = type2bf (o.GetType())
   let expr2bf (e:Dlr.Expr) = type2bf e.Type
@@ -101,7 +124,6 @@ module Utils =
 
   let tc2type tc =
     match tc with
-    | TypeCodes.Box         -> TypeObjects.Box
     | TypeCodes.Bool        -> TypeObjects.Bool     
     | TypeCodes.Number      -> TypeObjects.Number   
     | TypeCodes.String      -> TypeObjects.String   
@@ -137,14 +159,19 @@ module Utils =
     if o :? Box then unbox o
     else
       let mutable box = Box()
-      let tc = obj2tc o
 
-      match tc with
-      | TypeCodes.Bool   -> box.Bool   <- unbox o
-      | TypeCodes.Number -> box.Double <- unbox o
-      | _ -> box.Clr <- o
+      match obj2tc o with
+      | TypeCodes.Bool as tc -> 
+        box.Bool <- unbox o
+        box.Type <- tc
 
-      box.Type <- tc
+      | TypeCodes.Number -> 
+        box.Double <- unbox o
+
+      | tc -> 
+        box.Clr <- o
+        box.Type <- tc
+
       box
 
   let unbox (b:Box) =
@@ -178,19 +205,14 @@ module Utils =
 
   let boxedNegOne =
     let mutable box = new Box()
-    box.Type <- TypeCodes.Number
-    box.Double <- 0.0
+    box.Double <- -1.0
     box
       
   let boxedZero =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.Number
-    box.Double <- 0.0
-    box
+    new Box()
 
   let boxedOne =
     let mutable box = new Box()
-    box.Type <- TypeCodes.Number
     box.Double <- 1.0
     box
 
@@ -215,7 +237,6 @@ module Utils =
   let inline boxDouble (d:double) =
     let mutable box = Box()
     box.Double <- d
-    box.Type <- TypeCodes.Number
     box
 
   let inline boxClr (c:HostObject) =
@@ -248,7 +269,6 @@ module Utils =
     arr.[i].Clr   <- null
 
   let inline setNumberInArray (arr:Box array) i value =
-    arr.[i].Type    <- TypeCodes.Number
     arr.[i].Double  <- value
     arr.[i].Clr     <- null
 
@@ -277,7 +297,6 @@ module Utils =
   let inline boxIjsNum (d:double) =
     let mutable box = Box()
     box.Double <- d
-    box.Type <- TypeCodes.Number
     box
 
   let inline boxHostObject (c:HostObject) =

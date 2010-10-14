@@ -47,16 +47,16 @@ type TypeConverter =
   static member toString (s:string) = s
   static member toString (u:Undefined) = "undefined"
   static member toString (b:Box byref) =
-    match b.Type with
-    | TypeCodes.Empty
-    | TypeCodes.Undefined -> "undefined"
-    | TypeCodes.String -> b.String
-    | TypeCodes.Bool -> TypeConverter.toString b.Bool
-    | TypeCodes.Number -> TypeConverter.toString b.Double
-    | TypeCodes.Clr -> TypeConverter.toString b.Clr
-    | TypeCodes.Object -> TypeConverter.toString b.Object
-    | TypeCodes.Function -> TypeConverter.toString (b.Func :> IjsObj)
-    | _ -> Errors.Generic.invalidTypeCode b.Type
+    if Utils.Box.isNumber b.Tag then TypeConverter.toString(b.Double)
+    else
+      match b.Type with
+      | TypeCodes.Undefined -> "undefined"
+      | TypeCodes.String -> b.String
+      | TypeCodes.Bool -> TypeConverter.toString b.Bool
+      | TypeCodes.Clr -> TypeConverter.toString b.Clr
+      | TypeCodes.Object -> TypeConverter.toString b.Object
+      | TypeCodes.Function -> TypeConverter.toString (b.Func :> IjsObj)
+      | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toString (o:IjsObj) = 
     let mutable v = Object.defaultValue(o, DefaultValue.String)
@@ -283,12 +283,12 @@ and Operators =
       match l.Type with
       | TypeCodes.Empty
       | TypeCodes.Undefined -> true
-      | TypeCodes.Clr -> Object.ReferenceEquals(l.Clr, r.Clr)
       | TypeCodes.Number -> l.Double = r.Double
       | TypeCodes.String -> l.String = r.String
       | TypeCodes.Bool -> l.Bool = r.Bool
+      | TypeCodes.Clr
       | TypeCodes.Function
-      | TypeCodes.Object -> Object.ReferenceEquals(l.Object, r.Object)
+      | TypeCodes.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
       | _ -> false
 
     else
@@ -348,12 +348,12 @@ and Operators =
       match l.Type with
       | TypeCodes.Empty
       | TypeCodes.Undefined -> true
-      | TypeCodes.Clr -> Object.ReferenceEquals(l.Clr, r.Clr)
       | TypeCodes.Number -> l.Double = r.Double
       | TypeCodes.String -> l.String = r.String
       | TypeCodes.Bool -> l.Bool = r.Bool
+      | TypeCodes.Clr
       | TypeCodes.Function
-      | TypeCodes.Object -> Object.ReferenceEquals(l.Object, r.Object)
+      | TypeCodes.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
       | _ -> false
 
     else
@@ -578,6 +578,10 @@ and Environment =
   //----------------------------------------------------------------------------
   static member hasCompiler (x:IjsEnv, funcId) =
     x.Compilers.ContainsKey funcId
+
+  //----------------------------------------------------------------------------
+  static member createObject (x:IjsEnv, pc) =
+    IjsObj(pc, x.Object_prototype, Classes.Object, 0u)
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv) =
@@ -587,22 +591,21 @@ and Environment =
   static member createObject (x:IjsEnv, s:IjsStr) =
     let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
     Object.putProperty(o, "length", double s.Length) |> ignore
-    o.Value.Type <- TypeCodes.String
-    o.Value.String <-s
+    o.Value.Box.Type <- TypeCodes.String
+    o.Value.Box.String <-s
     o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, n:IjsNum) =
     let o = IjsObj(x.Number_Class, x.Number_prototype, Classes.Number, 0u)
-    o.Value.Type <- TypeCodes.Number
-    o.Value.Double <- n
+    o.Value.Box.Double <- n
     o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, b:IjsBool) =
     let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Boolean, 0u)
-    o.Value.Type <- TypeCodes.Bool
-    o.Value.Bool <- b
+    o.Value.Box.Type <- TypeCodes.Bool
+    o.Value.Box.Bool <- b
     o
     
 //------------------------------------------------------------------------------
@@ -1069,6 +1072,17 @@ and Object() =
 
     x.PropertyValues <- newPropertyValues
 
+
+  static member expandPropertyStorage2 (x:IjsObj) =
+    let newPropertyValues = 
+      Array.zeroCreate (if x.count = 0 then 2 else x.count*2)
+
+    if x.PropertyValues2.Length > 0 then 
+      Array.Copy(x.PropertyValues2, newPropertyValues, x.PropertyValues2.Length)
+
+    x.PropertyValues <- newPropertyValues
+    
+
   //----------------------------------------------------------------------------
   //Creates a property index for 'name' if one doesn't exist
   static member createPropertyIndex (x:IjsObj, name:string) =
@@ -1173,11 +1187,16 @@ and Object() =
     let tc = Utils.obj2tc value
 
     match tc with
-    | TypeCodes.Bool -> x.PropertyValues.[i].Bool <- unbox value
-    | TypeCodes.Number -> x.PropertyValues.[i].Double <- unbox value
-    | _ -> x.PropertyValues.[i].Clr <- value
+    | TypeCodes.Bool -> 
+      x.PropertyValues.[i].Bool <- unbox value
+      x.PropertyValues.[i].Type <- tc
 
-    x.PropertyValues.[i].Type <- tc
+    | TypeCodes.Number -> 
+      x.PropertyValues.[i].Double <- unbox value
+
+    | _ -> 
+      x.PropertyValues.[i].Clr <- value
+      x.PropertyValues.[i].Type <- tc
       
   //-------------------------------------------------------------------------
   //Expands IndexValues array size
@@ -1369,7 +1388,8 @@ and Object() =
   //----------------------------------------------------------------------------
   static member putProperty (x:IjsObj, name:IjsStr, value:IjsNum) =
     let index = Object.createPropertyIndex(x, name)
-    Utils.setIjsNumInArray x.PropertyValues index value
+    x.PropertyValues.[index].Double <- value
+    x.PropertyValues.[index].Clr <- null
     value
 
   //----------------------------------------------------------------------------
@@ -1915,3 +1935,168 @@ and Object() =
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
+
+module ObjectModule =
+
+  module Property = 
+
+    let requiredStorage (o:IjsObj) =
+      o.PropertyClass.PropertyMap.Count
+
+    let isFull (o:IjsObj) =
+      requiredStorage o >= o.PropertyValues2.Length
+
+    let getIndex (o:IjsObj) (name:string) =
+      o.PropertyClass.PropertyMap.TryGetValue name
+
+    let setMap (o:IjsObj, pc) =
+      o.PropertyClass <- pc
+      o.PropertyClassId <- pc.Id
+
+    let expandStorage (o:IjsObj) =
+      let values = o.PropertyValues2
+      let required = requiredStorage o
+      let newValues = Array.zeroCreate (required * 2)
+
+      if values.Length > 0 then 
+        Array.Copy(values, newValues, values.Length)
+      
+      o.PropertyValues2 <- newValues
+
+    let ensureIndex (o:IjsObj) (name:string) =
+      match getIndex o name with
+      | true, index -> index
+      | _ -> 
+        o.PropertyClass <- PropertyClass.subClass(o.PropertyClass, name)
+        o.PropertyClassId <- o.PropertyClass.Id
+        if isFull o then expandStorage o
+        o.PropertyClass.PropertyMap.[name]
+
+    let find (o:IjsObj) (name) =
+      let rec find o name =
+        if Utils.Utils.isNull o then (-1, null)
+        else
+          match getIndex o name with
+          | true, index ->  index, o
+          | _ -> find o.Prototype name
+
+      find o name
+
+    let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+      let index = ensureIndex o name
+      o.PropertyValues2.[index].Box <- val'
+      o.PropertyValues2.[index].HasValue <- true
+
+    let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
+      let index = ensureIndex o name
+      o.PropertyValues2.[index].Box.Clr <- val'
+      o.PropertyValues2.[index].Box.Type <- tc
+
+    let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+      let index = ensureIndex o name
+      o.PropertyValues2.[index].Box.Double <- val'
+      o.PropertyValues2.[index].HasValue <- true
+      
+    let inline fst (f, _) = f
+    let inline snd (_, s) = s
+
+    let inline get (o:IjsObj) (name:IjsStr) =
+      match find o name with
+      | -1, _ -> Utils.boxedUndefined
+      | pair -> (snd pair).PropertyValues2.[fst pair].Box
+
+    let has (o:IjsObj) (name:IjsStr) =
+      match find o name with
+      | -1, _ -> false
+      | _ -> true
+
+    let delete (o:IjsObj) (name:IjsStr) =
+      match getIndex o name with
+      | true, index -> 
+        let attrs = o.PropertyValues2.[index].Attributes
+        let canDelete = Utils.Descriptor.isDeletable attrs
+
+        if canDelete then
+          o.PropertyValues2.[index].HasValue <- false
+          o.PropertyValues2.[index].Box.Clr <- null
+          o.PropertyValues2.[index].Box.Double <- 0.0
+
+        canDelete
+
+      | _ -> true
+      
+    let setOnInternal (im:InternalMethods) =
+      {im with
+        GetProperty = new GetProperty(get)
+        HasProperty = new HasProperty(has)
+        DeleteProperty = new DeleteProperty(delete)
+        PutBoxProperty = new PutBoxProperty(putBox)
+        PutRefProperty = new PutRefProperty(putRef)
+        PutValProperty = new PutValProperty(putVal)
+      }
+    (*
+  //----------------------------------------------------------------------------
+  //Checks for a property, including Prototype chain
+  static member hasProperty (x, name, obj:IjsObj byref, index:int byref) =
+    obj <- x
+    let mutable continue' = true
+
+    while continue' && not (Object.ReferenceEquals(obj, null)) do
+      if obj.PropertyClass.PropertyMap.TryGetValue(name, &index)
+        then continue'  <- false  //Found
+        else obj        <- obj.Prototype //Try next in chain
+
+    not continue'
+      
+  //----------------------------------------------------------------------------
+  //Gets the index for a property named 'name'
+  static member getOwnPropertyIndex (x:IjsObj, name:string, out:int byref) =
+    x.PropertyClass.PropertyMap.TryGetValue(name, &out)
+      
+  //----------------------------------------------------------------------------
+  //Gets all property names for the current object
+  static member getOwnPropertyNames (x:IjsObj) =
+    seq {for x in x.PropertyClass.PropertyMap.Keys -> x}
+    
+  //----------------------------------------------------------------------------
+  static member getOwnPropertyAttributes (x:IjsObj, i:int) =
+    if not (Utils.refEquals x.PropertyAttributes null) 
+     && i < x.PropertyAttributes.Length then 
+      x.PropertyAttributes.[i]
+    else
+      0s
+      
+  //----------------------------------------------------------------------------
+  //Checks for a property, including Prototype chain
+  static member hasProperty (x:IjsObj, name:string) : IjsBool =
+    let mutable o = null
+    let mutable i = -1
+    Object.hasProperty(x, name, &o, &i)
+      
+  //----------------------------------------------------------------------------
+  //Gets a property value, including Prototype chain
+  static member getProperty (x:IjsObj, name:string) : IjsBox =
+    let mutable h = null
+    let mutable i = -1
+    if Object.hasProperty(x, name, &h, &i) 
+      then h.PropertyValues.[i]
+      else Utils.boxedUndefined
+      
+  //----------------------------------------------------------------------------
+  //Deletes a property on the object, making it dynamic in the process
+  static member deleteOwnProperty (x:IjsObj, name:string) =
+    let mutable i = -1
+    if Object.getOwnPropertyIndex(x, name, &i) then
+      let attrs = Object.getOwnPropertyAttributes(x, i)
+      if attrs &&& PropertyAttrs.DontDelete = 0s then
+        x.PropertyClass <- PropertyClass.delete(x.PropertyClass, name)
+        x.PropertyClassId <- x.PropertyClass.Id
+
+        x.PropertyValues.[i].Clr <- null
+        x.PropertyValues.[i].Type <- TypeCodes.Empty
+        x.PropertyValues.[i].Double <- 0.0
+          
+        true //We managed to delete the property
+
+      else false
+    else true*)

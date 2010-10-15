@@ -552,6 +552,7 @@ and PropertyClass =
 
     if pc.PropertyMap.TryGetValue(name, &index) then 
       pc.FreeIndexes.Push index
+      pc.PropertyMap.Remove name |> ignore
 
     pc
       
@@ -1953,9 +1954,15 @@ module ObjectModule =
       o.PropertyClass.PropertyMap.TryGetValue name
       
     //--------------------------------------------------------------------------
-    let setMap (o:IjsObj, pc) =
+    let setMap (o:IjsObj) pc =
       o.PropertyClass <- pc
       o.PropertyClassId <- pc.Id
+
+    //--------------------------------------------------------------------------
+    let makeDynamic (o:IjsObj) =
+      if o.PropertyClassId >= 0L then
+        o.PropertyClass <- PropertyClass.makeDynamic o.PropertyClass
+        o.PropertyClassId <- o.PropertyClass.Id
       
     //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) =
@@ -2021,6 +2028,8 @@ module ObjectModule =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
+        setMap o (PropertyClass.delete(o.PropertyClass, name))
+
         let attrs = o.PropertyValues2.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs
 
@@ -2047,9 +2056,9 @@ module ObjectModule =
       
     //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) i =
-      if o.IndexDense = null || o.IndexDense.Length <= i then
+      if o.IndexSparse = null || o.IndexDense.Length <= i then
         let size = if i >= 1073741823 then 2147483647 else ((i+1) * 2)
-        let values = o.IndexValues
+        let values = o.IndexDense
         let newValues = Array.zeroCreate size
 
         if values <> null && values.Length > 0 then
@@ -2084,4 +2093,5 @@ module ObjectModule =
         o.IndexSparse.[i] <- v
 
       updateLength o i
+
 

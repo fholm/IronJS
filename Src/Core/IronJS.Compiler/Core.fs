@@ -9,6 +9,14 @@ open IronJS.Compiler
 type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
 type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
 
+type Bar() =
+  member x.Get = new Zaz()
+
+and Foo() =
+  member x.Get = true
+
+and Zaz() = class end
+
 module Core =
 
   //----------------------------------------------------------------------------

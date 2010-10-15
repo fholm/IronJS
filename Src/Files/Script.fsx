@@ -17,11 +17,16 @@ let ctx = Hosting.Context.Create()
 let env = ctx.Environment
 let obj = IronJS.Object(env.Base_Class, null, Classes.Object, 0u)
 
-ObjectModule.putValProperty obj "foo" IronJS.TaggedBools.True
 
+ObjectModule.Property.putVal obj "foo" TaggedBools.True
+ObjectModule.Property.delete obj "foo"
+ObjectModule.Property.has obj "foo"
+
+obj.PropertyClassId
 
 obj.PropertyValues2.[0].Box.Type
 
+ObjectModule.Index.putBox obj 0u (Utils.boxDouble 1.0)
 
 sizeof<IronJS.Descriptor>
 

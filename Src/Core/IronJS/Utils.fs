@@ -47,6 +47,13 @@ module Utils =
     let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
     let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
 
+  module Object =
+    let isDense (x:IjsObj) =
+      Object.ReferenceEquals(x.IndexSparse, null)
+
+    let isSparse (x:IjsObj) =
+      isDense x |> not // isDense? ... pause ... NOT!
+
   module TypeCode =
     ()
 

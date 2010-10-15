@@ -1939,20 +1939,25 @@ and Object() =
 module ObjectModule =
 
   module Property = 
-
+  
+    //--------------------------------------------------------------------------
     let requiredStorage (o:IjsObj) =
       o.PropertyClass.PropertyMap.Count
-
+      
+    //--------------------------------------------------------------------------
     let isFull (o:IjsObj) =
       requiredStorage o >= o.PropertyValues2.Length
-
+      
+    //--------------------------------------------------------------------------
     let getIndex (o:IjsObj) (name:string) =
       o.PropertyClass.PropertyMap.TryGetValue name
-
+      
+    //--------------------------------------------------------------------------
     let setMap (o:IjsObj, pc) =
       o.PropertyClass <- pc
       o.PropertyClassId <- pc.Id
-
+      
+    //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) =
       let values = o.PropertyValues2
       let required = requiredStorage o
@@ -1962,7 +1967,8 @@ module ObjectModule =
         Array.Copy(values, newValues, values.Length)
       
       o.PropertyValues2 <- newValues
-
+      
+    //--------------------------------------------------------------------------
     let ensureIndex (o:IjsObj) (name:string) =
       match getIndex o name with
       | true, index -> index
@@ -1971,45 +1977,47 @@ module ObjectModule =
         o.PropertyClassId <- o.PropertyClass.Id
         if isFull o then expandStorage o
         o.PropertyClass.PropertyMap.[name]
-
+        
+    //--------------------------------------------------------------------------
     let find (o:IjsObj) (name) =
       let rec find o name =
-        if Utils.Utils.isNull o then (-1, null)
+        if Utils.Utils.isNull o then (null, -1)
         else
           match getIndex o name with
-          | true, index ->  index, o
+          | true, index ->  o, index
           | _ -> find o.Prototype name
 
       find o name
-
+      
+    //--------------------------------------------------------------------------
     let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box <- val'
       o.PropertyValues2.[index].HasValue <- true
-
+      
+    //--------------------------------------------------------------------------
     let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box.Clr <- val'
       o.PropertyValues2.[index].Box.Type <- tc
-
+      
+    //--------------------------------------------------------------------------
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box.Double <- val'
       o.PropertyValues2.[index].HasValue <- true
       
-    let inline fst (f, _) = f
-    let inline snd (_, s) = s
-
+    //--------------------------------------------------------------------------
     let inline get (o:IjsObj) (name:IjsStr) =
       match find o name with
-      | -1, _ -> Utils.boxedUndefined
-      | pair -> (snd pair).PropertyValues2.[fst pair].Box
-
+      | _, -1 -> Utils.boxedUndefined
+      | pair -> (fst pair).PropertyValues2.[snd pair].Box
+      
+    //--------------------------------------------------------------------------
     let has (o:IjsObj) (name:IjsStr) =
-      match find o name with
-      | -1, _ -> false
-      | _ -> true
-
+      find o name |> snd > -1
+      
+    //--------------------------------------------------------------------------
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
@@ -2024,79 +2032,56 @@ module ObjectModule =
         canDelete
 
       | _ -> true
-      
-    let setOnInternal (im:InternalMethods) =
-      {im with
-        GetProperty = new GetProperty(get)
-        HasProperty = new HasProperty(has)
-        DeleteProperty = new DeleteProperty(delete)
-        PutBoxProperty = new PutBoxProperty(putBox)
-        PutRefProperty = new PutRefProperty(putRef)
-        PutValProperty = new PutValProperty(putVal)
-      }
-    (*
-  //----------------------------------------------------------------------------
-  //Checks for a property, including Prototype chain
-  static member hasProperty (x, name, obj:IjsObj byref, index:int byref) =
-    obj <- x
-    let mutable continue' = true
 
-    while continue' && not (Object.ReferenceEquals(obj, null)) do
-      if obj.PropertyClass.PropertyMap.TryGetValue(name, &index)
-        then continue'  <- false  //Found
-        else obj        <- obj.Prototype //Try next in chain
+  module Index =
+  
+    //--------------------------------------------------------------------------
+    let initSparse (o:IjsObj) =
+      o.IndexSparse <- new MutableSorted<uint32, Box>()
 
-    not continue'
+      for i = 0 to (int (o.IndexLength-1u)) do
+        if Utils.Descriptor.hasValue (&o.IndexDense.[i]) then
+          o.IndexSparse.Add(uint32 i, o.IndexDense.[i].Box)
+
+      o.IndexDense <- null
       
-  //----------------------------------------------------------------------------
-  //Gets the index for a property named 'name'
-  static member getOwnPropertyIndex (x:IjsObj, name:string, out:int byref) =
-    x.PropertyClass.PropertyMap.TryGetValue(name, &out)
-      
-  //----------------------------------------------------------------------------
-  //Gets all property names for the current object
-  static member getOwnPropertyNames (x:IjsObj) =
-    seq {for x in x.PropertyClass.PropertyMap.Keys -> x}
+    //--------------------------------------------------------------------------
+    let expandStorage (o:IjsObj) i =
+      if o.IndexDense = null || o.IndexDense.Length <= i then
+        let size = if i >= 1073741823 then 2147483647 else ((i+1) * 2)
+        let values = o.IndexValues
+        let newValues = Array.zeroCreate size
+
+        if values <> null && values.Length > 0 then
+          Array.Copy(values, newValues, values.Length)
+
+        o.IndexDense <- newValues
+        
+    //--------------------------------------------------------------------------
+    let updateLength (o:IjsObj) (i:uint32) =
+      if i > o.IndexLength then
+        o.IndexLength <- i
+        o.Methods.PutValProperty.Invoke(o, "length", double i)
     
-  //----------------------------------------------------------------------------
-  static member getOwnPropertyAttributes (x:IjsObj, i:int) =
-    if not (Utils.refEquals x.PropertyAttributes null) 
-     && i < x.PropertyAttributes.Length then 
-      x.PropertyAttributes.[i]
-    else
-      0s
-      
-  //----------------------------------------------------------------------------
-  //Checks for a property, including Prototype chain
-  static member hasProperty (x:IjsObj, name:string) : IjsBool =
-    let mutable o = null
-    let mutable i = -1
-    Object.hasProperty(x, name, &o, &i)
-      
-  //----------------------------------------------------------------------------
-  //Gets a property value, including Prototype chain
-  static member getProperty (x:IjsObj, name:string) : IjsBox =
-    let mutable h = null
-    let mutable i = -1
-    if Object.hasProperty(x, name, &h, &i) 
-      then h.PropertyValues.[i]
-      else Utils.boxedUndefined
-      
-  //----------------------------------------------------------------------------
-  //Deletes a property on the object, making it dynamic in the process
-  static member deleteOwnProperty (x:IjsObj, name:string) =
-    let mutable i = -1
-    if Object.getOwnPropertyIndex(x, name, &i) then
-      let attrs = Object.getOwnPropertyAttributes(x, i)
-      if attrs &&& PropertyAttrs.DontDelete = 0s then
-        x.PropertyClass <- PropertyClass.delete(x.PropertyClass, name)
-        x.PropertyClassId <- x.PropertyClass.Id
+    //--------------------------------------------------------------------------
+    let putBox (o:IjsObj) (i:uint32) (v:Box) =
+      if i > Index.Max then initSparse o
+      if Utils.Object.isDense o then
+        let ii = int i
 
-        x.PropertyValues.[i].Clr <- null
-        x.PropertyValues.[i].Type <- TypeCodes.Empty
-        x.PropertyValues.[i].Double <- 0.0
-          
-        true //We managed to delete the property
+        if ii < o.IndexDense.Length then
+          o.IndexDense.[ii].Box <- v
+          o.IndexDense.[ii].HasValue <- true
+        else
+          if i > 255u && i/2u > o.IndexLength then
+            initSparse o
+            o.IndexSparse.[i] <- v
+          else
+            expandStorage o ii
+            o.IndexDense.[ii].Box <- v
 
-      else false
-    else true*)
+      else
+        o.IndexSparse.[i] <- v
+
+      updateLength o i
+

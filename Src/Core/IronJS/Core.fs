@@ -257,13 +257,14 @@ and [<ReferenceEquality>] InternalMethods = {
   PutValProperty : PutValProperty
   PutRefProperty : PutRefProperty
   
-  GetIndex : Func<IjsObj, uint32, IjsBox>
-  DeleteIndex : Func<IjsObj, uint32, IjsBool>
-  PutBoxIndex : Func<IjsObj, uint32, IjsBox>
-  PutValIndex : Func<IjsObj, uint32, IjsNum>
-  PutRefIndex : Func<IjsObj, uint32, HostObject, TypeCode>
+  GetIndex : GetIndex
+  HasIndex : HasIndex
+  DeleteIndex : DeleteIndex
+  PutBoxIndex : PutBoxIndex
+  PutValIndex : PutValIndex
+  PutRefIndex : PutRefIndex
 
-  DefaultValue : Func<IjsObj, byte, IjsBox>
+  Default : Default
 }
 
 and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
@@ -272,6 +273,15 @@ and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
 and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
 and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
 and PutRefProperty = delegate of IjsObj * IjsStr * HostObject * TypeCode -> unit
+
+and GetIndex = delegate of IjsObj * uint32 -> IjsBox
+and HasIndex = delegate of IjsObj * uint32 -> IjsBool
+and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
+and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
+and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * HostObject * TypeCode -> unit
+
+and Default = delegate of IjsObj * byte -> IjsBox
 
 
 
@@ -287,6 +297,7 @@ and [<AllowNullLiteral>] Object =
   val mutable IndexLength : uint32
   val mutable IndexValues : Box array
   val mutable IndexSparse : MutableSorted<uint32, Box>
+  val mutable IndexDense : Descriptor array
     
   val mutable PropertyValues : Box array
   val mutable PropertyClass : PropertyClass
@@ -307,6 +318,11 @@ and [<AllowNullLiteral>] Object =
     Prototype = prototype
 
     IndexLength = indexSize
+    IndexDense =
+      if indexSize <= (Index.Max+1u) && indexSize > 0u
+        then Array.zeroCreate (int indexSize) 
+        else Array.zeroCreate 0
+
     IndexValues = 
       if indexSize <= (Index.Max+1u) && indexSize > 0u
         then Array.zeroCreate (int indexSize) 
@@ -333,6 +349,7 @@ and [<AllowNullLiteral>] Object =
 
     IndexLength = Index.Min
     IndexValues = null
+    IndexDense = null
     IndexSparse = null
 
     PropertyClass = null

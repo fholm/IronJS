@@ -2156,5 +2156,9 @@ module ObjectModule =
         if isDense 
           then o.IndexDense.[int index].Box
           else o.IndexSparse.[index]
-
-
+          
+    //--------------------------------------------------------------------------
+    let has (o:IjsObj) (i:uint32) =
+      match find o i with
+      | null, _, _ -> false
+      | _ -> true

@@ -18,6 +18,12 @@ let env = ctx.Environment
 let obj = IronJS.Object(env.Base_Class, null, Classes.Object, 0u)
 
 
+ObjectModule.Index.putVal obj 4u TaggedBools.True
+
+(ObjectModule.Index.get obj 4u).Bool
+
+obj.IndexDense
+
 ObjectModule.Property.putVal obj "foo" TaggedBools.True
 ObjectModule.Property.delete obj "foo"
 ObjectModule.Property.has obj "foo"

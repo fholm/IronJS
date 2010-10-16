@@ -46,7 +46,7 @@ module Utils =
     let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
     let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
     let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
-
+     
   module Object =
     let isDense (x:IjsObj) =
       Object.ReferenceEquals(x.IndexSparse, null)
@@ -157,10 +157,14 @@ module Utils =
   let inline isDense (x:IjsObj) =
     Object.ReferenceEquals(x.IndexSparse, null)
 
-  let inline isPrimitive (b:Box byref) =
-    b.Type = TypeCodes.Number
-    || b.Type = TypeCodes.String
-    || b.Type = TypeCodes.Bool
+  let inline isPrimitive (b:Box) =
+    if Box.isNumber b.Tag
+      then true
+      else 
+        match b.Type with
+        | TypeCodes.String
+        | TypeCodes.Bool -> true
+        | _ -> false
 
   let box (o:obj) =
     if o :? Box then unbox o

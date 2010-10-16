@@ -1028,12 +1028,12 @@ and Object() =
       match valueOf.Type with
       | TypeCodes.Function -> 
         let mutable v = Function.call(valueOf.Func, x)
-        if Utils.isPrimitive &v then v
+        if Utils.isPrimitive v then v
         else
           match toString.Type with
           | TypeCodes.Function ->
             let mutable v = Function.call(toString.Func, x)
-            if Utils.isPrimitive &v then v else Errors.runtime "[[TypeError]]"
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
           | _ -> Errors.runtime "[[TypeError]]"
       | _ -> Errors.runtime "[[TypeError]]"
 
@@ -1041,12 +1041,12 @@ and Object() =
       match toString.Type with
       | TypeCodes.Function ->
         let mutable v = Function.call(toString.Func, x)
-        if Utils.isPrimitive &v then v
+        if Utils.isPrimitive v then v
         else 
           match toString.Type with
           | TypeCodes.Function ->
             let mutable v = Function.call(valueOf.Func, x)
-            if Utils.isPrimitive &v then v else Errors.runtime "[[TypeError]]"
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
           | _ -> Errors.runtime "[[TypeError]]"
       | _ -> Errors.runtime "[[TypeError]]"
 
@@ -1939,6 +1939,44 @@ and Object() =
 
 module ObjectModule =
 
+  let defaultvalue (o:IjsObj) (hint:byte) =
+    let hint = 
+      if hint = DefaultValue.None 
+        then DefaultValue.Number 
+        else hint
+
+    let valueOf = o.Methods.GetProperty.Invoke(o, "valueOf")
+    let toString = o.Methods.GetProperty.Invoke(o, "toString")
+
+    match hint with
+    | DefaultValue.Number ->
+      match valueOf.Type with
+      | TypeCodes.Function ->
+        let mutable v = Function.call(valueOf.Func, o)
+        if Utils.isPrimitive v then v
+        else
+          match toString.Type with
+          | TypeCodes.Function ->
+            let mutable v = Function.call(toString.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | DefaultValue.String ->
+      match toString.Type with
+      | TypeCodes.Function ->
+        let mutable v = Function.call(toString.Func, o)
+        if Utils.isPrimitive v then v
+        else 
+          match toString.Type with
+          | TypeCodes.Function ->
+            let mutable v = Function.call(valueOf.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | _ -> Errors.runtime "Invalid hint"
+
   module Property = 
   
     //--------------------------------------------------------------------------
@@ -2001,6 +2039,8 @@ module ObjectModule =
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box <- val'
       o.PropertyValues2.[index].HasValue <- true
+
+    let putBox' = PutBoxProperty putBox
       
     //--------------------------------------------------------------------------
     let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
@@ -2008,21 +2048,29 @@ module ObjectModule =
       o.PropertyValues2.[index].Box.Clr <- val'
       o.PropertyValues2.[index].Box.Type <- tc
       
+    let putRef' = PutRefProperty putRef
+
     //--------------------------------------------------------------------------
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box.Double <- val'
       o.PropertyValues2.[index].HasValue <- true
+
+    let putVal' = PutValProperty putVal
       
     //--------------------------------------------------------------------------
     let inline get (o:IjsObj) (name:IjsStr) =
       match find o name with
       | _, -1 -> Utils.boxedUndefined
       | pair -> (fst pair).PropertyValues2.[snd pair].Box
+
+    let get' = GetProperty get
       
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (name:IjsStr) =
       find o name |> snd > -1
+
+    let has' = HasProperty has
       
     //--------------------------------------------------------------------------
     let delete (o:IjsObj) (name:IjsStr) =
@@ -2041,6 +2089,8 @@ module ObjectModule =
         canDelete
 
       | _ -> true
+
+    let delete' = DeleteProperty delete
 
   module Index =
   
@@ -2070,7 +2120,8 @@ module ObjectModule =
     let updateLength (o:IjsObj) (i:uint32) =
       if i > o.IndexLength then
         o.IndexLength <- i
-        o.Methods.PutValProperty.Invoke(o, "length", double i)
+        if o.Class = Classes.Array then
+          Property.putVal o "length" (double i)
 
     //--------------------------------------------------------------------------
     let find (o:IjsObj) (i:uint32) =
@@ -2090,9 +2141,9 @@ module ObjectModule =
               else find o.Prototype i
 
       find o i
-    
+
     //--------------------------------------------------------------------------
-    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
+    let inline putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2101,7 +2152,7 @@ module ObjectModule =
 
         else
           let i = int i
-          if i < o.IndexDense.Length then expandStorage o i
+          if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box <- v
           o.IndexDense.[i].HasValue <- true
 
@@ -2110,8 +2161,10 @@ module ObjectModule =
 
       updateLength o i
 
+    let putBox' = PutBoxIndex putBox
+
     //--------------------------------------------------------------------------
-    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+    let inline putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2120,7 +2173,7 @@ module ObjectModule =
 
         else
           let i = int i
-          if i < o.IndexDense.Length then expandStorage o i
+          if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box.Double <- v
           o.IndexDense.[i].HasValue <- true
 
@@ -2129,8 +2182,10 @@ module ObjectModule =
 
       updateLength o i
 
+    let putVal' = PutValIndex putVal
+
     //--------------------------------------------------------------------------
-    let putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+    let inline putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2139,7 +2194,7 @@ module ObjectModule =
 
         else
           let i = int i
-          if i < o.IndexDense.Length then expandStorage o i
+          if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box.Clr <- v
           o.IndexDense.[i].Box.Type <- tc
 
@@ -2147,18 +2202,41 @@ module ObjectModule =
         o.IndexSparse.[i] <- Utils.boxRef v tc
 
       updateLength o i
-      
+
+    let putRef' = PutRefIndex putRef
+
     //--------------------------------------------------------------------------
-    let get (o:IjsObj) (i:uint32) =
+    let inline get (o:IjsObj) (i:uint32) =
       match find o i with
       | null, _, _ -> Utils.boxedUndefined
       | o, index, isDense ->
         if isDense 
           then o.IndexDense.[int index].Box
           else o.IndexSparse.[index]
+
+    let get' = GetIndex get
           
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (i:uint32) =
       match find o i with
       | null, _, _ -> false
       | _ -> true
+
+    let has' = HasIndex has
+      
+    //--------------------------------------------------------------------------
+    let delete (o:IjsObj) (i:uint32) =
+      match find o i with
+      | null, _, _ -> true
+      | o2, index, isDense ->
+        if Utils.refEquals o o2 then
+          if isDense then 
+            o.IndexDense.[int i].Box <- Box()
+            o.IndexDense.[int i].HasValue <- false
+          else 
+            o.IndexSparse.Remove i |> ignore
+
+          true
+        else false
+
+    let delete' = DeleteIndex delete

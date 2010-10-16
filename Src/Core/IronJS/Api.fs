@@ -2071,27 +2071,90 @@ module ObjectModule =
       if i > o.IndexLength then
         o.IndexLength <- i
         o.Methods.PutValProperty.Invoke(o, "length", double i)
+
+    //--------------------------------------------------------------------------
+    let find (o:IjsObj) (i:uint32) =
+      let rec find o (i:uint32) =
+        if Utils.Utils.isNull o then (null, 0u, false)
+        else 
+          if Utils.Object.isDense o then
+            let ii = int i
+            if ii < o.IndexDense.Length then
+              if Utils.Descriptor.hasValue &o.IndexDense.[ii] 
+                then (o, i, true)
+                else find o.Prototype i
+            else find o.Prototype i
+          else
+            if o.IndexSparse.ContainsKey i 
+              then (o, i, false)
+              else find o.Prototype i
+
+      find o i
     
     //--------------------------------------------------------------------------
-    let putBox (o:IjsObj) (i:uint32) (v:Box) =
+    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
-        let ii = int i
+        if i > 255u && i/2u > o.IndexLength then
+          initSparse o
+          o.IndexSparse.[i] <- v
 
-        if ii < o.IndexDense.Length then
-          o.IndexDense.[ii].Box <- v
-          o.IndexDense.[ii].HasValue <- true
         else
-          if i > 255u && i/2u > o.IndexLength then
-            initSparse o
-            o.IndexSparse.[i] <- v
-          else
-            expandStorage o ii
-            o.IndexDense.[ii].Box <- v
+          let i = int i
+          if i < o.IndexDense.Length then expandStorage o i
+          o.IndexDense.[i].Box <- v
+          o.IndexDense.[i].HasValue <- true
 
       else
         o.IndexSparse.[i] <- v
 
       updateLength o i
+
+    //--------------------------------------------------------------------------
+    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+      if i > Index.Max then initSparse o
+      if Utils.Object.isDense o then
+        if i > 255u && i/2u > o.IndexLength then
+          initSparse o
+          o.IndexSparse.[i] <- Utils.boxVal v
+
+        else
+          let i = int i
+          if i < o.IndexDense.Length then expandStorage o i
+          o.IndexDense.[i].Box.Double <- v
+          o.IndexDense.[i].HasValue <- true
+
+      else
+        o.IndexSparse.[i] <- Utils.boxVal v
+
+      updateLength o i
+
+    //--------------------------------------------------------------------------
+    let putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+      if i > Index.Max then initSparse o
+      if Utils.Object.isDense o then
+        if i > 255u && i/2u > o.IndexLength then
+          initSparse o
+          o.IndexSparse.[i] <- Utils.boxRef v tc
+
+        else
+          let i = int i
+          if i < o.IndexDense.Length then expandStorage o i
+          o.IndexDense.[i].Box.Clr <- v
+          o.IndexDense.[i].Box.Type <- tc
+
+      else
+        o.IndexSparse.[i] <- Utils.boxRef v tc
+
+      updateLength o i
+      
+    //--------------------------------------------------------------------------
+    let get (o:IjsObj) (i:uint32) =
+      match find o i with
+      | null, _, _ -> Utils.boxedUndefined
+      | o, index, isDense ->
+        if isDense 
+          then o.IndexDense.[int index].Box
+          else o.IndexSparse.[index]
 
 

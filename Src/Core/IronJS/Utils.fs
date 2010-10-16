@@ -191,6 +191,17 @@ module Utils =
     if o :? Box 
       then unbox (o :?> Box)
       else o
+      
+  let boxRef ref tc =
+    let mutable box = new Box()
+    box.Clr <- ref
+    box.Type <- tc
+    box
+
+  let boxVal val' =
+    let mutable box = new Box()
+    box.Double <- val'
+    box
 
   let boxedUndefined =
     let mutable box = new Box()

@@ -558,6 +558,10 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Number_Class : PropertyClass
   [<DefaultValue>] val mutable Boolean_Class : PropertyClass
 
+  //Methods
+  [<DefaultValue>] val mutable Object_methods : InternalMethods
+
+
   //Boxes
   [<DefaultValue>] val mutable Boxed_NegOne : Box
   [<DefaultValue>] val mutable Boxed_Zero : Box

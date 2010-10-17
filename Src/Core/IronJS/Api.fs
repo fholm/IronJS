@@ -59,7 +59,7 @@ type TypeConverter =
       | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toString (o:IjsObj) = 
-    let mutable v = Object.defaultValue(o, DefaultValue.String)
+    let mutable v = o.Methods.Default.Invoke(o, DefaultValue.String)
     TypeConverter.toString(&v)
 
   static member toString (d:double) = 
@@ -582,31 +582,38 @@ and Environment =
 
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, pc) =
-    IjsObj(pc, x.Object_prototype, Classes.Object, 0u)
+    let o = IjsObj(pc, x.Object_prototype, Classes.Object, 0u)
+    o.Methods <- x.Object_methods
+    o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv) =
-    IjsObj(x.Base_Class, x.Object_prototype, Classes.Object, 0u)
+    let o = IjsObj(x.Base_Class, x.Object_prototype, Classes.Object, 0u)
+    o.Methods <- x.Object_methods
+    o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, s:IjsStr) =
     let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
-    Object.putProperty(o, "length", double s.Length) |> ignore
+    o.Methods <- x.Object_methods
+    o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
+    o.Value.Box.Clr <-s
     o.Value.Box.Type <- TypeCodes.String
-    o.Value.Box.String <-s
     o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, n:IjsNum) =
     let o = IjsObj(x.Number_Class, x.Number_prototype, Classes.Number, 0u)
+    o.Methods <- x.Object_methods
     o.Value.Box.Double <- n
     o
     
   //----------------------------------------------------------------------------
   static member createObject (x:IjsEnv, b:IjsBool) =
     let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Boolean, 0u)
-    o.Value.Box.Type <- TypeCodes.Bool
+    o.Methods <- x.Object_methods
     o.Value.Box.Bool <- b
+    o.Value.Box.Type <- TypeCodes.Bool
     o
     
 //------------------------------------------------------------------------------
@@ -918,7 +925,9 @@ and DelegateFunction<'a when 'a :> Delegate>() =
   static member create (env:IjsEnv, delegate':'a) =
     let h = IjsDelFunc<'a>(env, delegate') :> IjsHostFunc
     let f = h :> IjsFunc
+    let o = f :> IjsObj
 
+    o.Methods <- env.Object_methods
     Object.putLength(f, double h.jsArgsLength) |> ignore
     Environment.addCompiler(env, f, DelegateFunction<'a>.compile)
 
@@ -955,7 +964,9 @@ and ClrFunction() =
   static member create (env:IjsEnv, method') =
     let h = IjsClrFunc(env, method') :> IjsHostFunc
     let f = h :> IjsFunc
-    
+    let o = f :> IjsObj
+
+    o.Methods <- env.Object_methods
     Object.putLength(f, double h.jsArgsLength) |> ignore
     Environment.addCompiler(env, f, ClrFunction.compile)
 
@@ -2040,7 +2051,11 @@ module ObjectModule =
       find o name
       
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+    #else
     let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+    #endif
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box <- val'
       o.PropertyValues2.[index].HasValue <- true
@@ -2048,7 +2063,11 @@ module ObjectModule =
     let putBox' = PutBoxProperty putBox
       
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
+    #else
     let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
+    #endif
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box.Clr <- val'
       o.PropertyValues2.[index].Box.Type <- tc
@@ -2056,7 +2075,11 @@ module ObjectModule =
     let putRef' = PutRefProperty putRef
 
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+    #else
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+    #endif
       let index = ensureIndex o name
       o.PropertyValues2.[index].Box.Double <- val'
       o.PropertyValues2.[index].HasValue <- true
@@ -2064,7 +2087,11 @@ module ObjectModule =
     let putVal' = PutValProperty putVal
       
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let get (o:IjsObj) (name:IjsStr) =
+    #else
     let inline get (o:IjsObj) (name:IjsStr) =
+    #endif
       match find o name with
       | _, -1 -> Utils.boxedUndefined
       | pair -> (fst pair).PropertyValues2.[snd pair].Box
@@ -2096,6 +2123,9 @@ module ObjectModule =
       | _ -> true
 
     let delete' = DeleteProperty delete
+
+    let putFunction (o:IjsObj) (name:IjsStr) (ref:HostObject) =
+      o.Methods.PutRefProperty.Invoke(o, name, ref, TypeCodes.Function)
     
   //----------------------------------------------------------------------------
   module Index =
@@ -2149,7 +2179,11 @@ module ObjectModule =
       find o i
 
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
+    #else
     let inline putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
+    #endif
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2170,7 +2204,11 @@ module ObjectModule =
     let putBox' = PutBoxIndex putBox
 
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+    #else
     let inline putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+    #endif
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2191,7 +2229,11 @@ module ObjectModule =
     let putVal' = PutValIndex putVal
 
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+    #else
     let inline putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+    #endif
       if i > Index.Max then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
@@ -2212,7 +2254,11 @@ module ObjectModule =
     let putRef' = PutRefIndex putRef
 
     //--------------------------------------------------------------------------
+    #if DEBUG
+    let get (o:IjsObj) (i:uint32) =
+    #else
     let inline get (o:IjsObj) (i:uint32) =
+    #endif
       match find o i with
       | null, _, _ -> Utils.boxedUndefined
       | o, index, isDense ->

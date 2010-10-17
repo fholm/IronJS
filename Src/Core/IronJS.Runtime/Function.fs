@@ -22,10 +22,12 @@ module Function =
 
   let setupPrototype (env:IjsEnv) =
     
+    (*
     Api.Object.putProperty(
       env.Function_prototype, "apply",
       Api.DelegateFunction<_>.create(
         env, new Func<IjsFunc, IjsObj, IjsObj, IjsBox array, IjsBox>(apply)), 
       PropertyAttrs.All)
+    *)
 
     ()

@@ -7,6 +7,25 @@ module Hosting =
 
   let createEnvironment () =
     let x = IjsEnv()
+
+    x.Object_methods <- {
+      GetProperty = Api.ObjectModule.Property.get'
+      HasProperty = Api.ObjectModule.Property.has'
+      DeleteProperty = Api.ObjectModule.Property.delete'
+      PutBoxProperty = Api.ObjectModule.Property.putBox'
+      PutRefProperty = Api.ObjectModule.Property.putRef'
+      PutValProperty = Api.ObjectModule.Property.putVal'
+
+      GetIndex = Api.ObjectModule.Index.get'
+      HasIndex = Api.ObjectModule.Index.has'
+      DeleteIndex = Api.ObjectModule.Index.delete'
+      PutBoxIndex = Api.ObjectModule.Index.putBox'
+      PutRefIndex = Api.ObjectModule.Index.putRef'
+      PutValIndex = Api.ObjectModule.Index.putVal'
+
+      Default = Api.ObjectModule.defaultValue'
+    }
+
     x.Base_Class <- PropertyClass(x)
 
     x.Prototype_Class <- Api.PropertyClass.subClass(x.Base_Class, "constructor")

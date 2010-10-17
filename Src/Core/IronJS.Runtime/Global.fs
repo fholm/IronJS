@@ -64,11 +64,15 @@ module Global =
 
   //15.1.1
   let setup (env:IjsEnv) =
-    //It's a g-thing.
-    let g = Api.Environment.createObject(env)
+    env.Globals <- Api.Environment.createObject(env)
 
-    env.Globals <- g
+    //15.1.2.1
+    (Api.ObjectModule.Property.putFunction
+      env.Globals "eval" 
+      (Api.DelegateFunction<_>.create(env, new Func<Compiler.EvalTarget, IjsBox>(eval)))
+    )
 
+    (*
     //15.1.1.1
     Api.Object.putProperty(g, "NaN", 
       NaN, PropertyAttrs.DontDelete ||| PropertyAttrs.DontEnum)
@@ -110,3 +114,4 @@ module Global =
       g, "isFinite", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsNum, IjsBox>(isFinite)), PropertyAttrs.All)
+    *)

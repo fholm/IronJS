@@ -54,22 +54,25 @@ module Object =
   //15.2.4
   let setupPrototype (env:IjsEnv) =
     //15.2.4.2
-    Api.Object.putProperty(
-      env.Object_prototype, "toString", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toString)), PropertyAttrs.All)
+    (Api.ObjectModule.Property.putFunction 
+      env.Object_prototype
+      "toString"
+      (Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsStr>(toString)))
+    )
 
+    //15.2.4.2
+    (Api.ObjectModule.Property.putFunction 
+      env.Object_prototype
+      "valueOf"
+      (Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsObj>(valueOf)))
+    )
+
+    (*
     //15.2.4.3
     Api.Object.putProperty(
       env.Object_prototype, "toLocaleString", 
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr>(toLocaleString)), PropertyAttrs.All)
-
-    //15.2.4.4
-    Api.Object.putProperty(
-      env.Object_prototype, "valueOf", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj>(valueOf)), PropertyAttrs.All)
 
     //15.2.4.5
     Api.Object.putProperty(
@@ -91,6 +94,7 @@ module Object =
       Api.DelegateFunction<_>.create(
         env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)), 
       PropertyAttrs.All)
+    *)
       
   //----------------------------------------------------------------------------
   //15.2.1

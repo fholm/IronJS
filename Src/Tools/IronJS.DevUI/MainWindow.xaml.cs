@@ -99,8 +99,8 @@ namespace IronJS.DevUI {
           }
 
           items.Add(
-                  RenderIronJSValue(
-                      kvp.Key, obj.PropertyValues[kvp.Value]));
+            RenderIronJSValue(
+                kvp.Key, obj.PropertyValues2[kvp.Value].Box));
         }
 
         if (Utils.isDense(obj)) {
@@ -110,7 +110,7 @@ namespace IronJS.DevUI {
               printedObjects.Clear();
             }
 
-            items.Add(RenderIronJSValue("[" + i + "]", obj.IndexValues[(int)i]));
+            items.Add(RenderIronJSValue("[" + i + "]", obj.IndexDense[(int)i].Box));
           }
         } else {
           foreach (var kvp in obj.IndexSparse) {

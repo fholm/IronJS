@@ -8,32 +8,35 @@ module Expr =
   let jsObjectGetProperty expr name = 
     let name = Dlr.const' name
     Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-      [Dlr.callStaticT<Api.Object> "getProperty" [tmp; name]]
+      [Dlr.invoke 
+        (Dlr.property
+          (Dlr.field tmp "Methods") "GetProperty"
+        )
+        [tmp; name]
+      ]
     )
-    
-  //----------------------------------------------------------------------------
-  let jsObjectPutLength expr value =
-    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-      [Dlr.callStaticT<Api.Object> "putLength" [tmp; value]]
-    )
-      
-  //----------------------------------------------------------------------------
-  let jsObjectPutProperty expr name value = 
-    match name with
-    | "length" -> 
-      jsObjectPutLength expr value
 
-    | _ ->
-      let name = Dlr.const' name
-      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.callStaticT<Api.Object> "putProperty" [tmp; name; value]]
-      )
+  //----------------------------------------------------------------------------
+  let jsObjectPutProperty expr name (value:Dlr.Expr) = 
+    let name = Dlr.const' name
+
+    let methodName =
+      if value.Type = typeof<IjsNum>
+        then "PutValProperty"
+        else "PutBoxProperty"
+
+    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+      [Dlr.invoke
+        (Dlr.property
+          (Dlr.field tmp "Methods") methodName
+        )
+        [tmp; name; value]
+      ]
+    )
       
   //----------------------------------------------------------------------------
   let jsObjectUpdateProperty expr name value = 
-    match name with
-    | "length" -> jsObjectPutLength expr value
-    | _ -> jsObjectPutProperty expr name value
+    jsObjectPutProperty expr name value
         
   //----------------------------------------------------------------------------
   let jsObjectPutIndex expr index value =

@@ -1978,6 +1978,8 @@ module ObjectModule =
       | _ -> Errors.runtime "[[TypeError]]"
 
     | _ -> Errors.runtime "Invalid hint"
+
+  let defaultValue' = Default defaultvalue
     
   //----------------------------------------------------------------------------
   module Property = 

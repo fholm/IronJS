@@ -19,7 +19,7 @@ type ScopeHelpers() =
         if level >= stop then
           let mutable h = null
           let mutable i = 0
-          if Object.hasProperty(o, name, &h, &i) 
+          if o.Methods.HasProperty.Invoke(o, name)
             then Some(o)
             else find xs
         else
@@ -30,26 +30,30 @@ type ScopeHelpers() =
   //----------------------------------------------------------------------------
   static let findVariable name (dc:DynamicChain) stop = 
     match findObject name dc stop with
-    | Some o -> Some(Object.getProperty(o, name))
+    | Some o -> Some(o.Methods.GetProperty.Invoke(o, name))
     | _ -> None
       
   //----------------------------------------------------------------------------
-  static member DynamicGet (name, dc, stop, g, s:Scope, i) =
+  static member DynamicGet (name, dc, stop, g:IjsObj, s:Scope, i) =
     match findObject name dc stop with
-    | Some o -> Object.getProperty(o, name)
-    | _ -> if s = null then Object.getProperty(g, name) else s.[i]
+    | Some o -> o.Methods.GetProperty.Invoke(o, name)
+    | _ -> if s = null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
       
   //----------------------------------------------------------------------------
-  static member DynamicSet (name, value:IjsBox byref, dc, stop, g, s:Scope, i) =
+  static member DynamicSet 
+    (name, value:IjsBox byref, dc, stop, g:IjsObj, s:Scope, i) =
+
     match findObject name dc stop with
-    | Some o -> Object.putProperty(o, name, &value)
+    | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, value)
     | _ -> 
       if s = null 
-        then Object.putProperty(g, name, &value) 
-        else s.[i] <- value; value
+        then g.Methods.PutBoxProperty.Invoke(g, name, value) 
+        else s.[i] <- value
           
   //----------------------------------------------------------------------------
-  static member DynamicCall<'a when 'a :> Delegate> (name, args, dc, stop, g, s:Scope, i) =
+  static member DynamicCall<'a when 'a :> Delegate> 
+    (name, args, dc, stop, g:IjsObj, s:Scope, i) =
+
     let callFunc this' (func:IjsBox) =
       if func.Type >= IronJS.TypeCodes.Function then
         let func = func.Func
@@ -61,17 +65,17 @@ type ScopeHelpers() =
         Errors.runtime "Can only call javascript function dynamically"
 
     match findObject name dc stop with
-    | Some o -> callFunc o (Object.getProperty(o, name))
+    | Some o -> callFunc o (o.Methods.GetProperty.Invoke(o, name))
     | None -> 
       if s = null
-        then callFunc g (Object.getProperty(g, name))
+        then callFunc g (g.Methods.GetProperty.Invoke(g, name))
         else callFunc g (s.[i])
         
   //----------------------------------------------------------------------------
   static member DynamicDelete (dc:DynamicChain, g:IjsObj, name) =
     match findObject name dc -1 with
-    | Some o -> Api.Object.deleteOwnProperty(o, name)
-    | _ -> Api.Object.deleteOwnProperty(g, name)
+    | Some o -> o.Methods.DeleteProperty.Invoke(o, name)
+    | _ -> g.Methods.DeleteProperty.Invoke(g, name)
 
   //----------------------------------------------------------------------------
   static member PushScope (dc:DynamicChain byref, new', level) =

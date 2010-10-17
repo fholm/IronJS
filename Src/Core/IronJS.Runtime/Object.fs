@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Api.Extensions
 
 //------------------------------------------------------------------------------
 //15.2
@@ -23,17 +24,13 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4.5
   let hasOwnProperty (o:IjsObj) (name:IjsStr) =
-    let mutable i = 0
-    if Api.Object.getOwnPropertyIndex(o, name, &i) 
-    then o.PropertyValues.[i].Type <> TypeCodes.Empty
-    else 
-      if name.Length > 0 && (name.[0] < '0' || name.[0] > '9') then false
-      else
-        let mutable i = Index.Min
-        if not (Utils.isStringIndex(name, &i)) then false
-        elif Utils.isDense o 
-        then i < o.IndexLength && o.IndexValues.[int i].Type <> TypeCodes.Empty
-        else o.IndexSparse.ContainsKey i
+    match Api.ObjectModule.Property.getIndex o name with
+    | true, index -> Utils.Descriptor.hasValue &o.PropertyValues2.[index]
+    | _ ->
+      let mutable i = Index.Min   
+      if Utils.isStringIndex(name, &i) 
+        then Api.ObjectModule.Index.hasIndex o i
+        else false
 
   //----------------------------------------------------------------------------
   //15.2.4.6
@@ -54,47 +51,39 @@ module Object =
   //15.2.4
   let setupPrototype (env:IjsEnv) =
     //15.2.4.2
-    (Api.ObjectModule.Property.putFunction 
-      env.Object_prototype
-      "toString"
-      (Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsStr>(toString)))
+    env.Object_prototype.put("toString", 
+      Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsStr>(toString))
     )
-
-    //15.2.4.2
-    (Api.ObjectModule.Property.putFunction 
-      env.Object_prototype
-      "valueOf"
-      (Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsObj>(valueOf)))
-    )
-
-    (*
+    
     //15.2.4.3
-    Api.Object.putProperty(
-      env.Object_prototype, "toLocaleString", 
+    env.Object_prototype.put("toLocaleString", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toLocaleString)), PropertyAttrs.All)
+        env, new Func<IjsObj, IjsStr>(toLocaleString))
+    )
+
+    //15.2.4.4
+    env.Object_prototype.put("valueOf", 
+      Api.DelegateFunction<_>.create(
+        env, new Func<IjsObj, IjsObj>(valueOf))
+    )
 
     //15.2.4.5
-    Api.Object.putProperty(
-      env.Object_prototype, "hasOwnProperty", 
+    env.Object_prototype.put("hasOwnProperty", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)), 
-      PropertyAttrs.All)
-
+        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty))
+    )
+    
     //15.2.4.6
-    Api.Object.putProperty(
-      env.Object_prototype, "isPrototypeOf", 
+    env.Object_prototype.put("isPrototypeOf", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)), 
-      PropertyAttrs.All)
-
-    //15.2.4.6
-    Api.Object.putProperty(
-      env.Object_prototype, "propertyIsEnumerable", 
+        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf))
+    )
+    
+    //15.2.4.7
+    env.Object_prototype.put("propertyIsEnumerable", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)), 
-      PropertyAttrs.All)
-    *)
+        env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable))
+    )
       
   //----------------------------------------------------------------------------
   //15.2.1
@@ -112,16 +101,7 @@ module Object =
       Api.DelegateFunction<_>.create(
         env, new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor))
 
-    objectCtor.ConstructorMode <- 
-      ConstructorModes.Host
-
-    Api.Object.putProperty(
-      objectCtor, "prototype", env.Object_prototype, PropertyAttrs.All
-    )
-
-    Api.Object.putProperty(
-      env.Object_prototype, "constructor", objectCtor, PropertyAttrs.None
-    )
-
-    Api.Object.putProperty(
-      env.Globals, "Object", objectCtor, PropertyAttrs.All)
+    objectCtor.ConstructorMode <- ConstructorModes.Host
+    objectCtor.put("prototype", env.Object_prototype)
+    env.Object_prototype.put("constructor", objectCtor)
+    env.Globals.put("Object", objectCtor)

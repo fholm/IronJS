@@ -4,6 +4,7 @@ open System
 open IronJS
 open IronJS.Compiler
 open IronJS.Aliases
+open IronJS.Api.Extensions
 
 module Global =
 
@@ -65,53 +66,36 @@ module Global =
   //15.1.1
   let setup (env:IjsEnv) =
     env.Globals <- Api.Environment.createObject(env)
+    env.Globals.put("NaN", NaN) //15.1.1.1
+    env.Globals.put("Infinity", PosInf) //15.1.1.2
+    env.Globals.put("undefined", Undefined.Instance) //15.1.1.3
 
     //15.1.2.1
-    (Api.ObjectModule.Property.putFunction
-      env.Globals "eval" 
-      (Api.DelegateFunction<_>.create(env, new Func<Compiler.EvalTarget, IjsBox>(eval)))
+    env.Globals.put("eval", 
+      Api.DelegateFunction<_>
+        .create(env, new Func<Compiler.EvalTarget, IjsBox>(eval))
     )
-
-    (*
-    //15.1.1.1
-    Api.Object.putProperty(g, "NaN", 
-      NaN, PropertyAttrs.DontDelete ||| PropertyAttrs.DontEnum)
-
-    //15.1.1.2
-    Api.Object.putProperty(g, "Infinity", 
-      PosInf, PropertyAttrs.DontDelete ||| PropertyAttrs.DontEnum)
-
-    //15.1.1.3
-    Api.Object.putProperty(g, "undefined",
-      Undefined.Instance, PropertyAttrs.DontDelete ||| PropertyAttrs.DontEnum)
-
-    //15.1.2.1
-    Api.Object.putProperty(
-      g, "eval", 
+    
+    //15.1.2.2
+    env.Globals.put("parseFloat",
       Api.DelegateFunction<_>.create(
-        env, new Func<Compiler.EvalTarget, IjsBox>(eval)), PropertyAttrs.All)
-
+        env, new Func<IjsStr, IjsBox>(parseFloat))
+    )
+    
     //15.1.2.3
-    Api.Object.putProperty(
-      g, "parseFloat", 
+    env.Globals.put("parseInt", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsStr, IjsBox>(parseFloat)), PropertyAttrs.All)
-
-    //15.1.2.3
-    Api.Object.putProperty(
-      g, "parseInt", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsStr, IjsBox>(parseInt)), PropertyAttrs.All)
-
+        env, new Func<IjsStr, IjsBox>(parseInt))
+    )
+    
     //15.1.2.4
-    Api.Object.putProperty(
-      g, "isNaN", 
+    env.Globals.put("isNaN", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsNum, IjsBox>(isNaN)), PropertyAttrs.All)
-
+        env, new Func<IjsNum, IjsBox>(isNaN))
+    )
+    
     //15.1.2.5
-    Api.Object.putProperty(
-      g, "isFinite", 
+    env.Globals.put("isFinite", 
       Api.DelegateFunction<_>.create(
-        env, new Func<IjsNum, IjsBox>(isFinite)), PropertyAttrs.All)
-    *)
+        env, new Func<IjsNum, IjsBox>(isFinite))
+    )

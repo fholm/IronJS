@@ -7,7 +7,7 @@ module Array =
 
   let createPrototype (env:IjsEnv) =
     let prototype = Api.Environment.createObject(env)
-    Api.Object.setPropertyClass(prototype, env.Array_Class)
+    Api.ObjectModule.Property.setMap prototype env.Array_Class
     prototype.Class <- Classes.Array
     prototype
 

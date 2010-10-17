@@ -9,7 +9,14 @@ module Unary =
   let deleteIndex object' index =
     (Expr.testIsObject
       (object')
-      (fun x -> Dlr.callStaticT<Api.Object> "deleteIndex" [x; index])
+      (fun x -> 
+        (Dlr.invoke 
+          (Dlr.property
+            (Dlr.field x "Methods") "DeleteIndex"
+          )
+          [x; index]
+        )
+      )
       (fun x -> Dlr.false')
     )
     
@@ -18,7 +25,14 @@ module Unary =
     let name = Dlr.const' name
     (Expr.testIsObject
       (object')
-      (fun x -> Dlr.callStaticT<Api.Object> "deleteOwnProperty" [x; name])
+      (fun x ->
+        (Dlr.invoke 
+          (Dlr.property
+            (Dlr.field x "Methods") "DeleteProperty"
+          )
+          [x; name]
+        )
+      )
       (fun x -> Dlr.false')
     )
     

@@ -39,15 +39,30 @@ module Expr =
     jsObjectPutProperty expr name value
         
   //----------------------------------------------------------------------------
-  let jsObjectPutIndex expr index value =
+  let jsObjectPutIndex expr index (value:Dlr.Expr) =
+    let methodName =
+      if value.Type = typeof<IjsNum>
+        then "PutValIndex"
+        else "PutBoxIndex"
+
     Expr.blockTmpT<IjsObj> expr (fun tmp ->
-      [Dlr.callStaticT<Api.Object> "putIndex" [tmp; index; value]]
+      [Dlr.invoke
+        (Dlr.property
+          (Dlr.field tmp "Methods") methodName
+        )
+        [tmp; index; value]
+      ]
     )
       
   //----------------------------------------------------------------------------
   let jsObjectGetIndex expr index =
     Expr.blockTmpT<IjsObj> expr (fun tmp ->
-      [Dlr.callStaticT<Api.Object> "getIndex" [tmp; index]]
+      [Dlr.invoke 
+        (Dlr.property
+          (Dlr.field tmp "Methods") "GetIndex"
+        )
+        [tmp; index]
+      ]
     )
       
   //----------------------------------------------------------------------------

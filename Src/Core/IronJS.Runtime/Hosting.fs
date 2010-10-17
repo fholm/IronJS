@@ -43,6 +43,7 @@ module Hosting =
     x.Boolean_prototype <- Native.Boolean.createPrototype x
     
     Native.Global.setup x
+    Native.Math.setup x
     Native.Object.setupPrototype x
     Native.Object.setupConstructor x
     Native.Function.setupPrototype x
@@ -114,11 +115,11 @@ module Hosting =
     member x.Execute source = x.InvokeCompiled (x.CompileSource source)
     member x.ExecuteT<'a> source = x.Execute source :?> 'a
 
-    member x.PutGlobal (name, value) =
-      Api.Object.putProperty(env.Globals, name, value, PropertyAttrs.All)
+    member x.PutGlobal (name, value:obj) =
+      env.Globals.Methods.PutBoxProperty.Invoke(env.Globals, name, Utils.box value)
 
     member x.GetGlobal name =
-      Api.Object.getProperty(env.Globals, name)
+      env.Globals.Methods.GetProperty.Invoke(env.Globals, name)
 
     member x.CreateDelegateFunction delegate' =
       Api.DelegateFunction<'a>.create(env, delegate')

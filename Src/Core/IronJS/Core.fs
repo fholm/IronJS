@@ -155,21 +155,21 @@ module Index =
 
 module TaggedBools =
   let True = 
-    let bytes = BitKit.double2bytes 0.0
+    let bytes = FSKit.Bit.double2bytes 0.0
     bytes.[0] <- 0x1uy
     bytes.[4] <- 0x1uy
     bytes.[5] <- 0xFFuy
     bytes.[6] <- 0xFFuy
     bytes.[7] <- 0xFFuy
-    BitKit.bytes2double bytes
+    FSKit.Bit.bytes2double bytes
 
   let False = 
-    let bytes = BitKit.double2bytes 0.0
+    let bytes = FSKit.Bit.double2bytes 0.0
     bytes.[4] <- 0x1uy
     bytes.[5] <- 0xFFuy
     bytes.[6] <- 0xFFuy
     bytes.[7] <- 0xFFuy
-    BitKit.bytes2double bytes
+    FSKit.Bit.bytes2double bytes
 
 //-------------------------------------------------------------------------
 // Struct used to represent a value whos type is unknown at runtime
@@ -498,8 +498,8 @@ and [<AllowNullLiteral>] DelegateFunction<'a when 'a :> Delegate> =
     {
       inherit HostFunction(
           env, 
-          Reflection.getDelegateArgTypesT<'a>, 
-          Reflection.getDelegateReturnTypeT<'a>
+          FSKit.Reflection.getDelegateArgTypesT<'a>, 
+          FSKit.Reflection.getDelegateReturnTypeT<'a>
         )
 
       Delegate = delegate'
@@ -519,7 +519,7 @@ and [<AllowNullLiteral>] ClrFunction =
   new (env:IjsEnv, method':MethodInfo) as x = 
     {
       inherit HostFunction(
-          env, Reflection.getParameters method', method'.ReturnType
+          env, FSKit.Reflection.getParameters method', method'.ReturnType
         )
 
       Method = method'

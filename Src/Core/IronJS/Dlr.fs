@@ -124,26 +124,26 @@ module Dlr =
   let private exprTypes (args:Expr seq) = [|for a in args -> a.Type|]
 
   let call (expr:Expr) name (args:Expr seq) =
-    match Reflection.getMethodArgs expr.Type name (exprTypes args) with
+    match FSKit.Reflection.getMethodArgs expr.Type name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callGeneric (expr:Expr) name typeArgs (args:Expr seq) =
     let exprTypes = (exprTypes args)
-    match Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
+    match FSKit.Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callStatic (type':System.Type) name (args:Expr seq) =
-    match Reflection.getMethodArgs type' name (exprTypes args) with
+    match FSKit.Reflection.getMethodArgs type' name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(null, method', args) :> Expr
 
   let callStaticT<'a> = callStatic typeof<'a>
 
   let callStaticGeneric (type':System.Type) name typeArgs (args:Expr seq) =
-    match Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
+    match FSKit.Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
 
@@ -173,7 +173,7 @@ module Dlr =
   let newGenericT<'a> = newGeneric typedefof<'a>
 
   let newArgs (typ:System.Type) (args:Et seq) = 
-    match Reflection.getCtor typ [for arg in args -> arg.Type] with
+    match FSKit.Reflection.getCtor typ [for arg in args -> arg.Type] with
     | None -> failwith "No matching constructor found"
     | Some ctor -> Et.New(ctor, args) :> Expr
 

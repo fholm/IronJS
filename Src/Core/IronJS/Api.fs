@@ -865,7 +865,7 @@ and HostFunction() =
   static member compileDispatcher (target:DispatchTarget) = 
     let f = target.Function
 
-    let argTypes = Reflection.getDelegateArgTypes target.Delegate
+    let argTypes = FSKit.Reflection.getDelegateArgTypes target.Delegate
     let args = argTypes |> Array.mapi createParam
     let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
 

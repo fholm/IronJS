@@ -106,6 +106,11 @@
     <Compile Include="Core.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
+      <Name>FSKit</Name>
+      <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\IronJS\IronJS.fsproj">
       <Name>IronJS</Name>
       <Project>{9e257324-94e7-49af-ae83-718288e925d8}</Project>

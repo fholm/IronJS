@@ -87,9 +87,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
-    <Compile Include="BitKit.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Reflection.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Debug.fs" />
     <Compile Include="Errors.fs" />
@@ -109,6 +107,13 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
+      <Name>FSKit</Name>
+      <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

@@ -25,7 +25,7 @@ type Target = {
     | Some delegate' -> 
       Dlr.ArrayUtils.RemoveFirst(
         Dlr.ArrayUtils.RemoveFirst(
-          Reflection.getDelegateArgTypes delegate'
+          FSKit.Reflection.getDelegateArgTypes delegate'
         )
       )
 

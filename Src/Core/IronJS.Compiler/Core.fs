@@ -360,9 +360,10 @@ module Core =
   //----------------------------------------------------------------------------
   // foo.bar;
   and private _compilePropertyAccess ctx tree name =
+    let name = Dlr.const' name
     (Expr.testIsObject
       (compileAst ctx tree)
-      (fun x -> Api.Expr.jsObjectGetProperty x name)
+      (fun x -> Object.Property.get x name)
       (fun x -> Expr.undefinedBoxed)
     )
     
@@ -421,11 +422,12 @@ module Core =
       Identifier.setValue ctx name value
 
     | Ast.Property(tree, name) -> //Property assignment: foo.bar = 1;
+      let name = Dlr.const' name
       Expr.blockTmp value (fun value ->
         [
           (Expr.testIsObject 
             (compileAst ctx tree)
-            (fun x -> Api.Expr.jsObjectPutProperty x name value)
+            (fun x -> Object.Property.put x name value)
             (fun x -> value)
           )
         ]
@@ -452,7 +454,7 @@ module Core =
     let target = Dlr.paramT<EvalTarget> "target"
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Api.Expr.jsObjectGetProperty ctx.Globals "eval"))
+      (Dlr.assign eval (Object.Property.get ctx.Globals ("eval" |> Dlr.const')))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))

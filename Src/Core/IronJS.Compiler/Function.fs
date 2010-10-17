@@ -64,6 +64,7 @@ module Function =
 
     Dlr.block [func; prototype] [
       (Dlr.assign func (Dlr.newArgsT<IjsFunc> funcArgs))
+      (Dlr.assign (Dlr.field func "Methods") (Dlr.field ctx.Env "Object_methods"))
       (Dlr.assign prototype (Dlr.newArgsT<IjsObj> prototypeArgs))
       (Expr.assignValue (Expr.propertyValue prototype Dlr.int0) func)
       (Expr.assignValue (Expr.propertyValue func Dlr.int0) argCount)
@@ -94,12 +95,13 @@ module Function =
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
+    let name = Dlr.const' name
     (Expr.testIsObject 
       (object')
       (fun x -> 
         (Api.Expr.jsMethodInvoke
           (x)
-          (fun x -> Api.Expr.jsObjectGetProperty x name)
+          (fun x -> Object.Property.get x name)
           (args)
         )
       )

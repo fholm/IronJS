@@ -108,7 +108,8 @@ module Hosting =
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.InvokeCompiled (compiled:Delegate) =
-      Utils.unboxObj(compiled.DynamicInvoke(globalFunc, env.Globals))
+      let result = compiled.DynamicInvoke(globalFunc, env.Globals)
+      Utils.unboxObj result
 
     member x.ExecuteFile fileName = x.InvokeCompiled (x.CompileFile fileName)
     member x.ExecuteFileT<'a> fileName = x.ExecuteFile fileName :?> 'a

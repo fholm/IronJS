@@ -1,42 +1,9 @@
 ﻿namespace IronJS.Api
 
 open IronJS
+open IronJS.Expr.Patterns
 
 module Expr =
-
-  //----------------------------------------------------------------------------
-  let jsObjectGetProperty expr name = 
-    let name = Dlr.const' name
-    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-      [Dlr.invoke 
-        (Dlr.property
-          (Dlr.field tmp "Methods") "GetProperty"
-        )
-        [tmp; name]
-      ]
-    )
-
-  //----------------------------------------------------------------------------
-  let jsObjectPutProperty expr name (value:Dlr.Expr) = 
-    let name = Dlr.const' name
-
-    let methodName =
-      if value.Type = typeof<IjsNum>
-        then "PutValProperty"
-        else "PutBoxProperty"
-
-    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-      [Dlr.invoke
-        (Dlr.property
-          (Dlr.field tmp "Methods") methodName
-        )
-        [tmp; name; value]
-      ]
-    )
-      
-  //----------------------------------------------------------------------------
-  let jsObjectUpdateProperty expr name value = 
-    jsObjectPutProperty expr name value
         
   //----------------------------------------------------------------------------
   let jsObjectPutIndex expr index (value:Dlr.Expr) =
@@ -47,9 +14,7 @@ module Expr =
 
     Expr.blockTmpT<IjsObj> expr (fun tmp ->
       [Dlr.invoke
-        (Dlr.property
-          (Dlr.field tmp "Methods") methodName
-        )
+        (Dlr.property (Dlr.field tmp "Methods") methodName)
         [tmp; index; value]
       ]
     )
@@ -58,9 +23,7 @@ module Expr =
   let jsObjectGetIndex expr index =
     Expr.blockTmpT<IjsObj> expr (fun tmp ->
       [Dlr.invoke 
-        (Dlr.property
-          (Dlr.field tmp "Methods") "GetIndex"
-        )
+        (Dlr.property (Dlr.field tmp "Methods") "GetIndex")
         [tmp; index]
       ]
     )

@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Api.Extensions
 
 module Function =
   
@@ -20,9 +21,7 @@ module Function =
     Unchecked.defaultof<IjsBox>
 
   let setupPrototype (env:IjsEnv) =
-    (Api.ObjectModule.Property.putFunction 
-      env.Function_prototype
-      "apply"
-      (Api.DelegateFunction<_>.create(
-        env, new Func<IjsFunc, IjsObj, IjsObj, IjsBox array, IjsBox>(apply)))
+    env.Function_prototype.put("apply",
+      Api.DelegateFunction<_>.create(
+        env, new Func<IjsFunc, IjsObj, IjsObj, IjsBox array, IjsBox>(apply))
     )

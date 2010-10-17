@@ -57,6 +57,23 @@ module Utils =
   module TypeCode =
     ()
 
+  module Patterns =
+    
+    let inline (|Number|_|) (box:IjsBox) = 
+      if Box.isNumber box.Tag then Some box.Double else None
+
+    let (|Tagged|_|) (box:IjsBox) = 
+      if Box.isTagged box.Tag then Some box.Type else None
+
+    let inline (|Index|_|) (num:IjsNum) =
+      let index = uint32 num
+      if double index = num then Some index else None
+
+    let (|StringIndex|_|) (str:IjsStr) =
+      match UInt32.TryParse str with
+      | true, num -> Some num
+      | _ -> None
+
   let asRef (x:HostType) = x.MakeByRefType()
   let isVoid t = typeof<System.Void> = t
   let isStringIndex (str:string, out:uint32 byref) = 
@@ -64,7 +81,6 @@ module Utils =
     && (str.[0] >= '0' || str.[0] <= '9') 
     && System.UInt32.TryParse(str, &out)
 
-  let inline retype (x:'a) : 'b = (# "" x : 'b #)
   let inline refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
 
   let type2tc (t:System.Type) =   
@@ -186,10 +202,12 @@ module Utils =
       box
 
   let unbox (b:Box) =
-    match b.Type with
-    | TypeCodes.Bool -> b.Bool :> obj
-    | TypeCodes.Number -> b.Double :> obj
-    | _ -> b.Clr
+    if Box.isNumber b.Tag
+      then b.Double :> obj
+      else
+      match b.Type with
+      | TypeCodes.Bool -> b.Bool :> obj
+      | _ -> b.Clr
 
   let unboxObj (o:obj) =
     if o :? Box 
@@ -350,36 +368,6 @@ module Utils =
     box.Clr <- f
     box.Type <- TypeCodes.Function
     box
-      
-  let inline setIjsBoolInArray (arr:Box array) i value =
-    arr.[i].Type  <- TypeCodes.Bool
-    arr.[i].Bool  <- value
-    arr.[i].Clr   <- null
-
-  let inline setIjsNumInArray (arr:Box array) i value =
-    arr.[i].Type    <- TypeCodes.Number
-    arr.[i].Double  <- value
-    arr.[i].Clr     <- null
-
-  let inline setHostObjectInArray (arr:Box array) i (value:HostObject) =
-    arr.[i].Type  <- TypeCodes.Clr
-    arr.[i].Clr   <- value
-
-  let inline setIjsStrInArray (arr:Box array) i (value:string) =
-    arr.[i].Type  <- TypeCodes.String
-    arr.[i].Clr   <- value
-
-  let inline setUndefinedInArray (arr:Box array) i (value:Undefined) =
-    arr.[i].Type  <- TypeCodes.Undefined
-    arr.[i].Clr   <- value
-
-  let inline setIjsObjInArray (arr:Box array) i (value:Object) =
-    arr.[i].Type  <- TypeCodes.Object
-    arr.[i].Clr   <- value
-
-  let inline setIjsFuncInArray (arr:Box array) i (value:Function) =
-    arr.[i].Type  <- TypeCodes.Function
-    arr.[i].Clr   <- value
       
   //-------------------------------------------------------------------------
   // Function + cache that creates delegates for IronJS functions, delegates

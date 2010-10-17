@@ -11,9 +11,7 @@ module Unary =
       (object')
       (fun x -> 
         (Dlr.invoke 
-          (Dlr.property
-            (Dlr.field x "Methods") "DeleteIndex"
-          )
+          (Dlr.property (Dlr.field x "Methods") "DeleteIndex")
           [x; index]
         )
       )
@@ -27,9 +25,7 @@ module Unary =
       (object')
       (fun x ->
         (Dlr.invoke 
-          (Dlr.property
-            (Dlr.field x "Methods") "DeleteProperty"
-          )
+          (Dlr.property (Dlr.field x "Methods") "DeleteProperty")
           [x; name]
         )
       )

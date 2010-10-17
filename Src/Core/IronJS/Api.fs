@@ -972,6 +972,54 @@ and ClrFunction() =
 
     f
 
+module Extensions = 
+
+  type Object with 
+
+    member o.put (name, v:IjsBool) =
+      let v = if v then TaggedBools.True else TaggedBools.False
+      o.Methods.PutValProperty.Invoke(o, name, v)
+
+    member o.put (name, v:IjsNum) =
+      o.Methods.PutValProperty.Invoke(o, name, v)
+
+    member o.put (name, v:HostObject) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Clr)
+
+    member o.put (name, v:IjsStr) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.String)
+
+    member o.put (name, v:Undefined) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Undefined)
+
+    member o.put (name, v:IjsObj) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Object)
+
+    member o.put (name, v:IjsFunc) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
+
+    member o.put (index, v:IjsBool) =
+      let v = if v then TaggedBools.True else TaggedBools.False
+      o.Methods.PutValIndex.Invoke(o, index, v)
+
+    member o.put (index, v:IjsNum) =
+      o.Methods.PutValIndex.Invoke(o, index, v)
+
+    member o.put (index, v:HostObject) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Clr)
+
+    member o.put (index, v:IjsStr) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.String)
+
+    member o.put (index, v:Undefined) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Undefined)
+
+    member o.put (index, v:IjsObj) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Object)
+
+    member o.put (index, v:IjsFunc) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Function)
+
 //------------------------------------------------------------------------------
 module ObjectModule =
 
@@ -1154,6 +1202,9 @@ module ObjectModule =
   //----------------------------------------------------------------------------
   module Index =
   
+    open Extensions
+    open Utils.Patterns
+  
     //--------------------------------------------------------------------------
     let initSparse (o:IjsObj) =
       o.IndexSparse <- new MutableSorted<uint32, Box>()
@@ -1326,26 +1377,17 @@ module ObjectModule =
         else false
 
     let delete' = DeleteIndex delete
+    
+    //--------------------------------------------------------------------------
+    type Converters =
+      
+      //------------------------------------------------------------------------
+      static member put (o:IjsObj, index:IjsBox, value:IjsNum) =
+        match index with
+        | Number n ->
+          match n with
+          | Index i -> o.put(i, value)
+          | _ -> o.put(TypeConverter.toString n, value)
 
-
-module Extensions = 
-  type Object with 
-  
-    member o.put (name, v:IjsBool) =
-      let v = if v then TaggedBools.True else TaggedBools.False
-      o.Methods.PutValProperty.Invoke(o, name, v)
-
-    member o.put (name, v:IjsNum) =
-      o.Methods.PutValProperty.Invoke(o, name, v)
-
-    member o.put (name, v:IjsStr) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.String)
-
-    member o.put (name, v:IjsObj) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Object)
-
-    member o.put (name, v:IjsFunc) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
-
-    member o.put (name, v:Undefined) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Undefined)
+        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | _ -> failwith "Que?"

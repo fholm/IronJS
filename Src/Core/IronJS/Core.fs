@@ -47,15 +47,15 @@ type Class = byte
 //
 //-------------------------------------------------------------------------
 module TypeCodes =
-  let [<Literal>] Box        = 0x00000000u
-  let [<Literal>] Empty      = 0xFFFFFF00u
-  let [<Literal>] Bool       = 0xFFFFFF01u
-  let [<Literal>] Number     = 0xFFFFFF02u
-  let [<Literal>] Clr        = 0xFFFFFF03u
-  let [<Literal>] String     = 0xFFFFFF04u
-  let [<Literal>] Undefined  = 0xFFFFFF05u
-  let [<Literal>] Object     = 0xFFFFFF06u
-  let [<Literal>] Function   = 0xFFFFFF07u
+  let [<Literal>] Box         = 0x00000000u
+  let [<Literal>] Empty       = 0xFFFFFF00u
+  let [<Literal>] Bool        = 0xFFFFFF01u
+  let [<Literal>] Number      = 0xFFFFFF02u
+  let [<Literal>] Clr         = 0xFFFFFF03u
+  let [<Literal>] String      = 0xFFFFFF04u
+  let [<Literal>] Undefined   = 0xFFFFFF05u
+  let [<Literal>] Object      = 0xFFFFFF06u
+  let [<Literal>] Function    = 0xFFFFFF07u
 
   let Names = 
     Map.ofList [

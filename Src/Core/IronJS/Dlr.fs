@@ -116,7 +116,9 @@ module Dlr =
     blockTmp typeof<'a> f
 
   let field expr (name:string) = Et.PropertyOrField(expr, name) :> Et
-  let property expr (name:string) = Et.Property(expr, name) :> Et
+  let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
+  let property expr (name:string) = Et.PropertyOrField(expr, name) :> Et
+  let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
   let propertyStatic (type':System.Type) name = Et.Property(null, type', name)
   let propertyStaticT<'a> = propertyStatic typeof<'a>
   let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Et
@@ -380,11 +382,11 @@ module Dlr =
           System.Reflection.BindingFlags.NonPublic 
             ||| System.Reflection.BindingFlags.Instance)
 
-    let debugView (expr:Expr) =
-      string (_dbgViewProp.GetValue(expr, null))
+    let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
+    let printDebugView (expr:Expr) = printf "%s" (debugView expr)
 
-    let printDebugView (expr:Expr) =
-      printf "%s" (debugView expr)
+    let is type' (expr:Expr) = expr.Type = type'
+    let isT<'a> (expr:Expr) = expr.Type = typeof<'a>
 
   module Ext =
 

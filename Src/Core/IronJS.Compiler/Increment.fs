@@ -53,21 +53,20 @@ module Increment =
       
   //----------------------------------------------------------------------------
   let postChangeProperty op (ctx:Ctx) expr name =
+    let name = Dlr.const' name
     Dlr.blockTmpT<IjsBox> (fun tmp ->
       [
         (Dlr.assign 
           (tmp)
-          (Api.Expr.jsObjectGetProperty expr name)
+          (Object.Property.get expr name)
         )
         (Dlr.ternary
           (Expr.containsNumber tmp)
           (Dlr.blockSimple
             [
-              (Api.Expr.jsObjectUpdateProperty 
-                (expr) 
-                (name)
-                (op (Expr.unboxNumber tmp) Dlr.dbl1)
-              )
+              (Object.Property.put
+                (expr) (name)
+                (op (Expr.unboxNumber tmp) Dlr.dbl1))
               (tmp)
             ]
           )

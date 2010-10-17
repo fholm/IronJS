@@ -4,6 +4,7 @@
 #r @"../../Lib/Antlr3.Runtime.dll"
 #r @"../../Lib/Microsoft.Dynamic.dll"
 #r @"../../Lib/Xebic.ES3.dll"
+#r @"../FSKit/bin/Debug/FSKit.dll"
 #r @"../Core/IronJS/bin/Debug/IronJS.dll"
 #r @"../Core/IronJS.Compiler/bin/Debug/IronJS.Compiler.dll"
 #r @"../Core/IronJS.Runtime/bin/Debug/IronJS.Runtime.dll"

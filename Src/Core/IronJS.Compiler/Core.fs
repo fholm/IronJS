@@ -515,21 +515,10 @@ module Core =
       ParameterExprs = parameterExprs
     }
 
-    let finalizers = 
-      Dlr.blockSimple [
-        #if REUSABLE_STACK
-        (Dlr.if'
-          (Dlr.isNull ctx.Fun_LocalStack)
-          (Dlr.assign ctx.Fun_LocalStack ctx.LocalExpr)
-        )
-        #endif
-      ]
-
     let returnExpr = [
-        (Dlr.labelExprVoid ctx.ReturnLabel)
-        (finalizers)
-        (ctx.Env_Return)
-      ]
+      (Dlr.labelExprVoid ctx.ReturnLabel)
+      (ctx.Env_Return)
+    ]
 
     let locals = 
       if ctx.Target.IsEval then [] |> Seq.ofList

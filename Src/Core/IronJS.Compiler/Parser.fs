@@ -5,7 +5,7 @@ module Ast =
   open IronJS
   open IronJS.Utils
   open IronJS.Aliases
-  open IronJS.Ops
+  open IronJS.Operators
   open Antlr.Runtime
 
   open System.Globalization
@@ -333,7 +333,7 @@ module Ast =
     | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
     | Case(tests, body) -> Case([for t in tests -> f t], f body)
     | Default body -> Default (f body)
-    | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, f >? ifFalse)
+    | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, ifFalse |?> f)
     | Ternary(test, ifTrue, ifFalse) -> Ternary(f test, f ifTrue, f ifFalse)
     | While(label, test, body) -> While(label, f test, f body)
     | DoWhile(label, test, body) -> DoWhile(label, f test, f body)
@@ -346,7 +346,7 @@ module Ast =
     | Finally body -> Finally (f body)
     | Throw tree -> Throw (f tree)
     | Try(body, catch, finally') -> 
-      Try(f body, [for x in catch -> f x], f >? finally')
+      Try(f body, [for x in catch -> f x], finally' |?> f)
 
     // Others
     | Block trees -> Block [for t in trees -> f t]
@@ -377,7 +377,7 @@ module Ast =
 
   let replaceScope old new' sc =
     let replace x = if x = old then new' else x
-    sc := sc %> List.map replace
+    sc := sc |!> List.map replace
 
   let modifyScope f sc =
     match !sc with
@@ -432,7 +432,7 @@ module Ast =
       | Invoke(Identifier "eval", source::[]) ->
 
         //Close over all variables in scope
-        sc := sc %> List.map (fun x ->
+        sc := sc |!> List.map (fun x ->
           Set.fold (fun (s:Scope) v -> 
             if not v.IsClosedOver then s.MakeVarClosedOver v else s
           ) x x.Variables
@@ -443,10 +443,10 @@ module Ast =
         Eval(source)
 
       | Identifier name ->
-        let refScope = sc %> List.head
+        let refScope = sc |!> List.head
 
         if not (hasVar name refScope) then
-          match sc %> List.tryFind (hasVar name) with
+          match sc |!> List.tryFind (hasVar name) with
           | None -> () //Global
           | Some defScope ->
             //Make sure we don't close over variables
@@ -455,7 +455,7 @@ module Ast =
             let continue' = 
               match defScope.ScopeType with
               | CatchScope -> 
-                sc %> Seq.takeWhile isCatchScope
+                sc |!> Seq.takeWhile isCatchScope
                    |> Seq.exists (fun x -> x = defScope)
                    |> not
 
@@ -577,7 +577,7 @@ module Ast =
       | Eval _ ->
         
         let closures = 
-          sc %> Seq.map (fun x -> 
+          sc |!> Seq.map (fun x -> 
                           x.Variables 
                           |> Seq.map (fun v -> 
                             v, x.GlobalLevel, x.ClosureLevel))
@@ -597,7 +597,7 @@ module Ast =
 
         if not (hasVariable refScope) then
 
-          match sc %> List.tryFind (fun x -> hasVariable x) with
+          match sc |!> List.tryFind (fun x -> hasVariable x) with
           | None -> () //Global
           | Some defScope ->
 
@@ -649,7 +649,7 @@ module Ast =
 
       | Assign(Identifier name, value) ->
 
-        let s = sc %> List.head
+        let s = sc |!> List.head
 
         match s.TryGetVar name with
         | None -> ()

@@ -11,24 +11,25 @@ module Version =
   let Tupled = Major, Minor, Build, Revision, Tag
   let FullName = sprintf "IronJS %s" Tagged
 
-module Ops2 =
+module Operators =
   let inline (|!>) a b = b !a 
   let inline (<==) a b = a := b !a
   let inline (|?>) a b = Option.map b a
   let inline (|?) a b = match a with Some x -> x | _ -> b()
 
 module Ops = 
+  ()
   //Same as |> but for refs
-  let (%>) a b = b !a 
+  //let (%>) a b = b !a 
 
   //Applies b to a and stores result in a
-  let (<!) a b = a := b !a
+  //let (<!) a b = a := b !a
 
   //Applies a to b if it has a value and returns Some(value) else None
-  let (>?) a b = match b with Some x -> Some(a x) | _ -> None
+  //let (>?) a b = match b with Some x -> Some(a x) | _ -> None
 
   //'Unwraps' an Option<'a> if it has  a value otherwise throws an exception
-  let (!?) opt = match opt with | Some v -> v | _ -> failwith "No value"
+  //let (!?) opt = match opt with | Some v -> v | _ -> failwith "No value"
 
 module Aliases = 
   open System

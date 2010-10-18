@@ -26,7 +26,7 @@ module Hosting =
       Default = Api.ObjectModule.defaultValue'
     }
 
-    x.Base_Class <- PropertyClass(x)
+    x.Base_Class <- PropertyMap(x)
 
     x.Prototype_Class <- Api.PropertyClass.subClass(x.Base_Class, "constructor")
     x.Function_Class <- Api.PropertyClass.subClass(x.Base_Class, ["length"; "prototype"])

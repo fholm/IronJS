@@ -93,15 +93,15 @@ namespace IronJS.DevUI {
       var items = new List<TreeViewItem>();
 
       if (obj != null) {
-        foreach (var kvp in obj.PropertyClass.PropertyMap) {
-          if (isGlobal) {
-            printedObjects.Clear();
-          }
+          foreach (var kvp in obj.PropertyMap.PropertyMap) {
+              if (isGlobal) {
+                  printedObjects.Clear();
+              }
 
-          items.Add(
-            RenderIronJSValue(
-                kvp.Key, obj.PropertyValues2[kvp.Value].Box));
-        }
+              items.Add(
+                RenderIronJSValue(
+                    kvp.Key, obj.PropertyDescriptors[kvp.Value].Box));
+          }
 
         if (Utils.isDense(obj)) {
           var length = obj.IndexLength;
@@ -130,7 +130,7 @@ namespace IronJS.DevUI {
       var item = new TreeViewItem();
       var header = item as HeaderedItemsControl;
 
-      if (IronJS.Utils.Box.isNumber(box.Tag)) {
+      if (IronJS.Utils.Box.isNumber(box.Marker)) {
         header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
         item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
 

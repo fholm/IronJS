@@ -47,7 +47,7 @@ type TypeConverter =
   static member toString (s:string) = s
   static member toString (u:Undefined) = "undefined"
   static member toString (b:Box byref) =
-    if Utils.Box.isNumber b.Tag then TypeConverter.toString(b.Double)
+    if Utils.Box.isNumber b.Marker then TypeConverter.toString(b.Double)
     else
       match b.Type with
       | TypeCodes.Undefined -> "undefined"
@@ -510,7 +510,7 @@ and Operators =
 and PropertyClass =
         
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyClass, name) = 
+  static member subClass (x:IronJS.PropertyMap, name) = 
     if x.isDynamic then 
       let index = 
         if x.FreeIndexes.Count > 0 then x.FreeIndexes.Pop()
@@ -525,20 +525,20 @@ and PropertyClass =
       if not(x.SubClasses.TryGetValue(name, &subClass)) then
         let newMap = new MutableDict<string, int>(x.PropertyMap)
         newMap.Add(name, newMap.Count)
-        subClass <- IronJS.PropertyClass(x.Env, newMap)
+        subClass <- IronJS.PropertyMap(x.Env, newMap)
         x.SubClasses.Add(name, subClass)
 
       subClass
 
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyClass, names:string seq) =
+  static member subClass (x:IronJS.PropertyMap, names:string seq) =
     Seq.fold (fun c (n:string) -> PropertyClass.subClass(c, n)) x names
         
   //----------------------------------------------------------------------------
-  static member makeDynamic (x:IronJS.PropertyClass) =
+  static member makeDynamic (x:IronJS.PropertyMap) =
     if x.isDynamic then x
     else
-      let pc = new IronJS.PropertyClass(null)
+      let pc = new IronJS.PropertyMap(null)
       pc.Id <- -1L
       pc.NextIndex <- x.NextIndex
       pc.FreeIndexes <- new MutableStack<int>()
@@ -546,7 +546,7 @@ and PropertyClass =
       pc
         
   //----------------------------------------------------------------------------
-  static member delete (x:IronJS.PropertyClass, name) =
+  static member delete (x:IronJS.PropertyMap, name) =
     let pc = if not x.isDynamic then PropertyClass.makeDynamic x else x
     let mutable index = 0
 
@@ -557,7 +557,7 @@ and PropertyClass =
     pc
       
   //----------------------------------------------------------------------------
-  static member getIndex (x:IronJS.PropertyClass, name) =
+  static member getIndex (x:IronJS.PropertyMap, name) =
     x.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
@@ -974,7 +974,12 @@ and ClrFunction() =
 
 module Extensions = 
 
+  open Utils.Patterns
+
   type Object with 
+
+    member o.put (name, v:IjsBox) =
+      o.Methods.PutBoxProperty.Invoke(o, name, v)
 
     member o.put (name, v:IjsBool) =
       let v = if v then TaggedBools.True else TaggedBools.False
@@ -998,6 +1003,12 @@ module Extensions =
     member o.put (name, v:IjsFunc) =
       o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
 
+    member o.put (name, v:IjsRef, tc:TypeCode) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, tc)
+      
+    member o.put (index, v:IjsBox) =
+      o.Methods.PutBoxIndex.Invoke(o, index, v)
+
     member o.put (index, v:IjsBool) =
       let v = if v then TaggedBools.True else TaggedBools.False
       o.Methods.PutValIndex.Invoke(o, index, v)
@@ -1019,6 +1030,9 @@ module Extensions =
 
     member o.put (index, v:IjsFunc) =
       o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Function)
+
+    member o.put (index, v:IjsRef, tc:TypeCode) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, tc)
 
 //------------------------------------------------------------------------------
 module ObjectModule =
@@ -1069,47 +1083,44 @@ module ObjectModule =
   
     //--------------------------------------------------------------------------
     let requiredStorage (o:IjsObj) =
-      o.PropertyClass.PropertyMap.Count
+      o.PropertyMap.PropertyMap.Count
       
     //--------------------------------------------------------------------------
     let isFull (o:IjsObj) =
-      requiredStorage o >= o.PropertyValues2.Length
+      requiredStorage o >= o.PropertyDescriptors.Length
       
     //--------------------------------------------------------------------------
     let getIndex (o:IjsObj) (name:string) =
-      o.PropertyClass.PropertyMap.TryGetValue name
+      o.PropertyMap.PropertyMap.TryGetValue name
       
     //--------------------------------------------------------------------------
     let setMap (o:IjsObj) pc =
-      o.PropertyClass <- pc
-      o.PropertyClassId <- pc.Id
+      o.PropertyMap <- pc
 
     //--------------------------------------------------------------------------
     let makeDynamic (o:IjsObj) =
-      if o.PropertyClassId >= 0L then
-        o.PropertyClass <- PropertyClass.makeDynamic o.PropertyClass
-        o.PropertyClassId <- o.PropertyClass.Id
+      if o.PropertyMapId >= 0L then
+        o.PropertyMap <- PropertyClass.makeDynamic o.PropertyMap
       
     //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) =
-      let values = o.PropertyValues2
+      let values = o.PropertyDescriptors
       let required = requiredStorage o
       let newValues = Array.zeroCreate (required * 2)
 
       if values.Length > 0 then 
         Array.Copy(values, newValues, values.Length)
       
-      o.PropertyValues2 <- newValues
+      o.PropertyDescriptors <- newValues
       
     //--------------------------------------------------------------------------
     let ensureIndex (o:IjsObj) (name:string) =
       match getIndex o name with
       | true, index -> index
       | _ -> 
-        o.PropertyClass <- PropertyClass.subClass(o.PropertyClass, name)
-        o.PropertyClassId <- o.PropertyClass.Id
+        o.PropertyMap <- PropertyClass.subClass(o.PropertyMap, name)
         if isFull o then expandStorage o
-        o.PropertyClass.PropertyMap.[name]
+        o.PropertyMap.PropertyMap.[name]
         
     //--------------------------------------------------------------------------
     let find (o:IjsObj) name =
@@ -1129,8 +1140,8 @@ module ObjectModule =
     let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
     #endif
       let index = ensureIndex o name
-      o.PropertyValues2.[index].Box <- val'
-      o.PropertyValues2.[index].HasValue <- true
+      o.PropertyDescriptors.[index].Box <- val'
+      o.PropertyDescriptors.[index].HasValue <- true
 
     let putBox' = PutBoxProperty putBox
       
@@ -1141,8 +1152,8 @@ module ObjectModule =
     let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
     #endif
       let index = ensureIndex o name
-      o.PropertyValues2.[index].Box.Clr <- val'
-      o.PropertyValues2.[index].Box.Type <- tc
+      o.PropertyDescriptors.[index].Box.Clr <- val'
+      o.PropertyDescriptors.[index].Box.Type <- tc
       
     let putRef' = PutRefProperty putRef
 
@@ -1153,8 +1164,8 @@ module ObjectModule =
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
     #endif
       let index = ensureIndex o name
-      o.PropertyValues2.[index].Box.Double <- val'
-      o.PropertyValues2.[index].HasValue <- true
+      o.PropertyDescriptors.[index].Box.Double <- val'
+      o.PropertyDescriptors.[index].HasValue <- true
 
     let putVal' = PutValProperty putVal
       
@@ -1166,7 +1177,7 @@ module ObjectModule =
     #endif
       match find o name with
       | _, -1 -> Utils.boxedUndefined
-      | pair -> (fst pair).PropertyValues2.[snd pair].Box
+      | pair -> (fst pair).PropertyDescriptors.[snd pair].Box
 
     let get' = GetProperty get
       
@@ -1180,15 +1191,15 @@ module ObjectModule =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
-        setMap o (PropertyClass.delete(o.PropertyClass, name))
+        setMap o (PropertyClass.delete(o.PropertyMap, name))
 
-        let attrs = o.PropertyValues2.[index].Attributes
+        let attrs = o.PropertyDescriptors.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs
 
         if canDelete then
-          o.PropertyValues2.[index].HasValue <- false
-          o.PropertyValues2.[index].Box.Clr <- null
-          o.PropertyValues2.[index].Box.Double <- 0.0
+          o.PropertyDescriptors.[index].HasValue <- false
+          o.PropertyDescriptors.[index].Box.Clr <- null
+          o.PropertyDescriptors.[index].Box.Double <- 0.0
 
         canDelete
 
@@ -1387,20 +1398,105 @@ module ObjectModule =
     
     //--------------------------------------------------------------------------
     type Converters =
-      
+    
       //------------------------------------------------------------------------
-      static member put (o:IjsObj, index:IjsBox, value:IjsNum) =
+      static member put (o:IjsObj, index:IjsBox, value:IjsBox) =
         match index with
-        | Number n ->
-          match n with
-          | Index i -> o.put(i, value)
-          | _ -> o.put(TypeConverter.toString n, value)
-
+        | NumberAndIndex i 
+        | StringAndIndex i -> o.put(i, value)
         | Tagged tc -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
-
-      //------------------------------------------------------------------------
-      static member put (o:IjsObj, index:IjsNum, value:IjsNum) =
+      
+      static member put (o:IjsObj, index:IjsBool, value:IjsBox) =
+        o.put(TypeConverter.toString index, value)
+      
+      static member put (o:IjsObj, index:IjsNum, value:IjsBox) =
         match index with
-        | Index i -> o.put(i, value)
+        | NumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
+        
+      static member put (o:IjsObj, index:HostObject, value:IjsBox) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value)
+        | index -> o.put(index, value)
+
+      static member put (o:IjsObj, index:Undefined, value:IjsBox) =
+        o.put("undefined", value)
+      
+      static member put (o:IjsObj, index:IjsStr, value:IjsBox) =
+        match index with
+        | StringIndex i -> o.put(i, value)
+        | _ -> o.put(TypeConverter.toString index, value)
+
+      static member put (o:IjsObj, index:IjsObj, value:IjsBox) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value)
+        | index -> o.put(index, value)
+        
+      //------------------------------------------------------------------------
+      static member put (o:IjsObj, index:IjsBox, value:IjsVal) =
+        match index with
+        | NumberAndIndex i
+        | StringAndIndex i -> o.put(i, value)
+        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | _ -> failwith "Que?"
+      
+      static member put (o:IjsObj, index:IjsBool, value:IjsVal) =
+        o.put(TypeConverter.toString index, value)
+      
+      static member put (o:IjsObj, index:IjsNum, value:IjsVal) =
+        match index with
+        | NumberIndex i -> o.put(i, value)
+        | _ -> o.put(TypeConverter.toString index, value)
+        
+      static member put (o:IjsObj, index:HostObject, value:IjsVal) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value)
+        | index -> o.put(index, value)
+
+      static member put (o:IjsObj, index:Undefined, value:IjsVal) =
+        o.put("undefined", value)
+      
+      static member put (o:IjsObj, index:IjsStr, value:IjsVal) =
+        match index with
+        | StringIndex i -> o.put(i, value)
+        | _ -> o.put(TypeConverter.toString index, value)
+
+      static member put (o:IjsObj, index:IjsObj, value:IjsVal) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value)
+        | index -> o.put(index, value)
+        
+      //------------------------------------------------------------------------
+      static member put (o:IjsObj, index:IjsBox, value:IjsRef, tc:TypeCode) =
+        match index with
+        | NumberAndIndex i
+        | StringAndIndex i -> o.put(i, value, tc)
+        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | _ -> failwith "Que?"
+      
+      static member put (o:IjsObj, index:IjsBool, value:IjsRef, tc:TypeCode) =
+        o.put(TypeConverter.toString index, value, tc)
+      
+      static member put (o:IjsObj, index:IjsNum, value:IjsRef, tc:TypeCode) =
+        match index with
+        | NumberIndex i -> o.put(i, value)
+        | _ -> o.put(TypeConverter.toString index, value, tc)
+        
+      static member put (o:IjsObj, index:HostObject, value:IjsRef, tc:TypeCode) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value, tc)
+        | index -> o.put(index, value, tc)
+
+      static member put (o:IjsObj, index:Undefined, value:IjsRef, tc:TypeCode) =
+        o.put("undefined", value, tc)
+      
+      static member put (o:IjsObj, index:IjsStr, value:IjsRef, tc:TypeCode) =
+        match index with
+        | StringIndex i -> o.put(i, value, tc)
+        | _ -> o.put(TypeConverter.toString index, value, tc)
+
+      static member put (o:IjsObj, index:IjsObj, value:IjsRef, tc:TypeCode) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.put(i, value, tc)
+        | index -> o.put(index, value, tc)

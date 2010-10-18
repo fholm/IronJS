@@ -52,7 +52,7 @@ module Scope =
       params' |> Seq.map (fun var ->
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
-        let i = Utils.Option.unwrap var.ParamIndex
+        let i = Option.get var.ParamIndex
         Expr.assignBoxValue variable ctx.ParameterExprs.[i]
       )  
       

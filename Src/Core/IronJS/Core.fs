@@ -21,25 +21,26 @@ open System.Globalization
 // the context of IronJS
 //
 //-------------------------------------------------------------------------
-type FunId        = int64
-type ClassId      = int64
-type TypeCode     = uint32
-type BoxField     = string
-type Number       = double
+type FunId = int64
+type ClassId = int64
+type TypeCode = uint32
+type TypeTag = uint32
+type BoxField = string
+type Number = double
 type DelegateType = System.Type
-type HostObject   = System.Object
-type HostType     = System.Type
+type HostObject = System.Object
+type HostType = System.Type
 type ConstructorMode = byte
 type PropertyAttr = int16
 type BoxTag = uint16
 type DescriptorAttr = uint16
 
 type IjsNum = double
+type IjsVal = IjsNum
 type IjsStr = string
 type IjsBool = bool
+type IjsRef = HostObject
 type Class = byte
-
-
 
 //-------------------------------------------------------------------------
 //
@@ -47,15 +48,15 @@ type Class = byte
 //
 //-------------------------------------------------------------------------
 module TypeCodes =
-  let [<Literal>] Box         = 0x00000000u
-  let [<Literal>] Empty       = 0xFFFFFF00u
-  let [<Literal>] Bool        = 0xFFFFFF01u
-  let [<Literal>] Number      = 0xFFFFFF02u
-  let [<Literal>] Clr         = 0xFFFFFF03u
-  let [<Literal>] String      = 0xFFFFFF04u
-  let [<Literal>] Undefined   = 0xFFFFFF05u
-  let [<Literal>] Object      = 0xFFFFFF06u
-  let [<Literal>] Function    = 0xFFFFFF07u
+  let [<Literal>] Box = 0x00000000u
+  let [<Literal>] Empty = 0xFFFFFF00u
+  let [<Literal>] Bool = 0xFFFFFF01u
+  let [<Literal>] Number = 0xFFFFFF02u
+  let [<Literal>] Clr = 0xFFFFFF03u
+  let [<Literal>] String = 0xFFFFFF04u
+  let [<Literal>] Undefined = 0xFFFFFF05u
+  let [<Literal>] Object = 0xFFFFFF06u
+  let [<Literal>] Function = 0xFFFFFF07u
 
   let Names = 
     Map.ofList [
@@ -70,14 +71,38 @@ module TypeCodes =
       (Function, "function")
     ]
 
+module TypeTags =
+  let [<Literal>] Box = 0x00000000u
+  let [<Literal>] Empty = 0xFFFFFF00u
+  let [<Literal>] Bool = 0xFFFFFF01u
+  let [<Literal>] Number = 0xFFFFFF02u
+  let [<Literal>] Host = 0xFFFFFF03u
+  let [<Literal>] String = 0xFFFFFF04u
+  let [<Literal>] Undefined = 0xFFFFFF05u
+  let [<Literal>] Object = 0xFFFFFF06u
+  let [<Literal>] Function = 0xFFFFFF07u
+
+  let Names = 
+    Map.ofList [
+      (Box, "internal")
+      (Empty, "undefined")
+      (Bool, "boolean")
+      (Number, "number")
+      (Host, "clr")
+      (String, "string")
+      (Undefined, "undefined")
+      (Object, "object")
+      (Function, "function")
+    ]
+
 module BoxFields =
-  let [<Literal>] Bool      = "Bool"
-  let [<Literal>] Number    = "Double"
-  let [<Literal>] Clr       = "Clr"
+  let [<Literal>] Bool = "Bool"
+  let [<Literal>] Number = "Double"
+  let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Undefined"
-  let [<Literal>] String    = "String"
-  let [<Literal>] Object    = "Object"
-  let [<Literal>] Function  = "Func"
+  let [<Literal>] String = "String"
+  let [<Literal>] Object = "Object"
+  let [<Literal>] Function = "Func"
 
 module DescriptorAttrs =
   let [<Literal>] None = 0us
@@ -85,23 +110,6 @@ module DescriptorAttrs =
   let [<Literal>] ReadOnly = 2us
   let [<Literal>] DontEnum = 4us
   let [<Literal>] DontDelete = 8us
-
-module PropertyAttrs =
-  let [<Literal>] None        = 0s
-  let [<Literal>] ReadOnly    = 1s
-  let [<Literal>] DontEnum    = 2s
-  let [<Literal>] DontDelete  = 4s
-  let [<Literal>] Immutable   = 5s //1s ||| 4s
-  let [<Literal>] All         = 7s //1s ||| 2s ||| 4s
-
-  let inline canDelete attr = (attr &&& DontDelete) = 0s
-  let inline canEnum attr   = (attr &&& DontEnum) = 0s
-  let inline canWrite attr  = (attr &&& ReadOnly) = 0s
-
-module PropertyClassTypes =
-  let [<Literal>] Global  = -2L
-  let [<Literal>] Dynamic = -1L
-  let [<Literal>] Default = 0L
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
@@ -119,16 +127,16 @@ module DefaultValue =
   let [<Literal>] Number = 2uy
 
 module Classes =
-  let [<Literal>] Object    = 1uy
-  let [<Literal>] Function  = 2uy
-  let [<Literal>] Array     = 3uy
-  let [<Literal>] String    = 4uy
-  let [<Literal>] Regexp    = 5uy
-  let [<Literal>] Boolean   = 6uy
-  let [<Literal>] Number    = 7uy
-  let [<Literal>] Math      = 8uy
-  let [<Literal>] Date      = 9uy
-  let [<Literal>] Error     = 10uy
+  let [<Literal>] Object = 1uy
+  let [<Literal>] Function = 2uy
+  let [<Literal>] Array = 3uy
+  let [<Literal>] String = 4uy
+  let [<Literal>] Regexp  = 5uy
+  let [<Literal>] Boolean = 6uy
+  let [<Literal>] Number = 7uy
+  let [<Literal>] Math = 8uy
+  let [<Literal>] Date = 9uy
+  let [<Literal>] Error = 10uy
 
   let Names = 
     Map.ofList [
@@ -190,7 +198,8 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Type & Tag
     [<FieldOffset(12)>] val mutable Type : TypeCode
-    [<FieldOffset(14)>] val mutable Tag : BoxTag
+    [<FieldOffset(12)>] val mutable Tag : TypeTag
+    [<FieldOffset(14)>] val mutable Marker : uint16
   end
   
 //-------------------------------------------------------------------------
@@ -215,20 +224,20 @@ and [<AllowNullLiteral>] Undefined() =
 //-------------------------------------------------------------------------
 // Class used for the the implementation of hidden classes
 //-------------------------------------------------------------------------
-and [<AllowNullLiteral>] PropertyClass =
+and [<AllowNullLiteral>] PropertyMap =
   val mutable Id : int64
   val mutable Env : IjsEnv
   val mutable NextIndex : int
   val mutable PropertyMap : MutableDict<string, int>
   val mutable FreeIndexes : MutableStack<int>
-  val mutable SubClasses : MutableDict<string, PropertyClass>
+  val mutable SubClasses : MutableDict<string, PropertyMap>
 
   new(env:IjsEnv, map) = {
     Id = env.nextPropertyClassId
     Env = env
     PropertyMap = map
     NextIndex = map.Count
-    SubClasses = MutableDict<string, PropertyClass>() 
+    SubClasses = MutableDict<string, PropertyMap>() 
     FreeIndexes = null
   }
 
@@ -237,13 +246,12 @@ and [<AllowNullLiteral>] PropertyClass =
     Env = env
     PropertyMap = new MutableDict<string, int>()
     NextIndex = 0
-    SubClasses = MutableDict<string, PropertyClass>() 
+    SubClasses = MutableDict<string, PropertyMap>() 
     FreeIndexes = null
   }
 
   member x.isDynamic = 
     x.Id < 0L
-
 
     
 //------------------------------------------------------------------------------
@@ -292,38 +300,26 @@ and Default = delegate of IjsObj * byte -> IjsBox
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte
   val mutable Value : Descriptor
+  val mutable Methods : InternalMethods
   val mutable Prototype : Object
 
   val mutable IndexLength : uint32
-  val mutable IndexValues : Box array
   val mutable IndexSparse : MutableSorted<uint32, Box>
   val mutable IndexDense : Descriptor array
     
-  val mutable PropertyValues : Box array
-  val mutable PropertyClass : PropertyClass
-  val mutable PropertyClassId : ClassId
-  val mutable PropertyAttributes : PropertyAttr array
-  
-  val mutable PropertyValues2 : Descriptor array
+  val mutable PropertyMap : PropertyMap
+  val mutable PropertyDescriptors : Descriptor array
 
-  [<DefaultValue>]
-  val mutable Methods : InternalMethods
+  member x.PropertyMapId = x.PropertyMap.Id
   
-  member x.count = x.PropertyClass.PropertyMap.Count
-  member x.isFull = x.count >= x.PropertyValues.Length
-
-  new (propertyClass, prototype, class', indexSize) = {
+  new (map, prototype, class', indexSize) = {
     Class = class'
     Value = Descriptor()
     Prototype = prototype
+    Methods = Unchecked.defaultof<InternalMethods>
 
     IndexLength = indexSize
     IndexDense =
-      if indexSize <= (Index.Max+1u) && indexSize > 0u
-        then Array.zeroCreate (int indexSize) 
-        else Array.zeroCreate 0
-
-    IndexValues = 
       if indexSize <= (Index.Max+1u) && indexSize > 0u
         then Array.zeroCreate (int indexSize) 
         else Array.zeroCreate 0
@@ -333,30 +329,22 @@ and [<AllowNullLiteral>] Object =
         then MutableSorted<uint32, Box>() 
         else null
 
-    PropertyClass = propertyClass
-
-    PropertyValues = Array.zeroCreate (propertyClass.PropertyMap.Count)
-    PropertyValues2 = Array.zeroCreate (propertyClass.PropertyMap.Count)
-
-    PropertyClassId = propertyClass.Id
-    PropertyAttributes = null
+    PropertyMap = map
+    PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
   }
 
   new () = {
     Class = Classes.Object
     Value = Descriptor()
     Prototype = null
+    Methods = Unchecked.defaultof<InternalMethods>
 
     IndexLength = Index.Min
-    IndexValues = null
     IndexDense = null
     IndexSparse = null
 
-    PropertyClass = null
-    PropertyValues = null
-    PropertyValues2 = null
-    PropertyClassId = PropertyClassTypes.Global
-    PropertyAttributes = null
+    PropertyMap = null
+    PropertyDescriptors = null
   }
   
 //------------------------------------------------------------------------------
@@ -550,13 +538,13 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Boolean_prototype : Object
 
   //Property Classes
-  [<DefaultValue>] val mutable Base_Class : PropertyClass
-  [<DefaultValue>] val mutable Array_Class : PropertyClass
-  [<DefaultValue>] val mutable Function_Class : PropertyClass
-  [<DefaultValue>] val mutable Prototype_Class : PropertyClass
-  [<DefaultValue>] val mutable String_Class : PropertyClass
-  [<DefaultValue>] val mutable Number_Class : PropertyClass
-  [<DefaultValue>] val mutable Boolean_Class : PropertyClass
+  [<DefaultValue>] val mutable Base_Class : PropertyMap
+  [<DefaultValue>] val mutable Array_Class : PropertyMap
+  [<DefaultValue>] val mutable Function_Class : PropertyMap
+  [<DefaultValue>] val mutable Prototype_Class : PropertyMap
+  [<DefaultValue>] val mutable String_Class : PropertyMap
+  [<DefaultValue>] val mutable Number_Class : PropertyMap
+  [<DefaultValue>] val mutable Boolean_Class : PropertyMap
 
   //Methods
   [<DefaultValue>] val mutable Object_methods : InternalMethods

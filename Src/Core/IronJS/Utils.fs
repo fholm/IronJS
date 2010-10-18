@@ -14,18 +14,6 @@ module Utils =
     let first seq' =
       Seq.find (fun _ -> true) seq'
 
-  module List =
-    let opt2lst lst =
-      match lst with 
-      | Some lst -> lst
-      | _ -> []
-
-  module Option =
-    let unwrap opt =
-      match opt with
-      | Some v -> v
-      | _ -> failwith "No value"
-
   module Utils =
     let isNull (o:obj) = Object.ReferenceEquals(o, null)
     let isNotNull o = o |> isNull |> not
@@ -36,12 +24,12 @@ module Utils =
 
   module Descriptor = 
     let hasValue (desc:Descriptor byref) =
-      if Box.isTagged desc.Box.Tag 
+      if Box.isTagged desc.Box.Marker 
         then true
         else desc.Attributes > 0us
 
-    let inline missingAttr attrs attr = attrs &&& attr = 0us
-    let inline hasAttr attrs attr = attrs &&& attr > 0us
+    let missingAttr attrs attr = attrs &&& attr = 0us
+    let hasAttr attrs attr = attrs &&& attr > 0us
 
     let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
     let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
@@ -55,20 +43,39 @@ module Utils =
       isDense x |> not // isDense? ... pause ... NOT!
 
   module Patterns =
-    
-    let (|Number|_|) (box:IjsBox) = 
-      if Box.isNumber box.Tag then Some box.Double else None
 
     let (|Tagged|_|) (box:IjsBox) = 
-      if Box.isTagged box.Tag then Some box.Type else None
+      if Box.isTagged box.Marker then Some box.Type else None
+    
+    let (|Number|_|) (box:IjsBox) = 
+      if Box.isNumber box.Marker then Some box.Double else None
 
-    let (|Index|_|) (num:IjsNum) =
+    let (|NumberIndex|_|) (num:IjsNum) =
       let index = uint32 num
       if double index = num then Some index else None
+
+    let (|NumberAndIndex|_|) (box:IjsBox) =
+      match box with
+      | Number n -> 
+        match n with
+        | NumberIndex i -> Some i
+        | _ -> None
+      | _ -> None
+
+    let (|String|_|) (box:IjsBox) =
+      if box.Type = TypeCodes.String then Some box.String else None
 
     let (|StringIndex|_|) (str:IjsStr) =
       match UInt32.TryParse str with
       | true, num -> Some num
+      | _ -> None
+
+    let (|StringAndIndex|_|) (box:IjsBox) =
+      match box with
+      | String s ->
+        match s with
+        | StringIndex i -> Some i
+        | _ -> None
       | _ -> None
 
   let asRef (x:HostType) = x.MakeByRefType()
@@ -78,7 +85,7 @@ module Utils =
     && (str.[0] >= '0' || str.[0] <= '9') 
     && System.UInt32.TryParse(str, &out)
 
-  let inline refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
+  let refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
 
   let type2tc (t:System.Type) =   
     if   refEquals TypeObjects.Bool t         then TypeCodes.Bool
@@ -153,25 +160,19 @@ module Utils =
     | TypeCodes.Clr         -> TypeObjects.Clr
     | _ -> failwithf "Invalid typecode %i" tc
 
-  let inline isBox (type':HostType) = 
-    Object.ReferenceEquals(type', TypeObjects.Box)
+  let isBox (type':HostType) = Object.ReferenceEquals(type', TypeObjects.Box)
       
-  let inline isObject type' = 
-    (type' = typeof<Object> 
-      || type'.IsSubclassOf(typeof<Object>))
+  let isObject type' = 
+    (type' = typeof<Object> || type'.IsSubclassOf(typeof<Object>))
 
-  let inline isFunction type' = 
-    (type' = typeof<Function> 
-      || type'.IsSubclassOf(typeof<Function>))
+  let isFunction type' = 
+    (type' = typeof<Function> || type'.IsSubclassOf(typeof<Function>))
+    
+  let isDense (x:IjsObj) = Object.ReferenceEquals(x.IndexSparse, null)
+  let isSparse (x:IjsObj) = not (Object.ReferenceEquals(x.IndexSparse, null))
 
-  let inline isSparse (x:IjsObj) =
-    not (Object.ReferenceEquals(x.IndexSparse, null))
-
-  let inline isDense (x:IjsObj) =
-    Object.ReferenceEquals(x.IndexSparse, null)
-
-  let inline isPrimitive (b:Box) =
-    if Box.isNumber b.Tag
+  let isPrimitive (b:Box) =
+    if Box.isNumber b.Marker
       then true
       else 
         match b.Type with
@@ -199,7 +200,7 @@ module Utils =
       box
 
   let unbox (b:Box) =
-    if Box.isNumber b.Tag
+    if Box.isNumber b.Marker
       then b.Double :> obj
       else
       match b.Type with
@@ -265,102 +266,42 @@ module Utils =
     box.Clr <- null
     box
 
-  let inline boxBool (b:bool) =
+  let boxBool (b:bool) =
     let mutable box = Box()
     box.Bool <- b
     box.Type <- TypeCodes.Bool
     box
 
-  let inline boxDouble (d:double) =
+  let boxDouble (d:double) =
     let mutable box = Box()
     box.Double <- d
     box
 
-  let inline boxClr (c:HostObject) =
+  let boxClr (c:HostObject) =
     let mutable box = Box()
     box.Clr <- c
     box.Type <- TypeCodes.Clr
     box
 
-  let inline boxString (s:String) =
-    let mutable box = Box()
-    box.Clr <- s
-    box.Type <- TypeCodes.String
-    box
-
-  let inline boxObject (o:Object) =
-    let mutable box = Box()
-    box.Clr <- o
-    box.Type <- TypeCodes.Object
-    box
-
-  let inline boxFunction (f:Function) =
-    let mutable box = Box()
-    box.Clr <- f
-    box.Type <- TypeCodes.Function
-    box
-      
-  let inline setBoolInArray (arr:Box array) i value =
-    arr.[i].Type  <- TypeCodes.Bool
-    arr.[i].Bool  <- value
-    arr.[i].Clr   <- null
-
-  let inline setNumberInArray (arr:Box array) i value =
-    arr.[i].Double  <- value
-    arr.[i].Clr     <- null
-
-  let inline setClrInArray (arr:Box array) i (value:HostObject) =
-    arr.[i].Type  <- TypeCodes.Clr
-    arr.[i].Clr   <- value
-
-  let inline setStringInArray (arr:Box array) i (value:string) =
-    arr.[i].Type  <- TypeCodes.String
-    arr.[i].Clr   <- value
-
-  let inline setObjectInArray (arr:Box array) i (value:Object) =
-    arr.[i].Type  <- TypeCodes.Object
-    arr.[i].Clr   <- value
-
-  let inline setFunctionInArray (arr:Box array) i (value:Function) =
-    arr.[i].Type  <- TypeCodes.Function
-    arr.[i].Clr   <- value
-
-  let inline boxIjsBool (b:bool) =
-    let mutable box = Box()
-    box.Bool <- b
-    box.Type <- TypeCodes.Bool
-    box
-
-  let inline boxIjsNum (d:double) =
-    let mutable box = Box()
-    box.Double <- d
-    box
-
-  let inline boxHostObject (c:HostObject) =
-    let mutable box = Box()
-    box.Clr <- c
-    box.Type <- TypeCodes.Clr
-    box
-
-  let inline boxIjsStr (s:String) =
-    let mutable box = Box()
-    box.Clr <- s
-    box.Type <- TypeCodes.String
-    box
-
-  let inline boxUndefined (u:Undefined) =
+  let boxUndefined (u:Undefined) =
     let mutable box = Box()
     box.Clr <- u
     box.Type <- TypeCodes.Undefined
     box
 
-  let inline boxIjsObj (o:Object) =
+  let boxString (s:String) =
+    let mutable box = Box()
+    box.Clr <- s
+    box.Type <- TypeCodes.String
+    box
+
+  let boxObject (o:Object) =
     let mutable box = Box()
     box.Clr <- o
     box.Type <- TypeCodes.Object
     box
 
-  let inline boxIjsFunc (f:Function) =
+  let boxFunction (f:Function) =
     let mutable box = Box()
     box.Clr <- f
     box.Type <- TypeCodes.Function

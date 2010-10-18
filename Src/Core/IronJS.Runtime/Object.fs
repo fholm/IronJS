@@ -25,7 +25,7 @@ module Object =
   //15.2.4.5
   let hasOwnProperty (o:IjsObj) (name:IjsStr) =
     match Api.ObjectModule.Property.getIndex o name with
-    | true, index -> Utils.Descriptor.hasValue &o.PropertyValues2.[index]
+    | true, index -> Utils.Descriptor.hasValue &o.PropertyDescriptors.[index]
     | _ ->
       let mutable i = Index.Min   
       if Utils.isStringIndex(name, &i) 

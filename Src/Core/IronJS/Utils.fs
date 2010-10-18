@@ -54,18 +54,15 @@ module Utils =
     let isSparse (x:IjsObj) =
       isDense x |> not // isDense? ... pause ... NOT!
 
-  module TypeCode =
-    ()
-
   module Patterns =
     
-    let inline (|Number|_|) (box:IjsBox) = 
+    let (|Number|_|) (box:IjsBox) = 
       if Box.isNumber box.Tag then Some box.Double else None
 
     let (|Tagged|_|) (box:IjsBox) = 
       if Box.isTagged box.Tag then Some box.Type else None
 
-    let inline (|Index|_|) (num:IjsNum) =
+    let (|Index|_|) (num:IjsNum) =
       let index = uint32 num
       if double index = num then Some index else None
 

@@ -1352,6 +1352,13 @@ module ObjectModule =
           else o.IndexSparse.[index]
 
     let get' = GetIndex get
+
+    //--------------------------------------------------------------------------
+    let test i1 i2 =
+      let y = i1 + i2
+      let x = y + i1
+      let z = x + y + i2
+      z + x + y + i1
           
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (i:uint32) =
@@ -1391,3 +1398,9 @@ module ObjectModule =
 
         | Tagged tc -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
+
+      //------------------------------------------------------------------------
+      static member put (o:IjsObj, index:IjsNum, value:IjsNum) =
+        match index with
+        | Index i -> o.put(i, value)
+        | _ -> o.put(TypeConverter.toString index, value)

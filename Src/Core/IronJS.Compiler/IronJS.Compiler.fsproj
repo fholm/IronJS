@@ -105,6 +105,7 @@
     <Compile Include="Convert.fs" />
     <Compile Include="ControlFlow.fs" />
     <Compile Include="Core.fs" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">

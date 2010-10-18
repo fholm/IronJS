@@ -93,6 +93,7 @@
     <Compile Include="Number.fs" />
     <Compile Include="Boolean.fs" />
     <Compile Include="Hosting.fs" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronJS.Compiler\IronJS.Compiler.fsproj">

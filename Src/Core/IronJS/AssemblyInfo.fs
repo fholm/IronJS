@@ -16,7 +16,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 [<assembly: Guid("93e32fd4-5c93-4d0b-91d5-0b4e54f0ce2d")>]
 
-[<assembly: AssemblyVersion("0.1.91.0")>]
-[<assembly: AssemblyFileVersion("0.1.91.0")>]
+[<assembly: AssemblyVersion(Version.String)>]
+[<assembly: AssemblyFileVersion(Version.String)>]
 
 ()

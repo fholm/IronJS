@@ -16,7 +16,7 @@ open System.Runtime.InteropServices
 [<assembly: ComVisible(false)>]
 [<assembly: Guid("91f97914-2e29-4118-a5dd-7f9d1709a14b")>]
 
-[<assembly: AssemblyVersion("0.1.91.0")>]
-[<assembly: AssemblyFileVersion("0.1.91.0")>]
+[<assembly: AssemblyVersion(IronJS.Version.String)>]
+[<assembly: AssemblyFileVersion(IronJS.Version.String)>]
 
 ()

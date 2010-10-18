@@ -1,13 +1,15 @@
 ﻿namespace IronJS
 
 module Version =
-  let Major = 0
-  let Minor = 1
-  let Build = 91
-  let Tag = "preview"
-  let Tupled = Major, Minor, Build, Tag
-  let String = sprintf "%i.%i.%i-%s" Major Minor Build Tag
-  let FullName = sprintf "IronJS %s" String
+  let [<Literal>] Major = 0
+  let [<Literal>] Minor = 1
+  let [<Literal>] Build = 91
+  let [<Literal>] Revision = 0
+  let [<Literal>] Tag = "preview"
+  let [<Literal>] String = "0.1.91.0"
+  let Tagged = sprintf "%s-%s" String Tag
+  let Tupled = Major, Minor, Build, Revision, Tag
+  let FullName = sprintf "IronJS %s" Tagged
 
 module Ops2 =
   let inline (|!>) a b = b !a 
@@ -28,7 +30,6 @@ module Ops =
   //'Unwraps' an Option<'a> if it has  a value otherwise throws an exception
   let (!?) opt = match opt with | Some v -> v | _ -> failwith "No value"
 
-[<CompiledName("AliasesModule")>]
 module Aliases = 
   open System
     

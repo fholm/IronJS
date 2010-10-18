@@ -60,6 +60,11 @@ module Object =
       
   //----------------------------------------------------------------------------
   module Index =
+
+    let convertIndex_BoxVal expr index value =
+      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+        [Dlr.callStaticT<Api.ObjectModule.Index.Converters> 
+          "put" [tmp; index; value]])
     
     //--------------------------------------------------------------------------
     let putBox expr index value =
@@ -70,6 +75,39 @@ module Object =
             (Expr.Object.Methods.putBoxIndex tmp)
             [tmp; index; value]])
 
-      | TypeCode -> failwith "Que?"
-        
+      | TypeCode -> convertIndex_BoxVal expr index value
 
+    //--------------------------------------------------------------------------
+    let putVal expr index value =
+      match index with
+      | Index ->
+        Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+          [Dlr.invoke
+            (Expr.Object.Methods.putValIndex tmp)
+            [tmp; index; value]])
+            
+      | TypeCode -> convertIndex_BoxVal expr index value
+
+    //--------------------------------------------------------------------------
+    let putRef expr index value =
+      match index with
+      | Index ->
+        Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+          [Dlr.invoke
+            (Expr.Object.Methods.putRefIndex tmp)
+            [tmp; index; value; value |> Utils.expr2tc |> Dlr.const']])
+            
+      | TypeCode -> 
+        Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+          [Dlr.callStaticT<Api.ObjectModule.Index.Converters> 
+            "put" [tmp; index; value; value |> Utils.expr2tc |> Dlr.const']])
+      
+    //--------------------------------------------------------------------------
+    let put expr index value =
+      match value with
+      | Box -> putBox expr index value
+      | Val -> putVal expr index value
+      | Ref -> putRef expr index value
+
+    let get expr index =
+      

@@ -4,29 +4,6 @@ open IronJS
 open IronJS.Expr.Patterns
 
 module Expr =
-        
-  //----------------------------------------------------------------------------
-  let jsObjectPutIndex expr index (value:Dlr.Expr) =
-    let methodName =
-      if value.Type = typeof<IjsNum>
-        then "PutValIndex"
-        else "PutBoxIndex"
-
-    Expr.blockTmpT<IjsObj> expr (fun tmp ->
-      [Dlr.invoke
-        (Dlr.property (Dlr.field tmp "Methods") methodName)
-        [tmp; index; value]
-      ]
-    )
-      
-  //----------------------------------------------------------------------------
-  let jsObjectGetIndex expr index =
-    Expr.blockTmpT<IjsObj> expr (fun tmp ->
-      [Dlr.invoke 
-        (Dlr.property (Dlr.field tmp "Methods") "GetIndex")
-        [tmp; index]
-      ]
-    )
       
   //----------------------------------------------------------------------------
   let jsFunctionInvoke func this' args =

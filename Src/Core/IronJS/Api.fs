@@ -1005,6 +1005,15 @@ module Extensions =
 
     member o.put (name, v:IjsRef, tc:TypeCode) =
       o.Methods.PutRefProperty.Invoke(o, name, v, tc)
+
+    member o.get (name) =
+      o.Methods.GetProperty.Invoke(o, name)
+
+    member o.has (name) =
+      o.Methods.HasProperty.Invoke(o, name)
+
+    member o.delete (name) =
+      o.Methods.DeleteProperty.Invoke(o, name)
       
     member o.put (index, v:IjsBox) =
       o.Methods.PutBoxIndex.Invoke(o, index, v)
@@ -1033,6 +1042,15 @@ module Extensions =
 
     member o.put (index, v:IjsRef, tc:TypeCode) =
       o.Methods.PutRefIndex.Invoke(o, index, v, tc)
+
+    member o.get (index) =
+      o.Methods.GetIndex.Invoke(o, index)
+
+    member o.has (index) =
+      o.Methods.HasIndex.Invoke(o, index)
+
+    member o.delete (index) =
+      o.Methods.DeleteIndex.Invoke(o, index)
 
 //------------------------------------------------------------------------------
 module ObjectModule =
@@ -1500,3 +1518,71 @@ module ObjectModule =
         match TypeConverter.toString index with
         | StringIndex i -> o.put(i, value, tc)
         | index -> o.put(index, value, tc)
+
+      //------------------------------------------------------------------------
+      static member get (o:IjsObj, index:IjsBox) =
+        match index with
+        | NumberAndIndex i
+        | StringAndIndex i -> o.get i
+        | Tagged tc -> o.get(TypeConverter.toString index)
+        | _ -> failwith "Que?"
+      
+      static member get (o:IjsObj, index:IjsBool) =
+        o.get(TypeConverter.toString index)
+      
+      static member get (o:IjsObj, index:IjsNum) =
+        match index with
+        | NumberIndex i -> o.get i
+        | _ -> o.get(TypeConverter.toString index)
+        
+      static member get (o:IjsObj, index:HostObject) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.get i
+        | index -> o.get(TypeConverter.toString index)
+
+      static member get (o:IjsObj, index:Undefined) =
+        o.get("undefined")
+      
+      static member get (o:IjsObj, index:IjsStr) =
+        match index with
+        | StringIndex i -> o.get i
+        | _ -> o.get index
+
+      static member get (o:IjsObj, index:IjsObj) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.get i
+        | index -> o.get index
+
+      //------------------------------------------------------------------------
+      static member has (o:IjsObj, index:IjsBox) =
+        match index with
+        | NumberAndIndex i
+        | StringAndIndex i -> o.has i
+        | Tagged tc -> o.has(TypeConverter.toString index)
+        | _ -> failwith "Que?"
+      
+      static member has (o:IjsObj, index:IjsBool) =
+        o.has(TypeConverter.toString index)
+      
+      static member has (o:IjsObj, index:IjsNum) =
+        match index with
+        | NumberIndex i -> o.has i
+        | _ -> o.has(TypeConverter.toString index)
+        
+      static member has (o:IjsObj, index:HostObject) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.has i
+        | index -> o.has(TypeConverter.toString index)
+
+      static member has (o:IjsObj, index:Undefined) =
+        o.has("undefined")
+      
+      static member has (o:IjsObj, index:IjsStr) =
+        match index with
+        | StringIndex i -> o.has i
+        | _ -> o.has index
+
+      static member has (o:IjsObj, index:IjsObj) =
+        match TypeConverter.toString index with
+        | StringIndex i -> o.has i
+        | index -> o.has index

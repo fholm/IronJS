@@ -5,6 +5,11 @@ open IronJS
 open IronJS.Expr.Patterns
 
 module Object =
+
+  //----------------------------------------------------------------------------
+  let ghd expr method' name = 
+    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+      [Dlr.invoke (method' tmp) [tmp; name]])
   
   //----------------------------------------------------------------------------
   module Property = 
@@ -108,6 +113,25 @@ module Object =
       | Box -> putBox expr index value
       | Val -> putVal expr index value
       | Ref -> putRef expr index value
-
-    let get expr index =
       
+  
+    //--------------------------------------------------------------------------
+    let get expr name = 
+      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+        [Dlr.invoke 
+          (Expr.Object.Methods.getProperty tmp)
+          [tmp; name]])
+  
+    //--------------------------------------------------------------------------
+    let has expr name = 
+      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+        [Dlr.invoke 
+          (Expr.Object.Methods.hasProperty tmp)
+          [tmp; name]])
+  
+    //--------------------------------------------------------------------------
+    let delete expr name = 
+      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
+        [Dlr.invoke 
+          (Expr.Object.Methods.deleteProperty tmp)
+          [tmp; name]])

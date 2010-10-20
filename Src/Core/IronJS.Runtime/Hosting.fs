@@ -9,19 +9,19 @@ module Hosting =
     let x = IjsEnv()
 
     x.Object_methods <- {
-      GetProperty = Api.ObjectModule.Property.get'
-      HasProperty = Api.ObjectModule.Property.has'
-      DeleteProperty = Api.ObjectModule.Property.delete'
-      PutBoxProperty = Api.ObjectModule.Property.putBox'
-      PutRefProperty = Api.ObjectModule.Property.putRef'
-      PutValProperty = Api.ObjectModule.Property.putVal'
+      GetProperty = Api.ObjectModule.Property.Delegates.get
+      HasProperty = Api.ObjectModule.Property.Delegates.has
+      DeleteProperty = Api.ObjectModule.Property.Delegates.delete
+      PutBoxProperty = Api.ObjectModule.Property.Delegates.putBox
+      PutRefProperty = Api.ObjectModule.Property.Delegates.putRef
+      PutValProperty = Api.ObjectModule.Property.Delegates.putVal
 
-      GetIndex = Api.ObjectModule.Index.get'
-      HasIndex = Api.ObjectModule.Index.has'
-      DeleteIndex = Api.ObjectModule.Index.delete'
-      PutBoxIndex = Api.ObjectModule.Index.putBox'
-      PutRefIndex = Api.ObjectModule.Index.putRef'
-      PutValIndex = Api.ObjectModule.Index.putVal'
+      GetIndex = Api.ObjectModule.Index.Delegates.get
+      HasIndex = Api.ObjectModule.Index.Delegates.has
+      DeleteIndex = Api.ObjectModule.Index.Delegates.delete
+      PutBoxIndex = Api.ObjectModule.Index.Delegates.putBox
+      PutRefIndex = Api.ObjectModule.Index.Delegates.putRef
+      PutValIndex = Api.ObjectModule.Index.Delegates.putVal
 
       Default = Api.ObjectModule.defaultValue'
     }

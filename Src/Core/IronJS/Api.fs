@@ -1242,8 +1242,6 @@ module ObjectModule =
       o.PropertyDescriptors.[index].Box <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
-    let putBox' = PutBoxProperty putBox
-      
     //--------------------------------------------------------------------------
     #if DEBUG
     let putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
@@ -1254,8 +1252,6 @@ module ObjectModule =
       o.PropertyDescriptors.[index].Box.Clr <- val'
       o.PropertyDescriptors.[index].Box.Type <- tc
       
-    let putRef' = PutRefProperty putRef
-
     //--------------------------------------------------------------------------
     #if DEBUG
     let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
@@ -1266,8 +1262,6 @@ module ObjectModule =
       o.PropertyDescriptors.[index].Box.Double <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
-    let putVal' = PutValProperty putVal
-      
     //--------------------------------------------------------------------------
     #if DEBUG
     let get (o:IjsObj) (name:IjsStr) =
@@ -1278,14 +1272,10 @@ module ObjectModule =
       | _, -1 -> Utils.boxedUndefined
       | pair -> (fst pair).PropertyDescriptors.[snd pair].Box
 
-    let get' = GetProperty get
-      
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (name:IjsStr) =
       find o name |> snd > -1
 
-    let has' = HasProperty has
-      
     //--------------------------------------------------------------------------
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
@@ -1303,11 +1293,15 @@ module ObjectModule =
         canDelete
 
       | _ -> true
-
-    let delete' = DeleteProperty delete
-
-    let putFunction (o:IjsObj) (name:IjsStr) (ref:HostObject) =
-      o.Methods.PutRefProperty.Invoke(o, name, ref, TypeCodes.Function)
+      
+    //--------------------------------------------------------------------------
+    module Delegates =
+      let putBox = PutBoxProperty putBox
+      let putVal = PutValProperty putVal
+      let putRef = PutRefProperty putRef
+      let get = GetProperty get
+      let has = HasProperty has
+      let delete = DeleteProperty delete
     
   //----------------------------------------------------------------------------
   module Index =
@@ -1396,7 +1390,6 @@ module ObjectModule =
 
       updateLength o i
 
-    let putBox' = PutBoxIndex putBox
 
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1421,8 +1414,6 @@ module ObjectModule =
 
       updateLength o i
 
-    let putVal' = PutValIndex putVal
-
     //--------------------------------------------------------------------------
     #if DEBUG
     let putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
@@ -1446,8 +1437,6 @@ module ObjectModule =
 
       updateLength o i
 
-    let putRef' = PutRefIndex putRef
-
     //--------------------------------------------------------------------------
     #if DEBUG
     let get (o:IjsObj) (i:uint32) =
@@ -1460,8 +1449,6 @@ module ObjectModule =
         if isDense 
           then o.IndexDense.[int index].Box
           else o.IndexSparse.[index]
-
-    let get' = GetIndex get
           
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (i:uint32) =
@@ -1469,8 +1456,6 @@ module ObjectModule =
       | null, _, _ -> false
       | _ -> true
 
-    let has' = HasIndex has
-      
     //--------------------------------------------------------------------------
     let delete (o:IjsObj) (i:uint32) =
       match find o i with
@@ -1485,8 +1470,15 @@ module ObjectModule =
 
           true
         else false
-
-    let delete' = DeleteIndex delete
+        
+    //--------------------------------------------------------------------------
+    module Delegates =
+      let putBox = PutBoxIndex putBox
+      let putVal = PutValIndex putVal
+      let putRef = PutRefIndex putRef
+      let get = GetIndex get
+      let has = HasIndex has
+      let delete = DeleteIndex delete
     
     //--------------------------------------------------------------------------
     type Converters =

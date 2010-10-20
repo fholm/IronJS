@@ -12,6 +12,7 @@
 open System
 open IronJS
 open IronJS.Api
+open IronJS.Api.Extensions
 open System.Runtime.InteropServices
 
 let ctx = Hosting.Context.Create()

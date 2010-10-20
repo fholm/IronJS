@@ -109,7 +109,7 @@ module Extensions =
 module Environment =
 
   open Extensions
-  
+
   //----------------------------------------------------------------------------
   let hasCompiler (env:IjsEnv) funcId =
     env.Compilers.ContainsKey funcId
@@ -190,6 +190,7 @@ module Environment =
     
   //----------------------------------------------------------------------------
   module MethodInfo =
+
     let createObject = 
       Reflected.getApiMethodInfo "Environment" "createObject"
 
@@ -1462,13 +1463,6 @@ module ObjectModule =
           else o.IndexSparse.[index]
 
     let get' = GetIndex get
-
-    //--------------------------------------------------------------------------
-    let test i1 i2 =
-      let y = i1 + i2
-      let x = y + i1
-      let z = x + y + i2
-      z + x + y + i1
           
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (i:uint32) =

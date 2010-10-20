@@ -75,7 +75,7 @@ module Global =
       (Api.DelegateFunction.create
         env (new Func<Compiler.EvalTarget, IjsBox>(eval)))
     )
-    
+
     //15.1.2.2
     env.Globals.put("parseFloat",
       (Api.DelegateFunction.create

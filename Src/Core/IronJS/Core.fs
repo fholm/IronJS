@@ -55,8 +55,8 @@ module TypeCodes =
   let [<Literal>] Clr = 0xFFFFFF03u
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
-  let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] Function = 0xFFFFFF07u
+  let [<Literal>] Object = 0xFFFFFF07u
+  let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
     Map.ofList [
@@ -73,25 +73,25 @@ module TypeCodes =
 
 module TypeTags =
   let [<Literal>] Box = 0x00000000u
-  let [<Literal>] Empty = 0xFFFFFF00u
   let [<Literal>] Bool = 0xFFFFFF01u
   let [<Literal>] Number = 0xFFFFFF02u
   let [<Literal>] Host = 0xFFFFFF03u
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
   let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] Function = 0xFFFFFF07u
+  let [<Literal>] UserObject = 0xFFFFFF07u
+  let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
     Map.ofList [
       (Box, "internal")
-      (Empty, "undefined")
       (Bool, "boolean")
       (Number, "number")
       (Host, "clr")
       (String, "string")
       (Undefined, "undefined")
       (Object, "object")
+      (UserObject, "object")
       (Function, "function")
     ]
 
@@ -293,6 +293,14 @@ and Default = delegate of IjsObj * byte -> IjsBox
 
 
 //------------------------------------------------------------------------------
+// 
+//------------------------------------------------------------------------------
+(*and [<AllowNullLiteral>] IjsObj =
+  val mutable Methods : InternalMethods*)
+
+
+
+//------------------------------------------------------------------------------
 // Base class used to represent all objects that are exposed as native
 // javascript objects to user code.
 //------------------------------------------------------------------------------
@@ -305,7 +313,7 @@ and [<AllowNullLiteral>] Object =
   val mutable IndexLength : uint32
   val mutable IndexSparse : MutableSorted<uint32, Box>
   val mutable IndexDense : Descriptor array
-    
+
   val mutable PropertyMap : PropertyMap
   val mutable PropertyDescriptors : Descriptor array
 

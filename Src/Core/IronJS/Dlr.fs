@@ -154,6 +154,9 @@ module Dlr =
 
   let callStaticGenericT<'a> = callStaticGeneric typeof<'a>
 
+  let callInstanceMethod (expr:Expr) (mi:MethodInfo) (args:Expr seq) = 
+    Expr.Call(expr, mi, args) :> Expr
+
   let callMethod (mi:MethodInfo) (args:Expr seq) = 
     Expr.Call(null, mi, args) :> Expr
 

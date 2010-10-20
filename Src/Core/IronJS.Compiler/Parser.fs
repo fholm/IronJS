@@ -196,6 +196,7 @@ module Ast =
 
     EvalMode: EvalMode
     DynamicLookup: bool
+    ContainsArguments: bool
 
     ScopeType: ScopeType
     Variables: Variable Set
@@ -267,6 +268,7 @@ module Ast =
 
       EvalMode = Clean
       DynamicLookup = false
+      ContainsArguments = false
 
       ScopeType = FunctionScope
       Variables = Set.empty

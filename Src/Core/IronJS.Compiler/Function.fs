@@ -37,40 +37,19 @@ module Function =
   //----------------------------------------------------------------------------
   let create ctx compiler id tree =
     //Make sure a compiler exists for this function
-    if not (Api.Environment.hasCompiler (ctx.Target.Environment, id)) then
-      Api.Environment.addCompiler(
-        ctx.Target.Environment, id, makeCompiler ctx compiler tree
-      )
-
-    let argCount = 
-      Dlr.const' (double (scopeParamCount tree))
+    if Api.Environment.hasCompiler ctx.Target.Environment id |> not then
+      (Api.Environment.addCompilerId 
+        ctx.Target.Environment id (makeCompiler ctx compiler tree))
 
     let funcArgs = [
       (ctx.Env)
       (Dlr.const' id)
+      (Dlr.const' (scopeParamCount tree))
       (ctx.ChainExpr)
       (ctx.DynamicExpr)
     ]
 
-    let prototypeArgs = [
-      ctx.Env_Prototype_Class; 
-      ctx.Env_Object_prototype; 
-      Dlr.const' Classes.Object;
-      Dlr.const' 0u
-    ]
-
-    let func = Dlr.paramT<IjsFunc> "function"
-    let prototype = Dlr.paramT<IjsObj> "prototype"
-
-    Dlr.block [func; prototype] [
-      (Dlr.assign func (Dlr.newArgsT<IjsFunc> funcArgs))
-      (Dlr.assign (Dlr.field func "Methods") (Dlr.field ctx.Env "Object_methods"))
-      (Dlr.assign prototype (Dlr.newArgsT<IjsObj> prototypeArgs))
-      (Expr.assignValue (Expr.propertyValue prototype Dlr.int0) func)
-      (Expr.assignValue (Expr.propertyValue func Dlr.int0) argCount)
-      (Expr.assignValue (Expr.propertyValue func Dlr.int1) prototype)
-      (func)
-    ]
+    Dlr.callMethod (Api.Environment.MethodInfo.createFunction) funcArgs
     
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -115,7 +94,7 @@ module Function =
       (fun x -> 
         (Api.Expr.jsMethodInvoke
           (x)
-          (fun x -> Api.Expr.jsObjectGetIndex x index)
+          (fun x -> Object.Index.get x index)
           (args)
         )
       )

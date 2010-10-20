@@ -106,7 +106,6 @@ module BoxFields =
 
 module DescriptorAttrs =
   let [<Literal>] None = 0us
-  let [<Literal>] HasValue = 1us
   let [<Literal>] ReadOnly = 2us
   let [<Literal>] DontEnum = 4us
   let [<Literal>] DontDelete = 8us

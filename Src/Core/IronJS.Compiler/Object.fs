@@ -41,6 +41,14 @@ module Object =
       | Box -> putBox expr name value
       | Ref -> putRef expr name value
       | Val -> putVal expr name value
+
+    //--------------------------------------------------------------------------
+    let putName expr name (value:Dlr.Expr) = 
+      let name = Dlr.const' name
+      match value with
+      | Box -> putBox expr name value
+      | Ref -> putRef expr name value
+      | Val -> putVal expr name value
   
     //--------------------------------------------------------------------------
     let get expr name = 
@@ -89,7 +97,7 @@ module Object =
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           [Dlr.invoke
             (Expr.Object.Methods.putValIndex tmp)
-            [tmp; index; value]])
+            [tmp; index; Expr.normalizeVal value]])
             
       | TypeCode -> convertIndex_BoxVal expr index value
 

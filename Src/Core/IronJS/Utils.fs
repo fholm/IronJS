@@ -23,10 +23,10 @@ module Utils =
     let isTagged tag = tag > 0xFFF8us
 
   module Descriptor = 
-    let hasValue (desc:Descriptor byref) =
+    let hasValue (desc:Descriptor) =
       if Box.isTagged desc.Box.Marker 
         then true
-        else desc.Attributes > 0us
+        else desc.HasValue || desc.Attributes > 0us
 
     let missingAttr attrs attr = attrs &&& attr = 0us
     let hasAttr attrs attr = attrs &&& attr > 0us

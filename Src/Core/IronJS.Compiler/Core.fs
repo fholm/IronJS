@@ -220,7 +220,7 @@ module Core =
     let index = _compileIndex ctx index
     (Expr.testIsObject
       (compileAst ctx tree)
-      (fun x -> Api.Expr.jsObjectGetIndex x index)
+      (fun x -> Object.Index.get x index)
       (fun x -> Expr.undefinedBoxed)
     )
       
@@ -287,29 +287,22 @@ module Core =
       (Expr.assignValue ctx.Env_Return (compileAst ctx tree))
       (Dlr.returnVoid ctx.ReturnLabel)
     ]
-
+    
+  //----------------------------------------------------------------------------
   and private _compileArray ctx indexes = 
     let length = indexes.Length
-    let args = [
-      ctx.Env_Array_Class
-      ctx.Env_Array_prototype
-      Dlr.const' Classes.Array
-      Dlr.const' (uint32 length)
-    ]
+    let args = [ctx.Env; Dlr.const' (uint32 length)]
 
     Dlr.blockTmpT<IjsObj> (fun tmp ->
       [
-        (Dlr.assign tmp (Dlr.newArgsT<IjsObj> args))
+        (Dlr.assign tmp
+          (Dlr.callMethod
+            Api.Environment.MethodInfo.createArray args))
+
         (List.mapi (fun i t ->
-          (Expr.assignValue
-            (Dlr.indexInt (Dlr.field tmp "IndexValues") i)
-            (compileAst ctx t)
-          )
+          (Object.Index.put tmp (uint32 i |> Dlr.const') (compileAst ctx t))
         ) indexes) |> Dlr.blockSimple
-        (Expr.assignValue
-          (Expr.propertyValue tmp Dlr.int0)
-          (Dlr.const' (double length))
-        )
+
         (tmp :> Dlr.Expr)
       ] |> Seq.ofList
     )
@@ -334,7 +327,9 @@ module Core =
       Dlr.const' pc; 
     ]
 
-    let newExpr = Dlr.callStaticT<Api.Environment> "createObject" newArgs
+    let newExpr = 
+      (Dlr.callMethod 
+        Api.Environment.MethodInfo.createObjectWithMap newArgs)
 
     //Set properties
     Dlr.blockTmpT<IjsObj> (fun tmp -> 
@@ -428,7 +423,7 @@ module Core =
           (Expr.testIsObject 
             (compileAst ctx tree)
             (fun x -> Object.Property.put x name value)
-            (fun x -> value)
+            (fun x -> Dlr.void')
           )
         ]
       )
@@ -439,8 +434,8 @@ module Core =
         [
           (Expr.testIsObject
             (compileAst ctx tree)
-            (fun x -> Api.Expr.jsObjectPutIndex x index value)
-            (fun x -> value)
+            (fun x -> Object.Index.put x index value)
+            (fun x -> Dlr.void')
           )
         ]
       )

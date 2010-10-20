@@ -123,7 +123,7 @@ module Hosting =
       env.Globals.Methods.GetProperty.Invoke(env.Globals, name)
 
     member x.CreateDelegateFunction delegate' =
-      Api.DelegateFunction<'a>.create(env, delegate')
+      Api.DelegateFunction.create env delegate'
 
     static member Create () =
       new Context(createEnvironment())

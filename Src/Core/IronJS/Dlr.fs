@@ -3,6 +3,7 @@
 module Dlr = 
 
   open System.Dynamic
+  open System.Reflection
   open System.Linq.Expressions
 
   //Double aliases, 'Et' and 'EtParam' will be removed later
@@ -152,6 +153,9 @@ module Dlr =
     | Some(method') -> Et.Call(null, method', args) :> Expr
 
   let callStaticGenericT<'a> = callStaticGeneric typeof<'a>
+
+  let callMethod (mi:MethodInfo) (args:Expr seq) = 
+    Expr.Call(null, mi, args) :> Expr
 
   let cast typ expr = Et.Convert(expr, typ) :> Et
   let castT<'a> = cast typeof<'a> 

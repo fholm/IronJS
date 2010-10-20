@@ -65,37 +65,37 @@ module Global =
 
   //15.1.1
   let setup (env:IjsEnv) =
-    env.Globals <- Api.Environment.createObject(env)
+    env.Globals <- Api.Environment.createObject env
     env.Globals.put("NaN", NaN) //15.1.1.1
     env.Globals.put("Infinity", PosInf) //15.1.1.2
     env.Globals.put("undefined", Undefined.Instance) //15.1.1.3
 
     //15.1.2.1
     env.Globals.put("eval", 
-      Api.DelegateFunction<_>
-        .create(env, new Func<Compiler.EvalTarget, IjsBox>(eval))
+      (Api.DelegateFunction.create
+        env (new Func<Compiler.EvalTarget, IjsBox>(eval)))
     )
     
     //15.1.2.2
     env.Globals.put("parseFloat",
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsStr, IjsBox>(parseFloat))
+      (Api.DelegateFunction.create
+        env (new Func<IjsStr, IjsBox>(parseFloat)))
     )
     
     //15.1.2.3
     env.Globals.put("parseInt", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsStr, IjsBox>(parseInt))
+      (Api.DelegateFunction.create
+        env (new Func<IjsStr, IjsBox>(parseInt)))
     )
     
     //15.1.2.4
     env.Globals.put("isNaN", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsNum, IjsBox>(isNaN))
+      (Api.DelegateFunction.create
+        env (new Func<IjsNum, IjsBox>(isNaN)))
     )
     
     //15.1.2.5
     env.Globals.put("isFinite", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsNum, IjsBox>(isFinite))
+      (Api.DelegateFunction.create
+        env (new Func<IjsNum, IjsBox>(isFinite)))
     )

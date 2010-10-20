@@ -88,7 +88,7 @@ module Expr =
   let normalizeVal (expr:Dlr.Expr) =
     if expr.Type = typeof<IjsBool> then bool2val expr else expr
 
-  let propertyValues obj = Dlr.field obj "PropertyValues"
+  let propertyValues obj = Dlr.field obj "PropertyDescriptors"
   let propertyValue obj i = Dlr.index (propertyValues obj) [i]
 
   module Object =

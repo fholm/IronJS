@@ -4,6 +4,216 @@ open System
 open IronJS
 open IronJS.Aliases
 
+module Reflected =
+
+  open System.Reflection
+  open System.Collections.Concurrent
+
+  let private apiTypes = ConcurrentDictionary<string, System.Type>()
+  let private bindingFlags = BindingFlags.Static ||| BindingFlags.Public
+
+  let private assembly = 
+    AppDomain.CurrentDomain.GetAssemblies() 
+      |> Array.find (fun x -> x.FullName.StartsWith("IronJS,"))
+
+  let rec getApiMethodInfo type' method' =
+    let found, typeObj = apiTypes.TryGetValue type'
+    if found then typeObj.GetMethod(method', bindingFlags)
+    else
+      match assembly.GetType("IronJS.Api." + type', false) with
+      | null -> null
+      | typeObj ->
+        apiTypes.TryAdd(type', typeObj) |> ignore
+        getApiMethodInfo type' method'
+
+module Extensions = 
+
+  open Utils.Patterns
+
+  type Object with 
+
+    member o.put (name, v:IjsBox) =
+      o.Methods.PutBoxProperty.Invoke(o, name, v)
+
+    member o.put (name, v:IjsBool) =
+      let v = if v then TaggedBools.True else TaggedBools.False
+      o.Methods.PutValProperty.Invoke(o, name, v)
+
+    member o.put (name, v:IjsNum) =
+      o.Methods.PutValProperty.Invoke(o, name, v)
+
+    member o.put (name, v:HostObject) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Clr)
+
+    member o.put (name, v:IjsStr) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.String)
+
+    member o.put (name, v:Undefined) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Undefined)
+
+    member o.put (name, v:IjsObj) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Object)
+
+    member o.put (name, v:IjsFunc) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
+
+    member o.put (name, v:IjsRef, tc:TypeCode) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, tc)
+
+    member o.get (name) =
+      o.Methods.GetProperty.Invoke(o, name)
+
+    member o.has (name) =
+      o.Methods.HasProperty.Invoke(o, name)
+
+    member o.delete (name) =
+      o.Methods.DeleteProperty.Invoke(o, name)
+      
+    member o.put (index, v:IjsBox) =
+      o.Methods.PutBoxIndex.Invoke(o, index, v)
+
+    member o.put (index, v:IjsBool) =
+      let v = if v then TaggedBools.True else TaggedBools.False
+      o.Methods.PutValIndex.Invoke(o, index, v)
+
+    member o.put (index, v:IjsNum) =
+      o.Methods.PutValIndex.Invoke(o, index, v)
+
+    member o.put (index, v:HostObject) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Clr)
+
+    member o.put (index, v:IjsStr) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.String)
+
+    member o.put (index, v:Undefined) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Undefined)
+
+    member o.put (index, v:IjsObj) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Object)
+
+    member o.put (index, v:IjsFunc) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Function)
+
+    member o.put (index, v:IjsRef, tc:TypeCode) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, tc)
+
+    member o.get (index) =
+      o.Methods.GetIndex.Invoke(o, index)
+
+    member o.has (index) =
+      o.Methods.HasIndex.Invoke(o, index)
+
+    member o.delete (index) =
+      o.Methods.DeleteIndex.Invoke(o, index)
+
+module Environment =
+
+  open Extensions
+  
+  //----------------------------------------------------------------------------
+  let hasCompiler (env:IjsEnv) funcId =
+    env.Compilers.ContainsKey funcId
+
+  //----------------------------------------------------------------------------
+  let addCompilerId (env:IjsEnv) funId compiler =
+    if hasCompiler env funId |> not then
+      env.Compilers.Add(funId, CachedCompiler compiler)
+
+  //----------------------------------------------------------------------------
+  let addCompiler (env:IjsEnv) (f:IjsFunc) compiler =
+    if hasCompiler env f.FunctionId |> not then
+      f.Compiler <- CachedCompiler compiler
+      env.Compilers.Add(f.FunctionId, f.Compiler)
+    
+  //----------------------------------------------------------------------------
+  let createObject (env:IjsEnv) =
+    let o = IjsObj(env.Base_Class, env.Object_prototype, Classes.Object, 0u)
+    o.Methods <- env.Object_methods
+    o
+
+  //----------------------------------------------------------------------------
+  let createObjectWithMap (env:IjsEnv) map =
+    let o = IjsObj(map, env.Object_prototype, Classes.Object, 0u)
+    o.Methods <- env.Object_methods
+    o
+
+  //----------------------------------------------------------------------------
+  let createArray (env:IjsEnv) size =
+    let o = IjsObj(env.Array_Class, env.Array_prototype, Classes.Array, size)
+    o.Methods <- env.Object_methods
+    o.Methods.PutValProperty.Invoke(o, "length", double size)
+    o
+    
+  //----------------------------------------------------------------------------
+  let createString (env:IjsEnv) (s:IjsStr) =
+    let o = IjsObj(env.String_Class, env.String_prototype, Classes.String, 0u)
+    o.Methods <- env.Object_methods
+    o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
+    o.Value.Box.Clr <-s
+    o.Value.Box.Type <- TypeCodes.String
+    o
+    
+  //----------------------------------------------------------------------------
+  let createNumber (env:IjsEnv) n =
+    let o = IjsObj(env.Number_Class, env.Number_prototype, Classes.Number, 0u)
+    o.Methods <- env.Object_methods
+    o.Value.Box.Double <- n
+    o
+    
+  //----------------------------------------------------------------------------
+  let createBoolean (env:IjsEnv) b =
+    let o = IjsObj(env.Boolean_Class, env.Boolean_prototype, Classes.Boolean, 0u)
+    o.Methods <- env.Object_methods
+    o.Value.Box.Bool <- b
+    o.Value.Box.Type <- TypeCodes.Bool
+    o
+  
+  //----------------------------------------------------------------------------
+  let createPrototype (env:IjsEnv) =
+    let o = IjsObj(env.Prototype_Class, env.Object_prototype, Classes.Object, 0u)
+    o.Methods <- env.Object_methods
+    o
+  
+  //----------------------------------------------------------------------------
+  let createFunction env id (args:int) chain dc =
+    let proto = createPrototype env
+    let func = IjsFunc(env, id, chain, dc)
+
+    (func :> IjsObj).Methods <- env.Object_methods
+    func.ConstructorMode <- ConstructorModes.User
+
+    proto.put("constructor", func)
+    func.put("prototype", proto)
+    func.put("length", double args)
+
+    func
+    
+  //----------------------------------------------------------------------------
+  module MethodInfo =
+    let createObject = 
+      Reflected.getApiMethodInfo "Environment" "createObject"
+
+    let createObjectWithMap = 
+      Reflected.getApiMethodInfo "Environment" "createObjectWithMap"
+
+    let createArray = 
+      Reflected.getApiMethodInfo "Environment" "createArray"
+
+    let createString = 
+      Reflected.getApiMethodInfo "Environment" "createString"
+
+    let createNumber = 
+      Reflected.getApiMethodInfo "Environment" "createNumber"
+
+    let createBoolean = 
+      Reflected.getApiMethodInfo "Environment" "createBoolean"
+
+    let createPrototype = 
+      Reflected.getApiMethodInfo "Environment" "createPrototype"
+
+    let createFunction = 
+      Reflected.getApiMethodInfo "Environment" "createFunction"
+
 //------------------------------------------------------------------------------
 // Static class containing all type conversions
 //------------------------------------------------------------------------------
@@ -156,9 +366,9 @@ type TypeConverter =
     | TypeCodes.Empty
     | TypeCodes.Undefined
     | TypeCodes.Clr -> Errors.Generic.notImplemented()
-    | TypeCodes.String -> Environment.createObject(env, b.String)
-    | TypeCodes.Number -> Environment.createObject(env, b.Double)
-    | TypeCodes.Bool -> Environment.createObject(env, b.Bool)
+    | TypeCodes.String -> Environment.createString env b.String
+    | TypeCodes.Number -> Environment.createNumber env b.Double
+    | TypeCodes.Bool -> Environment.createBoolean env b.Bool
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toObject (env:IjsEnv, b:Box) =
@@ -168,9 +378,9 @@ type TypeConverter =
     | TypeCodes.Empty
     | TypeCodes.Undefined
     | TypeCodes.Clr -> Errors.Generic.notImplemented()
-    | TypeCodes.String -> Environment.createObject(env, b.String)
-    | TypeCodes.Number -> Environment.createObject(env, b.Double)
-    | TypeCodes.Bool -> Environment.createObject(env, b.Bool)
+    | TypeCodes.String -> Environment.createString env b.String
+    | TypeCodes.Number -> Environment.createNumber env b.Double
+    | TypeCodes.Bool -> Environment.createBoolean env b.Bool
     | _ -> Errors.Generic.invalidTypeCode b.Type
 
   static member toObject (env:Dlr.Expr, expr:Dlr.Expr) =
@@ -507,7 +717,7 @@ and Operators =
 //------------------------------------------------------------------------------
 // PropertyClass API
 //------------------------------------------------------------------------------
-and PropertyClass =
+type PropertyClass =
         
   //----------------------------------------------------------------------------
   static member subClass (x:IronJS.PropertyMap, name) = 
@@ -561,65 +771,9 @@ and PropertyClass =
     x.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
-// Environment API
-//------------------------------------------------------------------------------
-and Environment =
-
-  //----------------------------------------------------------------------------
-  static member addCompiler (x:IjsEnv, funId, compiler) =
-    if not (x.Compilers.ContainsKey funId) then
-      x.Compilers.Add(funId, CachedCompiler compiler)
-
-  //----------------------------------------------------------------------------
-  static member addCompiler (x:IjsEnv, f:IjsFunc, compiler) =
-    if not (x.Compilers.ContainsKey f.FunctionId) then
-      f.Compiler <- CachedCompiler compiler
-      x.Compilers.Add(f.FunctionId, f.Compiler)
-  
-  //----------------------------------------------------------------------------
-  static member hasCompiler (x:IjsEnv, funcId) =
-    x.Compilers.ContainsKey funcId
-
-  //----------------------------------------------------------------------------
-  static member createObject (x:IjsEnv, pc) =
-    let o = IjsObj(pc, x.Object_prototype, Classes.Object, 0u)
-    o.Methods <- x.Object_methods
-    o
-    
-  //----------------------------------------------------------------------------
-  static member createObject (x:IjsEnv) =
-    let o = IjsObj(x.Base_Class, x.Object_prototype, Classes.Object, 0u)
-    o.Methods <- x.Object_methods
-    o
-    
-  //----------------------------------------------------------------------------
-  static member createObject (x:IjsEnv, s:IjsStr) =
-    let o = IjsObj(x.String_Class, x.String_prototype, Classes.String, 0u)
-    o.Methods <- x.Object_methods
-    o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
-    o.Value.Box.Clr <-s
-    o.Value.Box.Type <- TypeCodes.String
-    o
-    
-  //----------------------------------------------------------------------------
-  static member createObject (x:IjsEnv, n:IjsNum) =
-    let o = IjsObj(x.Number_Class, x.Number_prototype, Classes.Number, 0u)
-    o.Methods <- x.Object_methods
-    o.Value.Box.Double <- n
-    o
-    
-  //----------------------------------------------------------------------------
-  static member createObject (x:IjsEnv, b:IjsBool) =
-    let o = IjsObj(x.Boolean_Class, x.Boolean_prototype, Classes.Boolean, 0u)
-    o.Methods <- x.Object_methods
-    o.Value.Box.Bool <- b
-    o.Value.Box.Type <- TypeCodes.Bool
-    o
-    
-//------------------------------------------------------------------------------
 // Function API
 //------------------------------------------------------------------------------
-and Function() =
+type Function() =
 
   static let getPrototype(f:IjsFunc) =
     let prototype = (f :> IjsObj).Methods.GetProperty.Invoke(f, "prototype")
@@ -700,9 +854,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o)
+      c.Invoke(f,o) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -714,9 +869,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0)
+      c.Invoke(f,o,a0) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -728,9 +884,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1)
+      c.Invoke(f,o,a0,a1) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -742,9 +899,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2)
+      c.Invoke(f,o,a0,a1,a2) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -756,9 +914,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2,a3)
+      c.Invoke(f,o,a0,a1,a2,a3) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -770,9 +929,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2,a3,a4)
+      c.Invoke(f,o,a0,a1,a2,a3,a4) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -784,9 +944,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2,a3,a4,a5)
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -798,9 +959,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6)
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -812,9 +974,10 @@ and Function() =
     match f.ConstructorMode with
     | ConstructorModes.Host -> c.Invoke(f,null,a0,a1,a2,a3,a4,a5,a6,a7)
     | ConstructorModes.User -> 
-      let o = Environment.createObject(f.Env)
+      let o = Environment.createObject f.Env
       o.Prototype <- getPrototype f
-      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7)
+      c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7) |> ignore
+      Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
 
@@ -832,7 +995,7 @@ and Function() =
 //------------------------------------------------------------------------------
 // DispatchTarget
 //------------------------------------------------------------------------------
-and [<ReferenceEquality>] DispatchTarget = {
+type [<ReferenceEquality>] DispatchTarget = {
   Delegate : HostType
   Function : IjsHostFunc
   Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
@@ -841,7 +1004,7 @@ and [<ReferenceEquality>] DispatchTarget = {
 //------------------------------------------------------------------------------
 // HostFunction API
 //------------------------------------------------------------------------------
-and HostFunction() =
+type HostFunction() =
 
   //----------------------------------------------------------------------------
   static let marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
@@ -914,39 +1077,37 @@ and HostFunction() =
 //------------------------------------------------------------------------------
 // DelegateFunction API
 //------------------------------------------------------------------------------
-and DelegateFunction<'a when 'a :> Delegate>() =
+module DelegateFunction =
 
   //----------------------------------------------------------------------------
-  static let generateInvoke f args =
+  let generateInvoke<'a when 'a :> Delegate> f args =
     let casted = Dlr.castT<IjsDelFunc<'a>> f
     Dlr.invoke (Dlr.field casted "Delegate") args
+  
+  //----------------------------------------------------------------------------
+  let compile<'a when 'a :> Delegate> (x:IjsFunc) (delegate':System.Type) =
+    HostFunction.compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> IjsHostFunc
+      Invoke = generateInvoke<'a>
+    }
     
   //----------------------------------------------------------------------------
-  static member create (env:IjsEnv, delegate':'a) =
+  let create (env:IjsEnv) (delegate':'a) =
     let h = IjsDelFunc<'a>(env, delegate') :> IjsHostFunc
     let f = h :> IjsFunc
     let o = f :> IjsObj
 
     o.Methods <- env.Object_methods
     o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
-    Environment.addCompiler(env, f, DelegateFunction<'a>.compile)
+    Environment.addCompiler env f compile<'a>
 
     f
-  
-  //----------------------------------------------------------------------------
-  static member compile (x:IjsFunc) (delegate':System.Type) =
-    HostFunction.compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> IjsHostFunc
-      Invoke = generateInvoke
-    }
-
-    
 
 //------------------------------------------------------------------------------
 // ClrFunction API
 //------------------------------------------------------------------------------
-and ClrFunction() =
+type ClrFunction() =
   
   //----------------------------------------------------------------------------
   static let generateInvoke (x:IjsClrFunc) _ (args:Dlr.Expr seq) =
@@ -968,89 +1129,9 @@ and ClrFunction() =
 
     o.Methods <- env.Object_methods
     o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
-    Environment.addCompiler(env, f, ClrFunction.compile)
+    Environment.addCompiler env f ClrFunction.compile
 
     f
-
-module Extensions = 
-
-  open Utils.Patterns
-
-  type Object with 
-
-    member o.put (name, v:IjsBox) =
-      o.Methods.PutBoxProperty.Invoke(o, name, v)
-
-    member o.put (name, v:IjsBool) =
-      let v = if v then TaggedBools.True else TaggedBools.False
-      o.Methods.PutValProperty.Invoke(o, name, v)
-
-    member o.put (name, v:IjsNum) =
-      o.Methods.PutValProperty.Invoke(o, name, v)
-
-    member o.put (name, v:HostObject) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Clr)
-
-    member o.put (name, v:IjsStr) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.String)
-
-    member o.put (name, v:Undefined) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Undefined)
-
-    member o.put (name, v:IjsObj) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Object)
-
-    member o.put (name, v:IjsFunc) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
-
-    member o.put (name, v:IjsRef, tc:TypeCode) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, tc)
-
-    member o.get (name) =
-      o.Methods.GetProperty.Invoke(o, name)
-
-    member o.has (name) =
-      o.Methods.HasProperty.Invoke(o, name)
-
-    member o.delete (name) =
-      o.Methods.DeleteProperty.Invoke(o, name)
-      
-    member o.put (index, v:IjsBox) =
-      o.Methods.PutBoxIndex.Invoke(o, index, v)
-
-    member o.put (index, v:IjsBool) =
-      let v = if v then TaggedBools.True else TaggedBools.False
-      o.Methods.PutValIndex.Invoke(o, index, v)
-
-    member o.put (index, v:IjsNum) =
-      o.Methods.PutValIndex.Invoke(o, index, v)
-
-    member o.put (index, v:HostObject) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Clr)
-
-    member o.put (index, v:IjsStr) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.String)
-
-    member o.put (index, v:Undefined) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Undefined)
-
-    member o.put (index, v:IjsObj) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Object)
-
-    member o.put (index, v:IjsFunc) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Function)
-
-    member o.put (index, v:IjsRef, tc:TypeCode) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, tc)
-
-    member o.get (index) =
-      o.Methods.GetIndex.Invoke(o, index)
-
-    member o.has (index) =
-      o.Methods.HasIndex.Invoke(o, index)
-
-    member o.delete (index) =
-      o.Methods.DeleteIndex.Invoke(o, index)
 
 //------------------------------------------------------------------------------
 module ObjectModule =
@@ -1238,8 +1319,8 @@ module ObjectModule =
     let initSparse (o:IjsObj) =
       o.IndexSparse <- new MutableSorted<uint32, Box>()
 
-      for i = 0 to (int (o.IndexLength-1u)) do
-        if Utils.Descriptor.hasValue (&o.IndexDense.[i]) then
+      for i = 0 to int (o.IndexLength-1u) do
+        if Utils.Descriptor.hasValue o.IndexDense.[i] then
           o.IndexSparse.Add(uint32 i, o.IndexDense.[i].Box)
 
       o.IndexDense <- null
@@ -1259,7 +1340,7 @@ module ObjectModule =
     //--------------------------------------------------------------------------
     let updateLength (o:IjsObj) (i:uint32) =
       if i > o.IndexLength then
-        o.IndexLength <- i
+        o.IndexLength <- i+1u
         if o.Class = Classes.Array then
           Property.putVal o "length" (double i)
 
@@ -1271,7 +1352,7 @@ module ObjectModule =
           if Utils.Object.isDense o then
             let ii = int i
             if ii < o.IndexDense.Length then
-              if Utils.Descriptor.hasValue &o.IndexDense.[ii] 
+              if Utils.Descriptor.hasValue o.IndexDense.[ii] 
                 then (o, i, true)
                 else find o.Prototype i
             else find o.Prototype i
@@ -1287,7 +1368,7 @@ module ObjectModule =
       if Utils.Object.isDense o then
         let ii = int i
         if ii < o.IndexDense.Length 
-          then Utils.Descriptor.hasValue &o.IndexDense.[ii]
+          then Utils.Descriptor.hasValue o.IndexDense.[ii]
           else false
       else
         o.IndexSparse.ContainsKey i

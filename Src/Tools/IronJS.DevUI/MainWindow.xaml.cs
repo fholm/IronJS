@@ -177,7 +177,7 @@ namespace IronJS.DevUI {
                 item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
               }
 
-              if (IronJS.Utils.Descriptor.hasValue(ref box.Object.Value)) {
+              if (IronJS.Utils.Descriptor.hasValue(box.Object.Value)) {
                 item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value.Box));
               }
 

@@ -6,8 +6,9 @@ open IronJS
 module Array =
 
   let createPrototype (env:IjsEnv) =
-    let prototype = Api.Environment.createObject(env)
+    let prototype = Api.Environment.createArray env 0u
     Api.ObjectModule.Property.setMap prototype env.Array_Class
+    prototype.Prototype <- env.Object_prototype
     prototype.Class <- Classes.Array
     prototype
 

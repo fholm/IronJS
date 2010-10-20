@@ -25,7 +25,7 @@ module Object =
   //15.2.4.5
   let hasOwnProperty (o:IjsObj) (name:IjsStr) =
     match Api.ObjectModule.Property.getIndex o name with
-    | true, index -> Utils.Descriptor.hasValue &o.PropertyDescriptors.[index]
+    | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
     | _ ->
       let mutable i = Index.Min   
       if Utils.isStringIndex(name, &i) 
@@ -45,44 +45,44 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4
   let createPrototype (env:IjsEnv) =
-    Api.Environment.createObject(env)
+    Api.Environment.createObject env
     
   //----------------------------------------------------------------------------
   //15.2.4
   let setupPrototype (env:IjsEnv) =
     //15.2.4.2
     env.Object_prototype.put("toString", 
-      Api.DelegateFunction<_>.create(env, new Func<IjsObj, IjsStr>(toString))
+      Api.DelegateFunction.create env (new Func<IjsObj, IjsStr>(toString))
     )
     
     //15.2.4.3
     env.Object_prototype.put("toLocaleString", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toLocaleString))
+      (Api.DelegateFunction.create
+        env (new Func<IjsObj, IjsStr>(toLocaleString)))
     )
 
     //15.2.4.4
     env.Object_prototype.put("valueOf", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj>(valueOf))
+      (Api.DelegateFunction.create
+        env (new Func<IjsObj, IjsObj>(valueOf)))
     )
 
     //15.2.4.5
     env.Object_prototype.put("hasOwnProperty", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty))
+      (Api.DelegateFunction.create
+        env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)))
     )
     
     //15.2.4.6
     env.Object_prototype.put("isPrototypeOf", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf))
+      (Api.DelegateFunction.create
+        env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)))
     )
     
     //15.2.4.7
     env.Object_prototype.put("propertyIsEnumerable", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable))
+      (Api.DelegateFunction.create
+        env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)))
     )
       
   //----------------------------------------------------------------------------
@@ -90,16 +90,16 @@ module Object =
   let private objectConstructor (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
     match v.Type with
     | TypeCodes.Empty
-    | TypeCodes.Undefined -> Api.Environment.createObject(f.Env)
-    | TypeCodes.Clr when v.Clr = null -> Api.Environment.createObject(f.Env)
+    | TypeCodes.Undefined -> Api.Environment.createObject f.Env
+    | TypeCodes.Clr when v.Clr = null -> Api.Environment.createObject f.Env
     | _ -> Api.TypeConverter.toObject(f.Env, v)
 
   //----------------------------------------------------------------------------
   //15.2.1
   let setupConstructor (env:IjsEnv) =
     let objectCtor = 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor))
+      (Api.DelegateFunction.create
+        env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
 
     objectCtor.ConstructorMode <- ConstructorModes.Host
     objectCtor.put("prototype", env.Object_prototype)

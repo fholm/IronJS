@@ -83,7 +83,6 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utils.fs" />
     <Compile Include="Global.fs" />
     <Compile Include="Math.fs" />
     <Compile Include="Object.fs" />

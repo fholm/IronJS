@@ -26,6 +26,16 @@ module Hosting =
       Default = Api.ObjectModule.defaultValue'
     }
 
+    x.Arguments_methods <- 
+      {x.Object_methods with
+        GetIndex = Api.Arguments.Index.Delegates.get
+        HasIndex = Api.Arguments.Index.Delegates.has
+        DeleteIndex = Api.Arguments.Index.Delegates.delete
+        PutBoxIndex = Api.Arguments.Index.Delegates.putBox
+        PutValIndex = Api.Arguments.Index.Delegates.putVal
+        PutRefIndex = Api.Arguments.Index.Delegates.putRef
+      }
+
     x.Base_Class <- PropertyMap(x)
 
     x.Prototype_Class <- Api.PropertyClass.subClass(x.Base_Class, "constructor")
@@ -96,11 +106,15 @@ module Hosting =
     member x.CompileFile fileName =
       let tree = Ast.Parsers.Ecma3.parseGlobalFile fileName
       let analyzed = Ast.applyAnalyzers tree None
+      Debug.printString (sprintf "%A" analyzed)
+
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
       let tree = Ast.Parsers.Ecma3.parseGlobalSource source
       let analyzed = Ast.applyAnalyzers tree None
+      Debug.printString (sprintf "%A" analyzed)
+
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.InvokeCompiled (compiled:Delegate) =

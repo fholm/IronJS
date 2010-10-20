@@ -190,7 +190,6 @@ module Environment =
     
   //----------------------------------------------------------------------------
   module MethodInfo =
-
     let createObject = 
       Reflected.getApiMethodInfo "Environment" "createObject"
 
@@ -1661,3 +1660,97 @@ module ObjectModule =
         match TypeConverter.toString index with
         | StringIndex i -> o.has i
         | index -> o.has index
+
+module Arguments =
+
+  module Index =
+
+    //--------------------------------------------------------------------------
+    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length then
+        match a.LinkMap.[ii] with
+        | ArgumentsLinkArray.Locals, index -> a.Locals.[index] <- v
+        | ArgumentsLinkArray.ClosedOver, index -> a.ClosedOver.[index] <- v
+        | _ -> failwith "Que?"
+
+      ObjectModule.Index.putBox o i v
+  
+    //--------------------------------------------------------------------------
+    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length then
+        match a.LinkMap.[ii] with
+        | ArgumentsLinkArray.Locals, index -> a.Locals.[index].Double <- v
+        | ArgumentsLinkArray.ClosedOver, index -> 
+          a.ClosedOver.[index].Double <- v
+        | _ -> failwith "Que?"
+
+      ObjectModule.Index.putVal o i v
+
+    //--------------------------------------------------------------------------
+    let putRef (o:IjsObj) (i:uint32) (v:IjsRef) (tag:TypeTag) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length then
+        match a.LinkMap.[ii] with
+        | ArgumentsLinkArray.Locals, index -> 
+          a.Locals.[index].Clr <- v
+          a.Locals.[index].Tag <- tag
+
+        | ArgumentsLinkArray.ClosedOver, index -> 
+          a.ClosedOver.[index].Clr <- v
+          a.ClosedOver.[index].Tag <- tag
+
+        | _ -> failwith "Que?"
+
+      ObjectModule.Index.putRef o i v tag
+    
+    //--------------------------------------------------------------------------
+    let get (o:IjsObj) (i:uint32) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length then
+        match a.LinkMap.[ii] with
+        | ArgumentsLinkArray.Locals, index -> a.Locals.[index]
+        | ArgumentsLinkArray.ClosedOver, index -> a.ClosedOver.[index]
+        | _ -> failwith "Que?"
+
+      else
+        ObjectModule.Index.get o i
+        
+    //--------------------------------------------------------------------------
+    let has (o:IjsObj) (i:uint32) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length 
+        then true
+        else ObjectModule.Index.has o i
+        
+    //--------------------------------------------------------------------------
+    let delete (o:IjsObj) (i:uint32) =
+      let a = o :?> Arguments
+      let ii = int i
+
+      if a.LinkIntact && ii < a.LinkMap.Length then
+        a.LinkIntact <- false
+        a.Locals <- null
+        a.ClosedOver <- null
+
+      ObjectModule.Index.delete o i
+        
+    //--------------------------------------------------------------------------
+    module Delegates =
+      let putBox = PutBoxIndex putBox
+      let putVal = PutValIndex putVal
+      let putRef = PutRefIndex putRef
+      let get = GetIndex get
+      let has = HasIndex has
+      let delete = DeleteIndex delete

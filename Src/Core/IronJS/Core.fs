@@ -160,6 +160,10 @@ module Index =
   let [<Literal>] Min = 0u
   let [<Literal>] Max = 2147483646u
 
+module ArgumentsLinkArray =
+  let [<Literal>] Locals = 0uy
+  let [<Literal>] ClosedOver = 1uy
+
 module TaggedBools =
   let True = 
     let bytes = FSKit.Bit.double2bytes 0.0
@@ -279,24 +283,16 @@ and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
 and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
 and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
 and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
-and PutRefProperty = delegate of IjsObj * IjsStr * HostObject * TypeCode -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * HostObject * TypeTag -> unit
 
 and GetIndex = delegate of IjsObj * uint32 -> IjsBox
 and HasIndex = delegate of IjsObj * uint32 -> IjsBool
 and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
 and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
 and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
-and PutRefIndex = delegate of IjsObj * uint32 * HostObject * TypeCode -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * HostObject * TypeTag -> unit
 
 and Default = delegate of IjsObj * byte -> IjsBox
-
-
-
-//------------------------------------------------------------------------------
-// 
-//------------------------------------------------------------------------------
-(*and [<AllowNullLiteral>] IjsObj =
-  val mutable Methods : InternalMethods*)
 
 
 
@@ -354,6 +350,45 @@ and [<AllowNullLiteral>] Object =
     PropertyDescriptors = null
   }
   
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] Arguments =
+  inherit Object
+  
+  val mutable Locals : Box array
+  val mutable ClosedOver : Box array
+
+  val mutable LinkMap : (byte * int) array
+  val mutable LinkIntact : bool
+
+  new (env:IjsEnv, linkMap, locals, closedOver) as o = 
+    {
+      inherit Object(env.Array_Class, env.Object_prototype, Classes.Object, 0u)
+
+      Locals = locals
+      ClosedOver = closedOver
+
+      LinkMap = linkMap
+      LinkIntact = true
+    } then
+      let o = o :> IjsObj
+
+      o.Methods <- env.Arguments_methods
+      o.Methods.PutValProperty.Invoke(o, "length", double linkMap.Length)
+
+      for a, i in linkMap do
+        match a with
+        | ArgumentsLinkArray.Locals -> 
+          o.Methods.PutBoxIndex.Invoke(o, uint32 i, locals.[i])
+
+        | ArgumentsLinkArray.ClosedOver -> 
+          o.Methods.PutBoxIndex.Invoke(o, uint32 i, closedOver.[i])
+          
+
+
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
@@ -555,7 +590,7 @@ and [<AllowNullLiteral>] Environment =
 
   //Methods
   [<DefaultValue>] val mutable Object_methods : InternalMethods
-
+  [<DefaultValue>] val mutable Arguments_methods : InternalMethods
 
   //Boxes
   [<DefaultValue>] val mutable Boxed_NegOne : Box

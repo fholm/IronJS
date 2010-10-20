@@ -270,10 +270,14 @@ module Core =
       let initParams, initNonParams = 
         Scope.Function.initVariables ctx variables
 
+      let initArguments = 
+        [Scope.Function.initArguments ctx s]
+
       Seq.concat [
         [scopeInit; scopeChainInit; dynamicChainInit]
         (initParams |> List.ofSeq)
         (initNonParams |> List.ofSeq)
+        (initArguments)
         [compileAst (ctx.WithScope {s with Variables=variables}) tree]
       ] |> Dlr.blockSimple
 

@@ -11,18 +11,18 @@
                  AcceptsReturn="True" 
                  Margin="12,29,0,41" 
                  Name="Input" 
-                 Width="400" />
+                 Width="336" />
         
-        <TextBox Height="147" 
-                 Margin="704,29,12,0" 
+        <TextBox Height="91" 
+                 Margin="640,29,0,0" 
                  VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap"
                  FontFamily="Consolas"
                  Name="Result" 
                  IsReadOnly="True"
-                 VerticalAlignment="Top" />
+                 VerticalAlignment="Top" HorizontalAlignment="Left" Width="388" />
         
-        <TextBox Margin="704,195,12,12" 
+        <TextBox Margin="640,138,0,12" 
                  Name="Debug" 
                  VerticalScrollBarVisibility="Auto"
                  HorizontalScrollBarVisibility="Auto"
@@ -30,28 +30,28 @@
                  FontFamily="Consolas"
                  IsReadOnly="True"
                  Visibility="Visible"
-                 FontSize="11"/>
+                 FontSize="11" HorizontalAlignment="Left" Width="388" />
         
-        <Button Content="Run" Margin="209,0,0,11" 
+        <Button Content="Run" Margin="145,0,0,11" 
                 Name="RunCode" Height="23" 
                 VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="38" />
         
         <Button Content="Reset Environment" 
-                Margin="253,0,0,12" 
+                Margin="189,0,0,12" 
                 Name="ResetEnv" Height="23" 
                 VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="113" />
         
         <Label Content="Result (last statement executed):" 
                Height="28" 
                HorizontalAlignment="Left" 
-               Margin="699,7,0,0" 
+               Margin="635,7,0,0" 
                Name="ResultLabel" 
                VerticalAlignment="Top" />
         
-        <Label Content="Debug Output:" 
+        <Label Content="AST Tree:" 
                Height="28" 
                HorizontalAlignment="Left" 
-               Margin="699,172,0,0" 
+               Margin="635,116,0,0" 
                Name="DebugOutputLabel" 
                VerticalAlignment="Top" />
         
@@ -68,7 +68,7 @@
                Height="28" 
                VerticalAlignment="Bottom" />
 
-        <TreeView Margin="418,29,0,12" 
+        <TreeView Margin="354,29,0,12" 
                   Name="Variables" 
                   HorizontalAlignment="Left" 
                   Width="280" 
@@ -78,7 +78,7 @@
         <Label Content="Environment:" 
                Height="28" 
                HorizontalAlignment="Left" 
-               Margin="413,7,0,0" 
+               Margin="349,7,0,0" 
                Name="label1" 
                VerticalAlignment="Top" />
         
@@ -86,6 +86,17 @@
                Height="28" 
                HorizontalAlignment="Left" Margin="7,7,0,0" Name="label2" VerticalAlignment="Top" />
         
-        <Button Content="Quit" Height="23" HorizontalAlignment="Left" Margin="372,0,0,12" Name="QuitButton" VerticalAlignment="Bottom" Width="40" Click="QuitButton_Click" />
+        <Button Content="Quit" Height="23" HorizontalAlignment="Left" Margin="308,0,0,12" Name="QuitButton" VerticalAlignment="Bottom" Width="40" Click="QuitButton_Click" />
+
+        <TextBox Margin="1034,29,12,12" Name="ExpressionTree"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 TextWrapping="NoWrap"
+                 FontFamily="Consolas"
+                 IsReadOnly="True"
+                 Visibility="Visible"
+                 FontSize="11" />
+        
+        <Label Content="Expression Tree:" Height="28" HorizontalAlignment="Left" Margin="1030,7,0,0" Name="label3" VerticalAlignment="Top" />
     </Grid>
 </Window>

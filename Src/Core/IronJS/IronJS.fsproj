@@ -89,6 +89,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="Config.fs" />
+    <Compile Include="Attributes.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Debug.fs" />
     <Compile Include="Errors.fs" />

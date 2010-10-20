@@ -127,19 +127,19 @@ module Object =
     let get expr name = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [Dlr.invoke 
-          (Expr.Object.Methods.getProperty tmp)
+          (Expr.Object.Methods.getIndex tmp)
           [tmp; name]])
   
     //--------------------------------------------------------------------------
     let has expr name = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [Dlr.invoke 
-          (Expr.Object.Methods.hasProperty tmp)
+          (Expr.Object.Methods.hasIndex tmp)
           [tmp; name]])
   
     //--------------------------------------------------------------------------
     let delete expr name = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [Dlr.invoke 
-          (Expr.Object.Methods.deleteProperty tmp)
+          (Expr.Object.Methods.deleteIndex tmp)
           [tmp; name]])

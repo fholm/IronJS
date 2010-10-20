@@ -381,7 +381,7 @@ module Ast =
     let replace x = if x = old then new' else x
     sc := sc |!> List.map replace
 
-  let modifyScope f sc =
+  let modifyScope (f:Scope -> Scope) sc =
     match !sc with
     | []    -> ()
     | x::xs -> sc := f x :: xs
@@ -415,6 +415,14 @@ module Ast =
 
       | Var(Identifier name) -> addVar name None
       | Var(Assign(Identifier name, rtree)) -> addVar name (Some rtree)
+
+      | Identifier "arguments" ->
+        if (bottomScope sc).ScopeType = FunctionScope then
+          addVar "arguments" None |> ignore
+          modifyScope (fun s -> 
+            {s with ContainsArguments=true}) sc
+
+        tree
 
       | _ -> _walk analyze tree
 
@@ -638,48 +646,6 @@ module Ast =
       | _ -> None
     | _ -> None
 
-      
-
-  //-------------------------------------------------------------------------
-  let findAssignmentOperations tree =
-    let sc = ref List.empty<Scope>
-      
-    let rec find tree =
-      match tree with
-      | LocalScope(s, t) ->
-        LocalScope(pushScopeAnd sc s find t)
-
-      | Assign(Identifier name, value) ->
-
-        let s = sc |!> List.head
-
-        match s.TryGetVar name with
-        | None -> ()
-        | Some var -> 
-          let from = 
-            match expressionType value with
-            | None -> value
-            | Some tc -> Tree.Type tc
-
-          let var' = var.AddAssignedFrom from
-          modifyScope (fun (s:Scope) -> s.ReplaceVar var var') sc
-
-        Assign(Identifier name, find value)
-          
-      | _ -> _walk find tree
-
-    find tree
-
-
-    
-  //-------------------------------------------------------------------------
-  let transform tree =
-    
-    let rec transform tree =
-      tree
-
-    transform tree
-      
 
 
   //-------------------------------------------------------------------------
@@ -689,8 +655,6 @@ module Ast =
       markClosedOverVars
       calculateScopeLevels levels
       resolveClosures
-      findAssignmentOperations
-      transform
     ]
 
     List.fold (fun t f -> f t) tree analyzers

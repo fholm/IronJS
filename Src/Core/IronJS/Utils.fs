@@ -326,9 +326,7 @@ module Utils =
   // incomptabile delegates for the same arguments each time it's called.
   // E.g: Func<Closure, Object, int, string, Box>
   let private _delegateCache = 
-    new Collections.
-        Concurrent.
-        ConcurrentDictionary<System.RuntimeTypeHandle list, HostType>()
+    new ConcurrentMutableDict<System.RuntimeTypeHandle list, HostType>()
 
   let createDelegate (types:HostType seq) =
     let key = Seq.fold (fun s (t:HostType) -> t.TypeHandle :: s) [] types

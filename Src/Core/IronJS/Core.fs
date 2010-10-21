@@ -495,27 +495,25 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
       ParamsMode = ParamsModes.NoParams
       MarshalMode = MarshalModes.Default
-    } then x.resolveModes()
-  
-  //----------------------------------------------------------------------------
-  member internal x.resolveModes () =
-    let length = x.ArgTypes.Length
+    } then 
 
-    if length >= 2 && x.ArgTypes.[0] = typeof<IjsFunc>
-      then x.MarshalMode <- MarshalModes.Function
-      elif length >= 1 && x.ArgTypes.[0] = typeof<IjsObj>
-        then x.MarshalMode <- MarshalModes.This
-        else x.MarshalMode <- MarshalModes.Default
+      let length = x.ArgTypes.Length
 
-    if length > 0 then
-      let lastArg = x.ArgTypes.[length-1]
-      if lastArg = typeof<Box array> then
-        x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-        x.ParamsMode <- ParamsModes.BoxParams
+      if length >= 2 && x.ArgTypes.[0] = typeof<IjsFunc>
+        then x.MarshalMode <- MarshalModes.Function
+        elif length >= 1 && x.ArgTypes.[0] = typeof<IjsObj>
+          then x.MarshalMode <- MarshalModes.This
+          else x.MarshalMode <- MarshalModes.Default
 
-      if lastArg = typeof<obj array> then
-        x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-        x.ParamsMode <- ParamsModes.ObjectParams
+      if length > 0 then
+        let lastArg = x.ArgTypes.[length-1]
+        if lastArg = typeof<Box array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.BoxParams
+
+        if lastArg = typeof<obj array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.ObjectParams
         
   //----------------------------------------------------------------------------
   member x.jsArgsLength =

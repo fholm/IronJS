@@ -8,9 +8,8 @@ open IronJS.Utils.Patterns
 module Reflected =
 
   open System.Reflection
-  open System.Collections.Concurrent
 
-  let private apiTypes = ConcurrentDictionary<string, System.Type>()
+  let private apiTypes = ConcurrentMutableDict<string, System.Type>()
   let private bindingFlags = BindingFlags.Static ||| BindingFlags.Public
 
   let private assembly = 
@@ -797,6 +796,8 @@ type Function() =
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
     c.Invoke(f,t,a0,a1)
   
+  #if CLR2
+  #else
   //----------------------------------------------------------------------------
   static member call (f:IjsFunc,t,a0:'a0,a1:'a1,a2:'a2) =
     let c = f.Compiler
@@ -832,6 +833,7 @@ type Function() =
     let c = f.Compiler
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,'a2,'a3,'a4,'a5,'a6,'a7,IjsBox>>(f)
     c.Invoke(f,t,a0,a1,a2,a3,a4,a5,a6,a7)
+  #endif
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj) =
@@ -877,7 +879,9 @@ type Function() =
       Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
-
+    
+  #if CLR2
+  #else
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2) =
     let c = f.Compiler
@@ -967,6 +971,7 @@ type Function() =
       Utils.boxObject o
 
     | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+  #endif
 
 
   //----------------------------------------------------------------------------

@@ -4,13 +4,22 @@ module Dlr =
 
   open System.Dynamic
   open System.Reflection
+
+  #if CLR2
+  open Microsoft.Scripting.Ast
+
+  type private Et = Microsoft.Scripting.Ast.Expression
+  type private EtParam = Microsoft.Scripting.Ast.ParameterExpression
+  type Expr = Microsoft.Scripting.Ast.Expression
+  type ExprParam = Microsoft.Scripting.Ast.ParameterExpression
+  #else
   open System.Linq.Expressions
 
-  //Double aliases, 'Et' and 'EtParam' will be removed later
   type private Et = Expression
   type private EtParam = ParameterExpression
   type Expr = Expression
   type ExprParam = ParameterExpression
+  #endif
 
   type Label = LabelTarget
   type ExprType = ExpressionType

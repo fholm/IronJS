@@ -40,22 +40,22 @@ module Extensions =
     member o.put (name, v:IjsNum) =
       o.Methods.PutValProperty.Invoke(o, name, v)
 
-    member o.put (name, v:HostObject) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Clr)
+    member o.put (name, v:ClrObject) =
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeTags.Clr)
 
     member o.put (name, v:IjsStr) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.String)
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeTags.String)
 
     member o.put (name, v:Undefined) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Undefined)
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeTags.Undefined)
 
     member o.put (name, v:IjsObj) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Object)
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeTags.Object)
 
     member o.put (name, v:IjsFunc) =
-      o.Methods.PutRefProperty.Invoke(o, name, v, TypeCodes.Function)
+      o.Methods.PutRefProperty.Invoke(o, name, v, TypeTags.Function)
 
-    member o.put (name, v:IjsRef, tc:TypeCode) =
+    member o.put (name, v:IjsRef, tc:TypeTag) =
       o.Methods.PutRefProperty.Invoke(o, name, v, tc)
 
     member o.get (name) =
@@ -77,22 +77,22 @@ module Extensions =
     member o.put (index, v:IjsNum) =
       o.Methods.PutValIndex.Invoke(o, index, v)
 
-    member o.put (index, v:HostObject) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Clr)
+    member o.put (index, v:ClrObject) =
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeTags.Clr)
 
     member o.put (index, v:IjsStr) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.String)
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeTags.String)
 
     member o.put (index, v:Undefined) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Undefined)
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeTags.Undefined)
 
     member o.put (index, v:IjsObj) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Object)
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeTags.Object)
 
     member o.put (index, v:IjsFunc) =
-      o.Methods.PutRefIndex.Invoke(o, index, v, TypeCodes.Function)
+      o.Methods.PutRefIndex.Invoke(o, index, v, TypeTags.Function)
 
-    member o.put (index, v:IjsRef, tc:TypeCode) =
+    member o.put (index, v:IjsRef, tc:TypeTag) =
       o.Methods.PutRefIndex.Invoke(o, index, v, tc)
 
     member o.get (index) =
@@ -148,14 +148,14 @@ module Environment =
     o.Methods <- env.Object_methods
     o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
     o.Value.Box.Clr <-s
-    o.Value.Box.Type <- TypeCodes.String
+    o.Value.Box.Tag <- TypeTags.String
     o
     
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
     let o = IjsObj(env.Number_Class, env.Number_prototype, Classes.Number, 0u)
     o.Methods <- env.Object_methods
-    o.Value.Box.Double <- n
+    o.Value.Box.Number <- n
     o
     
   //----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ module Environment =
     let o = IjsObj(env.Boolean_Class, env.Boolean_prototype, Classes.Boolean, 0u)
     o.Methods <- env.Object_methods
     o.Value.Box.Bool <- b
-    o.Value.Box.Type <- TypeCodes.Bool
+    o.Value.Box.Tag <- TypeTags.Bool
     o
   
   //----------------------------------------------------------------------------
@@ -219,34 +219,34 @@ type TypeConverter =
 
   //----------------------------------------------------------------------------
   static member toBox(b:IjsBox) = b
-  static member toBox(d:IjsNum) = Utils.boxDouble d
+  static member toBox(d:IjsNum) = Utils.boxNumber d
   static member toBox(b:IjsBool) = Utils.boxBool b
   static member toBox(s:IjsStr) = Utils.boxString s
   static member toBox(o:IjsObj) = Utils.boxObject o
   static member toBox(f:IjsFunc) = Utils.boxFunction f
-  static member toBox(c:HostObject) = Utils.boxClr c
+  static member toBox(c:ClrObject) = Utils.boxClr c
   static member toBox(expr:Dlr.Expr) = 
     Dlr.callStaticT<TypeConverter> "toBox" [expr]
     
   //----------------------------------------------------------------------------
-  static member toHostObject(d:IjsNum) = box d
-  static member toHostObject(b:IjsBool) = box b
-  static member toHostObject(s:IjsStr) = box s
-  static member toHostObject(o:IjsObj) = box o
-  static member toHostObject(f:IjsFunc) = box f
-  static member toHostObject(c:HostObject) = c
-  static member toHostObject(b:IjsBox) =
+  static member toClrObject(d:IjsNum) = box d
+  static member toClrObject(b:IjsBool) = box b
+  static member toClrObject(s:IjsStr) = box s
+  static member toClrObject(o:IjsObj) = box o
+  static member toClrObject(f:IjsFunc) = box f
+  static member toClrObject(c:ClrObject) = c
+  static member toClrObject(b:IjsBox) =
     match b with
-    | Number -> b.Double :> HostObject
+    | Number -> b.Number :> ClrObject
     | Undefined -> null
-    | String -> b.String :> HostObject
-    | Boolean -> b.Bool :> HostObject
-    | Host -> b.Clr
-    | Object -> b.Object :> HostObject
-    | Function -> b.Func :> HostObject
+    | String -> b.String :> ClrObject
+    | Boolean -> b.Bool :> ClrObject
+    | Clr -> b.Clr
+    | Object -> b.Object :> ClrObject
+    | Function -> b.Func :> ClrObject
 
-  static member toHostObject (expr:Dlr.Expr) =
-    Dlr.callStaticT<TypeConverter> "toHostObject" [expr]
+  static member toClrObject (expr:Dlr.Expr) =
+    Dlr.callStaticT<TypeConverter> "toClrObject" [expr]
 
   //----------------------------------------------------------------------------
   static member toString (b:IjsBool) = if b then "true" else "false"
@@ -256,9 +256,9 @@ type TypeConverter =
     match b with
     | Undefined -> "undefined"
     | String -> b.String
-    | Number -> TypeConverter.toString b.Double
+    | Number -> TypeConverter.toString b.Number
     | Boolean -> TypeConverter.toString b.Bool
-    | Host -> TypeConverter.toString b.Clr
+    | Clr -> TypeConverter.toString b.Clr
     | Object -> TypeConverter.toString b.Object
     | Function -> TypeConverter.toString (b.Func :> IjsObj)
 
@@ -269,7 +269,7 @@ type TypeConverter =
   static member toString (d:IjsNum) = 
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
 
-  static member toString (c:HostObject) = 
+  static member toString (c:ClrObject) = 
     if c = null then "null" else c.ToString()
 
   static member toString (expr:Dlr.Expr) =
@@ -277,9 +277,9 @@ type TypeConverter =
       
   //----------------------------------------------------------------------------
   static member toPrimitive (b:IjsBool, _:byte) = Utils.boxBool b
-  static member toPrimitive (d:IjsNum, _:byte) = Utils.boxDouble d
+  static member toPrimitive (d:IjsNum, _:byte) = Utils.boxNumber d
   static member toPrimitive (s:IjsStr, _:byte) = Utils.boxString s
-  static member toPrimitive (u:Undefined, _:byte) = Utils.boxUndefined u
+  static member toPrimitive (u:Undefined, _:byte) = Utils.boxedUndefined
   static member toPrimitive (o:IjsObj, h:byte) = o.Methods.Default.Invoke(o, h)
   static member toPrimitive (o:IjsObj) = o.Methods.Default.Invoke(o, 0uy)
   static member toPrimitive (b:IjsBox, h:byte) =
@@ -288,11 +288,11 @@ type TypeConverter =
     | Boolean
     | String
     | Undefined -> b
-    | Host -> TypeConverter.toPrimitive(b.Clr, h)
+    | Clr -> TypeConverter.toPrimitive(b.Clr, h)
     | Object
     | Function -> b.Object.Methods.Default.Invoke(b.Object, h)
   
-  static member toPrimitive (c:HostObject, _:byte) = 
+  static member toPrimitive (c:ClrObject, _:byte) = 
     Utils.boxClr (if c = null then null else c.ToString())
 
   static member toPrimitive (expr:Dlr.Expr) =
@@ -301,7 +301,7 @@ type TypeConverter =
   //----------------------------------------------------------------------------
   static member toBoolean (b:IjsBool) = b
   static member toBoolean (d:IjsNum) = d > 0.0 || d < 0.0
-  static member toBoolean (c:HostObject) = if c = null then false else true
+  static member toBoolean (c:ClrObject) = if c = null then false else true
   static member toBoolean (s:IjsStr) = s.Length > 0
   static member toBoolean (u:Undefined) = false
   static member toBoolean (o:IjsObj) = true
@@ -311,7 +311,7 @@ type TypeConverter =
     | Boolean -> b.Bool
     | Undefined -> false
     | String -> b.String.Length > 0
-    | Host -> TypeConverter.toBoolean b.Clr
+    | Clr -> TypeConverter.toBoolean b.Clr
     | Object 
     | Function -> true
     
@@ -321,19 +321,19 @@ type TypeConverter =
   //----------------------------------------------------------------------------
   static member toNumber (b:IjsBool) : double = if b then 1.0 else 0.0
   static member toNumber (d:IjsNum) = d
-  static member toNumber (c:HostObject) = if c = null then 0.0 else 1.0
-  static member toNumber (u:Undefined) = Number.NaN
+  static member toNumber (c:ClrObject) = if c = null then 0.0 else 1.0
+  static member toNumber (u:Undefined) = IjsNum.NaN
   static member toNumber (b:IjsBox) =
     match b with
-    | Number -> b.Double
+    | Number -> b.Number
     | Boolean -> if b.Bool then 1.0 else 0.0
     | String -> TypeConverter.toNumber(b.String)
     | Undefined -> NaN
-    | Host -> TypeConverter.toNumber b.Clr
+    | Clr -> TypeConverter.toNumber b.Clr
     | Object 
     | Function -> TypeConverter.toNumber(b.Object)
 
-  static member toNumber (o:IjsObj) : Number = 
+  static member toNumber (o:IjsObj) : IjsNum = 
     TypeConverter.toNumber(o.Methods.Default.Invoke(o, DefaultValue.Number))
 
   static member toNumber (s:IjsStr) = 
@@ -352,8 +352,8 @@ type TypeConverter =
     | Function
     | Object -> b.Object
     | Undefined
-    | Host -> Errors.Generic.notImplemented()
-    | Number -> Environment.createNumber env b.Double
+    | Clr -> Errors.Generic.notImplemented()
+    | Number -> Environment.createNumber env b.Number
     | String -> Environment.createString env b.String
     | Boolean -> Environment.createBoolean env b.Bool
 
@@ -381,7 +381,7 @@ type TypeConverter =
       elif t = typeof<IjsBool> then TypeConverter.toBoolean expr
       elif t = typeof<IjsBox> then TypeConverter.toBox expr
       elif t = typeof<IjsObj> then TypeConverter.toObject(env, expr)
-      elif t = typeof<HostObject> then TypeConverter.toHostObject expr
+      elif t = typeof<ClrObject> then TypeConverter.toClrObject expr
       else Errors.Generic.noConversion expr.Type t
 
   static member convertToT<'a> env expr = 
@@ -398,7 +398,7 @@ type Operators =
 
   //----------------------------------------------------------------------------
   // typeof
-  static member typeOf (o:IjsBox) = TypeCodes.Names.[o.Type]
+  static member typeOf (o:IjsBox) = TypeTags.Names.[o.Tag]
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
   
   //----------------------------------------------------------------------------
@@ -413,19 +413,19 @@ type Operators =
   static member bitCmpl (o:IjsBox) =
     let o = TypeConverter.toNumber o
     let o = TypeConverter.toInt32 o
-    Utils.boxDouble (double (~~~ o))
+    Utils.boxNumber (double (~~~ o))
       
   //----------------------------------------------------------------------------
   // + (unary)
   static member plus (l, r) = Dlr.callStaticT<Operators> "plus" [l; r]
   static member plus (o:IjsBox) =
-    Utils.boxDouble (TypeConverter.toNumber o)
+    Utils.boxNumber (TypeConverter.toNumber o)
     
   //----------------------------------------------------------------------------
   // - (unary)
   static member minus (l, r) = Dlr.callStaticT<Operators> "minus" [l; r]
   static member minus (o:IjsBox) =
-    Utils.boxDouble ((TypeConverter.toNumber o) * -1.0)
+    Utils.boxNumber ((TypeConverter.toNumber o) * -1.0)
 
   //----------------------------------------------------------------------------
   // Binary
@@ -436,8 +436,8 @@ type Operators =
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
   static member lt (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then l.Double < r.Double
-      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+      then l.Number < r.Number
+      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String < r.String
         else TypeConverter.toNumber l < TypeConverter.toNumber r
         
@@ -446,8 +446,8 @@ type Operators =
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
   static member ltEq (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then l.Double <= r.Double
-      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+      then l.Number <= r.Number
+      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String <= r.String
         else TypeConverter.toNumber l <= TypeConverter.toNumber r
         
@@ -456,8 +456,8 @@ type Operators =
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
   static member gt (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then l.Double > r.Double
-      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+      then l.Number > r.Number
+      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String > r.String
         else TypeConverter.toNumber l > TypeConverter.toNumber r
         
@@ -466,8 +466,8 @@ type Operators =
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
   static member gtEq (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then l.Double >= r.Double
-      elif l.Type = TypeCodes.String && r.Type = TypeCodes.String
+      then l.Number >= r.Number
+      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String >= r.String
         else TypeConverter.toNumber l >= TypeConverter.toNumber r
         
@@ -476,46 +476,44 @@ type Operators =
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:IjsBox, r:IjsBox) = 
     if Utils.Box.isNumber l.Marker && Utils.Box.isNumber r.Marker then
-      l.Double = r.Double
+      l.Number = r.Number
 
-    elif l.Type = r.Type then
-      match l.Type with
-      | TypeCodes.Undefined -> true
-      | TypeCodes.String -> l.String = r.String
-      | TypeCodes.Bool -> l.Bool = r.Bool
-      | TypeCodes.Clr
-      | TypeCodes.Function
-      | TypeCodes.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
+    elif l.Tag = r.Tag then
+      match l.Tag with
+      | TypeTags.Undefined -> true
+      | TypeTags.String -> l.String = r.String
+      | TypeTags.Bool -> l.Bool = r.Bool
+      | TypeTags.Clr
+      | TypeTags.Function
+      | TypeTags.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
       | _ -> false
 
     else
-      if l.Type = TypeCodes.Clr 
+      if l.Tag = TypeTags.Clr 
         && l.Clr = null 
-        && (r.Type = TypeCodes.Undefined 
-            || r.Type = TypeCodes.Empty) then true
+        && r.Tag = TypeTags.Undefined then true
       
-      elif r.Type = TypeCodes.Clr 
+      elif r.Tag = TypeTags.Clr 
         && r.Clr = null 
-        && (l.Type = TypeCodes.Undefined 
-            || l.Type = TypeCodes.Empty) then true
+        && l.Tag = TypeTags.Undefined then true
 
-      elif Utils.Box.isNumber l.Marker && r.Type = TypeCodes.String then
-        l.Double = TypeConverter.toNumber r.String
+      elif Utils.Box.isNumber l.Marker && r.Tag = TypeTags.String then
+        l.Number = TypeConverter.toNumber r.String
         
-      elif r.Type = TypeCodes.String && Utils.Box.isNumber r.Marker then
-        TypeConverter.toNumber l.String = r.Double
+      elif r.Tag = TypeTags.String && Utils.Box.isNumber r.Marker then
+        TypeConverter.toNumber l.String = r.Number
 
-      elif l.Type = TypeCodes.Bool then
-        let mutable l = Utils.boxDouble(TypeConverter.toNumber l)
+      elif l.Tag = TypeTags.Bool then
+        let mutable l = Utils.boxNumber(TypeConverter.toNumber l)
         Operators.eq(l, r)
 
-      elif r.Type = TypeCodes.Bool then
-        let mutable r = Utils.boxDouble(TypeConverter.toNumber r)
+      elif r.Tag = TypeTags.Bool then
+        let mutable r = Utils.boxNumber(TypeConverter.toNumber r)
         Operators.eq(l, r)
 
-      elif r.Type >= TypeCodes.Object then
-        match l.Type with
-        | TypeCodes.String -> 
+      elif r.Tag >= TypeTags.Object then
+        match l.Tag with
+        | TypeTags.String -> 
           let mutable r = TypeConverter.toPrimitive(r.Object)
           Operators.eq(l, r)
 
@@ -526,9 +524,9 @@ type Operators =
           else
             false
 
-      elif l.Type >= TypeCodes.Object then
-        match r.Type with
-        | TypeCodes.String -> 
+      elif l.Tag >= TypeTags.Object then
+        match r.Tag with
+        | TypeTags.String -> 
           let mutable l = TypeConverter.toPrimitive(l.Object)
           Operators.eq(l, r)
 
@@ -552,16 +550,16 @@ type Operators =
   static member same (l, r) = Dlr.callStaticT<Operators> "same" [l; r]
   static member same (l:IjsBox, r:IjsBox) = 
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      l.Double = r.Double
+      l.Number = r.Number
 
     elif l.Tag = r.Tag then
-      match l.Type with
-      | TypeCodes.Undefined -> true
-      | TypeCodes.String -> l.String = r.String
-      | TypeCodes.Bool -> l.Bool = r.Bool
-      | TypeCodes.Clr
-      | TypeCodes.Function
-      | TypeCodes.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
+      match l.Tag with
+      | TypeTags.Undefined -> true
+      | TypeTags.String -> l.String = r.String
+      | TypeTags.Bool -> l.Bool = r.Bool
+      | TypeTags.Clr
+      | TypeTags.Function
+      | TypeTags.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
       | _ -> false
 
     else
@@ -578,53 +576,53 @@ type Operators =
   static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
   static member add (l:IjsBox, r:IjsBox) = 
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxDouble (l.Double + r.Double)
+      Utils.boxNumber (l.Number + r.Number)
 
     elif l.Tag = TypeTags.String || r.Tag = TypeTags.String then
       Utils.boxString (TypeConverter.toString(l) + TypeConverter.toString(r))
 
     else
-      Utils.boxDouble (TypeConverter.toNumber(l) + TypeConverter.toNumber(r))
+      Utils.boxNumber (TypeConverter.toNumber(l) + TypeConverter.toNumber(r))
       
   //----------------------------------------------------------------------------
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxDouble (l.Double - r.Double)
+      Utils.boxNumber (l.Number - r.Number)
 
     else
-      Utils.boxDouble (TypeConverter.toNumber(l) - TypeConverter.toNumber(r))
+      Utils.boxNumber (TypeConverter.toNumber(l) - TypeConverter.toNumber(r))
       
   //----------------------------------------------------------------------------
   // /
   static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxDouble (l.Double / r.Double)
+      Utils.boxNumber (l.Number / r.Number)
 
     else
-      Utils.boxDouble (TypeConverter.toNumber(l) / TypeConverter.toNumber(r))
+      Utils.boxNumber (TypeConverter.toNumber(l) / TypeConverter.toNumber(r))
       
   //----------------------------------------------------------------------------
   // *
   static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxDouble (l.Double * r.Double)
+      Utils.boxNumber (l.Number * r.Number)
 
     else
-      Utils.boxDouble (TypeConverter.toNumber(l) * TypeConverter.toNumber(r))
+      Utils.boxNumber (TypeConverter.toNumber(l) * TypeConverter.toNumber(r))
       
   //----------------------------------------------------------------------------
   // %
   static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:IjsBox, r:IjsBox) =
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxDouble (l.Double % r.Double)
+      Utils.boxNumber (l.Number % r.Number)
 
     else
-      Utils.boxDouble (TypeConverter.toNumber l % TypeConverter.toNumber r)
+      Utils.boxNumber (TypeConverter.toNumber l % TypeConverter.toNumber r)
     
   //----------------------------------------------------------------------------
   // &
@@ -634,7 +632,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxDouble (double (l &&& r))
+    Utils.boxNumber (double (l &&& r))
     
   //----------------------------------------------------------------------------
   // |
@@ -644,7 +642,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxDouble (double (l ||| r))
+    Utils.boxNumber (double (l ||| r))
     
   //----------------------------------------------------------------------------
   // ^
@@ -654,7 +652,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxDouble (double (l ^^^ r))
+    Utils.boxNumber (double (l ^^^ r))
     
   //----------------------------------------------------------------------------
   // <<
@@ -664,7 +662,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxDouble (double (l <<< int r))
+    Utils.boxNumber (double (l <<< int r))
     
   //----------------------------------------------------------------------------
   // >>
@@ -674,7 +672,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxDouble (double (l >>> int r))
+    Utils.boxNumber (double (l >>> int r))
     
   //----------------------------------------------------------------------------
   // >>>
@@ -684,7 +682,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxDouble (double (l >>> int r))
+    Utils.boxNumber (double (l >>> int r))
     
   //----------------------------------------------------------------------------
   // &&
@@ -763,9 +761,9 @@ type Function() =
 
   static let getPrototype(f:IjsFunc) =
     let prototype = (f :> IjsObj).Methods.GetProperty.Invoke(f, "prototype")
-    match prototype.Type with
-    | TypeCodes.Function
-    | TypeCodes.Object -> prototype.Object
+    match prototype.Tag with
+    | TypeTags.Function
+    | TypeTags.Object -> prototype.Object
     | _ -> f.Env.Object_prototype
 
   //----------------------------------------------------------------------------
@@ -995,39 +993,37 @@ module HostFunction =
   open Extensions
 
   [<ReferenceEquality>]
-  type internal DispatchTarget<'a when 'a :> Delegate> = {
-    Delegate : HostType
+  type DispatchTarget<'a when 'a :> Delegate> = {
+    Delegate : ClrType
     Function : IjsHostFunc<'a>
     Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
   }
 
   //----------------------------------------------------------------------------
-  let internal marshalArgs (passedArgs:Dlr.ExprParam array) (env:Dlr.Expr) i t =
-    if i < passedArgs.Length 
-      then TypeConverter.convertTo env passedArgs.[i] t
+  let marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
+    if i < args.Length 
+      then TypeConverter.convertTo env args.[i] t
       else Dlr.default' t
       
   //----------------------------------------------------------------------------
-  let internal marshalBoxParams 
-    (f:IjsHostFunc<_>) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
+  let marshalBoxParams (f:IjsHostFunc<_>) args m =
+    args
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map Expr.boxValue
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<IjsBox> x]
+    |> fun x -> Seq.append m [Dlr.newArrayItemsT<IjsBox> x]
     
   //----------------------------------------------------------------------------
-  let internal marshalObjectParams 
-    (f:IjsHostFunc<_>) (passed:Dlr.ExprParam array) (marshalled:Dlr.Expr seq) =
-    passed
+  let marshalObjectParams (f:IjsHostFunc<_>) (args:Dlr.ExprParam array) m =
+    args
     |> Seq.skip f.ArgTypes.Length
-    |> Seq.map TypeConverter.toHostObject
-    |> fun x -> Seq.append marshalled [Dlr.newArrayItemsT<HostObject> x]
+    |> Seq.map TypeConverter.toClrObject
+    |> fun x -> Seq.append m [Dlr.newArrayItemsT<ClrObject> x]
     
   //----------------------------------------------------------------------------
-  let internal createParam i t = Dlr.param (sprintf "a%i" i) t
+  let createParam i t = Dlr.param (sprintf "a%i" i) t
   
   //----------------------------------------------------------------------------
-  let internal compileDispatcher (target:DispatchTarget<'a>) = 
+  let compileDispatcher (target:DispatchTarget<'a>) = 
     let f = target.Function
 
     let argTypes = FSKit.Reflection.getDelegateArgTypes target.Delegate
@@ -1068,7 +1064,7 @@ module HostFunction =
     lambda.Compile()
 
   //----------------------------------------------------------------------------
-  let internal generateInvoke<'a when 'a :> Delegate> f args =
+  let generateInvoke<'a when 'a :> Delegate> f args =
     let casted = Dlr.castT<IjsHostFunc<'a>> f
     Dlr.invoke (Dlr.field casted "Delegate") args
   
@@ -1107,26 +1103,26 @@ module Object =
 
     match hint with
     | DefaultValue.Number ->
-      match valueOf.Type with
-      | TypeCodes.Function ->
+      match valueOf.Tag with
+      | TypeTags.Function ->
         let mutable v = Function.call(valueOf.Func, o)
         if Utils.isPrimitive v then v
         else
-          match toString.Type with
-          | TypeCodes.Function ->
+          match toString.Tag with
+          | TypeTags.Function ->
             let mutable v = Function.call(toString.Func, o)
             if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
           | _ -> Errors.runtime "[[TypeError]]"
       | _ -> Errors.runtime "[[TypeError]]"
 
     | DefaultValue.String ->
-      match toString.Type with
-      | TypeCodes.Function ->
+      match toString.Tag with
+      | TypeTags.Function ->
         let mutable v = Function.call(toString.Func, o)
         if Utils.isPrimitive v then v
         else 
-          match toString.Type with
-          | TypeCodes.Function ->
+          match toString.Tag with
+          | TypeTags.Function ->
             let mutable v = Function.call(valueOf.Func, o)
             if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
           | _ -> Errors.runtime "[[TypeError]]"
@@ -1183,7 +1179,7 @@ module Object =
     //--------------------------------------------------------------------------
     let find (o:IjsObj) name =
       let rec find o name =
-        if Utils.Utils.isNull o then (null, -1)
+        if Utils.isNull o then (null, -1)
         else
           match getIndex o name with
           | true, index ->  o, index
@@ -1203,13 +1199,13 @@ module Object =
 
     //--------------------------------------------------------------------------
     #if DEBUG
-    let putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
+    let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
     #else
-    let inline putRef (o:IjsObj) (name:IjsStr) (val':HostObject) (tc:TypeCode) =
+    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeCode) =
     #endif
       let index = ensureIndex o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
-      o.PropertyDescriptors.[index].Box.Type <- tc
+      o.PropertyDescriptors.[index].Box.Tag <- tc
       
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1218,7 +1214,7 @@ module Object =
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
     #endif
       let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box.Double <- val'
+      o.PropertyDescriptors.[index].Box.Number <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
     //--------------------------------------------------------------------------
@@ -1247,7 +1243,7 @@ module Object =
         if canDelete then
           o.PropertyDescriptors.[index].HasValue <- false
           o.PropertyDescriptors.[index].Box.Clr <- null
-          o.PropertyDescriptors.[index].Box.Double <- 0.0
+          o.PropertyDescriptors.[index].Box.Number <- 0.0
 
         canDelete
 
@@ -1300,7 +1296,7 @@ module Object =
     //--------------------------------------------------------------------------
     let find (o:IjsObj) (i:uint32) =
       let rec find o (i:uint32) =
-        if Utils.Utils.isNull o then (null, 0u, false)
+        if Utils.isNull o then (null, 0u, false)
         else 
           if Utils.Object.isDense o then
             let ii = int i
@@ -1332,7 +1328,7 @@ module Object =
     #else
     let inline putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
     #endif
-      if i > Index.Max then initSparse o
+      if i > Array.MaxIndex then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
           initSparse o
@@ -1356,7 +1352,7 @@ module Object =
     #else
     let inline putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
     #endif
-      if i > Index.Max then initSparse o
+      if i > Array.MaxIndex then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
           initSparse o
@@ -1365,7 +1361,7 @@ module Object =
         else
           let i = int i
           if i >= o.IndexDense.Length then expandStorage o i
-          o.IndexDense.[i].Box.Double <- v
+          o.IndexDense.[i].Box.Number <- v
           o.IndexDense.[i].HasValue <- true
 
       else
@@ -1375,11 +1371,11 @@ module Object =
 
     //--------------------------------------------------------------------------
     #if DEBUG
-    let putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+    let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
     #else
-    let inline putRef (o:IjsObj) (i:uint32) (v:HostObject) (tc:TypeCode) =
+    let inline putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeCode) =
     #endif
-      if i > Index.Max then initSparse o
+      if i > Array.MaxIndex then initSparse o
       if Utils.Object.isDense o then
         if i > 255u && i/2u > o.IndexLength then
           initSparse o
@@ -1389,7 +1385,7 @@ module Object =
           let i = int i
           if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box.Clr <- v
-          o.IndexDense.[i].Box.Type <- tc
+          o.IndexDense.[i].Box.Tag <- tc
 
       else
         o.IndexSparse.[i] <- Utils.boxRef v tc
@@ -1458,7 +1454,7 @@ module Object =
         | NumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
         
-      static member put (o:IjsObj, index:HostObject, value:IjsBox) =
+      static member put (o:IjsObj, index:ClrObject, value:IjsBox) =
         match TypeConverter.toString index with
         | StringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
@@ -1492,7 +1488,7 @@ module Object =
         | NumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
         
-      static member put (o:IjsObj, index:HostObject, value:IjsVal) =
+      static member put (o:IjsObj, index:ClrObject, value:IjsVal) =
         match TypeConverter.toString index with
         | StringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
@@ -1511,35 +1507,35 @@ module Object =
         | index -> o.put(index, value)
         
       //------------------------------------------------------------------------
-      static member put (o:IjsObj, index:IjsBox, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:IjsBox, value:IjsRef, tc:TypeTag) =
         match index with
         | NumberAndIndex i
         | StringAndIndex i -> o.put(i, value, tc)
         | Tagged tc -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
       
-      static member put (o:IjsObj, index:IjsBool, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:IjsBool, value:IjsRef, tc:TypeTag) =
         o.put(TypeConverter.toString index, value, tc)
       
-      static member put (o:IjsObj, index:IjsNum, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:IjsNum, value:IjsRef, tc:TypeTag) =
         match index with
         | NumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value, tc)
         
-      static member put (o:IjsObj, index:HostObject, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:ClrObject, value:IjsRef, tc:TypeTag) =
         match TypeConverter.toString index with
         | StringIndex i -> o.put(i, value, tc)
         | index -> o.put(index, value, tc)
 
-      static member put (o:IjsObj, index:Undefined, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:Undefined, value:IjsRef, tc:TypeTag) =
         o.put("undefined", value, tc)
       
-      static member put (o:IjsObj, index:IjsStr, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:IjsStr, value:IjsRef, tc:TypeTag) =
         match index with
         | StringIndex i -> o.put(i, value, tc)
         | _ -> o.put(TypeConverter.toString index, value, tc)
 
-      static member put (o:IjsObj, index:IjsObj, value:IjsRef, tc:TypeCode) =
+      static member put (o:IjsObj, index:IjsObj, value:IjsRef, tc:TypeTag) =
         match TypeConverter.toString index with
         | StringIndex i -> o.put(i, value, tc)
         | index -> o.put(index, value, tc)
@@ -1560,7 +1556,7 @@ module Object =
         | NumberIndex i -> o.get i
         | _ -> o.get(TypeConverter.toString index)
         
-      static member get (o:IjsObj, index:HostObject) =
+      static member get (o:IjsObj, index:ClrObject) =
         match TypeConverter.toString index with
         | StringIndex i -> o.get i
         | index -> o.get(TypeConverter.toString index)
@@ -1594,7 +1590,7 @@ module Object =
         | NumberIndex i -> o.has i
         | _ -> o.has(TypeConverter.toString index)
         
-      static member has (o:IjsObj, index:HostObject) =
+      static member has (o:IjsObj, index:ClrObject) =
         match TypeConverter.toString index with
         | StringIndex i -> o.has i
         | index -> o.has(TypeConverter.toString index)
@@ -1636,9 +1632,9 @@ module Arguments =
 
       if a.LinkIntact && ii < a.LinkMap.Length then
         match a.LinkMap.[ii] with
-        | ArgumentsLinkArray.Locals, index -> a.Locals.[index].Double <- v
+        | ArgumentsLinkArray.Locals, index -> a.Locals.[index].Number <- v
         | ArgumentsLinkArray.ClosedOver, index -> 
-          a.ClosedOver.[index].Double <- v
+          a.ClosedOver.[index].Number <- v
         | _ -> failwith "Que?"
 
       Object.Index.putVal o i v

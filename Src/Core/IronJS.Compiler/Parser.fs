@@ -126,12 +126,12 @@ module Ast =
     | Var of Tree
     | Identifier of string
     | Block of Tree list
-    | Type of TypeCode
+    | Type of TypeTag
     
   //-------------------------------------------------------------------------
   and [<CustomEquality>] [<CustomComparison>] Variable = {
     Name: string
-    Type: TypeCode option
+    Type: TypeTag option
     Index: int
     ParamIndex: int option
     ForceDynamic: bool
@@ -176,7 +176,7 @@ module Ast =
   and Closure = {
     Name: string
     Index: int
-    Type: TypeCode option
+    Type: TypeTag option
     ClosureLevel: int
     GlobalLevel: int
   } with
@@ -636,13 +636,13 @@ module Ast =
   //-------------------------------------------------------------------------
   let expressionType tree =
     match tree with
-    | Tree.Number _ -> Some TypeCodes.Number
-    | Tree.Function (_, _, _) -> Some TypeCodes.Function
-    | Tree.Object _ -> Some TypeCodes.Object
+    | Tree.Number _ -> Some TypeTags.Number
+    | Tree.Function (_, _, _) -> Some TypeTags.Function
+    | Tree.Object _ -> Some TypeTags.Object
     | Tree.Binary (op, l, r) ->
       match op with
-      | BinaryOp.BitShiftLeft -> Some TypeCodes.Number
-      | BinaryOp.BitAnd -> Some TypeCodes.Number
+      | BinaryOp.BitShiftLeft -> Some TypeTags.Number
+      | BinaryOp.BitAnd -> Some TypeTags.Number
       | _ -> None
     | _ -> None
 

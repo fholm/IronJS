@@ -138,25 +138,24 @@ namespace IronJS.DevUI {
 
             } else {
 
-                switch (box.Type) {
-                    case IronJS.TypeCodes.Undefined:
-                    case IronJS.TypeCodes.Empty:
+                switch (box.Tag) {
+                    case IronJS.TypeTags.Undefined:
                         header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
                         break;
 
-                    case IronJS.TypeCodes.Bool:
+                    case IronJS.TypeTags.Bool:
                         header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkBlue);
                         break;
 
-                    case IronJS.TypeCodes.String:
+                    case IronJS.TypeTags.String:
                         item.Foreground = new SolidColorBrush(Colors.Brown);
                         header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(box) + "\"";
                         break;
 
-                    case IronJS.TypeCodes.Object:
-                    case IronJS.TypeCodes.Function:
+                    case IronJS.TypeTags.Object:
+                    case IronJS.TypeTags.Function:
                         header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkGreen);
                         if (printedObjects.ContainsKey(box.Object)) {

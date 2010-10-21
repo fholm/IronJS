@@ -7,7 +7,7 @@ module Increment =
 
   //----------------------------------------------------------------------------
   type ChangeVariable = 
-    Ctx -> Dlr.Expr -> TypeCode option -> Dlr.Expr
+    Ctx -> Dlr.Expr -> TypeTag option -> Dlr.Expr
     
   //----------------------------------------------------------------------------
   type ChangeProperty = 
@@ -36,7 +36,7 @@ module Increment =
 
     | Some tc ->
       match tc with
-      | TypeCodes.Number ->
+      | TypeTags.Number ->
         Dlr.blockTmpT<IjsNum> (fun tmp -> 
           [
             (Dlr.assign tmp expr)

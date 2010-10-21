@@ -16,7 +16,7 @@ type TargetMode
 type Target = {
   Ast: Ast.Tree
   TargetMode: TargetMode
-  Delegate: HostType option
+  Delegate: ClrType option
   Environment: IjsEnv
 } with
   member x.ParamTypes = 

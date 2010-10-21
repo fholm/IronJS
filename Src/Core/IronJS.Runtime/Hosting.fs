@@ -60,39 +60,39 @@ module Hosting =
 
     //Boxed bools
     x.Boxed_False.Bool  <- false
-    x.Boxed_False.Type  <- TypeCodes.Bool
+    x.Boxed_False.Tag  <- TypeTags.Bool
     x.Boxed_True.Bool   <- true
-    x.Boxed_True.Type   <- TypeCodes.Bool
+    x.Boxed_True.Tag   <- TypeTags.Bool
 
     //Boxed doubles
-    x.Boxed_NegOne.Double <- -1.0
-    x.Boxed_NegOne.Type   <- TypeCodes.Number
-    x.Boxed_Zero.Double   <- 0.0
-    x.Boxed_Zero.Type     <- TypeCodes.Number
-    x.Boxed_One.Double    <- 1.0
-    x.Boxed_One.Type      <- TypeCodes.Number
-    x.Boxed_NaN.Double    <- System.Double.NaN
-    x.Boxed_NaN.Type      <- TypeCodes.Number
+    x.Boxed_NegOne.Number <- -1.0
+    x.Boxed_NegOne.Tag   <- TypeTags.Number
+    x.Boxed_Zero.Number   <- 0.0
+    x.Boxed_Zero.Tag     <- TypeTags.Number
+    x.Boxed_One.Number    <- 1.0
+    x.Boxed_One.Tag      <- TypeTags.Number
+    x.Boxed_NaN.Number    <- System.Double.NaN
+    x.Boxed_NaN.Tag      <- TypeTags.Number
 
     //Boxed null
     x.Boxed_Null.Clr  <- null
-    x.Boxed_Null.Type <- TypeCodes.Clr
+    x.Boxed_Null.Tag <- TypeTags.Clr
 
     //Boxed empty string
     x.Boxed_EmptyString.Clr   <- ""
-    x.Boxed_EmptyString.Type  <- TypeCodes.String
+    x.Boxed_EmptyString.Tag  <- TypeTags.String
 
     //Boxed undefined
     x.Boxed_Undefined.Clr   <- Undefined.Instance
-    x.Boxed_Undefined.Type  <- TypeCodes.Undefined
+    x.Boxed_Undefined.Tag  <- TypeTags.Undefined
 
     //Temp boxes
-    x.Temp_Bool.Type      <- TypeCodes.Bool
-    x.Temp_Number.Type    <- TypeCodes.Number
-    x.Temp_Clr.Type       <- TypeCodes.Clr
-    x.Temp_String.Type    <- TypeCodes.String
-    x.Temp_Function.Type  <- TypeCodes.Function
-    x.Temp_Object.Type    <- TypeCodes.Object
+    x.Temp_Bool.Tag      <- TypeTags.Bool
+    x.Temp_Number.Tag    <- TypeTags.Number
+    x.Temp_Clr.Tag       <- TypeTags.Clr
+    x.Temp_String.Tag    <- TypeTags.String
+    x.Temp_Function.Tag  <- TypeTags.Function
+    x.Temp_Object.Tag    <- TypeTags.Object
 
     x
 

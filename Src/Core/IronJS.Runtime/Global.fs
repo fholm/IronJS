@@ -10,8 +10,8 @@ module Global =
 
   //15.1.2.1
   let eval (target:Compiler.EvalTarget) =
-    match target.Target.Type with
-    | TypeCodes.String ->
+    match target.Target.Tag with
+    | TypeTags.String ->
       let tree = 
         Ast.LocalScope(
          {Ast.Scope.New with Closures=target.Closures}, 
@@ -44,11 +44,11 @@ module Global =
 
   //15.1.2.2
   let parseInt (str:IjsStr) =
-    Utils.boxDouble (double (System.Int32.Parse(str)))
+    Utils.boxNumber (double (System.Int32.Parse(str)))
 
   //15.1.2.3
   let parseFloat (str:IjsStr) =
-    Utils.boxDouble (Api.TypeConverter.toNumber str)
+    Utils.boxNumber (Api.TypeConverter.toNumber str)
 
   //15.1.2.4
   let isNaN (number:IjsNum) =

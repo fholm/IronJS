@@ -55,7 +55,7 @@ type ScopeHelpers() =
     (name, args, dc, stop, g:IjsObj, s:Scope, i) =
 
     let callFunc this' (func:IjsBox) =
-      if func.Type >= IronJS.TypeCodes.Function then
+      if func.Tag >= TypeTags.Function then
         let func = func.Func
         let internalArgs = [|func :> obj; this' :> obj|]
         let compiled = func.Compiler.compileAs<'a> func

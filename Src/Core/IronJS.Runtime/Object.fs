@@ -27,7 +27,7 @@ module Object =
     match Api.Object.Property.getIndex o name with
     | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
     | _ ->
-      let mutable i = Index.Min   
+      let mutable i = Array.MinIndex
       if Utils.isStringIndex(name, &i) 
         then Api.Object.Index.hasIndex o i
         else false
@@ -88,10 +88,9 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.1
   let private objectConstructor (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
-    match v.Type with
-    | TypeCodes.Empty
-    | TypeCodes.Undefined -> Api.Environment.createObject f.Env
-    | TypeCodes.Clr when v.Clr = null -> Api.Environment.createObject f.Env
+    match v.Tag with
+    | TypeTags.Undefined -> Api.Environment.createObject f.Env
+    | TypeTags.Clr when v.Clr = null -> Api.Environment.createObject f.Env
     | _ -> Api.TypeConverter.toObject(f.Env, v)
 
   //----------------------------------------------------------------------------

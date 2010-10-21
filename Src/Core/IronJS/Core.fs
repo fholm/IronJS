@@ -16,40 +16,33 @@ open System.Globalization
 
 
 //-------------------------------------------------------------------------
-//
 // Type aliases to give a more meaningful name to some special types in 
 // the context of IronJS
-//
 //-------------------------------------------------------------------------
+type Class = byte
 type FunId = int64
 type ClassId = int64
-type TypeCode = uint32
 type TypeTag = uint32
+type TypeMarker = uint16
 type BoxField = string
-type Number = double
-type DelegateType = System.Type
-type HostObject = System.Object
-type HostType = System.Type
+
 type ConstructorMode = byte
 type PropertyAttr = int16
-type BoxTag = uint16
 type DescriptorAttr = uint16
+
+type ClrType = System.Type
+type ClrObject = System.Object
+type ClrDelegate = System.Delegate
+type ClrDelegateType = System.Type
 
 type IjsNum = double
 type IjsVal = IjsNum
 type IjsStr = string
 type IjsBool = bool
-type IjsRef = HostObject
-type Class = byte
+type IjsRef = ClrObject
 
-//-------------------------------------------------------------------------
-//
-// Constants
-//
-//-------------------------------------------------------------------------
-module TypeCodes =
+module TypeTags =
   let [<Literal>] Box = 0x00000000u
-  let [<Literal>] Empty = 0xFFFFFF00u
   let [<Literal>] Bool = 0xFFFFFF01u
   let [<Literal>] Number = 0xFFFFFF02u
   let [<Literal>] Clr = 0xFFFFFF03u
@@ -61,7 +54,6 @@ module TypeCodes =
   let Names = 
     Map.ofList [
       (Box, "internal")
-      (Empty, "undefined")
       (Bool, "boolean")
       (Number, "number")
       (Clr, "clr")
@@ -71,33 +63,9 @@ module TypeCodes =
       (Function, "function")
     ]
 
-module TypeTags =
-  let [<Literal>] Box = 0x00000000u
-  let [<Literal>] Bool = 0xFFFFFF01u
-  let [<Literal>] Number = 0xFFFFFF02u
-  let [<Literal>] Host = 0xFFFFFF03u
-  let [<Literal>] String = 0xFFFFFF04u
-  let [<Literal>] Undefined = 0xFFFFFF05u
-  let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] UserObject = 0xFFFFFF07u
-  let [<Literal>] Function = 0xFFFFFF08u
-
-  let Names = 
-    Map.ofList [
-      (Box, "internal")
-      (Bool, "boolean")
-      (Number, "number")
-      (Host, "clr")
-      (String, "string")
-      (Undefined, "undefined")
-      (Object, "object")
-      (UserObject, "object")
-      (Function, "function")
-    ]
-
 module BoxFields =
   let [<Literal>] Bool = "Bool"
-  let [<Literal>] Number = "Double"
+  let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Undefined"
   let [<Literal>] String = "String"
@@ -156,9 +124,10 @@ module MarshalModes =
   let [<Literal>] This = 1
   let [<Literal>] Function = 0
 
-module Index =
-  let [<Literal>] Min = 0u
-  let [<Literal>] Max = 2147483646u
+module Array =
+  let [<Literal>] MinIndex = 0u
+  let [<Literal>] MaxIndex = 2147483646u
+  let [<Literal>] MaxSize = 2147483647u
 
 module ArgumentsLinkArray =
   let [<Literal>] Locals = 0uy
@@ -188,7 +157,7 @@ module TaggedBools =
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
-    [<FieldOffset(0)>]  val mutable Clr : HostObject 
+    [<FieldOffset(0)>]  val mutable Clr : ClrObject 
     [<FieldOffset(0)>]  val mutable Object : IjsObj
     [<FieldOffset(0)>]  val mutable Func : IjsFunc
     [<FieldOffset(0)>]  val mutable String : IjsStr
@@ -197,10 +166,9 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
-    [<FieldOffset(8)>]  val mutable Double : IjsNum
+    [<FieldOffset(8)>]  val mutable Number : IjsNum
 
     //Type & Tag
-    [<FieldOffset(12)>] val mutable Type : TypeCode
     [<FieldOffset(12)>] val mutable Tag : TypeTag
     [<FieldOffset(14)>] val mutable Marker : uint16
   end
@@ -281,14 +249,14 @@ and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
 and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
 and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
 and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
-and PutRefProperty = delegate of IjsObj * IjsStr * HostObject * TypeTag -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
 
 and GetIndex = delegate of IjsObj * uint32 -> IjsBox
 and HasIndex = delegate of IjsObj * uint32 -> IjsBool
 and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
 and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
 and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
-and PutRefIndex = delegate of IjsObj * uint32 * HostObject * TypeTag -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
 
 and Default = delegate of IjsObj * byte -> IjsBox
 
@@ -320,15 +288,13 @@ and [<AllowNullLiteral>] Object =
     Methods = Unchecked.defaultof<InternalMethods>
 
     IndexLength = indexSize
-    IndexDense =
-      if indexSize <= (Index.Max+1u) && indexSize > 0u
-        then Array.zeroCreate (int indexSize) 
-        else Array.zeroCreate 0
+    IndexDense = 
+      if indexSize <= Array.MaxSize
+        then Array.zeroCreate (int indexSize) else Array.empty
 
     IndexSparse = 
-      if indexSize > (Index.Max+1u) && indexSize > 0u
-        then MutableSorted<uint32, Box>() 
-        else null
+      if indexSize > Array.MaxSize && indexSize > 0u
+        then MutableSorted<uint32, Box>() else null
 
     PropertyMap = map
     PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
@@ -340,7 +306,7 @@ and [<AllowNullLiteral>] Object =
     Prototype = null
     Methods = Unchecked.defaultof<InternalMethods>
 
-    IndexLength = Index.Min
+    IndexLength = Array.MinIndex
     IndexDense = null
     IndexSparse = null
 
@@ -371,6 +337,7 @@ and [<AllowNullLiteral>] Arguments =
 
       LinkMap = linkMap
       LinkIntact = true
+
     } then
       let o = a :> IjsObj
       o.Methods <- env.Arguments_methods
@@ -395,7 +362,7 @@ and [<AllowNullLiteral>] Arguments =
 
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] ICompiler =
-  abstract member compile : IjsFunc * DelegateType -> Delegate
+  abstract member compile : IjsFunc * ClrDelegateType -> Delegate
   abstract member compileAs<'a when 'a :> Delegate> : IjsFunc -> 'a
 
   
@@ -403,11 +370,11 @@ and [<AllowNullLiteral>] ICompiler =
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] CachedCompiler(compiler) = 
 
-  let cache = new MutableDict<DelegateType, Delegate>()
+  let cache = new MutableDict<ClrDelegateType, Delegate>()
 
   interface ICompiler with
 
-    member x.compile (f:IjsFunc, t:DelegateType) = 
+    member x.compile (f:IjsFunc, t:ClrDelegateType) = 
       let mutable delegate' = null
 
       if not (cache.TryGetValue(t, &delegate')) then
@@ -478,8 +445,8 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit Function
   
   val mutable Delegate : 'a
-  val mutable ArgTypes : HostType array
-  val mutable ReturnType : HostType
+  val mutable ArgTypes : ClrType array
+  val mutable ReturnType : ClrType
 
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
@@ -523,9 +490,7 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | _ -> x.ArgTypes.Length
 
 //-------------------------------------------------------------------------
-//
 // Class that encapsulates a runtime environment
-//
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment =
   //Id counters
@@ -591,24 +556,18 @@ and [<AllowNullLiteral>] Environment =
     Compilers = new MutableDict<FunId, ICompiler>()
   }
 
-
-
 //------------------------------------------------------------------------------
-//
 // Class representing a javascript user exception
-//
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] UserError(jsValue:Box) =
   inherit Exception()
   member x.JsValue = jsValue
 
-
-
-//-------------------------------------------------------------------------
-// Aliases
 //-------------------------------------------------------------------------
 and Scope = Box array
 and DynamicScope = (int * Object) list
+
+//-------------------------------------------------------------------------
 and IjsBox = Box
 and IjsEnv = Environment
 and IjsObj = Object
@@ -616,17 +575,12 @@ and IjsFunc = Function
 and IjsHostFunc<'a when 'a :> Delegate> = HostFunction<'a>
 
 //-------------------------------------------------------------------------
-//
-// Type definitions for the different runtime types
-//
-//-------------------------------------------------------------------------
 module TypeObjects =
-  let Box = typeof<Box>
-  let BoxByRef = typeof<Box>.MakeByRefType()
-  let Bool = typeof<bool>
-  let Number = typeof<Number>
-  let Clr = typeof<System.Object>
-  let String = typeof<string>
+  let Box = typeof<IjsBox>
+  let Bool = typeof<IjsBool>
+  let Number = typeof<IjsNum>
+  let Clr = typeof<ClrObject>
+  let String = typeof<IjsStr>
   let Undefined = typeof<Undefined>
-  let Object = typeof<Object>
-  let Function = typeof<Function>
+  let Object = typeof<IjsObj>
+  let Function = typeof<IjsFunc>

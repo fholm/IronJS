@@ -22,4 +22,4 @@ module Math =
 
     env.Globals
       .Methods.PutRefProperty
-        .Invoke(env.Globals, "Math", math, TypeCodes.Object)
+        .Invoke(env.Globals, "Math", math, TypeTags.Object)

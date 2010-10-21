@@ -93,7 +93,6 @@
   <ItemGroup>
     <Compile Include="Parser.fs" />
     <Compile Include="Context.fs" />
-    <Compile Include="Expr.fs" />
     <Compile Include="Scope.fs" />
     <Compile Include="Object.fs" />
     <Compile Include="Identifier.fs" />

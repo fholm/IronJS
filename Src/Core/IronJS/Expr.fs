@@ -39,7 +39,7 @@ module Expr =
     Dlr.assign (Dlr.field (Dlr.Ext.unwrap expr) BoxFields.Clr) Dlr.null'
     
   //-------------------------------------------------------------------------
-  let getBoxType expr = Dlr.field expr "Type"
+  let getBoxType expr = Dlr.field expr "Tag"
   let setBoxType expr tc = Dlr.assign (getBoxType expr) (Dlr.const' tc)
   let setBoxTypeOf expr of' = setBoxType expr (Utils.expr2tc of')
       
@@ -56,7 +56,7 @@ module Expr =
   let testBoxType expr typeCode = 
     if isBoxed expr then
       let comparer = 
-        if typeCode >= TypeCodes.Clr
+        if typeCode >= TypeTags.Clr
           then Dlr.gtEq
           else Dlr.eq
       comparer (getBoxType expr) (Dlr.const' typeCode)
@@ -120,13 +120,13 @@ module Expr =
   let unboxObject box = Dlr.field box BoxFields.Object
   let unboxFunction box = Dlr.field box BoxFields.Function
 
-  let containsNumber box = testBoxType box TypeCodes.Number
-  let containsBool box = testBoxType box TypeCodes.Bool
-  let containsClr box = testBoxType box TypeCodes.Clr
-  let containsString box = testBoxType box TypeCodes.String
-  let containsUndefined box = testBoxType box TypeCodes.Undefined
-  let containsObject box = testBoxType box TypeCodes.Object
-  let containsFunction box = testBoxType box TypeCodes.Function
+  let containsNumber box = testBoxType box TypeTags.Number
+  let containsBool box = testBoxType box TypeTags.Bool
+  let containsClr box = testBoxType box TypeTags.Clr
+  let containsString box = testBoxType box TypeTags.String
+  let containsUndefined box = testBoxType box TypeTags.Undefined
+  let containsObject box = testBoxType box TypeTags.Object
+  let containsFunction box = testBoxType box TypeTags.Function
 
   //-------------------------------------------------------------------------
   let unbox type' (expr:Dlr.Expr) =
@@ -211,7 +211,7 @@ module Expr =
       let typeCode = Utils.expr2tc rexpr
       let box = Dlr.Ext.unwrap lexpr
       let val' = Dlr.Ext.unwrap rexpr
-      if typeCode <= TypeCodes.Number then
+      if typeCode <= TypeTags.Number then
         Dlr.blockSimple [
           (setBoxClrNull box)
           (setBoxTypeOf box val')

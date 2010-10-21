@@ -17,23 +17,26 @@ module Object =
     //--------------------------------------------------------------------------
     let putBox expr name value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke
-          (Expr.Object.Methods.putBoxProperty tmp)
-          [tmp; name; value]])
+        [ (Dlr.invoke
+            (Expr.Object.Methods.putBoxProperty tmp)
+            [tmp; name; value])
+          (value)])
     
     //--------------------------------------------------------------------------
     let putRef expr name value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke
-          (Expr.Object.Methods.putRefProperty tmp)
-          [tmp; name; value; value |> Utils.expr2tc |> Dlr.const']])
+        [ (Dlr.invoke
+            (Expr.Object.Methods.putRefProperty tmp)
+            [tmp; name; value; value |> Utils.expr2tc |> Dlr.const'])
+          (value)])
     
     //--------------------------------------------------------------------------
     let putVal expr name (value:Dlr.Expr) =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke
-          (Expr.Object.Methods.putValProperty tmp)
-          [tmp; name; Expr.normalizeVal value]])
+        [ (Dlr.invoke
+            (Expr.Object.Methods.putValProperty tmp)
+            [tmp; name; Expr.normalizeVal value])
+          (value)])
 
     //--------------------------------------------------------------------------
     let put expr name (value:Dlr.Expr) = 
@@ -76,17 +79,19 @@ module Object =
 
     let convertIndex_BoxVal expr index value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.callStaticT<Api.Object.Index.Converters> 
-          "put" [tmp; index; value]])
+        [ (Dlr.callStaticT<Api.Object.Index.Converters> 
+            "put" [tmp; index; value])
+          (value)])
     
     //--------------------------------------------------------------------------
     let putBox expr index value =
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [Dlr.invoke
-            (Expr.Object.Methods.putBoxIndex tmp)
-            [tmp; index; value]])
+          [ (Dlr.invoke
+              (Expr.Object.Methods.putBoxIndex tmp)
+              [tmp; index; value])
+            (value)])
 
       | TypeCode -> convertIndex_BoxVal expr index value
 
@@ -95,9 +100,10 @@ module Object =
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [Dlr.invoke
-            (Expr.Object.Methods.putValIndex tmp)
-            [tmp; index; Expr.normalizeVal value]])
+          [ (Dlr.invoke
+              (Expr.Object.Methods.putValIndex tmp)
+              [tmp; index; Expr.normalizeVal value])
+            (value)])
             
       | TypeCode -> convertIndex_BoxVal expr index value
 
@@ -106,14 +112,16 @@ module Object =
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [Dlr.invoke
-            (Expr.Object.Methods.putRefIndex tmp)
-            [tmp; index; value; value |> Utils.expr2tc |> Dlr.const']])
+          [ (Dlr.invoke
+              (Expr.Object.Methods.putRefIndex tmp)
+              [tmp; index; value; value |> Utils.expr2tc |> Dlr.const'])
+            (value)])
             
       | TypeCode -> 
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [Dlr.callStaticT<Api.Object.Index.Converters> 
-            "put" [tmp; index; value; value |> Utils.expr2tc |> Dlr.const']])
+          [ (Dlr.callStaticT<Api.Object.Index.Converters> 
+              "put" [tmp; index; value; value |> Utils.expr2tc |> Dlr.const'])
+            (value)])
       
     //--------------------------------------------------------------------------
     let put expr index value =

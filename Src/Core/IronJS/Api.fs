@@ -1201,7 +1201,7 @@ module Object =
     #if DEBUG
     let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
     #else
-    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeCode) =
+    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
     #endif
       let index = ensureIndex o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
@@ -1373,7 +1373,7 @@ module Object =
     #if DEBUG
     let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
     #else
-    let inline putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeCode) =
+    let inline putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
     #endif
       if i > Array.MaxIndex then initSparse o
       if Utils.Object.isDense o then

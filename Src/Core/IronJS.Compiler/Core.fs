@@ -427,7 +427,7 @@ module Core =
           (Expr.testIsObject 
             (compileAst ctx tree)
             (fun x -> Object.Property.put x name value)
-            (fun x -> Dlr.void')
+            (fun x -> value)
           )
         ]
       )
@@ -439,7 +439,7 @@ module Core =
           (Expr.testIsObject
             (compileAst ctx tree)
             (fun x -> Object.Index.put x index value)
-            (fun x -> Dlr.void')
+            (fun x -> value)
           )
         ]
       )

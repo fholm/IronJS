@@ -102,7 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\..\Lib\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>..\..\..\Lib\CLR4\Microsoft.Dynamic.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />

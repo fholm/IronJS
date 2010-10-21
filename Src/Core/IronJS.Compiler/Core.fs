@@ -258,7 +258,7 @@ module Core =
     | Ast.FunctionScope ->
       let scopeInit = Scope.Function.initLocalScope ctx s.LocalCount
       let scopeChainInit = Scope.Function.initScopeChain ctx s.ClosedOverCount
-      let dynamicChainInit = Scope.Function.initDynamicChain ctx s
+      let DynamicScopeInit = Scope.Function.initDynamicScope ctx s
       
       let variables = 
         (Scope.Function.demoteMissingParams 
@@ -274,7 +274,7 @@ module Core =
         [Scope.Function.initArguments ctx s]
 
       Seq.concat [
-        [scopeInit; scopeChainInit; dynamicChainInit]
+        [scopeInit; scopeChainInit; DynamicScopeInit]
         (initParams |> List.ofSeq)
         (initNonParams |> List.ofSeq)
         (initArguments)
@@ -474,11 +474,11 @@ module Core =
       (Expr.assignValue (Dlr.field target "This") ctx.This)
       (Expr.assignValue (Dlr.field target "Local") ctx.LocalExpr)
       (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ChainExpr)
-      (Expr.assignValue (Dlr.field target "DynamicChain") ctx.DynamicExpr)
+      (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicExpr)
 
       (Expr.testIsFunction
         (eval)
-        (fun x -> Api.Expr.jsFunctionInvoke x ctx.This [target])
+        (fun x -> Function.invokeAsFunction x ctx.This [target])
         (fun x -> ctx.Env_Boxed_Undefined)
       )
     ]
@@ -510,7 +510,7 @@ module Core =
       This = Dlr.paramT<IjsObj> "~this"
       LocalExpr = Dlr.paramT<Scope> "~locals"
       ChainExpr = Dlr.paramT<Scope> "~chain"
-      DynamicExpr = Dlr.paramT<DynamicChain> "~dynamic"
+      DynamicExpr = Dlr.paramT<DynamicScope> "~dynamic"
       ParameterExprs = parameterExprs
     }
 

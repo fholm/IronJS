@@ -24,12 +24,12 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4.5
   let hasOwnProperty (o:IjsObj) (name:IjsStr) =
-    match Api.ObjectModule.Property.getIndex o name with
+    match Api.Object.Property.getIndex o name with
     | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
     | _ ->
       let mutable i = Index.Min   
       if Utils.isStringIndex(name, &i) 
-        then Api.ObjectModule.Index.hasIndex o i
+        then Api.Object.Index.hasIndex o i
         else false
 
   //----------------------------------------------------------------------------
@@ -52,36 +52,36 @@ module Object =
   let setupPrototype (env:IjsEnv) =
     //15.2.4.2
     env.Object_prototype.put("toString", 
-      Api.DelegateFunction.create env (new Func<IjsObj, IjsStr>(toString))
+      Api.HostFunction.create env (new Func<IjsObj, IjsStr>(toString))
     )
     
     //15.2.4.3
     env.Object_prototype.put("toLocaleString", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr>(toLocaleString)))
     )
 
     //15.2.4.4
     env.Object_prototype.put("valueOf", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsObj, IjsObj>(valueOf)))
     )
 
     //15.2.4.5
     env.Object_prototype.put("hasOwnProperty", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)))
     )
     
     //15.2.4.6
     env.Object_prototype.put("isPrototypeOf", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)))
     )
     
     //15.2.4.7
     env.Object_prototype.put("propertyIsEnumerable", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)))
     )
       
@@ -98,7 +98,7 @@ module Object =
   //15.2.1
   let setupConstructor (env:IjsEnv) =
     let objectCtor = 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
 
     objectCtor.ConstructorMode <- ConstructorModes.Host

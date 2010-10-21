@@ -21,6 +21,7 @@ module Utils =
   module Box = 
     let isNumber tag = tag < 0xFFF9us
     let isTagged tag = tag > 0xFFF8us
+    let isBothNumber l r = isNumber l && isNumber r
 
   module Descriptor = 
     let hasValue (desc:Descriptor) =
@@ -77,6 +78,18 @@ module Utils =
         | StringIndex i -> Some i
         | _ -> None
       | _ -> None
+
+    let (|Boolean|Number|Host|String|Undefined|Object|Function|) (box:IjsBox) =
+      if Box.isNumber box.Marker then Number
+      else
+        match box.Tag with
+        | TypeTags.Bool -> Boolean
+        | TypeTags.Host -> Host
+        | TypeTags.String -> String
+        | TypeTags.Undefined -> Undefined
+        | TypeTags.Object -> Object
+        | TypeTags.Function -> Function
+        | _ -> failwith "Que?"
 
   let asRef (x:HostType) = x.MakeByRefType()
   let isVoid t = typeof<System.Void> = t

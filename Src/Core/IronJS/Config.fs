@@ -7,8 +7,8 @@ module Version =
   let [<Literal>] Revision = 0
   let [<Literal>] Tag = "preview"
   let [<Literal>] String = "0.1.91.0"
-  let Tagged = sprintf "%s-%s" String Tag
   let Tupled = Major, Minor, Build, Revision, Tag
+  let Tagged = sprintf "%s-%s" String Tag
   let FullName = sprintf "IronJS %s" Tagged
 
 module Aliases = 

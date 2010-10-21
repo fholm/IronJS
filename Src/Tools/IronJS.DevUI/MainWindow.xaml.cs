@@ -55,7 +55,7 @@ namespace IronJS.DevUI {
             ijsCtx = IronJS.Hosting.Context.Create();
 
             var inspect =
-                IronJS.Api.DelegateFunction.create<Action<IronJS.Box>>(
+                IronJS.Api.HostFunction.create<Action<IronJS.Box>>(
                     ijsCtx.Environment, Inspect);
 
             ijsCtx.PutGlobal("inspect", inspect);
@@ -87,7 +87,7 @@ namespace IronJS.DevUI {
                 ExpressionTree.Text = "";
                 var result = Utils.box(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
-                Result.Text = IronJS.Api.TypeConverter.toString(ref result);
+                Result.Text = IronJS.Api.TypeConverter.toString(result);
 
             } catch (Exception ex) {
                 stopWatch.Stop();
@@ -120,23 +120,8 @@ namespace IronJS.DevUI {
                           kvp.Key, obj.PropertyDescriptors[kvp.Value].Box));
                 }
 
-                if (Utils.isDense(obj)) {
-                    var length = obj.IndexLength;
-                    for (var i = 0u; i < length; ++i) {
-                        if (isGlobal) {
-                            printedObjects.Clear();
-                        }
-
-                        items.Add(RenderIronJSValue("[" + i + "]", obj.IndexDense[(int)i].Box));
-                    }
-                } else {
-                    foreach (var kvp in obj.IndexSparse) {
-                        if (isGlobal) {
-                            printedObjects.Clear();
-                        }
-
-                        items.Add(RenderIronJSValue("[" + kvp.Key + "]", kvp.Value));
-                    }
+                for (var i = 0u; i < obj.IndexLength; ++i) {
+                    items.Add(RenderIronJSValue("[" + i + "]", obj.Methods.GetIndex(obj, i)));
                 }
             }
 
@@ -148,7 +133,7 @@ namespace IronJS.DevUI {
             var header = item as HeaderedItemsControl;
 
             if (IronJS.Utils.Box.isNumber(box.Marker)) {
-                header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+                header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                 item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
 
             } else {
@@ -156,23 +141,23 @@ namespace IronJS.DevUI {
                 switch (box.Type) {
                     case IronJS.TypeCodes.Undefined:
                     case IronJS.TypeCodes.Empty:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
                         break;
 
                     case IronJS.TypeCodes.Bool:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkBlue);
                         break;
 
                     case IronJS.TypeCodes.String:
                         item.Foreground = new SolidColorBrush(Colors.Brown);
-                        header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(ref box) + "\"";
+                        header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(box) + "\"";
                         break;
 
                     case IronJS.TypeCodes.Object:
                     case IronJS.TypeCodes.Function:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(ref box);
+                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkGreen);
                         if (printedObjects.ContainsKey(box.Object)) {
                             item = new TreeViewItem();

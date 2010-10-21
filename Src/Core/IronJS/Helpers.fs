@@ -11,8 +11,8 @@ open IronJS.Api
 type ScopeHelpers() =
 
   //----------------------------------------------------------------------------
-  static let findObject name (dc:DynamicChain) stop =
-    let rec find (dc:DynamicChain) =
+  static let findObject name (dc:DynamicScope) stop =
+    let rec find (dc:DynamicScope) =
       match dc with
       | [] -> None
       | (level, o)::xs ->
@@ -28,7 +28,7 @@ type ScopeHelpers() =
     find dc
       
   //----------------------------------------------------------------------------
-  static let findVariable name (dc:DynamicChain) stop = 
+  static let findVariable name (dc:DynamicScope) stop = 
     match findObject name dc stop with
     | Some o -> Some(o.Methods.GetProperty.Invoke(o, name))
     | _ -> None
@@ -72,15 +72,15 @@ type ScopeHelpers() =
         else callFunc g (s.[i])
         
   //----------------------------------------------------------------------------
-  static member DynamicDelete (dc:DynamicChain, g:IjsObj, name) =
+  static member DynamicDelete (dc:DynamicScope, g:IjsObj, name) =
     match findObject name dc -1 with
     | Some o -> o.Methods.DeleteProperty.Invoke(o, name)
     | _ -> g.Methods.DeleteProperty.Invoke(g, name)
 
   //----------------------------------------------------------------------------
-  static member PushScope (dc:DynamicChain byref, new', level) =
+  static member PushScope (dc:DynamicScope byref, new', level) =
     dc <- (level, new') :: dc
       
   //----------------------------------------------------------------------------
-  static member PopScope (dc:DynamicChain byref) =
+  static member PopScope (dc:DynamicScope byref) =
     dc <- List.tail dc

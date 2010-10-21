@@ -38,7 +38,7 @@ module Global =
           target.This,
           target.Local,
           target.ScopeChain,
-          target.DynamicChain))
+          target.DynamicScope))
 
     | _ -> target.Target
 
@@ -72,30 +72,30 @@ module Global =
 
     //15.1.2.1
     env.Globals.put("eval", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<Compiler.EvalTarget, IjsBox>(eval)))
     )
 
     //15.1.2.2
     env.Globals.put("parseFloat",
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsStr, IjsBox>(parseFloat)))
     )
     
     //15.1.2.3
     env.Globals.put("parseInt", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsStr, IjsBox>(parseInt)))
     )
     
     //15.1.2.4
     env.Globals.put("isNaN", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsNum, IjsBox>(isNaN)))
     )
     
     //15.1.2.5
     env.Globals.put("isFinite", 
-      (Api.DelegateFunction.create
+      (Api.HostFunction.create
         env (new Func<IjsNum, IjsBox>(isFinite)))
     )

@@ -76,7 +76,7 @@ module Object =
 
     let convertIndex_BoxVal expr index value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.callStaticT<Api.ObjectModule.Index.Converters> 
+        [Dlr.callStaticT<Api.Object.Index.Converters> 
           "put" [tmp; index; value]])
     
     //--------------------------------------------------------------------------
@@ -112,7 +112,7 @@ module Object =
             
       | TypeCode -> 
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [Dlr.callStaticT<Api.ObjectModule.Index.Converters> 
+          [Dlr.callStaticT<Api.Object.Index.Converters> 
             "put" [tmp; index; value; value |> Utils.expr2tc |> Dlr.const']])
       
     //--------------------------------------------------------------------------

@@ -222,8 +222,6 @@ and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
 
-
-
 //-------------------------------------------------------------------------
 // Class used for the the implementation of hidden classes
 //-------------------------------------------------------------------------
@@ -364,7 +362,7 @@ and [<AllowNullLiteral>] Arguments =
   val mutable LinkMap : (byte * int) array
   val mutable LinkIntact : bool
 
-  new (env:IjsEnv, linkMap, locals, closedOver) as o = 
+  new (env:IjsEnv, linkMap, locals, closedOver) as a = 
     {
       inherit Object(env.Array_Class, env.Object_prototype, Classes.Object, 0u)
 
@@ -374,30 +372,36 @@ and [<AllowNullLiteral>] Arguments =
       LinkMap = linkMap
       LinkIntact = true
     } then
-      let o = o :> IjsObj
-
+      let o = a :> IjsObj
       o.Methods <- env.Arguments_methods
       o.Methods.PutValProperty.Invoke(o, "length", double linkMap.Length)
+      a.copyLinkedValues()
+      
+  //----------------------------------------------------------------------------
+  // This function can't be put in the API since it needs to be called 
+  // from both the Arguments constructor and Api.Arguments.Index.delete
+  member a.copyLinkedValues() =
+    for array, i in a.LinkMap do
+      match array with
+      | ArgumentsLinkArray.Locals -> 
+        a.Methods.PutBoxIndex.Invoke(a, uint32 i, a.Locals.[i])
 
-      for a, i in linkMap do
-        match a with
-        | ArgumentsLinkArray.Locals -> 
-          o.Methods.PutBoxIndex.Invoke(o, uint32 i, locals.[i])
+      | ArgumentsLinkArray.ClosedOver -> 
+        a.Methods.PutBoxIndex.Invoke(a, uint32 i, a.ClosedOver.[i])
 
-        | ArgumentsLinkArray.ClosedOver -> 
-          o.Methods.PutBoxIndex.Invoke(o, uint32 i, closedOver.[i])
-          
+      | _ -> failwith "Que?"
 
 
-//------------------------------------------------------------------------------
-//
+
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] ICompiler =
   abstract member compile : IjsFunc * DelegateType -> Delegate
   abstract member compileAs<'a when 'a :> Delegate> : IjsFunc -> 'a
 
+  
 
-and [<AllowNullLiteral>] CachedCompiler(compiler:IjsFunc -> DelegateType -> Delegate) = 
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] CachedCompiler(compiler) = 
 
   let cache = new MutableDict<DelegateType, Delegate>()
 
@@ -429,10 +433,10 @@ and [<AllowNullLiteral>] Function =
   val mutable FunctionId : FunId
   val mutable ConstructorMode : ConstructorMode
 
-  val mutable ScopeChain : ScopeChain
-  val mutable DynamicChain : DynamicChain
+  val mutable ScopeChain : Scope
+  val mutable DynamicScope : DynamicScope
      
-  new (env:IjsEnv, funcId, scopeChain, dynamicChain) = { 
+  new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
     inherit Object(
       env.Function_Class, env.Function_prototype, Classes.Function, 0u)
 
@@ -442,7 +446,7 @@ and [<AllowNullLiteral>] Function =
     ConstructorMode = 1uy
 
     ScopeChain = scopeChain
-    DynamicChain = dynamicChain
+    DynamicScope = dynamicScope
   }
 
   new (env:IjsEnv, propertyClass) = {
@@ -453,7 +457,7 @@ and [<AllowNullLiteral>] Function =
     ConstructorMode = 0uy
 
     ScopeChain = null
-    DynamicChain = List.empty
+    DynamicScope = List.empty
   }
 
   new (env:IjsEnv) = {
@@ -464,30 +468,34 @@ and [<AllowNullLiteral>] Function =
     ConstructorMode = 0uy
 
     ScopeChain = null
-    DynamicChain = List.empty
+    DynamicScope = List.empty
   }
 
 //------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] HostFunction =
+and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit Function
-
+  
+  val mutable Delegate : 'a
   val mutable ArgTypes : HostType array
   val mutable ReturnType : HostType
 
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
 
-  new (env:IjsEnv, argTypes, returnType) = {
-    inherit Function(env, env.Function_Class)
+  new (env:IjsEnv, delegate') as x = 
+    {
+      inherit Function(env, env.Function_Class)
 
-    ArgTypes = argTypes
-    ReturnType = returnType
+      Delegate = delegate'
 
-    ParamsMode = ParamsModes.NoParams
-    MarshalMode = MarshalModes.Default
-  }
+      ArgTypes = FSKit.Reflection.getDelegateArgTypesT<'a>
+      ReturnType = FSKit.Reflection.getDelegateReturnTypeT<'a>
+
+      ParamsMode = ParamsModes.NoParams
+      MarshalMode = MarshalModes.Default
+    } then x.resolveModes()
   
   //----------------------------------------------------------------------------
   member internal x.resolveModes () =
@@ -515,46 +523,6 @@ and [<AllowNullLiteral>] HostFunction =
     | MarshalModes.Function -> x.ArgTypes.Length - 2
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
-  
-//------------------------------------------------------------------------------
-// Class used to represent a .NET delegate wrapped as a javascript function
-//------------------------------------------------------------------------------
-and [<AllowNullLiteral>] DelegateFunction<'a when 'a :> Delegate> =
-  inherit HostFunction
-
-  val mutable Delegate : 'a
-
-  new (env:IjsEnv, delegate':'a) as x = 
-    {
-      inherit HostFunction(
-          env, 
-          FSKit.Reflection.getDelegateArgTypesT<'a>, 
-          FSKit.Reflection.getDelegateReturnTypeT<'a>
-        )
-
-      Delegate = delegate'
-    } then x.resolveModes()
-
-//-------------------------------------------------------------------------
-//
-// Class used to represent a static .NET function 
-// wrapped as a javascript function
-//
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] ClrFunction =
-  inherit HostFunction
-
-  val mutable Method : MethodInfo
-
-  new (env:IjsEnv, method':MethodInfo) as x = 
-    {
-      inherit HostFunction(
-          env, FSKit.Reflection.getParameters method', method'.ReturnType
-        )
-
-      Method = method'
-    } then x.resolveModes()
-      
 
 //-------------------------------------------------------------------------
 //
@@ -639,21 +607,15 @@ and [<AllowNullLiteral>] UserError(jsValue:Box) =
 
 
 //-------------------------------------------------------------------------
-//
-// Scope Aliases
-//
+// Aliases
 //-------------------------------------------------------------------------
 and Scope = Box array
-and ScopeChain = Box array
-and DynamicScope = int * Object
-and DynamicChain = DynamicScope list
+and DynamicScope = (int * Object) list
+and IjsBox = Box
+and IjsEnv = Environment
 and IjsObj = Object
 and IjsFunc = Function
-and IjsEnv = Environment
-and IjsBox = Box
-and IjsHostFunc = HostFunction
-and IjsClrFunc = ClrFunction
-and IjsDelFunc<'a when 'a :> Delegate> = DelegateFunction<'a>
+and IjsHostFunc<'a when 'a :> Delegate> = HostFunction<'a>
 
 //-------------------------------------------------------------------------
 //
@@ -670,57 +632,3 @@ module TypeObjects =
   let Undefined = typeof<Undefined>
   let Object = typeof<Object>
   let Function = typeof<Function>
-  
-
-
-//-------------------------------------------------------------------------
-//
-// Inline cache for property gets, e.g: var x = foo.bar;
-//
-//-------------------------------------------------------------------------
-type GetPropertyCache =
-  val mutable PropertyName : string
-  val mutable PropertyIndex : int
-  val mutable PropertyClassId : int64
-
-  new (propertyName) = {
-    PropertyName    = propertyName
-    PropertyIndex   = -2
-    PropertyClassId = -2L
-  }
-    
-
-      
-//-------------------------------------------------------------------------
-//
-// Inline cache for property puts, e.g: foo.bar = 1;
-//
-//-------------------------------------------------------------------------
-type PutPropertyCache =
-  val mutable PropertyName : string
-  val mutable PropertyIndex : int
-  val mutable PropertyClassId : int64
-
-  new (propertyName) = {
-    PropertyName = propertyName
-    PropertyIndex = -2
-    PropertyClassId = -2L
-  }
-    
-
-        
-//-------------------------------------------------------------------------
-//
-// Inline cache for function invoke, e.g: foo(1);
-//
-//-------------------------------------------------------------------------
-type InvokeCache<'a when 'a :> Delegate and 'a : null> =
-  val mutable Cached : 'a
-  val mutable FunctionId : int64
-  val mutable FunctionType : HostType
-
-  new () = {
-    Cached = null
-    FunctionId = -1L
-    FunctionType = typeof<'a>
-  }

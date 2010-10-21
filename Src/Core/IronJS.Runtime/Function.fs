@@ -11,7 +11,7 @@ module Function =
 
   let createPrototype (env:IjsEnv) =
     let prototype =
-      (Api.DelegateFunction.create env
+      (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsBox>(Function_prototype)))
 
     (prototype :> IjsObj).Prototype <- env.Object_prototype
@@ -22,6 +22,6 @@ module Function =
 
   let setupPrototype (env:IjsEnv) =
     env.Function_prototype.put("apply",
-      (Api.DelegateFunction.create env
+      (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsObj, IjsBox array, IjsBox>(apply)))
     )

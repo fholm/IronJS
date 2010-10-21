@@ -9,21 +9,21 @@ module Hosting =
     let x = IjsEnv()
 
     x.Object_methods <- {
-      GetProperty = Api.ObjectModule.Property.Delegates.get
-      HasProperty = Api.ObjectModule.Property.Delegates.has
-      DeleteProperty = Api.ObjectModule.Property.Delegates.delete
-      PutBoxProperty = Api.ObjectModule.Property.Delegates.putBox
-      PutRefProperty = Api.ObjectModule.Property.Delegates.putRef
-      PutValProperty = Api.ObjectModule.Property.Delegates.putVal
+      GetProperty = Api.Object.Property.Delegates.get
+      HasProperty = Api.Object.Property.Delegates.has
+      DeleteProperty = Api.Object.Property.Delegates.delete
+      PutBoxProperty = Api.Object.Property.Delegates.putBox
+      PutRefProperty = Api.Object.Property.Delegates.putRef
+      PutValProperty = Api.Object.Property.Delegates.putVal
 
-      GetIndex = Api.ObjectModule.Index.Delegates.get
-      HasIndex = Api.ObjectModule.Index.Delegates.has
-      DeleteIndex = Api.ObjectModule.Index.Delegates.delete
-      PutBoxIndex = Api.ObjectModule.Index.Delegates.putBox
-      PutRefIndex = Api.ObjectModule.Index.Delegates.putRef
-      PutValIndex = Api.ObjectModule.Index.Delegates.putVal
+      GetIndex = Api.Object.Index.Delegates.get
+      HasIndex = Api.Object.Index.Delegates.has
+      DeleteIndex = Api.Object.Index.Delegates.delete
+      PutBoxIndex = Api.Object.Index.Delegates.putBox
+      PutRefIndex = Api.Object.Index.Delegates.putRef
+      PutValIndex = Api.Object.Index.Delegates.putVal
 
-      Default = Api.ObjectModule.defaultValue'
+      Default = Api.Object.defaultValue'
     }
 
     x.Arguments_methods <- 
@@ -131,9 +131,6 @@ module Hosting =
 
     member x.GetGlobal name =
       env.Globals.Methods.GetProperty.Invoke(env.Globals, name)
-
-    member x.CreateDelegateFunction delegate' =
-      Api.DelegateFunction.create env delegate'
 
     static member Create () =
       new Context(createEnvironment())

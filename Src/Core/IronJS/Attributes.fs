@@ -7,5 +7,4 @@ type ExposeClass() =
 
 type ExposeMember(asName:string) =
   inherit Attribute()
-
   member x.AsName = asName

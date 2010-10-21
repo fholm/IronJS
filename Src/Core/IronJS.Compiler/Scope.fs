@@ -10,7 +10,7 @@ module Scope =
   let initGlobal (ctx:Ctx) tree =
     Dlr.blockSimple [
       (Dlr.assign ctx.ChainExpr ctx.Fun_Chain)
-      (Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicChain)
+      (Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicScope)
       (tree)]
     
   //----------------------------------------------------------------------------
@@ -96,10 +96,10 @@ module Scope =
               (ctx.Fun_Chain))]
           
     //--------------------------------------------------------------------------
-    let initDynamicChain (ctx:Ctx) (s:Ast.Scope) =
+    let initDynamicScope (ctx:Ctx) (s:Ast.Scope) =
       if ctx.Target.IsEval || not s.DynamicLookup
         then Dlr.void'
-        else Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicChain
+        else Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicScope
         
     //--------------------------------------------------------------------------
     let initArguments (ctx:Ctx) (s:Ast.Scope) =
@@ -108,7 +108,7 @@ module Scope =
         match s.TryGetVar "arguments" with
         | None -> failwith "Que?"
         | Some var ->
-          let linkArray = 
+          let linkMap = 
             s.Variables 
               |> Set.filter (fun x -> x.IsParameter)    
               |> Set.map (fun x ->
@@ -126,6 +126,6 @@ module Scope =
             (Dlr.indexInt ctx.LocalExpr var.Index)
             (Dlr.newArgsT<Arguments> [
               ctx.Env;
-              Dlr.const' linkArray;
+              Dlr.const' linkMap;
               ctx.LocalExpr;
               ctx.ChainExpr]))

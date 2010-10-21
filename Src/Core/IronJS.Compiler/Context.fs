@@ -49,7 +49,7 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable Local : Scope
   [<DefaultValue>] val mutable EvalScope : IjsObj
   [<DefaultValue>] val mutable ScopeChain : Scope
-  [<DefaultValue>] val mutable DynamicChain : DynamicChain
+  [<DefaultValue>] val mutable DynamicScope : DynamicScope
     
 //------------------------------------------------------------------------------
 // Record representing a compilation context
@@ -101,7 +101,7 @@ type Context = {
   member x.Env_Temp_Object = Dlr.field x.Env "Temp_Object"
   member x.Env_Temp_Function = Dlr.field x.Env "Temp_Function"
 
-  member x.Fun_DynamicChain = Dlr.field x.Function "DynamicChain"
+  member x.Fun_DynamicScope = Dlr.field x.Function "DynamicScope"
   member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
 
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")

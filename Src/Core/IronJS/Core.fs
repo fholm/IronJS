@@ -482,12 +482,13 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment =
   //Id counters
-  val mutable private _nextPropertyClassId : int64
-  val mutable private _nextFunctionId : int64
+  [<DefaultValue>] val mutable private _nextPropertyMapId : int64
+  [<DefaultValue>] val mutable private _nextFunctionId : int64
 
   //
   [<DefaultValue>] val mutable Return : Box
   val mutable Compilers : MutableDict<FunId, FunctionCompiler>
+  val mutable FunctionSourceStrings : MutableDict<FunId, IjsStr>
 
   //Objects
   [<DefaultValue>] val mutable Globals : Object
@@ -522,7 +523,7 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Boxed_True : Box
   [<DefaultValue>] val mutable Boxed_Null : Box
   [<DefaultValue>] val mutable Boxed_Temp : Box
-    
+
   [<DefaultValue>] val mutable Temp_Bool : Box
   [<DefaultValue>] val mutable Temp_Number : Box
   [<DefaultValue>] val mutable Temp_Clr : Box
@@ -531,17 +532,16 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Temp_Function : Box
 
   member x.nextPropertyClassId = 
-    x._nextPropertyClassId <- x._nextPropertyClassId + 1L
-    x._nextPropertyClassId
+    x._nextPropertyMapId <- x._nextPropertyMapId + 1L
+    x._nextPropertyMapId
 
   member x.nextFunctionId = 
     x._nextFunctionId <- x._nextFunctionId + 1L
     x._nextFunctionId
       
   new () = {
-    _nextFunctionId = 0L
-    _nextPropertyClassId = 0L
     Compilers = new MutableDict<FunId, FunctionCompiler>()
+    FunctionSourceStrings = new MutableDict<FunId, IjsStr>()
   }
 
 //------------------------------------------------------------------------------

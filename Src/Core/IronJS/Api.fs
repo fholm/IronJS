@@ -5,27 +5,6 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Utils.Patterns
 
-module Reflected =
-
-  open System.Reflection
-
-  let private apiTypes = ConcurrentMutableDict<string, System.Type>()
-  let private bindingFlags = BindingFlags.Static ||| BindingFlags.Public
-
-  let private assembly = 
-    AppDomain.CurrentDomain.GetAssemblies() 
-      |> Array.find (fun x -> x.FullName.StartsWith("IronJS,"))
-
-  let rec getApiMethodInfo type' method' =
-    let found, typeObj = apiTypes.TryGetValue type'
-    if found then typeObj.GetMethod(method', bindingFlags)
-    else
-      match assembly.GetType("IronJS.Api." + type', false) with
-      | null -> null
-      | typeObj ->
-        apiTypes.TryAdd(type', typeObj) |> ignore
-        getApiMethodInfo type' method'
-
 module Extensions = 
 
   type Object with 
@@ -187,30 +166,31 @@ module Environment =
     func
     
   //----------------------------------------------------------------------------
-  module MethodInfo =
+  module Reflected =
+
     let createObject = 
-      Reflected.getApiMethodInfo "Environment" "createObject"
+      Utils.Reflected.methodInfo "Api.Environment" "createObject"
 
     let createObjectWithMap = 
-      Reflected.getApiMethodInfo "Environment" "createObjectWithMap"
+      Utils.Reflected.methodInfo "Api.Environment" "createObjectWithMap"
 
     let createArray = 
-      Reflected.getApiMethodInfo "Environment" "createArray"
+      Utils.Reflected.methodInfo "Api.Environment" "createArray"
 
     let createString = 
-      Reflected.getApiMethodInfo "Environment" "createString"
+      Utils.Reflected.methodInfo "Api.Environment" "createString"
 
     let createNumber = 
-      Reflected.getApiMethodInfo "Environment" "createNumber"
+      Utils.Reflected.methodInfo "Api.Environment" "createNumber"
 
     let createBoolean = 
-      Reflected.getApiMethodInfo "Environment" "createBoolean"
+      Utils.Reflected.methodInfo "Api.Environment" "createBoolean"
 
     let createPrototype = 
-      Reflected.getApiMethodInfo "Environment" "createPrototype"
+      Utils.Reflected.methodInfo "Api.Environment" "createPrototype"
 
     let createFunction = 
-      Reflected.getApiMethodInfo "Environment" "createFunction"
+      Utils.Reflected.methodInfo "Api.Environment" "createFunction"
 
 //------------------------------------------------------------------------------
 // Static class containing all type conversions
@@ -1702,3 +1682,78 @@ module Arguments =
       let get = GetIndex get
       let has = HasIndex has
       let delete = DeleteIndex delete
+      
+//------------------------------------------------------------------------------
+module DynamicScope =
+  
+  //----------------------------------------------------------------------------
+  let findObject name (dc:DynamicScope) stop =
+    let rec find (dc:DynamicScope) =
+      match dc with
+      | [] -> None
+      | (level, o)::xs ->
+        if level >= stop then
+          let mutable h = null
+          let mutable i = 0
+          if o.Methods.HasProperty.Invoke(o, name)
+            then Some o
+            else find xs
+        else
+          None
+
+    find dc
+      
+  //----------------------------------------------------------------------------
+  let findVariable name (dc:DynamicScope) stop = 
+    match findObject name dc stop with
+    | Some o -> Some(o.Methods.GetProperty.Invoke(o, name))
+    | _ -> None
+      
+  //----------------------------------------------------------------------------
+  let set (name, dc, stop, g:IjsObj, s:Scope, i) =
+    match findObject name dc stop with
+    | Some o -> o.Methods.GetProperty.Invoke(o, name)
+    | _ -> if s = null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
+      
+  //----------------------------------------------------------------------------
+  let get (name, v:IjsBox, dc, stop, g:IjsObj, s:Scope, i) =
+    match findObject name dc stop with
+    | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, v)
+    | _ -> 
+      if s = null 
+        then g.Methods.PutBoxProperty.Invoke(g, name, v) 
+        else s.[i] <- v
+          
+  //----------------------------------------------------------------------------
+  let call<'a when 'a :> Delegate> (name, args, dc, stop, g, s:Scope, i) =
+
+    let this, func = 
+      match findObject name dc stop with
+      | Some o -> o, (o.Methods.GetProperty.Invoke(o, name))
+      | _ -> g, if s=null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
+
+    if func.Tag >= TypeTags.Function then
+      let func = func.Func
+      let internalArgs = [|func :> obj; this :> obj|]
+      let compiled = func.Compiler.compileAs<'a> func
+      Utils.box (compiled.DynamicInvoke(Array.append internalArgs args))
+
+    else
+      Errors.runtime "Can only call javascript function dynamically"
+        
+  //----------------------------------------------------------------------------
+  let delete (dc:DynamicScope, g:IjsObj, name) =
+    match findObject name dc -1 with
+    | Some o -> o.Methods.DeleteProperty.Invoke(o, name)
+    | _ -> g.Methods.DeleteProperty.Invoke(g, name)
+
+  //----------------------------------------------------------------------------
+  let push (dc:DynamicScope byref, new', level) =
+    dc <- (level, new') :: dc
+      
+  //----------------------------------------------------------------------------
+  let pop (dc:DynamicScope byref) =
+    dc <- List.tail dc
+
+  module Reflected =
+    let set = Utils.Reflected.methodInfo "Api.DynamicScope" "set"

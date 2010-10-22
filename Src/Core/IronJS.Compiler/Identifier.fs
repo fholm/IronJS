@@ -27,7 +27,7 @@ module Identifier =
   let clsExprAndIndex ctx (cls:Ast.Closure) =
     let expr = 
       (walkScopeChain
-        (ctx.ChainExpr)
+        (ctx.ClosureScope)
         (cls.ClosureLevel)
         (ctx.Scope.ClosureLevel)
       )
@@ -39,14 +39,14 @@ module Identifier =
     let expr =
       if var.IsClosedOver then
         (walkScopeChain
-          (ctx.ChainExpr)
+          (ctx.ClosureScope)
           (scope.ClosureLevel)
           (ctx.Scope.ClosureLevel)
         )
 
       else
         (walkScopeChain
-          (ctx.LocalExpr)
+          (ctx.LocalScope)
           (scope.LocalLevel)
           (ctx.Scope.LocalLevel)
         )
@@ -80,14 +80,14 @@ module Identifier =
           
   //----------------------------------------------------------------------------
   let getValueDynamic (ctx:Ctx) name =
-    let defaultArgs = [Dlr.const' name; ctx.DynamicExpr]
+    let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicGet" (args)
           
   //----------------------------------------------------------------------------
   let setValueDynamic (ctx:Ctx) name value =
-    let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicExpr]
+    let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicSet" (args)

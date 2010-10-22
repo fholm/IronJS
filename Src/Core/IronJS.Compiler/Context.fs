@@ -46,9 +46,9 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable Closures : Ast.Closure Set
   [<DefaultValue>] val mutable Function : IjsFunc
   [<DefaultValue>] val mutable This : IjsObj
-  [<DefaultValue>] val mutable Local : Scope
   [<DefaultValue>] val mutable EvalScope : IjsObj
-  [<DefaultValue>] val mutable ScopeChain : Scope
+  [<DefaultValue>] val mutable LocalScope : Scope
+  [<DefaultValue>] val mutable ClosureScope : Scope
   [<DefaultValue>] val mutable DynamicScope : DynamicScope
     
 //------------------------------------------------------------------------------
@@ -62,16 +62,16 @@ type Context = {
 
   This: Dlr.Expr
   Function: Dlr.Expr
-  LocalExpr: Dlr.Expr
-  ChainExpr: Dlr.Expr
-  DynamicExpr: Dlr.Expr
+  LocalScope: Dlr.Expr
+  ClosureScope: Dlr.Expr
+  DynamicScope: Dlr.Expr
 
   Break: Dlr.Label option
   Continue: Dlr.Label option
   BreakLabels: Map<string, Dlr.Label>
   ContinueLabels: Map<string, Dlr.Label>
 
-  ParameterExprs: Dlr.ExprParam array
+  Parameters: Dlr.ExprParam array
 } with
 
   member x.Env = Dlr.field x.Function "Env"

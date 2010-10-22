@@ -9,17 +9,17 @@ module Scope =
   //----------------------------------------------------------------------------
   let initGlobal (ctx:Ctx) tree =
     Dlr.blockSimple [
-      (Dlr.assign ctx.ChainExpr ctx.Fun_Chain)
-      (Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicScope)
+      (Dlr.assign ctx.ClosureScope ctx.Fun_Chain)
+      (Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope)
       (tree)]
     
   //----------------------------------------------------------------------------
   let initWith (ctx:Ctx) object' tree =
-    let pushArgs = [ctx.DynamicExpr; object'; Dlr.const' ctx.Scope.GlobalLevel]
+    let pushArgs = [ctx.DynamicScope; object'; Dlr.const' ctx.Scope.GlobalLevel]
     Dlr.blockSimple [
       (Dlr.callStaticT<Helpers.ScopeHelpers> "PushScope" pushArgs)
       (tree)
-      (Dlr.callStaticT<Helpers.ScopeHelpers> "PopScope" [ctx.DynamicExpr])]
+      (Dlr.callStaticT<Helpers.ScopeHelpers> "PopScope" [ctx.DynamicScope])]
     
   //----------------------------------------------------------------------------
   module Function =
@@ -43,7 +43,7 @@ module Scope =
       
     //--------------------------------------------------------------------------
     let storageExpr ctx (var:Ast.Variable) =
-      if var.IsClosedOver then ctx.ChainExpr else ctx.LocalExpr
+      if var.IsClosedOver then ctx.ClosureScope else ctx.LocalScope
       
     //--------------------------------------------------------------------------
     let initParams ctx (params':Ast.Variable seq) =
@@ -51,7 +51,7 @@ module Scope =
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
         let i = Option.get var.ParamIndex
-        Expr.assignBoxValue variable ctx.ParameterExprs.[i]
+        Expr.assignBoxValue variable ctx.Parameters.[i]
       )  
       
     //--------------------------------------------------------------------------
@@ -77,7 +77,7 @@ module Scope =
         | 0 -> Dlr.void'
         | _ ->
           (Dlr.assign
-            (ctx.LocalExpr)
+            (ctx.LocalScope)
             (Dlr.newArrayBoundsT<IronJS.Box> (Dlr.const' count)))
     
     //--------------------------------------------------------------------------
@@ -85,21 +85,21 @@ module Scope =
       if ctx.Target.IsEval then Dlr.void'
       else
         match count with
-        | 0 -> Dlr.assign ctx.ChainExpr ctx.Fun_Chain
+        | 0 -> Dlr.assign ctx.ClosureScope ctx.Fun_Chain
         | _ -> 
           Dlr.blockSimple [ 
             (Dlr.assign
-              (ctx.ChainExpr)
+              (ctx.ClosureScope)
               (Dlr.newArrayBoundsT<IronJS.Box> (Dlr.const' (count+1))))
             (Dlr.assign
-              (Dlr.field (Dlr.index0 ctx.ChainExpr) "Scope")
+              (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
               (ctx.Fun_Chain))]
           
     //--------------------------------------------------------------------------
     let initDynamicScope (ctx:Ctx) (s:Ast.Scope) =
       if ctx.Target.IsEval || not s.DynamicLookup
         then Dlr.void'
-        else Dlr.assign ctx.DynamicExpr ctx.Fun_DynamicScope
+        else Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
         
     //--------------------------------------------------------------------------
     let initArguments (ctx:Ctx) (s:Ast.Scope) =
@@ -123,9 +123,9 @@ module Scope =
               |> Array.sortBy (fun (_, i) -> i)
 
           (Expr.assignValue 
-            (Dlr.indexInt ctx.LocalExpr var.Index)
+            (Dlr.indexInt ctx.LocalScope var.Index)
             (Dlr.newArgsT<Arguments> [
               ctx.Env;
               Dlr.const' linkMap;
-              ctx.LocalExpr;
-              ctx.ChainExpr]))
+              ctx.LocalScope;
+              ctx.ClosureScope]))

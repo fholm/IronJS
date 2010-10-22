@@ -35,7 +35,7 @@ module Unary =
   //----------------------------------------------------------------------------
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
-      let args = [ctx.DynamicExpr; ctx.Globals; Dlr.const' name]
+      let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
       Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicDelete" args
 
     else

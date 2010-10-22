@@ -98,7 +98,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | Function of int64 * string option * Tree
+    | Function of int64 * Tree
     | Invoke of Tree * Tree list
 
     // Control Flow
@@ -324,7 +324,7 @@ module Ast =
     | InstanceOf(object', func) -> InstanceOf(f object', f func)
 
     //Functions
-    | Function(id, source, tree) -> Function(id, source, f tree) 
+    | Function(id, tree) -> Function(id, f tree) 
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
     | Return value -> Return(f value)
@@ -637,7 +637,7 @@ module Ast =
   let expressionType tree =
     match tree with
     | Tree.Number _ -> Some TypeTags.Number
-    | Tree.Function (_, _, _) -> Some TypeTags.Function
+    | Tree.Function (_, _) -> Some TypeTags.Function
     | Tree.Object _ -> Some TypeTags.Object
     | Tree.Binary (op, l, r) ->
       match op with
@@ -672,6 +672,11 @@ module Ast =
 
       type private AntlrToken = Antlr.Runtime.Tree.CommonTree
 
+      type Context = {
+        Environment : IjsEnv
+        TokenStream : CommonTokenStream
+      }
+
       let private _funIdCounter = ref 0L
       let private _funId () = 
         _funIdCounter := !_funIdCounter + 1L
@@ -685,14 +690,12 @@ module Ast =
                        |> Seq.toList
               
       //------------------------------------------------------------------------
-      let private cast (tok:obj) = tok :?> AntlrToken
-
-      //------------------------------------------------------------------------
       let private hasChild (tok:AntlrToken) index = tok.ChildCount > index
           
       //------------------------------------------------------------------------
       let private child (tok:AntlrToken) index = 
-        if hasChild tok index then cast tok.Children.[index] else null
+        if hasChild tok index 
+          then tok.Children.[index] :?> AntlrToken  else null
           
       //------------------------------------------------------------------------
       let private text (tok:AntlrToken) = tok.Text
@@ -713,6 +716,7 @@ module Ast =
       and private for' stream label tok =
         let type' = child tok 0 
         let translate = translate stream
+
         match type'.Type with
         | ES3Parser.FORSTEP ->
           let init = translate (child type' 0)
@@ -750,7 +754,7 @@ module Ast =
         Unary(op, translate stream (child tok 0))
         
       //------------------------------------------------------------------------
-      and translate (stream:CommonTokenStream) (tok:AntlrToken) =
+      and translate (stream:Context) (tok:AntlrToken) =
         let translate = translate stream
 
         if tok = null then Pass else
@@ -976,22 +980,27 @@ module Ast =
 
         // function() {}
         | ES3Parser.FUNCTION -> 
-          // Source representation that is used 
-          // in Function.prototype.toString
-          let source = 
-            stream.GetTokens(tok.TokenStartIndex, tok.TokenStopIndex)
-            |> Seq.cast<CommonToken> 
-            |> Seq.map (fun x -> x.Text)
-            |> String.concat ""
 
           let named = tok.ChildCount = 3
           let pc, bc = if named then (1, 2) else (0, 1)
-          let id = _funId() + 1000000L
+          let id = stream.Environment.nextFunctionId
           let parms = [for x in children (child tok pc) -> text x]
           let scope = Scope.NewFunction parms
           let body = translate (child tok bc)
           let scope = LocalScope(scope, body)
-          let func = Tree.Function(id, Some source, scope)
+          let func = Tree.Function(id, scope)
+
+          // Source representation that is used 
+          // in Function.prototype.toString
+          let source = 
+            stream.TokenStream.GetTokens(
+              tok.TokenStartIndex, tok.TokenStopIndex)
+            |> Seq.cast<CommonToken> 
+            |> Seq.map (fun x -> x.Text)
+            |> String.concat ""
+
+          // Add Source to environment
+          stream.Environment.FunctionSourceStrings.Add(id, source)
 
           if not named then func
           else
@@ -1034,7 +1043,7 @@ module Ast =
         | _ -> 
           match tok with
           | :? CommonErrorNode as error ->
-            let errorTok = stream.Get(error.TokenStopIndex)
+            let errorTok = stream.TokenStream.Get(error.TokenStopIndex)
             let line = errorTok.Line 
             let col = errorTok.CharPositionInLine + 1
             failwithf "Syntax Error at line %d after column %d" line col
@@ -1044,19 +1053,22 @@ module Ast =
             failwithf "No parser for token %s (%i)" name tok.Type
           
       //------------------------------------------------------------------------
-      let parse source = 
+      let parse env source = 
         let stringStream = new Antlr.Runtime.ANTLRStringStream(source)
         let lexer = new Xebic.ES3.ES3Lexer(stringStream)
         let tokenStream = new Antlr.Runtime.CommonTokenStream(lexer)
         let parser = new Xebic.ES3.ES3Parser(tokenStream)
         let program = parser.program()
-        translate tokenStream (program.Tree :?> AntlrToken)
+        let context = {Environment=env; TokenStream=tokenStream}
+        translate context (program.Tree :?> AntlrToken)
         
       //------------------------------------------------------------------------
-      let parseFile path = parse (System.IO.File.ReadAllText(path))
+      let parseFile env path = parse env (System.IO.File.ReadAllText(path))
 
       //------------------------------------------------------------------------
-      let parseGlobalFile path = LocalScope(Scope.NewGlobal, parseFile path)
+      let parseGlobalFile env path = 
+        LocalScope(Scope.NewGlobal, parseFile env path)
 
       //------------------------------------------------------------------------
-      let parseGlobalSource source = LocalScope(Scope.NewGlobal, parse source)
+      let parseGlobalSource env source = 
+        LocalScope(Scope.NewGlobal, parse env source)

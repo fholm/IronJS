@@ -15,7 +15,7 @@ module Global =
       let tree = 
         Ast.LocalScope(
          {Ast.Scope.New with Closures=target.Closures}, 
-          Ast.Parsers.Ecma3.parse target.Target.String
+          Ast.Parsers.Ecma3.parse target.Function.Env target.Target.String
         )
 
       let levels = 
@@ -36,8 +36,8 @@ module Global =
         compiled.DynamicInvoke(
           target.Function,
           target.This,
-          target.Local,
-          target.ScopeChain,
+          target.LocalScope,
+          target.ClosureScope,
           target.DynamicScope))
 
     | _ -> target.Target

@@ -9,14 +9,6 @@ open IronJS.Compiler
 type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
 type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
 
-type Bar() =
-  member x.Get = new Zaz()
-
-and Foo() =
-  member x.Get = true
-
-and Zaz() = class end
-
 module Core =
 
   //----------------------------------------------------------------------------
@@ -55,7 +47,7 @@ module Core =
     //Functions
     | Ast.Invoke(func, args)  -> _compileInvoke ctx func args
     | Ast.New(func, args) -> _compileNew ctx func args
-    | Ast.Function(id, _, body) -> Function.create ctx compile id body
+    | Ast.Function(id, body) -> Function.create ctx compile id body
     | Ast.Return tree -> _compileReturn ctx tree
 
     //Control Flow
@@ -301,7 +293,7 @@ module Core =
       [
         (Dlr.assign tmp
           (Dlr.callMethod
-            Api.Environment.MethodInfo.createArray args))
+            Api.Environment.Reflected.createArray args))
 
         (List.mapi (fun i t ->
           (Object.Index.put tmp (uint32 i |> Dlr.const') (compileAst ctx t))
@@ -333,7 +325,7 @@ module Core =
 
     let newExpr = 
       (Dlr.callMethod 
-        Api.Environment.MethodInfo.createObjectWithMap newArgs)
+        Api.Environment.Reflected.createObjectWithMap newArgs)
 
     //Set properties
     Dlr.blockTmpT<IjsObj> (fun tmp -> 
@@ -344,8 +336,7 @@ module Core =
             (Expr.assignValue
               (Expr.propertyValue 
                 (tmp)
-                (Dlr.const' (Api.PropertyClass.getIndex(pc, name)))
-              )
+                (Dlr.const' (Api.PropertyClass.getIndex(pc, name))))
               (compileAst ctx expr)
             ) :: s
 
@@ -378,7 +369,8 @@ module Core =
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         (Dlr.ternary
           (Expr.isConstructor f)
-          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes (f :: ctx.Globals :: args))
+          (Dlr.callStaticGenericT<Api.Function> 
+            "construct" argTypes (f :: ctx.Globals :: args))
           (ctx.Env_Boxed_Undefined)
         )
       )
@@ -472,9 +464,9 @@ module Core =
 
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
-      (Expr.assignValue (Dlr.field target "Local") ctx.LocalExpr)
-      (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ChainExpr)
-      (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicExpr)
+      (Expr.assignValue (Dlr.field target "Local") ctx.LocalScope)
+      (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ClosureScope)
+      (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
       (Expr.testIsFunction
         (eval)
@@ -508,10 +500,10 @@ module Core =
 
       Function = Dlr.paramT<IjsFunc> "~function"
       This = Dlr.paramT<IjsObj> "~this"
-      LocalExpr = Dlr.paramT<Scope> "~locals"
-      ChainExpr = Dlr.paramT<Scope> "~chain"
-      DynamicExpr = Dlr.paramT<DynamicScope> "~dynamic"
-      ParameterExprs = parameterExprs
+      LocalScope = Dlr.paramT<Scope> "~localScope"
+      ClosureScope = Dlr.paramT<Scope> "~closureScope"
+      DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"
+      Parameters = parameterExprs
     }
 
     let returnExpr = [
@@ -522,7 +514,7 @@ module Core =
     let locals = 
       if ctx.Target.IsEval then [] |> Seq.ofList
       else
-        [ ctx.LocalExpr; ctx.ChainExpr; ctx.DynamicExpr; 
+        [ ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope; 
         ] |> Seq.cast<Dlr.ExprParam> 
 
     //Main function body
@@ -534,11 +526,11 @@ module Core =
     let allParameters =
       (
         if ctx.Target.IsEval then 
-          [ ctx.Function; ctx.This; ctx.LocalExpr; 
-            ctx.ChainExpr; ctx.DynamicExpr
+          [ ctx.Function; ctx.This; ctx.LocalScope; 
+            ctx.ClosureScope; ctx.DynamicScope
           ] |> Seq.cast<Dlr.ExprParam>
         else 
-          ctx.ParameterExprs
+          ctx.Parameters
             |> Seq.cast<Dlr.ExprParam>
             |> Seq.append (Seq.cast<Dlr.ExprParam> [ctx.Function; ctx.This])
 

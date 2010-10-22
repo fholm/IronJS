@@ -549,7 +549,7 @@ module Ast =
         let s =
           match s.ScopeType with
           | CatchScope when s.LocalCount > 0 ->
-            let var = Seq.first s.Variables
+            let var = FSKit.Seq.first s.Variables
             let var = {var with Index=1}
             {s with Variables=set[var]}
           | _ -> s

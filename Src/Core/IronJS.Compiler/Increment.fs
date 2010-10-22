@@ -28,7 +28,7 @@ module Increment =
                 (op (Expr.unboxNumber expr) Dlr.dbl1))
               (tmp :> Dlr.Expr)])
             //TODO: Fallback for non-numbers
-            (ctx.Env_Boxed_Zero))
+            (Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.zero))
         ] |> Seq.ofList
       )
 
@@ -66,7 +66,7 @@ module Increment =
                 (op (Expr.unboxNumber tmp) Dlr.dbl1))
               (tmp)])
           //TODO: Fallback for non-numbers
-          (ctx.Env_Boxed_Undefined)) 
+          (Expr.undefinedBoxed)) 
       ] |> Seq.ofList
     )
 

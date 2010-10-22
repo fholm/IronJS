@@ -7,9 +7,9 @@ open IronJS.Utils.Patterns
 
 module Function =
 
-  module Constructor = 
-
-    let private function' (f:IjsFunc) (_:IjsObj) (args:IjsBox array) : IjsFunc =
+  //----------------------------------------------------------------------------
+  // 15.3.2
+  let private constructor' (f:IjsFunc) (_:IjsObj) (args:IjsBox array) : IjsFunc =
       let args, body = 
         if args.Length = 0 then "", ""
         else 
@@ -27,22 +27,20 @@ module Function =
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
       (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxObj) :?> IjsFunc
     
-    //--------------------------------------------------------------------------<
-    let setup (env:IjsEnv) =
-      let ctor =
-        (Api.HostFunction.create env
-          (new Func<IjsFunc, IjsObj, IjsBox array, IjsFunc>(function')))
+  //----------------------------------------------------------------------------
+  let setupConstructor (env:IjsEnv) =
+    let ctor =
+      (Api.HostFunction.create env
+        (new Func<IjsFunc, IjsObj, IjsBox array, IjsFunc>(constructor')))
       
-      ctor.Prototype <- env.Function_prototype
-      env.Globals.put("Function", ctor);
+    ctor.Prototype <- env.Function_prototype
+    ctor.put("prototype", env.Function_prototype)
+    env.Globals.put("Function", ctor)
 
-  module Prototype =
-    ()
-  
   //----------------------------------------------------------------------------
   // 15.3.4
-  let private Function_prototype (f:IjsFunc) _ =
-    f.Env.Boxed_Undefined
+  let private prototype (f:IjsFunc) _ =
+    Utils.BoxedConstants.undefined
     
   //----------------------------------------------------------------------------
   // 15.3.4.2
@@ -96,7 +94,7 @@ module Function =
   let createPrototype (env:IjsEnv) =
     let prototype =
       (Api.HostFunction.create env
-        (new Func<IjsFunc, IjsObj, IjsBox>(Function_prototype)))
+        (new Func<IjsFunc, IjsObj, IjsBox>(prototype)))
 
     prototype.Prototype <- env.Object_prototype
     prototype
@@ -114,3 +112,6 @@ module Function =
     env.Function_prototype.put("toString",
       (Api.HostFunction.create env
         (new Func<IjsObj, IjsStr>(toString))))
+
+    env.Function_prototype.put("constructor", 
+      env.Globals.get("Function"))

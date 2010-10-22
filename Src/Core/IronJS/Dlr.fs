@@ -127,6 +127,9 @@ module Dlr =
 
   let field expr (name:string) = Et.PropertyOrField(expr, name) :> Et
   let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
+
+  let propertyInfoStatic (pi:PropertyInfo) = Et.Property(null, pi) :> Et
+
   let property expr (name:string) = Et.PropertyOrField(expr, name) :> Et
   let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
   let propertyStatic (type':System.Type) name = Et.Property(null, type', name)

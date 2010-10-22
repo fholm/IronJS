@@ -84,23 +84,6 @@ type Context = {
   member x.Env_Array_Class = Dlr.field x.Env "Array_Class"
   member x.Env_Prototype_Class = Dlr.field x.Env "Prototype_Class"
 
-  member x.Env_Boxed_Temp = Dlr.field x.Env "Boxed_Temp"
-  member x.Env_Boxed_NegOne = Dlr.field x.Env "Boxed_NegOne"
-  member x.Env_Boxed_Zero = Dlr.field x.Env "Boxed_Zero"
-  member x.Env_Boxed_One = Dlr.field x.Env "Boxed_One"
-  member x.Env_Boxed_Undefined = Dlr.field x.Env "Boxed_Undefined"
-  member x.Env_Boxed_EmptyString = Dlr.field x.Env "Boxed_EmptyString"
-  member x.Env_Boxed_False = Dlr.field x.Env "Boxed_False"
-  member x.Env_Boxed_True = Dlr.field x.Env "Boxed_True"
-  member x.Env_Boxed_Null = Dlr.field x.Env "Boxed_Null"
-
-  member x.Env_Temp_Bool = Dlr.field x.Env "Temp_Bool"
-  member x.Env_Temp_Number = Dlr.field x.Env "Temp_Number"
-  member x.Env_Temp_Clr = Dlr.field x.Env "Temp_Clr"
-  member x.Env_Temp_String = Dlr.field x.Env "Temp_String"
-  member x.Env_Temp_Object = Dlr.field x.Env "Temp_Object"
-  member x.Env_Temp_Function = Dlr.field x.Env "Temp_Function"
-
   member x.Fun_DynamicScope = Dlr.field x.Function "DynamicScope"
   member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
 

@@ -10,6 +10,7 @@ open System.Runtime.InteropServices
 
 module Utils =
 
+  //----------------------------------------------------------------------------
   module Reflected =
 
     open System.Reflection
@@ -35,19 +36,31 @@ module Utils =
       let found, typeObj = apiTypes.TryGetValue type'
       if found then typeObj.GetProperty(property, bindingFlags)
       else
+        let types = assembly.GetTypes()
         match assembly.GetType("IronJS." + type', false) with
         | null -> null
         | typeObj ->
           apiTypes.TryAdd(type', typeObj) |> ignore
           propertyInfo type' property
+          
+  //----------------------------------------------------------------------------
+  module BoxedConstants =
+
+    let zero = Box()
+    let undefined =
+      let mutable box = Box()
+      box.Tag <- TypeTags.Undefined
+      box.Clr <- Undefined.Instance
+      box
+
+    module Reflected =
+
+      let zero = Reflected.propertyInfo "Utils+BoxedConstants" "zero"
+      let undefined = Reflected.propertyInfo "Utils+BoxedConstants" "undefined"
+
 
   let isNull (o:obj) = Object.ReferenceEquals(o, null)
   let isNotNull o = o |> isNull |> not
-  
-  //----------------------------------------------------------------------------
-  module Seq =
-    let first seq' =
-      Seq.find (fun _ -> true) seq'
       
   //----------------------------------------------------------------------------
   module Box = 
@@ -249,12 +262,6 @@ module Utils =
 
   let unboxObj (o:obj) =
     if o :? Box then unbox (o :?> Box) else o
-
-  let boxedUndefined =
-    let mutable box = new Box()
-    box.Tag <- TypeTags.Undefined
-    box.Clr <- Undefined.Instance
-    box
       
   let boxRef ref tc =
     let mutable box = new Box()

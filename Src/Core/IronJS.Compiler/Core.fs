@@ -371,10 +371,10 @@ module Core =
           (Expr.isConstructor f)
           (Dlr.callStaticGenericT<Api.Function> 
             "construct" argTypes (f :: ctx.Globals :: args))
-          (ctx.Env_Boxed_Undefined)
+          (Expr.undefinedBoxed)
         )
       )
-      (fun _ -> ctx.Env_Boxed_Undefined)
+      (fun _ -> Expr.undefinedBoxed)
     )
       
   //----------------------------------------------------------------------------
@@ -453,17 +453,13 @@ module Core =
 
       (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
       (Expr.assignValue
-        (Dlr.field target "GlobalLevel") (Dlr.const' ctx.Scope.GlobalLevel)
-      )
+        (Dlr.field target "GlobalLevel") (Dlr.const' ctx.Scope.GlobalLevel))
       (Expr.assignValue
-        (Dlr.field target "ClosureLevel") (Dlr.const' ctx.Scope.ClosureLevel)
-      )
+        (Dlr.field target "ClosureLevel") (Dlr.const' ctx.Scope.ClosureLevel))
       (Expr.assignValue
-        (Dlr.field target "LocalLevel") (Dlr.const' ctx.Scope.LocalLevel)
-      )
+        (Dlr.field target "LocalLevel") (Dlr.const' ctx.Scope.LocalLevel))
       (Expr.assignValue
-        (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures)
-      )
+        (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures))
 
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
@@ -474,7 +470,7 @@ module Core =
       (Expr.testIsFunction
         (eval)
         (fun x -> Function.invokeAsFunction x ctx.This [target])
-        (fun x -> ctx.Env_Boxed_Undefined)
+        (fun x -> Expr.undefinedBoxed)
       )
     ]
 

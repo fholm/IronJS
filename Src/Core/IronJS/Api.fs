@@ -259,7 +259,7 @@ type TypeConverter =
   static member toPrimitive (b:IjsBool, _:byte) = Utils.boxBool b
   static member toPrimitive (d:IjsNum, _:byte) = Utils.boxNumber d
   static member toPrimitive (s:IjsStr, _:byte) = Utils.boxString s
-  static member toPrimitive (u:Undefined, _:byte) = Utils.boxedUndefined
+  static member toPrimitive (u:Undefined, _:byte) = Utils.BoxedConstants.undefined
   static member toPrimitive (o:IjsObj, h:byte) = o.Methods.Default.Invoke(o, h)
   static member toPrimitive (o:IjsObj) = o.Methods.Default.Invoke(o, 0uy)
   static member toPrimitive (b:IjsBox, h:byte) =
@@ -1204,7 +1204,7 @@ module Object =
     let inline get (o:IjsObj) (name:IjsStr) =
     #endif
       match find o name with
-      | _, -1 -> Utils.boxedUndefined
+      | _, -1 -> Utils.BoxedConstants.undefined
       | pair -> (fst pair).PropertyDescriptors.[snd pair].Box
 
     //--------------------------------------------------------------------------
@@ -1379,7 +1379,7 @@ module Object =
     let inline get (o:IjsObj) (i:uint32) =
     #endif
       match find o i with
-      | null, _, _ -> Utils.boxedUndefined
+      | null, _, _ -> Utils.BoxedConstants.undefined
       | o, index, isDense ->
         if isDense 
           then o.IndexDense.[int index].Box

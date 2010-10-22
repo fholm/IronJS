@@ -518,25 +518,6 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Object_methods : InternalMethods
   [<DefaultValue>] val mutable Arguments_methods : InternalMethods
 
-  //Boxes
-  [<DefaultValue>] val mutable Boxed_NegOne : Box
-  [<DefaultValue>] val mutable Boxed_Zero : Box
-  [<DefaultValue>] val mutable Boxed_One : Box
-  [<DefaultValue>] val mutable Boxed_NaN : Box
-  [<DefaultValue>] val mutable Boxed_Undefined : Box
-  [<DefaultValue>] val mutable Boxed_EmptyString : Box
-  [<DefaultValue>] val mutable Boxed_False : Box
-  [<DefaultValue>] val mutable Boxed_True : Box
-  [<DefaultValue>] val mutable Boxed_Null : Box
-  [<DefaultValue>] val mutable Boxed_Temp : Box
-
-  [<DefaultValue>] val mutable Temp_Bool : Box
-  [<DefaultValue>] val mutable Temp_Number : Box
-  [<DefaultValue>] val mutable Temp_Clr : Box
-  [<DefaultValue>] val mutable Temp_String : Box
-  [<DefaultValue>] val mutable Temp_Object : Box
-  [<DefaultValue>] val mutable Temp_Function : Box
-
   member x.nextPropertyClassId = 
     x._nextPropertyMapId <- x._nextPropertyMapId + 1L
     x._nextPropertyMapId

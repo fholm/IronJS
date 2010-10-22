@@ -59,7 +59,7 @@
         
     //-------------------------------------------------------------------------
     let catch ctx (scope:Ast.Scope) bodyExpr =
-      let var = Utils.Seq.first scope.Variables
+      let var = FSKit.Seq.first scope.Variables
       let tmp = Dlr.paramT<Scope> "~newScope"
       let param = Dlr.paramT<UserError> "~ex"
 

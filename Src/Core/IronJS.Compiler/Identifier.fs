@@ -9,9 +9,8 @@ module Identifier =
   //----------------------------------------------------------------------------
   let private walkScopeChain expr target current =
     let rec walk expr times = 
-      if times = 0
-        then expr
-        else walk (Dlr.field (Dlr.index0 expr) "Scope") (times-1)
+      if times = 0 
+        then expr else walk (Dlr.field (Dlr.index0 expr) "Scope") (times-1)
 
     walk expr (current - target)
       
@@ -44,6 +43,7 @@ module Identifier =
           (scope.ClosureLevel)
           (ctx.Scope.ClosureLevel)
         )
+
       else
         (walkScopeChain
           (ctx.LocalExpr)
@@ -114,8 +114,7 @@ module Identifier =
       | None -> 
         let name = Dlr.const' name
         Expr.blockTmp value (fun value ->
-          [Object.Property.put ctx.Globals name value]
-        )
+          [Object.Property.put ctx.Globals name value])
 
       | Some(expr, i, _, tc) -> 
         let varExpr = Expr.unboxIndex expr i tc

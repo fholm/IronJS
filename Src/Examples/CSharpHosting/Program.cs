@@ -3,45 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using IronJS;
+using IronJS.Api;
 
 namespace CSharpHosting {
-  class Program {
-    static void test(IronJS.Box b, IronJS.Box b2, int a) {
-      return;
-    }
+    class Program {
+        static void Main(string[] args) {
+            var ctx = Hosting.Context.Create();
+            var env = ctx.Environment;
 
-    static void Main(string[] args) {
-      var ctx = Hosting.Context.Create();
-      var env = ctx.Environment;
+            ctx.Execute(@"
+                function Book(name) {
+                    var _name = name;
 
-      var fn = IronJS.Api.DelegateFunction<Action<IronJS.Box, IronJS.Box, int>>.create(env, test);
+                    this.Name = function(n) {
+                        if(n) {
+                            _name = n;
+                        }
+                        return _name;
+                    };
+                };
 
-      //IronJS.Api.Object.putProperty(env, "test2", fn);
+                var book = new Book('IronJS in Action');
+            ");
 
-      ctx.Execute(@"
-function Book(name) {
-    var _name = name;
-
-    this.Name = function(n) {
-        if(n) {
-            _name = n;
+            var book = ctx.ExecuteT<string>("book.Name();");
+            Console.WriteLine(book);
+            Console.ReadLine();
         }
-        return _name;
-    };
-};
-
-var book = new Book('IronJS in Action');
-
-");
-      dynamic book = ctx.ExecuteT<string>("book.Name();");
-      Console.WriteLine(book);
-      Console.ReadLine();
-
-      book = ctx.Execute("book.Name('IronJS to C#');");
-      Console.WriteLine(book);
-      Console.ReadLine();
-
-      ctx.Execute("1 === 1");
     }
-  }
 }

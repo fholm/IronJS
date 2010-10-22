@@ -2,7 +2,10 @@
 
 open System
 open IronJS
+open IronJS.Api.Extensions
 
+//------------------------------------------------------------------------------
+//15.2
 module Object =
 
   //----------------------------------------------------------------------------
@@ -21,61 +24,83 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4.5
   let hasOwnProperty (o:IjsObj) (name:IjsStr) =
-    let mutable i = 0
-    if Api.Object.getOwnPropertyIndex(o, name, &i) 
-    then o.PropertyValues.[i].Type <> TypeCodes.Empty
-    else 
-      if name.Length > 0 && (name.[0] < '0' || name.[0] > '9') then false
-      else
-        let mutable i = Index.Min
-        if not (Utils.isStringIndex(name, &i)) then false
-        elif Utils.isDense o 
-        then i < o.IndexLength && o.IndexValues.[int i].Type <> TypeCodes.Empty
-        else o.IndexSparse.ContainsKey i
+    match Api.Object.Property.getIndex o name with
+    | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
+    | _ ->
+      let mutable i = Array.MinIndex
+      if Utils.isStringIndex(name, &i) 
+        then Api.Object.Index.hasIndex o i
+        else false
 
   //----------------------------------------------------------------------------
   //15.2.4.6
   let isPrototypeOf (o:IjsObj) (v:IjsObj) =
     v.Prototype = o
+
+  //----------------------------------------------------------------------------
+  //15.2.4.7
+  let propertyIsEnumerable (o:IjsObj) (n:IjsStr) =
+    Errors.Generic.notImplemented()
       
   //----------------------------------------------------------------------------
   //15.2.4
-  let createObjectPrototype (env:IjsEnv) =
+  let createPrototype (env:IjsEnv) =
+    Api.Environment.createObject env
     
-    let o = IjsObj(env.Base_Class, null, Classes.Object, 0u)
-
+  //----------------------------------------------------------------------------
+  //15.2.4
+  let setupPrototype (env:IjsEnv) =
     //15.2.4.2
-    Api.Object.putProperty(
-      o, "toString", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toString)), PropertyAttrs.All)
-
+    env.Object_prototype.put("toString", 
+      Api.HostFunction.create env (new Func<IjsObj, IjsStr>(toString))
+    )
+    
     //15.2.4.3
-    Api.Object.putProperty(
-      o, "toLocaleString", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr>(toLocaleString)), PropertyAttrs.All)
+    env.Object_prototype.put("toLocaleString", 
+      (Api.HostFunction.create
+        env (new Func<IjsObj, IjsStr>(toLocaleString)))
+    )
 
     //15.2.4.4
-    Api.Object.putProperty(
-      o, "valueOf", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj>(valueOf)), PropertyAttrs.All)
+    env.Object_prototype.put("valueOf", 
+      (Api.HostFunction.create
+        env (new Func<IjsObj, IjsObj>(valueOf)))
+    )
 
     //15.2.4.5
-    Api.Object.putProperty(
-      o, "hasOwnProperty", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)), 
-      PropertyAttrs.All)
-
+    env.Object_prototype.put("hasOwnProperty", 
+      (Api.HostFunction.create
+        env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)))
+    )
+    
     //15.2.4.6
-    Api.Object.putProperty(
-      o, "isPrototypeOf", 
-      Api.DelegateFunction<_>.create(
-        env, new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)), 
-      PropertyAttrs.All)
-
-    o
+    env.Object_prototype.put("isPrototypeOf", 
+      (Api.HostFunction.create
+        env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)))
+    )
+    
+    //15.2.4.7
+    env.Object_prototype.put("propertyIsEnumerable", 
+      (Api.HostFunction.create
+        env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)))
+    )
       
+  //----------------------------------------------------------------------------
+  //15.2.1
+  let private objectConstructor (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
+    match v.Tag with
+    | TypeTags.Undefined -> Api.Environment.createObject f.Env
+    | TypeTags.Clr when v.Clr = null -> Api.Environment.createObject f.Env
+    | _ -> Api.TypeConverter.toObject(f.Env, v)
 
+  //----------------------------------------------------------------------------
+  //15.2.1
+  let setupConstructor (env:IjsEnv) =
+    let objectCtor = 
+      (Api.HostFunction.create
+        env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
+
+    objectCtor.ConstructorMode <- ConstructorModes.Host
+    objectCtor.put("prototype", env.Object_prototype)
+    env.Object_prototype.put("constructor", objectCtor)
+    env.Globals.put("Object", objectCtor)

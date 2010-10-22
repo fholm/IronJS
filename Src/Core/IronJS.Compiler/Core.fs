@@ -9,6 +9,14 @@ open IronJS.Compiler
 type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
 type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
 
+type Bar() =
+  member x.Get = new Zaz()
+
+and Foo() =
+  member x.Get = true
+
+and Zaz() = class end
+
 module Core =
 
   //----------------------------------------------------------------------------
@@ -47,11 +55,12 @@ module Core =
     //Functions
     | Ast.Invoke(func, args)  -> _compileInvoke ctx func args
     | Ast.New(func, args) -> _compileNew ctx func args
-    | Ast.Function(id, body) -> Function.create ctx compile id body
+    | Ast.Function(id, _, body) -> Function.create ctx compile id body
     | Ast.Return tree -> _compileReturn ctx tree
 
     //Control Flow
-    | Ast.If(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
+    | Ast.IfElse(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
+    | Ast.Switch(test, cases) -> _compileSwitch ctx test cases
     | Ast.While(label, test, body) -> _compileWhile ctx label test body
     | Ast.For(label, i, t, incr, b) -> _compileFor ctx label i t incr b
     | Ast.Break label -> ControlFlow.break' ctx label
@@ -62,6 +71,7 @@ module Core =
     | Ast.Try(body, catch, finally') -> _compileTry ctx body catch finally'
     | Ast.Throw tree -> Exception.throw (compileAst ctx tree)
     | Ast.Finally body -> Exception.finally' (compileAst ctx body)
+
       
     | _ -> failwithf "Failed to compile %A" tree
       
@@ -74,7 +84,14 @@ module Core =
   //----------------------------------------------------------------------------
   and compileTreeAsVoid ctx tree =
     Dlr.castVoid (compileAst ctx tree)
-
+      
+  //----------------------------------------------------------------------------
+  and compileTreeOptionVoid ctx tree =
+    match tree with
+    | None -> Dlr.void'
+    | Some t -> compileTreeAsVoid ctx t
+    
+  //----------------------------------------------------------------------------
   and _compileLabel (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
     let ctx = ctx.AddLabel label target
@@ -82,6 +99,37 @@ module Core =
       (compileAst ctx tree)
       (Dlr.labelExprVoid target)
     ]
+    
+  //----------------------------------------------------------------------------
+  and _compileCase ctx value case =
+    match case with
+    | Ast.Case(tests, body) -> 
+
+      let tests = 
+        Dlr.orChain [
+          for t in tests -> 
+            let t = compileAst ctx t
+            Binary.compile ctx Ast.BinaryOp.Eq t value
+        ]
+
+      Dlr.if' tests (compileAst ctx body)
+
+    | Ast.Default body -> compileAst ctx body
+    | _ -> failwith "Que?"
+    
+  //----------------------------------------------------------------------------
+  and _compileSwitch (ctx:Ctx) value cases =
+    let value = compileAst ctx value
+    let break' = Dlr.labelBreak()
+    let ctx = ctx.AddDefaultLabel break'
+    
+    Dlr.blockTmp value.Type (fun tmp ->
+      [
+        Dlr.assign tmp value
+        Dlr.blockSimple [for c in cases -> _compileCase ctx tmp c]
+        Dlr.labelExprVoid break'
+      ] |> Seq.ofList
+    )
 
   //----------------------------------------------------------------------------
   and _compileWhile ctx label test body =
@@ -172,7 +220,7 @@ module Core =
     let index = _compileIndex ctx index
     (Expr.testIsObject
       (compileAst ctx tree)
-      (fun x -> Api.Expr.jsObjectGetIndex x index)
+      (fun x -> Object.Index.get x index)
       (fun x -> Expr.undefinedBoxed)
     )
       
@@ -210,7 +258,7 @@ module Core =
     | Ast.FunctionScope ->
       let scopeInit = Scope.Function.initLocalScope ctx s.LocalCount
       let scopeChainInit = Scope.Function.initScopeChain ctx s.ClosedOverCount
-      let dynamicChainInit = Scope.Function.initDynamicChain ctx s
+      let DynamicScopeInit = Scope.Function.initDynamicScope ctx s
       
       let variables = 
         (Scope.Function.demoteMissingParams 
@@ -222,10 +270,14 @@ module Core =
       let initParams, initNonParams = 
         Scope.Function.initVariables ctx variables
 
+      let initArguments = 
+        [Scope.Function.initArguments ctx s]
+
       Seq.concat [
-        [scopeInit; scopeChainInit; dynamicChainInit]
+        [scopeInit; scopeChainInit; DynamicScopeInit]
         (initParams |> List.ofSeq)
         (initNonParams |> List.ofSeq)
+        (initArguments)
         [compileAst (ctx.WithScope {s with Variables=variables}) tree]
       ] |> Dlr.blockSimple
 
@@ -239,29 +291,22 @@ module Core =
       (Expr.assignValue ctx.Env_Return (compileAst ctx tree))
       (Dlr.returnVoid ctx.ReturnLabel)
     ]
-
+    
+  //----------------------------------------------------------------------------
   and private _compileArray ctx indexes = 
     let length = indexes.Length
-    let args = [
-      ctx.Env_Array_Class
-      ctx.Env_Array_prototype
-      Dlr.const' Classes.Array
-      Dlr.const' (uint32 length)
-    ]
+    let args = [ctx.Env; Dlr.const' (uint32 length)]
 
     Dlr.blockTmpT<IjsObj> (fun tmp ->
       [
-        (Dlr.assign tmp (Dlr.newArgsT<IjsObj> args))
+        (Dlr.assign tmp
+          (Dlr.callMethod
+            Api.Environment.MethodInfo.createArray args))
+
         (List.mapi (fun i t ->
-          (Expr.assignValue
-            (Dlr.indexInt (Dlr.field tmp "IndexValues") i)
-            (compileAst ctx t)
-          )
+          (Object.Index.put tmp (uint32 i |> Dlr.const') (compileAst ctx t))
         ) indexes) |> Dlr.blockSimple
-        (Expr.assignValue
-          (Expr.propertyValue tmp Dlr.int0)
-          (Dlr.const' (double length))
-        )
+
         (tmp :> Dlr.Expr)
       ] |> Seq.ofList
     )
@@ -282,13 +327,13 @@ module Core =
 
     //New object
     let newArgs = [
+      ctx.Env;
       Dlr.const' pc; 
-      ctx.Env_Object_prototype; 
-      Dlr.const' Classes.Object; 
-      Dlr.const' 0u
     ]
 
-    let newExpr = Dlr.newArgsT<IjsObj> newArgs
+    let newExpr = 
+      (Dlr.callMethod 
+        Api.Environment.MethodInfo.createObjectWithMap newArgs)
 
     //Set properties
     Dlr.blockTmpT<IjsObj> (fun tmp -> 
@@ -314,9 +359,10 @@ module Core =
   //----------------------------------------------------------------------------
   // foo.bar;
   and private _compilePropertyAccess ctx tree name =
+    let name = Dlr.const' name
     (Expr.testIsObject
       (compileAst ctx tree)
-      (fun x -> Api.Expr.jsObjectGetProperty x name)
+      (fun x -> Object.Property.get x name)
       (fun x -> Expr.undefinedBoxed)
     )
     
@@ -329,38 +375,14 @@ module Core =
     (Expr.testIsFunction
       (func)
       (fun f ->
+        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         (Dlr.ternary
           (Expr.isConstructor f)
-          (Dlr.blockTmpT<IjsObj> (fun obj ->
-            [
-              (Dlr.assign obj (_compileObject ctx []))
-              (Dlr.assign
-                (Expr.constructorMode f)
-                (Dlr.const' ConstructorModes.CalledAsConstructor)
-              )
-              (Api.Expr.jsFunctionInvoke f obj args)
-              (Dlr.assign
-                (Expr.constructorMode f)
-                (Dlr.const' ConstructorModes.Constructor)
-              )
-              (Dlr.assign
-                (Expr.prototype obj)
-                (Dlr.ternary
-                  (Expr.testBoxType 
-                    (Expr.propertyValue f Dlr.int1) 
-                    (TypeCodes.Object)
-                  )
-                  (Expr.unboxObject (Expr.propertyValue f Dlr.int1))
-                  (ctx.Env_Object_prototype)
-                )
-              )
-              (obj :> Dlr.Expr)
-            ] |> Seq.ofList
-          ))
-          (Dlr.defaultT<IjsObj>)
+          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes (f :: ctx.Globals :: args))
+          (ctx.Env_Boxed_Undefined)
         )
       )
-      (fun _ -> Dlr.defaultT<IjsObj>)
+      (fun _ -> ctx.Env_Boxed_Undefined)
     )
       
   //----------------------------------------------------------------------------
@@ -399,11 +421,12 @@ module Core =
       Identifier.setValue ctx name value
 
     | Ast.Property(tree, name) -> //Property assignment: foo.bar = 1;
+      let name = Dlr.const' name
       Expr.blockTmp value (fun value ->
         [
           (Expr.testIsObject 
             (compileAst ctx tree)
-            (fun x -> Api.Expr.jsObjectPutProperty x name value)
+            (fun x -> Object.Property.put x name value)
             (fun x -> value)
           )
         ]
@@ -415,7 +438,7 @@ module Core =
         [
           (Expr.testIsObject
             (compileAst ctx tree)
-            (fun x -> Api.Expr.jsObjectPutIndex x index value)
+            (fun x -> Object.Index.put x index value)
             (fun x -> value)
           )
         ]
@@ -426,12 +449,11 @@ module Core =
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
   and private _compileEval (ctx:Context) evalTree =
-
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Api.Expr.jsObjectGetProperty ctx.Globals "eval"))
+      (Dlr.assign eval (Object.Property.get ctx.Globals ("eval" |> Dlr.const')))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
@@ -452,11 +474,11 @@ module Core =
       (Expr.assignValue (Dlr.field target "This") ctx.This)
       (Expr.assignValue (Dlr.field target "Local") ctx.LocalExpr)
       (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ChainExpr)
-      (Expr.assignValue (Dlr.field target "DynamicChain") ctx.DynamicExpr)
+      (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicExpr)
 
       (Expr.testIsFunction
         (eval)
-        (fun x -> Api.Expr.jsFunctionInvoke x ctx.This [target])
+        (fun x -> Function.invokeAsFunction x ctx.This [target])
         (fun x -> ctx.Env_Boxed_Undefined)
       )
     ]
@@ -488,25 +510,14 @@ module Core =
       This = Dlr.paramT<IjsObj> "~this"
       LocalExpr = Dlr.paramT<Scope> "~locals"
       ChainExpr = Dlr.paramT<Scope> "~chain"
-      DynamicExpr = Dlr.paramT<DynamicChain> "~dynamic"
+      DynamicExpr = Dlr.paramT<DynamicScope> "~dynamic"
       ParameterExprs = parameterExprs
     }
 
-    let finalizers = 
-      Dlr.blockSimple [
-        #if REUSABLE_STACK
-        (Dlr.if'
-          (Dlr.isNull ctx.Fun_LocalStack)
-          (Dlr.assign ctx.Fun_LocalStack ctx.LocalExpr)
-        )
-        #endif
-      ]
-
     let returnExpr = [
-        (Dlr.labelExprVoid ctx.ReturnLabel)
-        (finalizers)
-        (ctx.Env_Return)
-      ]
+      (Dlr.labelExprVoid ctx.ReturnLabel)
+      (ctx.Env_Return)
+    ]
 
     let locals = 
       if ctx.Target.IsEval then [] |> Seq.ofList
@@ -539,10 +550,7 @@ module Core =
       | Some d -> Dlr.lambda d allParameters functionBody
       | _ -> Dlr.lambdaAuto allParameters functionBody
       
-    #if DEBUG
-    IronJS.Printer.print.Invoke(lambda)
-    #endif
-
+    Debug.printExpr lambda
     lambda.Compile()
       
   let compileAsGlobal env tree =

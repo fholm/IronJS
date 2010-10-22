@@ -97,11 +97,12 @@ module Identifier =
     match ctx.DynamicLookup with
     | true -> getValueDynamic ctx name
     | _ -> 
+      let cname = Dlr.const' name
       match ctx.Scope.ScopeType with
-      | Ast.GlobalScope -> Api.Expr.jsObjectGetProperty ctx.Globals name
+      | Ast.GlobalScope -> Object.Property.get ctx.Globals cname
       | _ ->
         match getExprIndexLevelType ctx name with
-        | None -> Api.Expr.jsObjectGetProperty ctx.Globals name
+        | None -> Object.Property.get ctx.Globals cname
         | Some(expr, i, _, tc) -> Dlr.Ext.static' (Expr.unboxIndex expr i tc)
         
   //----------------------------------------------------------------------------
@@ -111,8 +112,9 @@ module Identifier =
     | _ ->
       match getExprIndexLevelType ctx name with
       | None -> 
+        let name = Dlr.const' name
         Expr.blockTmp value (fun value ->
-          [Api.Expr.jsObjectPutProperty ctx.Globals name value]
+          [Object.Property.put ctx.Globals name value]
         )
 
       | Some(expr, i, _, tc) -> 

@@ -1,0 +1,19 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <script type="text/javascript">
+            var foo = function (a, b) {
+                alert(arguments[0]);
+                delete arguments[0];
+                arguments[0] = 5;
+                alert(arguments[0]);
+                alert(a);
+            };
+
+            foo(1, 2);
+
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>

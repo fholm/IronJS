@@ -69,7 +69,8 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\IronJS.Runtime.XML</DocumentationFile>
     <PlatformTarget>x86</PlatformTarget>
@@ -82,11 +83,16 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utils.fs" />
     <Compile Include="Global.fs" />
     <Compile Include="Math.fs" />
     <Compile Include="Object.fs" />
+    <Compile Include="Function.fs" />
+    <Compile Include="Array.fs" />
+    <Compile Include="String.fs" />
+    <Compile Include="Number.fs" />
+    <Compile Include="Boolean.fs" />
     <Compile Include="Hosting.fs" />
+    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronJS.Compiler\IronJS.Compiler.fsproj">

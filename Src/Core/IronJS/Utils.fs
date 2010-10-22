@@ -10,52 +10,115 @@ open System.Runtime.InteropServices
 
 module Utils =
 
+  let isNull (o:obj) = Object.ReferenceEquals(o, null)
+  let isNotNull o = o |> isNull |> not
+  
+  //----------------------------------------------------------------------------
   module Seq =
     let first seq' =
       Seq.find (fun _ -> true) seq'
+      
+  //----------------------------------------------------------------------------
+  module Box = 
+    let isNumber tag = tag < 0xFFF9us
+    let isTagged tag = tag > 0xFFF8us
+    let isBothNumber l r = isNumber l && isNumber r
+    
+  //----------------------------------------------------------------------------
+  module Descriptor = 
+    let hasValue (desc:Descriptor) =
+      if Box.isTagged desc.Box.Marker 
+        then true
+        else desc.HasValue || desc.Attributes > 0us
 
-  module List =
-    let opt2lst lst =
-      match lst with 
-      | Some lst -> lst
-      | _ -> []
+    let missingAttr attrs attr = attrs &&& attr = 0us
+    let hasAttr attrs attr = attrs &&& attr > 0us
 
-  module Option =
-    let unwrap opt =
-      match opt with
-      | Some v -> v
-      | _ -> failwith "No value"
+    let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
+    let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
+    let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
+     
+  //----------------------------------------------------------------------------
+  module Object =
+    let isDense (x:IjsObj) = Object.ReferenceEquals(x.IndexSparse, null)
+    let isSparse (x:IjsObj) = isDense x |> not // isDense? ... pause ... NOT!
+    
+  //----------------------------------------------------------------------------
+  module Patterns =
 
-  let asRef (x:HostType) = x.MakeByRefType()
+    let (|Tagged|_|) (box:IjsBox) = 
+      if Box.isTagged box.Marker then Some box.Tag else None
+    
+    let (|Number|_|) (box:IjsBox) = 
+      if Box.isNumber box.Marker then Some box.Number else None
+
+    let (|NumberIndex|_|) (num:IjsNum) =
+      let index = uint32 num
+      if double index = num then Some index else None
+
+    let (|NumberAndIndex|_|) (box:IjsBox) =
+      match box with
+      | Number n -> 
+        match n with
+        | NumberIndex i -> Some i
+        | _ -> None
+      | _ -> None
+
+    let (|String|_|) (box:IjsBox) =
+      if box.Tag = TypeTags.String then Some box.String else None
+
+    let (|StringIndex|_|) (str:IjsStr) =
+      match UInt32.TryParse str with
+      | true, num -> Some num
+      | _ -> None
+
+    let (|StringAndIndex|_|) (box:IjsBox) =
+      match box with
+      | String s ->
+        match s with
+        | StringIndex i -> Some i
+        | _ -> None
+      | _ -> None
+
+    let (|Boolean|Number|Clr|String|Undefined|Object|Function|) (box:IjsBox) =
+      if Box.isNumber box.Marker then Number
+      else
+        match box.Tag with
+        | TypeTags.Bool -> Boolean
+        | TypeTags.Clr -> Clr
+        | TypeTags.String -> String
+        | TypeTags.Undefined -> Undefined
+        | TypeTags.Object -> Object
+        | TypeTags.Function -> Function
+        | _ -> failwith "Que?"
+        
+  //----------------------------------------------------------------------------
   let isVoid t = typeof<System.Void> = t
+
+  let refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
+
   let isStringIndex (str:string, out:uint32 byref) = 
     str.Length > 0 
     && (str.[0] >= '0' || str.[0] <= '9') 
     && System.UInt32.TryParse(str, &out)
 
-  let inline retype (x:'a) : 'b = (# "" x : 'b #)
-  let inline refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
-
   let type2tc (t:System.Type) =   
-    if   refEquals TypeObjects.Bool t         then TypeCodes.Bool
-    elif refEquals TypeObjects.Number t       then TypeCodes.Number
-    elif refEquals TypeObjects.String t       then TypeCodes.String
-    elif refEquals TypeObjects.Undefined t    then TypeCodes.Undefined
-    elif refEquals TypeObjects.Object t       then TypeCodes.Object
-    elif refEquals TypeObjects.Function t     then TypeCodes.Function
-
-    elif refEquals TypeObjects.Box t          then TypeCodes.Box
-    elif refEquals TypeObjects.BoxByRef t     then TypeCodes.Box
-    
-    elif t.IsSubclassOf(TypeObjects.Function) then TypeCodes.Function
-    elif t.IsSubclassOf(TypeObjects.Object)   then TypeCodes.Object
-                                              else TypeCodes.Clr
+    if   refEquals TypeObjects.Bool t         then TypeTags.Bool
+    elif refEquals TypeObjects.Number t       then TypeTags.Number
+    elif refEquals TypeObjects.String t       then TypeTags.String
+    elif refEquals TypeObjects.Undefined t    then TypeTags.Undefined
+    elif refEquals TypeObjects.Object t       then TypeTags.Object
+    elif refEquals TypeObjects.Function t     then TypeTags.Function
+    elif refEquals TypeObjects.Box t          then TypeTags.Box
+    elif t.IsSubclassOf(TypeObjects.Function) then TypeTags.Function
+    elif t.IsSubclassOf(TypeObjects.Object)   then TypeTags.Object
+                                              else TypeTags.Clr
 
   let type2tcT<'a> = type2tc typeof<'a>
 
   let obj2tc (o:obj) = 
     if o = null 
-      then TypeCodes.Clr
+      then TypeTags.Clr
       else type2tc (o.GetType())
 
   let expr2tc (e:Dlr.Expr) = type2tc e.Type
@@ -72,86 +135,86 @@ module Utils =
     elif t.IsSubclassOf(TypeObjects.Object)   then BoxFields.Object
                                               else BoxFields.Clr
 
-
   let type2bfT<'a> = type2bf
   let obj2bf (o:obj) = type2bf (o.GetType())
   let expr2bf (e:Dlr.Expr) = type2bf e.Type
 
   let bf2tc bf =
     match bf with
-    | BoxFields.Bool        -> TypeCodes.Bool     
-    | BoxFields.Number      -> TypeCodes.Number   
-    | BoxFields.String      -> TypeCodes.String   
-    | BoxFields.Undefined   -> TypeCodes.Undefined
-    | BoxFields.Object      -> TypeCodes.Object   
-    | BoxFields.Function    -> TypeCodes.Function 
-    | BoxFields.Clr         -> TypeCodes.Clr
+    | BoxFields.Bool        -> TypeTags.Bool     
+    | BoxFields.Number      -> TypeTags.Number   
+    | BoxFields.String      -> TypeTags.String   
+    | BoxFields.Undefined   -> TypeTags.Undefined
+    | BoxFields.Object      -> TypeTags.Object   
+    | BoxFields.Function    -> TypeTags.Function 
+    | BoxFields.Clr         -> TypeTags.Clr
     | _ -> failwithf "Invalid boxfield %s" bf
 
   let tc2bf tc =
     match tc with
-    | TypeCodes.Bool        -> BoxFields.Bool     
-    | TypeCodes.Number      -> BoxFields.Number   
-    | TypeCodes.String      -> BoxFields.String   
-    | TypeCodes.Undefined   -> BoxFields.Undefined
-    | TypeCodes.Object      -> BoxFields.Object   
-    | TypeCodes.Function    -> BoxFields.Function 
-    | TypeCodes.Clr         -> BoxFields.Clr
+    | TypeTags.Bool        -> BoxFields.Bool     
+    | TypeTags.Number      -> BoxFields.Number   
+    | TypeTags.String      -> BoxFields.String   
+    | TypeTags.Undefined   -> BoxFields.Undefined
+    | TypeTags.Object      -> BoxFields.Object   
+    | TypeTags.Function    -> BoxFields.Function 
+    | TypeTags.Clr        -> BoxFields.Clr
     | _ -> failwithf "Invalid typecode %i" tc
 
   let tc2type tc =
     match tc with
-    | TypeCodes.Box         -> TypeObjects.Box
-    | TypeCodes.Bool        -> TypeObjects.Bool     
-    | TypeCodes.Number      -> TypeObjects.Number   
-    | TypeCodes.String      -> TypeObjects.String   
-    | TypeCodes.Undefined   -> TypeObjects.Undefined
-    | TypeCodes.Object      -> TypeObjects.Object   
-    | TypeCodes.Function    -> TypeObjects.Function 
-    | TypeCodes.Clr         -> TypeObjects.Clr
+    | TypeTags.Bool        -> TypeObjects.Bool     
+    | TypeTags.Number      -> TypeObjects.Number   
+    | TypeTags.String      -> TypeObjects.String   
+    | TypeTags.Undefined   -> TypeObjects.Undefined
+    | TypeTags.Object      -> TypeObjects.Object   
+    | TypeTags.Function    -> TypeObjects.Function 
+    | TypeTags.Clr         -> TypeObjects.Clr
     | _ -> failwithf "Invalid typecode %i" tc
 
-  let inline isBox (type':HostType) = 
-    Object.ReferenceEquals(type', TypeObjects.Box)
+  let isBox (type':ClrType) = Object.ReferenceEquals(type', TypeObjects.Box)
       
-  let inline isObject type' = 
-    (type' = typeof<Object> 
-      || type'.IsSubclassOf(typeof<Object>))
+  let isObject type' = 
+    (type' = typeof<Object> || type'.IsSubclassOf(typeof<Object>))
 
-  let inline isFunction type' = 
-    (type' = typeof<Function> 
-      || type'.IsSubclassOf(typeof<Function>))
+  let isFunction type' = 
+    (type' = typeof<Function> || type'.IsSubclassOf(typeof<Function>))
 
-  let inline isSparse (x:IjsObj) =
-    not (Object.ReferenceEquals(x.IndexSparse, null))
-
-  let inline isDense (x:IjsObj) =
-    Object.ReferenceEquals(x.IndexSparse, null)
-
-  let inline isPrimitive (b:Box byref) =
-    b.Type = TypeCodes.Number
-    || b.Type = TypeCodes.String
-    || b.Type = TypeCodes.Bool
+  let isPrimitive (b:Box) =
+    if Box.isNumber b.Marker
+      then true
+      else 
+        match b.Tag with
+        | TypeTags.String
+        | TypeTags.Bool -> true
+        | _ -> false
 
   let box (o:obj) =
     if o :? Box then unbox o
     else
       let mutable box = Box()
-      let tc = obj2tc o
 
-      match tc with
-      | TypeCodes.Bool   -> box.Bool   <- unbox o
-      | TypeCodes.Number -> box.Double <- unbox o
-      | _ -> box.Clr <- o
+      match obj2tc o with
+      | TypeTags.Bool as tc -> 
+        box.Bool <- unbox o
+        box.Tag <- tc
 
-      box.Type <- tc
+      | TypeTags.Number -> 
+        box.Number <- unbox o
+
+      | tc -> 
+        box.Clr <- o
+        box.Tag <- tc
+
       box
 
   let unbox (b:Box) =
-    match b.Type with
-    | TypeCodes.Bool -> b.Bool :> obj
-    | TypeCodes.Number -> b.Double :> obj
-    | _ -> b.Clr
+    if Box.isNumber b.Marker
+      then b.Number :> obj
+      else
+      match b.Tag with
+      | TypeTags.Bool -> b.Bool :> obj
+      | _ -> b.Clr
 
   let unboxObj (o:obj) =
     if o :? Box 
@@ -160,123 +223,55 @@ module Utils =
 
   let boxedUndefined =
     let mutable box = new Box()
-    box.Type <- TypeCodes.Undefined
+    box.Tag <- TypeTags.Undefined
     box.Clr  <- Undefined.Instance
     box
-
-  let boxedTrue =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.Bool
-    box.Bool <- true
-    box
-
-  let boxedFalse =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.Bool
-    box.Bool <- false
-    box
-
-  let boxedNegOne =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.Number
-    box.Double <- 0.0
-    box
       
-  let boxedZero =
+  let boxRef ref tc =
     let mutable box = new Box()
-    box.Type <- TypeCodes.Number
-    box.Double <- 0.0
+    box.Clr <- ref
+    box.Tag <- tc
     box
 
-  let boxedOne =
+  let boxVal val' =
     let mutable box = new Box()
-    box.Type <- TypeCodes.Number
-    box.Double <- 1.0
+    box.Number <- val'
     box
 
-  let boxedEmptyString =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.String
-    box.String <- ""
-    box
-
-  let boxedNull =
-    let mutable box = new Box()
-    box.Type <- TypeCodes.Clr
-    box.Clr <- null
-    box
-
-  let inline boxBool (b:bool) =
+  let boxBool (b:IjsBool) =
     let mutable box = Box()
     box.Bool <- b
-    box.Type <- TypeCodes.Bool
+    box.Tag <- TypeTags.Bool
     box
 
-  let inline boxDouble (d:double) =
+  let boxNumber (d:IjsNum) =
     let mutable box = Box()
-    box.Double <- d
-    box.Type <- TypeCodes.Number
+    box.Number <- d
     box
 
-  let inline boxClr (c:HostObject) =
+  let boxClr (c:ClrObject) =
     let mutable box = Box()
     box.Clr <- c
-    box.Type <- TypeCodes.Clr
+    box.Tag <- TypeTags.Clr
     box
 
-  let inline boxString (s:String) =
+  let boxString (s:IjsStr) =
     let mutable box = Box()
     box.Clr <- s
-    box.Type <- TypeCodes.String
+    box.Tag <- TypeTags.String
     box
 
-  let inline boxUndefined (u:Undefined) =
-    let mutable box = Box()
-    box.Clr <- u
-    box.Type <- TypeCodes.Undefined
-    box
-
-  let inline boxObject (o:Object) =
+  let boxObject (o:IjsObj) =
     let mutable box = Box()
     box.Clr <- o
-    box.Type <- TypeCodes.Object
+    box.Tag <- TypeTags.Object
     box
 
-  let inline boxFunction (f:Function) =
+  let boxFunction (f:IjsFunc) =
     let mutable box = Box()
     box.Clr <- f
-    box.Type <- TypeCodes.Function
+    box.Tag <- TypeTags.Function
     box
-      
-  let inline setBoolInArray (arr:Box array) i value =
-    arr.[i].Type  <- TypeCodes.Bool
-    arr.[i].Bool  <- value
-    arr.[i].Clr   <- null
-
-  let inline setNumberInArray (arr:Box array) i value =
-    arr.[i].Type    <- TypeCodes.Number
-    arr.[i].Double  <- value
-    arr.[i].Clr     <- null
-
-  let inline setClrInArray (arr:Box array) i (value:HostObject) =
-    arr.[i].Type  <- TypeCodes.Clr
-    arr.[i].Clr   <- value
-
-  let inline setStringInArray (arr:Box array) i (value:string) =
-    arr.[i].Type  <- TypeCodes.String
-    arr.[i].Clr   <- value
-
-  let inline setUndefinedInArray (arr:Box array) i (value:Undefined) =
-    arr.[i].Type  <- TypeCodes.Undefined
-    arr.[i].Clr   <- value
-
-  let inline setObjectInArray (arr:Box array) i (value:Object) =
-    arr.[i].Type  <- TypeCodes.Object
-    arr.[i].Clr   <- value
-
-  let inline setFunctionInArray (arr:Box array) i (value:Function) =
-    arr.[i].Type  <- TypeCodes.Function
-    arr.[i].Clr   <- value
       
   //-------------------------------------------------------------------------
   // Function + cache that creates delegates for IronJS functions, delegates
@@ -284,12 +279,10 @@ module Utils =
   // incomptabile delegates for the same arguments each time it's called.
   // E.g: Func<Closure, Object, int, string, Box>
   let private _delegateCache = 
-    new Collections.
-        Concurrent.
-        ConcurrentDictionary<System.RuntimeTypeHandle list, HostType>()
+    new ConcurrentMutableDict<System.RuntimeTypeHandle list, ClrType>()
 
-  let createDelegate (types:HostType seq) =
-    let key = Seq.fold (fun s (t:HostType) -> t.TypeHandle :: s) [] types
+  let createDelegate (types:ClrType seq) =
+    let key = Seq.fold (fun s (t:ClrType) -> t.TypeHandle :: s) [] types
 
     let rec createDelegate' types =
       let success, func = _delegateCache.TryGetValue key
@@ -304,6 +297,6 @@ module Utils =
 
   let private _internalArgs = Seq.ofList [TypeObjects.Function; TypeObjects.Object]
   let private _interanlReturnType = Seq.ofList [TypeObjects.Box]
-  let addInternalArgs (types:HostType seq) =
+  let addInternalArgs (types:ClrType seq) =
     Seq.concat [_internalArgs; types; _interanlReturnType]
         

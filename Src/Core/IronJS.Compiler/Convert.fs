@@ -10,14 +10,14 @@
 
     let toBool2 (expr:Dlr.Expr) =
       match Utils.expr2tc expr with
-      | TypeCodes.Bool -> expr
-      | TypeCodes.Undefined -> Dlr.false'
-      | TypeCodes.Object -> Dlr.true'
-      | TypeCodes.Function -> Dlr.true'
-      | TypeCodes.Clr -> Dlr.notEq expr (Dlr.null')
-      | TypeCodes.String -> Dlr.gt (Dlr.property expr "Length") Dlr.int0
-      | TypeCodes.Number ->
-        Expr.blockTmpT<Number> expr (fun tmp ->
+      | TypeTags.Bool -> expr
+      | TypeTags.Undefined -> Dlr.false'
+      | TypeTags.Object -> Dlr.true'
+      | TypeTags.Function -> Dlr.true'
+      | TypeTags.Clr -> Dlr.notEq expr (Dlr.null')
+      | TypeTags.String -> Dlr.gt (Dlr.property expr "Length") Dlr.int0
+      | TypeTags.Number ->
+        Expr.blockTmpT<IjsNum> expr (fun tmp ->
           [
             (Dlr.or'
               (Dlr.lt tmp Dlr.dbl0)
@@ -26,7 +26,7 @@
           ]
         )
 
-      | TypeCodes.Box ->
+      | TypeTags.Box ->
         let value = Dlr.paramRefT<Box> "ref"
 
         (Dlr.invoke

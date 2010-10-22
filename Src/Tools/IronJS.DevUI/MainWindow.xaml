@@ -1,7 +1,7 @@
 ﻿<Window x:Class="IronJS.DevUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="400" Width="1200">
+        Title="MainWindow" Height="500" Width="1500">
     <Grid>
         <TextBox HorizontalAlignment="Left" 
                  TextWrapping="Wrap" 
@@ -9,42 +9,94 @@
                  FontFamily="Consolas" 
                  VerticalScrollBarVisibility="Auto"
                  AcceptsReturn="True" 
-                 Margin="12,12,0,41" 
+                 Margin="12,29,0,41" 
                  Name="Input" 
-                 Width="400" />
+                 Width="336" />
         
-        <TextBox Height="51" 
-                 Margin="418,29,12,0" 
+        <TextBox Height="91" 
+                 Margin="640,29,0,0" 
                  VerticalScrollBarVisibility="Auto"
                  TextWrapping="Wrap"
                  FontFamily="Consolas"
                  Name="Result" 
                  IsReadOnly="True"
-                 VerticalAlignment="Top" />
+                 VerticalAlignment="Top" HorizontalAlignment="Left" Width="388" />
         
-        <TextBox Margin="418,102,12,12" 
+        <TextBox Margin="640,138,0,12" 
                  Name="Debug" 
                  VerticalScrollBarVisibility="Auto"
-                 TextWrapping="Wrap"
+                 HorizontalScrollBarVisibility="Auto"
+                 TextWrapping="NoWrap"
                  FontFamily="Consolas"
                  IsReadOnly="True"
                  Visibility="Visible"
-                 />
+                 FontSize="11" HorizontalAlignment="Left" Width="388" />
         
-        <Button Content="Run" 
-                HorizontalAlignment="Left" 
-                Margin="337,0,0,12" 
-                Name="RunCode"
-                Width="75" 
-                Height="23" 
-                VerticalAlignment="Bottom" />
+        <Button Content="Run" Margin="145,0,0,11" 
+                Name="RunCode" Height="23" 
+                VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="38" />
         
-        <Button Content="Reset Environment" Margin="218,0,0,12" 
-                Name="ResetEnv" HorizontalAlignment="Left" 
-                Width="113" Height="23" VerticalAlignment="Bottom" />
-        <Label Content="Result (last statement executed):" Height="28" HorizontalAlignment="Left" Margin="413,5,0,0" Name="ResultLabel" VerticalAlignment="Top" />
-        <Label Content="Debug Output:" Height="28" HorizontalAlignment="Left" Margin="413,78,0,0" Name="label2" VerticalAlignment="Top" />
-        <Label Content="Execution Time:" Height="28" Margin="12,0,0,7" Name="label3" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="93" />
-        <Label Content="" HorizontalAlignment="Left" Margin="111,0,0,7" Name="ExecutionTime" Height="28" VerticalAlignment="Bottom" />
+        <Button Content="Reset Environment" 
+                Margin="189,0,0,12" 
+                Name="ResetEnv" Height="23" 
+                VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="113" />
+        
+        <Label Content="Result (last statement executed):" 
+               Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="635,7,0,0" 
+               Name="ResultLabel" 
+               VerticalAlignment="Top" />
+        
+        <Label Content="AST Tree:" 
+               Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="635,116,0,0" 
+               Name="DebugOutputLabel" 
+               VerticalAlignment="Top" />
+        
+        <Label Content="Execution Time:" 
+               Height="28" 
+               Margin="12,0,0,7" 
+               Name="ExecutionTimeLabel" 
+               VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="93" />
+        
+        <Label Content="" 
+               HorizontalAlignment="Left" 
+               Margin="102,0,0,7" 
+               Name="ExecutionTime" 
+               Height="28" 
+               VerticalAlignment="Bottom" />
+
+        <TreeView Margin="354,29,0,12" 
+                  Name="Variables" 
+                  HorizontalAlignment="Left" 
+                  Width="280" 
+                  FontFamily="Consolas"
+                  FontSize="11" />
+        
+        <Label Content="Environment:" 
+               Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="349,7,0,0" 
+               Name="label1" 
+               VerticalAlignment="Top" />
+        
+        <Label Content="JavaScript Code:" 
+               Height="28" 
+               HorizontalAlignment="Left" Margin="7,7,0,0" Name="label2" VerticalAlignment="Top" />
+        
+        <Button Content="Quit" Height="23" HorizontalAlignment="Left" Margin="308,0,0,12" Name="QuitButton" VerticalAlignment="Bottom" Width="40" Click="QuitButton_Click" />
+
+        <TextBox Margin="1034,29,12,12" Name="ExpressionTree"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Auto"
+                 TextWrapping="NoWrap"
+                 FontFamily="Consolas"
+                 IsReadOnly="True"
+                 Visibility="Visible"
+                 FontSize="11" />
+        
+        <Label Content="Expression Tree:" Height="28" HorizontalAlignment="Left" Margin="1030,7,0,0" Name="label3" VerticalAlignment="Top" />
     </Grid>
 </Window>

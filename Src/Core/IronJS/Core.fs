@@ -16,50 +16,45 @@ open System.Globalization
 
 
 //-------------------------------------------------------------------------
-//
 // Type aliases to give a more meaningful name to some special types in 
 // the context of IronJS
-//
 //-------------------------------------------------------------------------
-type FunId        = int64
-type ClassId      = int64
-type TypeCode     = int16
-type BoxField     = string
-type Number       = double
-type DelegateType = System.Type
-type HostObject   = System.Object
-type HostType     = System.Type
+type Class = byte
+type FunId = int64
+type ClassId = int64
+
+type BoxField = string
+type TypeTag = uint32
+type TypeMarker = uint16
+
 type ConstructorMode = byte
 type PropertyAttr = int16
+type DescriptorAttr = uint16
 
-type IjsNum = double
-type IjsStr = string
-type IjsBool = bool
-type Class = byte
+type ClrType = System.Type
+type ClrObject = System.Object
+type ClrDelegate = System.Delegate
+type ClrDelegateType = System.Type
 
+type IjsBool = bool   // 8.3
+type IjsStr = string  // 8.4
+type IjsNum = double  // 8.5
+type IjsVal = IjsNum  
+type IjsRef = ClrObject
 
-
-
-//-------------------------------------------------------------------------
-//
-// Constants
-//
-//-------------------------------------------------------------------------
-module TypeCodes =
-  let [<Literal>] Box       = -1s
-  let [<Literal>] Empty     = 0s
-  let [<Literal>] Bool      = 1s
-  let [<Literal>] Number    = 2s
-  let [<Literal>] Clr       = 4s
-  let [<Literal>] String    = 8s
-  let [<Literal>] Undefined = 16s
-  let [<Literal>] Object    = 32s
-  let [<Literal>] Function  = 64s
+module TypeTags =
+  let [<Literal>] Box = 0x00000000u
+  let [<Literal>] Bool = 0xFFFFFF01u
+  let [<Literal>] Number = 0xFFFFFF02u
+  let [<Literal>] Clr = 0xFFFFFF03u
+  let [<Literal>] String = 0xFFFFFF04u
+  let [<Literal>] Undefined = 0xFFFFFF05u
+  let [<Literal>] Object = 0xFFFFFF06u
+  let [<Literal>] Function = 0xFFFFFF07u
 
   let Names = 
     Map.ofList [
       (Box, "internal")
-      (Empty, "undefined")
       (Bool, "boolean")
       (Number, "number")
       (Clr, "clr")
@@ -70,35 +65,24 @@ module TypeCodes =
     ]
 
 module BoxFields =
-  let [<Literal>] Bool      = "Bool"
-  let [<Literal>] Number    = "Double"
-  let [<Literal>] Clr       = "Clr"
-  let [<Literal>] Undefined = "Undefined"
-  let [<Literal>] String    = "String"
-  let [<Literal>] Object    = "Object"
-  let [<Literal>] Function  = "Func"
+  let [<Literal>] Bool = "Bool"
+  let [<Literal>] Number = "Number"
+  let [<Literal>] Clr = "Clr"
+  let [<Literal>] Undefined = "Clr"
+  let [<Literal>] String = "String"
+  let [<Literal>] Object = "Object"
+  let [<Literal>] Function = "Func"
 
-module PropertyAttrs =
-  let [<Literal>] ReadOnly    = 1s
-  let [<Literal>] DontEnum    = 2s
-  let [<Literal>] DontDelete  = 4s
-  let [<Literal>] Immutable   = 5s //1s ||| 4s
-  let [<Literal>] All         = 7s //1s ||| 2s ||| 4s
-  let [<Literal>] NoDelNoEnum = 6s
-
-  let inline canDelete attr = (attr &&& DontDelete) = 0s
-  let inline canEnum attr   = (attr &&& DontEnum) = 0s
-  let inline canWrite attr  = (attr &&& ReadOnly) = 0s
-
-module PropertyClassTypes =
-  let [<Literal>] Global  = -2L
-  let [<Literal>] Dynamic = -1L
-  let [<Literal>] Default = 0L
+module DescriptorAttrs =
+  let [<Literal>] None = 0us
+  let [<Literal>] ReadOnly = 2us
+  let [<Literal>] DontEnum = 4us
+  let [<Literal>] DontDelete = 8us
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
-  let [<Literal>] Constructor = 1uy
-  let [<Literal>] CalledAsConstructor = 2uy
+  let [<Literal>] User = 1uy
+  let [<Literal>] Host = 2uy
 
 module ParamsModes =
   let [<Literal>] NoParams = 0uy
@@ -111,29 +95,29 @@ module DefaultValue =
   let [<Literal>] Number = 2uy
 
 module Classes =
-  let [<Literal>] Object    = 1uy
-  let [<Literal>] Function  = 2uy
-  let [<Literal>] Array     = 3uy
-  let [<Literal>] String    = 4uy
-  let [<Literal>] Regexp    = 5uy
-  let [<Literal>] Boolean   = 6uy
-  let [<Literal>] Number    = 7uy
-  let [<Literal>] Math      = 8uy
-  let [<Literal>] Date      = 9uy
-  let [<Literal>] Error     = 10uy
+  let [<Literal>] Object = 1uy
+  let [<Literal>] Function = 2uy
+  let [<Literal>] Array = 3uy
+  let [<Literal>] String = 4uy
+  let [<Literal>] Regexp  = 5uy
+  let [<Literal>] Boolean = 6uy
+  let [<Literal>] Number = 7uy
+  let [<Literal>] Math = 8uy
+  let [<Literal>] Date = 9uy
+  let [<Literal>] Error = 10uy
 
   let Names = 
     Map.ofList [
-      (Object,    "Object")
-      (Function,  "Function")
-      (Array,     "Array")
-      (String,    "String")
-      (Regexp,    "Regexp")
-      (Boolean,   "Boolean")
-      (Number,    "Number")
-      (Math,      "Math")
-      (Date,      "Date")
-      (Error,     "Error")
+      (Object, "Object")
+      (Function, "Function")
+      (Array, "Array")
+      (String, "String")
+      (Regexp, "Regexp")
+      (Boolean, "Boolean")
+      (Number, "Number")
+      (Math, "Math")
+      (Date, "Date")
+      (Error, "Error")
     ]
 
 module MarshalModes =
@@ -141,94 +125,176 @@ module MarshalModes =
   let [<Literal>] This = 1
   let [<Literal>] Function = 0
 
-module Index =
-  let [<Literal>] Min = 0u
-  let [<Literal>] Max = 2147483646u
+module Array =
+  let [<Literal>] MinIndex = 0u
+  let [<Literal>] MaxIndex = 2147483646u
+  let [<Literal>] MaxSize = 2147483647u
+
+module ArgumentsLinkArray =
+  let [<Literal>] Locals = 0uy
+  let [<Literal>] ClosedOver = 1uy
+
+module TaggedBools =
+  let True = 
+    let bytes = FSKit.Bit.double2bytes 0.0
+    bytes.[0] <- 0x1uy
+    bytes.[4] <- 0x1uy
+    bytes.[5] <- 0xFFuy
+    bytes.[6] <- 0xFFuy
+    bytes.[7] <- 0xFFuy
+    FSKit.Bit.bytes2double bytes
+
+  let False = 
+    let bytes = FSKit.Bit.double2bytes 0.0
+    bytes.[4] <- 0x1uy
+    bytes.[5] <- 0xFFuy
+    bytes.[6] <- 0xFFuy
+    bytes.[7] <- 0xFFuy
+    FSKit.Bit.bytes2double bytes
 
 //-------------------------------------------------------------------------
-//
-// Struct used to represent a value whos type is unknown at runtime
-//
+// Represents a value whos type is unknown at runtime
 //-------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
-    [<FieldOffset(0)>]  val mutable Clr : HostObject 
+    [<FieldOffset(0)>]  val mutable Clr : ClrObject 
     [<FieldOffset(0)>]  val mutable Object : IjsObj
     [<FieldOffset(0)>]  val mutable Func : IjsFunc
     [<FieldOffset(0)>]  val mutable String : IjsStr
-    [<FieldOffset(0)>]  val mutable Undefined : Undefined
     [<FieldOffset(0)>]  val mutable Scope : Scope
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
-    [<FieldOffset(8)>]  val mutable Double : IjsNum
+    [<FieldOffset(8)>]  val mutable Number : IjsNum
 
-    //TypeCode
-    [<FieldOffset(16)>] val mutable Type : int16
+    //Type & Tag
+    [<FieldOffset(12)>] val mutable Tag : TypeTag
+    [<FieldOffset(14)>] val mutable Marker : uint16
   end
-(*
-type [<Struct>] Box =
-  struct
-    val mutable Clr : obj 
-    val mutable Double : IjsNum
-    val mutable Type : int
-
-    member x.String 
-      with get ()  = Index.retype x.Clr : IjsStr
-       and set (v) = x.Clr <- v
-
-    member x.Scope
-      with get ()  = Index.retype x.Clr : Scope
-       and set (v) = x.Clr <- v
-
-    member x.Undefined 
-      with get ()  = Index.retype x.Clr : Undefined
-       and set (v) = x.Clr <- v
-
-    member x.Object 
-      with get ()  = Index.retype x.Clr : Object
-       and set (v) = x.Clr <- v
-
-    member x.Func 
-      with get ()  = Index.retype x.Clr : Function
-       and set (v) = x.Clr <- v
-
-    member x.Bool 
-      with get ()  = x.Double > 0.0
-      and  set (v) = x.Double <- if v then 1.0 else 0.0
-
-  end
-*)
-    
-
 
 //-------------------------------------------------------------------------
-// Class used to represent the javascript 'undefined' value
+// 8.1 Undefined
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
 
+//------------------------------------------------------------------------------
+// 8.6
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] Object = 
+  val mutable Class : byte // [[Class]]
+  val mutable Value : Descriptor // [[Value]]
+  val mutable Methods : InternalMethods // 8.6.2
+  val mutable Prototype : Object // [[Property]]
 
+  val mutable IndexLength : uint32
+  val mutable IndexSparse : MutableSorted<uint32, Box>
+  val mutable IndexDense : Descriptor array
+
+  val mutable PropertyMap : PropertyMap
+  val mutable PropertyDescriptors : Descriptor array
+
+  member x.PropertyMapId = x.PropertyMap.Id
+  
+  new (map, prototype, class', indexSize) = {
+    Class = class'
+    Value = Descriptor()
+    Prototype = prototype
+    Methods = Unchecked.defaultof<InternalMethods>
+
+    IndexLength = indexSize
+    IndexDense = 
+      if indexSize <= Array.MaxSize
+        then Array.zeroCreate (int indexSize) else Array.empty
+
+    IndexSparse = 
+      if indexSize > Array.MaxSize && indexSize > 0u
+        then MutableSorted<uint32, Box>() else null
+
+    PropertyMap = map
+    PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
+  }
+
+  new () = {
+    Class = Classes.Object
+    Value = Descriptor()
+    Prototype = null
+    Methods = Unchecked.defaultof<InternalMethods>
+
+    IndexLength = Array.MinIndex
+    IndexDense = null
+    IndexSparse = null
+
+    PropertyMap = null
+    PropertyDescriptors = null
+  }
+  
+//-------------------------------------------------------------------------
+// Property descriptor
+//-------------------------------------------------------------------------
+and [<StructuralEquality>] [<NoComparison>] Descriptor =
+  struct
+    val mutable Box : Box
+    val mutable Attributes : uint16 // 8.6.1
+    val mutable HasValue : bool
+  end
+    
+//------------------------------------------------------------------------------
+// 8.6.2
+//------------------------------------------------------------------------------
+and [<ReferenceEquality>] InternalMethods = {
+  GetProperty : GetProperty // 8.6.2.1
+  HasProperty : HasProperty // 8.6.2.4
+  DeleteProperty : DeleteProperty // 8.6.2.5
+  PutBoxProperty : PutBoxProperty // 8.6.2.2
+  PutValProperty : PutValProperty // 8.6.2.2
+  PutRefProperty : PutRefProperty // 8.6.2.2
+  
+  GetIndex : GetIndex // 8.6.2.1
+  HasIndex : HasIndex // 8.6.2.4
+  DeleteIndex : DeleteIndex // 8.6.2.5
+  PutBoxIndex : PutBoxIndex // 8.6.2.2
+  PutValIndex : PutValIndex // 8.6.2.2
+  PutRefIndex : PutRefIndex // 8.6.2.2
+
+  Default : Default // 8.6.2.6
+}
+
+and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
+and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
+and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
+and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
+and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
+
+and GetIndex = delegate of IjsObj * uint32 -> IjsBox
+and HasIndex = delegate of IjsObj * uint32 -> IjsBool
+and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
+and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
+and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
+
+and Default = delegate of IjsObj * byte -> IjsBox
 
 //-------------------------------------------------------------------------
-// Class used for the the implementation of hidden classes
+// 
 //-------------------------------------------------------------------------
-and [<AllowNullLiteral>] PropertyClass =
+and [<AllowNullLiteral>] PropertyMap =
   val mutable Id : int64
   val mutable Env : IjsEnv
   val mutable NextIndex : int
   val mutable PropertyMap : MutableDict<string, int>
   val mutable FreeIndexes : MutableStack<int>
-  val mutable SubClasses : MutableDict<string, PropertyClass>
+  val mutable SubClasses : MutableDict<string, PropertyMap>
 
   new(env:IjsEnv, map) = {
     Id = env.nextPropertyClassId
     Env = env
     PropertyMap = map
     NextIndex = map.Count
-    SubClasses = MutableDict<string, PropertyClass>() 
+    SubClasses = MutableDict<string, PropertyMap>() 
     FreeIndexes = null
   }
 
@@ -237,119 +303,95 @@ and [<AllowNullLiteral>] PropertyClass =
     Env = env
     PropertyMap = new MutableDict<string, int>()
     NextIndex = 0
-    SubClasses = MutableDict<string, PropertyClass>() 
+    SubClasses = MutableDict<string, PropertyMap>() 
     FreeIndexes = null
   }
 
   member x.isDynamic = 
     x.Id < 0L
+
   
 
 
-//------------------------------------------------------------------------------
-// Base class used to represent all objects that are exposed as native
-// javascript objects to user code.
-//------------------------------------------------------------------------------
-and [<AllowNullLiteral>] Object = 
-  val mutable Class : byte
-  val mutable Value : Box
-  val mutable Prototype : Object
-
-  val mutable IndexLength : uint32
-  val mutable IndexValues : Box array
-  val mutable IndexSparse : MutableSorted<uint32, Box>
-    
-  val mutable PropertyValues : Box array
-  val mutable PropertyClass : PropertyClass
-  val mutable PropertyClassId : ClassId
-  val mutable PropertyAttributes : PropertyAttr array
-  
-  member x.count = x.PropertyClass.PropertyMap.Count
-  member x.isFull = x.count >= x.PropertyValues.Length
-
-  new (propertyClass, prototype, class', indexSize) = {
-    Class = class'
-    Value = Box()
-    Prototype = prototype
-
-    IndexLength = indexSize
-    IndexValues = 
-      if indexSize <= (Index.Max+1u) && indexSize > 0u
-        then Array.zeroCreate (int indexSize) 
-        else null
-
-    IndexSparse = 
-      if indexSize > (Index.Max+1u) && indexSize > 0u
-        then MutableSorted<uint32, Box>() 
-        else null
-
-    PropertyClass = propertyClass
-    PropertyValues = Array.zeroCreate (propertyClass.PropertyMap.Count)
-    PropertyClassId = propertyClass.Id
-    PropertyAttributes = null
-  }
-
-  new () = {
-    Class = Classes.Object
-    Value = Box()
-    Prototype = null
-
-    IndexLength = Index.Min
-    IndexValues = null
-    IndexSparse = null
-
-    PropertyClass = null
-    PropertyValues = null
-    PropertyClassId = PropertyClassTypes.Global
-    PropertyAttributes = null
-  }
-  
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ICompiler =
-  abstract member compile : IjsFunc * DelegateType -> Delegate
-  abstract member compileAs<'a when 'a :> Delegate> : IjsFunc -> 'a
+and [<AllowNullLiteral>] Arguments =
+  inherit Object
+  
+  val mutable Locals : Box array
+  val mutable ClosedOver : Box array
+
+  val mutable LinkMap : (byte * int) array
+  val mutable LinkIntact : bool
+
+  new (env:IjsEnv, linkMap, locals, closedOver) as a = 
+    {
+      inherit Object(env.Array_Class, env.Object_prototype, Classes.Object, 0u)
+
+      Locals = locals
+      ClosedOver = closedOver
+
+      LinkMap = linkMap
+      LinkIntact = true
+
+    } then
+      let o = a :> IjsObj
+      o.Methods <- env.Arguments_methods
+      o.Methods.PutValProperty.Invoke(o, "length", double linkMap.Length)
+      a.copyLinkedValues()
+      
+  //----------------------------------------------------------------------------
+  // This function can't be put in the API since it needs to be called 
+  // from both the Arguments constructor and Api.Arguments.Index.delete
+  member a.copyLinkedValues() =
+    for array, i in a.LinkMap do
+      match array with
+      | ArgumentsLinkArray.Locals -> 
+        a.Methods.PutBoxIndex.Invoke(a, uint32 i, a.Locals.[i])
+
+      | ArgumentsLinkArray.ClosedOver -> 
+        a.Methods.PutBoxIndex.Invoke(a, uint32 i, a.ClosedOver.[i])
+
+      | _ -> failwith "Que?"
 
 
-and [<AllowNullLiteral>] CachedCompiler(compiler:IjsFunc -> DelegateType -> Delegate) = 
 
-  let cache = new MutableDict<DelegateType, Delegate>()
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] FunctionCompiler(compiler) = 
 
-  interface ICompiler with
+  let cache = new MutableDict<ClrDelegateType, Delegate>()
 
-    member x.compile (f:IjsFunc, t:DelegateType) = 
-      let mutable delegate' = null
+  member x.compile (f:IjsFunc, t:ClrDelegateType) = 
+    let mutable delegate' = null
 
-      if not (cache.TryGetValue(t, &delegate')) then
-        delegate' <- compiler f t
-        cache.Add(t, delegate')
+    if not (cache.TryGetValue(t, &delegate')) then
+      delegate' <- compiler f t
+      cache.Add(t, delegate')
 
-      delegate'
+    delegate'
 
-    member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
-      (x :> ICompiler).compile(f, typeof<'a>) :?> 'a
+  member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
+    x.compile(f, typeof<'a>) :?> 'a
 
 
       
 //------------------------------------------------------------------------------
-//
 // Base class used to represent all functions exposed as native javascript
 // functions to user code.
-//
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
   val mutable Env : Environment
-  val mutable Compiler : ICompiler
+  val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunId
   val mutable ConstructorMode : ConstructorMode
 
-  val mutable ScopeChain : ScopeChain
-  val mutable DynamicChain : DynamicChain
+  val mutable ScopeChain : Scope
+  val mutable DynamicScope : DynamicScope
      
-  new (env:IjsEnv, funcId, scopeChain, dynamicChain) = { 
+  new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
     inherit Object(
       env.Function_Class, env.Function_prototype, Classes.Function, 0u)
 
@@ -359,18 +401,18 @@ and [<AllowNullLiteral>] Function =
     ConstructorMode = 1uy
 
     ScopeChain = scopeChain
-    DynamicChain = dynamicChain
+    DynamicScope = dynamicScope
   }
 
   new (env:IjsEnv, propertyClass) = {
-    inherit Object(propertyClass, env.Object_prototype, Classes.Function, 0u)
+    inherit Object(propertyClass, env.Function_prototype, Classes.Function, 0u)
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId
     ConstructorMode = 0uy
 
     ScopeChain = null
-    DynamicChain = List.empty
+    DynamicScope = List.empty
   }
 
   new (env:IjsEnv) = {
@@ -381,94 +423,62 @@ and [<AllowNullLiteral>] Function =
     ConstructorMode = 0uy
 
     ScopeChain = null
-    DynamicChain = List.empty
+    DynamicScope = List.empty
   }
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] HostFunction =
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit Function
-
-  val mutable ArgTypes : HostType array
-  val mutable ReturnType : HostType
+  
+  val mutable Delegate : 'a
+  val mutable ArgTypes : ClrType array
+  val mutable ReturnType : ClrType
 
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
 
-  new (env:IjsEnv, argTypes, returnType) = {
-    inherit Function(env, env.Function_Class)
-
-    ArgTypes = argTypes
-    ReturnType = returnType
-
-    ParamsMode = ParamsModes.NoParams
-    MarshalMode = MarshalModes.Default
-  }
-
-  member internal x.resolveModes () =
-    let length = x.ArgTypes.Length
-
-    if length >= 2 && x.ArgTypes.[0] = typeof<IjsFunc>
-      then x.MarshalMode <- MarshalModes.Function
-      elif length >= 1 && x.ArgTypes.[0] = typeof<IjsObj>
-        then x.MarshalMode <- MarshalModes.This
-        else x.MarshalMode <- MarshalModes.Default
-
-    if length > 0 then
-      let lastArg = x.ArgTypes.[length-1]
-      if lastArg = typeof<Box array> then
-        x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-        x.ParamsMode <- ParamsModes.BoxParams
-
-      if lastArg = typeof<obj array> then
-        x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-        x.ParamsMode <- ParamsModes.ObjectParams
-  
-//-------------------------------------------------------------------------
-// Class used to represent a .NET delegate wrapped as a javascript function
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] DelegateFunction<'a when 'a :> Delegate> =
-  inherit HostFunction
-
-  val mutable Delegate : 'a
-
-  new (env:IjsEnv, delegate':'a) as x = 
+  new (env:IjsEnv, delegate') as x = 
     {
-      inherit HostFunction(
-          env, 
-          Reflection.getDelegateArgTypesT<'a>, 
-          Reflection.getDelegateReturnTypeT<'a>
-        )
+      inherit Function(env, env.Function_Class)
 
       Delegate = delegate'
-    } then x.resolveModes()
+
+      ArgTypes = FSKit.Reflection.getDelegateArgTypesT<'a>
+      ReturnType = FSKit.Reflection.getDelegateReturnTypeT<'a>
+
+      ParamsMode = ParamsModes.NoParams
+      MarshalMode = MarshalModes.Default
+    } then 
+
+      let length = x.ArgTypes.Length
+
+      if length >= 2 && x.ArgTypes.[0] = typeof<IjsFunc>
+        then x.MarshalMode <- MarshalModes.Function
+        elif length >= 1 && x.ArgTypes.[0] = typeof<IjsObj>
+          then x.MarshalMode <- MarshalModes.This
+          else x.MarshalMode <- MarshalModes.Default
+
+      if length > 0 then
+        let lastArg = x.ArgTypes.[length-1]
+        if lastArg = typeof<Box array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.BoxParams
+
+        if lastArg = typeof<obj array> then
+          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
+          x.ParamsMode <- ParamsModes.ObjectParams
+        
+  //----------------------------------------------------------------------------
+  member x.jsArgsLength =
+    match x.MarshalMode with
+    | MarshalModes.Function -> x.ArgTypes.Length - 2
+    | MarshalModes.This -> x.ArgTypes.Length - 1 
+    | _ -> x.ArgTypes.Length
 
 //-------------------------------------------------------------------------
-//
-// Class used to represent a static .NET function 
-// wrapped as a javascript function
-//
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] ClrFunction =
-  inherit HostFunction
-
-  val mutable Method : MethodInfo
-
-  new (env:IjsEnv, method':MethodInfo) as x = 
-    {
-      inherit HostFunction(
-          env, Reflection.getParameters method', method'.ReturnType
-        )
-
-      Method = method'
-    } then x.resolveModes()
-      
-
-//-------------------------------------------------------------------------
-//
 // Class that encapsulates a runtime environment
-//
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment =
   //Id counters
@@ -477,7 +487,7 @@ and [<AllowNullLiteral>] Environment =
 
   //
   [<DefaultValue>] val mutable Return : Box
-  val mutable Compilers : MutableDict<FunId, ICompiler>
+  val mutable Compilers : MutableDict<FunId, FunctionCompiler>
 
   //Objects
   [<DefaultValue>] val mutable Globals : Object
@@ -489,13 +499,17 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Boolean_prototype : Object
 
   //Property Classes
-  [<DefaultValue>] val mutable Base_Class : PropertyClass
-  [<DefaultValue>] val mutable Array_Class : PropertyClass
-  [<DefaultValue>] val mutable Function_Class : PropertyClass
-  [<DefaultValue>] val mutable Prototype_Class : PropertyClass
-  [<DefaultValue>] val mutable String_Class : PropertyClass
-  [<DefaultValue>] val mutable Number_Class : PropertyClass
-  [<DefaultValue>] val mutable Boolean_Class : PropertyClass
+  [<DefaultValue>] val mutable Base_Class : PropertyMap
+  [<DefaultValue>] val mutable Array_Class : PropertyMap
+  [<DefaultValue>] val mutable Function_Class : PropertyMap
+  [<DefaultValue>] val mutable Prototype_Class : PropertyMap
+  [<DefaultValue>] val mutable String_Class : PropertyMap
+  [<DefaultValue>] val mutable Number_Class : PropertyMap
+  [<DefaultValue>] val mutable Boolean_Class : PropertyMap
+
+  //Methods
+  [<DefaultValue>] val mutable Object_methods : InternalMethods
+  [<DefaultValue>] val mutable Arguments_methods : InternalMethods
 
   //Boxes
   [<DefaultValue>] val mutable Boxed_NegOne : Box
@@ -527,105 +541,34 @@ and [<AllowNullLiteral>] Environment =
   new () = {
     _nextFunctionId = 0L
     _nextPropertyClassId = 0L
-    Compilers = new MutableDict<FunId, ICompiler>()
+    Compilers = new MutableDict<FunId, FunctionCompiler>()
   }
 
-
-
 //------------------------------------------------------------------------------
-//
 // Class representing a javascript user exception
-//
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] UserError(jsValue:Box) =
   inherit Exception()
   member x.JsValue = jsValue
 
-
-
-//-------------------------------------------------------------------------
-//
-// Scope Aliases
-//
 //-------------------------------------------------------------------------
 and Scope = Box array
-and ScopeChain = Box array
-and DynamicScope = int * Object
-and DynamicChain = DynamicScope list
+and DynamicScope = (int * Object) list
+
+//-------------------------------------------------------------------------
+and IjsBox = Box
+and IjsEnv = Environment
 and IjsObj = Object
 and IjsFunc = Function
-and IjsEnv = Environment
-and IjsBox = Box
-and IjsHostFunc = HostFunction
-and IjsClrFunc = ClrFunction
-and IjsDelFunc<'a when 'a :> Delegate> = DelegateFunction<'a>
+and IjsHostFunc<'a when 'a :> Delegate> = HostFunction<'a>
 
-//-------------------------------------------------------------------------
-//
-// Type definitions for the different runtime types
-//
 //-------------------------------------------------------------------------
 module TypeObjects =
-  let Box = typeof<Box>
-  let BoxByRef = typeof<Box>.MakeByRefType()
-  let Bool = typeof<bool>
-  let Number = typeof<Number>
-  let Clr = typeof<System.Object>
-  let String = typeof<string>
+  let Box = typeof<IjsBox>
+  let Bool = typeof<IjsBool>
+  let Number = typeof<IjsNum>
+  let Clr = typeof<ClrObject>
+  let String = typeof<IjsStr>
   let Undefined = typeof<Undefined>
-  let Object = typeof<Object>
-  let Function = typeof<Function>
-  
-
-
-//-------------------------------------------------------------------------
-//
-// Inline cache for property gets, e.g: var x = foo.bar;
-//
-//-------------------------------------------------------------------------
-type GetPropertyCache =
-  val mutable PropertyName : string
-  val mutable PropertyIndex : int
-  val mutable PropertyClassId : int64
-
-  new (propertyName) = {
-    PropertyName    = propertyName
-    PropertyIndex   = -2
-    PropertyClassId = -2L
-  }
-    
-
-      
-//-------------------------------------------------------------------------
-//
-// Inline cache for property puts, e.g: foo.bar = 1;
-//
-//-------------------------------------------------------------------------
-type PutPropertyCache =
-  val mutable PropertyName : string
-  val mutable PropertyIndex : int
-  val mutable PropertyClassId : int64
-
-  new (propertyName) = {
-    PropertyName = propertyName
-    PropertyIndex = -2
-    PropertyClassId = -2L
-  }
-    
-
-        
-//-------------------------------------------------------------------------
-//
-// Inline cache for function invoke, e.g: foo(1);
-//
-//-------------------------------------------------------------------------
-type InvokeCache<'a when 'a :> Delegate and 'a : null> =
-  val mutable Cached : 'a
-  val mutable FunctionId : int64
-  val mutable FunctionType : HostType
-
-  new () = {
-    Cached = null
-    FunctionId = -1L
-    FunctionType = typeof<'a>
-  }
+  let Object = typeof<IjsObj>
+  let Function = typeof<IjsFunc>

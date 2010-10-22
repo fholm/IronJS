@@ -3,13 +3,23 @@
 module Dlr = 
 
   open System.Dynamic
+  open System.Reflection
+
+  #if CLR2
+  open Microsoft.Scripting.Ast
+
+  type private Et = Microsoft.Scripting.Ast.Expression
+  type private EtParam = Microsoft.Scripting.Ast.ParameterExpression
+  type Expr = Microsoft.Scripting.Ast.Expression
+  type ExprParam = Microsoft.Scripting.Ast.ParameterExpression
+  #else
   open System.Linq.Expressions
 
-  //Double aliases, 'Et' and 'EtParam' will be removed later
   type private Et = Expression
   type private EtParam = ParameterExpression
   type Expr = Expression
   type ExprParam = ParameterExpression
+  #endif
 
   type Label = LabelTarget
   type ExprType = ExpressionType
@@ -116,7 +126,9 @@ module Dlr =
     blockTmp typeof<'a> f
 
   let field expr (name:string) = Et.PropertyOrField(expr, name) :> Et
-  let property expr (name:string) = Et.Property(expr, name) :> Et
+  let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
+  let property expr (name:string) = Et.PropertyOrField(expr, name) :> Et
+  let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
   let propertyStatic (type':System.Type) name = Et.Property(null, type', name)
   let propertyStaticT<'a> = propertyStatic typeof<'a>
   let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Et
@@ -124,32 +136,38 @@ module Dlr =
   let private exprTypes (args:Expr seq) = [|for a in args -> a.Type|]
 
   let call (expr:Expr) name (args:Expr seq) =
-    match Reflection.getMethodArgs expr.Type name (exprTypes args) with
+    match FSKit.Reflection.getMethodArgs expr.Type name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callGeneric (expr:Expr) name typeArgs (args:Expr seq) =
     let exprTypes = (exprTypes args)
-    match Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
+    match FSKit.Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callStatic (type':System.Type) name (args:Expr seq) =
-    match Reflection.getMethodArgs type' name (exprTypes args) with
+    match FSKit.Reflection.getMethodArgs type' name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(null, method', args) :> Expr
 
   let callStaticT<'a> = callStatic typeof<'a>
 
   let callStaticGeneric (type':System.Type) name typeArgs (args:Expr seq) =
-    match Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
+    match FSKit.Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
 
     | Some(method') -> Et.Call(null, method', args) :> Expr
 
   let callStaticGenericT<'a> = callStaticGeneric typeof<'a>
+
+  let callInstanceMethod (expr:Expr) (mi:MethodInfo) (args:Expr seq) = 
+    Expr.Call(expr, mi, args) :> Expr
+
+  let callMethod (mi:MethodInfo) (args:Expr seq) = 
+    Expr.Call(null, mi, args) :> Expr
 
   let cast typ expr = Et.Convert(expr, typ) :> Et
   let castT<'a> = cast typeof<'a> 
@@ -173,7 +191,7 @@ module Dlr =
   let newGenericT<'a> = newGeneric typedefof<'a>
 
   let newArgs (typ:System.Type) (args:Et seq) = 
-    match Reflection.getCtor typ [for arg in args -> arg.Type] with
+    match FSKit.Reflection.getCtor typ [for arg in args -> arg.Type] with
     | None -> failwith "No matching constructor found"
     | Some ctor -> Et.New(ctor, args) :> Expr
 
@@ -380,11 +398,11 @@ module Dlr =
           System.Reflection.BindingFlags.NonPublic 
             ||| System.Reflection.BindingFlags.Instance)
 
-    let debugView (expr:Expr) =
-      string (_dbgViewProp.GetValue(expr, null))
+    let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
+    let printDebugView (expr:Expr) = printf "%s" (debugView expr)
 
-    let printDebugView (expr:Expr) =
-      printf "%s" (debugView expr)
+    let is type' (expr:Expr) = expr.Type = type'
+    let isT<'a> (expr:Expr) = expr.Type = typeof<'a>
 
   module Ext =
 

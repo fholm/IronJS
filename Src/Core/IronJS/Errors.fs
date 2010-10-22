@@ -14,7 +14,7 @@ module Errors =
   let runtime msg = raise (RuntimeError(msg))
 
   module Generic = 
-    let invalidTypeCode (tc:int16) =
+    let invalidTypeCode (tc:uint32) =
       generic (sprintf "Invalid typecode %d" tc)
 
     let noConversion (from:System.Type) (to':System.Type) =
@@ -24,5 +24,5 @@ module Errors =
       raise (NotImplementedException("Missing feature"))
 
   module Compiler =
-    let binaryFailed op (l:int16) (r:int16) =
+    let binaryFailed op (l:uint32) (r:uint32) =
       compiler (sprintf "Failed to compile operator %A for types %i %i" op l r)

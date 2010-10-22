@@ -37,40 +37,37 @@ module Function =
   //----------------------------------------------------------------------------
   let create ctx compiler id tree =
     //Make sure a compiler exists for this function
-    if not (Api.Environment.hasCompiler (ctx.Target.Environment, id)) then
-      Api.Environment.addCompiler(
-        ctx.Target.Environment, id, makeCompiler ctx compiler tree
-      )
-
-    let argCount = 
-      Dlr.const' (double (scopeParamCount tree))
+    if Api.Environment.hasCompiler ctx.Target.Environment id |> not then
+      (Api.Environment.addCompilerId 
+        ctx.Target.Environment id (makeCompiler ctx compiler tree))
 
     let funcArgs = [
       (ctx.Env)
       (Dlr.const' id)
+      (Dlr.const' (scopeParamCount tree))
       (ctx.ChainExpr)
-      (ctx.DynamicExpr)
-    ]
+      (ctx.DynamicExpr)]
 
-    let prototypeArgs = [
-      ctx.Env_Prototype_Class; 
-      ctx.Env_Object_prototype; 
-      Dlr.const' Classes.Object;
-      Dlr.const' 0u
-    ]
+    Dlr.callMethod (Api.Environment.MethodInfo.createFunction) funcArgs
 
-    let func = Dlr.paramT<IjsFunc> "function"
-    let prototype = Dlr.paramT<IjsObj> "prototype"
+  //----------------------------------------------------------------------------
+  let invokeAsFunction func this' args =
+    Expr.blockTmpT<IjsFunc> func (fun f -> 
+      let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
+      let args = f :: this' :: args
+      [Dlr.callStaticGenericT<Api.Function> "call" argTypes args])
+      
+  //----------------------------------------------------------------------------
+  let invokeAsMethod target f args =
+    Expr.blockTmpT<IjsObj> target (fun object' ->
+      [
+        Expr.blockTmpT<IjsBox> (f object') (fun method' ->
+          [
+            (Expr.testIsFunction
+              (method')
+              (fun x -> invokeAsFunction x object' args)
+              (fun x -> Expr.undefinedBoxed))])])
 
-    Dlr.block [func; prototype] [
-      (Dlr.assign func (Dlr.newArgsT<IjsFunc> funcArgs))
-      (Dlr.assign prototype (Dlr.newArgsT<IjsObj> prototypeArgs))
-      (Expr.assignValue (Expr.propertyValue prototype Dlr.int0) func)
-      (Expr.assignValue (Expr.propertyValue func Dlr.int0) argCount)
-      (Expr.assignValue (Expr.propertyValue func Dlr.int1) prototype)
-      (func)
-    ]
-    
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
     let argsArray = Dlr.newArrayItemsT<obj> [for a in args -> Dlr.castT<obj> a]
@@ -79,8 +76,7 @@ module Function =
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicExpr]
     (Dlr.callStaticGenericT<Helpers.ScopeHelpers> 
-      "DynamicCall" [delegateType] (defaultArgs @ dynamicArgs)
-    )
+      "DynamicCall" [delegateType] (defaultArgs @ dynamicArgs))
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =
@@ -88,37 +84,31 @@ module Function =
     else
       (Expr.testIsFunction 
         (Identifier.getValue ctx name)
-        (fun x -> Api.Expr.jsFunctionInvoke x ctx.Globals args)
-        (fun x -> Expr.undefinedBoxed)
-      )
+        (fun x -> invokeAsFunction x ctx.Globals args)
+        (fun x -> Expr.undefinedBoxed))
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
+    let name = Dlr.const' name
     (Expr.testIsObject 
       (object')
       (fun x -> 
-        (Api.Expr.jsMethodInvoke
+        (invokeAsMethod
           (x)
-          (fun x -> Api.Expr.jsObjectGetProperty x name)
-          (args)
-        )
-      )
-      (fun x -> Expr.undefinedBoxed)
-    )
+          (fun x -> Object.Property.get x name)
+          (args)))
+      (fun x -> Expr.undefinedBoxed))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
     (Expr.testIsObject 
       (object')
       (fun x -> 
-        (Api.Expr.jsMethodInvoke
+        (invokeAsMethod
           (x)
-          (fun x -> Api.Expr.jsObjectGetIndex x index)
-          (args)
-        )
-      )
-      (fun x -> Expr.undefinedBoxed)
-    )
+          (fun x -> Object.Index.get x index)
+          (args)))
+      (fun x -> Expr.undefinedBoxed))
     
   //----------------------------------------------------------------------------
   let createTempVars args =

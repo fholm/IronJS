@@ -3,6 +3,18 @@
 open IronJS
 
 module Expr = 
+
+  module Patterns =
+    
+    let (|Box|Ref|Val|) (expr:Dlr.Expr) =
+      if expr.Type = typeof<IjsBox>
+        then Box
+        elif expr.Type = typeof<IjsNum> || expr.Type = typeof<IjsBool>
+          then Val
+          else Ref
+
+    let (|Index|TypeCode|) (expr:Dlr.Expr) =
+      if expr.Type = typeof<uint32> then Index else TypeCode
     
   //-------------------------------------------------------------------------
   let undefined = Dlr.propertyStaticT<IronJS.Undefined> "Instance"
@@ -27,7 +39,7 @@ module Expr =
     Dlr.assign (Dlr.field (Dlr.Ext.unwrap expr) BoxFields.Clr) Dlr.null'
     
   //-------------------------------------------------------------------------
-  let getBoxType expr = Dlr.field expr "Type"
+  let getBoxType expr = Dlr.field expr "Tag"
   let setBoxType expr tc = Dlr.assign (getBoxType expr) (Dlr.const' tc)
   let setBoxTypeOf expr of' = setBoxType expr (Utils.expr2tc of')
       
@@ -44,7 +56,7 @@ module Expr =
   let testBoxType expr typeCode = 
     if isBoxed expr then
       let comparer = 
-        if typeCode >= TypeCodes.Clr
+        if typeCode >= TypeTags.Clr
           then Dlr.gtEq
           else Dlr.eq
       comparer (getBoxType expr) (Dlr.const' typeCode)
@@ -68,9 +80,37 @@ module Expr =
   let num0 = Dlr.const' 0.0
   let num1 = Dlr.const' 1.0
   let num2 = Dlr.const' 2.0
+  
+  let bool2val expr =
+    (Dlr.ternary
+      expr (Dlr.const' TaggedBools.True) (Dlr.const' TaggedBools.False))
 
-  let propertyValues obj = Dlr.field obj "PropertyValues"
+  let normalizeVal (expr:Dlr.Expr) =
+    if expr.Type = typeof<IjsBool> then bool2val expr else expr
+
+  let propertyValues obj = Dlr.field obj "PropertyDescriptors"
   let propertyValue obj i = Dlr.index (propertyValues obj) [i]
+
+  module Object =
+    let methods obj = Dlr.field obj "Methods"
+
+    module Methods = 
+      let getProperty obj = obj |> methods |> Dlr.fieldr "GetProperty"
+      let hasProperty obj = obj |> methods |> Dlr.fieldr "HasProperty"
+      let deleteProperty obj = obj |> methods |> Dlr.fieldr "DeleteProperty"
+      let putBoxProperty obj = obj |> methods |> Dlr.fieldr "PutBoxProperty"
+      let putRefProperty obj = obj |> methods |> Dlr.fieldr "PutRefProperty"
+      let putValProperty obj = obj |> methods |> Dlr.fieldr "PutValProperty"
+    
+      let getIndex obj = obj |> methods |> Dlr.fieldr "GetIndex"
+      let hasIndex obj = obj |> methods |> Dlr.fieldr "HasIndex"
+      let deleteIndex obj = obj |> methods |> Dlr.fieldr "DeleteIndex"
+      let putBoxIndex obj = obj |> methods |> Dlr.fieldr "PutBoxIndex"
+      let putRefIndex obj = obj |> methods |> Dlr.fieldr "PutRefIndex"
+      let putValIndex obj = obj |> methods |> Dlr.fieldr "PutValIndex"
+
+  let expr2constTc expr =
+    Dlr.const' (Utils.expr2tc expr)
 
   let unboxNumber box = Dlr.field box BoxFields.Number
   let unboxBool box = Dlr.field box BoxFields.Bool
@@ -80,13 +120,13 @@ module Expr =
   let unboxObject box = Dlr.field box BoxFields.Object
   let unboxFunction box = Dlr.field box BoxFields.Function
 
-  let containsNumber box = testBoxType box TypeCodes.Number
-  let containsBool box = testBoxType box TypeCodes.Bool
-  let containsClr box = testBoxType box TypeCodes.Clr
-  let containsString box = testBoxType box TypeCodes.String
-  let containsUndefined box = testBoxType box TypeCodes.Undefined
-  let containsObject box = testBoxType box TypeCodes.Object
-  let containsFunction box = testBoxType box TypeCodes.Function
+  let containsNumber box = testBoxType box TypeTags.Number
+  let containsBool box = testBoxType box TypeTags.Bool
+  let containsClr box = testBoxType box TypeTags.Clr
+  let containsString box = testBoxType box TypeTags.String
+  let containsUndefined box = testBoxType box TypeTags.Undefined
+  let containsObject box = testBoxType box TypeTags.Object
+  let containsFunction box = testBoxType box TypeTags.Function
 
   //-------------------------------------------------------------------------
   let unbox type' (expr:Dlr.Expr) =
@@ -171,7 +211,7 @@ module Expr =
       let typeCode = Utils.expr2tc rexpr
       let box = Dlr.Ext.unwrap lexpr
       let val' = Dlr.Ext.unwrap rexpr
-      if typeCode <= TypeCodes.Number then
+      if typeCode <= TypeTags.Number then
         Dlr.blockSimple [
           (setBoxClrNull box)
           (setBoxTypeOf box val')
@@ -206,7 +246,7 @@ module Expr =
   let constructorMode expr = Dlr.field expr "ConstructorMode"
 
   let isConstructor expr =
-    Dlr.gtEq (constructorMode expr) (Dlr.const' ConstructorModes.Constructor)
+    Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
     
   //-------------------------------------------------------------------------
   let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox (*ifOther*) =

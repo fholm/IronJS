@@ -22,9 +22,10 @@ open System.Globalization
 type Class = byte
 type FunId = int64
 type ClassId = int64
+
+type BoxField = string
 type TypeTag = uint32
 type TypeMarker = uint16
-type BoxField = string
 
 type ConstructorMode = byte
 type PropertyAttr = int16
@@ -67,7 +68,7 @@ module BoxFields =
   let [<Literal>] Bool = "Bool"
   let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
-  let [<Literal>] Undefined = "Undefined"
+  let [<Literal>] Undefined = "Clr"
   let [<Literal>] String = "String"
   let [<Literal>] Object = "Object"
   let [<Literal>] Function = "Func"
@@ -161,7 +162,6 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(0)>]  val mutable Object : IjsObj
     [<FieldOffset(0)>]  val mutable Func : IjsFunc
     [<FieldOffset(0)>]  val mutable String : IjsStr
-    [<FieldOffset(0)>]  val mutable Undefined : Undefined
     [<FieldOffset(0)>]  val mutable Scope : Scope
 
     //Value Types

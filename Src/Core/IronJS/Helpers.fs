@@ -19,7 +19,7 @@ type ScopeHelpers() =
           let mutable h = null
           let mutable i = 0
           if o.Methods.HasProperty.Invoke(o, name)
-            then Some(o)
+            then Some o
             else find xs
         else
           None
@@ -39,36 +39,31 @@ type ScopeHelpers() =
     | _ -> if s = null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
       
   //----------------------------------------------------------------------------
-  static member DynamicSet 
-    (name, value:IjsBox byref, dc, stop, g:IjsObj, s:Scope, i) =
-
+  static member DynamicSet (name, v:IjsBox, dc, stop, g:IjsObj, s:Scope, i) =
     match findObject name dc stop with
-    | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, value)
+    | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, v)
     | _ -> 
       if s = null 
-        then g.Methods.PutBoxProperty.Invoke(g, name, value) 
-        else s.[i] <- value
+        then g.Methods.PutBoxProperty.Invoke(g, name, v) 
+        else s.[i] <- v
           
   //----------------------------------------------------------------------------
   static member DynamicCall<'a when 'a :> Delegate> 
-    (name, args, dc, stop, g:IjsObj, s:Scope, i) =
+    (name, args, dc, stop, g, s:Scope, i) =
 
-    let callFunc this' (func:IjsBox) =
-      if func.Tag >= TypeTags.Function then
-        let func = func.Func
-        let internalArgs = [|func :> obj; this' :> obj|]
-        let compiled = func.Compiler.compileAs<'a> func
-        compiled.DynamicInvoke(Array.append internalArgs args) :?> Box
+    let this, func = 
+      match findObject name dc stop with
+      | Some o -> o, (o.Methods.GetProperty.Invoke(o, name))
+      | _ -> g, if s=null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
 
-      else
-        Errors.runtime "Can only call javascript function dynamically"
+    if func.Tag >= TypeTags.Function then
+      let func = func.Func
+      let internalArgs = [|func :> obj; this :> obj|]
+      let compiled = func.Compiler.compileAs<'a> func
+      Utils.box (compiled.DynamicInvoke(Array.append internalArgs args))
 
-    match findObject name dc stop with
-    | Some o -> callFunc o (o.Methods.GetProperty.Invoke(o, name))
-    | None -> 
-      if s = null
-        then callFunc g (g.Methods.GetProperty.Invoke(g, name))
-        else callFunc g (s.[i])
+    else
+      Errors.runtime "Can only call javascript function dynamically"
         
   //----------------------------------------------------------------------------
   static member DynamicDelete (dc:DynamicScope, g:IjsObj, name) =

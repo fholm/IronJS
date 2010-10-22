@@ -64,6 +64,9 @@ module TypeTags =
       (Function, "function")
     ]
 
+  let getName (tag:TypeTag) = 
+    Names.[tag]
+
 module BoxFields =
   let [<Literal>] Bool = "Bool"
   let [<Literal>] Number = "Number"
@@ -119,6 +122,9 @@ module Classes =
       (Date, "Date")
       (Error, "Error")
     ]
+
+  let getName (class':Class) = 
+    Names.[class']
 
 module MarshalModes =
   let [<Literal>] Default = 2

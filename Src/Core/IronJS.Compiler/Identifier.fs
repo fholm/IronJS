@@ -76,21 +76,21 @@ module Identifier =
   let getDynamicArgs (ctx:Ctx) name =
     match getExprIndexLevelType ctx name with
     | None -> dynamicGetGlobalArgs ctx name
-    | Some(expr, i, l, _) -> dynamicGetVariableArgs ctx expr name i l
+    | Some(expr, i, level, _) -> dynamicGetVariableArgs ctx expr name i level
           
   //----------------------------------------------------------------------------
   let getValueDynamic (ctx:Ctx) name =
     let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicGet" (args)
+    Dlr.callMethod Api.DynamicScope.Reflected.get args
           
   //----------------------------------------------------------------------------
   let setValueDynamic (ctx:Ctx) name value =
     let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicSet" (args)
+    Dlr.callMethod Api.DynamicScope.Reflected.set args
         
   //----------------------------------------------------------------------------
   let getValue (ctx:Ctx) name =

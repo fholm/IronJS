@@ -17,9 +17,9 @@ module Scope =
   let initWith (ctx:Ctx) object' tree =
     let pushArgs = [ctx.DynamicScope; object'; Dlr.const' ctx.Scope.GlobalLevel]
     Dlr.blockSimple [
-      (Dlr.callStaticT<Helpers.ScopeHelpers> "PushScope" pushArgs)
+      (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
       (tree)
-      (Dlr.callStaticT<Helpers.ScopeHelpers> "PopScope" [ctx.DynamicScope])]
+      (Dlr.callMethod Api.DynamicScope.Reflected.pop [ctx.DynamicScope])]
     
   //----------------------------------------------------------------------------
   module Function =
@@ -51,8 +51,7 @@ module Scope =
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
         let i = Option.get var.ParamIndex
-        Expr.assignBoxValue variable ctx.Parameters.[i]
-      )  
+        Expr.assignBoxValue variable ctx.Parameters.[i])  
       
     //--------------------------------------------------------------------------
     let initNonParams ctx (nonParams:Ast.Variable seq) =
@@ -61,8 +60,7 @@ module Scope =
         let variable = Dlr.indexInt expr var.Index
         match var.Type with
         | None -> Expr.assignBoxValue variable Expr.undefined
-        | Some tc -> Expr.setBoxType variable tc
-      )
+        | Some tc -> Expr.setBoxType variable tc)
       
     //--------------------------------------------------------------------------
     let initVariables ctx (vars:Ast.Variable Set) =

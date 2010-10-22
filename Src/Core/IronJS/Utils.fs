@@ -77,6 +77,17 @@ module Utils =
   //----------------------------------------------------------------------------
   module Patterns =
 
+    let (|IsObject|_|) (box:IjsBox) =
+      if box.Tag = TypeTags.Object || box.Tag = TypeTags.Function
+        then Some box.Object else None
+
+    let (|IsFunction|_|) (o:IjsObj) =
+      if o.Class = Classes.Function then Some (o :?> IjsFunc) else None
+
+    let (|IsArrayOrArguments|IsOther|) (o:IjsObj) =
+      if o.Class = Classes.Array || o :? Arguments 
+        then IsArrayOrArguments else IsOther
+
     let (|Tagged|_|) (box:IjsBox) = 
       if Box.isTagged box.Marker then Some box.Tag else None
     
@@ -170,17 +181,6 @@ module Utils =
   let obj2bf (o:obj) = type2bf (o.GetType())
   let expr2bf (e:Dlr.Expr) = type2bf e.Type
 
-  let bf2tc bf =
-    match bf with
-    | BoxFields.Bool        -> TypeTags.Bool     
-    | BoxFields.Number      -> TypeTags.Number   
-    | BoxFields.String      -> TypeTags.String   
-    | BoxFields.Undefined   -> TypeTags.Undefined
-    | BoxFields.Object      -> TypeTags.Object   
-    | BoxFields.Function    -> TypeTags.Function 
-    | BoxFields.Clr         -> TypeTags.Clr
-    | _ -> failwithf "Invalid boxfield %s" bf
-
   let tc2bf tc =
     match tc with
     | TypeTags.Bool        -> BoxFields.Bool     
@@ -248,14 +248,12 @@ module Utils =
       | _ -> b.Clr
 
   let unboxObj (o:obj) =
-    if o :? Box 
-      then unbox (o :?> Box)
-      else o
+    if o :? Box then unbox (o :?> Box) else o
 
   let boxedUndefined =
     let mutable box = new Box()
     box.Tag <- TypeTags.Undefined
-    box.Clr  <- Undefined.Instance
+    box.Clr <- Undefined.Instance
     box
       
   let boxRef ref tc =

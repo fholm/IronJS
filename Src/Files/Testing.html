@@ -2,11 +2,8 @@
     <head>
         <script type="text/javascript">
             var foo = function (a, b) {
-                alert(arguments[0]);
-                delete arguments[0];
-                arguments[0] = 5;
-                alert(arguments[0]);
-                alert(a);
+                var f = new Function("c", "return a + b + c;");
+                alert(f(3));
             };
 
             foo(1, 2);

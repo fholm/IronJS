@@ -1,8 +1,20 @@
 ﻿namespace IronJS
 
+
 open System.Reflection
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
+
+module Version =
+  let [<Literal>] Major = 0
+  let [<Literal>] Minor = 1
+  let [<Literal>] Build = 91
+  let [<Literal>] Revision = 0
+  let [<Literal>] Tag = "preview"
+  let [<Literal>] String = "0.1.91.0"
+  let Tupled = Major, Minor, Build, Revision, Tag
+  let Tagged = sprintf "%s-%s" String Tag
+  let FullName = sprintf "IronJS %s" Tagged
  
 [<assembly: AssemblyTitle("IronJS")>]
 [<assembly: AssemblyDescription("IronJS - A JavaScript runtime for the DLR")>]

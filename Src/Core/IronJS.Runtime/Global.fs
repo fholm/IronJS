@@ -15,8 +15,7 @@ module Global =
       let tree = 
         Ast.LocalScope(
          {Ast.Scope.New with Closures=target.Closures}, 
-          Ast.Parsers.Ecma3.parse target.Function.Env target.Target.String
-        )
+          Ast.Parsers.Ecma3.parse target.Function.Env target.Target.String)
 
       let levels = 
         Some(
@@ -73,29 +72,24 @@ module Global =
     //15.1.2.1
     env.Globals.put("eval", 
       (Api.HostFunction.create
-        env (new Func<Compiler.EvalTarget, IjsBox>(eval)))
-    )
+        env (new Func<Compiler.EvalTarget, IjsBox>(eval))))
 
     //15.1.2.2
     env.Globals.put("parseFloat",
       (Api.HostFunction.create
-        env (new Func<IjsStr, IjsBox>(parseFloat)))
-    )
+        env (new Func<IjsStr, IjsBox>(parseFloat))))
     
     //15.1.2.3
     env.Globals.put("parseInt", 
       (Api.HostFunction.create
-        env (new Func<IjsStr, IjsBox>(parseInt)))
-    )
+        env (new Func<IjsStr, IjsBox>(parseInt))))
     
     //15.1.2.4
     env.Globals.put("isNaN", 
       (Api.HostFunction.create
-        env (new Func<IjsNum, IjsBox>(isNaN)))
-    )
+        env (new Func<IjsNum, IjsBox>(isNaN))))
     
     //15.1.2.5
     env.Globals.put("isFinite", 
       (Api.HostFunction.create
-        env (new Func<IjsNum, IjsBox>(isFinite)))
-    )
+        env (new Func<IjsNum, IjsBox>(isFinite))))

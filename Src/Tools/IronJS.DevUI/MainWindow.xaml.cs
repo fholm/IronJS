@@ -156,7 +156,7 @@ namespace IronJS.DevUI {
 
                     case IronJS.TypeTags.Object:
                     case IronJS.TypeTags.Function:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
+                        header.Header = name + ": " + IronJS.Classes.getName(box.Object.Class);
                         item.Foreground = new SolidColorBrush(Colors.DarkGreen);
                         if (printedObjects.ContainsKey(box.Object)) {
                             item = new TreeViewItem();

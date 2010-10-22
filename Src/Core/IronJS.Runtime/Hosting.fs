@@ -57,6 +57,7 @@ module Hosting =
     Native.Object.setupPrototype x
     Native.Object.setupConstructor x
     Native.Function.setupPrototype x
+    Native.Function.Constructor.setup x
 
     //Boxed bools
     x.Boxed_False.Bool  <- false

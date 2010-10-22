@@ -400,7 +400,10 @@ module Core =
         let index = compileAst ctx index
         Function.invokeIndex ctx object' index args
 
-      | _ -> failwith "Que?"
+      //(function(){ ... })();
+      | _ -> 
+        let func = compileAst ctx tree
+        Function.invokeAsFunction func ctx.Globals args
 
     Dlr.block temps (assigns @ [invokeExpr])
 

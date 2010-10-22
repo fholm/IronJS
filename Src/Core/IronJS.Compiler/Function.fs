@@ -75,8 +75,10 @@ module Function =
     let delegateType = Utils.createDelegate typeArgs
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
-    (Dlr.callStaticGenericT<Helpers.ScopeHelpers> 
-      "DynamicCall" [delegateType] (defaultArgs @ dynamicArgs))
+
+    (Dlr.callMethod
+      (Api.DynamicScope.Reflected.call.MakeGenericMethod([|delegateType|]))
+      (defaultArgs @ dynamicArgs))
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =

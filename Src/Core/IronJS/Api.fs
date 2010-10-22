@@ -1584,9 +1584,7 @@ module Object =
         | _ -> o.has index
 
       static member has (o:IjsObj, index:IjsObj) =
-        match TypeConverter.toString index with
-        | StringIndex i -> o.has i
-        | index -> o.has index
+        Converters.has(o, TypeConverter.toPrimitive index)
 
 module Arguments =
 
@@ -1710,13 +1708,13 @@ module DynamicScope =
     | _ -> None
       
   //----------------------------------------------------------------------------
-  let set (name, dc, stop, g:IjsObj, s:Scope, i) =
+  let set (name) dc stop (g:IjsObj) (s:Scope) i =
     match findObject name dc stop with
     | Some o -> o.Methods.GetProperty.Invoke(o, name)
     | _ -> if s = null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
       
   //----------------------------------------------------------------------------
-  let get (name, v:IjsBox, dc, stop, g:IjsObj, s:Scope, i) =
+  let get name (v:IjsBox) dc stop (g:IjsObj) (s:Scope) i =
     match findObject name dc stop with
     | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, v)
     | _ -> 
@@ -1725,7 +1723,7 @@ module DynamicScope =
         else s.[i] <- v
           
   //----------------------------------------------------------------------------
-  let call<'a when 'a :> Delegate> (name, args, dc, stop, g, s:Scope, i) =
+  let call<'a when 'a :> Delegate> name args dc stop g (s:Scope) i =
 
     let this, func = 
       match findObject name dc stop with
@@ -1742,13 +1740,13 @@ module DynamicScope =
       Errors.runtime "Can only call javascript function dynamically"
         
   //----------------------------------------------------------------------------
-  let delete (dc:DynamicScope, g:IjsObj, name) =
+  let delete (dc:DynamicScope) (g:IjsObj) name =
     match findObject name dc -1 with
     | Some o -> o.Methods.DeleteProperty.Invoke(o, name)
     | _ -> g.Methods.DeleteProperty.Invoke(g, name)
 
   //----------------------------------------------------------------------------
-  let push (dc:DynamicScope byref, new', level) =
+  let push (dc:DynamicScope byref) new' level =
     dc <- (level, new') :: dc
       
   //----------------------------------------------------------------------------
@@ -1757,3 +1755,8 @@ module DynamicScope =
 
   module Reflected =
     let set = Utils.Reflected.methodInfo "Api.DynamicScope" "set"
+    let get = Utils.Reflected.methodInfo "Api.DynamicScope" "get"
+    let call = Utils.Reflected.methodInfo "Api.DynamicScope" "call"
+    let delete = Utils.Reflected.methodInfo "Api.DynamicScope" "delete"
+    let push = Utils.Reflected.methodInfo "Api.DynamicScope" "push"
+    let pop = Utils.Reflected.methodInfo "Api.DynamicScope" "pop"

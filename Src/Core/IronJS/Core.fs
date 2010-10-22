@@ -36,10 +36,10 @@ type ClrObject = System.Object
 type ClrDelegate = System.Delegate
 type ClrDelegateType = System.Type
 
-type IjsNum = double
-type IjsVal = IjsNum
-type IjsStr = string
-type IjsBool = bool
+type IjsBool = bool   // 8.3
+type IjsStr = string  // 8.4
+type IjsNum = double  // 8.5
+type IjsVal = IjsNum  
 type IjsRef = ClrObject
 
 module TypeTags =
@@ -49,8 +49,8 @@ module TypeTags =
   let [<Literal>] Clr = 0xFFFFFF03u
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
-  let [<Literal>] Object = 0xFFFFFF07u
-  let [<Literal>] Function = 0xFFFFFF08u
+  let [<Literal>] Object = 0xFFFFFF06u
+  let [<Literal>] Function = 0xFFFFFF07u
 
   let Names = 
     Map.ofList [
@@ -153,7 +153,7 @@ module TaggedBools =
     FSKit.Bit.bytes2double bytes
 
 //-------------------------------------------------------------------------
-// Struct used to represent a value whos type is unknown at runtime
+// Represents a value whos type is unknown at runtime
 //-------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
@@ -172,105 +172,22 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(12)>] val mutable Tag : TypeTag
     [<FieldOffset(14)>] val mutable Marker : uint16
   end
-  
-//-------------------------------------------------------------------------
-// Property descriptor
-//-------------------------------------------------------------------------
-and [<StructuralEquality>] [<NoComparison>] Descriptor =
-  struct
-    val mutable Box : Box
-    val mutable Attributes : uint16
-    val mutable HasValue : bool
-  end
 
 //-------------------------------------------------------------------------
-// Class used to represent the javascript 'undefined' value
+// 8.1 Undefined
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
 
-//-------------------------------------------------------------------------
-// Class used for the the implementation of hidden classes
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] PropertyMap =
-  val mutable Id : int64
-  val mutable Env : IjsEnv
-  val mutable NextIndex : int
-  val mutable PropertyMap : MutableDict<string, int>
-  val mutable FreeIndexes : MutableStack<int>
-  val mutable SubClasses : MutableDict<string, PropertyMap>
-
-  new(env:IjsEnv, map) = {
-    Id = env.nextPropertyClassId
-    Env = env
-    PropertyMap = map
-    NextIndex = map.Count
-    SubClasses = MutableDict<string, PropertyMap>() 
-    FreeIndexes = null
-  }
-
-  new(env:IjsEnv) = {
-    Id = 0L
-    Env = env
-    PropertyMap = new MutableDict<string, int>()
-    NextIndex = 0
-    SubClasses = MutableDict<string, PropertyMap>() 
-    FreeIndexes = null
-  }
-
-  member x.isDynamic = 
-    x.Id < 0L
-
-    
 //------------------------------------------------------------------------------
-// Record used to represent internal operations
-//------------------------------------------------------------------------------
-and [<ReferenceEquality>] InternalMethods = {
-  GetProperty : GetProperty
-  HasProperty : HasProperty
-  DeleteProperty : DeleteProperty
-  PutBoxProperty : PutBoxProperty
-  PutValProperty : PutValProperty
-  PutRefProperty : PutRefProperty
-  
-  GetIndex : GetIndex
-  HasIndex : HasIndex
-  DeleteIndex : DeleteIndex
-  PutBoxIndex : PutBoxIndex
-  PutValIndex : PutValIndex
-  PutRefIndex : PutRefIndex
-
-  Default : Default
-}
-
-and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
-and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
-and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
-and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
-and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
-and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
-
-and GetIndex = delegate of IjsObj * uint32 -> IjsBox
-and HasIndex = delegate of IjsObj * uint32 -> IjsBool
-and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
-and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
-and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
-and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
-
-and Default = delegate of IjsObj * byte -> IjsBox
-
-
-
-//------------------------------------------------------------------------------
-// Base class used to represent all objects that are exposed as native
-// javascript objects to user code.
+// 8.6
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Object = 
-  val mutable Class : byte
-  val mutable Value : Descriptor
-  val mutable Methods : InternalMethods
-  val mutable Prototype : Object
+  val mutable Class : byte // [[Class]]
+  val mutable Value : Descriptor // [[Value]]
+  val mutable Methods : InternalMethods // 8.6.2
+  val mutable Prototype : Object // [[Property]]
 
   val mutable IndexLength : uint32
   val mutable IndexSparse : MutableSorted<uint32, Box>
@@ -313,6 +230,86 @@ and [<AllowNullLiteral>] Object =
     PropertyMap = null
     PropertyDescriptors = null
   }
+  
+//-------------------------------------------------------------------------
+// Property descriptor
+//-------------------------------------------------------------------------
+and [<StructuralEquality>] [<NoComparison>] Descriptor =
+  struct
+    val mutable Box : Box
+    val mutable Attributes : uint16 // 8.6.1
+    val mutable HasValue : bool
+  end
+    
+//------------------------------------------------------------------------------
+// 8.6.2
+//------------------------------------------------------------------------------
+and [<ReferenceEquality>] InternalMethods = {
+  GetProperty : GetProperty // 8.6.2.1
+  HasProperty : HasProperty // 8.6.2.4
+  DeleteProperty : DeleteProperty // 8.6.2.5
+  PutBoxProperty : PutBoxProperty // 8.6.2.2
+  PutValProperty : PutValProperty // 8.6.2.2
+  PutRefProperty : PutRefProperty // 8.6.2.2
+  
+  GetIndex : GetIndex // 8.6.2.1
+  HasIndex : HasIndex // 8.6.2.4
+  DeleteIndex : DeleteIndex // 8.6.2.5
+  PutBoxIndex : PutBoxIndex // 8.6.2.2
+  PutValIndex : PutValIndex // 8.6.2.2
+  PutRefIndex : PutRefIndex // 8.6.2.2
+
+  Default : Default // 8.6.2.6
+}
+
+and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
+and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
+and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
+and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
+and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
+
+and GetIndex = delegate of IjsObj * uint32 -> IjsBox
+and HasIndex = delegate of IjsObj * uint32 -> IjsBool
+and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
+and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
+and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
+
+and Default = delegate of IjsObj * byte -> IjsBox
+
+//-------------------------------------------------------------------------
+// 
+//-------------------------------------------------------------------------
+and [<AllowNullLiteral>] PropertyMap =
+  val mutable Id : int64
+  val mutable Env : IjsEnv
+  val mutable NextIndex : int
+  val mutable PropertyMap : MutableDict<string, int>
+  val mutable FreeIndexes : MutableStack<int>
+  val mutable SubClasses : MutableDict<string, PropertyMap>
+
+  new(env:IjsEnv, map) = {
+    Id = env.nextPropertyClassId
+    Env = env
+    PropertyMap = map
+    NextIndex = map.Count
+    SubClasses = MutableDict<string, PropertyMap>() 
+    FreeIndexes = null
+  }
+
+  new(env:IjsEnv) = {
+    Id = 0L
+    Env = env
+    PropertyMap = new MutableDict<string, int>()
+    NextIndex = 0
+    SubClasses = MutableDict<string, PropertyMap>() 
+    FreeIndexes = null
+  }
+
+  member x.isDynamic = 
+    x.Id < 0L
+
   
 
 
@@ -361,30 +358,21 @@ and [<AllowNullLiteral>] Arguments =
 
 
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ICompiler =
-  abstract member compile : IjsFunc * ClrDelegateType -> Delegate
-  abstract member compileAs<'a when 'a :> Delegate> : IjsFunc -> 'a
-
-  
-
-//------------------------------------------------------------------------------
-and [<AllowNullLiteral>] CachedCompiler(compiler) = 
+and [<AllowNullLiteral>] FunctionCompiler(compiler) = 
 
   let cache = new MutableDict<ClrDelegateType, Delegate>()
 
-  interface ICompiler with
+  member x.compile (f:IjsFunc, t:ClrDelegateType) = 
+    let mutable delegate' = null
 
-    member x.compile (f:IjsFunc, t:ClrDelegateType) = 
-      let mutable delegate' = null
+    if not (cache.TryGetValue(t, &delegate')) then
+      delegate' <- compiler f t
+      cache.Add(t, delegate')
 
-      if not (cache.TryGetValue(t, &delegate')) then
-        delegate' <- compiler f t
-        cache.Add(t, delegate')
+    delegate'
 
-      delegate'
-
-    member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
-      (x :> ICompiler).compile(f, typeof<'a>) :?> 'a
+  member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
+    x.compile(f, typeof<'a>) :?> 'a
 
 
       
@@ -396,7 +384,7 @@ and [<AllowNullLiteral>] Function =
   inherit Object
 
   val mutable Env : Environment
-  val mutable Compiler : ICompiler
+  val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunId
   val mutable ConstructorMode : ConstructorMode
 
@@ -499,7 +487,7 @@ and [<AllowNullLiteral>] Environment =
 
   //
   [<DefaultValue>] val mutable Return : Box
-  val mutable Compilers : MutableDict<FunId, ICompiler>
+  val mutable Compilers : MutableDict<FunId, FunctionCompiler>
 
   //Objects
   [<DefaultValue>] val mutable Globals : Object
@@ -553,7 +541,7 @@ and [<AllowNullLiteral>] Environment =
   new () = {
     _nextFunctionId = 0L
     _nextPropertyClassId = 0L
-    Compilers = new MutableDict<FunId, ICompiler>()
+    Compilers = new MutableDict<FunId, FunctionCompiler>()
   }
 
 //------------------------------------------------------------------------------

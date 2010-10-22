@@ -115,12 +115,12 @@ module Environment =
   //----------------------------------------------------------------------------
   let addCompilerId (env:IjsEnv) funId compiler =
     if hasCompiler env funId |> not then
-      env.Compilers.Add(funId, CachedCompiler compiler)
+      env.Compilers.Add(funId, FunctionCompiler compiler)
 
   //----------------------------------------------------------------------------
   let addCompiler (env:IjsEnv) (f:IjsFunc) compiler =
     if hasCompiler env f.FunctionId |> not then
-      f.Compiler <- CachedCompiler compiler
+      f.Compiler <- FunctionCompiler compiler
       env.Compilers.Add(f.FunctionId, f.Compiler)
     
   //----------------------------------------------------------------------------

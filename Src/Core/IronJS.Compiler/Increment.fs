@@ -43,7 +43,7 @@ module Increment =
           ] |> Seq.ofList
         )
                  
-      | _ ->failwith "Que?"
+      | _ -> failwith "Que?"
 
   //foo++, foo--
   let postIncrementVariable : ChangeVariable = postChangeVariable Dlr.add

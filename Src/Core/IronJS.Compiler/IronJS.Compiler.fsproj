@@ -92,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Errors.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Context.fs" />
     <Compile Include="Scope.fs" />

@@ -26,13 +26,13 @@ module Function =
   let scopeLocalSize tree =
     match tree with
     | Ast.LocalScope(scope, _) -> scope.LocalCount
-    | _ -> failwith "Que?"
+    | _ -> Errors.topNodeInFunctionMustBeLocalScope()
     
   //----------------------------------------------------------------------------
   let scopeParamCount tree =
     match tree with
     | Ast.LocalScope(scope, _) -> scope.ParamCount
-    | _ -> failwith "Que?"
+    | _ -> Errors.topNodeInFunctionMustBeLocalScope()
     
   //----------------------------------------------------------------------------
   let create ctx compiler id tree =

@@ -64,7 +64,6 @@ module Core =
     | Ast.Try(body, catch, finally') -> _compileTry ctx body catch finally'
     | Ast.Throw tree -> Exception.throw (compileAst ctx tree)
     | Ast.Finally body -> Exception.finally' (compileAst ctx body)
-
       
     | _ -> failwithf "Failed to compile %A" tree
       
@@ -99,8 +98,7 @@ module Core =
         Dlr.orChain [
           for t in tests -> 
             let t = compileAst ctx t
-            Binary.compile ctx Ast.BinaryOp.Eq t value
-        ]
+            Binary.compile ctx Ast.BinaryOp.Eq t value]
 
       Dlr.if' tests (compileAst ctx body)
 
@@ -118,23 +116,21 @@ module Core =
         Dlr.assign tmp value
         Dlr.blockSimple [for c in cases -> _compileCase ctx tmp c]
         Dlr.labelExprVoid break'
-      ] |> Seq.ofList
-    )
+      ] |> Seq.ofList)
 
   //----------------------------------------------------------------------------
   and _compileWhile ctx label test body =
     let break', continue' = ControlFlow.loopLabels()
     let test = Api.TypeConverter.toBoolean (compileAst ctx test)
     let body = compileAst (ctx.AddLoopLabels label break' continue') body
-    Dlr.whileL test body break' continue'
+    Dlr.while' test body break' continue'
     
   //----------------------------------------------------------------------------
   and _compileDoWhile ctx label body test =
     let break', continue' = ControlFlow.loopLabels()
     let test = Api.TypeConverter.toBoolean (compileAst ctx test)
     let body = compileAst (ctx.AddLoopLabels label break' continue') body
-    let res = Dlr.doWhile test body break' continue'
-    res
+    Dlr.doWhile test body break' continue'
 
   //----------------------------------------------------------------------------
   and _compileFor ctx label init test incr body =
@@ -143,7 +139,7 @@ module Core =
     let test = compileAst ctx test
     let incr = compileAst ctx incr
     let body = compileAst (ctx.AddLoopLabels label break' continue') body
-    Dlr.forL init test incr body break' continue'
+    Dlr.for' init test incr body break' continue'
       
   //----------------------------------------------------------------------------
   and _compileIf ctx test ifTrue ifFalse =

@@ -144,13 +144,13 @@ module Ast =
       member x.CompareTo y =
         match y with
         | :? Variable as y -> compare x.Name y.Name
-        | _ -> invalidArg "y" "Can't compare objects of different type"
+        | _ -> invalidArg "y" "Can't compare objects of different types"
         
     override x.GetHashCode () = x.Name.GetHashCode()
     override x.Equals (y:obj) =
       match y with
       | :? Variable as y -> x.Name = y.Name
-      | _ -> invalidArg "y" "Can't compare objects of different type"
+      | _ -> invalidArg "y" "Can't compare objects of different types"
 
     member x.IsParameter = x.ParamIndex <> None
     member x.HasStaticType = x.Type <> None
@@ -363,7 +363,7 @@ module Ast =
 
   let hasCls n s = s.Closures |> Set.exists (clsByName n)
   let hasVar n s = s.Variables |> Set.exists (varByName n)
-    
+
   let getCls n s = s.Closures |> Seq.find (clsByName n)
   let getVar n s = s.Variables |> Seq.find (varByName n)
 

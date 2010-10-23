@@ -15,18 +15,21 @@ module Expr =
 
     let (|Index|TypeCode|) (expr:Dlr.Expr) =
       if expr.Type = typeof<uint32> then Index else TypeCode
+
+  let undefined = 
+    Dlr.propertyStaticT<IronJS.Undefined> "Instance"
     
-  //-------------------------------------------------------------------------
-  let undefined = Dlr.propertyStaticT<IronJS.Undefined> "Instance"
-  let undefinedBoxed = 
-    Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
+  module BoxedConstants =
+    //-------------------------------------------------------------------------
+    let zero = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.zero
+    let undefined = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
     
   //-------------------------------------------------------------------------
   let voidAsUndefined (expr:Dlr.Expr) =
     if expr.Type = typeof<System.Void> then
       Dlr.blockSimple [
         (expr)
-        (undefinedBoxed)
+        (BoxedConstants.undefined)
       ]
     else
       expr

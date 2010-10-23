@@ -66,7 +66,7 @@ module Function =
             (Expr.testIsFunction
               (method')
               (fun x -> invokeAsFunction x object' args)
-              (fun x -> Expr.undefinedBoxed))])])
+              (fun x -> Expr.BoxedConstants.undefined))])])
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -87,7 +87,7 @@ module Function =
       (Expr.testIsFunction 
         (Identifier.getValue ctx name)
         (fun x -> invokeAsFunction x ctx.Globals args)
-        (fun x -> Expr.undefinedBoxed))
+        (fun x -> Expr.BoxedConstants.undefined))
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
@@ -99,7 +99,7 @@ module Function =
           (x)
           (fun x -> Object.Property.get x name)
           (args)))
-      (fun x -> Expr.undefinedBoxed))
+      (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
@@ -110,7 +110,7 @@ module Function =
           (x)
           (fun x -> Object.Index.get x index)
           (args)))
-      (fun x -> Expr.undefinedBoxed))
+      (fun x -> Expr.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
   let createTempVars args =

@@ -91,7 +91,7 @@ module Utils =
   module Patterns =
 
     let (|IsObject|_|) (box:IjsBox) =
-      if box.Tag = TypeTags.Object || box.Tag = TypeTags.Function
+      if box.Tag >= TypeTags.Object
         then Some box.Object else None
 
     let (|IsFunction|_|) (o:IjsObj) =

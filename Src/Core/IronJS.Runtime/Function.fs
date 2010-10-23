@@ -33,6 +33,7 @@ module Function =
       (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsBox array, IjsFunc>(constructor')))
       
+    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Prototype <- env.Function_prototype
     ctor.put("prototype", env.Function_prototype)
     env.Globals.put("Function", ctor)

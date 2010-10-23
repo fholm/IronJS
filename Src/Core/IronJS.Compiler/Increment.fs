@@ -66,7 +66,7 @@ module Increment =
                 (op (Expr.unboxNumber tmp) Dlr.dbl1))
               (tmp)])
           //TODO: Fallback for non-numbers
-          (Expr.undefinedBoxed)) 
+          (Expr.BoxedConstants.undefined)) 
       ] |> Seq.ofList
     )
 

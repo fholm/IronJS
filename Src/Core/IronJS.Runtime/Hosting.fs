@@ -38,10 +38,10 @@ module Hosting =
 
     x.Base_Class <- PropertyMap(x)
 
-    x.Prototype_Class <- Api.PropertyClass.subClass(x.Base_Class, "constructor")
-    x.Function_Class <- Api.PropertyClass.subClass(x.Base_Class, ["length"; "prototype"])
-    x.Array_Class <- Api.PropertyClass.subClass(x.Base_Class, "length")
-    x.String_Class <- Api.PropertyClass.subClass(x.Base_Class, "length")
+    x.Prototype_Class <- Api.PropertyMap.getSubMap x.Base_Class "constructor"
+    x.Function_Class <- Api.PropertyMap.buildSubMap x.Base_Class ["length"; "prototype"]
+    x.Array_Class <- Api.PropertyMap.getSubMap x.Base_Class "length"
+    x.String_Class <- Api.PropertyMap.getSubMap x.Base_Class "length"
     x.Number_Class <- x.Base_Class
     x.Boolean_Class <- x.Base_Class
 
@@ -58,6 +58,8 @@ module Hosting =
     Native.Object.setupConstructor x
     Native.Function.setupConstructor x
     Native.Function.setupPrototype x
+    Native.Array.setupConstructor x
+    Native.Array.setupPrototype x
 
     x
 

@@ -98,7 +98,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | Function of int64 * Tree
+    | Function of FunctionId * Tree
     | Invoke of Tree * Tree list
 
     // Control Flow
@@ -983,7 +983,7 @@ module Ast =
 
           let named = tok.ChildCount = 3
           let pc, bc = if named then (1, 2) else (0, 1)
-          let id = stream.Environment.nextFunctionId
+          let id = stream.Environment.nextFunctionId()
           let parms = [for x in children (child tok pc) -> text x]
           let scope = Scope.NewFunction parms
           let body = translate (child tok bc)
@@ -1063,7 +1063,8 @@ module Ast =
         translate context (program.Tree :?> AntlrToken)
         
       //------------------------------------------------------------------------
-      let parseFile env path = parse env (System.IO.File.ReadAllText(path))
+      let parseFile env path = 
+        parse env (path |> System.IO.File.ReadAllText)
 
       //------------------------------------------------------------------------
       let parseGlobalFile env path = 

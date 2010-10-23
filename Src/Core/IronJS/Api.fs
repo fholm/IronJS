@@ -676,52 +676,50 @@ type Operators =
   static member or' (l:IjsBox, r:IjsBox) =
     if TypeConverter.toBoolean l then l else r
       
-
-
 //------------------------------------------------------------------------------
-// PropertyClass API
+// PropertyMap
 //------------------------------------------------------------------------------
-type PropertyClass =
-        
+module PropertyMap =
+
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyMap, name) = 
-    if x.isDynamic then 
+  let getSubMap (map:PropertyMap) name = 
+    if map.isDynamic then 
       let index = 
-        if x.FreeIndexes.Count > 0 then x.FreeIndexes.Pop()
-        else x.NextIndex <- x.NextIndex + 1; x.NextIndex - 1
+        if map.FreeIndexes.Count > 0 then map.FreeIndexes.Pop()
+        else map.NextIndex <- map.NextIndex + 1; map.NextIndex - 1
 
-      x.PropertyMap.Add(name, index)
-      x
+      map.PropertyMap.Add(name, index)
+      map
 
     else
-      let mutable subClass = null
+      let mutable subMap = null
       
-      if not(x.SubClasses.TryGetValue(name, &subClass)) then
-        let newMap = new MutableDict<string, int>(x.PropertyMap)
-        newMap.Add(name, newMap.Count)
-        subClass <- IronJS.PropertyMap(x.Env, newMap)
-        x.SubClasses.Add(name, subClass)
+      if not(map.SubClasses.TryGetValue(name, &subMap)) then
+        let properties = new MutableDict<string, int>(map.PropertyMap)
+        properties.Add(name, properties.Count)
+        subMap <- IronJS.PropertyMap(map.Env, properties)
+        map.SubClasses.Add(name, subMap)
 
-      subClass
+      subMap
 
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyMap, names:string seq) =
-    Seq.fold (fun c (n:string) -> PropertyClass.subClass(c, n)) x names
+  let rec buildSubMap (map:PropertyMap) names =
+    Seq.fold (fun map name -> getSubMap map name) map names
         
   //----------------------------------------------------------------------------
-  static member makeDynamic (x:IronJS.PropertyMap) =
-    if x.isDynamic then x
+  let makeDynamic (map:IronJS.PropertyMap) =
+    if map.isDynamic then map
     else
-      let pc = new IronJS.PropertyMap(null)
-      pc.Id <- -1L
-      pc.NextIndex <- x.NextIndex
-      pc.FreeIndexes <- new MutableStack<int>()
-      pc.PropertyMap <- new MutableDict<string, int>(x.PropertyMap)
-      pc
+      let newMap = PropertyMap(null)
+      newMap.Id <- -1L
+      newMap.NextIndex <- map.NextIndex
+      newMap.FreeIndexes <- new MutableStack<int>()
+      newMap.PropertyMap <- new MutableDict<string, int>(map.PropertyMap)
+      newMap
         
   //----------------------------------------------------------------------------
-  static member delete (x:IronJS.PropertyMap, name) =
-    let pc = if not x.isDynamic then PropertyClass.makeDynamic x else x
+  let delete (x:IronJS.PropertyMap, name) =
+    let pc = if not x.isDynamic then makeDynamic x else x
     let mutable index = 0
 
     if pc.PropertyMap.TryGetValue(name, &index) then 
@@ -731,8 +729,8 @@ type PropertyClass =
     pc
       
   //----------------------------------------------------------------------------
-  static member getIndex (x:IronJS.PropertyMap, name) =
-    x.PropertyMap.[name]
+  let getIndex (map:PropertyMap) name =
+    map.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
 // Function API
@@ -963,9 +961,6 @@ type Function() =
   //----------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// DispatchTarget
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 // HostFunction API
 //------------------------------------------------------------------------------
 module HostFunction =
@@ -1134,7 +1129,7 @@ module Object =
     //--------------------------------------------------------------------------
     let makeDynamic (o:IjsObj) =
       if o.PropertyMapId >= 0L then
-        o.PropertyMap <- PropertyClass.makeDynamic o.PropertyMap
+        o.PropertyMap <- PropertyMap.makeDynamic o.PropertyMap
       
     //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) =
@@ -1152,7 +1147,7 @@ module Object =
       match getIndex o name with
       | true, index -> index
       | _ -> 
-        o.PropertyMap <- PropertyClass.subClass(o.PropertyMap, name)
+        o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
         if isFull o then expandStorage o
         o.PropertyMap.PropertyMap.[name]
         
@@ -1215,7 +1210,7 @@ module Object =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
-        setMap o (PropertyClass.delete(o.PropertyMap, name))
+        setMap o (PropertyMap.delete(o.PropertyMap, name))
 
         let attrs = o.PropertyDescriptors.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs

@@ -13,12 +13,12 @@ module Core =
 
   //----------------------------------------------------------------------------
   // Compiler functions
-  let rec private compileAst (ctx:Context) tree =
+  let rec compileAst (ctx:Context) tree =
     match tree with
     //Constants
     | Ast.Pass -> Dlr.void'
     | Ast.This -> ctx.This
-    | Ast.Undefined -> Dlr.constant Expr.undefinedBoxed
+    | Ast.Undefined -> Expr.BoxedConstants.undefined
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
@@ -87,10 +87,7 @@ module Core =
   and _compileLabel (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
     let ctx = ctx.AddLabel label target
-    Dlr.blockSimple [
-      (compileAst ctx tree)
-      (Dlr.labelExprVoid target)
-    ]
+    Dlr.blockSimple [compileAst ctx tree; Dlr.labelExprVoid target]
     
   //----------------------------------------------------------------------------
   and _compileCase ctx value case =
@@ -213,11 +210,11 @@ module Core =
     (Expr.testIsObject
       (compileAst ctx tree)
       (fun x -> Object.Index.get x index)
-      (fun x -> Expr.undefinedBoxed)
+      (fun x -> Expr.BoxedConstants.undefined)
     )
       
   //----------------------------------------------------------------------------
-  and private _compileCatch ctx catch =
+  and _compileCatch ctx catch =
     match catch with
     | Ast.Catch(Ast.LocalScope(s, tree)) ->
       Exception.catch ctx s (compileAst (ctx.WithScope s) tree)
@@ -228,21 +225,20 @@ module Core =
     | _ -> failwith "Que?"
       
   //----------------------------------------------------------------------------
-  and private _compileTry ctx body catches finally' =
+  and _compileTry ctx body catches finally' =
     (Exception.try'
       (compileTreeAsVoid ctx body)
       (seq{for x in catches -> _compileCatch ctx x})
-      (compileTreeOption ctx finally')
-    )
+      (compileTreeOption ctx finally'))
 
   //----------------------------------------------------------------------------
-  and private _compileWith ctx init tree =
+  and _compileWith ctx init tree =
     let object' = Expr.unboxT<IjsObj> (compileAst ctx init)
     let tree = compileAst ({ctx with InsideWith=true}) tree
     Scope.initWith ctx object' tree
       
   //----------------------------------------------------------------------------
-  and private compileLocalScope ctx (s:Ast.Scope) tree =
+  and compileLocalScope ctx (s:Ast.Scope) tree =
     match s.ScopeType with
     | Ast.GlobalScope -> 
       Scope.initGlobal ctx (compileAst (ctx.WithScope s) tree)
@@ -278,20 +274,18 @@ module Core =
 
   //----------------------------------------------------------------------------
   // Compiles a return statement, e.g: return 1;
-  and private _compileReturn ctx tree =
+  and _compileReturn ctx tree =
     Dlr.blockSimple [
       (Expr.assignValue ctx.Env_Return (compileAst ctx tree))
-      (Dlr.returnVoid ctx.ReturnLabel)
-    ]
+      (Dlr.returnVoid ctx.ReturnLabel)]
     
   //----------------------------------------------------------------------------
-  and private _compileArray ctx indexes = 
+  and _compileArray ctx indexes = 
     let length = indexes.Length
     let args = [ctx.Env; Dlr.const' (uint32 length)]
 
     Dlr.blockTmpT<IjsObj> (fun tmp ->
-      [
-        (Dlr.assign tmp
+      [ (Dlr.assign tmp
           (Dlr.callMethod
             Api.Environment.Reflected.createArray args))
 
@@ -300,66 +294,39 @@ module Core =
         ) indexes) |> Dlr.blockSimple
 
         (tmp :> Dlr.Expr)
-      ] |> Seq.ofList
-    )
+      ] |> Seq.ofList)
       
   //----------------------------------------------------------------------------
   // {foo: 12}
-  and private _compileObject ctx properties =
-    //Compute property class
-    let pc =
-      Seq.fold (fun s init ->
-        match init with
-        | Ast.Assign(Ast.String name, _) -> 
-          Api.PropertyClass.subClass(s, name)
+  and _compileObject ctx properties =
+    let method' = Api.Environment.Reflected.createObject
+    let newExpr = Dlr.callMethod method' [ctx.Env]
 
-        | _ -> Errors.compiler "_compileNew:0"
+    let setProperty tmp assign =
+      match assign with
+      | Ast.Assign(Ast.String name, expr) -> 
+        let value = compileAst ctx expr
+        let name = Dlr.const' name
+        Object.Property.put tmp name value
 
-      ) ctx.Target.Environment.Base_Class properties
+      | _ -> failwith "Que?"
 
-    //New object
-    let newArgs = [
-      ctx.Env;
-      Dlr.const' pc; 
-    ]
-
-    let newExpr = 
-      (Dlr.callMethod 
-        Api.Environment.Reflected.createObjectWithMap newArgs)
-
-    //Set properties
     Dlr.blockTmpT<IjsObj> (fun tmp -> 
-      let initExprs = 
-        List.fold (fun s init ->
-          match init with
-          | Ast.Assign(Ast.String name, expr) -> 
-            (Expr.assignValue
-              (Expr.propertyValue 
-                (tmp)
-                (Dlr.const' (Api.PropertyClass.getIndex(pc, name))))
-              (compileAst ctx expr)
-            ) :: s
-
-          | _ -> failwith "Que?"
-
-        ) [tmp] properties
-
-      (Dlr.assign tmp newExpr :: initExprs) |> Seq.ofList
-    )
+      let initExprs = List.map (setProperty tmp) properties
+      (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList)
       
   //----------------------------------------------------------------------------
   // foo.bar;
-  and private _compilePropertyAccess ctx tree name =
+  and _compilePropertyAccess ctx tree name =
     let name = Dlr.const' name
     (Expr.testIsObject
       (compileAst ctx tree)
       (fun x -> Object.Property.get x name)
-      (fun x -> Expr.undefinedBoxed)
-    )
+      (fun x -> Expr.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
   //var foo = new Foo(arg1, arg2, [arg3, ...]);
-  and private _compileNew ctx func args =
+  and _compileNew ctx func args =
     let args = [for a in args -> compileAst ctx a]
     let func = compileAst ctx func
 
@@ -371,15 +338,12 @@ module Core =
           (Expr.isConstructor f)
           (Dlr.callStaticGenericT<Api.Function> 
             "construct" argTypes (f :: ctx.Globals :: args))
-          (Expr.undefinedBoxed)
-        )
-      )
-      (fun _ -> Expr.undefinedBoxed)
-    )
+          (Expr.BoxedConstants.undefined)))
+      (fun _ -> Expr.BoxedConstants.undefined))
       
   //----------------------------------------------------------------------------
   // foo(arg1, arg2, [arg3, ...]);
-  and private _compileInvoke ctx tree argTrees =
+  and _compileInvoke ctx tree argTrees =
     let args = [for tree in argTrees -> compileAst ctx tree]
     let temps, args, assigns = Function.createTempVars args
 
@@ -409,7 +373,7 @@ module Core =
 
   //----------------------------------------------------------------------------
   // Compiles an assignment operation, e.g: foo = 1; or foo.bar = 1;
-  and private _compileAssign (ctx:Context) ltree rtree =
+  and _compileAssign (ctx:Context) ltree rtree =
     let value = compileAst ctx rtree
     match ltree with
     | Ast.Identifier(name) -> //Variable assignment: foo = 1;
@@ -418,32 +382,24 @@ module Core =
     | Ast.Property(tree, name) -> //Property assignment: foo.bar = 1;
       let name = Dlr.const' name
       Expr.blockTmp value (fun value ->
-        [
-          (Expr.testIsObject 
+        [ (Expr.testIsObject 
             (compileAst ctx tree)
             (fun x -> Object.Property.put x name value)
-            (fun x -> value)
-          )
-        ]
-      )
+            (fun x -> value))])
 
     | Ast.Index(tree, index) -> //Index assignemnt: foo[0] = "bar";
       let index = _compileIndex ctx index
       Expr.blockTmp value (fun value ->
-        [
-          (Expr.testIsObject
+        [ (Expr.testIsObject
             (compileAst ctx tree)
             (fun x -> Object.Index.put x index value)
-            (fun x -> value)
-          )
-        ]
-      )
+            (fun x -> value))])
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree
       
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
-  and private _compileEval (ctx:Context) evalTree =
+  and _compileEval (ctx:Context) evalTree =
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
     
@@ -451,7 +407,6 @@ module Core =
       (Dlr.assign eval (Object.Property.get ctx.Globals ("eval" |> Dlr.const')))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
-      (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
       (Expr.assignValue
         (Dlr.field target "GlobalLevel") (Dlr.const' ctx.Scope.GlobalLevel))
       (Expr.assignValue
@@ -460,7 +415,8 @@ module Core =
         (Dlr.field target "LocalLevel") (Dlr.const' ctx.Scope.LocalLevel))
       (Expr.assignValue
         (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures))
-
+        
+      (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
       (Expr.assignValue (Dlr.field target "Local") ctx.LocalScope)
@@ -470,9 +426,7 @@ module Core =
       (Expr.testIsFunction
         (eval)
         (fun x -> Function.invokeAsFunction x ctx.This [target])
-        (fun x -> Expr.undefinedBoxed)
-      )
-    ]
+        (fun x -> Expr.BoxedConstants.undefined))]
 
   //----------------------------------------------------------------------------
   // Main compiler function that setups compilation and invokes compileAst

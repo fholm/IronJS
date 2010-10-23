@@ -123,3 +123,58 @@ module Function =
         (tmp :: temps, tmp :> Dlr.Expr :: args, assign :: ass)
 
     ) args ([], [], [])
+
+    
+  //----------------------------------------------------------------------------
+  // 11.2.2 the new operator
+  let new' (ctx:Ctx) func args =
+    let args = [for a in args -> ctx.Compile a]
+    let func = ctx.Compile func
+
+    (Expr.testIsFunction
+      (func)
+      (fun f ->
+        let args = f :: ctx.Globals :: args
+        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
+        (Dlr.ternary
+          (Expr.isConstructor f)
+          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes args)
+          (Expr.BoxedConstants.undefined)))
+      (fun _ -> Expr.BoxedConstants.undefined))
+      
+  //----------------------------------------------------------------------------
+  // 11.2.3 function calls
+  let invoke (ctx:Ctx) tree argTrees =
+    let args = [for tree in argTrees -> ctx.Compile tree]
+    let temps, args, assigns = createTempVars args
+
+    let invokeExpr = 
+      //foo(arg1, arg2, [arg3, ...])
+      match tree with
+      | Ast.Identifier(name) -> 
+        invokeIdentifier ctx name args
+
+      //bar.foo(arg1, arg2, [arg3, ...])
+      | Ast.Property(tree, name) ->
+        let object' = ctx.Compile tree
+        invokeProperty ctx object' name args
+
+      //bar["foo"](arg1, arg2, [arg3, ...])
+      | Ast.Index(tree, index) ->
+        let object' = ctx.Compile tree
+        let index = ctx.Compile index
+        invokeIndex ctx object' index args
+
+      //(function(){ ... })();
+      | _ -> 
+        let func = ctx.Compile tree
+        invokeAsFunction func ctx.Globals args
+
+    Dlr.block temps (assigns @ [invokeExpr])
+    
+  //----------------------------------------------------------------------------
+  // 12.9 the return statement
+  let return' (ctx:Ctx) tree =
+    Dlr.blockSimple [
+      (Expr.assignValue ctx.Env_Return (ctx.Compile tree))
+      (Dlr.returnVoid ctx.ReturnLabel)]

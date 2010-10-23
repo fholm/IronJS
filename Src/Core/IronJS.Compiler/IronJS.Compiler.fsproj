@@ -95,15 +95,13 @@
     <Compile Include="Errors.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Context.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Scope.fs" />
     <Compile Include="Object.fs" />
     <Compile Include="Identifier.fs" />
     <Compile Include="Function.fs" />
-    <Compile Include="Increment.fs" />
     <Compile Include="Exception.fs" />
-    <Compile Include="Unary.fs" />
-    <Compile Include="Binary.fs" />
-    <Compile Include="Convert.fs" />
+    <Compile Include="Operators.fs" />
     <Compile Include="ControlFlow.fs" />
     <Compile Include="Core.fs" />
   </ItemGroup>

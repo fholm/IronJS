@@ -20,3 +20,6 @@ module Errors =
       "be an Ast.Tree.LocalScope node"
 
     Errors.compiler error
+
+  let invalidCaseNodeType() =
+    Errors.compiler "Switch case nodes must be either Ast.Case or Ast.Default"

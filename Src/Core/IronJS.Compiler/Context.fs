@@ -25,9 +25,7 @@ type Target = {
     | Some delegate' -> 
       Dlr.ArrayUtils.RemoveFirst(
         Dlr.ArrayUtils.RemoveFirst(
-          FSKit.Reflection.getDelegateArgTypes delegate'
-        )
-      )
+          FSKit.Reflection.getDelegateArgTypes delegate'))
 
   member x.ParamType i = x.ParamTypes.[i]
   member x.ParamCount = x.ParamTypes.Length
@@ -55,6 +53,7 @@ type [<AllowNullLiteral>] EvalTarget() =
 // Record representing a compilation context
 //------------------------------------------------------------------------------
 type Context = {
+  Compiler : Context -> Ast.Tree -> Dlr.Expr
   Target: Target
   ScopeChain: Ast.Scope list
   ReturnLabel: Dlr.Label
@@ -73,6 +72,7 @@ type Context = {
 
   Parameters: Dlr.ExprParam array
 } with
+  member x.Compile tree = x.Compiler x tree
 
   member x.Env = Dlr.field x.Function "Env"
   member x.Env_Return = Dlr.field x.Env "Return"

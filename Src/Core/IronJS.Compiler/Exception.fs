@@ -28,34 +28,28 @@
       Dlr.blockSimple [ 
         (Dlr.assign 
           (Dlr.field (Dlr.index0 tmp) "Scope")
-          (ctx.ClosureScope)
-        )
-        (Dlr.assign ctx.ClosureScope tmp)
-      ]
+          (ctx.ClosureScope))
+        (Dlr.assign ctx.ClosureScope tmp)]
       
     //-------------------------------------------------------------------------
     let private _pushLocalCatch ctx tmp =
       Dlr.blockSimple [
         (Dlr.assign 
           (Dlr.field (Dlr.index0 tmp) "Scope")
-          (ctx.LocalScope)
-        )
-        (Dlr.assign ctx.LocalScope tmp)
-      ]
+          (ctx.LocalScope))
+        (Dlr.assign ctx.LocalScope tmp)]
       
     //-------------------------------------------------------------------------
     let private _popClosedOverCatch ctx =
       (Dlr.assign 
         (ctx.ClosureScope)
-        (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
-      )
+        (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope"))
       
     //-------------------------------------------------------------------------
     let private _popLocalCatch ctx =
       (Dlr.assign 
         (ctx.LocalScope)
-        (Dlr.field (Dlr.index0 ctx.LocalScope) "Scope")
-      )
+        (Dlr.field (Dlr.index0 ctx.LocalScope) "Scope"))
         
     //-------------------------------------------------------------------------
     let catch ctx (scope:Ast.Scope) bodyExpr =
@@ -70,10 +64,8 @@
             (Dlr.assign (Dlr.index1 tmp) (Expr.errorValue param))
             (if var.IsClosedOver 
               then _pushClosedOverCatch ctx tmp 
-              else _pushLocalCatch ctx tmp
-            )
-          ] |> Seq.ofList
-        )
+              else _pushLocalCatch ctx tmp)
+          ] |> Seq.ofList)
 
       let popScope =
         if var.IsClosedOver 
@@ -85,7 +77,5 @@
           (pushScope)
           (bodyExpr)
           (popScope)
-          (Dlr.void')
-        ]
-      )
+          (Dlr.void')])
 

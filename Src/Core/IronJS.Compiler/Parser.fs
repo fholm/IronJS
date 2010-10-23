@@ -81,6 +81,7 @@ module Ast =
     | Undefined
 
     // Operators
+    | Convert of TypeTag * Tree
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
     | Assign of Tree * Tree
@@ -310,6 +311,7 @@ module Ast =
     | Undefined -> tree
     
     // Operators
+    | Convert(tag, tree) -> Convert(tag, f tree)
     | Assign(left, right) -> Assign(f left, f right)
     | Unary(op, tree) -> Unary(op, f tree)
     | Binary(op, ltree, rtree) -> Binary(op, f ltree, f rtree)

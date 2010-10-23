@@ -10,13 +10,57 @@ open System.Runtime.InteropServices
 
 module Utils =
 
+  //----------------------------------------------------------------------------
+  module Reflected =
+
+    open System.Reflection
+
+    let private apiTypes = ConcurrentMutableDict<string, System.Type>()
+    let private bindingFlags = BindingFlags.Static ||| BindingFlags.Public
+
+    let private assembly = 
+      AppDomain.CurrentDomain.GetAssemblies() 
+        |> Array.find (fun x -> x.FullName.StartsWith("IronJS,"))
+
+    let rec methodInfo type' method' =
+      let found, typeObj = apiTypes.TryGetValue type'
+      if found then typeObj.GetMethod(method', bindingFlags)
+      else
+        match assembly.GetType("IronJS." + type', false) with
+        | null -> null
+        | typeObj ->
+          apiTypes.TryAdd(type', typeObj) |> ignore
+          methodInfo type' method'
+
+    let rec propertyInfo type' property =
+      let found, typeObj = apiTypes.TryGetValue type'
+      if found then typeObj.GetProperty(property, bindingFlags)
+      else
+        let types = assembly.GetTypes()
+        match assembly.GetType("IronJS." + type', false) with
+        | null -> null
+        | typeObj ->
+          apiTypes.TryAdd(type', typeObj) |> ignore
+          propertyInfo type' property
+          
+  //----------------------------------------------------------------------------
+  module BoxedConstants =
+
+    let zero = Box()
+    let undefined =
+      let mutable box = Box()
+      box.Tag <- TypeTags.Undefined
+      box.Clr <- Undefined.Instance
+      box
+
+    module Reflected =
+
+      let zero = Reflected.propertyInfo "Utils+BoxedConstants" "zero"
+      let undefined = Reflected.propertyInfo "Utils+BoxedConstants" "undefined"
+
+
   let isNull (o:obj) = Object.ReferenceEquals(o, null)
   let isNotNull o = o |> isNull |> not
-  
-  //----------------------------------------------------------------------------
-  module Seq =
-    let first seq' =
-      Seq.find (fun _ -> true) seq'
       
   //----------------------------------------------------------------------------
   module Box = 
@@ -45,6 +89,17 @@ module Utils =
     
   //----------------------------------------------------------------------------
   module Patterns =
+
+    let (|IsObject|_|) (box:IjsBox) =
+      if box.Tag = TypeTags.Object || box.Tag = TypeTags.Function
+        then Some box.Object else None
+
+    let (|IsFunction|_|) (o:IjsObj) =
+      if o.Class = Classes.Function then Some (o :?> IjsFunc) else None
+
+    let (|IsArrayOrArguments|IsOther|) (o:IjsObj) =
+      if o.Class = Classes.Array || o :? Arguments 
+        then IsArrayOrArguments else IsOther
 
     let (|Tagged|_|) (box:IjsBox) = 
       if Box.isTagged box.Marker then Some box.Tag else None
@@ -139,17 +194,6 @@ module Utils =
   let obj2bf (o:obj) = type2bf (o.GetType())
   let expr2bf (e:Dlr.Expr) = type2bf e.Type
 
-  let bf2tc bf =
-    match bf with
-    | BoxFields.Bool        -> TypeTags.Bool     
-    | BoxFields.Number      -> TypeTags.Number   
-    | BoxFields.String      -> TypeTags.String   
-    | BoxFields.Undefined   -> TypeTags.Undefined
-    | BoxFields.Object      -> TypeTags.Object   
-    | BoxFields.Function    -> TypeTags.Function 
-    | BoxFields.Clr         -> TypeTags.Clr
-    | _ -> failwithf "Invalid boxfield %s" bf
-
   let tc2bf tc =
     match tc with
     | TypeTags.Bool        -> BoxFields.Bool     
@@ -217,15 +261,7 @@ module Utils =
       | _ -> b.Clr
 
   let unboxObj (o:obj) =
-    if o :? Box 
-      then unbox (o :?> Box)
-      else o
-
-  let boxedUndefined =
-    let mutable box = new Box()
-    box.Tag <- TypeTags.Undefined
-    box.Clr  <- Undefined.Instance
-    box
+    if o :? Box then unbox (o :?> Box) else o
       
   let boxRef ref tc =
     let mutable box = new Box()

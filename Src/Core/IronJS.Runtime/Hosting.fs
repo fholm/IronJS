@@ -56,43 +56,8 @@ module Hosting =
     Native.Math.setup x
     Native.Object.setupPrototype x
     Native.Object.setupConstructor x
+    Native.Function.setupConstructor x
     Native.Function.setupPrototype x
-
-    //Boxed bools
-    x.Boxed_False.Bool  <- false
-    x.Boxed_False.Tag  <- TypeTags.Bool
-    x.Boxed_True.Bool   <- true
-    x.Boxed_True.Tag   <- TypeTags.Bool
-
-    //Boxed doubles
-    x.Boxed_NegOne.Number <- -1.0
-    x.Boxed_NegOne.Tag   <- TypeTags.Number
-    x.Boxed_Zero.Number   <- 0.0
-    x.Boxed_Zero.Tag     <- TypeTags.Number
-    x.Boxed_One.Number    <- 1.0
-    x.Boxed_One.Tag      <- TypeTags.Number
-    x.Boxed_NaN.Number    <- System.Double.NaN
-    x.Boxed_NaN.Tag      <- TypeTags.Number
-
-    //Boxed null
-    x.Boxed_Null.Clr  <- null
-    x.Boxed_Null.Tag <- TypeTags.Clr
-
-    //Boxed empty string
-    x.Boxed_EmptyString.Clr   <- ""
-    x.Boxed_EmptyString.Tag  <- TypeTags.String
-
-    //Boxed undefined
-    x.Boxed_Undefined.Clr   <- Undefined.Instance
-    x.Boxed_Undefined.Tag  <- TypeTags.Undefined
-
-    //Temp boxes
-    x.Temp_Bool.Tag      <- TypeTags.Bool
-    x.Temp_Number.Tag    <- TypeTags.Number
-    x.Temp_Clr.Tag       <- TypeTags.Clr
-    x.Temp_String.Tag    <- TypeTags.String
-    x.Temp_Function.Tag  <- TypeTags.Function
-    x.Temp_Object.Tag    <- TypeTags.Object
 
     x
 
@@ -104,14 +69,14 @@ module Hosting =
     member x.GlobalFunc = globalFunc
 
     member x.CompileFile fileName =
-      let tree = Ast.Parsers.Ecma3.parseGlobalFile fileName
+      let tree = Ast.Parsers.Ecma3.parseGlobalFile env fileName
       let analyzed = Ast.applyAnalyzers tree None
       Debug.printString (sprintf "%A" analyzed)
 
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
-      let tree = Ast.Parsers.Ecma3.parseGlobalSource source
+      let tree = Ast.Parsers.Ecma3.parseGlobalSource env source
       let analyzed = Ast.applyAnalyzers tree None
       Debug.printString (sprintf "%A" analyzed)
 

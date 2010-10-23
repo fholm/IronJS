@@ -64,6 +64,9 @@ module TypeTags =
       (Function, "function")
     ]
 
+  let getName (tag:TypeTag) = 
+    Names.[tag]
+
 module BoxFields =
   let [<Literal>] Bool = "Bool"
   let [<Literal>] Number = "Number"
@@ -119,6 +122,9 @@ module Classes =
       (Date, "Date")
       (Error, "Error")
     ]
+
+  let getName (class':Class) = 
+    Names.[class']
 
 module MarshalModes =
   let [<Literal>] Default = 2
@@ -482,12 +488,13 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 //-------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment =
   //Id counters
-  val mutable private _nextPropertyClassId : int64
-  val mutable private _nextFunctionId : int64
+  [<DefaultValue>] val mutable private _nextPropertyMapId : int64
+  [<DefaultValue>] val mutable private _nextFunctionId : int64
 
   //
   [<DefaultValue>] val mutable Return : Box
   val mutable Compilers : MutableDict<FunId, FunctionCompiler>
+  val mutable FunctionSourceStrings : MutableDict<FunId, IjsStr>
 
   //Objects
   [<DefaultValue>] val mutable Globals : Object
@@ -511,37 +518,17 @@ and [<AllowNullLiteral>] Environment =
   [<DefaultValue>] val mutable Object_methods : InternalMethods
   [<DefaultValue>] val mutable Arguments_methods : InternalMethods
 
-  //Boxes
-  [<DefaultValue>] val mutable Boxed_NegOne : Box
-  [<DefaultValue>] val mutable Boxed_Zero : Box
-  [<DefaultValue>] val mutable Boxed_One : Box
-  [<DefaultValue>] val mutable Boxed_NaN : Box
-  [<DefaultValue>] val mutable Boxed_Undefined : Box
-  [<DefaultValue>] val mutable Boxed_EmptyString : Box
-  [<DefaultValue>] val mutable Boxed_False : Box
-  [<DefaultValue>] val mutable Boxed_True : Box
-  [<DefaultValue>] val mutable Boxed_Null : Box
-  [<DefaultValue>] val mutable Boxed_Temp : Box
-    
-  [<DefaultValue>] val mutable Temp_Bool : Box
-  [<DefaultValue>] val mutable Temp_Number : Box
-  [<DefaultValue>] val mutable Temp_Clr : Box
-  [<DefaultValue>] val mutable Temp_String : Box
-  [<DefaultValue>] val mutable Temp_Object : Box
-  [<DefaultValue>] val mutable Temp_Function : Box
-
   member x.nextPropertyClassId = 
-    x._nextPropertyClassId <- x._nextPropertyClassId + 1L
-    x._nextPropertyClassId
+    x._nextPropertyMapId <- x._nextPropertyMapId + 1L
+    x._nextPropertyMapId
 
   member x.nextFunctionId = 
     x._nextFunctionId <- x._nextFunctionId + 1L
     x._nextFunctionId
       
   new () = {
-    _nextFunctionId = 0L
-    _nextPropertyClassId = 0L
     Compilers = new MutableDict<FunId, FunctionCompiler>()
+    FunctionSourceStrings = new MutableDict<FunId, IjsStr>()
   }
 
 //------------------------------------------------------------------------------

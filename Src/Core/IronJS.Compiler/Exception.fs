@@ -28,9 +28,9 @@
       Dlr.blockSimple [ 
         (Dlr.assign 
           (Dlr.field (Dlr.index0 tmp) "Scope")
-          (ctx.ChainExpr)
+          (ctx.ClosureScope)
         )
-        (Dlr.assign ctx.ChainExpr tmp)
+        (Dlr.assign ctx.ClosureScope tmp)
       ]
       
     //-------------------------------------------------------------------------
@@ -38,28 +38,28 @@
       Dlr.blockSimple [
         (Dlr.assign 
           (Dlr.field (Dlr.index0 tmp) "Scope")
-          (ctx.LocalExpr)
+          (ctx.LocalScope)
         )
-        (Dlr.assign ctx.LocalExpr tmp)
+        (Dlr.assign ctx.LocalScope tmp)
       ]
       
     //-------------------------------------------------------------------------
     let private _popClosedOverCatch ctx =
       (Dlr.assign 
-        (ctx.ChainExpr)
-        (Dlr.field (Dlr.index0 ctx.ChainExpr) "Scope")
+        (ctx.ClosureScope)
+        (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
       )
       
     //-------------------------------------------------------------------------
     let private _popLocalCatch ctx =
       (Dlr.assign 
-        (ctx.LocalExpr)
-        (Dlr.field (Dlr.index0 ctx.LocalExpr) "Scope")
+        (ctx.LocalScope)
+        (Dlr.field (Dlr.index0 ctx.LocalScope) "Scope")
       )
         
     //-------------------------------------------------------------------------
     let catch ctx (scope:Ast.Scope) bodyExpr =
-      let var = Utils.Seq.first scope.Variables
+      let var = FSKit.Seq.first scope.Variables
       let tmp = Dlr.paramT<Scope> "~newScope"
       let param = Dlr.paramT<UserError> "~ex"
 

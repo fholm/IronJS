@@ -88,7 +88,9 @@
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
-    <Compile Include="Config.fs" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Aliases.fs" />
+    <Compile Include="Operators.fs" />
     <Compile Include="Attributes.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Debug.fs" />
@@ -97,8 +99,6 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Api.fs" />
-    <Compile Include="Helpers.fs" />
-    <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">

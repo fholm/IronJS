@@ -9,9 +9,8 @@ module Identifier =
   //----------------------------------------------------------------------------
   let private walkScopeChain expr target current =
     let rec walk expr times = 
-      if times = 0
-        then expr
-        else walk (Dlr.field (Dlr.index0 expr) "Scope") (times-1)
+      if times = 0 
+        then expr else walk (Dlr.field (Dlr.index0 expr) "Scope") (times-1)
 
     walk expr (current - target)
       
@@ -28,7 +27,7 @@ module Identifier =
   let clsExprAndIndex ctx (cls:Ast.Closure) =
     let expr = 
       (walkScopeChain
-        (ctx.ChainExpr)
+        (ctx.ClosureScope)
         (cls.ClosureLevel)
         (ctx.Scope.ClosureLevel)
       )
@@ -40,13 +39,14 @@ module Identifier =
     let expr =
       if var.IsClosedOver then
         (walkScopeChain
-          (ctx.ChainExpr)
+          (ctx.ClosureScope)
           (scope.ClosureLevel)
           (ctx.Scope.ClosureLevel)
         )
+
       else
         (walkScopeChain
-          (ctx.LocalExpr)
+          (ctx.LocalScope)
           (scope.LocalLevel)
           (ctx.Scope.LocalLevel)
         )
@@ -76,21 +76,21 @@ module Identifier =
   let getDynamicArgs (ctx:Ctx) name =
     match getExprIndexLevelType ctx name with
     | None -> dynamicGetGlobalArgs ctx name
-    | Some(expr, i, l, _) -> dynamicGetVariableArgs ctx expr name i l
+    | Some(expr, i, level, _) -> dynamicGetVariableArgs ctx expr name i level
           
   //----------------------------------------------------------------------------
   let getValueDynamic (ctx:Ctx) name =
-    let defaultArgs = [Dlr.const' name; ctx.DynamicExpr]
+    let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicGet" (args)
+    Dlr.callMethod Api.DynamicScope.Reflected.get args
           
   //----------------------------------------------------------------------------
   let setValueDynamic (ctx:Ctx) name value =
-    let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicExpr]
+    let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicSet" (args)
+    Dlr.callMethod Api.DynamicScope.Reflected.set args
         
   //----------------------------------------------------------------------------
   let getValue (ctx:Ctx) name =
@@ -114,8 +114,7 @@ module Identifier =
       | None -> 
         let name = Dlr.const' name
         Expr.blockTmp value (fun value ->
-          [Object.Property.put ctx.Globals name value]
-        )
+          [Object.Property.put ctx.Globals name value])
 
       | Some(expr, i, _, tc) -> 
         let varExpr = Expr.unboxIndex expr i tc

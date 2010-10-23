@@ -25,12 +25,10 @@ module Increment =
             (Dlr.blockSimple [
               (Expr.updateBoxValue 
                 (expr)
-                (op (Expr.unboxNumber expr) Dlr.dbl1)
-              )
-              (tmp :> Dlr.Expr)
-            ])
-            (ctx.Env_Boxed_Zero) //TODO: Fallback for non-numbers
-          )
+                (op (Expr.unboxNumber expr) Dlr.dbl1))
+              (tmp :> Dlr.Expr)])
+            //TODO: Fallback for non-numbers
+            (Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.zero))
         ] |> Seq.ofList
       )
 
@@ -58,8 +56,7 @@ module Increment =
       [
         (Dlr.assign 
           (tmp)
-          (Object.Property.get expr name)
-        )
+          (Object.Property.get expr name))
         (Dlr.ternary
           (Expr.containsNumber tmp)
           (Dlr.blockSimple
@@ -67,11 +64,9 @@ module Increment =
               (Object.Property.put
                 (expr) (name)
                 (op (Expr.unboxNumber tmp) Dlr.dbl1))
-              (tmp)
-            ]
-          )
-          (ctx.Env_Boxed_Undefined) //TODO: Fallback for non-numbers
-        )
+              (tmp)])
+          //TODO: Fallback for non-numbers
+          (Expr.undefinedBoxed)) 
       ] |> Seq.ofList
     )
 

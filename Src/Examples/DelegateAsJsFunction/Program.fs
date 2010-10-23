@@ -9,15 +9,24 @@ module Main =
 
     let ctx = IronJS.Hosting.Context.Create()
 
-    let increment (n:IjsNum) = n + 1.0
+    //FSharp function exposed to IronJS
+    let print_fsharp (s:IjsStr) = Console.WriteLine(s);
 
-    ctx.PutGlobal("increment", 
-      Api.DelegateFunction.create(
-        ctx.Environment, new Func<IjsNum, IjsNum>(increment)
-      )
-    )
+    ctx.PutGlobal("print_fsharp", 
+      (Api.HostFunction.create
+        ctx.Environment (new Action<IjsStr>(print_fsharp))))
 
-    let result = ctx.ExecuteT<IjsNum> @"var i = 1; increment(i);"
-    printf "%.1f" result
+    //CSharp/CLR function exposed to IronJS
+    ctx.PutGlobal("print_csharp", 
+      (Api.HostFunction.create
+        ctx.Environment (new Action<IjsStr>(Console.WriteLine))))
+
+    ctx.Execute @" 
+      print_fsharp('Hi from F#!'); 
+      print_csharp('Hi from C#!');
+      " |> ignore
+
+    Console.WriteLine("Press [Enter] to exit");
+    Console.ReadLine();
     
   main() |> ignore

@@ -12,11 +12,8 @@ module Unary =
       (fun x -> 
         (Dlr.invoke 
           (Dlr.property (Dlr.field x "Methods") "DeleteIndex")
-          [x; index]
-        )
-      )
-      (fun x -> Dlr.false')
-    )
+          [x; index]))
+      (fun x -> Dlr.false'))
     
   //----------------------------------------------------------------------------
   let deleteProperty object' name =
@@ -26,17 +23,14 @@ module Unary =
       (fun x ->
         (Dlr.invoke 
           (Dlr.property (Dlr.field x "Methods") "DeleteProperty")
-          [x; name]
-        )
-      )
-      (fun x -> Dlr.false')
-    )
+          [x; name]))
+      (fun x -> Dlr.false'))
     
   //----------------------------------------------------------------------------
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
-      let args = [ctx.DynamicExpr; ctx.Globals; Dlr.const' name]
-      Dlr.callStaticT<Helpers.ScopeHelpers> "DynamicDelete" args
+      let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
+      Dlr.callMethod Api.DynamicScope.Reflected.delete args
 
     else
       if Identifier.isGlobal ctx name 

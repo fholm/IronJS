@@ -18,7 +18,8 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let undefined = Dlr.propertyStaticT<IronJS.Undefined> "Instance"
-  let undefinedBoxed = Dlr.const' Utils.boxedUndefined
+  let undefinedBoxed = 
+    Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
     
   //-------------------------------------------------------------------------
   let voidAsUndefined (expr:Dlr.Expr) =

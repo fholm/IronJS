@@ -45,10 +45,10 @@ module Function =
       (ctx.Env)
       (Dlr.const' id)
       (Dlr.const' (scopeParamCount tree))
-      (ctx.ChainExpr)
-      (ctx.DynamicExpr)]
+      (ctx.ClosureScope)
+      (ctx.DynamicScope)]
 
-    Dlr.callMethod (Api.Environment.MethodInfo.createFunction) funcArgs
+    Dlr.callMethod (Api.Environment.Reflected.createFunction) funcArgs
 
   //----------------------------------------------------------------------------
   let invokeAsFunction func this' args =
@@ -74,9 +74,11 @@ module Function =
     let typeArgs = Utils.addInternalArgs [for a in args -> a.Type]
     let delegateType = Utils.createDelegate typeArgs
     let dynamicArgs = Identifier.getDynamicArgs ctx name
-    let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicExpr]
-    (Dlr.callStaticGenericT<Helpers.ScopeHelpers> 
-      "DynamicCall" [delegateType] (defaultArgs @ dynamicArgs))
+    let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
+
+    (Dlr.callMethod
+      (Api.DynamicScope.Reflected.call.MakeGenericMethod([|delegateType|]))
+      (defaultArgs @ dynamicArgs))
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =

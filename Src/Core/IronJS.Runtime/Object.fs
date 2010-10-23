@@ -46,7 +46,7 @@ module Object =
   //15.2.4
   let createPrototype (env:IjsEnv) =
     let o = IjsObj(env.Maps.Base, null, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o
     
   //----------------------------------------------------------------------------
@@ -98,11 +98,12 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.1
   let setupConstructor (env:IjsEnv) =
-    let objectCtor = 
+    let ctor = 
       (Api.HostFunction.create
         env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
 
-    objectCtor.ConstructorMode <- ConstructorModes.Host
-    objectCtor.put("prototype", env.Prototypes.Object)
-    env.Prototypes.Object.put("constructor", objectCtor)
-    env.Globals.put("Object", objectCtor)
+    ctor.ConstructorMode <- ConstructorModes.Host
+    ctor.put("prototype", env.Prototypes.Object)
+    env.Prototypes.Object.put("constructor", ctor)
+    env.Globals.put("Object", ctor)
+    env.Constructors <- {env.Constructors with Object = ctor}

@@ -54,6 +54,7 @@ module Core =
     | Ast.IfElse(test, ifTrue, ifFalse) -> _compileIf ctx test ifTrue ifFalse
     | Ast.Switch(test, cases) -> _compileSwitch ctx test cases
     | Ast.While(label, test, body) -> _compileWhile ctx label test body
+    | Ast.DoWhile(label, body, test) -> _compileDoWhile ctx label body test
     | Ast.For(label, i, t, incr, b) -> _compileFor ctx label i t incr b
     | Ast.Break label -> ControlFlow.break' ctx label
     | Ast.Continue label -> ControlFlow.continue' ctx label
@@ -126,6 +127,14 @@ module Core =
     let test = Api.TypeConverter.toBoolean (compileAst ctx test)
     let body = compileAst (ctx.AddLoopLabels label break' continue') body
     Dlr.whileL test body break' continue'
+    
+  //----------------------------------------------------------------------------
+  and _compileDoWhile ctx label body test =
+    let break', continue' = ControlFlow.loopLabels()
+    let test = Api.TypeConverter.toBoolean (compileAst ctx test)
+    let body = compileAst (ctx.AddLoopLabels label break' continue') body
+    let res = Dlr.doWhile test body break' continue'
+    res
 
   //----------------------------------------------------------------------------
   and _compileFor ctx label init test incr body =

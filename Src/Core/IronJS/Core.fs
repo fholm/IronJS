@@ -198,6 +198,12 @@ and Maps = {
   Number : PropertyMap
   Boolean : PropertyMap
 }
+//------------------------------------------------------------------------------
+and Methods = {
+  Object : InternalMethods
+  Array : InternalMethods
+  Arguments : InternalMethods
+}
 
 //------------------------------------------------------------------------------
 and Prototypes = {
@@ -225,14 +231,15 @@ and Constructors = {
   String : IjsFunc
   Number : IjsFunc
   Boolean : IjsFunc
-}
-
-//------------------------------------------------------------------------------
-and Methods = {
-  Object : InternalMethods
-  Array : InternalMethods
-  Arguments : InternalMethods
-}
+} with
+  static member Empty = {
+    Object = null
+    Function = null
+    Array = null
+    String = null
+    Number = null
+    Boolean = null
+  }
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
@@ -244,16 +251,12 @@ and [<AllowNullLiteral>] Environment() =
   let compilers = new MutableDict<FunctionId, FunctionCompiler>()
   let functionStrings = new MutableDict<FunctionId, IjsStr>()
 
-  //
   [<DefaultValue>] val mutable Return : Box
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Globals : Object
-
-  //Methods
-  [<DefaultValue>] val mutable Object_methods : InternalMethods
-  [<DefaultValue>] val mutable Arguments_methods : InternalMethods
+  [<DefaultValue>] val mutable Methods : Methods
 
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
@@ -412,7 +415,7 @@ and [<AllowNullLiteral>] Arguments =
 
     } then
       let o = a :> IjsObj
-      o.Methods <- env.Arguments_methods
+      o.Methods <- env.Methods.Arguments
       o.Methods.PutValProperty.Invoke(o, "length", double linkMap.Length)
       a.copyLinkedValues()
       

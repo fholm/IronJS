@@ -105,26 +105,26 @@ module Environment =
   //----------------------------------------------------------------------------
   let createObject (env:IjsEnv) =
     let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createObjectWithMap (env:IjsEnv) map =
     let o = IjsObj(map, env.Prototypes.Object, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createArray (env:IjsEnv) size =
     let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Array
     o.Methods.PutValProperty.Invoke(o, "length", double size)
     o
     
   //----------------------------------------------------------------------------
   let createString (env:IjsEnv) (s:IjsStr) =
     let o = IjsObj(env.Maps.String, env.Prototypes.String, Classes.String, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
     o.Value.Box.Clr <-s
     o.Value.Box.Tag <- TypeTags.String
@@ -133,14 +133,14 @@ module Environment =
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
     let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o.Value.Box.Number <- n
     o
     
   //----------------------------------------------------------------------------
   let createBoolean (env:IjsEnv) b =
     let o = IjsObj(env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o.Value.Box.Bool <- b
     o.Value.Box.Tag <- TypeTags.Bool
     o
@@ -148,7 +148,7 @@ module Environment =
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) =
     let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o
   
   //----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ module Environment =
     let proto = createPrototype env
     let func = IjsFunc(env, id, chain, dc)
 
-    (func :> IjsObj).Methods <- env.Object_methods
+    (func :> IjsObj).Methods <- env.Methods.Object
     func.ConstructorMode <- ConstructorModes.User
 
     proto.put("constructor", func)
@@ -1057,7 +1057,7 @@ module HostFunction =
     let f = h :> IjsFunc
     let o = f :> IjsObj
 
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
     Environment.addCompiler env f compile<'a>
 

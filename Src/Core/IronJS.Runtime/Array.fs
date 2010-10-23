@@ -34,6 +34,7 @@ module Array =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.put("prototype", env.Prototypes.Array)
     env.Globals.put("Array", ctor)
+    env.Constructors <- {env.Constructors with Array = ctor}
     
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) objPrototype =

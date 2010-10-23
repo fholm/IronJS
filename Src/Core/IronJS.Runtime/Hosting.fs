@@ -8,7 +8,7 @@ module Hosting =
   let createEnvironment () =
     let x = IjsEnv()
 
-    x.Object_methods <- {
+    let objectMethods = {
       GetProperty = Api.Object.Property.Delegates.get
       HasProperty = Api.Object.Property.Delegates.has
       DeleteProperty = Api.Object.Property.Delegates.delete
@@ -26,15 +26,19 @@ module Hosting =
       Default = Api.Object.defaultValue'
     }
 
-    x.Arguments_methods <- 
-      {x.Object_methods with
-        GetIndex = Api.Arguments.Index.Delegates.get
-        HasIndex = Api.Arguments.Index.Delegates.has
-        DeleteIndex = Api.Arguments.Index.Delegates.delete
-        PutBoxIndex = Api.Arguments.Index.Delegates.putBox
-        PutValIndex = Api.Arguments.Index.Delegates.putVal
-        PutRefIndex = Api.Arguments.Index.Delegates.putRef
-      }
+    x.Methods <- {
+      Object = objectMethods
+      Array = objectMethods
+      Arguments = 
+        {objectMethods with
+          GetIndex = Api.Arguments.Index.Delegates.get
+          HasIndex = Api.Arguments.Index.Delegates.has
+          DeleteIndex = Api.Arguments.Index.Delegates.delete
+          PutBoxIndex = Api.Arguments.Index.Delegates.putBox
+          PutValIndex = Api.Arguments.Index.Delegates.putVal
+          PutRefIndex = Api.Arguments.Index.Delegates.putRef
+        }
+    }
 
     let baseMap = PropertyMap(x)
     x.Maps <- {
@@ -58,6 +62,8 @@ module Hosting =
       Boolean = Native.Boolean.createPrototype x objectPrototype
     }
     
+    x.Constructors <- Constructors.Empty
+
     Native.Global.setup x
     Native.Math.setup x
     Native.Object.setupPrototype x

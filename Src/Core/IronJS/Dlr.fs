@@ -292,6 +292,9 @@ module Dlr =
   let whileL test body break' continue' = 
     AstUtils.Loop(test, void', body, void', break', continue') :> Expr
 
+  let doWhile test body breakLbl continueLbl =
+    let body = blockSimple [body; ifElse test void' (break' breakLbl)]
+    Expr.Loop(body, breakLbl, continueLbl) :> Expr
 
   let sub left right = Et.Subtract(left, right) :> Et
   let subChk left right = Et.SubtractChecked(left, right) :> Et

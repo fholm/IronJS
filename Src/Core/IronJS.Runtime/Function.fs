@@ -37,6 +37,7 @@ module Function =
     ctor.Prototype <- env.Prototypes.Function
     ctor.put("prototype", env.Prototypes.Function)
     env.Globals.put("Function", ctor)
+    env.Constructors <- {env.Constructors with Function = ctor}
 
   //----------------------------------------------------------------------------
   // 15.3.4

@@ -45,42 +45,44 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4
   let createPrototype (env:IjsEnv) =
-    Api.Environment.createObject env
+    let o = IjsObj(env.Maps.Base, null, Classes.Object, 0u)
+    o.Methods <- env.Object_methods
+    o
     
   //----------------------------------------------------------------------------
   //15.2.4
   let setupPrototype (env:IjsEnv) =
     //15.2.4.2
-    env.Object_prototype.put("toString", 
+    env.Prototypes.Object.put("toString", 
       Api.HostFunction.create env (new Func<IjsObj, IjsStr>(toString))
     )
     
     //15.2.4.3
-    env.Object_prototype.put("toLocaleString", 
+    env.Prototypes.Object.put("toLocaleString", 
       (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr>(toLocaleString)))
     )
 
     //15.2.4.4
-    env.Object_prototype.put("valueOf", 
+    env.Prototypes.Object.put("valueOf", 
       (Api.HostFunction.create
         env (new Func<IjsObj, IjsObj>(valueOf)))
     )
 
     //15.2.4.5
-    env.Object_prototype.put("hasOwnProperty", 
+    env.Prototypes.Object.put("hasOwnProperty", 
       (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)))
     )
     
     //15.2.4.6
-    env.Object_prototype.put("isPrototypeOf", 
+    env.Prototypes.Object.put("isPrototypeOf", 
       (Api.HostFunction.create
         env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)))
     )
     
     //15.2.4.7
-    env.Object_prototype.put("propertyIsEnumerable", 
+    env.Prototypes.Object.put("propertyIsEnumerable", 
       (Api.HostFunction.create
         env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)))
     )
@@ -101,6 +103,6 @@ module Object =
         env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
 
     objectCtor.ConstructorMode <- ConstructorModes.Host
-    objectCtor.put("prototype", env.Object_prototype)
-    env.Object_prototype.put("constructor", objectCtor)
+    objectCtor.put("prototype", env.Prototypes.Object)
+    env.Prototypes.Object.put("constructor", objectCtor)
     env.Globals.put("Object", objectCtor)

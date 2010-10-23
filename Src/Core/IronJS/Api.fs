@@ -104,26 +104,26 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createObject (env:IjsEnv) =
-    let o = IjsObj(env.Base_Class, env.Object_prototype, Classes.Object, 0u)
+    let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object, 0u)
     o.Methods <- env.Object_methods
     o
 
   //----------------------------------------------------------------------------
   let createObjectWithMap (env:IjsEnv) map =
-    let o = IjsObj(map, env.Object_prototype, Classes.Object, 0u)
+    let o = IjsObj(map, env.Prototypes.Object, Classes.Object, 0u)
     o.Methods <- env.Object_methods
     o
 
   //----------------------------------------------------------------------------
   let createArray (env:IjsEnv) size =
-    let o = IjsObj(env.Array_Class, env.Array_prototype, Classes.Array, size)
+    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
     o.Methods <- env.Object_methods
     o.Methods.PutValProperty.Invoke(o, "length", double size)
     o
     
   //----------------------------------------------------------------------------
   let createString (env:IjsEnv) (s:IjsStr) =
-    let o = IjsObj(env.String_Class, env.String_prototype, Classes.String, 0u)
+    let o = IjsObj(env.Maps.String, env.Prototypes.String, Classes.String, 0u)
     o.Methods <- env.Object_methods
     o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
     o.Value.Box.Clr <-s
@@ -132,14 +132,14 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
-    let o = IjsObj(env.Number_Class, env.Number_prototype, Classes.Number, 0u)
+    let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
     o.Methods <- env.Object_methods
     o.Value.Box.Number <- n
     o
     
   //----------------------------------------------------------------------------
   let createBoolean (env:IjsEnv) b =
-    let o = IjsObj(env.Boolean_Class, env.Boolean_prototype, Classes.Boolean, 0u)
+    let o = IjsObj(env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean, 0u)
     o.Methods <- env.Object_methods
     o.Value.Box.Bool <- b
     o.Value.Box.Tag <- TypeTags.Bool
@@ -147,7 +147,7 @@ module Environment =
   
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Prototype_Class, env.Object_prototype, Classes.Object, 0u)
+    let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object, 0u)
     o.Methods <- env.Object_methods
     o
   
@@ -742,7 +742,7 @@ type Function() =
     match prototype.Tag with
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
-    | _ -> f.Env.Object_prototype
+    | _ -> f.Env.Prototypes.Object
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------

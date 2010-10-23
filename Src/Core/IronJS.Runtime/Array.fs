@@ -32,19 +32,19 @@ module Array =
         env (new Func<IjsFunc, IjsObj, IjsBox array, IjsObj>(constructor')))
 
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.put("prototype", env.Array_prototype)
+    ctor.put("prototype", env.Prototypes.Array)
     env.Globals.put("Array", ctor)
     
   //----------------------------------------------------------------------------
-  let createPrototype (env:IjsEnv) =
+  let createPrototype (env:IjsEnv) objPrototype =
     let prototype = Api.Environment.createArray env 0u
-    Api.Object.Property.setMap prototype env.Array_Class
-    prototype.Prototype <- env.Object_prototype
+    Api.Object.Property.setMap prototype env.Maps.Array
+    prototype.Prototype <- objPrototype
     prototype.Class <- Classes.Array
     prototype
     
   //----------------------------------------------------------------------------
   let setupPrototype (env:IjsEnv) =
-    env.Array_prototype.put("constructor", 
+    env.Prototypes.Array.put("constructor", 
       env.Globals.get("Array"))
 

@@ -34,8 +34,8 @@ module Function =
         (new Func<IjsFunc, IjsObj, IjsBox array, IjsFunc>(constructor')))
       
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.Prototype <- env.Function_prototype
-    ctor.put("prototype", env.Function_prototype)
+    ctor.Prototype <- env.Prototypes.Function
+    ctor.put("prototype", env.Prototypes.Function)
     env.Globals.put("Function", ctor)
 
   //----------------------------------------------------------------------------
@@ -92,27 +92,27 @@ module Function =
     | _ -> failwith "Que?"
     
   //----------------------------------------------------------------------------
-  let createPrototype (env:IjsEnv) =
+  let createPrototype (env:IjsEnv) objPrototype =
     let prototype =
       (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsBox>(prototype)))
 
-    prototype.Prototype <- env.Object_prototype
+    prototype.Prototype <- objPrototype
     prototype
       
   //----------------------------------------------------------------------------
   let setupPrototype (env:IjsEnv) =
-    env.Function_prototype.put("call",
+    env.Prototypes.Function.put("call",
       (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsObj, obj array, IjsBox>(call))))
 
-    env.Function_prototype.put("apply",
+    env.Prototypes.Function.put("apply",
       (Api.HostFunction.create env
         (new Func<IjsFunc, IjsObj, IjsObj, IjsObj, IjsBox>(apply))))
     
-    env.Function_prototype.put("toString",
+    env.Prototypes.Function.put("toString",
       (Api.HostFunction.create env
         (new Func<IjsObj, IjsStr>(toString))))
 
-    env.Function_prototype.put("constructor", 
+    env.Prototypes.Function.put("constructor", 
       env.Globals.get("Function"))

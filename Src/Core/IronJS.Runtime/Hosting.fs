@@ -36,21 +36,27 @@ module Hosting =
         PutRefIndex = Api.Arguments.Index.Delegates.putRef
       }
 
-    x.Base_Class <- PropertyMap(x)
+    let baseMap = PropertyMap(x)
+    x.Maps <- {
+      Base = baseMap
+      Array = Api.PropertyMap.getSubMap baseMap "length"
+      Function = Api.PropertyMap.buildSubMap baseMap ["length"; "prototype"]
+      Prototype = Api.PropertyMap.getSubMap baseMap "constructor"
+      String = Api.PropertyMap.getSubMap baseMap "length"
+      Number = baseMap
+      Boolean = baseMap
+    }
 
-    x.Prototype_Class <- Api.PropertyMap.getSubMap x.Base_Class "constructor"
-    x.Function_Class <- Api.PropertyMap.buildSubMap x.Base_Class ["length"; "prototype"]
-    x.Array_Class <- Api.PropertyMap.getSubMap x.Base_Class "length"
-    x.String_Class <- Api.PropertyMap.getSubMap x.Base_Class "length"
-    x.Number_Class <- x.Base_Class
-    x.Boolean_Class <- x.Base_Class
-
-    x.Object_prototype <- Native.Object.createPrototype x
-    x.Function_prototype <- Native.Function.createPrototype x
-    x.Array_prototype <- Native.Array.createPrototype x
-    x.String_prototype <- Native.String.createPrototype x
-    x.Number_prototype <- Native.Number.createPrototype x
-    x.Boolean_prototype <- Native.Boolean.createPrototype x
+    let objectPrototype = Native.Object.createPrototype x
+    x.Prototypes <- Prototypes.Empty
+    x.Prototypes <- {
+      Object = objectPrototype
+      Function = Native.Function.createPrototype x objectPrototype
+      Array = Native.Array.createPrototype x objectPrototype
+      String = Native.String.createPrototype x objectPrototype
+      Number = Native.Number.createPrototype x objectPrototype
+      Boolean = Native.Boolean.createPrototype x objectPrototype
+    }
     
     Native.Global.setup x
     Native.Math.setup x

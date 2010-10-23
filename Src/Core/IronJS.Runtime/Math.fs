@@ -9,7 +9,7 @@ module Math =
     let math = Api.Environment.createObject(env)
     
     math.Class <- Classes.Math
-    math.Prototype <- env.Object_prototype
+    math.Prototype <- env.Prototypes.Object
 
     math.Methods.PutValProperty.Invoke(math, "E", Math.E)
     math.Methods.PutValProperty.Invoke(math, "LN10", 2.302585092994046)

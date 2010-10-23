@@ -189,7 +189,7 @@ and [<AllowNullLiteral>] Undefined() =
 //------------------------------------------------------------------------------
 // Record for all default property maps
 //------------------------------------------------------------------------------
-and PropertyMaps = {
+and Maps = {
   Base : PropertyMap
   Array : PropertyMap
   Function : PropertyMap
@@ -207,7 +207,15 @@ and Prototypes = {
   String : IjsObj
   Number : IjsObj
   Boolean : IjsObj
-}
+} with
+  static member Empty = {
+    Object = null
+    Function = null
+    Array = null
+    String = null
+    Number = null
+    Boolean = null
+  }
 
 //------------------------------------------------------------------------------
 and Constructors = {
@@ -220,10 +228,16 @@ and Constructors = {
 }
 
 //------------------------------------------------------------------------------
+and Methods = {
+  Object : InternalMethods
+  Array : InternalMethods
+  Arguments : InternalMethods
+}
+
+//------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment() =
-  //Id counters
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0L
 
@@ -232,24 +246,10 @@ and [<AllowNullLiteral>] Environment() =
 
   //
   [<DefaultValue>] val mutable Return : Box
-
-  //Objects
+  [<DefaultValue>] val mutable Prototypes : Prototypes
+  [<DefaultValue>] val mutable Constructors : Constructors
+  [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Globals : Object
-  [<DefaultValue>] val mutable Object_prototype : Object
-  [<DefaultValue>] val mutable Array_prototype : Object
-  [<DefaultValue>] val mutable Function_prototype : Object
-  [<DefaultValue>] val mutable String_prototype : Object
-  [<DefaultValue>] val mutable Number_prototype : Object
-  [<DefaultValue>] val mutable Boolean_prototype : Object
-
-  //Property Classes
-  [<DefaultValue>] val mutable Base_Class : PropertyMap
-  [<DefaultValue>] val mutable Array_Class : PropertyMap
-  [<DefaultValue>] val mutable Function_Class : PropertyMap
-  [<DefaultValue>] val mutable Prototype_Class : PropertyMap
-  [<DefaultValue>] val mutable String_Class : PropertyMap
-  [<DefaultValue>] val mutable Number_Class : PropertyMap
-  [<DefaultValue>] val mutable Boolean_Class : PropertyMap
 
   //Methods
   [<DefaultValue>] val mutable Object_methods : InternalMethods
@@ -402,7 +402,7 @@ and [<AllowNullLiteral>] Arguments =
 
   new (env:IjsEnv, linkMap, locals, closedOver) as a = 
     {
-      inherit Object(env.Array_Class, env.Object_prototype, Classes.Object, 0u)
+      inherit Object(env.Maps.Array, env.Prototypes.Object, Classes.Object, 0u)
 
       Locals = locals
       ClosedOver = closedOver
@@ -449,7 +449,7 @@ and [<AllowNullLiteral>] Function =
      
   new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
     inherit Object(
-      env.Function_Class, env.Function_prototype, Classes.Function, 0u)
+      env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
     Env = env
     Compiler = env.Compilers.[funcId]
@@ -461,7 +461,7 @@ and [<AllowNullLiteral>] Function =
   }
 
   new (env:IjsEnv, propertyMap) = {
-    inherit Object(propertyMap, env.Function_prototype, Classes.Function, 0u)
+    inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
@@ -497,7 +497,7 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
   new (env:IjsEnv, delegate') as x = 
     {
-      inherit Function(env, env.Function_Class)
+      inherit Function(env, env.Maps.Function)
 
       Delegate = delegate'
 

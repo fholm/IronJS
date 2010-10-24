@@ -111,5 +111,9 @@ module Hosting =
     member x.GetGlobal name =
       env.Globals.Methods.GetProperty.Invoke(env.Globals, name)
 
+    member x.GetGlobalT<'a> name =
+      let value = env.Globals.Methods.GetProperty.Invoke(env.Globals, name) 
+      value |> Utils.unboxT<'a> 
+
     static member Create () =
       new Context(createEnvironment())

@@ -40,6 +40,9 @@ module Extensions =
     member o.get (name) =
       o.Methods.GetProperty.Invoke(o, name)
 
+    member o.get<'a> (name) =
+      o.Methods.GetProperty.Invoke(o, name) |> Utils.unboxT<'a>
+
     member o.has (name) =
       o.Methods.HasProperty.Invoke(o, name)
 
@@ -76,6 +79,9 @@ module Extensions =
 
     member o.get (index) =
       o.Methods.GetIndex.Invoke(o, index)
+      
+    member o.get<'a> (index) =
+      o.Methods.GetIndex.Invoke(o, index) |> Utils.unboxT<'a>
 
     member o.has (index) =
       o.Methods.HasIndex.Invoke(o, index)
@@ -287,7 +293,7 @@ type TypeConverter =
   static member toBoolean (o:IjsObj) = true
   static member toBoolean (b:IjsBox) =
     match b with 
-    | Number -> TypeConverter.toBoolean b
+    | Number -> TypeConverter.toBoolean b.Number
     | Boolean -> b.Bool
     | Undefined -> false
     | String -> b.String.Length > 0
@@ -341,13 +347,19 @@ type TypeConverter =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
   //----------------------------------------------------------------------------
-  static member toInt32 (d:IjsNum) = int d
-  static member toUInt32 (d:IjsNum) = uint32 d
-  static member toUInt16 (d:IjsNum) = uint16 d
+  static member toInt32 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0 else int d
+
+  static member toUInt32 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0u else uint32 d
+
+  static member toUInt16 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0us else uint16 d
+
   static member toInteger (d:IjsNum) : double = 
     if d = NaN
       then 0.0
-      elif d = 0.0 || d = NegInf || d = PosInf
+      elif d = 0.0 || Double.IsInfinity d
         then d
         else double (Math.Sign d) * Math.Floor(Math.Abs d)
                 
@@ -378,7 +390,12 @@ type Operators =
 
   //----------------------------------------------------------------------------
   // typeof
-  static member typeOf (o:IjsBox) = TypeTags.Names.[o.Tag]
+  static member typeOf (o:IjsBox) = 
+    match o with
+    | Number _ -> "number" 
+    | IsNull _ -> "object"
+    | _ -> TypeTags.Names.[o.Tag]
+
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
   
   //----------------------------------------------------------------------------
@@ -393,7 +410,7 @@ type Operators =
   static member bitCmpl (o:IjsBox) =
     let o = TypeConverter.toNumber o
     let o = TypeConverter.toInt32 o
-    Utils.boxNumber (double (~~~ o))
+    ~~~ o
       
   //----------------------------------------------------------------------------
   // + (unary)
@@ -612,7 +629,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l &&& r))
+    l &&& r
     
   //----------------------------------------------------------------------------
   // |
@@ -622,7 +639,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l ||| r))
+    l ||| r
     
   //----------------------------------------------------------------------------
   // ^
@@ -632,7 +649,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l ^^^ r))
+    l ^^^ r
     
   //----------------------------------------------------------------------------
   // <<
@@ -642,7 +659,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l <<< int r))
+    l <<< int r
     
   //----------------------------------------------------------------------------
   // >>
@@ -652,7 +669,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l >>> int r))
+    l >>> int r
     
   //----------------------------------------------------------------------------
   // >>>
@@ -662,7 +679,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l >>> int r))
+    l >>> int r
     
   //----------------------------------------------------------------------------
   // &&

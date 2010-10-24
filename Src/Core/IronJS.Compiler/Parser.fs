@@ -853,6 +853,13 @@ module Ast =
         // typeof x
         | ES3Parser.TYPEOF -> Unary(UnaryOp.TypeOf, translate (child tok 0))
 
+        // void foo;
+        | ES3Parser.VOID ->
+          Unary(UnaryOp.Void, translate (child tok 0))
+
+        // null
+        | ES3Parser.NULL -> Null
+
         // {x: 1}
         | ES3Parser.NAMEDVALUE -> 
           Assign(String(text (child tok 0)), translate (child tok 1))

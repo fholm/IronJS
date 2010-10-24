@@ -82,7 +82,7 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.3
   let typeOf (expr:Dlr.Expr) = 
-    Api.Operators.typeOf expr
+    Api.Operators.typeOf (expr |> Expr.boxValue)
       
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
@@ -102,12 +102,12 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.6
   let plus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast]
+    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Expr.boxValue]
 
   //----------------------------------------------------------------------------
   // 11.4.7
   let minus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast]
+    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Expr.boxValue]
   
   //----------------------------------------------------------------------------
   // 11.4.8

@@ -94,6 +94,9 @@ module Utils =
       if box.Tag >= TypeTags.Object
         then Some box.Object else None
 
+    let (|IsNull|_|) (box:IjsBox) =
+      if box.Tag = TypeTags.Clr && box.Clr = null then Some null else None
+
     let (|IsFunction|_|) (o:IjsObj) =
       if o.Class = Classes.Function then Some (o :?> IjsFunc) else None
 
@@ -259,6 +262,9 @@ module Utils =
       match b.Tag with
       | TypeTags.Bool -> b.Bool :> obj
       | _ -> b.Clr
+
+  let unboxT<'a> (b:Box) =
+    unbox b :?> 'a
 
   let unboxObj (o:obj) =
     if o :? Box then unbox (o :?> Box) else o

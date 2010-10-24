@@ -6,9 +6,6 @@ open IronJS.Compiler
 module ControlFlow =
 
   //----------------------------------------------------------------------------
-  let private loopLabels () =
-    Dlr.labelBreak(), Dlr.labelContinue()
-  //----------------------------------------------------------------------------
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
     let test = Api.TypeConverter.toBoolean (ctx.Compile test)
@@ -52,9 +49,12 @@ module ControlFlow =
       match ctx.BreakLabels.TryFind label with
       | Some label -> Dlr.continue' label
       | _ -> Errors.missingLabel label
-    
+
   //----------------------------------------------------------------------------
   // 12.6.1 do-while
+  let private loopLabels () =
+    Dlr.labelBreak(), Dlr.labelContinue()
+
   let doWhile' (ctx:Ctx) label body test =
     let break', continue' = loopLabels()
     let test = Api.TypeConverter.toBoolean (ctx.Compile test)

@@ -85,7 +85,6 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
     <Reference Include="Xebic.ES3">
       <HintPath>..\..\..\Lib\CLR4\Xebic.ES3.dll</HintPath>
     </Reference>
@@ -106,7 +105,7 @@
     <Compile Include="Core.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
+    <ProjectReference Include="..\..\Dependencies\FSKit\Src\FSKit.fsproj">
       <Name>FSKit</Name>
       <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
       <Private>True</Private>

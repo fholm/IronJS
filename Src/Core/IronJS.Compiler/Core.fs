@@ -16,6 +16,7 @@ module Core =
   let rec private compileAst (ctx:Context) ast =
     match ast with
     //Constants
+    | Ast.Null -> Dlr.null'
     | Ast.Pass -> Dlr.void'
     | Ast.This -> ctx.This
     | Ast.Undefined -> Expr.BoxedConstants.undefined
@@ -33,7 +34,7 @@ module Core =
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
 
     //Scopes
-    | Ast.LocalScope(scope, tree) -> _compileLocalScope ctx scope tree
+    | Ast.LocalScope(scope, tree) -> Scope.localScope ctx scope tree
     | Ast.With(init, tree) -> Scope.with' ctx init tree
 
     //Objects
@@ -69,54 +70,19 @@ module Core =
     | _ -> failwithf "Failed to compile %A" ast
       
   //----------------------------------------------------------------------------
-  and private compileUnary ctx op tree =
+  and private compileUnary ctx op ast =
     match op with
-    | Ast.UnaryOp.Delete -> Unary.delete ctx tree
-    | Ast.UnaryOp.TypeOf -> Unary.typeOf (compileAst ctx tree)
-    | Ast.UnaryOp.Void -> Unary.void' ctx tree
-    | Ast.UnaryOp.Inc -> Unary.increment ctx tree
-    | Ast.UnaryOp.Dec -> Unary.decrement ctx tree
-    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx tree
-    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx tree
-    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx tree
-    | Ast.UnaryOp.Not -> Unary.not ctx tree
-    | Ast.UnaryOp.Plus -> Unary.plus ctx tree
-    | Ast.UnaryOp.Minus -> Unary.minus ctx tree
-      
-  //----------------------------------------------------------------------------
-  and _compileLocalScope ctx (s:Ast.Scope) tree =
-    match s.ScopeType with
-    | Ast.GlobalScope -> 
-      Scope.initGlobal ctx (compileAst (ctx.WithScope s) tree)
-
-    | Ast.FunctionScope ->
-      let scopeInit = Scope.Function.initLocalScope ctx s.LocalCount
-      let scopeChainInit = Scope.Function.initScopeChain ctx s.ClosedOverCount
-      let DynamicScopeInit = Scope.Function.initDynamicScope ctx s
-      
-      let variables = 
-        (Scope.Function.demoteMissingParams 
-          (s.Variables)
-          (s.ParamCount)
-          (ctx.Target.ParamCount)
-        ) |> Scope.Function.resolveVariableTypes ctx
-
-      let initParams, initNonParams = 
-        Scope.Function.initVariables ctx variables
-
-      let initArguments = 
-        [Scope.Function.initArguments ctx s]
-
-      Seq.concat [
-        [scopeInit; scopeChainInit; DynamicScopeInit]
-        (initParams |> List.ofSeq)
-        (initNonParams |> List.ofSeq)
-        (initArguments)
-        [compileAst (ctx.WithScope {s with Variables=variables}) tree]
-      ] |> Dlr.blockSimple
-
-    | Ast.CatchScope -> 
-      Errors.compiler "Catch scopes should never reach this point"
+    | Ast.UnaryOp.Delete -> Unary.delete ctx ast
+    | Ast.UnaryOp.TypeOf -> Unary.typeOf (compileAst ctx ast)
+    | Ast.UnaryOp.Void -> Unary.void' ctx ast
+    | Ast.UnaryOp.Inc -> Unary.increment ctx ast
+    | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
+    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx ast
+    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx ast
+    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx ast
+    | Ast.UnaryOp.Not -> Unary.not ctx ast
+    | Ast.UnaryOp.Plus -> Unary.plus ctx ast
+    | Ast.UnaryOp.Minus -> Unary.minus ctx ast
       
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');

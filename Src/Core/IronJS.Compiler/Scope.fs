@@ -130,3 +130,38 @@ module Scope =
               Dlr.const' linkMap;
               ctx.LocalScope;
               ctx.ClosureScope]))
+
+  //----------------------------------------------------------------------------
+  let localScope ctx (s:Ast.Scope) tree =
+    match s.ScopeType with
+    | Ast.GlobalScope -> 
+      initGlobal ctx ((ctx.WithScope s).Compile tree)
+
+    | Ast.FunctionScope ->
+      let scopeInit = Function.initLocalScope ctx s.LocalCount
+      let scopeChainInit = Function.initScopeChain ctx s.ClosedOverCount
+      let DynamicScopeInit = Function.initDynamicScope ctx s
+      
+      let variables = 
+        (Function.demoteMissingParams 
+          (s.Variables)
+          (s.ParamCount)
+          (ctx.Target.ParamCount)
+        ) |> Function.resolveVariableTypes ctx
+
+      let initParams, initNonParams = 
+        Function.initVariables ctx variables
+
+      let initArguments = 
+        [Function.initArguments ctx s]
+
+      Seq.concat [
+        [scopeInit; scopeChainInit; DynamicScopeInit]
+        (initParams |> List.ofSeq)
+        (initNonParams |> List.ofSeq)
+        (initArguments)
+        [(ctx.WithScope {s with Variables=variables}).Compile tree]
+      ] |> Dlr.blockSimple
+
+    | Ast.CatchScope -> 
+      Errors.compiler "Catch scopes should never reach this point"

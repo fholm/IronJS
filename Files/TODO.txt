@@ -1,0 +1,5 @@
+﻿* support for defining variables in eval
+* in operator
+* instanceof operator
+* for ... in ...
+* array .length property

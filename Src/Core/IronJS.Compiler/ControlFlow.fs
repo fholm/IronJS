@@ -88,7 +88,7 @@ module ControlFlow =
         Dlr.orChain [
           for t in tests -> 
             let t = ctx.Compile t
-            Binary.compile ctx Ast.BinaryOp.Eq t value]
+            Binary.compileExpr Ast.BinaryOp.Eq t value]
 
       Dlr.if' tests (ctx.Compile body)
 
@@ -100,10 +100,10 @@ module ControlFlow =
     let break' = Dlr.labelBreak()
     let ctx = ctx.AddDefaultLabel break'
     
-    Dlr.blockTmp value.Type (fun tmp ->
+    Dlr.blockTmp value.Type (fun tmpValue ->
       [
-        Dlr.assign tmp value
-        Dlr.blockSimple [for case in cases -> switchCase ctx tmp case]
+        Dlr.assign tmpValue value
+        Dlr.blockSimple [for case in cases -> switchCase ctx tmpValue case]
         Dlr.labelExprVoid break'
       ] |> Seq.ofList)
 

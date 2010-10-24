@@ -132,10 +132,7 @@ module Binary =
   open IronJS.Ast
 
   //----------------------------------------------------------------------------
-  let compile ctx op left right =
-    let l = Expr.boxValue left
-    let r = Expr.boxValue right
-
+  let compileExpr op (l:Dlr.Expr) r =
     match op with
     | BinaryOp.Add -> Api.Operators.add(l, r)
     | BinaryOp.Sub -> Api.Operators.sub(l, r)
@@ -163,6 +160,11 @@ module Binary =
     | BinaryOp.GtEq -> Api.Operators.gtEq(l, r)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
+
+  let compile (ctx:Ctx) op left right =
+    let l = ctx.Compile left |> Expr.boxValue 
+    let r = ctx.Compile right |> Expr.boxValue
+    compileExpr op l r
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

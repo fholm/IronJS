@@ -28,16 +28,13 @@ module Core =
     | Ast.Identifier name -> Identifier.getValue ctx name
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
-    | Ast.Eval tree -> _compileEval ctx tree
+    | Ast.Eval tree -> compileEval ctx tree
     | Ast.Unary(op, tree) -> compileUnary ctx op tree
-    | Ast.Binary(op, left, right) -> 
-      let lexpr = compileAst ctx left
-      let rexpr = compileAst ctx right
-      Binary.compile ctx op lexpr rexpr
+    | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
 
     //Scopes
-    | Ast.LocalScope(scope, tree) -> compileLocalScope ctx scope tree
-    | Ast.With(init, tree) -> _compileWith ctx init tree
+    | Ast.LocalScope(scope, tree) -> _compileLocalScope ctx scope tree
+    | Ast.With(init, tree) -> Scope.with' ctx init tree
 
     //Objects
     | Ast.Object properties -> Object.literalObject ctx properties
@@ -66,17 +63,10 @@ module Core =
       ControlFlow.for' ctx label init test incr body
 
     //Exceptions
-    | Ast.Try(body, catch, finally') -> _compileTry ctx body catch finally'
-    | Ast.Throw tree -> Exception.throw (compileAst ctx tree)
-    | Ast.Finally body -> Exception.finally' (compileAst ctx body)
+    | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
+    | Ast.Throw tree -> Exception.throw ctx tree
       
     | _ -> failwithf "Failed to compile %A" ast
-      
-  //----------------------------------------------------------------------------
-  and private compileTreeOption ctx tree =
-    match tree with
-    | None -> None
-    | Some t -> Some (compileAst ctx t)
       
   //----------------------------------------------------------------------------
   and private compileUnary ctx op tree =
@@ -92,33 +82,9 @@ module Core =
     | Ast.UnaryOp.Not -> Unary.not ctx tree
     | Ast.UnaryOp.Plus -> Unary.plus ctx tree
     | Ast.UnaryOp.Minus -> Unary.minus ctx tree
-
-  //----------------------------------------------------------------------------
-  and _compileCatch ctx catch =
-    match catch with
-    | Ast.Catch(Ast.LocalScope(s, tree)) ->
-      Exception.catch ctx s (compileAst (ctx.WithScope s) tree)
-
-    | Ast.Catch(tree) ->
-      Exception.catchSimple (compileAst ctx tree)
-
-    | _ -> failwith "Que?"
       
   //----------------------------------------------------------------------------
-  and _compileTry ctx body catches finally' =
-    (Exception.try'
-      (ctx.Compile body |> Dlr.castVoid)
-      (seq{for x in catches -> _compileCatch ctx x})
-      (compileTreeOption ctx finally'))
-
-  //----------------------------------------------------------------------------
-  and _compileWith ctx init tree =
-    let object' = Expr.unboxT<IjsObj> (compileAst ctx init)
-    let tree = compileAst ({ctx with InsideWith=true}) tree
-    Scope.initWith ctx object' tree
-      
-  //----------------------------------------------------------------------------
-  and compileLocalScope ctx (s:Ast.Scope) tree =
+  and _compileLocalScope ctx (s:Ast.Scope) tree =
     match s.ScopeType with
     | Ast.GlobalScope -> 
       Scope.initGlobal ctx (compileAst (ctx.WithScope s) tree)
@@ -154,7 +120,7 @@ module Core =
       
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
-  and _compileEval (ctx:Context) evalTree =
+  and compileEval (ctx:Context) evalTree =
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
     

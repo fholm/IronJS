@@ -12,9 +12,12 @@ module Scope =
       (Dlr.assign ctx.ClosureScope ctx.Fun_Chain)
       (Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope)
       (tree)]
-    
+
   //----------------------------------------------------------------------------
-  let initWith (ctx:Ctx) object' tree =
+  // 12.10 the with statement
+  let with' (ctx:Ctx) init tree =
+    let object' = Expr.unboxT<IjsObj> (ctx.Compile init)
+    let tree = {ctx with InsideWith=true}.Compile tree
     let pushArgs = [ctx.DynamicScope; object'; Dlr.const' ctx.Scope.GlobalLevel]
     Dlr.blockSimple [
       (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
@@ -39,7 +42,7 @@ module Scope =
         
     //--------------------------------------------------------------------------
     let resolveVariableTypes ctx vars =
-      vars |> Set.map (fun (var:Ast.Variable) -> var)
+      vars |> Set.map (fun var -> var)
       
     //--------------------------------------------------------------------------
     let storageExpr ctx (var:Ast.Variable) =

@@ -18,7 +18,7 @@ open IronJS.Tests.Tools
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 test "13.2 Creating Function Objects" (fun ctx ->
-  ctx.Execute("var foo = function() { }") |> ignore
+  ctx.Execute("var foo = function(a) { }") |> ignore
 
   let foo = ctx.GetGlobalT<IronJS.Function>("foo")
   let prototype = foo.get<IjsObj>("prototype")
@@ -26,18 +26,29 @@ test "13.2 Creating Function Objects" (fun ctx ->
   Assert.IsInstanceOfType(foo, typeof<IjsFunc>)
   Assert.AreEqual(foo.Class, Classes.Function)
   Assert.AreSame(foo.Prototype, ctx.Environment.Prototypes.Function)
-  Assert.AreEqual(0.0, foo.get<IjsNum>("length"))
+  Assert.AreEqual(1.0, foo.get<IjsNum>("length"))
   Assert.AreSame(foo, prototype.get<IjsFunc>("constructor"))
 )
 
-test "13.2.1 [[Call]]" (fun ctx ->
-  ctx.Execute("var foo = function() { }; foo();") |> ignore
-  ctx.Execute("var foo = function(a, b, c) { }; foo(1, 2, 3);") |> ignore
-  ctx.Execute("var foo = function(a, b, c) { }; foo(1, 2);") |> ignore
-  ctx.Execute("var foo = function(a, b, c) { }; foo(1, 2, 3, 4);") |> ignore
+test "11.2.2 The new Operator" (fun ctx ->
+  ctx.Execute("var foo = function() { }") |> ignore
 
-  Assert.AreEqual(
-    1.0, ctx.ExecuteT<double>("(function() { return 1; })();")) |> ignore
+  let foo = ctx.GetGlobalT<IjsFunc> "foo"
+  let object' = ctx.ExecuteT<IjsObj> "new foo();"
+  let prototype = foo.get<IjsObj> "prototype"
+
+  Assert.IsInstanceOfType(object', typeof<IjsObj>)
+  Assert.AreSame(object'.Prototype, prototype)
+)
+
+test "11.2.3 Function Calls" (fun ctx ->
+  ctx.Execute "var foo = function() { }; foo();" |> ignore
+  ctx.Execute "var foo = function(a, b, c) { }; foo(1, 2, 3);" |> ignore
+  ctx.Execute "var foo = function(a, b, c) { }; foo(1, 2);" |> ignore
+  ctx.Execute "var foo = function(a, b, c) { }; foo(1, 2, 3, 4);" |> ignore
+
+  let result = ctx.ExecuteT<double> "(function() { return 1; })();"
+  Assert.AreEqual(1.0, result)
 )
 
 (*

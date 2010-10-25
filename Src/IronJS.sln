@@ -48,6 +48,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5070932B
 	ProjectSection(SolutionItems) = preProject
 		..\Tests\Function.fsx = ..\Tests\Function.fsx
 		..\Tests\Operators.fsx = ..\Tests\Operators.fsx
+		..\Tests\Statements.fsx = ..\Tests\Statements.fsx
 		..\Tests\Tests.Tools.fs = ..\Tests\Tests.Tools.fs
 	EndProjectSection
 EndProject

@@ -12,26 +12,27 @@
 
 open IronJS
 open IronJS.Aliases
-open IronJS.Tests
 open IronJS.Tests.Tools
+
+open FSKit.Assert
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 test "11.3 Postfix Expressions" (fun ctx ->
-  Assert.AreEqual(0.0, ctx.ExecuteT<double>("var i = 0; i++;"));
-  Assert.AreEqual(1.0, ctx.ExecuteT<double>("i"));
-  Assert.AreEqual(1.0, ctx.ExecuteT<double>("i--"));
-  Assert.AreEqual(0.0, ctx.ExecuteT<double>("i"));
+  equal 0.0 (ctx.ExecuteT<double> "var i = 0; i++;")
+  equal 1.0 (ctx.ExecuteT<double> "i")
+  equal 1.0 (ctx.ExecuteT<double> "i--")
+  equal 0.0 (ctx.ExecuteT<double> "i")
 )
 
 test "11.4.1 The delete Operator" (fun ctx ->
   //Property
-  ctx.Execute("var o = {foo: 1, bar: 2}") |> ignore
-  Assert.AreEqual(1.0, ctx.ExecuteT<double>("o.foo"))
-  Assert.AreEqual(2.0, ctx.ExecuteT<double>("o.bar"))
+  ctx.Execute "var o = {foo: 1, bar: 2}" |> ignore
+  equal 1.0 (ctx.ExecuteT<double> "o.foo")
+  equal 2.0 (ctx.ExecuteT<double> "o.bar")
 
-  ctx.Execute("delete o.foo") |> ignore
-  Assert.AreEqual(IronJS.Undefined.Instance, ctx.ExecuteT<Undefined>("o.foo"))
-  Assert.AreEqual(2.0, ctx.ExecuteT<double>("o.bar"))
+  ctx.Execute "delete o.foo" |> ignore
+  same IronJS.Undefined.Instance (ctx.ExecuteT<Undefined> "o.foo")
+  equal 2.0 (ctx.ExecuteT<double> "o.bar")
 
   //Index
   ctx.Execute("var a = ['foo', 'bar']") |> ignore

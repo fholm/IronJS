@@ -17,6 +17,9 @@ open IronJS.Api.Extensions
 open IronJS.Tests.Tools
 open FSKit.Assert
 
+IronJS.Debug.stringPrinters.Add (fun s -> System.Console.WriteLine s)
+IronJS.Debug.exprPrinters.Add (fun s -> Dlr.Utils.printDebugView s)
+
 test "12.2 Variable statement" (fun ctx ->
   same Undefined.Instance (ctx.ExecuteT<Undefined> "foo")
 

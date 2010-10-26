@@ -44,7 +44,11 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let getBoxType expr = Dlr.field expr "Tag"
-  let setBoxType expr tc = Dlr.assign (getBoxType expr) (Dlr.const' tc)
+  let setBoxType expr tag =
+    match tag with
+    | TypeTags.Number -> Dlr.void'
+    | _ -> Dlr.assign (getBoxType expr) (Dlr.const' tag)
+
   let setBoxTypeOf expr of' = setBoxType expr (Utils.expr2tc of')
       
   //-------------------------------------------------------------------------

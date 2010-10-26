@@ -108,7 +108,8 @@ module Hosting =
     member x.EvalInFunc source = 
       x.Execute (sprintf "(function(){ %s })();" source)
 
-    member x.EvalInFuncT<'a> source = x.EvalInFunc source :?> 'a
+    member x.EvalInFuncT<'a> source = 
+      x.EvalInFunc source :?> 'a
 
     member x.PutGlobal (name, value:obj) =
       env.Globals.Methods.PutBoxProperty.Invoke(env.Globals, name, Utils.box value)

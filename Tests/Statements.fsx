@@ -62,3 +62,99 @@ test "12.5 The if Statement" (fun ctx ->
   let result = ctx.EvalInFuncT<double> "if(undefined){return 1} else{return 0}"
   equal 0.0 result
 )
+
+test "12.6.1 The do-while Statement" (fun ctx ->
+  equal 1.0 (
+    ctx.ExecuteT<double> @"
+      var i = 0;
+      do {
+         i = 1;
+      } while(false);
+      i;")
+
+  equal 10.0 (
+    ctx.ExecuteT<double> @"
+      var i = 0;
+      do {
+        i = i + 1;
+      } while(i < 10);
+      i;
+    ")
+)
+
+test "12.6.2 The while Statement" (fun ctx ->
+  equal 0.0 (
+    ctx.ExecuteT<double> @"
+      var i = 0;
+      while(false) {
+         i = 1;
+      }
+      i;")
+
+  equal 10.0 (
+    ctx.ExecuteT<double> @"
+      var i = 0;
+      while(i < 10) {
+        i = i + 1;
+      }
+      i;
+    ")
+)
+
+test "12.6.3 The for Statement" (fun ctx ->
+  equal 20.0 (ctx.ExecuteT<double> @"
+    var j = 0;
+    for(var i = 0;i < 10; ++i) {
+      ++j;
+    }
+    i + j;
+  ")
+)
+
+test "12.6.4 The for-in Statement" (fun ctx ->
+  fail "Not implemented"
+)
+
+test "12.7 The continue Statement" (fun ctx ->
+
+  equal 9.0 (ctx.ExecuteT<double> @"
+    var j = 0;
+    for(var i = 0; i < 10; ++i) {
+      if(i == 5) continue;
+      ++j;
+    }
+    j;
+  ")
+
+  equal 9.0 (ctx.ExecuteT<double> @"
+    var j = 0;
+    foo: for(var i = 0; i < 10; ++i) {
+      if(i == 5) continue foo;
+      ++j;
+    }
+    j;
+  ")
+
+)
+
+test "12.8 The break Statement" (fun ctx ->
+
+  equal 5.0 (ctx.ExecuteT<double> @"
+    var j = 0;
+    for(var i = 0; i < 10; ++i) {
+      if(i == 5) break;
+      ++j;
+    }
+    j;
+  ")
+
+  equal 5.0 (ctx.ExecuteT<double> @"
+    var j = 0;
+    foo: for(var i = 0; i < 10; ++i) {
+      if(i == 5) break foo;
+      ++j;
+    }
+    j;
+  ")
+
+)

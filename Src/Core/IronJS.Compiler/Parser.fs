@@ -57,19 +57,19 @@ module Ast =
     | Delete // delete x.y
     | TypeOf // typeof x
     
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   type ScopeType
     = GlobalScope
     | FunctionScope
     | CatchScope
     
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   type EvalMode
     = Clean
     | Contains
     | Effected
-
-  //-------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   type Tree
     // Simple
     = String of string
@@ -99,7 +99,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | Function of FunctionId * Tree
+    | Function of (int * int) option * FunctionId * Tree
     | Invoke of Tree * Tree list
 
     // Control Flow
@@ -129,7 +129,7 @@ module Ast =
     | Block of Tree list
     | Type of TypeTag
     
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   and [<CustomEquality>] [<CustomComparison>] Variable = {
     Name: string
     Type: TypeTag option
@@ -173,7 +173,7 @@ module Ast =
       InitToUndefined = false
     }
     
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   and Closure = {
     Name: string
     Index: int
@@ -189,7 +189,7 @@ module Ast =
       GlobalLevel = gl
     }
     
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   and Scope = {
     GlobalLevel: int
     ClosureLevel: int
@@ -202,6 +202,7 @@ module Ast =
     ScopeType: ScopeType
     Variables: Variable Set
     Closures: Closure Set
+    Functions: Map<string, Tree>
   } with
     member x.VariableCount = x.Variables.Count
 
@@ -274,6 +275,7 @@ module Ast =
       ScopeType = FunctionScope
       Variables = Set.empty
       Closures = Set.empty
+      Functions = Map.empty
     }
     static member NewFunction parms = {
       Scope.New with 
@@ -290,10 +292,10 @@ module Ast =
     }
 
 
-
-  //-------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   // ANALYZERS
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
         
   let private _walk f tree = 
     match tree with
@@ -326,7 +328,7 @@ module Ast =
     | InstanceOf(object', func) -> InstanceOf(f object', f func)
 
     //Functions
-    | Function(id, tree) -> Function(id, f tree) 
+    | Function(levels, id, tree) -> Function(levels, id, f tree) 
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
     | Return value -> Return(f value)
@@ -357,9 +359,8 @@ module Ast =
     | Var tree -> Var (f tree)
     | LocalScope(scope, body) -> LocalScope(scope, f body)
       
-
-
-  //-------------------------------------------------------------------------
+      
+  //----------------------------------------------------------------------------
   let varByName n (v:Variable) = n = v.Name
   let clsByName n (v:Closure) = n = v.Name
 
@@ -396,9 +397,8 @@ module Ast =
   let isCatchScope s =
     s.ScopeType = CatchScope
 
-
-
-  //-------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   let stripVarStatements tree =
     let sc = ref List.empty<Scope>
       
@@ -430,9 +430,8 @@ module Ast =
 
     analyze tree
 
-
-      
-  //-------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   let markClosedOverVars tree =
     let sc = ref List.empty
 
@@ -489,10 +488,9 @@ module Ast =
       | _ -> _walk mark tree
 
     mark tree
+
       
-
-
-  //-------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
   let calculateScopeLevels levels tree =
     //wl = WithLevel
     //gl = GlobalLevel
@@ -570,9 +568,8 @@ module Ast =
     | Some(gl, cl, ll) -> calculate 0 gl cl ll tree
     | None -> calculate 0 0 -1 -1 tree
 
-
-
-  //-------------------------------------------------------------------------
+    
+  //----------------------------------------------------------------------------
   let resolveClosures tree =
     let sc = ref List.empty<Scope>
 
@@ -591,8 +588,7 @@ module Ast =
         let closures = 
           sc |!> Seq.map (fun x -> 
                           x.Variables 
-                          |> Seq.map (fun v -> 
-                            v, x.GlobalLevel, x.ClosureLevel))
+                          |> Seq.map (fun v-> v, x.GlobalLevel, x.ClosureLevel))
              |> Seq.concat
              |> Seq.groupBy (fun (v, _, _) -> v.Name)
              |> Seq.map (fun (_, s) -> Seq.maxBy(fun (_, _, cl) -> cl) s)
@@ -633,30 +629,39 @@ module Ast =
 
     analyze tree
 
+    
+  //----------------------------------------------------------------------------
+  let hoistFunctions ast =
+    let sc = ref List.empty<Scope>
 
+    let rec hoist ast = 
+      match ast with
+      | LocalScope(scope, ast) when scope.ScopeType <> CatchScope ->
+        LocalScope(pushScopeAnd sc scope hoist ast)
 
-  //-------------------------------------------------------------------------
-  let expressionType tree =
-    match tree with
-    | Tree.Number _ -> Some TypeTags.Number
-    | Tree.Function (_, _) -> Some TypeTags.Function
-    | Tree.Object _ -> Some TypeTags.Object
-    | Tree.Binary (op, l, r) ->
-      match op with
-      | BinaryOp.BitShiftLeft -> Some TypeTags.Number
-      | BinaryOp.BitAnd -> Some TypeTags.Number
-      | _ -> None
-    | _ -> None
+      | Assign(Identifier name, Function(Some(_, _), id, ast)) ->
+        let scope = bottomScope sc
+        let levels = Some(scope.LocalLevel, scope.ClosureLevel)
+        let func = Function(levels, id, ast)
 
+        modifyScope (fun s -> 
+          {s with Functions=Map.add name func s.Functions}) sc
 
+        Pass
 
-  //-------------------------------------------------------------------------
+      | _ -> _walk hoist ast
+
+    hoist ast
+      
+
+  //----------------------------------------------------------------------------
   let applyAnalyzers tree levels =
     let analyzers = [
       stripVarStatements
       markClosedOverVars
       calculateScopeLevels levels
       resolveClosures
+      hoistFunctions
     ]
 
     List.fold (fun t f -> f t) tree analyzers
@@ -992,12 +997,13 @@ module Ast =
 
           let named = tok.ChildCount = 3
           let pc, bc = if named then (1, 2) else (0, 1)
+          let levels = if named then Some(-1, -1) else None
           let id = stream.Environment.nextFunctionId()
           let parms = [for x in children (child tok pc) -> text x]
           let scope = Scope.NewFunction parms
           let body = translate (child tok bc)
           let scope = LocalScope(scope, body)
-          let func = Tree.Function(id, scope)
+          let func = Tree.Function(levels, id, scope)
 
           // Source representation that is used 
           // in Function.prototype.toString

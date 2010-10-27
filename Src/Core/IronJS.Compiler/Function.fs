@@ -35,7 +35,7 @@ module Function =
     | _ -> Errors.topNodeInFunctionMustBeLocalScope()
     
   //----------------------------------------------------------------------------
-  let create ctx compiler id tree =
+  let create ctx compiler levels id tree =
     //Make sure a compiler exists for this function
     if Api.Environment.hasCompiler ctx.Target.Environment id |> not then
       (Api.Environment.addCompilerId 

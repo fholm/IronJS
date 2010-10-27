@@ -46,8 +46,10 @@ module Core =
     //Functions
     | Ast.Invoke(func, args)  -> Function.invoke ctx func args
     | Ast.New(func, args) -> Function.new' ctx func args
-    | Ast.Function(id, body) -> Function.create ctx compile id body
     | Ast.Return tree -> Function.return' ctx tree
+    | Ast.Function(levels, id, body) -> 
+      Function.create ctx compile levels id body
+
 
     //Control Flow
     | Ast.Switch(value, cases) -> ControlFlow.switch ctx value cases

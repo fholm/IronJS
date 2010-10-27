@@ -17,9 +17,6 @@ open IronJS.Api.Extensions
 open IronJS.Tests.Tools
 open FSKit.Assert
 
-IronJS.Debug.stringPrinters.Add (fun s -> System.Console.WriteLine s)
-IronJS.Debug.exprPrinters.Add (fun s -> Dlr.Utils.printDebugView s)
-
 test "12.2 Variable statement" (fun ctx ->
   same Undefined.Instance (ctx.ExecuteT<Undefined> "foo")
 
@@ -38,10 +35,30 @@ test "12.2 Variable statement" (fun ctx ->
 )
 
 test "12.5 The if Statement" (fun ctx ->
-  let result =
-    ctx.EvalInFuncT<double> @"
-      if(true) { return 1; } else { return 0; }
-    " |> ignore
-
+  let result = ctx.EvalInFuncT<double> "if(true) {return 1} else{return 0}"
   equal 1.0 result
+
+  let result = ctx.EvalInFuncT<double> "if(false) {return 1} else{return 0}"
+  equal 0.0 result
+
+  let result = ctx.EvalInFuncT<double> "if(1) {return 1} else{return 0}"
+  equal 1.0 result
+
+  let result = ctx.EvalInFuncT<double> "if(0) {return 1} else{return 0}"
+  equal 0.0 result
+
+  let result = ctx.EvalInFuncT<double> "if('foo') {return 1} else{return 0}"
+  equal 1.0 result
+
+  let result = ctx.EvalInFuncT<double> "if('') {return 1} else{return 0}"
+  equal 0.0 result
+
+  let result = ctx.EvalInFuncT<double> "if({}) {return 1} else{return 0}"
+  equal 1.0 result
+
+  let result = ctx.EvalInFuncT<double> "if(null) {return 1} else{return 0}"
+  equal 0.0 result
+
+  let result = ctx.EvalInFuncT<double> "if(undefined){return 1} else{return 0}"
+  equal 0.0 result
 )

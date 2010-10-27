@@ -63,3 +63,9 @@ test "11.2.3 Function Calls" (fun ctx ->
   let result = ctx.ExecuteT<IjsObj> "(function(){ return this; })();"
   same result ctx.Environment.Globals
 )
+
+test "11.2.3 Function Closures" (fun ctx ->
+  let result = ctx.ExecuteT<double> @"
+      
+    "
+)

@@ -12,10 +12,11 @@
 
 open IronJS
 open IronJS.Aliases
-open IronJS.Tests
 open IronJS.Api.Extensions
-open IronJS.Tests.Tools
-open FSKit.Assert
+open FSKit.Testing.Assert
+
+let test, clean, state, report = 
+  FSKit.Testing.createTesters (fun () -> IronJS.Hosting.Context.Create())
 
 test "12.2 Variable statement" (fun ctx ->
   same Undefined.Instance (ctx.ExecuteT<Undefined> "foo")
@@ -158,3 +159,5 @@ test "12.8 The break Statement" (fun ctx ->
   ")
 
 )
+
+report()

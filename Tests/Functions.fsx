@@ -8,18 +8,18 @@
 #r @"../Src/Core/IronJS.Compiler/bin/Debug/IronJS.Compiler.dll"
 #r @"../Src/Core/IronJS.Runtime/bin/Debug/IronJS.Runtime.dll"
 
-#load "Tests.Tools.fs"
-
 open IronJS
 open IronJS.Api.Extensions
 open IronJS.Aliases
-open IronJS.Tests.Tools
-open FSKit.Assert
+open FSKit.Testing.Assert
+
+let test, clean, state, report = 
+  FSKit.Testing.createTesters (fun () -> IronJS.Hosting.Context.Create())
 
 test "13.2 Creating Function Objects" (fun ctx ->
   ctx.Execute "var foo = function(a) { }" |> ignore
 
-  let foo = ctx.GetGlobalT<IronJS.Function> "foo"
+  let foo = ctx.GetGlobalT<IjsFunc> "foo"
   let prototype = foo.get<IjsObj> "prototype"
 
   isT<IjsFunc> foo
@@ -34,21 +34,21 @@ test "11.2.2 The new Operator" (fun ctx ->
   ctx.Execute "var foo = function(a, b) { this.a=a; this.b=b; }" |> ignore
 
   let foo = ctx.GetGlobalT<IjsFunc> "foo"
-  let object' = ctx.ExecuteT<IjsObj> "var obj = new foo(1, 'test')"
+  let obj = ctx.ExecuteT<IjsObj> "var obj = new foo(1, 'test')"
   let prototype = foo.get<IjsObj> "prototype"
 
-  isT<IjsObj> object'
-  same object'.Prototype prototype
-  equal 1.0 (object'.get<double> "a")
-  equal "test" (object'.get<string> "b")
+  isT<IjsObj> obj
+  same obj.Prototype prototype
+  equal 1.0 (obj.get<double> "a")
+  equal "test" (obj.get<string> "b")
   
   ctx.Execute "foo.prototype.bar = 1" |> ignore
-  equal 1.0 (prototype.get<double> "bar");
-  equal (object'.get<double> "bar") (prototype.get<double> "bar")
+  equal 0.0 (prototype.get<double> "bar");
+  equal (obj.get<double> "bar") (prototype.get<double> "bar")
 
   ctx.Execute "obj.bar = 2" |> ignore
   equal 1.0 (prototype.get<double> "bar");
-  equal 2.0 (object'.get<double> "bar");
+  equal 2.0 (obj.get<double> "bar");
 )
 
 test "11.2.3 Function Calls" (fun ctx ->
@@ -63,3 +63,5 @@ test "11.2.3 Function Calls" (fun ctx ->
   let result = ctx.ExecuteT<IjsObj> "(function(){ return this; })();"
   same result ctx.Environment.Globals
 )
+
+report()

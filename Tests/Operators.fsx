@@ -12,10 +12,11 @@
 
 open IronJS
 open IronJS.Aliases
-open IronJS.Tests.Tools
-
-open FSKit.Assert
+open FSKit.Testing.Assert
 open Microsoft.VisualStudio.TestTools.UnitTesting
+
+let test, clean, state, report = 
+  FSKit.Testing.createTesters (fun () -> IronJS.Hosting.Context.Create())
 
 test "11.3 Postfix Expressions" (fun ctx ->
   equal 0.0 (ctx.ExecuteT<double> "var i = 0; i++;")
@@ -432,3 +433,5 @@ test "11.12 Conditional Operator ( ?: )" (fun ctx ->
   Assert.AreEqual(1.0, ctx.ExecuteT<double>("'foo' ? 1 : 0"));
   Assert.AreEqual(0.0, ctx.ExecuteT<double>("'' ? 1 : 0"));
 )
+
+report()

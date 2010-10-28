@@ -134,11 +134,10 @@ module Ast =
     Name: string
     Type: TypeTag option
     Index: int
+    Indexes : int Set
     ParamIndex: int option
-    ForceDynamic: bool
     AssignedFrom: Tree Set
     IsClosedOver: bool
-    InitToUndefined: bool
   } with
 
     interface System.IComparable with
@@ -158,19 +157,16 @@ module Ast =
     member x.AddAssignedFrom tree = 
       {x with AssignedFrom = x.AssignedFrom.Add tree}
 
-    static member NewParam n i = {Variable.New n i with ParamIndex=Some(i)}
-    static member NewTyped n i type' = 
-      {Variable.New n i with Type = Some(type')}
-
+    static member NewParam n i = {Variable.New n i with ParamIndex=Some i}
+    static member NewTyped n i type' = {Variable.New n i with Type=Some type'}
     static member New name index = {
       Name = name
       Type = None
       Index = index
+      Indexes = Set.empty
       ParamIndex = None
       AssignedFrom = Set.empty
-      ForceDynamic = false
       IsClosedOver = false
-      InitToUndefined = false
     }
     
   //----------------------------------------------------------------------------

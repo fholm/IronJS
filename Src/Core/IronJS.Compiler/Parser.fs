@@ -99,7 +99,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | Function of (int * int) option * FunctionId * Tree
+    | Function of string option * FunctionId * Tree
     | Invoke of Tree * Tree list
 
     // Control Flow
@@ -134,7 +134,6 @@ module Ast =
     Name: string
     Type: TypeTag option
     Index: int
-    Indexes : int Set
     ParamIndex: int option
     AssignedFrom: Tree Set
     IsClosedOver: bool
@@ -143,13 +142,16 @@ module Ast =
     interface System.IComparable with
       member x.CompareTo y =
         match y with
-        | :? Variable as y -> compare x.Name y.Name
+        | :? Variable as y -> 
+          let cmp = compare x.Name y.Name
+          if cmp = 0 then compare x.Index y.Index else cmp
+
         | _ -> invalidArg "y" "Can't compare objects of different types"
         
     override x.GetHashCode () = x.Name.GetHashCode()
     override x.Equals (y:obj) =
       match y with
-      | :? Variable as y -> x.Name = y.Name
+      | :? Variable as y -> x.Name = y.Name && x.Index = y.Index
       | _ -> invalidArg "y" "Can't compare objects of different types"
 
     member x.IsParameter = x.ParamIndex <> None
@@ -163,7 +165,6 @@ module Ast =
       Name = name
       Type = None
       Index = index
-      Indexes = Set.empty
       ParamIndex = None
       AssignedFrom = Set.empty
       IsClosedOver = false
@@ -635,10 +636,10 @@ module Ast =
       | LocalScope(scope, ast) when scope.ScopeType <> CatchScope ->
         LocalScope(pushScopeAnd sc scope hoist ast)
 
-      | Assign(Identifier name, Function(Some(_, _), id, ast)) ->
+      | Function(Some name, id, ast) ->
         let scope = bottomScope sc
         let levels = Some(scope.LocalLevel, scope.ClosureLevel)
-        let func = Function(levels, id, ast)
+        let func = Function(Some name, id, ast)
 
         modifyScope (fun s -> 
           {s with Functions=Map.add name func s.Functions}) sc
@@ -678,7 +679,10 @@ module Ast =
       type Context = {
         Environment : IjsEnv
         TokenStream : CommonTokenStream
-      }
+        Translator : Context -> AntlrToken -> Tree
+      } with 
+        member x.Translate token =
+          x.Translator x token
 
       let private _funIdCounter = ref 0L
       let private _funId () = 
@@ -702,81 +706,78 @@ module Ast =
           
       //------------------------------------------------------------------------
       let private text (tok:AntlrToken) = tok.Text
-      
+
       //------------------------------------------------------------------------
       let private jsString (tok:AntlrToken) = 
         let str = text tok
         str.Substring(1, str.Length - 2)
         
       //------------------------------------------------------------------------
-      let rec private binary stream op tok =
-        let translate = translate stream
-        let left = translate (child tok 0)
-        let right = translate (child tok 1)
-        Binary(op, left, right)
+      module private Translators = 
         
-      //------------------------------------------------------------------------
-      and private for' stream label tok =
-        let type' = child tok 0 
-        let translate = translate stream
+        //----------------------------------------------------------------------
+        let binary (ctx:Context) op tok =
+          let left = ctx.Translate (child tok 0)
+          let right = ctx.Translate (child tok 1)
+          Binary(op, left, right)
+        
+        //----------------------------------------------------------------------
+        let for' (ctx:Context) label tok =
+          let type' = child tok 0 
 
-        match type'.Type with
-        | ES3Parser.FORSTEP ->
-          let init = translate (child type' 0)
-          let test = translate (child type' 1)
-          let incr = translate (child type' 2)
-          For(label, init, test, incr, translate (child tok 1))
+          match type'.Type with
+          | ES3Parser.FORSTEP ->
+            let init = ctx.Translate (child type' 0)
+            let test = ctx.Translate (child type' 1)
+            let incr = ctx.Translate (child type' 2)
+            For(label, init, test, incr, ctx.Translate (child tok 1))
 
-        | ES3Parser.FORITER -> 
-          let name = translate (child type' 0)
-          let init = translate (child type' 1)
-          let body = translate (child tok 1)
-          ForIn(label, name, init, body)
+          | ES3Parser.FORITER -> 
+            let name = ctx.Translate (child type' 0)
+            let init = ctx.Translate (child type' 1)
+            let body = ctx.Translate (child tok 1)
+            ForIn(label, name, init, body)
 
-        | _ -> Errors.compiler "Token should be FORSTEP or FORITER"
+          | _ -> Errors.compiler "Token should be FORSTEP or FORITER"
+        
+        //----------------------------------------------------------------------
+        let while' (ctx:Context) label tok =
+          While(label, ctx.Translate (child tok 0), ctx.Translate (child tok 1))
+        
+        //----------------------------------------------------------------------
+        let doWhile (ctx:Context) label tok =
+          DoWhile(label, 
+            ctx.Translate (child tok 0), ctx.Translate (child tok 1))
+        
+        //----------------------------------------------------------------------
+        let binaryAsn (ctx:Context) op tok =
+          let target = ctx.Translate (child tok 0)
+          let op = Binary(op, target, ctx.Translate (child tok 1))
+          Assign(target, op)
+        
+        //----------------------------------------------------------------------
+        let unary (ctx:Context) op tok =
+          Unary(op, ctx.Translate (child tok 0))
         
       //------------------------------------------------------------------------
-      and private while' stream label tok =
-        let translate = translate stream
-        While(label, translate (child tok 0), translate (child tok 1))
-        
-      //------------------------------------------------------------------------
-      and private doWhile stream label tok =
-        let translate = translate stream
-        DoWhile(label, translate (child tok 0), translate (child tok 1))
-        
-      //------------------------------------------------------------------------
-      and private binaryAsn stream op tok =
-        let translate = translate stream
-        let target = translate (child tok 0)
-        let op = Binary(op, target, translate (child tok 1))
-        Assign(target, op)
-        
-      //------------------------------------------------------------------------
-      and private unary stream op tok =
-        Unary(op, translate stream (child tok 0))
-        
-      //------------------------------------------------------------------------
-      and translate (stream:Context) (tok:AntlrToken) =
-        let translate = translate stream
-
+      let translate (ctx:Context) (tok:AntlrToken) =
         if tok = null then Pass else
         match tok.Type with
         // Nil
-        | 0 when tok.IsNil -> Block [for x in children tok -> translate x]
+        | 0 when tok.IsNil -> Block [for x in children tok -> ctx.Translate x]
 
         // { }
-        | ES3Parser.BLOCK -> Block [for x in children tok -> translate x]
+        | ES3Parser.BLOCK -> Block [for x in children tok -> ctx.Translate x]
 
         // var x
         | ES3Parser.VAR   -> 
           if tok.ChildCount > 1 
-            then Block [for x in children tok -> Var(translate x)]
-            else Var(translate (child tok 0))
+            then Block [for x in children tok -> Var(ctx.Translate x)]
+            else Var(ctx.Translate (child tok 0))
 
         // x = 1
         | ES3Parser.ASSIGN -> 
-          Assign(translate (child tok 0), translate (child tok 1))
+          Assign(ctx.Translate (child tok 0), ctx.Translate (child tok 1))
 
         // true
         | ES3Parser.TRUE -> Boolean true
@@ -806,165 +807,190 @@ module Ast =
         // x(y)
         | ES3Parser.CALL -> 
           let child0 = child tok 0
-          let args = [for x in children (child tok 1) -> translate x]
+          let args = [for x in children (child tok 1) -> ctx.Translate x]
           if child0.Type = ES3Parser.NEW 
-            then New(translate (child child0 0), args)
-            else Invoke(translate child0, args)
+            then New(ctx.Translate (child child0 0), args)
+            else Invoke(ctx.Translate child0, args)
 
         // x.y
         | ES3Parser.BYFIELD -> 
-          Property (translate (child tok 0), text (child tok 1))
+          Property (ctx.Translate (child tok 0), text (child tok 1))
 
         // return x
-        | ES3Parser.RETURN -> Return (translate (child tok 0))
+        | ES3Parser.RETURN -> Return (ctx.Translate (child tok 0))
 
         // this
         | ES3Parser.THIS -> This
 
         // {x: 1}
         | ES3Parser.OBJECT -> 
-          Tree.Object [for x in children tok -> translate x]
+          Tree.Object [for x in children tok -> ctx.Translate x]
 
         // [1, 2, 3]
         | ES3Parser.ARRAY ->
-          Tree.Array [for x in children tok -> translate (child x 0)]
+          Tree.Array [for x in children tok -> ctx.Translate (child x 0)]
 
         // try { }
         | ES3Parser.TRY -> 
           let finally' =
             if tok.ChildCount = 3 
-              then Some(translate (child tok 2))
+              then Some(ctx.Translate (child tok 2))
               else None
 
-          Try(translate (child tok 0), [translate (child tok 1)], finally')
+          Try(ctx.Translate (child tok 0), 
+            [ctx.Translate (child tok 1)], finally')
 
         // throw
-        | ES3Parser.THROW -> Throw(translate (child tok 0))
+        | ES3Parser.THROW -> Throw(ctx.Translate (child tok 0))
 
         // finally { }
-        | ES3Parser.FINALLY -> Finally(translate (child tok 0))
+        | ES3Parser.FINALLY -> Finally(ctx.Translate (child tok 0))
 
         // x[0]
         | ES3Parser.BYINDEX -> 
-          Index(translate (child tok 0), translate (child tok 1))
+          Index(ctx.Translate (child tok 0), ctx.Translate (child tok 1))
 
         // delete x.y
-        | ES3Parser.DELETE -> Unary(UnaryOp.Delete, translate (child tok 0))
+        | ES3Parser.DELETE -> Unary(UnaryOp.Delete, ctx.Translate (child tok 0))
 
         // typeof x
-        | ES3Parser.TYPEOF -> Unary(UnaryOp.TypeOf, translate (child tok 0))
+        | ES3Parser.TYPEOF -> Unary(UnaryOp.TypeOf, ctx.Translate (child tok 0))
 
         // void foo;
         | ES3Parser.VOID ->
-          Unary(UnaryOp.Void, translate (child tok 0))
+          Unary(UnaryOp.Void, ctx.Translate (child tok 0))
 
         // null
         | ES3Parser.NULL -> Null
 
         // {x: 1}
         | ES3Parser.NAMEDVALUE -> 
-          Assign(String(text (child tok 0)), translate (child tok 1))
+          Assign(String(text (child tok 0)), ctx.Translate (child tok 1))
 
         // if { } else { }
         | ES3Parser.IF ->
-          let test = translate (child tok 0)
-          let ifTrue = translate (child tok 1)
+          let test = ctx.Translate (child tok 0)
+          let ifTrue = ctx.Translate (child tok 1)
           let ifFalse =
             if tok.ChildCount > 2 
-              then Some (translate (child tok 2))
+              then Some (ctx.Translate (child tok 2))
               else None
 
           IfElse(test, ifTrue, ifFalse)
 
         // x = y ? t : f
         | ES3Parser.QUE ->
-          let test = translate (child tok 0)
-          let ifTrue = translate (child tok 1)
-          let ifFalse = translate (child tok 2)
+          let test = ctx.Translate (child tok 0)
+          let ifTrue = ctx.Translate (child tok 1)
+          let ifFalse = ctx.Translate (child tok 2)
           Ternary(test, ifTrue, ifFalse)
           
         // (x)
         | ES3Parser.PAREXPR
-        | ES3Parser.EXPR -> translate (child tok 0) // (foo)
+        | ES3Parser.EXPR -> ctx.Translate (child tok 0) // (foo)
 
         // Math operators
-        | ES3Parser.ADD -> binary stream BinaryOp.Add tok // x + y
-        | ES3Parser.ADDASS -> binaryAsn stream BinaryOp.Add tok // x += y
-        | ES3Parser.SUB -> binary stream BinaryOp.Sub tok // x - y
-        | ES3Parser.SUBASS -> binaryAsn stream BinaryOp.Sub tok // x -= y
-        | ES3Parser.DIV -> binary stream BinaryOp.Div tok // x / y
-        | ES3Parser.DIVASS -> binaryAsn stream BinaryOp.Div tok // x /= y
-        | ES3Parser.MUL -> binary stream BinaryOp.Mul tok // x * y
-        | ES3Parser.MULASS -> binaryAsn stream BinaryOp.Mul tok // x *= y
-        | ES3Parser.MOD -> binary stream BinaryOp.Mod tok // x % y
-        | ES3Parser.MODASS -> binaryAsn stream BinaryOp.Mod tok // x %= y
+        | ES3Parser.ADD -> Translators.binary ctx BinaryOp.Add tok // x + y
+        | ES3Parser.ADDASS -> 
+          Translators.binaryAsn ctx BinaryOp.Add tok // x += y
+
+        | ES3Parser.SUB -> Translators.binary ctx BinaryOp.Sub tok // x - y
+        | ES3Parser.SUBASS -> 
+          Translators.binaryAsn ctx BinaryOp.Sub tok // x -= y
+
+        | ES3Parser.DIV -> Translators.binary ctx BinaryOp.Div tok // x / y
+        | ES3Parser.DIVASS -> 
+          Translators.binaryAsn ctx BinaryOp.Div tok // x /= y
+
+        | ES3Parser.MUL -> Translators.binary ctx BinaryOp.Mul tok // x * y
+        | ES3Parser.MULASS -> 
+          Translators.binaryAsn ctx BinaryOp.Mul tok // x *= y
+
+        | ES3Parser.MOD -> Translators.binary ctx BinaryOp.Mod tok // x % y
+        | ES3Parser.MODASS -> 
+          Translators.binaryAsn ctx BinaryOp.Mod tok // x %= y
 
         // Bit operators
-        | ES3Parser.AND -> binary stream BinaryOp.BitAnd tok // x & y
-        | ES3Parser.ANDASS -> binaryAsn stream BinaryOp.BitAnd tok // x &= y
-        | ES3Parser.OR  -> binary stream BinaryOp.BitOr tok // x | y
-        | ES3Parser.ORASS -> binaryAsn stream BinaryOp.BitOr tok // x |= y
-        | ES3Parser.XOR -> binary stream BinaryOp.BitXor tok // x ^ y
-        | ES3Parser.XORASS -> binaryAsn stream BinaryOp.BitXor tok // x ^= y
-        | ES3Parser.SHL -> binary stream BinaryOp.BitShiftLeft tok // x << y
+        | ES3Parser.AND -> Translators.binary ctx BinaryOp.BitAnd tok // x & y
+        | ES3Parser.ANDASS -> 
+          Translators.binaryAsn ctx BinaryOp.BitAnd tok // x &= y
+
+        | ES3Parser.OR  -> Translators.binary ctx BinaryOp.BitOr tok // x | y
+        | ES3Parser.ORASS -> 
+          Translators.binaryAsn ctx BinaryOp.BitOr tok // x |= y
+
+        | ES3Parser.XOR -> Translators.binary ctx BinaryOp.BitXor tok // x ^ y
+        | ES3Parser.XORASS -> 
+          Translators.binaryAsn ctx BinaryOp.BitXor tok // x ^= y
+
+        | ES3Parser.SHL -> 
+          Translators.binary ctx BinaryOp.BitShiftLeft tok // x << y
+
         | ES3Parser.SHLASS -> 
-          binaryAsn stream BinaryOp.BitShiftLeft tok // x <<= y
+          Translators.binaryAsn ctx BinaryOp.BitShiftLeft tok // x <<= y
 
-        | ES3Parser.SHR -> binary stream BinaryOp.BitShiftRight tok // x >> y
+        | ES3Parser.SHR -> 
+          Translators.binary ctx BinaryOp.BitShiftRight tok // x >> y
+
         | ES3Parser.SHRASS -> 
-          binaryAsn stream BinaryOp.BitShiftRight tok // x >>= y
+          Translators.binaryAsn ctx BinaryOp.BitShiftRight tok // x >>= y
 
-        | ES3Parser.SHU -> binary stream BinaryOp.BitUShiftRight tok // x >>> y
+        | ES3Parser.SHU -> 
+          Translators.binary ctx BinaryOp.BitUShiftRight tok // x >>> y
+
         | ES3Parser.SHUASS -> 
-          binaryAsn stream BinaryOp.BitUShiftRight tok // x >>>= y
+          Translators.binaryAsn ctx BinaryOp.BitUShiftRight tok // x >>>= y
 
         // Logical operators
-        | ES3Parser.EQ -> binary stream BinaryOp.Eq tok // x == y
-        | ES3Parser.NEQ -> binary stream BinaryOp.NotEq tok // x != y
-        | ES3Parser.SAME -> binary stream BinaryOp.Same tok // x === y
-        | ES3Parser.NSAME -> binary stream BinaryOp.NotSame tok // x !== y
-        | ES3Parser.LT -> binary stream BinaryOp.Lt tok // x < y
-        | ES3Parser.LTE -> binary stream BinaryOp.LtEq tok // x <= y
-        | ES3Parser.GT -> binary stream BinaryOp.Gt tok // x > y
-        | ES3Parser.GTE -> binary stream BinaryOp.GtEq tok // x >= y
-        | ES3Parser.LAND -> binary stream BinaryOp.And  tok // x && y
-        | ES3Parser.LOR -> binary stream BinaryOp.Or tok // x || y
+        | ES3Parser.EQ -> Translators.binary ctx BinaryOp.Eq tok // x == y
+        | ES3Parser.NEQ -> Translators.binary ctx BinaryOp.NotEq tok // x != y
+        | ES3Parser.SAME -> Translators.binary ctx BinaryOp.Same tok // x === y
+        | ES3Parser.NSAME -> 
+          Translators.binary ctx BinaryOp.NotSame tok // x !== y
+
+        | ES3Parser.LT -> Translators.binary ctx BinaryOp.Lt tok // x < y
+        | ES3Parser.LTE -> Translators.binary ctx BinaryOp.LtEq tok // x <= y
+        | ES3Parser.GT -> Translators.binary ctx BinaryOp.Gt tok // x > y
+        | ES3Parser.GTE -> Translators.binary ctx BinaryOp.GtEq tok // x >= y
+        | ES3Parser.LAND -> Translators.binary ctx BinaryOp.And  tok // x && y
+        | ES3Parser.LOR -> Translators.binary ctx BinaryOp.Or tok // x || y
 
         // Unary operators
-        | ES3Parser.PINC -> unary stream UnaryOp.PostInc tok // x++
-        | ES3Parser.PDEC -> unary stream UnaryOp.PostDec tok // x--
-        | ES3Parser.INC -> unary stream UnaryOp.Inc tok // ++x
-        | ES3Parser.DEC -> unary stream UnaryOp.Dec tok // --x
-        | ES3Parser.NOT -> unary stream UnaryOp.Not tok // !x
-        | ES3Parser.INV -> unary stream UnaryOp.BitCmpl tok // ~x
-        | ES3Parser.NEG -> unary stream UnaryOp.Minus tok // -x
-        | ES3Parser.POS -> unary stream UnaryOp.Plus tok // +x
+        | ES3Parser.PINC -> Translators.unary ctx UnaryOp.PostInc tok // x++
+        | ES3Parser.PDEC -> Translators.unary ctx UnaryOp.PostDec tok // x--
+        | ES3Parser.INC -> Translators.unary ctx UnaryOp.Inc tok // ++x
+        | ES3Parser.DEC -> Translators.unary ctx UnaryOp.Dec tok // --x
+        | ES3Parser.NOT -> Translators.unary ctx UnaryOp.Not tok // !x
+        | ES3Parser.INV -> Translators.unary ctx UnaryOp.BitCmpl tok // ~x
+        | ES3Parser.NEG -> Translators.unary ctx UnaryOp.Minus tok // -x
+        | ES3Parser.POS -> Translators.unary ctx UnaryOp.Plus tok // +x
 
         // x in y
-        | ES3Parser.IN -> In(translate (child tok 0), translate (child tok 1))
+        | ES3Parser.IN -> 
+          In(ctx.Translate (child tok 0), ctx.Translate (child tok 1))
 
         // x instanceof y
         | ES3Parser.INSTANCEOF -> 
-          InstanceOf(translate (child tok 0), translate (child tok 1))
+          InstanceOf(ctx.Translate (child tok 0), ctx.Translate (child tok 1))
 
         // for(;;) 
-        | ES3Parser.FOR -> for' stream None tok
+        | ES3Parser.FOR -> Translators.for' ctx None tok
 
         // while() {}
-        | ES3Parser.WHILE -> while' stream None tok
+        | ES3Parser.WHILE -> Translators.while' ctx None tok
 
         // do { } while ();
-        | ES3Parser.DO -> doWhile stream None tok
+        | ES3Parser.DO -> Translators.doWhile ctx None tok
           
         // catch() { }
         | ES3Parser.CATCH ->        
           let varName = text (child tok 0)
-          let body = translate (child tok 1)
+          let body = ctx.Translate (child tok 1)
           Catch(LocalScope(Scope.NewCatch varName, body))
 
         // with() { }
         | ES3Parser.WITH -> 
-          With(translate (child tok 0), translate (child tok 1))
+          With(ctx.Translate (child tok 0), ctx.Translate (child tok 1))
 
         // break
         | ES3Parser.BREAK ->
@@ -983,40 +1009,36 @@ module Ast =
           let child1 = child tok 1
           let label = text (child tok 0)
           match child1.Type with
-          | ES3Parser.FOR -> for' stream (Some label) child1
-          | ES3Parser.WHILE -> while' stream (Some label) child1
-          | ES3Parser.DO -> doWhile stream (Some label) child1
-          | _ -> Label(label, translate child1)
+          | ES3Parser.FOR -> Translators.for' ctx (Some label) child1
+          | ES3Parser.WHILE -> Translators.while' ctx (Some label) child1
+          | ES3Parser.DO -> Translators.doWhile ctx (Some label) child1
+          | _ -> Label(label, ctx.Translate child1)
 
         // function() {}
         | ES3Parser.FUNCTION -> 
 
           let named = tok.ChildCount = 3
           let pc, bc = if named then (1, 2) else (0, 1)
-          let levels = if named then Some(-1, -1) else None
-          let id = stream.Environment.nextFunctionId()
+          let id = ctx.Environment.nextFunctionId()
           let parms = [for x in children (child tok pc) -> text x]
           let scope = Scope.NewFunction parms
-          let body = translate (child tok bc)
+          let body = ctx.Translate (child tok bc)
           let scope = LocalScope(scope, body)
-          let func = Tree.Function(levels, id, scope)
 
           // Source representation that is used 
           // in Function.prototype.toString
           let source = 
-            stream.TokenStream.GetTokens(
+            ctx.TokenStream.GetTokens(
               tok.TokenStartIndex, tok.TokenStopIndex)
             |> Seq.cast<CommonToken> 
             |> Seq.map (fun x -> x.Text)
             |> String.concat ""
 
           // Add Source to environment
-          stream.Environment.FunctionSourceStrings.Add(id, source)
+          ctx.Environment.FunctionSourceStrings.Add(id, source)
 
-          if not named then func
-          else
-            let name = text (child tok 0)
-            Var(Assign(Identifier name, func)) 
+          let name = if named then Some(text (child tok 0)) else None
+          Tree.Function(name, id, scope)
 
         // switch() {}
         | ES3Parser.SWITCH ->
@@ -1031,7 +1053,7 @@ module Ast =
               
               match case.Type with
               | ES3Parser.DEFAULT -> 
-                let default' = translate (child case 0)
+                let default' = ctx.Translate (child case 0)
                 [], Default default' :: cases
 
               | ES3Parser.CASE -> 
@@ -1041,20 +1063,20 @@ module Ast =
                 | [] -> Errors.parser "Empty list"
                 | test::[] -> test :: tests, cases
                 | test::body ->
-                  let body = Block [for x in body -> translate x]
-                  let tests = [for t in test :: tests -> translate t]
+                  let body = Block [for x in body -> ctx.Translate x]
+                  let tests = [for t in test :: tests -> ctx.Translate t]
                   [], Case(tests, body) :: cases
 
               | _ -> Errors.parser "Should be CASE or DEFAULT"
 
             ) ([], []) cases |> snd
 
-          Switch(translate value, cases)
+          Switch(ctx.Translate value, cases)
 
         | _ -> 
           match tok with
           | :? CommonErrorNode as error ->
-            let errorTok = stream.TokenStream.Get(error.TokenStopIndex)
+            let errorTok = ctx.TokenStream.Get(error.TokenStopIndex)
             let line = errorTok.Line 
             let col = errorTok.CharPositionInLine + 1
             failwithf "Syntax Error at line %d after column %d" line col
@@ -1070,7 +1092,12 @@ module Ast =
         let tokenStream = new Antlr.Runtime.CommonTokenStream(lexer)
         let parser = new Xebic.ES3.ES3Parser(tokenStream)
         let program = parser.program()
-        let context = {Environment=env; TokenStream=tokenStream}
+        let context = {
+          Environment = env
+          TokenStream = tokenStream
+          Translator = translate
+        }
+
         translate context (program.Tree :?> AntlrToken)
         
       //------------------------------------------------------------------------

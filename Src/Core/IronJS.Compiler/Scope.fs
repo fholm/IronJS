@@ -61,9 +61,7 @@ module Scope =
       nonParams |> Seq.map (fun var ->
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
-        match var.Type with
-        | None -> Expr.assignBoxValue variable Expr.undefined
-        | Some tc -> Expr.setBoxType variable tc)
+        Expr.assignBoxValue variable Expr.undefined)
       
     //--------------------------------------------------------------------------
     let initVariables ctx (vars:Ast.Variable Set) =

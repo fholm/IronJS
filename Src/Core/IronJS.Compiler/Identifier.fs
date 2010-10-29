@@ -51,7 +51,7 @@ module Identifier =
           (ctx.Scope.LocalLevel)
         )
 
-    Some(expr, var.Index, scope.GlobalLevel, var.Type)
+    Some(expr, var.Index, scope.GlobalLevel, None)
     
   //----------------------------------------------------------------------------
   let isGlobal ctx name =

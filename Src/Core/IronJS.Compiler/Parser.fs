@@ -128,16 +128,30 @@ module Ast =
     | Identifier of string
     | Block of Tree list
     | Type of TypeTag
+
+    
+  //----------------------------------------------------------------------------
+  and VariableName = {
+    Name: string
+    Active: int
+    Indexes: VariableIndex array
+  }
+
+  and VariableIndex = {
+    Index: int
+    ParamIndex: int option
+    IsClosedOver: bool
+  }
     
   //----------------------------------------------------------------------------
   and [<CustomEquality>] [<CustomComparison>] Variable = {
     Name: string
-    Type: TypeTag option
     Index: int
     ParamIndex: int option
-    AssignedFrom: Tree Set
     IsClosedOver: bool
   } with
+
+    member x.IsParameter = x.ParamIndex <> None
 
     interface System.IComparable with
       member x.CompareTo y =
@@ -154,19 +168,11 @@ module Ast =
       | :? Variable as y -> x.Name = y.Name && x.Index = y.Index
       | _ -> invalidArg "y" "Can't compare objects of different types"
 
-    member x.IsParameter = x.ParamIndex <> None
-    member x.HasStaticType = x.Type <> None
-    member x.AddAssignedFrom tree = 
-      {x with AssignedFrom = x.AssignedFrom.Add tree}
-
-    static member NewParam n i = {Variable.New n i with ParamIndex=Some i}
-    static member NewTyped n i type' = {Variable.New n i with Type=Some type'}
+    static member NewParam n i = {Variable.New n i with Variable.ParamIndex=Some i}
     static member New name index = {
       Name = name
-      Type = None
       Index = index
       ParamIndex = None
-      AssignedFrom = Set.empty
       IsClosedOver = false
     }
     

@@ -10,6 +10,9 @@ module Ast =
 
   open System.Globalization
 
+
+    
+
   //----------------------------------------------------------------------------
   // Binary Operators
   //----------------------------------------------------------------------------
@@ -130,7 +133,7 @@ module Ast =
     | Type of TypeTag
     
   //----------------------------------------------------------------------------
-  and [<ReferenceEquality>] VariableGroup = {
+  and VariableGroup = {
     Name: string
     Active: int
     Indexes: VariableIndex array
@@ -145,7 +148,7 @@ module Ast =
     }
   
   //----------------------------------------------------------------------------
-  and [<ReferenceEquality>] VariableIndex = {
+  and VariableIndex = {
     Index: int
     ParamIndex: int option
     IsClosedOver: bool
@@ -157,7 +160,7 @@ module Ast =
     }
     
   //----------------------------------------------------------------------------
-  and [<CustomEquality>] [<CustomComparison>] Variable = {
+  and [<CustomEquality; CustomComparison>] Variable = {
     Name: string
     Index: int
     ParamIndex: int option
@@ -335,6 +338,17 @@ module Ast =
       ParamCount' = (defaultArg paramIndex currentIndex) + 1
       Variables' = Map.add name group scope.Variables'
     }
+
+  let hasVar' name (scope:Scope) =
+    scope.Variables' |> Map.containsKey name
+
+  let tryGetVar' name (scope:Scope) =
+    Map.tryFind name scope.Variables'
+
+  let getVar' name (scope:Scope) =
+    match scope |> tryGetVar' name with
+    | None -> failwithf "Missing variable %s" name
+    | Some index -> index
     
   //----------------------------------------------------------------------------
   let decrementLocalIndexes (scope:Scope) topIndex =
@@ -344,7 +358,7 @@ module Ast =
         {group with 
           Indexes = 
             group.Indexes |> Array.map (fun i -> 
-              if i.IsClosedOver || i.Index >= topIndex
+              if i.IsClosedOver || i.Index < topIndex
                 then i
                 else {i with Index=i.Index-1}
             ) 
@@ -366,7 +380,11 @@ module Ast =
         let localIndex = active.Index
         let closedOverIndex = scope.ClosedOverCount'
         let closedOver = {active with IsClosedOver=true; Index=closedOverIndex}
-        let scope = {scope with ClosedOverCount'=closedOverIndex+1}
+        let scope = {
+          scope with 
+            ClosedOverCount'=closedOverIndex+1
+            LocalCount'=scope.LocalCount'-1
+        }
         group.Indexes.[group.Active] <- closedOver
         decrementLocalIndexes scope localIndex
 
@@ -498,7 +516,8 @@ module Ast =
       | Var(Assign(Identifier name, rtree)) -> addVar name (Some rtree)
 
       | Function(Some name, _, _) ->
-        addVar name None
+        addVar name None |> ignore
+        tree
 
       | Identifier "arguments" ->
         if (bottomScope sc).ScopeType = FunctionScope then
@@ -537,6 +556,7 @@ module Ast =
       | Identifier name ->
         let refScope = sc |!> List.head
 
+        //OLD SCOPE
         if not (hasVar name refScope) then
           match sc |!> List.tryFind (hasVar name) with
           | None -> () //Global
@@ -562,6 +582,15 @@ module Ast =
                 if not var.IsClosedOver then
                   let varScope' = defScope.MakeVarClosedOver var
                   replaceScope defScope varScope' sc
+
+        //NEW SCOPE
+        match refScope |> tryGetVar' name with
+        | Some _ -> ()
+        | None ->
+          match !sc |> List.tryFind (hasVar' name) with
+          | None -> ()
+          | Some defScope ->
+            replaceScope defScope (closeOverVar defScope name) sc
 
         //Return Tree
         tree
@@ -722,12 +751,8 @@ module Ast =
 
       | Function(Some name, id, ast) ->
         let scope = bottomScope sc
-        let levels = Some(scope.LocalLevel, scope.ClosureLevel)
         let func = Function(Some name, id, ast)
-
-        modifyScope (fun s -> 
-          {s with Functions=Map.add name func s.Functions}) sc
-
+        modifyScope (fun s -> {s with Functions=s.Functions.Add(name,func)}) sc
         Pass
 
       | _ -> _walk hoist ast

@@ -12,6 +12,7 @@ module Global =
   let eval (target:Compiler.EvalTarget) =
     match target.Target.Tag with
     | TypeTags.String ->
+
       let tree = 
         Ast.LocalScope(
          {Ast.Scope.New with Closures=target.Closures}, 

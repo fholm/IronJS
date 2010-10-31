@@ -172,16 +172,14 @@ module Ast =
     interface System.IComparable with
       member x.CompareTo y =
         match y with
-        | :? Variable as y -> 
-          let cmp = compare x.Name y.Name
-          if cmp = 0 then compare x.Index y.Index else cmp
+        | :? Variable as y -> compare x.Name y.Name
 
         | _ -> invalidArg "y" "Can't compare objects of different types"
         
     override x.GetHashCode () = x.Name.GetHashCode()
     override x.Equals (y:obj) =
       match y with
-      | :? Variable as y -> x.Name = y.Name && x.Index = y.Index
+      | :? Variable as y -> x.Name = y.Name
       | _ -> invalidArg "y" "Can't compare objects of different types"
 
     static member NewParam n i = {Variable.New n i with Variable.ParamIndex=Some i}
@@ -196,14 +194,12 @@ module Ast =
   and Closure = {
     Name: string
     Index: int
-    Type: TypeTag option
     ClosureLevel: int
     GlobalLevel: int
   } with
     static member New n i cl gl = {
       Name  = n
       Index = i
-      Type = None
       ClosureLevel = cl
       GlobalLevel = gl
     }
@@ -217,7 +213,8 @@ module Ast =
     EvalMode: EvalMode
     DynamicLookup: bool
     ContainsArguments: bool
-
+    
+    Closures': Map<string, Closure>
     Variables': Map<string, VariableGroup>
     LocalCount': int
     ParamCount': int
@@ -296,6 +293,7 @@ module Ast =
       DynamicLookup = false
       ContainsArguments = false
 
+      Closures' = Map.empty
       Variables' = Map.empty
       LocalCount' = 0
       ClosedOverCount' = 0
@@ -325,6 +323,9 @@ module Ast =
     if index.IsClosedOver then IsClosedOver else IsLocal
     
   //----------------------------------------------------------------------------
+  let hasVar' name (scope:Scope) = scope.Variables' |> Map.containsKey name
+  let getVar' name (scope:Scope) = scope.Variables' |> Map.find name
+  let tryGetVar' name (scope:Scope) = scope.Variables' |> Map.tryFind name 
   let addVar' (scope:Scope) name paramIndex =
     let index = VariableIndex.New scope.LocalCount' paramIndex
     let group = 
@@ -339,16 +340,19 @@ module Ast =
       Variables' = Map.add name group scope.Variables'
     }
 
-  let hasVar' name (scope:Scope) =
-    scope.Variables' |> Map.containsKey name
+  //----------------------------------------------------------------------------
+  let hasClosure name (scope:Scope) = scope.Closures' |> Map.containsKey name
+  let getClosure name (scope:Scope) = scope.Closures' |> Map.find name
+  let tryGetClosure name (scope:Scope) = scope.Closures' |> Map.tryFind name
+  let addClosure closure (scope:Scope) =
+    {scope with Closures' = scope.Closures' |> Map.add closure.Name closure}
 
-  let tryGetVar' name (scope:Scope) =
-    Map.tryFind name scope.Variables'
+  //----------------------------------------------------------------------------
+  let hasVariableOrClosure name (scope:Scope) =
+    (scope |> hasVar' name) || (scope |> hasClosure name)
 
-  let getVar' name (scope:Scope) =
-    match scope |> tryGetVar' name with
-    | None -> failwithf "Missing variable %s" name
-    | Some index -> index
+  let varIndex (group:VariableGroup) =
+    group.Indexes.[group.Active].Index
     
   //----------------------------------------------------------------------------
   let decrementLocalIndexes (scope:Scope) topIndex =
@@ -542,58 +546,18 @@ module Ast =
         LocalScope(pushScopeAnd sc s mark t)
 
       | Invoke(Identifier "eval", source::[]) ->
-
-        //Close over all variables in scope
-        sc := sc |!> List.map (fun x ->
-          Set.fold (fun (s:Scope) v -> 
-            if not v.IsClosedOver then s.MakeVarClosedOver v else s
-          ) x x.Variables
-        )
-
-        modifyScope (fun s -> {s with EvalMode=EvalMode.Contains}) sc
-        Eval source
+        failwith "Eval handling not implemented"
 
       | Identifier name ->
-        let refScope = sc |!> List.head
 
-        //OLD SCOPE
-        if not (hasVar name refScope) then
-          match sc |!> List.tryFind (hasVar name) with
-          | None -> () //Global
-          | Some defScope ->
-            //Make sure we don't close over variables
-            //in the same function scope but in different
-            //catch scopes
-            let continue' = 
-              match defScope.ScopeType with
-              | CatchScope -> 
-                sc |!> Seq.takeWhile isCatchScope
-                   |> Seq.exists (fun x -> x = defScope)
-                   |> not
-
-              | _ -> true
-
-            //If we're ok to continue set the variable
-            //as closed over in its defining scope
-            if continue' then
-              match defScope.TryGetVar name with
-              | None -> failwith "Que?"
-              | Some var ->
-                if not var.IsClosedOver then
-                  let varScope' = defScope.MakeVarClosedOver var
-                  replaceScope defScope varScope' sc
-
-        //NEW SCOPE
-        match refScope |> tryGetVar' name with
+        match !sc |> List.head |> tryGetVar' name with
         | Some _ -> ()
         | None ->
           match !sc |> List.tryFind (hasVar' name) with
           | None -> ()
-          | Some defScope ->
-            replaceScope defScope (closeOverVar defScope name) sc
+          | Some scope -> replaceScope scope (closeOverVar scope name) sc
 
-        //Return Tree
-        tree
+        Identifier name
 
       | _ -> _walk mark tree
 
@@ -609,15 +573,11 @@ module Ast =
     //dl = DynamicLookup
     //em = EvalMode
 
-    let getLocalLevel ll s = 
-      match s.ScopeType with
-      | FunctionScope -> 0
-      | CatchScope when s.LocalCount > 0 -> ll+1
-      | _ -> ll
-
+    let getLocalLevel ll s = 0
     let getGlobalLevel gl s = gl + 1
+
     let getClosureLevel cl (s:Scope) = 
-      if s.ClosedOverCount > 0 then cl+1 else cl
+      if s.ClosedOverCount' > 0 then cl+1 else cl
 
     let getDynamicLookup wl s (sc:Scope list ref) =
       wl > 0
@@ -683,61 +643,34 @@ module Ast =
   let resolveClosures tree =
     let sc = ref List.empty<Scope>
 
-    let hasVariable name (s:Scope) =
-      match s.TryGetVar name  with
-      | None -> s.TryGetCls name <> None
-      | _ -> true
-
-    let rec analyze tree =
+    let rec resolve tree =
       match tree with
-      | LocalScope(s, t) ->
-        LocalScope(pushScopeAnd sc s analyze t)
-
-      | Eval _ ->
-        
-        let closures = 
-          sc |!> Seq.map (fun x -> 
-                          x.Variables 
-                          |> Seq.map (fun v-> v, x.GlobalLevel, x.ClosureLevel))
-             |> Seq.concat
-             |> Seq.groupBy (fun (v, _, _) -> v.Name)
-             |> Seq.map (fun (_, s) -> Seq.maxBy(fun (_, _, cl) -> cl) s)
-             |> Seq.map (fun (v, gl, cl) -> Closure.New v.Name v.Index cl gl)
-             |> Set.ofSeq
-
-        modifyScope (fun s -> {s with Closures=closures}) sc
-
-        tree
-
+      | LocalScope(s, t) -> LocalScope(pushScopeAnd sc s resolve t)
+      | Eval _ -> failwith "Eval handling not implemented"
       | Identifier name ->
-        let refScope = List.head !sc
-        let hasVariable = hasVariable name
 
-        if not (hasVariable refScope) then
+        if List.head !sc |> hasVariableOrClosure name |> not then
 
-          match sc |!> List.tryFind (fun x -> hasVariable x) with
+          match sc |!> List.tryFind (hasVariableOrClosure name) with
           | None -> () //Global
-          | Some defScope ->
-
-            match defScope.TryGetVar name with
+          | Some scope ->
+            match scope |> tryGetVar' name with
             | None ->
-
-              match defScope.TryGetCls name with
+              match scope |> tryGetClosure name with
               | None -> failwith "Que?"
-              | Some cls -> modifyScope (fun (s:Scope) -> s.AddCls cls) sc
+              | Some cls -> modifyScope (addClosure cls) sc
 
             | Some var ->
-              if var.IsClosedOver then
-                let cl = defScope.ClosureLevel
-                let gl = defScope.GlobalLevel
-                let cls = Closure.New name var.Index cl gl
-                modifyScope (fun (s:Scope) -> s.AddCls cls) sc
+              let cl = scope.ClosureLevel
+              let gl = scope.GlobalLevel
+              let cls = Closure.New name (var |> varIndex) cl gl
+              modifyScope (addClosure cls) sc
 
-        tree
+        Identifier name
 
-      | _ -> _walk analyze tree
+      | _ -> _walk resolve tree
 
-    analyze tree
+    resolve tree
 
     
   //----------------------------------------------------------------------------

@@ -73,6 +73,11 @@ module Ast =
     | Effected
     
   //----------------------------------------------------------------------------
+  type LookupMode
+    = Static
+    | Dynamic
+    
+  //----------------------------------------------------------------------------
   type Tree
     // Simple
     = String of string
@@ -133,10 +138,10 @@ module Ast =
     | Type of TypeTag
     
   //----------------------------------------------------------------------------
-  and VariableGroup = {
+  and LocalGroup = {
     Name: string
     Active: int
-    Indexes: VariableIndex array
+    Indexes: LocalIndex array
   } with
     member x.addIndex index =
       {x with Indexes = Dlr.ArrayUtils.Append(x.Indexes, index)}
@@ -148,7 +153,7 @@ module Ast =
     }
   
   //----------------------------------------------------------------------------
-  and VariableIndex = {
+  and LocalIndex = {
     Index: int
     ParamIndex: int option
     IsClosedOver: bool
@@ -211,11 +216,12 @@ module Ast =
     LocalLevel: int
 
     EvalMode: EvalMode
+    LookupMode: LookupMode
     DynamicLookup: bool
     ContainsArguments: bool
     
     Closures': Map<string, Closure>
-    Variables': Map<string, VariableGroup>
+    Variables': Map<string, LocalGroup>
     LocalCount': int
     ParamCount': int
     ClosedOverCount': int
@@ -289,7 +295,8 @@ module Ast =
       ClosureLevel = -1
       LocalLevel = -1
 
-      EvalMode = Clean
+      EvalMode = EvalMode.Clean
+      LookupMode = LookupMode.Static
       DynamicLookup = false
       ContainsArguments = false
 
@@ -319,18 +326,14 @@ module Ast =
     }
     
   //----------------------------------------------------------------------------
-  let (|IsClosedOver|IsLocal|) (index:VariableIndex) =
-    if index.IsClosedOver then IsClosedOver else IsLocal
-    
-  //----------------------------------------------------------------------------
   let hasVar' name (scope:Scope) = scope.Variables' |> Map.containsKey name
   let getVar' name (scope:Scope) = scope.Variables' |> Map.find name
   let tryGetVar' name (scope:Scope) = scope.Variables' |> Map.tryFind name 
-  let addVar' (scope:Scope) name paramIndex =
-    let index = VariableIndex.New scope.LocalCount' paramIndex
+  let addVar' name paramIndex (scope:Scope) =
+    let index = LocalIndex.New scope.LocalCount' paramIndex
     let group = 
       match Map.tryFind name scope.Variables' with
-      | None -> VariableGroup.New name index
+      | None -> LocalGroup.New name index
       | Some name -> name.addIndex index
 
     let currentIndex = scope.ParamCount' - 1
@@ -348,10 +351,28 @@ module Ast =
     {scope with Closures' = scope.Closures' |> Map.add closure.Name closure}
 
   //----------------------------------------------------------------------------
-  let hasVariableOrClosure name (scope:Scope) =
+  type VariableOption 
+    = Global
+    | Local of LocalGroup
+    | Closure of Closure
+
+  let hasVariable name (scope:Scope) =
     (scope |> hasVar' name) || (scope |> hasClosure name)
 
-  let varIndex (group:VariableGroup) =
+  let getVariable name (scope:Scope) =
+    match scope |> tryGetVar' name with
+    | Some var -> Local var
+    | _ ->
+      match scope |> tryGetClosure name with
+      | Some cls -> Closure cls
+      | _ -> Global
+
+  let tryGetVariable name (scope:Scope) =
+    match scope |> getVariable name with
+    | Global -> None
+    | x -> (scope, x) |> Some
+
+  let varIndex (group:LocalGroup) =
     group.Indexes.[group.Active].Index
     
   //----------------------------------------------------------------------------
@@ -374,24 +395,23 @@ module Ast =
     
   //----------------------------------------------------------------------------
   let closeOverVar (scope:Scope) name =
-    match Map.tryFind name scope.Variables' with
+    match scope |> tryGetVar' name with
     | None -> failwith "Que?"
     | Some group ->
-      let active = group.Indexes.[group.Active]
-      match active with
-      | IsClosedOver -> scope
-      | IsLocal ->
+      match group.Indexes.[group.Active] with
+      | active when active.IsClosedOver |> not ->
         let localIndex = active.Index
         let closedOverIndex = scope.ClosedOverCount'
         let closedOver = {active with IsClosedOver=true; Index=closedOverIndex}
         let scope = {
           scope with 
-            ClosedOverCount'=closedOverIndex+1
-            LocalCount'=scope.LocalCount'-1
+            ClosedOverCount' = closedOverIndex+1
+            LocalCount' = scope.LocalCount'-1
         }
         group.Indexes.[group.Active] <- closedOver
         decrementLocalIndexes scope localIndex
 
+      | _ -> scope
 
   //----------------------------------------------------------------------------
   // ANALYZERS
@@ -477,8 +497,7 @@ module Ast =
 
   let pushScopeAnd sc s f t =
     sc := s :: !sc
-    let t' = f t
-    popScope sc, t'
+    let t' = f t in popScope sc, t'
 
   let replaceScope old new' sc =
     let replace x = if x = old then new' else x
@@ -496,38 +515,32 @@ module Ast =
 
   let isCatchScope s =
     s.ScopeType = CatchScope
-
     
   //----------------------------------------------------------------------------
   let stripVarStatements tree =
     let sc = ref List.empty<Scope>
       
-    let rec addVar name rtree =
-      if (bottomScope sc).ScopeType <> GlobalScope then
-        modifyScope (fun s -> s.AddVar name) sc
-        modifyScope (fun s -> addVar' s name None) sc
-
-      match rtree with
-      | None -> Pass
-      | Some rtree -> Assign(Identifier name, analyze rtree)
-
-    and analyze tree = 
+    let rec analyze tree = 
       match tree with
       | LocalScope(s, t) when s.ScopeType <> CatchScope ->
         LocalScope(pushScopeAnd sc s analyze t)
 
-      | Var(Identifier name) -> addVar name None
-      | Var(Assign(Identifier name, rtree)) -> addVar name (Some rtree)
+      | Var(Identifier name) -> 
+        modifyScope (addVar' name None) sc
+        Pass
 
-      | Function(Some name, _, _) ->
-        addVar name None |> ignore
-        tree
+      | Var(Assign(Identifier name, rtree)) -> 
+        modifyScope (addVar' name None) sc
+        Assign(Identifier name, analyze rtree)
+
+      | Function(Some name, id, body) ->
+        modifyScope (addVar' name None) sc
+        Function(Some name, id, analyze body)
 
       | Identifier "arguments" ->
         if (bottomScope sc).ScopeType = FunctionScope then
-          addVar "arguments" None |> ignore
-          modifyScope (fun s -> 
-            {s with ContainsArguments=true}) sc
+          modifyScope (addVar' "arguments" None) sc
+          modifyScope (fun s -> {s with ContainsArguments=true}) sc
 
         tree
 
@@ -649,22 +662,15 @@ module Ast =
       | Eval _ -> failwith "Eval handling not implemented"
       | Identifier name ->
 
-        if List.head !sc |> hasVariableOrClosure name |> not then
+        match !sc |> List.tail |> List.tryPick (tryGetVariable name) with
+        | Some (scope, Local local) when scope <> (bottomScope sc) ->
+          let cl = scope.ClosureLevel
+          let gl = scope.GlobalLevel
+          let cls = Closure.New name (local |> varIndex) cl gl
+          modifyScope (addClosure cls) sc
 
-          match sc |!> List.tryFind (hasVariableOrClosure name) with
-          | None -> () //Global
-          | Some scope ->
-            match scope |> tryGetVar' name with
-            | None ->
-              match scope |> tryGetClosure name with
-              | None -> failwith "Que?"
-              | Some cls -> modifyScope (addClosure cls) sc
-
-            | Some var ->
-              let cl = scope.ClosureLevel
-              let gl = scope.GlobalLevel
-              let cls = Closure.New name (var |> varIndex) cl gl
-              modifyScope (addClosure cls) sc
+        | Some (_, Closure closure) -> modifyScope (addClosure closure) sc
+        | _ -> () //Global
 
         Identifier name
 
@@ -1065,7 +1071,7 @@ module Ast =
           let parms = [for x in children (child tok pc) -> text x]
           let scope =
             List.fold (fun scope name ->
-              addVar' scope name (Some scope.ParamCount')
+              scope |> addVar' name (Some scope.ParamCount')
             ) (Scope.NewFunction parms) parms
 
           let body = ctx.Translate (child tok bc)

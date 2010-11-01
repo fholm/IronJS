@@ -211,6 +211,7 @@ module Ast =
     
   //----------------------------------------------------------------------------
   and Scope = {
+    Id : FunctionId
     GlobalLevel: int
     ClosureLevel: int
     LocalLevel: int
@@ -221,7 +222,7 @@ module Ast =
     ContainsArguments: bool
     
     Closures': Map<string, Closure>
-    Variables': Map<string, LocalGroup>
+    Locals: Map<string, LocalGroup>
     LocalCount': int
     ParamCount': int
     ClosedOverCount': int
@@ -252,10 +253,6 @@ module Ast =
 
     member x.ClosedOverCount = 
       x.Variables |> Set.filter (fun x -> x.IsClosedOver) 
-                  |> Set.count
-
-    member x.NonParamCount =
-      x.Variables |> Set.filter (fun x -> not x.IsParameter) 
                   |> Set.count
 
     member x.LocalCount = 
@@ -291,6 +288,7 @@ module Ast =
     static member NewDynamic = {Scope.New with DynamicLookup = true}
     static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
     static member New = {
+      Id = 0UL
       GlobalLevel = -1
       ClosureLevel = -1
       LocalLevel = -1
@@ -301,7 +299,7 @@ module Ast =
       ContainsArguments = false
 
       Closures' = Map.empty
-      Variables' = Map.empty
+      Locals = Map.empty
       LocalCount' = 0
       ClosedOverCount' = 0
       ParamCount' = 0
@@ -311,28 +309,15 @@ module Ast =
       Closures = Set.empty
       Functions = Map.empty
     }
-    static member NewFunction parms = {
-      Scope.New with 
-        ScopeType = FunctionScope
-        Variables = 
-          parms 
-            |> List.mapi (fun i n -> Variable.NewParam n i)
-            |> Set.ofList
-    }
-    static member NewCatch name = {
-      Scope.New with
-        ScopeType = CatchScope
-        Variables = Set.ofList [Variable.New name 0]
-    }
     
   //----------------------------------------------------------------------------
-  let hasVar' name (scope:Scope) = scope.Variables' |> Map.containsKey name
-  let getVar' name (scope:Scope) = scope.Variables' |> Map.find name
-  let tryGetVar' name (scope:Scope) = scope.Variables' |> Map.tryFind name 
-  let addVar' name paramIndex (scope:Scope) =
+  let hasLocal name (scope:Scope) = scope.Locals |> Map.containsKey name
+  let getLocal name (scope:Scope) = scope.Locals |> Map.find name
+  let tryGetLocal name (scope:Scope) = scope.Locals |> Map.tryFind name 
+  let addLocal name paramIndex (scope:Scope) =
     let index = LocalIndex.New scope.LocalCount' paramIndex
     let group = 
-      match Map.tryFind name scope.Variables' with
+      match Map.tryFind name scope.Locals with
       | None -> LocalGroup.New name index
       | Some name -> name.addIndex index
 
@@ -340,7 +325,7 @@ module Ast =
     {scope with 
       LocalCount' = index.Index + 1
       ParamCount' = (defaultArg paramIndex currentIndex) + 1
-      Variables' = Map.add name group scope.Variables'
+      Locals = Map.add name group scope.Locals
     }
 
   //----------------------------------------------------------------------------
@@ -357,10 +342,10 @@ module Ast =
     | Closure of Closure
 
   let hasVariable name (scope:Scope) =
-    (scope |> hasVar' name) || (scope |> hasClosure name)
+    (scope |> hasLocal name) || (scope |> hasClosure name)
 
   let getVariable name (scope:Scope) =
-    match scope |> tryGetVar' name with
+    match scope |> tryGetLocal name with
     | Some var -> Local var
     | _ ->
       match scope |> tryGetClosure name with
@@ -389,13 +374,13 @@ module Ast =
             ) 
         }
 
-      ) scope.Variables'
+      ) scope.Locals
 
-    {scope with Variables'=groups}
+    {scope with Locals=groups}
     
   //----------------------------------------------------------------------------
   let closeOverVar (scope:Scope) name =
-    match scope |> tryGetVar' name with
+    match scope |> tryGetLocal name with
     | None -> failwith "Que?"
     | Some group ->
       match group.Indexes.[group.Active] with
@@ -515,10 +500,36 @@ module Ast =
 
   let isCatchScope s =
     s.ScopeType = CatchScope
-    
+
+  let currentScope sc = 
+    match !sc with [] -> failwith "Empty scope chain" | x::_ -> x
+
+  module Utils =
+
+    module ScopeChain =
+      let notEmpty sc = match !sc with [] -> false | _ -> true
+      let currentScope sc = match !sc with [] -> None | s::_ -> Some s
+
+    module Scope =
+      let hasDynamicLookup (scope:Scope) = scope.DynamicLookup
+      let hasClosedOverLocals (scope:Scope) = scope.ClosedOverCount' > 0
+      let isFunction (scope:Scope) = scope.ScopeType = FunctionScope
+      let isGlobal (scope:Scope) = scope.ScopeType = GlobalScope
+
+  open Utils
+
   //----------------------------------------------------------------------------
   let stripVarStatements tree =
     let sc = ref List.empty<Scope>
+
+    let addVar name =
+      sc  |> ScopeChain.currentScope
+          |> Option.map (
+              fun scope -> 
+                if scope |> Scope.isFunction then 
+                  modifyScope (addLocal name None) sc
+            )
+          |> ignore
       
     let rec analyze tree = 
       match tree with
@@ -526,20 +537,18 @@ module Ast =
         LocalScope(pushScopeAnd sc s analyze t)
 
       | Var(Identifier name) -> 
-        modifyScope (addVar' name None) sc
-        Pass
+        addVar name; Pass
 
       | Var(Assign(Identifier name, rtree)) -> 
-        modifyScope (addVar' name None) sc
-        Assign(Identifier name, analyze rtree)
+        addVar name; Assign(Identifier name, analyze rtree)
 
       | Function(Some name, id, body) ->
-        modifyScope (addVar' name None) sc
-        Function(Some name, id, analyze body)
+        addVar name; Function(Some name, id, analyze body)
 
       | Identifier "arguments" ->
+        addVar "arguments"
+
         if (bottomScope sc).ScopeType = FunctionScope then
-          modifyScope (addVar' "arguments" None) sc
           modifyScope (fun s -> {s with ContainsArguments=true}) sc
 
         tree
@@ -563,10 +572,10 @@ module Ast =
 
       | Identifier name ->
 
-        match !sc |> List.head |> tryGetVar' name with
+        match !sc |> List.head |> tryGetLocal name with
         | Some _ -> ()
         | None ->
-          match !sc |> List.tryFind (hasVar' name) with
+          match !sc |> List.tryFind (hasLocal name) with
           | None -> ()
           | Some scope -> replaceScope scope (closeOverVar scope name) sc
 
@@ -579,78 +588,57 @@ module Ast =
       
   //----------------------------------------------------------------------------
   let calculateScopeLevels levels tree =
-    //wl = WithLevel
-    //gl = GlobalLevel
-    //cl = ClosureLevel
-    //ll = LocalLevel
-    //dl = DynamicLookup
-    //em = EvalMode
 
-    let getLocalLevel ll s = 0
-    let getGlobalLevel gl s = gl + 1
+    let getClosureLevel closureLevel (scope:Scope) = 
+      if Scope.hasClosedOverLocals scope 
+        then closureLevel + 1 else closureLevel
 
-    let getClosureLevel cl (s:Scope) = 
-      if s.ClosedOverCount' > 0 then cl+1 else cl
+    let getDynamicLookup withLevel (sc:Scope list ref) scope =
+      let dynamicLookup = withLevel > 0 || (scope |> Scope.hasDynamicLookup)
+      match sc |> ScopeChain.currentScope with
+      | Some current -> dynamicLookup || (current |> Scope.hasDynamicLookup)
+      | _ -> dynamicLookup
 
-    let getDynamicLookup wl s (sc:Scope list ref) =
-      wl > 0
-      || s.DynamicLookup
-      || ((!sc).Length > 0 && (!sc).[0].DynamicLookup)
+    let getEvalMode (sc:Scope list ref) (scope:Scope) =
+      match scope.EvalMode with
+      | EvalMode.Clean ->
+        match sc |> ScopeChain.currentScope with
+        | Some current ->
+          match current.EvalMode with
+          | EvalMode.Clean -> EvalMode.Clean
+          | _ -> EvalMode.Effected
 
-    let getEvalMode (s:Scope) (sc:Scope list ref) =
-      match s.EvalMode with
-      | Clean ->
-        if (!sc).Length > 0 && (!sc).[0].EvalMode <> EvalMode.Clean
-          then EvalMode.Effected
-          else EvalMode.Clean
+        | _ -> EvalMode.Clean
+
       | mode -> mode
       
     let sc = ref List.empty
-    let rec calculate wl gl cl ll tree =
+    let rec calculate wl gl cl tree =
       match tree with 
       | LocalScope(s, t) ->
 
-        let dl = getDynamicLookup wl s sc
-        let em = getEvalMode s sc
-        let gl, cl, ll =
-          match !sc with
-          | [] -> gl, cl, ll
-          | _ ->
-            getGlobalLevel gl s,
-            getClosureLevel cl s,
-            getLocalLevel ll s
-
         let s = 
           {s with 
-            GlobalLevel=gl
-            ClosureLevel=cl
-            LocalLevel=ll
-            DynamicLookup=dl
-            EvalMode=em
+            EvalMode = s |> getEvalMode sc
+            DynamicLookup = s |> getDynamicLookup wl sc
+            GlobalLevel = if sc |> ScopeChain.notEmpty then gl + 1 else gl
+            ClosureLevel = 
+              if sc |> ScopeChain.notEmpty then s |> getClosureLevel cl else cl
           }
 
-        let s =
-          match s.ScopeType with
-          | CatchScope when s.LocalCount > 0 ->
-            let var = FSKit.Seq.first s.Variables
-            let var = {var with Index=1}
-            {s with Variables=set[var]}
-          | _ -> s
-
-        LocalScope(pushScopeAnd sc s (calculate wl gl cl ll) t)
+        LocalScope(pushScopeAnd sc s (calculate wl gl cl) t)
 
       | With(object', tree) ->
-        let object' = calculate wl gl cl ll object'
-        let tree = calculate (wl+1) gl cl ll tree
+        let object' = calculate wl gl cl object'
+        let tree = calculate (wl+1) gl cl tree
         modifyScope (fun s -> {s with DynamicLookup=true}) sc
         With(object', tree)
 
-      | _ -> _walk (calculate wl gl cl ll) tree
+      | _ -> _walk (calculate wl gl cl) tree
         
     match levels with 
-    | Some(gl, cl, ll) -> calculate 0 gl cl ll tree
-    | None -> calculate 0 0 -1 -1 tree
-
+    | Some(gl, cl, _) -> calculate 0 gl cl tree
+    | _ -> calculate 0 0 -1 tree
     
   //----------------------------------------------------------------------------
   let resolveClosures tree =
@@ -1034,7 +1022,7 @@ module Ast =
         | ES3Parser.CATCH ->        
           let varName = text (child tok 0)
           let body = ctx.Translate (child tok 1)
-          Catch(LocalScope(Scope.NewCatch varName, body))
+          Catch body
 
         // with() { }
         | ES3Parser.WITH -> 
@@ -1071,8 +1059,8 @@ module Ast =
           let parms = [for x in children (child tok pc) -> text x]
           let scope =
             List.fold (fun scope name ->
-              scope |> addVar' name (Some scope.ParamCount')
-            ) (Scope.NewFunction parms) parms
+              scope |> addLocal name (Some scope.ParamCount')
+            ) ({Scope.New with Id = id}) parms
 
           let body = ctx.Translate (child tok bc)
           let scope = LocalScope(scope, body)

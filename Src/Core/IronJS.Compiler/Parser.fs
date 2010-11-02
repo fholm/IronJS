@@ -314,6 +314,7 @@ module Ast =
   let hasLocal name (scope:Scope) = scope.Locals |> Map.containsKey name
   let getLocal name (scope:Scope) = scope.Locals |> Map.find name
   let tryGetLocal name (scope:Scope) = scope.Locals |> Map.tryFind name 
+  let localIndex (group:LocalGroup) = group.Indexes.[group.Active].Index
   let addLocal name paramIndex (scope:Scope) =
     let index = LocalIndex.New scope.LocalCount' paramIndex
     let group = 
@@ -327,6 +328,7 @@ module Ast =
       ParamCount' = (defaultArg paramIndex currentIndex) + 1
       Locals = Map.add name group scope.Locals
     }
+    
 
   //----------------------------------------------------------------------------
   let hasClosure name (scope:Scope) = scope.Closures' |> Map.containsKey name
@@ -356,9 +358,6 @@ module Ast =
     match scope |> getVariable name with
     | Global -> None
     | x -> (scope, x) |> Some
-
-  let varIndex (group:LocalGroup) =
-    group.Indexes.[group.Active].Index
     
   //----------------------------------------------------------------------------
   let decrementLocalIndexes (scope:Scope) topIndex =
@@ -475,46 +474,40 @@ module Ast =
   let getCls n s = s.Closures |> Seq.find (clsByName n)
   let getVar n s = s.Variables |> Seq.find (varByName n)
 
-  let popScope sc = 
-    match !sc with
-    | []     -> failwith "Que?"
-    | s::sc' -> sc := sc'; s
-
-  let pushScopeAnd sc s f t =
-    sc := s :: !sc
-    let t' = f t in popScope sc, t'
-
-  let replaceScope old new' sc =
-    let replace x = if x = old then new' else x
-    sc := sc |!> List.map replace
-
-  let modifyScope (f:Scope -> Scope) sc =
-    match !sc with
-    | []    -> ()
-    | x::xs -> sc := f x :: xs
-
-  let bottomScope sc =
-    match !sc with
-    | []   -> failwith "Que?"
-    | x::_ -> x
-
-  let isCatchScope s =
-    s.ScopeType = CatchScope
-
-  let currentScope sc = 
-    match !sc with [] -> failwith "Empty scope chain" | x::_ -> x
-
   module Utils =
 
     module ScopeChain =
       let notEmpty sc = match !sc with [] -> false | _ -> true
-      let currentScope sc = match !sc with [] -> None | s::_ -> Some s
+      let tryCurrentScope sc = match !sc with [] -> None | x::_ -> Some x
+      let currentScope sc =
+        match !sc with [] -> failwith "Empty scope chain" | x::_ -> x
+      
+      let pop sc =
+        match !sc with
+        | []          -> failwith "Empty scope chain"
+        | scope::sc'  -> sc := sc'; scope
 
+      let replace old new' sc =
+        sc := sc |!> List.map (fun scope ->
+          if scope.Id = old.Id then new' else scope
+        )
+
+      let modifyCurrent (f:Scope -> Scope) sc =
+        match !sc with
+        | []    -> ()
+        | x::xs -> sc := f x :: xs
+
+      let pushAnd sc s f t =
+        sc := s :: !sc
+        let t' = f t in pop sc, t'
+        
     module Scope =
       let hasDynamicLookup (scope:Scope) = scope.DynamicLookup
       let hasClosedOverLocals (scope:Scope) = scope.ClosedOverCount' > 0
       let isFunction (scope:Scope) = scope.ScopeType = FunctionScope
       let isGlobal (scope:Scope) = scope.ScopeType = GlobalScope
+      let addFunction name func (scope:Scope) =
+        {scope with Functions = scope.Functions |> Map.add name func}
 
   open Utils
 
@@ -523,24 +516,19 @@ module Ast =
     let sc = ref List.empty<Scope>
 
     let addVar name =
-      sc  |> ScopeChain.currentScope
-          |> Option.map (
-              fun scope -> 
-                if scope |> Scope.isFunction then 
-                  modifyScope (addLocal name None) sc
-            )
-          |> ignore
+      if ScopeChain.currentScope sc |> Scope.isFunction then
+        ScopeChain.modifyCurrent (addLocal name None) sc
       
     let rec analyze tree = 
       match tree with
       | LocalScope(s, t) when s.ScopeType <> CatchScope ->
-        LocalScope(pushScopeAnd sc s analyze t)
+        LocalScope(ScopeChain.pushAnd sc s analyze t)
 
       | Var(Identifier name) -> 
         addVar name; Pass
 
-      | Var(Assign(Identifier name, rtree)) -> 
-        addVar name; Assign(Identifier name, analyze rtree)
+      | Var(Assign(Identifier name, value)) -> 
+        addVar name; Assign(Identifier name, analyze value)
 
       | Function(Some name, id, body) ->
         addVar name; Function(Some name, id, analyze body)
@@ -548,8 +536,8 @@ module Ast =
       | Identifier "arguments" ->
         addVar "arguments"
 
-        if (bottomScope sc).ScopeType = FunctionScope then
-          modifyScope (fun s -> {s with ContainsArguments=true}) sc
+        if ScopeChain.currentScope sc |> Scope.isFunction then
+          ScopeChain.modifyCurrent (fun s -> {s with ContainsArguments=true}) sc
 
         tree
 
@@ -565,7 +553,7 @@ module Ast =
     let rec mark tree =
       match tree with 
       | LocalScope(s, t) ->
-        LocalScope(pushScopeAnd sc s mark t)
+        LocalScope(ScopeChain.pushAnd sc s mark t)
 
       | Invoke(Identifier "eval", source::[]) ->
         failwith "Eval handling not implemented"
@@ -577,7 +565,8 @@ module Ast =
         | None ->
           match !sc |> List.tryFind (hasLocal name) with
           | None -> ()
-          | Some scope -> replaceScope scope (closeOverVar scope name) sc
+          | Some scope -> 
+            ScopeChain.replace scope (closeOverVar scope name) sc
 
         Identifier name
 
@@ -595,14 +584,14 @@ module Ast =
 
     let getDynamicLookup withLevel (sc:Scope list ref) scope =
       let dynamicLookup = withLevel > 0 || (scope |> Scope.hasDynamicLookup)
-      match sc |> ScopeChain.currentScope with
+      match sc |> ScopeChain.tryCurrentScope with
       | Some current -> dynamicLookup || (current |> Scope.hasDynamicLookup)
       | _ -> dynamicLookup
 
     let getEvalMode (sc:Scope list ref) (scope:Scope) =
       match scope.EvalMode with
       | EvalMode.Clean ->
-        match sc |> ScopeChain.currentScope with
+        match sc |> ScopeChain.tryCurrentScope with
         | Some current ->
           match current.EvalMode with
           | EvalMode.Clean -> EvalMode.Clean
@@ -626,12 +615,12 @@ module Ast =
               if sc |> ScopeChain.notEmpty then s |> getClosureLevel cl else cl
           }
 
-        LocalScope(pushScopeAnd sc s (calculate wl gl cl) t)
+        LocalScope(ScopeChain.pushAnd sc s (calculate wl gl cl) t)
 
       | With(object', tree) ->
         let object' = calculate wl gl cl object'
         let tree = calculate (wl+1) gl cl tree
-        modifyScope (fun s -> {s with DynamicLookup=true}) sc
+        ScopeChain.modifyCurrent (fun s -> {s with DynamicLookup=true}) sc
         With(object', tree)
 
       | _ -> _walk (calculate wl gl cl) tree
@@ -646,18 +635,21 @@ module Ast =
 
     let rec resolve tree =
       match tree with
-      | LocalScope(s, t) -> LocalScope(pushScopeAnd sc s resolve t)
+      | LocalScope(s, t) -> LocalScope(ScopeChain.pushAnd sc s resolve t)
       | Eval _ -> failwith "Eval handling not implemented"
       | Identifier name ->
 
         match !sc |> List.tail |> List.tryPick (tryGetVariable name) with
-        | Some (scope, Local local) when scope <> (bottomScope sc) ->
+        | Some(scope, Local local) ->
           let cl = scope.ClosureLevel
           let gl = scope.GlobalLevel
-          let cls = Closure.New name (local |> varIndex) cl gl
-          modifyScope (addClosure cls) sc
+          let index = local |> localIndex
+          let closure = Closure.New name index cl gl
+          ScopeChain.modifyCurrent (addClosure closure) sc
 
-        | Some (_, Closure closure) -> modifyScope (addClosure closure) sc
+        | Some(_, Closure closure) -> 
+          ScopeChain.modifyCurrent (addClosure closure) sc
+
         | _ -> () //Global
 
         Identifier name
@@ -674,12 +666,11 @@ module Ast =
     let rec hoist ast = 
       match ast with
       | LocalScope(scope, ast) when scope.ScopeType <> CatchScope ->
-        LocalScope(pushScopeAnd sc scope hoist ast)
+        LocalScope(ScopeChain.pushAnd sc scope hoist ast)
 
       | Function(Some name, id, ast) ->
-        let scope = bottomScope sc
         let func = Function(Some name, id, ast)
-        modifyScope (fun s -> {s with Functions=s.Functions.Add(name,func)}) sc
+        ScopeChain.modifyCurrent (Scope.addFunction name func) sc
         Pass
 
       | _ -> _walk hoist ast

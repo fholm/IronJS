@@ -43,7 +43,7 @@ test "11.2.2 The new Operator" (fun ctx ->
   equal "test" (obj.get<string> "b")
   
   ctx.Execute "foo.prototype.bar = 1" |> ignore
-  equal 0.0 (prototype.get<double> "bar");
+  equal 1.0 (prototype.get<double> "bar");
   equal (obj.get<double> "bar") (prototype.get<double> "bar")
 
   ctx.Execute "obj.bar = 2" |> ignore

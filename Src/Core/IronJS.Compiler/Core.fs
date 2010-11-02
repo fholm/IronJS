@@ -99,8 +99,6 @@ module Core =
       (Expr.assignValue
         (Dlr.field target "ClosureLevel") (Dlr.const' ctx.Scope.ClosureLevel))
       (Expr.assignValue
-        (Dlr.field target "LocalLevel") (Dlr.const' ctx.Scope.LocalLevel))
-      (Expr.assignValue
         (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures))
         
       (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
@@ -154,10 +152,22 @@ module Core =
       | Ast.ScopeType.GlobalScope -> Scope.initGlobal ctx
       | Ast.ScopeType.FunctionScope -> Scope.initFunction ctx
 
+    let functionsInit =
+      scope.Functions
+      |> Map.toSeq
+      |> Seq.map (fun (_, func) ->
+          match func with
+          | Ast.Function(Some name, scope, body) ->
+            let func = Function.create ctx compile scope func
+            Identifier.setValue ctx name func
+
+          | _ -> failwith "Que?"
+        )
+      |> Dlr.blockSimple
+
     let returnExpr = [
       (Dlr.labelExprVoid ctx.ReturnLabel)
-      (ctx.Env_Return)
-    ]
+      (ctx.Env_Return)]
 
     let locals = 
       if ctx.Target.IsEval then [] |> Seq.ofList
@@ -168,7 +178,7 @@ module Core =
     //Main function body
     let functionBody = 
       (if ctx.Target.IsFunction then returnExpr else [])
-        |> Seq.append [scopeInit; ctx.Compile ast]
+        |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
         |> Dlr.block locals
 
     let allParameters =

@@ -35,7 +35,7 @@ module Function =
     let funcArgs = [
       (ctx.Env)
       (Dlr.const' scope.Id)
-      (Dlr.const' scope.ParamCount')
+      (Dlr.const' scope.ParamCount)
       (ctx.ClosureScope)
       (ctx.DynamicScope)]
 

@@ -10,11 +10,6 @@ module Ast =
 
   open System.Globalization
 
-
-    
-
-  //----------------------------------------------------------------------------
-  // Binary Operators
   //----------------------------------------------------------------------------
   type BinaryOp 
     = Add = 1 // x + y
@@ -42,8 +37,6 @@ module Ast =
     | Gt = 106 // x > y
     | GtEq = 107 // x >= y
       
-  //----------------------------------------------------------------------------
-  // Unary Operators
   //----------------------------------------------------------------------------
   type UnaryOp 
     = Inc // ++x
@@ -134,7 +127,7 @@ module Ast =
     | Identifier of string
     | Block of Tree list
     | Type of TypeTag
-    
+
   //----------------------------------------------------------------------------
   and LocalGroup = {
     Name: string
@@ -142,7 +135,7 @@ module Ast =
     Indexes: LocalIndex array
   } with
     member x.addIndex index =
-      {x with Indexes = Dlr.ArrayUtils.Append(x.Indexes, index)}
+      {x with Indexes = x.Indexes |> FSKit.Array.appendOne index}
 
     static member New name index = {
       Name = name
@@ -163,37 +156,6 @@ module Ast =
     }
     
   //----------------------------------------------------------------------------
-  and [<CustomEquality; CustomComparison>] Variable = {
-    Name: string
-    Index: int
-    ParamIndex: int option
-    IsClosedOver: bool
-  } with
-
-    member x.IsParameter = x.ParamIndex <> None
-
-    interface System.IComparable with
-      member x.CompareTo y =
-        match y with
-        | :? Variable as y -> compare x.Name y.Name
-
-        | _ -> invalidArg "y" "Can't compare objects of different types"
-        
-    override x.GetHashCode () = x.Name.GetHashCode()
-    override x.Equals (y:obj) =
-      match y with
-      | :? Variable as y -> x.Name = y.Name
-      | _ -> invalidArg "y" "Can't compare objects of different types"
-
-    static member NewParam n i = {Variable.New n i with Variable.ParamIndex=Some i}
-    static member New name index = {
-      Name = name
-      Index = index
-      ParamIndex = None
-      IsClosedOver = false
-    }
-    
-  //----------------------------------------------------------------------------
   and Closure = {
     Name: string
     Index: int
@@ -210,103 +172,50 @@ module Ast =
   //----------------------------------------------------------------------------
   and Scope = {
     Id : FunctionId
+
     GlobalLevel: int
     ClosureLevel: int
-    LocalLevel: int
 
     EvalMode: EvalMode
     LookupMode: LookupMode
-    DynamicLookup: bool
     ContainsArguments: bool
     
-    Closures': Map<string, Closure>
+    Closures: Map<string, Closure>
     Locals: Map<string, LocalGroup>
-    LocalCount': int
-    ParamCount': int
-    ClosedOverCount': int
+    LocalCount: int
+    ParamCount: int
+    ClosedOverCount: int
 
     ScopeType: ScopeType
-    Variables: Variable Set
-    Closures: Closure Set
     Functions: Map<string, Tree>
   } with
-    member x.VariableCount = x.Variables.Count
-
-    member x.AddVar n = 
-      let c = x.VariableCount
-      {x with Variables = x.Variables.Add (Variable.New n c)}
-
-    member x.ReplaceVar old new' = 
-      {x with Variables = (x.Variables.Remove old).Add new'}
-
-    member x.AddCls cls = 
-      {x with Closures = x.Closures.Add cls}
-
-    member x.TryGetVar n = x.Variables |> Seq.tryFind (fun x -> x.Name = n) 
-    member x.TryGetCls n = x.Closures |> Seq.tryFind (fun x -> x.Name = n) 
-
-    member x.ParamCount = 
-      x.Variables |> Set.filter (fun x -> x.IsParameter) 
-                  |> Set.count
-
-    member x.ClosedOverCount = 
-      x.Variables |> Set.filter (fun x -> x.IsClosedOver) 
-                  |> Set.count
-
-    member x.LocalCount = 
-      x.Variables |> Set.filter (fun x -> not x.IsClosedOver) 
-                  |> Set.count
-
-    member x.ClosedOverSize = x.ClosedOverCount + 1
-
-    member x.MakeVarClosedOver var = 
-      if var.IsClosedOver then 
-        failwith "Variable is already closed over"
-
-      //New, closed over version
-      let var' = 
-        {var with 
-          Index = x.ClosedOverCount + 1
-          IsClosedOver = true}
-
-      //New variable set
-      let variables = (x.Variables.Remove var).Add var'
-          
-      //Update indexes of non-closed over variable indexes in set
-      let variables = 
-        variables |> Set.map (fun x -> 
-          if not x.IsClosedOver && x.Index > var.Index // (var.Index-1) ???
-            then {x with Index = x.Index - 1} 
-            else x
-        )
-
-      //Return new scope
-      {x with Variables = variables}
-
-    static member NewDynamic = {Scope.New with DynamicLookup = true}
+    static member NewDynamic = {Scope.New with LookupMode = LookupMode.Dynamic}
     static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
     static member New = {
       Id = 0UL
+
       GlobalLevel = -1
       ClosureLevel = -1
-      LocalLevel = -1
 
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
-      DynamicLookup = false
       ContainsArguments = false
 
-      Closures' = Map.empty
+      Closures = Map.empty
       Locals = Map.empty
-      LocalCount' = 0
-      ClosedOverCount' = 0
-      ParamCount' = 0
+      LocalCount = 0
+      ClosedOverCount = 0
+      ParamCount = 0
 
       ScopeType = FunctionScope
-      Variables = Set.empty
-      Closures = Set.empty
       Functions = Map.empty
     }
+
+  //----------------------------------------------------------------------------
+  type VariableOption 
+    = Global
+    | Local of LocalGroup
+    | Closure of Closure
     
   //----------------------------------------------------------------------------
   let hasLocal name (scope:Scope) = scope.Locals |> Map.containsKey name
@@ -315,32 +224,26 @@ module Ast =
   let localIndex (group:LocalGroup) = group.Indexes.[group.Active].Index
   let localIndexIsParam (index:LocalIndex) = index.ParamIndex |> Option.isSome
   let addLocal name paramIndex (scope:Scope) =
-    let index = LocalIndex.New scope.LocalCount' paramIndex
+    let index = LocalIndex.New scope.LocalCount paramIndex
     let group = 
       match Map.tryFind name scope.Locals with
       | None -> LocalGroup.New name index
       | Some name -> name.addIndex index
 
-    let currentIndex = scope.ParamCount' - 1
+    let currentIndex = scope.ParamCount - 1
     {scope with 
-      LocalCount' = index.Index + 1
-      ParamCount' = (defaultArg paramIndex currentIndex) + 1
+      LocalCount = index.Index + 1
+      ParamCount = (defaultArg paramIndex currentIndex) + 1
       Locals = Map.add name group scope.Locals
     }
     
 
   //----------------------------------------------------------------------------
-  let hasClosure name (scope:Scope) = scope.Closures' |> Map.containsKey name
-  let getClosure name (scope:Scope) = scope.Closures' |> Map.find name
-  let tryGetClosure name (scope:Scope) = scope.Closures' |> Map.tryFind name
+  let hasClosure name (scope:Scope) = scope.Closures |> Map.containsKey name
+  let getClosure name (scope:Scope) = scope.Closures |> Map.find name
+  let tryGetClosure name (scope:Scope) = scope.Closures |> Map.tryFind name
   let addClosure closure (scope:Scope) =
-    {scope with Closures' = scope.Closures' |> Map.add closure.Name closure}
-
-  //----------------------------------------------------------------------------
-  type VariableOption 
-    = Global
-    | Local of LocalGroup
-    | Closure of Closure
+    {scope with Closures = scope.Closures |> Map.add closure.Name closure}
 
   let hasVariable name (scope:Scope) =
     (scope |> hasLocal name) || (scope |> hasClosure name)
@@ -384,12 +287,12 @@ module Ast =
       match group.Indexes.[group.Active] with
       | active when active.IsClosedOver |> not ->
         let localIndex = active.Index
-        let closedOverIndex = scope.ClosedOverCount'
+        let closedOverIndex = scope.ClosedOverCount
         let closedOver = {active with IsClosedOver=true; Index=closedOverIndex}
         let scope = {
           scope with 
-            ClosedOverCount' = closedOverIndex+1
-            LocalCount' = scope.LocalCount'-1
+            ClosedOverCount = closedOverIndex+1
+            LocalCount = scope.LocalCount-1
         }
         group.Indexes.[group.Active] <- closedOver
         decrementLocalIndexes scope localIndex
@@ -463,15 +366,6 @@ module Ast =
       
       
   //----------------------------------------------------------------------------
-  let varByName n (v:Variable) = n = v.Name
-  let clsByName n (v:Closure) = n = v.Name
-
-  let hasCls n s = s.Closures |> Set.exists (clsByName n)
-  let hasVar n s = s.Variables |> Set.exists (varByName n)
-
-  let getCls n s = s.Closures |> Seq.find (clsByName n)
-  let getVar n s = s.Variables |> Seq.find (varByName n)
-
   module Utils =
 
     module ScopeChain =
@@ -500,8 +394,8 @@ module Ast =
         let t' = f t in pop sc, t'
         
     module Scope =
-      let hasDynamicLookup (scope:Scope) = scope.DynamicLookup
-      let hasClosedOverLocals (scope:Scope) = scope.ClosedOverCount' > 0
+      let hasDynamicLookup (scope:Scope) = scope.LookupMode = LookupMode.Dynamic
+      let hasClosedOverLocals (scope:Scope) = scope.ClosedOverCount > 0
       let isFunction (scope:Scope) = scope.ScopeType = FunctionScope
       let isGlobal (scope:Scope) = scope.ScopeType = GlobalScope
       let addFunction name func (scope:Scope) =
@@ -580,11 +474,14 @@ module Ast =
       if Scope.hasClosedOverLocals scope 
         then closureLevel + 1 else closureLevel
 
-    let getDynamicLookup withLevel (sc:Scope list ref) scope =
-      let dynamicLookup = withLevel > 0 || (scope |> Scope.hasDynamicLookup)
-      match sc |> ScopeChain.tryCurrentScope with
-      | Some current -> dynamicLookup || (current |> Scope.hasDynamicLookup)
-      | _ -> dynamicLookup
+    let getLookupMode withLevel (sc:Scope list ref) scope =
+      match scope.LookupMode with
+      | LookupMode.Dynamic
+      | LookupMode.Static when withLevel > 0 -> LookupMode.Dynamic
+      | _ ->
+        match sc |> ScopeChain.tryCurrentScope with
+        | Some current -> current.LookupMode
+        | _ -> LookupMode.Static
 
     let getEvalMode (sc:Scope list ref) (scope:Scope) =
       match scope.EvalMode with
@@ -607,20 +504,20 @@ module Ast =
         let s = 
           {s with 
             EvalMode = s |> getEvalMode sc
-            DynamicLookup = s |> getDynamicLookup wl sc
+            LookupMode = s |> getLookupMode wl sc
             GlobalLevel = if sc |> ScopeChain.notEmpty then gl + 1 else gl
             ClosureLevel = 
               if sc |> ScopeChain.notEmpty then s |> getClosureLevel cl else cl
           }
           
-        let calculate = calculate wl gl cl
+        let calculate = calculate wl s.GlobalLevel s.ClosureLevel
         let scope, body = ScopeChain.pushAnd sc s calculate body
         Function(name, scope, body)
 
       | With(object', tree) ->
         let object' = calculate wl gl cl object'
         let tree = calculate (wl+1) gl cl tree
-        ScopeChain.modifyCurrent (fun s -> {s with DynamicLookup=true}) sc
+        ScopeChain.modifyCurrent (fun s -> {s with LookupMode=Dynamic}) sc
         With(object', tree)
 
       | _ -> walkAst (calculate wl gl cl) tree
@@ -1051,7 +948,7 @@ module Ast =
           let id = ctx.Environment.nextFunctionId()
           let scope =
             List.fold (fun scope name ->
-              scope |> addLocal name (Some scope.ParamCount')
+              scope |> addLocal name (Some scope.ParamCount)
             ) ({Scope.New with Id = id}) parms
 
           let body = ctx.Translate (child tok bc)

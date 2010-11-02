@@ -87,7 +87,8 @@ type Context = {
   member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
 
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
-  member x.DynamicLookup = x.Scope.DynamicLookup || x.InsideWith
+  member x.DynamicLookup = 
+    Ast.Utils.Scope.hasDynamicLookup x.Scope || x.InsideWith
 
   member x.AddDefaultLabel break' =
     {x with Break=Some break'}
@@ -106,9 +107,3 @@ type Context = {
     {x with BreakLabels = x.BreakLabels.Add(label, break')}
 
 type Ctx = Context
-      
-//-------------------------------------------------------------------------
-type IdentifierType
-  = Global
-  | Variable of Ast.Scope * Ast.Variable
-  | Closure of Ast.Closure

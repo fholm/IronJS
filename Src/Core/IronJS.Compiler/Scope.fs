@@ -86,12 +86,17 @@ module Scope =
           
     //--------------------------------------------------------------------------
     let initDynamicScope (ctx:Ctx) (dynamicLookup) =
-      if ctx.Target.IsEval || not dynamicLookup
-        then Dlr.void'
-        else Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
+      match ctx.Scope.LookupMode with
+      | Ast.LookupMode.Dynamic
+      | _ when ctx.Target.IsEval ->
+        Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
+
+      | _ -> Dlr.void'
         
     //--------------------------------------------------------------------------
     let initArguments (ctx:Ctx) (s:Ast.Scope) =
+      ()
+      (*
       if not s.ContainsArguments then Dlr.void'
       else 
         match s.TryGetVar "arguments" with
@@ -117,7 +122,7 @@ module Scope =
               ctx.Env;
               Dlr.const' linkMap;
               ctx.LocalScope;
-              ctx.ClosureScope]))
+              ctx.ClosureScope]))*)
   
     //--------------------------------------------------------------------------
     let demoteParam maxIndex (v:Ast.LocalIndex) =
@@ -138,14 +143,14 @@ module Scope =
   let initFunction (ctx:Ctx) =
     let scope = ctx.Scope
 
-    let localScopeInit = Function.initLocalScope ctx scope.LocalCount'
-    let closureScopeInit = Function.initClosureScope ctx scope.ClosedOverCount'
-    let dynamicScopeInit = Function.initDynamicScope ctx scope.DynamicLookup
+    let localScopeInit = Function.initLocalScope ctx scope.LocalCount
+    let closureScopeInit = Function.initClosureScope ctx scope.ClosedOverCount
+    let dynamicScopeInit = Function.initDynamicScope ctx scope.LookupMode
 
     let locals = 
       Function.demoteMissingParams
         scope.Locals
-        scope.ParamCount'
+        scope.ParamCount
         ctx.Target.ParamCount
 
     let ctx = {ctx with Scope = {ctx.Scope with Locals=locals}}

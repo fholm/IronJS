@@ -7,13 +7,6 @@ open IronJS.Compiler
 module Scope =
 
   //----------------------------------------------------------------------------
-  let initGlobal (ctx:Ctx) tree =
-    Dlr.blockSimple [
-      (Dlr.assign ctx.ClosureScope ctx.Fun_Chain)
-      (Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope)
-      (tree)]
-
-  //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
     let object' = Expr.unboxT<IjsObj> (ctx.Compile init)
@@ -23,49 +16,46 @@ module Scope =
       (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
       (tree)
       (Dlr.callMethod Api.DynamicScope.Reflected.pop [ctx.DynamicScope])]
+
+  //----------------------------------------------------------------------------
+  let initGlobal (ctx:Ctx) =
+    Dlr.blockSimple [
+      (Dlr.assign ctx.ClosureScope ctx.Fun_Chain)
+      (Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope)], ctx
     
   //----------------------------------------------------------------------------
   module Function =
-  
-    //--------------------------------------------------------------------------
-    let demoteParam maxIndex (v:Ast.Variable) =
-      match v.ParamIndex with
-      | None -> v
-      | Some i -> if i < maxIndex then v else {v with ParamIndex=None}
       
     //--------------------------------------------------------------------------
-    let demoteMissingParams vars count supplied =
-      let diff = supplied - count
-      if diff < 0 
-        then vars |> Set.map (demoteParam supplied)
-        else vars
-        
-    //--------------------------------------------------------------------------
-    let resolveVariableTypes ctx vars =
-      vars |> Set.map (fun var -> var)
-      
-    //--------------------------------------------------------------------------
-    let storageExpr ctx (var:Ast.Variable) =
+    let storageExpr ctx (var:Ast.LocalIndex) =
       if var.IsClosedOver then ctx.ClosureScope else ctx.LocalScope
       
     //--------------------------------------------------------------------------
-    let initParams ctx (params':Ast.Variable seq) =
-      params' |> Seq.map (fun var ->
+    let initParams ctx (locals:Ast.LocalIndex seq) =
+      locals |> Seq.map (fun var ->
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
         let i = Option.get var.ParamIndex
         Expr.assignBoxValue variable ctx.Parameters.[i])  
       
     //--------------------------------------------------------------------------
-    let initNonParams ctx (nonParams:Ast.Variable seq) =
-      nonParams |> Seq.map (fun var ->
+    let initNonParams ctx (locals:Ast.LocalIndex seq) =
+      locals |> Seq.map (fun var ->
         let expr = storageExpr ctx var
         let variable = Dlr.indexInt expr var.Index
         Expr.assignBoxValue variable Expr.undefined)
       
     //--------------------------------------------------------------------------
-    let initVariables ctx (vars:Ast.Variable Set) =
-      let params',nonParams = vars |> Set.partition (fun var -> var.IsParameter)
+    let initLocals ctx (locals:Map<string, Ast.LocalGroup>) =
+      let indexes =
+        locals 
+          |> Map.toSeq 
+          |> Seq.map (fun (_, group) -> group.Indexes)
+          |> Seq.concat
+
+      let params' = indexes |> Seq.filter Ast.localIndexIsParam
+      let nonParams = indexes |> Seq.filter (Ast.localIndexIsParam >> not)
+
       initParams ctx params', initNonParams ctx nonParams
         
     //--------------------------------------------------------------------------
@@ -77,10 +67,10 @@ module Scope =
         | _ ->
           (Dlr.assign
             (ctx.LocalScope)
-            (Dlr.newArrayBoundsT<IronJS.Box> (Dlr.const' count)))
+            (Dlr.newArrayBoundsT<IjsBox> (Dlr.const' count)))
     
     //--------------------------------------------------------------------------
-    let initScopeChain (ctx:Ctx) count =
+    let initClosureScope (ctx:Ctx) count =
       if ctx.Target.IsEval then Dlr.void'
       else
         match count with
@@ -89,14 +79,14 @@ module Scope =
           Dlr.blockSimple [ 
             (Dlr.assign
               (ctx.ClosureScope)
-              (Dlr.newArrayBoundsT<IronJS.Box> (Dlr.const' (count+1))))
+              (Dlr.newArrayBoundsT<IjsBox> (Dlr.const' (count+1))))
             (Dlr.assign
               (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
               (ctx.Fun_Chain))]
           
     //--------------------------------------------------------------------------
-    let initDynamicScope (ctx:Ctx) (s:Ast.Scope) =
-      if ctx.Target.IsEval || not s.DynamicLookup
+    let initDynamicScope (ctx:Ctx) (dynamicLookup) =
+      if ctx.Target.IsEval || not dynamicLookup
         then Dlr.void'
         else Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
         
@@ -128,38 +118,46 @@ module Scope =
               Dlr.const' linkMap;
               ctx.LocalScope;
               ctx.ClosureScope]))
+  
+    //--------------------------------------------------------------------------
+    let demoteParam maxIndex (v:Ast.LocalIndex) =
+      match v.ParamIndex with
+      | None -> v
+      | Some i -> if i < maxIndex then v else {v with ParamIndex=None}
+      
+    //--------------------------------------------------------------------------
+    let demoteMissingParams (locals:Map<string,Ast.LocalGroup>) count supplied =
+      let diff = supplied - count
+      if diff >= 0 then locals
+      else
+        locals |> Map.map (fun _ group ->
+          let indexes = group.Indexes
+          {group with Indexes = indexes |> Array.map (demoteParam supplied)})
 
   //----------------------------------------------------------------------------
-  let localScope ctx (s:Ast.Scope) tree =
-    match s.ScopeType with
-    | Ast.GlobalScope -> 
-      initGlobal ctx ((ctx.WithScope s).Compile tree)
+  let initFunction (ctx:Ctx) =
+    let scope = ctx.Scope
 
-    | Ast.FunctionScope ->
-      let scopeInit = Function.initLocalScope ctx s.LocalCount
-      let scopeChainInit = Function.initScopeChain ctx s.ClosedOverCount
-      let DynamicScopeInit = Function.initDynamicScope ctx s
-      
-      let variables = 
-        (Function.demoteMissingParams 
-          (s.Variables)
-          (s.ParamCount)
-          (ctx.Target.ParamCount)
-        ) |> Function.resolveVariableTypes ctx
+    let localScopeInit = Function.initLocalScope ctx scope.LocalCount'
+    let closureScopeInit = Function.initClosureScope ctx scope.ClosedOverCount'
+    let dynamicScopeInit = Function.initDynamicScope ctx scope.DynamicLookup
 
-      let initParams, initNonParams = 
-        Function.initVariables ctx variables
+    let locals = 
+      Function.demoteMissingParams
+        scope.Locals
+        scope.ParamCount'
+        ctx.Target.ParamCount
 
-      let initArguments = 
-        [Function.initArguments ctx s]
+    let ctx = {ctx with Scope = {ctx.Scope with Locals=locals}}
 
+    let initParams, initNonParams = Function.initLocals ctx locals 
+    let initBlock = 
       Seq.concat [
-        [scopeInit; scopeChainInit; DynamicScopeInit]
-        (initParams |> List.ofSeq)
-        (initNonParams |> List.ofSeq)
-        (initArguments)
-        [(ctx.WithScope {s with Variables=variables}).Compile tree]
+        [localScopeInit]
+        [closureScopeInit]
+        [dynamicScopeInit]
+        initParams |> List.ofSeq
+        initNonParams |> List.ofSeq
       ] |> Dlr.blockSimple
 
-    | Ast.CatchScope -> 
-      Errors.compiler "Catch scopes should never reach this point"
+    initBlock, ctx

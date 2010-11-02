@@ -34,7 +34,6 @@ module Core =
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
 
     //Scopes
-    | Ast.LocalScope(scope, tree) -> Scope.localScope ctx scope tree
     | Ast.With(init, tree) -> Scope.with' ctx init tree
 
     //Objects
@@ -47,8 +46,7 @@ module Core =
     | Ast.Invoke(func, args)  -> Function.invoke ctx func args
     | Ast.New(func, args) -> Function.new' ctx func args
     | Ast.Return tree -> Function.return' ctx tree
-    | Ast.Function(levels, id, body) -> 
-      Function.create ctx compile levels id body
+    | Ast.Function(_, scope, _) -> Function.create ctx compile scope ast
 
 
     //Control Flow
@@ -121,19 +119,18 @@ module Core =
   // Main compiler function that setups compilation and invokes compileAst
   and compile (target:Target) =
 
-    //Parameter variables
-    let parameterExprs =
-      target.ParamTypes
-        |> Seq.mapi (fun i type' -> Dlr.param (sprintf "param%i" i) type')
-        |> Seq.toArray
-          
+    let scope, ast =
+      match target.Ast with
+      | Ast.Function(_, scope, ast) -> scope, ast
+      | _ -> failwith "Top AST node must be Tree.Function"
+
     //--------------------------------------------------------------------------
     // Main Context
     let ctx = {
       Compiler = compileAst
       Target = target
       InsideWith = false
-      ScopeChain = List.empty
+      Scope = scope
       ReturnLabel = Dlr.labelVoid "~return"
 
       Break = None
@@ -146,8 +143,16 @@ module Core =
       LocalScope = Dlr.paramT<Scope> "~localScope"
       ClosureScope = Dlr.paramT<Scope> "~closureScope"
       DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"
-      Parameters = parameterExprs
+      Parameters = 
+        target.ParamTypes
+          |> Seq.mapi (fun i type' -> Dlr.param (sprintf "param%i" i) type')
+          |> Seq.toArray
     }
+
+    let scopeInit, ctx = 
+      match scope.ScopeType with
+      | Ast.ScopeType.GlobalScope -> Scope.initGlobal ctx
+      | Ast.ScopeType.FunctionScope -> Scope.initFunction ctx
 
     let returnExpr = [
       (Dlr.labelExprVoid ctx.ReturnLabel)
@@ -163,7 +168,7 @@ module Core =
     //Main function body
     let functionBody = 
       (if ctx.Target.IsFunction then returnExpr else [])
-        |> Seq.append [ctx.Compile target.Ast]
+        |> Seq.append [scopeInit; ctx.Compile ast]
         |> Dlr.block locals
 
     let allParameters =

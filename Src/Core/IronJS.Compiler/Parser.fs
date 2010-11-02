@@ -64,7 +64,6 @@ module Ast =
   type ScopeType
     = GlobalScope
     | FunctionScope
-    | CatchScope
     
   //----------------------------------------------------------------------------
   type EvalMode
@@ -107,7 +106,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | Function of string option * FunctionId * Tree
+    | Function of string option * Scope * Tree
     | Invoke of Tree * Tree list
 
     // Control Flow
@@ -131,7 +130,6 @@ module Ast =
     | Throw of Tree
 
     //
-    | LocalScope of Scope * Tree
     | Var of Tree
     | Identifier of string
     | Block of Tree list
@@ -315,6 +313,7 @@ module Ast =
   let getLocal name (scope:Scope) = scope.Locals |> Map.find name
   let tryGetLocal name (scope:Scope) = scope.Locals |> Map.tryFind name 
   let localIndex (group:LocalGroup) = group.Indexes.[group.Active].Index
+  let localIndexIsParam (index:LocalIndex) = index.ParamIndex |> Option.isSome
   let addLocal name paramIndex (scope:Scope) =
     let index = LocalIndex.New scope.LocalCount' paramIndex
     let group = 
@@ -401,7 +400,7 @@ module Ast =
   // ANALYZERS
   //----------------------------------------------------------------------------
         
-  let private _walk f tree = 
+  let private walkAst f tree = 
     match tree with
     // Simple
     | Identifier _
@@ -432,7 +431,7 @@ module Ast =
     | InstanceOf(object', func) -> InstanceOf(f object', f func)
 
     //Functions
-    | Function(levels, id, tree) -> Function(levels, id, f tree) 
+    | Function(name, scope, body) -> Function(name, scope, f body) 
     | New(func, args) -> New(f func, [for a in args -> f a])
     | Invoke(func, args) -> Invoke(f func, [for a in args -> f a])
     | Return value -> Return(f value)
@@ -461,7 +460,6 @@ module Ast =
     // Others
     | Block trees -> Block [for t in trees -> f t]
     | Var tree -> Var (f tree)
-    | LocalScope(scope, body) -> LocalScope(scope, f body)
       
       
   //----------------------------------------------------------------------------
@@ -521,17 +519,16 @@ module Ast =
       
     let rec analyze tree = 
       match tree with
-      | LocalScope(s, t) when s.ScopeType <> CatchScope ->
-        LocalScope(ScopeChain.pushAnd sc s analyze t)
+      | Function(name, scope, body) ->
+        match name with Some name -> addVar name | _ -> ()
+        let scope, body = ScopeChain.pushAnd sc scope analyze body
+        Function(name, scope, body)
 
       | Var(Identifier name) -> 
         addVar name; Pass
 
       | Var(Assign(Identifier name, value)) -> 
         addVar name; Assign(Identifier name, analyze value)
-
-      | Function(Some name, id, body) ->
-        addVar name; Function(Some name, id, analyze body)
 
       | Identifier "arguments" ->
         addVar "arguments"
@@ -541,7 +538,7 @@ module Ast =
 
         tree
 
-      | _ -> _walk analyze tree
+      | _ -> walkAst analyze tree
 
     analyze tree
 
@@ -552,8 +549,9 @@ module Ast =
 
     let rec mark tree =
       match tree with 
-      | LocalScope(s, t) ->
-        LocalScope(ScopeChain.pushAnd sc s mark t)
+      | Function(name, scope, body) ->
+        let scope, body = ScopeChain.pushAnd sc scope mark body
+        Function(name, scope, body)
 
       | Invoke(Identifier "eval", source::[]) ->
         failwith "Eval handling not implemented"
@@ -570,7 +568,7 @@ module Ast =
 
         Identifier name
 
-      | _ -> _walk mark tree
+      | _ -> walkAst mark tree
 
     mark tree
 
@@ -604,7 +602,7 @@ module Ast =
     let sc = ref List.empty
     let rec calculate wl gl cl tree =
       match tree with 
-      | LocalScope(s, t) ->
+      | Function(name, s, body) ->
 
         let s = 
           {s with 
@@ -614,8 +612,10 @@ module Ast =
             ClosureLevel = 
               if sc |> ScopeChain.notEmpty then s |> getClosureLevel cl else cl
           }
-
-        LocalScope(ScopeChain.pushAnd sc s (calculate wl gl cl) t)
+          
+        let calculate = calculate wl gl cl
+        let scope, body = ScopeChain.pushAnd sc s calculate body
+        Function(name, scope, body)
 
       | With(object', tree) ->
         let object' = calculate wl gl cl object'
@@ -623,7 +623,7 @@ module Ast =
         ScopeChain.modifyCurrent (fun s -> {s with DynamicLookup=true}) sc
         With(object', tree)
 
-      | _ -> _walk (calculate wl gl cl) tree
+      | _ -> walkAst (calculate wl gl cl) tree
         
     match levels with 
     | Some(gl, cl, _) -> calculate 0 gl cl tree
@@ -635,7 +635,10 @@ module Ast =
 
     let rec resolve tree =
       match tree with
-      | LocalScope(s, t) -> LocalScope(ScopeChain.pushAnd sc s resolve t)
+      | Function(name, scope, body) ->
+        let scope, body = ScopeChain.pushAnd sc scope resolve body
+        Function(name, scope, body)
+
       | Eval _ -> failwith "Eval handling not implemented"
       | Identifier name ->
 
@@ -654,7 +657,7 @@ module Ast =
 
         Identifier name
 
-      | _ -> _walk resolve tree
+      | _ -> walkAst resolve tree
 
     resolve tree
 
@@ -665,15 +668,17 @@ module Ast =
 
     let rec hoist ast = 
       match ast with
-      | LocalScope(scope, ast) when scope.ScopeType <> CatchScope ->
-        LocalScope(ScopeChain.pushAnd sc scope hoist ast)
-
-      | Function(Some name, id, ast) ->
-        let func = Function(Some name, id, ast)
+      | Function(Some name, scope, body) ->
+        let func = Function(Some name, scope, body)
         ScopeChain.modifyCurrent (Scope.addFunction name func) sc
+        let scope, body = ScopeChain.pushAnd sc scope hoist body
         Pass
 
-      | _ -> _walk hoist ast
+      | Function(None, scope, body) ->
+        let scope, body = ScopeChain.pushAnd sc scope hoist body
+        Function(None, scope, body)
+
+      | _ -> walkAst hoist ast
 
     hoist ast
       
@@ -710,11 +715,6 @@ module Ast =
       } with 
         member x.Translate token =
           x.Translator x token
-
-      let private _funIdCounter = ref 0L
-      let private _funId () = 
-        _funIdCounter := !_funIdCounter + 1L
-        !_funIdCounter
         
       //------------------------------------------------------------------------
       let private children (tok:AntlrToken) = 
@@ -1046,15 +1046,15 @@ module Ast =
 
           let named = tok.ChildCount = 3
           let pc, bc = if named then (1, 2) else (0, 1)
-          let id = ctx.Environment.nextFunctionId()
           let parms = [for x in children (child tok pc) -> text x]
+
+          let id = ctx.Environment.nextFunctionId()
           let scope =
             List.fold (fun scope name ->
               scope |> addLocal name (Some scope.ParamCount')
             ) ({Scope.New with Id = id}) parms
 
           let body = ctx.Translate (child tok bc)
-          let scope = LocalScope(scope, body)
 
           // Source representation that is used 
           // in Function.prototype.toString
@@ -1069,7 +1069,7 @@ module Ast =
           ctx.Environment.FunctionSourceStrings.Add(id, source)
 
           let name = if named then Some(text (child tok 0)) else None
-          Tree.Function(name, id, scope)
+          Tree.Function(name, scope, body)
 
         // switch() {}
         | ES3Parser.SWITCH ->
@@ -1137,8 +1137,8 @@ module Ast =
 
       //------------------------------------------------------------------------
       let parseGlobalFile env path = 
-        LocalScope(Scope.NewGlobal, parseFile env path)
+        Tree.Function(None, Scope.NewGlobal, parseFile env path)
 
       //------------------------------------------------------------------------
       let parseGlobalSource env source = 
-        LocalScope(Scope.NewGlobal, parse env source)
+        Tree.Function(None, Scope.NewGlobal, parse env source)

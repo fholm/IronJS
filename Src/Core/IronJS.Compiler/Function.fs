@@ -7,6 +7,9 @@ open IronJS.Compiler
 //------------------------------------------------------------------------------
 module Function =
 
+  let closureScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "ScopeChain"
+  let dynamicScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "DynamicChain"
+
   //----------------------------------------------------------------------------
   let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegateType =
     compiler {target with Delegate = Some delegateType}
@@ -23,28 +26,16 @@ module Function =
     applyCompiler compiler target
     
   //----------------------------------------------------------------------------
-  let scopeLocalSize tree =
-    match tree with
-    | Ast.LocalScope(scope, _) -> scope.LocalCount
-    | _ -> Errors.topNodeInFunctionMustBeLocalScope()
-    
-  //----------------------------------------------------------------------------
-  let scopeParamCount tree =
-    match tree with
-    | Ast.LocalScope(scope, _) -> scope.ParamCount
-    | _ -> Errors.topNodeInFunctionMustBeLocalScope()
-    
-  //----------------------------------------------------------------------------
-  let create ctx compiler levels id tree =
+  let create ctx compiler (scope:Ast.Scope) ast =
     //Make sure a compiler exists for this function
-    if Api.Environment.hasCompiler ctx.Target.Environment id |> not then
+    if Api.Environment.hasCompiler ctx.Target.Environment scope.Id |> not then
       (Api.Environment.addCompilerId 
-        ctx.Target.Environment id (makeCompiler ctx compiler tree))
+        ctx.Target.Environment scope.Id (makeCompiler ctx compiler ast))
 
     let funcArgs = [
       (ctx.Env)
-      (Dlr.const' id)
-      (Dlr.const' (scopeParamCount tree))
+      (Dlr.const' scope.Id)
+      (Dlr.const' scope.ParamCount')
       (ctx.ClosureScope)
       (ctx.DynamicScope)]
 
@@ -123,7 +114,6 @@ module Function =
         (tmp :: temps, tmp :> Dlr.Expr :: args, assign :: ass)
 
     ) args ([], [], [])
-
     
   //----------------------------------------------------------------------------
   // 11.2.2 the new operator

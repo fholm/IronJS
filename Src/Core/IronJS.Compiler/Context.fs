@@ -55,7 +55,7 @@ type [<AllowNullLiteral>] EvalTarget() =
 type Context = {
   Compiler : Context -> Ast.Tree -> Dlr.Expr
   Target: Target
-  ScopeChain: Ast.Scope list
+  Scope: Ast.Scope
   ReturnLabel: Dlr.Label
   InsideWith: bool
 
@@ -87,10 +87,7 @@ type Context = {
   member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
 
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
-  member x.Scope = match x.ScopeChain with s::_ -> s | [] -> failwith "Que?"
-  member x.WithScope s = {x with ScopeChain = s :: x.ScopeChain}
   member x.DynamicLookup = x.Scope.DynamicLookup || x.InsideWith
-  member x.TopScope = x.ScopeChain.[x.ScopeChain.Length - 1]
 
   member x.AddDefaultLabel break' =
     {x with Break=Some break'}

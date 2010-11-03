@@ -83,15 +83,15 @@ module Hosting =
     member x.GlobalFunc = globalFunc
 
     member x.CompileFile fileName =
-      let tree = Ast.Parsers.Ecma3.parseGlobalFile env fileName
-      let analyzed = Ast.applyAnalyzers tree None
+      let tree = Parsers.Ecma3.parseGlobalFile env fileName
+      let analyzed = Ast.Analyzers.applyDefault tree None
       Debug.printString (sprintf "%A" analyzed)
 
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
-      let tree = Ast.Parsers.Ecma3.parseGlobalSource env source
-      let analyzed = Ast.applyAnalyzers tree None
+      let tree = Parsers.Ecma3.parseGlobalSource env source
+      let analyzed = Ast.Analyzers.applyDefault tree None
       Debug.printString (sprintf "%A" analyzed)
 
       Compiler.Core.compileAsGlobal env analyzed

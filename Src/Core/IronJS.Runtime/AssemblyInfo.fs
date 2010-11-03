@@ -5,7 +5,7 @@ open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
  
 [<assembly: AssemblyTitle("IronJS.Runtime")>]
-[<assembly: AssemblyDescription("IronJS - A JavaScript runtime for the DLR")>]
+[<assembly: AssemblyDescription("IronJS - A JavaScript runtime for .NET")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("IronJS")>]
 [<assembly: AssemblyProduct("IronJS")>]

@@ -22,8 +22,8 @@ module Function =
           args, body
 
       let func = sprintf "(function(){ return function(%s){%s}; })();" args body
-      let tree = Ast.Parsers.Ecma3.parseGlobalSource f.Env func
-      let analyzed = Ast.applyAnalyzers tree None
+      let tree = Parsers.Ecma3.parseGlobalSource f.Env func
+      let analyzed = Ast.Analyzers.applyDefault tree None
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
       (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxObj) :?> IjsFunc
     

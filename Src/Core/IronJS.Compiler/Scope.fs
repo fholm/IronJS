@@ -25,7 +25,7 @@ module Scope =
     
   //----------------------------------------------------------------------------
   module Function =
-      
+    
     //--------------------------------------------------------------------------
     let storageExpr ctx (var:Ast.LocalIndex) =
       if var.IsClosedOver then ctx.ClosureScope else ctx.LocalScope
@@ -53,8 +53,8 @@ module Scope =
           |> Seq.map (fun (_, group) -> group.Indexes)
           |> Seq.concat
 
-      let params' = indexes |> Seq.filter Ast.localIndexIsParam
-      let nonParams = indexes |> Seq.filter (Ast.localIndexIsParam >> not)
+      let params' = indexes |> Seq.filter Ast.Utils.Local.Index.isParam
+      let nonParams = indexes |> Seq.filter Ast.Utils.Local.Index.isNotParam
 
       initParams ctx params', initNonParams ctx nonParams
         
@@ -95,34 +95,33 @@ module Scope =
         
     //--------------------------------------------------------------------------
     let initArguments (ctx:Ctx) (s:Ast.Scope) =
-      ()
-      (*
       if not s.ContainsArguments then Dlr.void'
       else 
-        match s.TryGetVar "arguments" with
-        | None -> failwith "Que?"
-        | Some var ->
+        match s |> Ast.Utils.Scope.getVariable "arguments" with
+        | Ast.VariableOption.Global 
+        | Ast.VariableOption.Closure _ -> failwith "Que?"
+        | Ast.VariableOption.Local local ->
           let linkMap = 
-            s.Variables 
-              |> Set.filter (fun x -> x.IsParameter)    
-              |> Set.map (fun x ->
+            s.Locals 
+              |> Map.toSeq
+              |> Seq.filter (snd >> Ast.Utils.Local.isParam)
+              |> Seq.map (fun (_, local) ->
                   let linkArray =
-                    if x.IsClosedOver 
+                    if local |> Ast.Utils.Local.isClosedOver
                       then ArgumentsLinkArray.ClosedOver
                       else ArgumentsLinkArray.Locals
-                  linkArray, x.Index
+                  linkArray, local |> Ast.Utils.Local.index
                 )
-              |> Set.toSeq
+              |> Seq.sortBy (fun (_, i) -> i)
               |> Array.ofSeq
-              |> Array.sortBy (fun (_, i) -> i)
 
           (Expr.assignValue 
-            (Dlr.indexInt ctx.LocalScope var.Index)
+            (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
             (Dlr.newArgsT<Arguments> [
               ctx.Env;
               Dlr.const' linkMap;
               ctx.LocalScope;
-              ctx.ClosureScope]))*)
+              ctx.ClosureScope]))
   
     //--------------------------------------------------------------------------
     let demoteParam maxIndex (v:Ast.LocalIndex) =
@@ -146,6 +145,7 @@ module Scope =
     let localScopeInit = Function.initLocalScope ctx scope.LocalCount
     let closureScopeInit = Function.initClosureScope ctx scope.ClosedOverCount
     let dynamicScopeInit = Function.initDynamicScope ctx scope.LookupMode
+    let initArguments = Function.initArguments ctx scope
 
     let locals = 
       Function.demoteMissingParams
@@ -163,6 +163,7 @@ module Scope =
         [dynamicScopeInit]
         initParams |> List.ofSeq
         initNonParams |> List.ofSeq
+        [initArguments]
       ] |> Dlr.blockSimple
 
     initBlock, ctx

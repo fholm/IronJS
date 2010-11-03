@@ -48,7 +48,6 @@ module Core =
     | Ast.Return tree -> Function.return' ctx tree
     | Ast.Function(_, scope, _) -> Function.create ctx compile scope ast
 
-
     //Control Flow
     | Ast.Switch(value, cases) -> ControlFlow.switch ctx value cases
     | Ast.While(label, test, body) -> ControlFlow.while' ctx label test body

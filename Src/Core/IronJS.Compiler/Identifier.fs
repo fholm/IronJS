@@ -35,7 +35,7 @@ module Identifier =
     
   //----------------------------------------------------------------------------
   let private getExprIndexLevelType ctx name =
-    match ctx.Scope |> Ast.getVariable name with
+    match ctx.Scope |> Ast.Utils.Scope.getVariable name with
     | Ast.VariableOption.Global -> None
     | Ast.VariableOption.Local group -> localExprAndIndex ctx group
     | Ast.VariableOption.Closure closure -> closureExprAndIndex ctx closure
@@ -70,7 +70,7 @@ module Identifier =
     
   //----------------------------------------------------------------------------
   let isGlobal ctx name =
-    ctx.Scope |> Ast.hasVariable name
+    ctx.Scope |> Ast.Utils.Scope.hasVariable name
         
   //----------------------------------------------------------------------------
   let getValue (ctx:Ctx) name =

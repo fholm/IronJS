@@ -17,7 +17,7 @@ module Version =
   let FullName = sprintf "IronJS %s" Tagged
  
 [<assembly: AssemblyTitle("IronJS")>]
-[<assembly: AssemblyDescription("IronJS - A JavaScript runtime for the DLR")>]
+[<assembly: AssemblyDescription("IronJS - A JavaScript runtime for .NET")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("IronJS")>]
 [<assembly: AssemblyProduct("IronJS")>]

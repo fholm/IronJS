@@ -10,6 +10,11 @@ IronJS is released under the [Apache License Version 2.0](http://www.apache.org/
 
 What you need to use IronJS
 
-* An understanding that this is alpha quality software, it will crash on you.
-* .NET 3.5/4.0 or Mono 2.8
-* For 3.5 and Mono 2.8 you also need The Dynamic Language Runtime from Microsoft.
+* .NET 4.0
+
+## Getting the source
+
+* Open a terminal/command line and go to an empty folder, in my case: C:\Users\Fredrik\Projets
+* Type "git clone git@github.com:fholm/IronJS.git IronJS"
+* Type "cd IronJS\Src\Dependencies"
+* Type "git clone git@github.com:fholm/FSKit.git"

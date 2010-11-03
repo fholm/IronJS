@@ -103,8 +103,8 @@ module Core =
       (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
-      (Expr.assignValue (Dlr.field target "Local") ctx.LocalScope)
-      (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ClosureScope)
+      (Expr.assignValue (Dlr.field target "LocalScope") ctx.LocalScope)
+      (Expr.assignValue (Dlr.field target "ClosureScope") ctx.ClosureScope)
       (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
       (Expr.testIsFunction

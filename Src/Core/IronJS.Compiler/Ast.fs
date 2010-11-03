@@ -413,7 +413,7 @@ module Ast =
 
     open Utils
 
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let stripVarStatements tree =
       let sc = ref List.empty<Scope>
 
@@ -447,7 +447,7 @@ module Ast =
 
       analyze tree
     
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let markClosedOverVars tree =
       let sc = ref List.empty
 
@@ -458,7 +458,14 @@ module Ast =
           Function(name, scope, body)
 
         | Invoke(Identifier "eval", source::[]) ->
-          failwith "Eval handling not implemented"
+
+          sc := !sc |> List.map (fun scope ->
+            Map.fold (fun state name _ ->
+              Scope.closeOverVar state name
+            ) scope scope.Locals 
+          )
+
+          Eval source
 
         | Identifier name ->
 
@@ -476,7 +483,7 @@ module Ast =
 
       mark tree
       
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let calculateScopeLevels levels tree =
 
       let getClosureLevel closureLevel (scope:Scope) = 
@@ -534,7 +541,7 @@ module Ast =
       | Some(gl, cl, _) -> calculate 0 gl cl tree
       | _ -> calculate 0 0 -1 tree
     
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let resolveClosures tree =
       let sc = ref List.empty<Scope>
 
@@ -544,7 +551,12 @@ module Ast =
           let scope, body = ScopeChain.pushAnd sc scope resolve body
           Function(name, scope, body)
 
-        | Eval _ -> failwith "Eval handling not implemented"
+        | Eval source -> 
+          
+
+
+          Eval source
+
         | Identifier name ->
 
           match !sc|> List.tail|> List.tryPick (Scope.tryGetVariable name) with
@@ -566,7 +578,7 @@ module Ast =
 
       resolve tree
     
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let hoistFunctions ast =
       let sc = ref List.empty<Scope>
 
@@ -586,7 +598,7 @@ module Ast =
 
       hoist ast
 
-    //----------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     let applyDefault tree levels =
       let analyzers = [
         stripVarStatements

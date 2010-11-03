@@ -25,7 +25,7 @@ module Identifier =
     Some(expr, closure.Index, closure.GlobalLevel)
       
   //----------------------------------------------------------------------------
-  let private localExprAndIndex (ctx:Ctx) (group:Ast.LocalGroup) =
+  let private localExprAndIndex (ctx:Ctx) (group:Ast.Local) =
     let index = group.Indexes.[group.Active]
     let scopeExpr = 
       if index.IsClosedOver 

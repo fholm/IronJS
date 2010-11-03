@@ -137,7 +137,7 @@ module Ast =
     | Type of TypeTag
 
   //----------------------------------------------------------------------------
-  and LocalGroup = {
+  and Local = {
     Name: string
     Active: int
     Indexes: LocalIndex array
@@ -186,7 +186,7 @@ module Ast =
     LookupMode: LookupMode
     ContainsArguments: bool
     
-    Locals: Map<string, LocalGroup>
+    Locals: Map<string, Local>
     Closures: Map<string, Closure>
     Functions: Map<string, Tree>
     LocalCount: int
@@ -217,7 +217,7 @@ module Ast =
   //----------------------------------------------------------------------------
   type VariableOption 
     = Global
-    | Local of LocalGroup
+    | Local of Local
     | Closure of Closure
       
   //----------------------------------------------------------------------------
@@ -229,7 +229,7 @@ module Ast =
         let isParam index = index.ParamIndex |> Option.isSome
         let isNotParam index = index |> isParam |> not
       
-      let private activeIndex (local:LocalGroup) =
+      let private activeIndex (local:Local) =
         if local.Active >= local.Indexes.Length then 
           Errors.variableIndexOutOfRange()
 
@@ -238,7 +238,7 @@ module Ast =
       let internal addIndex index group =
         {group with Indexes = group.Indexes |> FSKit.Array.appendOne index}
 
-      let index (local:LocalGroup) = (local |> activeIndex).Index
+      let index local = (local |> activeIndex).Index
       let isClosedOver local = (local |> activeIndex).IsClosedOver
       let isParam local = (local |> activeIndex) |> Index.isParam
       let isNotParam local = local |> isParam |> not
@@ -272,7 +272,7 @@ module Ast =
         let index = LocalIndex.New scope.LocalCount paramIndex
         let group = 
           match Map.tryFind name scope.Locals with
-          | None -> LocalGroup.New name index
+          | None -> Local.New name index
           | Some group -> group |> Local.addIndex index
 
         let currentIndex = scope.ParamCount - 1

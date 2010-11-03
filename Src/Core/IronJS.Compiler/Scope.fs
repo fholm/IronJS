@@ -46,7 +46,7 @@ module Scope =
         Expr.assignBoxValue variable Expr.undefined)
       
     //--------------------------------------------------------------------------
-    let initLocals ctx (locals:Map<string, Ast.LocalGroup>) =
+    let initLocals ctx (locals:Map<string, Ast.Local>) =
       let indexes =
         locals 
           |> Map.toSeq 
@@ -130,7 +130,7 @@ module Scope =
       | Some i -> if i < maxIndex then v else {v with ParamIndex=None}
       
     //--------------------------------------------------------------------------
-    let demoteMissingParams (locals:Map<string,Ast.LocalGroup>) count supplied =
+    let demoteMissingParams (locals:Map<string,Ast.Local>) count supplied =
       let diff = supplied - count
       if diff >= 0 then locals
       else

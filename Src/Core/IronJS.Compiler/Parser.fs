@@ -134,9 +134,6 @@ module Ast =
     Active: int
     Indexes: LocalIndex array
   } with
-    member x.addIndex index =
-      {x with Indexes = x.Indexes |> FSKit.Array.appendOne index}
-
     static member New name index = {
       Name = name
       Active = 0
@@ -175,40 +172,38 @@ module Ast =
 
     GlobalLevel: int
     ClosureLevel: int
-
+    
+    ScopeType: ScopeType
     EvalMode: EvalMode
     LookupMode: LookupMode
     ContainsArguments: bool
     
-    Closures: Map<string, Closure>
     Locals: Map<string, LocalGroup>
+    Closures: Map<string, Closure>
+    Functions: Map<string, Tree>
     LocalCount: int
     ParamCount: int
     ClosedOverCount: int
 
-    ScopeType: ScopeType
-    Functions: Map<string, Tree>
   } with
-    static member NewDynamic = {Scope.New with LookupMode = LookupMode.Dynamic}
     static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
     static member New = {
       Id = 0UL
 
       GlobalLevel = -1
       ClosureLevel = -1
-
+      
+      ScopeType = FunctionScope
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
       ContainsArguments = false
-
-      Closures = Map.empty
+      
       Locals = Map.empty
-      LocalCount = 0
-      ClosedOverCount = 0
-      ParamCount = 0
-
-      ScopeType = FunctionScope
+      Closures = Map.empty
       Functions = Map.empty
+      LocalCount = 0
+      ParamCount = 0
+      ClosedOverCount = 0
     }
 
   //----------------------------------------------------------------------------
@@ -218,6 +213,9 @@ module Ast =
     | Closure of Closure
     
   //----------------------------------------------------------------------------
+  let addIndex index group =
+    {group with Indexes = group.Indexes |> FSKit.Array.appendOne index}
+
   let hasLocal name (scope:Scope) = scope.Locals |> Map.containsKey name
   let getLocal name (scope:Scope) = scope.Locals |> Map.find name
   let tryGetLocal name (scope:Scope) = scope.Locals |> Map.tryFind name 
@@ -228,7 +226,7 @@ module Ast =
     let group = 
       match Map.tryFind name scope.Locals with
       | None -> LocalGroup.New name index
-      | Some name -> name.addIndex index
+      | Some group -> group |> addIndex index
 
     let currentIndex = scope.ParamCount - 1
     {scope with 
@@ -263,21 +261,16 @@ module Ast =
     
   //----------------------------------------------------------------------------
   let decrementLocalIndexes (scope:Scope) topIndex =
-    let groups = 
-      Map.map (fun _ group ->
-        
-        {group with 
-          Indexes = 
-            group.Indexes |> Array.map (fun i -> 
-              if i.IsClosedOver || i.Index < topIndex
-                then i
-                else {i with Index=i.Index-1}
-            ) 
-        }
-
-      ) scope.Locals
-
-    {scope with Locals=groups}
+    {scope with 
+      Locals = 
+        scope.Locals |> Map.map (fun _ group ->
+          {group with 
+            Indexes = 
+              group.Indexes |> Array.map (fun i -> 
+                if i.IsClosedOver || i.Index < topIndex
+                  then i else {i with Index=i.Index-1}) 
+          })
+    }
     
   //----------------------------------------------------------------------------
   let closeOverVar (scope:Scope) name =
@@ -376,22 +369,18 @@ module Ast =
       
       let pop sc =
         match !sc with
-        | []          -> failwith "Empty scope chain"
-        | scope::sc'  -> sc := sc'; scope
+        | [] -> failwith "Empty scope chain"
+        | scope::sc' -> sc := sc'; scope
 
       let replace old new' sc =
         sc := sc |!> List.map (fun scope ->
-          if scope.Id = old.Id then new' else scope
-        )
+          if scope.Id = old.Id then new' else scope)
 
       let modifyCurrent (f:Scope -> Scope) sc =
-        match !sc with
-        | []    -> ()
-        | x::xs -> sc := f x :: xs
+        match !sc with [] -> () | x::xs -> sc := f x :: xs
 
       let pushAnd sc s f t =
-        sc := s :: !sc
-        let t' = f t in pop sc, t'
+        sc := s :: !sc; let t' = f t in pop sc, t'
         
     module Scope =
       let hasDynamicLookup (scope:Scope) = scope.LookupMode = LookupMode.Dynamic
@@ -506,8 +495,7 @@ module Ast =
             EvalMode = s |> getEvalMode sc
             LookupMode = s |> getLookupMode wl sc
             GlobalLevel = if sc |> ScopeChain.notEmpty then gl + 1 else gl
-            ClosureLevel = 
-              if sc |> ScopeChain.notEmpty then s |> getClosureLevel cl else cl
+            ClosureLevel = s |> getClosureLevel cl 
           }
           
         let calculate = calculate wl s.GlobalLevel s.ClosureLevel

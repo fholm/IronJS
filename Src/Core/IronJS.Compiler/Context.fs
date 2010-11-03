@@ -25,9 +25,7 @@ type Target = {
     | Some delegate' -> 
       Dlr.ArrayUtils.RemoveFirst(
         Dlr.ArrayUtils.RemoveFirst(
-          FSKit.Reflection.getDelegateArgTypes delegate'
-        )
-      )
+          FSKit.Reflection.getDelegateArgTypes delegate'))
 
   member x.ParamType i = x.ParamTypes.[i]
   member x.ParamCount = x.ParamTypes.Length
@@ -55,8 +53,9 @@ type [<AllowNullLiteral>] EvalTarget() =
 // Record representing a compilation context
 //------------------------------------------------------------------------------
 type Context = {
+  Compiler : Context -> Ast.Tree -> Dlr.Expr
   Target: Target
-  ScopeChain: Ast.Scope list
+  Scope: Ast.Scope
   ReturnLabel: Dlr.Label
   InsideWith: bool
 
@@ -70,9 +69,9 @@ type Context = {
   Continue: Dlr.Label option
   BreakLabels: Map<string, Dlr.Label>
   ContinueLabels: Map<string, Dlr.Label>
-
   Parameters: Dlr.ExprParam array
 } with
+  member x.Compile tree = x.Compiler x tree
 
   member x.Env = Dlr.field x.Function "Env"
   member x.Env_Return = Dlr.field x.Env "Return"
@@ -88,10 +87,8 @@ type Context = {
   member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
 
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
-  member x.Scope = match x.ScopeChain with s::_ -> s | [] -> failwith "Que?"
-  member x.WithScope s = {x with ScopeChain = s :: x.ScopeChain}
-  member x.DynamicLookup = x.Scope.DynamicLookup || x.InsideWith
-  member x.TopScope = x.ScopeChain.[x.ScopeChain.Length - 1]
+  member x.DynamicLookup = 
+    Ast.Utils.Scope.hasDynamicLookup x.Scope || x.InsideWith
 
   member x.AddDefaultLabel break' =
     {x with Break=Some break'}
@@ -110,9 +107,3 @@ type Context = {
     {x with BreakLabels = x.BreakLabels.Add(label, break')}
 
 type Ctx = Context
-      
-//-------------------------------------------------------------------------
-type IdentifierType
-  = Global
-  | Variable of Ast.Scope * Ast.Variable
-  | Closure of Ast.Closure

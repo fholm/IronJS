@@ -72,15 +72,18 @@
     <DefineConstants>
     </DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\IronJS.Runtime.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>..\..\..\Lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

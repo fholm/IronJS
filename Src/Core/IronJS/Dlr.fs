@@ -279,19 +279,17 @@ module Dlr =
   let ifElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
   let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
 
-  let for' init test incr body = 
-    blockSimple [init; AstUtils.Loop(test, incr, body, void')]
-
-  let forL init test incr body break' continue' = 
+  let for' init test incr body break' continue' = 
     blockSimple [
       (init)
-      (AstUtils.Loop(test, incr, body, void', break', continue'))
-    ]
+      (AstUtils.Loop(test, incr, body, void', break', continue'))]
 
-  let while' test body = AstUtils.Loop(test, void', body, void') :> Expr
-  let whileL test body break' continue' = 
+  let while' test body break' continue' = 
     AstUtils.Loop(test, void', body, void', break', continue') :> Expr
 
+  let doWhile test body breakLbl continueLbl =
+    let body = blockSimple [body; ifElse test void' (break' breakLbl)]
+    Expr.Loop(body, breakLbl, continueLbl) :> Expr
 
   let sub left right = Et.Subtract(left, right) :> Et
   let subChk left right = Et.SubtractChecked(left, right) :> Et

@@ -79,7 +79,8 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
@@ -110,7 +111,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
+    <ProjectReference Include="..\..\Dependencies\FSKit\Src\FSKit.fsproj">
       <Name>FSKit</Name>
       <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
       <Private>True</Private>

@@ -15,13 +15,13 @@ open System.Globalization
   
 
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Type aliases to give a more meaningful name to some special types in 
 // the context of IronJS
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 type Class = byte
-type FunId = int64
-type ClassId = int64
+type FunctionId = uint64
+type MapId = int64
 
 type BoxField = string
 type TypeTag = uint32
@@ -158,9 +158,9 @@ module TaggedBools =
     bytes.[7] <- 0xFFuy
     FSKit.Bit.bytes2double bytes
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Represents a value whos type is unknown at runtime
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
@@ -179,12 +179,90 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
     [<FieldOffset(14)>] val mutable Marker : uint16
   end
 
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // 8.1 Undefined
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
+    
+//------------------------------------------------------------------------------
+// Record for all default property maps
+//------------------------------------------------------------------------------
+and Maps = {
+  Base : PropertyMap
+  Array : PropertyMap
+  Function : PropertyMap
+  Prototype : PropertyMap
+  String : PropertyMap
+  Number : PropertyMap
+  Boolean : PropertyMap
+}
+//------------------------------------------------------------------------------
+and Methods = {
+  Object : InternalMethods
+  Array : InternalMethods
+  Arguments : InternalMethods
+}
+
+//------------------------------------------------------------------------------
+and Prototypes = {
+  Object : IjsObj
+  Array : IjsObj
+  Function : IjsFunc
+  String : IjsObj
+  Number : IjsObj
+  Boolean : IjsObj
+} with
+  static member Empty = {
+    Object = null
+    Function = null
+    Array = null
+    String = null
+    Number = null
+    Boolean = null
+  }
+
+//------------------------------------------------------------------------------
+and Constructors = {
+  Object : IjsFunc
+  Array : IjsFunc
+  Function : IjsFunc
+  String : IjsFunc
+  Number : IjsFunc
+  Boolean : IjsFunc
+} with
+  static member Empty = {
+    Object = null
+    Function = null
+    Array = null
+    String = null
+    Number = null
+    Boolean = null
+  }
+
+//------------------------------------------------------------------------------
+// Class that encapsulates a runtime environment
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] Environment() =
+  let currentFunctionId = ref 0UL
+  let currentPropertyMapId = ref 0L
+
+  let compilers = new MutableDict<FunctionId, FunctionCompiler>()
+  let functionStrings = new MutableDict<FunctionId, IjsStr>()
+
+  [<DefaultValue>] val mutable Return : Box
+  [<DefaultValue>] val mutable Prototypes : Prototypes
+  [<DefaultValue>] val mutable Constructors : Constructors
+  [<DefaultValue>] val mutable Maps : Maps
+  [<DefaultValue>] val mutable Globals : Object
+  [<DefaultValue>] val mutable Methods : Methods
+
+  member x.Compilers = compilers
+  member x.FunctionSourceStrings = functionStrings
+  
+  member x.nextFunctionId() = FSKit.Ref.incru64 currentFunctionId
+  member x.nextPropertyMapId() = FSKit.Ref.incr64 currentPropertyMapId
 
 //------------------------------------------------------------------------------
 // 8.6
@@ -285,10 +363,8 @@ and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
 and Default = delegate of IjsObj * byte -> IjsBox
 
 //-------------------------------------------------------------------------
-// 
-//-------------------------------------------------------------------------
 and [<AllowNullLiteral>] PropertyMap =
-  val mutable Id : int64
+  val mutable Id : MapId
   val mutable Env : IjsEnv
   val mutable NextIndex : int
   val mutable PropertyMap : MutableDict<string, int>
@@ -296,7 +372,7 @@ and [<AllowNullLiteral>] PropertyMap =
   val mutable SubClasses : MutableDict<string, PropertyMap>
 
   new(env:IjsEnv, map) = {
-    Id = env.nextPropertyClassId
+    Id = env.nextPropertyMapId()
     Env = env
     PropertyMap = map
     NextIndex = map.Count
@@ -316,12 +392,8 @@ and [<AllowNullLiteral>] PropertyMap =
   member x.isDynamic = 
     x.Id < 0L
 
-  
-
-
 //------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
+// 10.1.8
 and [<AllowNullLiteral>] Arguments =
   inherit Object
   
@@ -333,7 +405,7 @@ and [<AllowNullLiteral>] Arguments =
 
   new (env:IjsEnv, linkMap, locals, closedOver) as a = 
     {
-      inherit Object(env.Array_Class, env.Object_prototype, Classes.Object, 0u)
+      inherit Object(env.Maps.Array, env.Prototypes.Object, Classes.Object, 0u)
 
       Locals = locals
       ClosedOver = closedOver
@@ -343,7 +415,7 @@ and [<AllowNullLiteral>] Arguments =
 
     } then
       let o = a :> IjsObj
-      o.Methods <- env.Arguments_methods
+      o.Methods <- env.Methods.Arguments
       o.Methods.PutValProperty.Invoke(o, "length", double linkMap.Length)
       a.copyLinkedValues()
       
@@ -362,25 +434,6 @@ and [<AllowNullLiteral>] Arguments =
       | _ -> failwith "Que?"
 
 
-
-//------------------------------------------------------------------------------
-and [<AllowNullLiteral>] FunctionCompiler(compiler) = 
-
-  let cache = new MutableDict<ClrDelegateType, Delegate>()
-
-  member x.compile (f:IjsFunc, t:ClrDelegateType) = 
-    let mutable delegate' = null
-
-    if not (cache.TryGetValue(t, &delegate')) then
-      delegate' <- compiler f t
-      cache.Add(t, delegate')
-
-    delegate'
-
-  member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
-    x.compile(f, typeof<'a>) :?> 'a
-
-
       
 //------------------------------------------------------------------------------
 // Base class used to represent all functions exposed as native javascript
@@ -391,7 +444,7 @@ and [<AllowNullLiteral>] Function =
 
   val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
-  val mutable FunctionId : FunId
+  val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
 
   val mutable ScopeChain : Scope
@@ -399,22 +452,22 @@ and [<AllowNullLiteral>] Function =
      
   new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
     inherit Object(
-      env.Function_Class, env.Function_prototype, Classes.Function, 0u)
+      env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
     Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
-    ConstructorMode = 1uy
+    ConstructorMode = ConstructorModes.User
 
     ScopeChain = scopeChain
     DynamicScope = dynamicScope
   }
 
-  new (env:IjsEnv, propertyClass) = {
-    inherit Object(propertyClass, env.Function_prototype, Classes.Function, 0u)
+  new (env:IjsEnv, propertyMap) = {
+    inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
     Env = env
     Compiler = null
-    FunctionId = env.nextFunctionId
+    FunctionId = env.nextFunctionId()
     ConstructorMode = 0uy
 
     ScopeChain = null
@@ -425,7 +478,7 @@ and [<AllowNullLiteral>] Function =
     inherit Object()
     Env = env
     Compiler = null
-    FunctionId = -1L
+    FunctionId = 0UL
     ConstructorMode = 0uy
 
     ScopeChain = null
@@ -447,7 +500,7 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
   new (env:IjsEnv, delegate') as x = 
     {
-      inherit Function(env, env.Function_Class)
+      inherit Function(env, env.Maps.Function)
 
       Delegate = delegate'
 
@@ -483,53 +536,22 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
-//-------------------------------------------------------------------------
-// Class that encapsulates a runtime environment
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] Environment =
-  //Id counters
-  [<DefaultValue>] val mutable private _nextPropertyMapId : int64
-  [<DefaultValue>] val mutable private _nextFunctionId : int64
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] FunctionCompiler(compiler) = 
 
-  //
-  [<DefaultValue>] val mutable Return : Box
-  val mutable Compilers : MutableDict<FunId, FunctionCompiler>
-  val mutable FunctionSourceStrings : MutableDict<FunId, IjsStr>
+  let cache = new MutableDict<ClrType, Delegate>()
 
-  //Objects
-  [<DefaultValue>] val mutable Globals : Object
-  [<DefaultValue>] val mutable Object_prototype : Object
-  [<DefaultValue>] val mutable Array_prototype : Object
-  [<DefaultValue>] val mutable Function_prototype : Object
-  [<DefaultValue>] val mutable String_prototype : Object
-  [<DefaultValue>] val mutable Number_prototype : Object
-  [<DefaultValue>] val mutable Boolean_prototype : Object
+  member x.compile (f:IjsFunc, t:ClrType) = 
+    let mutable delegate' = null
 
-  //Property Classes
-  [<DefaultValue>] val mutable Base_Class : PropertyMap
-  [<DefaultValue>] val mutable Array_Class : PropertyMap
-  [<DefaultValue>] val mutable Function_Class : PropertyMap
-  [<DefaultValue>] val mutable Prototype_Class : PropertyMap
-  [<DefaultValue>] val mutable String_Class : PropertyMap
-  [<DefaultValue>] val mutable Number_Class : PropertyMap
-  [<DefaultValue>] val mutable Boolean_Class : PropertyMap
+    if not (cache.TryGetValue(t, &delegate')) then
+      delegate' <- compiler f t
+      cache.Add(t, delegate')
 
-  //Methods
-  [<DefaultValue>] val mutable Object_methods : InternalMethods
-  [<DefaultValue>] val mutable Arguments_methods : InternalMethods
+    delegate'
 
-  member x.nextPropertyClassId = 
-    x._nextPropertyMapId <- x._nextPropertyMapId + 1L
-    x._nextPropertyMapId
-
-  member x.nextFunctionId = 
-    x._nextFunctionId <- x._nextFunctionId + 1L
-    x._nextFunctionId
-      
-  new () = {
-    Compilers = new MutableDict<FunId, FunctionCompiler>()
-    FunctionSourceStrings = new MutableDict<FunId, IjsStr>()
-  }
+  member x.compileAs<'a when 'a :> Delegate> (f:IjsFunc) = 
+    x.compile(f, typeof<'a>) :?> 'a
 
 //------------------------------------------------------------------------------
 // Class representing a javascript user exception

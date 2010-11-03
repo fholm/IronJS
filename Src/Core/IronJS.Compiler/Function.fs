@@ -7,6 +7,9 @@ open IronJS.Compiler
 //------------------------------------------------------------------------------
 module Function =
 
+  let closureScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "ScopeChain"
+  let dynamicScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "DynamicChain"
+
   //----------------------------------------------------------------------------
   let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegateType =
     compiler {target with Delegate = Some delegateType}
@@ -23,28 +26,16 @@ module Function =
     applyCompiler compiler target
     
   //----------------------------------------------------------------------------
-  let scopeLocalSize tree =
-    match tree with
-    | Ast.LocalScope(scope, _) -> scope.LocalCount
-    | _ -> failwith "Que?"
-    
-  //----------------------------------------------------------------------------
-  let scopeParamCount tree =
-    match tree with
-    | Ast.LocalScope(scope, _) -> scope.ParamCount
-    | _ -> failwith "Que?"
-    
-  //----------------------------------------------------------------------------
-  let create ctx compiler id tree =
+  let create ctx compiler (scope:Ast.Scope) ast =
     //Make sure a compiler exists for this function
-    if Api.Environment.hasCompiler ctx.Target.Environment id |> not then
+    if Api.Environment.hasCompiler ctx.Target.Environment scope.Id |> not then
       (Api.Environment.addCompilerId 
-        ctx.Target.Environment id (makeCompiler ctx compiler tree))
+        ctx.Target.Environment scope.Id (makeCompiler ctx compiler ast))
 
     let funcArgs = [
       (ctx.Env)
-      (Dlr.const' id)
-      (Dlr.const' (scopeParamCount tree))
+      (Dlr.const' scope.Id)
+      (Dlr.const' scope.ParamCount)
       (ctx.ClosureScope)
       (ctx.DynamicScope)]
 
@@ -66,7 +57,7 @@ module Function =
             (Expr.testIsFunction
               (method')
               (fun x -> invokeAsFunction x object' args)
-              (fun x -> Expr.undefinedBoxed))])])
+              (fun x -> Expr.BoxedConstants.undefined))])])
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -87,7 +78,7 @@ module Function =
       (Expr.testIsFunction 
         (Identifier.getValue ctx name)
         (fun x -> invokeAsFunction x ctx.Globals args)
-        (fun x -> Expr.undefinedBoxed))
+        (fun x -> Expr.BoxedConstants.undefined))
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
@@ -99,7 +90,7 @@ module Function =
           (x)
           (fun x -> Object.Property.get x name)
           (args)))
-      (fun x -> Expr.undefinedBoxed))
+      (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
@@ -110,7 +101,7 @@ module Function =
           (x)
           (fun x -> Object.Index.get x index)
           (args)))
-      (fun x -> Expr.undefinedBoxed))
+      (fun x -> Expr.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
   let createTempVars args =
@@ -123,3 +114,57 @@ module Function =
         (tmp :: temps, tmp :> Dlr.Expr :: args, assign :: ass)
 
     ) args ([], [], [])
+    
+  //----------------------------------------------------------------------------
+  // 11.2.2 the new operator
+  let new' (ctx:Ctx) func args =
+    let args = [for a in args -> ctx.Compile a]
+    let func = ctx.Compile func
+
+    (Expr.testIsFunction
+      (func)
+      (fun f ->
+        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
+        let args = f :: ctx.Globals :: args
+        (Dlr.ternary
+          (Expr.isConstructor f)
+          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes args)
+          (Expr.BoxedConstants.undefined)))
+      (fun _ -> Expr.BoxedConstants.undefined))
+      
+  //----------------------------------------------------------------------------
+  // 11.2.3 function calls
+  let invoke (ctx:Ctx) tree argTrees =
+    let args = [for tree in argTrees -> ctx.Compile tree]
+    let temps, args, assigns = createTempVars args
+
+    let invokeExpr = 
+      //foo(arg1, arg2, [arg3, ...])
+      match tree with
+      | Ast.Identifier(name) -> 
+        invokeIdentifier ctx name args
+
+      //bar.foo(arg1, arg2, [arg3, ...])
+      | Ast.Property(tree, name) ->
+        let object' = ctx.Compile tree
+        invokeProperty ctx object' name args
+
+      //bar["foo"](arg1, arg2, [arg3, ...])
+      | Ast.Index(tree, index) ->
+        let object' = ctx.Compile tree
+        let index = ctx.Compile index
+        invokeIndex ctx object' index args
+
+      //(function(){ ... })();
+      | _ -> 
+        let func = ctx.Compile tree
+        invokeAsFunction func ctx.Globals args
+
+    Dlr.block temps (assigns @ [invokeExpr])
+    
+  //----------------------------------------------------------------------------
+  // 12.9 the return statement
+  let return' (ctx:Ctx) tree =
+    Dlr.blockSimple [
+      (Expr.assignValue ctx.Env_Return (ctx.Compile tree))
+      (Dlr.returnVoid ctx.ReturnLabel)]

@@ -12,8 +12,10 @@ module Global =
   let eval (target:Compiler.EvalTarget) =
     match target.Target.Tag with
     | TypeTags.String ->
+
+      (*
       let tree = 
-        Ast.LocalScope(
+        Ast.Function(          
          {Ast.Scope.New with Closures=target.Closures}, 
           Ast.Parsers.Ecma3.parse target.Function.Env target.Target.String)
 
@@ -38,6 +40,9 @@ module Global =
           target.LocalScope,
           target.ClosureScope,
           target.DynamicScope))
+      *)
+
+      Utils.BoxedConstants.undefined
 
     | _ -> target.Target
 

@@ -40,6 +40,9 @@ module Extensions =
     member o.get (name) =
       o.Methods.GetProperty.Invoke(o, name)
 
+    member o.get<'a> (name) =
+      o.Methods.GetProperty.Invoke(o, name) |> Utils.unboxT<'a>
+
     member o.has (name) =
       o.Methods.HasProperty.Invoke(o, name)
 
@@ -76,6 +79,9 @@ module Extensions =
 
     member o.get (index) =
       o.Methods.GetIndex.Invoke(o, index)
+      
+    member o.get<'a> (index) =
+      o.Methods.GetIndex.Invoke(o, index) |> Utils.unboxT<'a>
 
     member o.has (index) =
       o.Methods.HasIndex.Invoke(o, index)
@@ -104,27 +110,27 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createObject (env:IjsEnv) =
-    let o = IjsObj(env.Base_Class, env.Object_prototype, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object, 0u)
+    o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createObjectWithMap (env:IjsEnv) map =
-    let o = IjsObj(map, env.Object_prototype, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(map, env.Prototypes.Object, Classes.Object, 0u)
+    o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createArray (env:IjsEnv) size =
-    let o = IjsObj(env.Array_Class, env.Array_prototype, Classes.Array, size)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
+    o.Methods <- env.Methods.Array
     o.Methods.PutValProperty.Invoke(o, "length", double size)
     o
     
   //----------------------------------------------------------------------------
   let createString (env:IjsEnv) (s:IjsStr) =
-    let o = IjsObj(env.String_Class, env.String_prototype, Classes.String, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.String, env.Prototypes.String, Classes.String, 0u)
+    o.Methods <- env.Methods.Object
     o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
     o.Value.Box.Clr <-s
     o.Value.Box.Tag <- TypeTags.String
@@ -132,23 +138,23 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
-    let o = IjsObj(env.Number_Class, env.Number_prototype, Classes.Number, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
+    o.Methods <- env.Methods.Object
     o.Value.Box.Number <- n
     o
     
   //----------------------------------------------------------------------------
   let createBoolean (env:IjsEnv) b =
-    let o = IjsObj(env.Boolean_Class, env.Boolean_prototype, Classes.Boolean, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean, 0u)
+    o.Methods <- env.Methods.Object
     o.Value.Box.Bool <- b
     o.Value.Box.Tag <- TypeTags.Bool
     o
   
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Prototype_Class, env.Object_prototype, Classes.Object, 0u)
-    o.Methods <- env.Object_methods
+    let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object, 0u)
+    o.Methods <- env.Methods.Object
     o
   
   //----------------------------------------------------------------------------
@@ -156,7 +162,7 @@ module Environment =
     let proto = createPrototype env
     let func = IjsFunc(env, id, chain, dc)
 
-    (func :> IjsObj).Methods <- env.Object_methods
+    (func :> IjsObj).Methods <- env.Methods.Object
     func.ConstructorMode <- ConstructorModes.User
 
     proto.put("constructor", func)
@@ -287,7 +293,7 @@ type TypeConverter =
   static member toBoolean (o:IjsObj) = true
   static member toBoolean (b:IjsBox) =
     match b with 
-    | Number -> TypeConverter.toBoolean b
+    | Number -> TypeConverter.toBoolean b.Number
     | Boolean -> b.Bool
     | Undefined -> false
     | String -> b.String.Length > 0
@@ -341,13 +347,19 @@ type TypeConverter =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
   //----------------------------------------------------------------------------
-  static member toInt32 (d:IjsNum) = int d
-  static member toUInt32 (d:IjsNum) = uint32 d
-  static member toUInt16 (d:IjsNum) = uint16 d
+  static member toInt32 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0 else int d
+
+  static member toUInt32 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0u else uint32 d
+
+  static member toUInt16 (d:IjsNum) = 
+    if d <> d || Double.IsInfinity d then 0us else uint16 d
+
   static member toInteger (d:IjsNum) : double = 
     if d = NaN
       then 0.0
-      elif d = 0.0 || d = NegInf || d = PosInf
+      elif d = 0.0 || Double.IsInfinity d
         then d
         else double (Math.Sign d) * Math.Floor(Math.Abs d)
                 
@@ -378,7 +390,12 @@ type Operators =
 
   //----------------------------------------------------------------------------
   // typeof
-  static member typeOf (o:IjsBox) = TypeTags.Names.[o.Tag]
+  static member typeOf (o:IjsBox) = 
+    match o with
+    | Number _ -> "number" 
+    | IsNull _ -> "object"
+    | _ -> TypeTags.Names.[o.Tag]
+
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
   
   //----------------------------------------------------------------------------
@@ -393,7 +410,7 @@ type Operators =
   static member bitCmpl (o:IjsBox) =
     let o = TypeConverter.toNumber o
     let o = TypeConverter.toInt32 o
-    Utils.boxNumber (double (~~~ o))
+    ~~~ o
       
   //----------------------------------------------------------------------------
   // + (unary)
@@ -612,7 +629,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l &&& r))
+    l &&& r
     
   //----------------------------------------------------------------------------
   // |
@@ -622,7 +639,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l ||| r))
+    l ||| r
     
   //----------------------------------------------------------------------------
   // ^
@@ -632,7 +649,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    Utils.boxNumber (double (l ^^^ r))
+    l ^^^ r
     
   //----------------------------------------------------------------------------
   // <<
@@ -642,7 +659,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l <<< int r))
+    l <<< int r
     
   //----------------------------------------------------------------------------
   // >>
@@ -652,7 +669,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l >>> int r))
+    l >>> int r
     
   //----------------------------------------------------------------------------
   // >>>
@@ -662,7 +679,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    Utils.boxNumber (double (l >>> int r))
+    l >>> int r
     
   //----------------------------------------------------------------------------
   // &&
@@ -676,52 +693,50 @@ type Operators =
   static member or' (l:IjsBox, r:IjsBox) =
     if TypeConverter.toBoolean l then l else r
       
-
-
 //------------------------------------------------------------------------------
-// PropertyClass API
+// PropertyMap
 //------------------------------------------------------------------------------
-type PropertyClass =
-        
+module PropertyMap =
+
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyMap, name) = 
-    if x.isDynamic then 
+  let getSubMap (map:PropertyMap) name = 
+    if map.isDynamic then 
       let index = 
-        if x.FreeIndexes.Count > 0 then x.FreeIndexes.Pop()
-        else x.NextIndex <- x.NextIndex + 1; x.NextIndex - 1
+        if map.FreeIndexes.Count > 0 then map.FreeIndexes.Pop()
+        else map.NextIndex <- map.NextIndex + 1; map.NextIndex - 1
 
-      x.PropertyMap.Add(name, index)
-      x
+      map.PropertyMap.Add(name, index)
+      map
 
     else
-      let mutable subClass = null
+      let mutable subMap = null
       
-      if not(x.SubClasses.TryGetValue(name, &subClass)) then
-        let newMap = new MutableDict<string, int>(x.PropertyMap)
-        newMap.Add(name, newMap.Count)
-        subClass <- IronJS.PropertyMap(x.Env, newMap)
-        x.SubClasses.Add(name, subClass)
+      if not(map.SubClasses.TryGetValue(name, &subMap)) then
+        let properties = new MutableDict<string, int>(map.PropertyMap)
+        properties.Add(name, properties.Count)
+        subMap <- IronJS.PropertyMap(map.Env, properties)
+        map.SubClasses.Add(name, subMap)
 
-      subClass
+      subMap
 
   //----------------------------------------------------------------------------
-  static member subClass (x:IronJS.PropertyMap, names:string seq) =
-    Seq.fold (fun c (n:string) -> PropertyClass.subClass(c, n)) x names
+  let rec buildSubMap (map:PropertyMap) names =
+    Seq.fold (fun map name -> getSubMap map name) map names
         
   //----------------------------------------------------------------------------
-  static member makeDynamic (x:IronJS.PropertyMap) =
-    if x.isDynamic then x
+  let makeDynamic (map:IronJS.PropertyMap) =
+    if map.isDynamic then map
     else
-      let pc = new IronJS.PropertyMap(null)
-      pc.Id <- -1L
-      pc.NextIndex <- x.NextIndex
-      pc.FreeIndexes <- new MutableStack<int>()
-      pc.PropertyMap <- new MutableDict<string, int>(x.PropertyMap)
-      pc
+      let newMap = PropertyMap(null)
+      newMap.Id <- -1L
+      newMap.NextIndex <- map.NextIndex
+      newMap.FreeIndexes <- new MutableStack<int>()
+      newMap.PropertyMap <- new MutableDict<string, int>(map.PropertyMap)
+      newMap
         
   //----------------------------------------------------------------------------
-  static member delete (x:IronJS.PropertyMap, name) =
-    let pc = if not x.isDynamic then PropertyClass.makeDynamic x else x
+  let delete (x:IronJS.PropertyMap, name) =
+    let pc = if not x.isDynamic then makeDynamic x else x
     let mutable index = 0
 
     if pc.PropertyMap.TryGetValue(name, &index) then 
@@ -731,8 +746,8 @@ type PropertyClass =
     pc
       
   //----------------------------------------------------------------------------
-  static member getIndex (x:IronJS.PropertyMap, name) =
-    x.PropertyMap.[name]
+  let getIndex (map:PropertyMap) name =
+    map.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
 // Function API
@@ -744,7 +759,7 @@ type Function() =
     match prototype.Tag with
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
-    | _ -> f.Env.Object_prototype
+    | _ -> f.Env.Prototypes.Object
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
@@ -963,9 +978,6 @@ type Function() =
   //----------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// DispatchTarget
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 // HostFunction API
 //------------------------------------------------------------------------------
 module HostFunction =
@@ -1062,7 +1074,7 @@ module HostFunction =
     let f = h :> IjsFunc
     let o = f :> IjsObj
 
-    o.Methods <- env.Object_methods
+    o.Methods <- env.Methods.Object
     o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
     Environment.addCompiler env f compile<'a>
 
@@ -1134,7 +1146,7 @@ module Object =
     //--------------------------------------------------------------------------
     let makeDynamic (o:IjsObj) =
       if o.PropertyMapId >= 0L then
-        o.PropertyMap <- PropertyClass.makeDynamic o.PropertyMap
+        o.PropertyMap <- PropertyMap.makeDynamic o.PropertyMap
       
     //--------------------------------------------------------------------------
     let expandStorage (o:IjsObj) =
@@ -1152,7 +1164,7 @@ module Object =
       match getIndex o name with
       | true, index -> index
       | _ -> 
-        o.PropertyMap <- PropertyClass.subClass(o.PropertyMap, name)
+        o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
         if isFull o then expandStorage o
         o.PropertyMap.PropertyMap.[name]
         
@@ -1215,7 +1227,7 @@ module Object =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
-        setMap o (PropertyClass.delete(o.PropertyMap, name))
+        setMap o (PropertyMap.delete(o.PropertyMap, name))
 
         let attrs = o.PropertyDescriptors.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs

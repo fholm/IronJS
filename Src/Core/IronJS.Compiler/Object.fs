@@ -6,11 +6,6 @@ open IronJS.Expr.Patterns
 
 //------------------------------------------------------------------------------
 module Object =
-
-  //----------------------------------------------------------------------------
-  let ghd expr method' name = 
-    Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-      [Dlr.invoke (method' tmp) [tmp; name]])
   
   //----------------------------------------------------------------------------
   module Property = 
@@ -151,3 +146,61 @@ module Object =
         [Dlr.invoke 
           (Expr.Object.Methods.deleteIndex tmp)
           [tmp; name]])
+          
+  //----------------------------------------------------------------------------
+  // 11.2.1 Property Accessors
+      
+  // MemberExpression . Identifier
+  let getProperty (ctx:Ctx) object' name =
+    let name = Dlr.const' name
+    (Expr.testIsObject
+      (ctx.Compile object')
+      (fun x -> Property.get x name)
+      (fun x -> Expr.BoxedConstants.undefined))
+
+  // MemberExpression [ Expression ]
+  let getIndex (ctx:Ctx) object' index =
+    let index = Utils.compileIndex ctx index
+    (Expr.testIsObject
+      (ctx.Compile object')
+      (fun x -> Index.get x index)
+      (fun x -> Expr.BoxedConstants.undefined))
+
+  //----------------------------------------------------------------------------
+  // 11.1.4 array initialiser
+  let literalArray (ctx:Ctx) (indexes:Ast.Tree list) = 
+    let length = indexes.Length
+    let args = [ctx.Env; Dlr.const' (uint32 length)]
+
+    Dlr.blockTmpT<IjsObj> (fun tmp ->
+      [ (Dlr.assign tmp
+          (Dlr.callMethod
+            Api.Environment.Reflected.createArray args))
+
+        (List.mapi (fun i value ->
+          let index = uint32 i |> Dlr.const'
+          let value = ctx.Compile value
+          Index.put tmp index value
+        ) indexes) |> Dlr.blockSimple
+
+        (tmp :> Dlr.Expr)
+      ] |> Seq.ofList)
+      
+  //----------------------------------------------------------------------------
+  // 11.1.5 object initialiser
+  let literalObject (ctx:Ctx) properties =
+    let method' = Api.Environment.Reflected.createObject
+    let newExpr = Dlr.callMethod method' [ctx.Env]
+
+    let setProperty tmp assign =
+      match assign with
+      | Ast.Assign(Ast.String name, expr) -> 
+        let value = ctx.Compile expr
+        let name = Dlr.const' name
+        Property.put tmp name value
+
+      | _ -> failwith "Que?"
+
+    Dlr.blockTmpT<IjsObj> (fun tmp -> 
+      let initExprs = List.map (setProperty tmp) properties
+      (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList)

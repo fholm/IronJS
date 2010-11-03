@@ -15,95 +15,74 @@ module Identifier =
     walk expr (current - target)
       
   //----------------------------------------------------------------------------
-  let getData (ctx:Ctx) name =
-    match Seq.tryFind (Ast.hasVar name) ctx.ScopeChain with
-    | Some scope -> Variable(scope, Ast.getVar name scope)
-    | None -> 
-      match Seq.tryFind (Ast.hasCls name) ctx.ScopeChain with
-      | None -> Global
-      | Some scope -> Closure(Ast.getCls name scope)
-        
-  //----------------------------------------------------------------------------
-  let clsExprAndIndex ctx (cls:Ast.Closure) =
+  let private closureExprAndIndex ctx (closure:Ast.Closure) =
     let expr = 
       (walkScopeChain
         (ctx.ClosureScope)
-        (cls.ClosureLevel)
-        (ctx.Scope.ClosureLevel)
-      )
+        (closure.ClosureLevel)
+        (ctx.Scope.ClosureLevel))
 
-    Some(expr, cls.Index, cls.GlobalLevel, None)
+    Some(expr, closure.Index, closure.GlobalLevel)
       
   //----------------------------------------------------------------------------
-  let varExprAndIndex ctx (scope:Ast.Scope) (var:Ast.Variable) =
-    let expr =
-      if var.IsClosedOver then
-        (walkScopeChain
-          (ctx.ClosureScope)
-          (scope.ClosureLevel)
-          (ctx.Scope.ClosureLevel)
-        )
+  let private localExprAndIndex (ctx:Ctx) (group:Ast.LocalGroup) =
+    let index = group.Indexes.[group.Active]
+    let scopeExpr = 
+      if index.IsClosedOver 
+        then ctx.ClosureScope else ctx.LocalScope
 
-      else
-        (walkScopeChain
-          (ctx.LocalScope)
-          (scope.LocalLevel)
-          (ctx.Scope.LocalLevel)
-        )
-
-    Some(expr, var.Index, scope.GlobalLevel, var.Type)
+    Some(scopeExpr, index.Index, ctx.Scope.GlobalLevel)
     
   //----------------------------------------------------------------------------
-  let isGlobal ctx name =
-    getData ctx name = Global
-    
-  //----------------------------------------------------------------------------
-  let getExprIndexLevelType ctx name =
-    match getData ctx name with
-    | Global -> None
-    | Variable(scope, var) -> varExprAndIndex ctx scope var
-    | Closure cls -> clsExprAndIndex ctx cls
+  let private getExprIndexLevelType ctx name =
+    match ctx.Scope |> Ast.Utils.Scope.getVariable name with
+    | Ast.VariableOption.Global -> None
+    | Ast.VariableOption.Local group -> localExprAndIndex ctx group
+    | Ast.VariableOption.Closure closure -> closureExprAndIndex ctx closure
 
   //----------------------------------------------------------------------------
-  let dynamicGetGlobalArgs (ctx:Ctx) name = 
+  let private dynamicGetGlobalArgs (ctx:Ctx) name = 
     [Dlr.neg1; ctx.Globals; Dlr.defaultT<Scope>; Dlr.neg1]
 
   //----------------------------------------------------------------------------
-  let dynamicGetVariableArgs (ctx:Ctx) expr (name:string) (i:int) (l:int) =
+  let private dynamicGetVariableArgs (ctx:Ctx) expr (name:string) (i:int) (l:int) =
     [Dlr.const' l; ctx.Globals; expr; Dlr.const' i]
           
   //----------------------------------------------------------------------------
   let getDynamicArgs (ctx:Ctx) name =
     match getExprIndexLevelType ctx name with
     | None -> dynamicGetGlobalArgs ctx name
-    | Some(expr, i, level, _) -> dynamicGetVariableArgs ctx expr name i level
+    | Some(expr, i, level) -> dynamicGetVariableArgs ctx expr name i level
           
   //----------------------------------------------------------------------------
-  let getValueDynamic (ctx:Ctx) name =
+  let private getValueDynamic (ctx:Ctx) name =
     let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callMethod Api.DynamicScope.Reflected.get args
           
   //----------------------------------------------------------------------------
-  let setValueDynamic (ctx:Ctx) name value =
+  let private setValueDynamic (ctx:Ctx) name value =
     let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callMethod Api.DynamicScope.Reflected.set args
+    
+  //----------------------------------------------------------------------------
+  let isGlobal ctx name =
+    ctx.Scope |> Ast.Utils.Scope.hasVariable name
         
   //----------------------------------------------------------------------------
   let getValue (ctx:Ctx) name =
     match ctx.DynamicLookup with
     | true -> getValueDynamic ctx name
     | _ -> 
-      let cname = Dlr.const' name
-      match ctx.Scope.ScopeType with
-      | Ast.GlobalScope -> Object.Property.get ctx.Globals cname
-      | _ ->
-        match getExprIndexLevelType ctx name with
-        | None -> Object.Property.get ctx.Globals cname
-        | Some(expr, i, _, tc) -> Dlr.Ext.static' (Expr.unboxIndex expr i tc)
+      match getExprIndexLevelType ctx name with
+      | Some(expr, i, _) -> Dlr.Ext.static' (Dlr.indexInt expr i)
+      | _ -> 
+        let name = Dlr.const' name
+        Object.Property.get ctx.Globals name
+
         
   //----------------------------------------------------------------------------
   let setValue (ctx:Ctx) name value =
@@ -116,6 +95,6 @@ module Identifier =
         Expr.blockTmp value (fun value ->
           [Object.Property.put ctx.Globals name value])
 
-      | Some(expr, i, _, tc) -> 
-        let varExpr = Expr.unboxIndex expr i tc
+      | Some(expr, i, _) -> 
+        let varExpr = (Dlr.indexInt expr i)
         Expr.assignValue (Dlr.Ext.static' varExpr) value

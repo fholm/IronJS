@@ -126,7 +126,7 @@ module Ast =
 
     // Exception
     | Try of Tree * Tree list * Tree option
-    | Catch of Tree
+    | Catch of string * Tree
     | Finally of Tree
     | Throw of Tree
 
@@ -242,26 +242,10 @@ module Ast =
       let isClosedOver local = (local |> activeIndex).IsClosedOver
       let isParam local = (local |> activeIndex) |> Index.isParam
       let isNotParam local = local |> isParam |> not
-
-    module ScopeChain =
-      let notEmpty sc = match !sc with [] -> false | _ -> true
-      let tryCurrentScope sc = match !sc with [] -> None | x::_ -> Some x
-      let currentScope sc =
-        match !sc with [] -> Errors.emptyScopeChain() | x::_ -> x
-      
-      let pop sc =
-        match !sc with
-        | [] -> Errors.emptyScopeChain()
-        | scope::sc' -> sc := sc'; scope
-
-      let replace old new' sc =
-        sc := sc |!> List.map (fun scope ->
-          if scope.Id = old.Id then new' else scope)
-
-      let modifyCurrent (f:Scope -> Scope) sc =
-        match !sc with [] -> Errors.emptyScopeChain() | x::xs -> sc := f x :: xs
-
-      let pushAnd sc s f t = sc := s :: !sc; let t' = f t in pop sc, t'
+      let decrActive local = {local with Active = local.Active-1}
+      let incrActive local = 
+        if local.Active < local.Indexes.Length-1 
+          then {local with Active = local.Active+1} else local
         
     module Scope =
 
@@ -281,6 +265,19 @@ module Ast =
           ParamCount = (defaultArg paramIndex currentIndex) + 1
           Locals = Map.add name group scope.Locals
         }
+
+      let replaceLocal (local:Local) (scope:Scope) =
+        {scope with Locals = scope.Locals |> Map.add local.Name local}
+
+      let incrLocal name (scope:Scope) =
+        match scope |> tryGetLocal name with
+        | None -> failwith "Que?"
+        | Some local -> scope |> replaceLocal (local |> Local.incrActive)
+
+      let decrLocal name (scope:Scope) =
+        match scope |> tryGetLocal name with
+        | None -> failwith "Que?"
+        | Some local -> scope |> replaceLocal (local |> Local.decrActive)
 
       let hasClosure name (scope:Scope) = scope.Closures |> Map.containsKey name
       let getClosure name (scope:Scope) = scope.Closures |> Map.find name
@@ -332,13 +329,13 @@ module Ast =
           match group.Indexes.[group.Active] with
           | active when active.IsClosedOver |> not ->
             let localIndex = active.Index
-            let closedOverIndex = scope.ClosedOverCount
+            let closedOverIndex = scope.ClosedOverCount + 1;
             let closedOver = 
               {active with IsClosedOver=true; Index=closedOverIndex}
 
             let scope = {
               scope with 
-                ClosedOverCount = closedOverIndex+1
+                ClosedOverCount = closedOverIndex
                 LocalCount = scope.LocalCount-1
             }
 
@@ -346,6 +343,32 @@ module Ast =
             decrementLocalIndexes scope localIndex
 
           | _ -> scope
+
+    module ScopeChain =
+      let notEmpty sc = match !sc with [] -> false | _ -> true
+      let tryCurrentScope sc = match !sc with [] -> None | x::_ -> Some x
+      let currentScope sc =
+        match !sc with [] -> Errors.emptyScopeChain() | x::_ -> x
+      
+      let pop sc =
+        match !sc with
+        | [] -> Errors.emptyScopeChain()
+        | scope::sc' -> sc := sc'; scope
+
+      let replace old new' sc =
+        sc := sc |!> List.map (fun scope ->
+          if scope.Id = old.Id then new' else scope)
+
+      let modifyCurrent (f:Scope -> Scope) sc =
+        match !sc with [] -> Errors.emptyScopeChain() | x::xs -> sc := f x :: xs
+
+      let pushAnd sc s f t = sc := s :: !sc; let t' = f t in pop sc, t'
+
+      let incrLocalAnd sc name f tree =
+        modifyCurrent (Scope.incrLocal name) sc
+        let tree = f tree
+        modifyCurrent (Scope.decrLocal name) sc
+        tree
 
     //--------------------------------------------------------------------------
     let walkAst f tree = 
@@ -399,7 +422,7 @@ module Ast =
         For(label, f init, f test, f incr, f body)
 
       // Exceptions
-      | Catch tree -> Catch (f tree)
+      | Catch(name, tree) -> Catch (name, f tree)
       | Finally body -> Finally (f body)
       | Throw tree -> Throw (f tree)
       | Try(body, catch, finally') -> 
@@ -434,6 +457,9 @@ module Ast =
         | Var(Assign(Identifier name, value)) -> 
           addVar name; Assign(Identifier name, analyze value)
 
+        | Catch(name, body) ->
+          addVar name; Catch(name, analyze body)
+
         | Identifier "arguments" ->
           addVar "arguments"
 
@@ -466,6 +492,9 @@ module Ast =
           )
 
           Eval source
+
+        | Catch(name, body) ->
+          Catch(name, ScopeChain.incrLocalAnd sc name mark body)
 
         | Identifier name ->
 
@@ -551,17 +580,20 @@ module Ast =
           let scope, body = ScopeChain.pushAnd sc scope resolve body
           Function(name, scope, body)
 
+        | Catch(name, body) ->
+          Catch(name, ScopeChain.incrLocalAnd sc name resolve body)
+
         | Eval source -> 
           
           let closures =
             !sc 
               |> Seq.map (fun scope ->
                 scope.Locals
-                |> Map.toSeq 
-                |> Seq.map (fun (name, local) ->
-                    name, Local.index local, scope.GlobalLevel, scope.ClosureLevel
-                  )
-                )
+                  |> Map.toSeq 
+                  |> Seq.map (
+                    fun (name, local) ->
+                      name, Local.index local, 
+                      scope.GlobalLevel, scope.ClosureLevel))
               |> Seq.concat
               |> Seq.groupBy (fun (name, _, _, _) -> name)
               |> Seq.map (
@@ -629,6 +661,3 @@ module Ast =
       ]
 
       List.fold (fun t f -> f t) tree analyzers
-
-
-

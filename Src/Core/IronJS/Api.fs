@@ -427,6 +427,27 @@ type Operators =
   //----------------------------------------------------------------------------
   // Binary
   //----------------------------------------------------------------------------
+  // in
+  static member in' (l,r) = Dlr.callStaticT<Operators> "in'" [l; r]
+  static member in' (l:IjsBox, r:IjsBox) = 
+    if Utils.Box.isObject r.Tag |> not then
+      failwith "[[TypeError]]"
+
+    match l with
+    | StringAndIndex i
+    | NumberAndIndex i -> r.Object.Methods.HasIndex.Invoke(r.Object, i)
+    | _ -> 
+      r.Object.Methods.HasProperty.Invoke(r.Object, TypeConverter.toString l)
+
+  // instanceof
+  static member instanceOf (l,r)= Dlr.callStaticT<Operators> "instanceOf" [l; r]
+  static member instanceOf(l:IjsBox, r:IjsBox) =
+    if Utils.Box.isFunction r.Tag |> not then
+      failwith "[[TypeError]]"
+
+    if Utils.Box.isObject l.Tag |> not 
+      then false
+      else r.Func.FunctionMethods.HasInstance.Invoke(r.Func, l.Object)
     
   //----------------------------------------------------------------------------
   // <
@@ -748,18 +769,34 @@ module PropertyMap =
   //----------------------------------------------------------------------------
   let getIndex (map:PropertyMap) name =
     map.PropertyMap.[name]
+
+open Extensions
     
 //------------------------------------------------------------------------------
 // Function API
 //------------------------------------------------------------------------------
 type Function() =
 
+  //----------------------------------------------------------------------------
   static let getPrototype(f:IjsFunc) =
     let prototype = (f :> IjsObj).Methods.GetProperty.Invoke(f, "prototype")
     match prototype.Tag with
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
     | _ -> f.Env.Prototypes.Object
+
+    
+  //----------------------------------------------------------------------------
+  //15.3.5.3
+  static member hasInstance (f:IjsFunc, o:IjsObj) =
+    let prototype = f.get "prototype"
+
+    if Utils.Box.isObject prototype.Tag |> not then
+      failwith "[[TypeError]]"
+
+    if o = null || o.Prototype = null
+      then false 
+      else Object.ReferenceEquals(prototype.Object, o.Prototype)
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
@@ -770,7 +807,7 @@ type Function() =
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  
+
   //----------------------------------------------------------------------------
   static member call (f:IjsFunc,t) =
     let c = f.Compiler

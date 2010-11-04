@@ -28,10 +28,13 @@ module Core =
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
     | Ast.Identifier name -> Identifier.getValue ctx name
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
-    | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
     | Ast.Eval tree -> compileEval ctx tree
+
+    //Operators
+    | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
     | Ast.Unary(op, tree) -> compileUnary ctx op tree
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
+    | Ast.InstanceOf(left, right) -> Binary.instanceOf ctx left right
 
     //Scopes
     | Ast.With(init, tree) -> Scope.with' ctx init tree

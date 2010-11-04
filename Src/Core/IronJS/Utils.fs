@@ -64,6 +64,8 @@ module Utils =
       
   //----------------------------------------------------------------------------
   module Box = 
+    let isObject tag = tag >= TypeTags.Object
+    let isFunction tag = tag >= TypeTags.Function
     let isNumber tag = tag < 0xFFF9us
     let isTagged tag = tag > 0xFFF8us
     let isBothNumber l r = isNumber l && isNumber r

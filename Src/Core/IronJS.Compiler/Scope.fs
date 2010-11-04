@@ -76,7 +76,7 @@ module Scope =
         match count with
         | 0 -> Dlr.assign ctx.ClosureScope ctx.Fun_Chain
         | _ -> 
-          Dlr.blockSimple [ 
+          Dlr.blockSimple [
             (Dlr.assign
               (ctx.ClosureScope)
               (Dlr.newArrayBoundsT<IjsBox> (Dlr.const' (count+1))))

@@ -257,6 +257,7 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable Methods : Methods
+  [<DefaultValue>] val mutable FunctionMethods : FunctionMethods
 
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
@@ -446,6 +447,7 @@ and [<AllowNullLiteral>] Function =
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
+  val mutable FunctionMethods : FunctionMethods
 
   val mutable ScopeChain : Scope
   val mutable DynamicScope : DynamicScope
@@ -461,6 +463,7 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = scopeChain
     DynamicScope = dynamicScope
+    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv, propertyMap) = {
@@ -472,6 +475,7 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = null
     DynamicScope = List.empty
+    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv) = {
@@ -483,7 +487,14 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = null
     DynamicScope = List.empty
+    FunctionMethods = env.FunctionMethods
   }
+
+and FunctionMethods = {
+  HasInstance : HasInstance
+}
+
+and HasInstance = delegate of IjsFunc * IjsObj -> IjsBool
 
 //------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function

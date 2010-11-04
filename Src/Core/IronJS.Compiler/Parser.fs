@@ -346,7 +346,7 @@ module Parsers =
       | ES3Parser.CATCH ->        
         let varName = text (child tok 0)
         let body = ctx.Translate (child tok 1)
-        Catch body
+        Catch(varName, body)
 
       // with() { }
       | ES3Parser.WITH -> 

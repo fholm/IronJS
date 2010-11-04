@@ -14,8 +14,15 @@ module Exception =
   // 12.14 the try statement
   let private catch (ctx:Ctx) catch =
     match catch with
-    | Ast.Catch(ast) ->
-      Dlr.catchT<UserError> (ctx.Compile ast |> Dlr.castVoid)
+    | Ast.Catch(name, ast) ->
+      let param = Dlr.paramT<UserError> "error"
+      let ctx = {ctx with Scope=ctx.Scope |> Ast.Utils.Scope.incrLocal name}
+
+      Dlr.catchVar param (
+        Dlr.blockSimple[
+          (Identifier.setValue ctx name (Expr.errorValue param))
+          (ctx.Compile ast |> Dlr.castVoid)
+        ])
 
     | _ -> failwith "Que?"
 
@@ -23,7 +30,7 @@ module Exception =
     Dlr.castVoid (ctx.Compile ast)
 
   let try' (ctx:Ctx) body catches final =
-    let body = ctx.Compile body
+    let body = ctx.Compile body |> Dlr.castVoid
     let catches = seq{for x in catches -> catch ctx x}
     match Option.map (finally' ctx) final with
     | None -> Dlr.tryCatch body catches

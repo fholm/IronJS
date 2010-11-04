@@ -40,6 +40,10 @@ module Hosting =
         }
     }
 
+    x.FunctionMethods <- {
+      HasInstance = new HasInstance(fun l r -> Api.Function.hasInstance(l, r))
+    }
+
     let baseMap = PropertyMap(x)
     x.Maps <- {
       Base = baseMap

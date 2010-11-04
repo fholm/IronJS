@@ -172,6 +172,12 @@ module Binary =
     let l = ctx.Compile left |> Expr.boxValue 
     let r = ctx.Compile right |> Expr.boxValue
     Api.Operators.instanceOf(l, r)
+    
+  //----------------------------------------------------------------------------
+  let in' (ctx:Context) left right =
+    let l = ctx.Compile left |> Expr.boxValue 
+    let r = ctx.Compile right |> Expr.boxValue
+    Api.Operators.in'(l, r)
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

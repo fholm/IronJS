@@ -784,7 +784,6 @@ type Function() =
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
     | _ -> f.Env.Prototypes.Object
-
     
   //----------------------------------------------------------------------------
   //15.3.5.3

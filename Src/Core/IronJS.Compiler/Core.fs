@@ -29,6 +29,7 @@ module Core =
     | Ast.Identifier name -> Identifier.getValue ctx name
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
     | Ast.Eval tree -> compileEval ctx tree
+    | Ast.Var ast -> compileAst ctx ast
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
@@ -65,6 +66,9 @@ module Core =
 
     | Ast.For(label, init, test, incr, body) -> 
       ControlFlow.for' ctx label init test incr body
+
+    | Ast.ForIn(label, name, init, body) ->
+      ControlFlow.forIn ctx label name init body
 
     //Exceptions
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'

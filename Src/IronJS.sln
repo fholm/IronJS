@@ -25,20 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{7E895BE2
 		..\Files\TODO.txt = ..\Files\TODO.txt
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{93001306-3A95-4FE4-AC79-99A19BCB9F68}"
-	ProjectSection(SolutionItems) = preProject
-		..\Docs\E262-3.pdf = ..\Docs\E262-3.pdf
-		..\Docs\ECMA-262 (ECMAScript 5).pdf = ..\Docs\ECMA-262 (ECMAScript 5).pdf
-		..\Docs\ECMA-335 (CLI).pdf = ..\Docs\ECMA-335 (CLI).pdf
-		..\Docs\ES5 Errata 7-1-10.pdf = ..\Docs\ES5 Errata 7-1-10.pdf
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{87931B49-6A57-41FE-AF23-A4F9301A23DE}"
-	ProjectSection(SolutionItems) = preProject
-		..\Files\Dlr.fsx = ..\Files\Dlr.fsx
-		..\Files\Script.fsx = ..\Files\Script.fsx
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Development", "Development", "{83550B44-A2E4-49AF-A70E-9CE067DB382B}"
 	ProjectSection(SolutionItems) = preProject
 		..\Files\BrowserTesting.html = ..\Files\BrowserTesting.html
@@ -49,6 +35,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5070932B
 		..\Tests\Functions.fsx = ..\Tests\Functions.fsx
 		..\Tests\Operators.fsx = ..\Tests\Operators.fsx
 		..\Tests\Statements.fsx = ..\Tests\Statements.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{ADB528F1-B545-4A8E-87AF-D51C82DE3F06}"
+	ProjectSection(SolutionItems) = preProject
+		..\Files\Docs\E262-3.pdf = ..\Files\Docs\E262-3.pdf
+		..\Files\Docs\ECMA-262 (ECMAScript 5).pdf = ..\Files\Docs\ECMA-262 (ECMAScript 5).pdf
+		..\Files\Docs\ECMA-335 (CLI).pdf = ..\Files\Docs\ECMA-335 (CLI).pdf
+		..\Files\Docs\ES5 Errata 7-1-10.pdf = ..\Files\Docs\ES5 Errata 7-1-10.pdf
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Changelogs", "Changelogs", "{6846E259-C63E-44FA-B201-5381D2A590AB}"
+	ProjectSection(SolutionItems) = preProject
+		..\Files\Changelogs\0.1.91.1.txt = ..\Files\Changelogs\0.1.91.1.txt
 	EndProjectSection
 EndProject
 Global
@@ -168,8 +167,8 @@ Global
 		{0F78334F-EA74-4C5C-8232-B7D329BE2226} = {EEE4C960-93E5-40EE-B827-75A33C1AF9A8}
 		{02F37695-7FA2-4C83-82D2-76FCFE468B38} = {EEE4C960-93E5-40EE-B827-75A33C1AF9A8}
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66} = {8AF0E644-8747-4DFD-B922-6429EBDA29E8}
-		{93001306-3A95-4FE4-AC79-99A19BCB9F68} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
-		{87931B49-6A57-41FE-AF23-A4F9301A23DE} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 		{83550B44-A2E4-49AF-A70E-9CE067DB382B} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
+		{ADB528F1-B545-4A8E-87AF-D51C82DE3F06} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
+		{6846E259-C63E-44FA-B201-5381D2A590AB} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 	EndGlobalSection
 EndGlobal

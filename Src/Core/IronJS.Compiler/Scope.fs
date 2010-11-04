@@ -115,13 +115,24 @@ module Scope =
               |> Seq.sortBy (fun (_, i) -> i)
               |> Array.ofSeq
 
-          (Expr.assignValue 
-            (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
-            (Dlr.newArgsT<Arguments> [
-              ctx.Env;
-              Dlr.const' linkMap;
-              ctx.LocalScope;
-              ctx.ClosureScope]))
+          (Dlr.blockTmpT<Arguments> (fun arguments ->
+            [
+              (Dlr.assign arguments 
+                (Dlr.newArgsT<Arguments> [
+                    ctx.Env;
+                    Dlr.const' linkMap;
+                    ctx.LocalScope;
+                    ctx.ClosureScope]))
+              (Object.Property.put 
+                (Dlr.castT<IjsObj> arguments) 
+                (Dlr.const' "callee")
+                (ctx.Function)
+              )
+              (Expr.assignValue 
+                (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
+                (arguments))
+            ] |> Seq.ofList
+          ))
   
     //--------------------------------------------------------------------------
     let demoteParam maxIndex (v:Ast.LocalIndex) =

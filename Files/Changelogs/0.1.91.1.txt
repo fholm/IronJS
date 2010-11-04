@@ -1,0 +1,8 @@
+### Changelog for 0.1.91.1 ###
+
+* Re-enabled support for eval()
+* Re-enabled try/catch/finally/throw support
+* Added arguments.callee support
+* Added instanceof operator
+* Added in operator
+* 

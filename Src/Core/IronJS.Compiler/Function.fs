@@ -11,8 +11,8 @@ module Function =
   let dynamicScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "DynamicChain"
 
   //----------------------------------------------------------------------------
-  let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegateType =
-    compiler {target with Delegate = Some delegateType}
+  let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegate' =
+    compiler {target with Delegate = Some delegate'}
   
   //----------------------------------------------------------------------------
   let makeCompiler ctx compiler tree =

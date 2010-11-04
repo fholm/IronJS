@@ -452,10 +452,10 @@ module Ast =
           Function(name, scope, body)
 
         | Var(Identifier name) -> 
-          addVar name; Pass
+          addVar name; Var(Identifier name)
 
         | Var(Assign(Identifier name, value)) -> 
-          addVar name; Assign(Identifier name, analyze value)
+          addVar name; Var(Assign(Identifier name, analyze value))
 
         | Catch(name, body) ->
           addVar name; Catch(name, analyze body)

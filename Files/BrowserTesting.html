@@ -3,11 +3,13 @@
         <title></title>
         <script type="text/javascript">
             (function () {
-                foo();
-                var a = 2;
-                function foo () {
-                    alert(a);
-                };
+                var x = { foo: 1 };
+                x[4] = "lol";
+                x.bar = "asd";
+
+                for (var z in x) {
+                    alert(z);
+                }
             })();
         </script>
     </head>

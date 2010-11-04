@@ -78,6 +78,11 @@ module ControlFlow =
     let incr = ctx.Compile incr
     let body = (ctx.AddLoopLabels label break' continue').Compile body
     Dlr.for' init test incr body break' continue'
+    
+  //----------------------------------------------------------------------------
+  // 12.6.4 for-in
+  let forIn (ctx:Ctx) label name init body =
+    Dlr.void'
 
   //----------------------------------------------------------------------------
   // 12.11 switch

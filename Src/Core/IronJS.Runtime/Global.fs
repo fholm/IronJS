@@ -20,10 +20,7 @@ module Global =
         Ast.Function(None, {Ast.Scope.New with Closures=target.Closures}, ast)
 
       let levels = 
-        Some(
-          target.GlobalLevel, 
-          target.ClosureLevel, 
-          target.LocalLevel)
+        Some(target.GlobalLevel, target.ClosureLevel, 0)
 
       let compiled = 
         Core.compile {

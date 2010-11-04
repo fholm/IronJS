@@ -553,7 +553,27 @@ module Ast =
 
         | Eval source -> 
           
+          let closures =
+            !sc 
+              |> Seq.map (fun scope ->
+                scope.Locals
+                |> Map.toSeq 
+                |> Seq.map (fun (name, local) ->
+                    name, Local.index local, scope.GlobalLevel, scope.ClosureLevel
+                  )
+                )
+              |> Seq.concat
+              |> Seq.groupBy (fun (name, _, _, _) -> name)
+              |> Seq.map (
+                fun (_, group) -> 
+                  group |> Seq.maxBy (fun (name, _, _, _) -> name))
+              |> Seq.map (
+                fun (name, index, gl, cl) ->
+                  name, Closure.New name index cl gl)
+              |> Map.ofSeq
 
+          ScopeChain.modifyCurrent (
+            fun scope -> {scope with Closures=closures}) sc
 
           Eval source
 

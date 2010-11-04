@@ -72,8 +72,9 @@ module Object =
       
   //----------------------------------------------------------------------------
   module Index =
-
-    let convertIndex_BoxVal expr index value =
+  
+    //--------------------------------------------------------------------------
+    let private convertIndex_BoxVal expr index value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [ (Dlr.callStaticT<Api.Object.Index.Converters> 
             "put" [tmp; index; value])

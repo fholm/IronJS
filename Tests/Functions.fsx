@@ -13,6 +13,128 @@ open IronJS.Api.Extensions
 open IronJS.Aliases
 open FSKit.Testing.Assert
 
+module bit = FSKit.Bit
+
+open System.Runtime.InteropServices
+
+[<StructLayout(LayoutKind.Explicit)>]
+type LongBytes =
+  struct
+    [<FieldOffset(0)>] val mutable long : uint64
+    [<FieldOffset(4)>] val mutable int0 : uint32
+    [<FieldOffset(2)>] val mutable short2 : uint16
+    [<FieldOffset(6)>] val mutable short0 : uint16
+    [<FieldOffset(0)>] val mutable byte7 : byte
+    [<FieldOffset(1)>] val mutable byte6 : byte
+    [<FieldOffset(2)>] val mutable byte5 : byte
+    [<FieldOffset(3)>] val mutable byte4 : byte
+    [<FieldOffset(4)>] val mutable byte3 : byte
+    [<FieldOffset(5)>] val mutable byte2 : byte
+    [<FieldOffset(6)>] val mutable byte1 : byte
+    [<FieldOffset(7)>] val mutable byte0 : byte
+  end
+
+[<AllowNullLiteral>]
+type TrieCell<'a> =
+  
+  [<DefaultValue>] val mutable value : 'a
+  [<DefaultValue>] val mutable hasValue : bool
+  val mutable children : TrieCell<'a> array
+
+  new () = {
+    children = Array.zeroCreate<TrieCell<'a>> 2
+  }
+
+type BitTrie<'a>() =
+
+  let leadingZeros (lb:LongBytes) =
+
+    let leadingZeros (b:byte) =
+      if   b &&& 128uy > 0uy then 0
+      elif b &&& 64uy  > 0uy then 1
+      elif b &&& 32uy  > 0uy then 2
+      elif b &&& 16uy  > 0uy then 3
+      elif b &&& 8uy   > 0uy then 4
+      elif b &&& 4uy   > 0uy then 5
+      elif b &&& 2uy   > 0uy then 6
+      elif b &&& 1uy   > 0uy then 7
+                             else 8
+
+    if lb.int0 = 0u then
+      if lb.short2 = 0us then
+        if lb.byte6 = 0uy 
+          then (leadingZeros lb.byte7) + 56
+          else (leadingZeros lb.byte6) + 48        
+      else
+        if lb.byte4 = 0uy then
+          if lb.byte5 = 0uy
+            then failwith "short2 was not 0 but byte4+5 is"
+            else (leadingZeros lb.byte5) + 40
+        else
+          (leadingZeros lb.byte4) + 32
+    else
+      if lb.short0 = 0us then
+        if lb.byte2 = 0uy
+          then (leadingZeros lb.byte3) + 24
+          else (leadingZeros lb.byte2) + 16
+      else
+        if lb.byte0 = 0uy then
+          if lb.byte1 = 0uy
+            then failwith "short0 was not 0 but byte0+1 is"
+            else (leadingZeros lb.byte1) + 8
+        else
+          leadingZeros lb.byte0
+
+  let mutable longBytes = LongBytes()
+  let zeroArray = Array.zeroCreate<TrieCell<'a>> 64
+
+  do
+    for i = 0 to 63 do
+      zeroArray.[0] <- new TrieCell<'a>()
+
+  member x.Insert(index:uint64, value:'a) = 
+    longBytes.long <- index
+    let lz = leadingZeros longBytes
+    let bits2go = 64 - lz
+    let mutable cell = zeroArray.[lz]
+    let mutable index = index
+    let mutable child : TrieCell<'a> = null
+
+    for i = 0 to (bits2go-1) do
+      index <- index >>> 1
+      let i = int (index &&& 1UL)
+      child <- cell.children.[i]
+
+      if child = null then
+        child <- new TrieCell<'a>()
+        cell.children.[i] <- child
+
+      cell <- child
+
+    cell.value <- value
+    cell.hasValue <- true
+
+let bt = new BitTrie<string>()
+
+
+for i = 0 to 0 do
+  printf "lol"
+
+let mutable b8 = LongBytes()
+b8.long <- 0x1UL
+
+leadingZeros b8
+
+b8.l
+
+for i = 1 to 10000000 do  
+  leadingZeros b8
+
+2uy |> bit.byte2string
+80uy |> bit.byte2string
+
+1UL <<< (64-20) |> bit.ulong2bytes |> bit.hexOrder |> bit.bytes2string
+
 let test, clean, state, report = 
   FSKit.Testing.createTesters (fun () -> IronJS.Hosting.Context.Create())
 

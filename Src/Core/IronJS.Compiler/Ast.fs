@@ -468,7 +468,8 @@ module Ast =
           addVar name; Var(Assign(Identifier name, analyze value))
 
         | Catch(name, body) ->
-          addVar name; Catch(name, analyze body)
+          ScopeChain.modifyCurrent (Scope.addLocal name None) sc
+          Catch(name, analyze body)
 
         | Identifier "arguments" ->
           addVar "arguments"

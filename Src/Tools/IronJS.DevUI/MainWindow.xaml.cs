@@ -99,15 +99,15 @@ namespace IronJS.DevUI {
                 stopWatch.Stop();
                 Result.Text += IronJS.Api.TypeConverter.toString(result);
 
-            } catch (Exception ex) {
-                stopWatch.Stop();
+              /*} catch (Exception ex) {
+                  stopWatch.Stop();
 
-                while (ex.InnerException != null) {
-                    ex = ex.InnerException;
-                }
+                  while (ex.InnerException != null) {
+                      ex = ex.InnerException;
+                  }
 
-                Result.Text = ex.Message + "\n\n";
-                Result.Text += ex.StackTrace;
+                  Result.Text = ex.Message + "\n\n";
+                  Result.Text += ex.StackTrace;*/
 
             } finally {
                 RenderEnvironment();

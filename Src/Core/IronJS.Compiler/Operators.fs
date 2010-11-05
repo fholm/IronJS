@@ -36,6 +36,7 @@ module Unary =
         (Dlr.invoke 
           (Dlr.property (Dlr.field x "Methods") "DeleteIndex")
           [x; index]))
+      (fun x -> Dlr.false')
       (fun x -> Dlr.false'))
     
   let deleteProperty object' name =
@@ -46,6 +47,7 @@ module Unary =
         (Dlr.invoke 
           (Dlr.property (Dlr.field x "Methods") "DeleteProperty")
           [x; name]))
+      (fun x -> Dlr.false')
       (fun x -> Dlr.false'))
     
   let deleteIdentifier (ctx:Ctx) name =
@@ -195,6 +197,7 @@ module Binary =
         [ (Expr.testIsObject 
             (ctx.Compile tree)
             (fun x -> Object.Property.put x name value)
+            (fun x -> value)
             (fun x -> value))])
 
     //Index assignemnt: foo[0] = "bar";
@@ -204,6 +207,7 @@ module Binary =
         [ (Expr.testIsObject
             (ctx.Compile tree)
             (fun x -> Object.Index.put x index value)
+            (fun x -> value)
             (fun x -> value))])
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree

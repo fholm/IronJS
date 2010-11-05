@@ -57,6 +57,7 @@ module Function =
             (Expr.testIsFunction
               (method')
               (fun x -> invokeAsFunction x object' args)
+              (fun x -> Expr.BoxedConstants.undefined)
               (fun x -> Expr.BoxedConstants.undefined))])])
 
   //----------------------------------------------------------------------------
@@ -78,6 +79,7 @@ module Function =
       (Expr.testIsFunction 
         (Identifier.getValue ctx name)
         (fun x -> invokeAsFunction x ctx.Globals args)
+        (fun x -> Expr.BoxedConstants.undefined)
         (fun x -> Expr.BoxedConstants.undefined))
       
   //----------------------------------------------------------------------------
@@ -90,6 +92,7 @@ module Function =
           (x)
           (fun x -> Object.Property.get x name)
           (args)))
+      (fun x -> Expr.BoxedConstants.undefined)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
@@ -101,6 +104,7 @@ module Function =
           (x)
           (fun x -> Object.Index.get x index)
           (args)))
+      (fun x -> Expr.BoxedConstants.undefined)
       (fun x -> Expr.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
@@ -130,6 +134,7 @@ module Function =
           (Expr.isConstructor f)
           (Dlr.callStaticGenericT<Api.Function> "construct" argTypes args)
           (Expr.BoxedConstants.undefined)))
+      (fun _ -> Expr.BoxedConstants.undefined)
       (fun _ -> Expr.BoxedConstants.undefined))
       
   //----------------------------------------------------------------------------

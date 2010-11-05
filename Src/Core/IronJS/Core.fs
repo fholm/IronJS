@@ -195,6 +195,7 @@ and Maps = {
   String : PropertyMap
   Number : PropertyMap
   Boolean : PropertyMap
+  Regexp : PropertyMap
 }
 //------------------------------------------------------------------------------
 and Methods = {
@@ -211,6 +212,16 @@ and Prototypes = {
   String : IjsObj
   Number : IjsObj
   Boolean : IjsObj
+  Date : IjsObj
+  RegExp : IjsObj
+  Error: IjsObj
+
+  EvalError : IjsObj
+  RangeError : IjsObj
+  ReferenceError : IjsObj
+  SyntaxError : IjsObj
+  TypeError : IjsObj
+  URIError : IjsObj
 } with
   static member Empty = {
     Object = null
@@ -219,6 +230,16 @@ and Prototypes = {
     String = null
     Number = null
     Boolean = null
+    Date = null
+    RegExp = null
+    Error = null
+
+    EvalError = null
+    RangeError = null
+    ReferenceError = null
+    SyntaxError = null
+    TypeError  = null
+    URIError = null
   }
 
 //------------------------------------------------------------------------------
@@ -229,6 +250,16 @@ and Constructors = {
   String : IjsFunc
   Number : IjsFunc
   Boolean : IjsFunc
+  Date : IjsFunc
+  RegExp : IjsFunc
+  Error : IjsFunc
+
+  EvalError : IjsFunc
+  RangeError : IjsFunc
+  ReferenceError : IjsFunc
+  SyntaxError : IjsFunc
+  TypeError : IjsFunc
+  URIError : IjsFunc
 } with
   static member Empty = {
     Object = null
@@ -237,6 +268,16 @@ and Constructors = {
     String = null
     Number = null
     Boolean = null
+    Date = null
+    RegExp = null
+    Error = null
+
+    EvalError = null
+    RangeError = null
+    ReferenceError = null
+    SyntaxError = null
+    TypeError = null
+    URIError  = null
   }
 
 //------------------------------------------------------------------------------
@@ -434,6 +475,7 @@ and [<AllowNullLiteral>] Arguments =
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
+  val mutable Name : IjsStr
   val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
@@ -447,6 +489,7 @@ and [<AllowNullLiteral>] Function =
     inherit Object(
       env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
+    Name = ""
     Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
@@ -459,6 +502,8 @@ and [<AllowNullLiteral>] Function =
 
   new (env:IjsEnv, propertyMap) = {
     inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
+
+    Name = ""
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
@@ -471,6 +516,8 @@ and [<AllowNullLiteral>] Function =
 
   new (env:IjsEnv) = {
     inherit Object()
+
+    Name = ""
     Env = env
     Compiler = null
     FunctionId = 0UL

@@ -157,6 +157,7 @@ module Object =
     (Expr.testIsObject
       (ctx.Compile object')
       (fun x -> Property.get x name)
+      (fun x -> Expr.BoxedConstants.undefined)
       (fun x -> Expr.BoxedConstants.undefined))
 
   // MemberExpression [ Expression ]
@@ -165,6 +166,7 @@ module Object =
     (Expr.testIsObject
       (ctx.Compile object')
       (fun x -> Index.get x index)
+      (fun x -> Expr.BoxedConstants.undefined)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------

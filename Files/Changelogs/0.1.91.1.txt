@@ -2,8 +2,10 @@
 
 * Re-enabled support for eval()
 * Re-enabled try/catch/finally/throw support
+* Fixed bug with try/catch in global scope
 * Added arguments.callee support
 * Added instanceof operator
 * Added in operator
 * Added support for regex literals in AST/Parser
 * Added for (... in ...) support
+* Implemented Error constructor and prototype 

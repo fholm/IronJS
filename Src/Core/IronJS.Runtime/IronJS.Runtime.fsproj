@@ -95,6 +95,7 @@
     <Compile Include="String.fs" />
     <Compile Include="Number.fs" />
     <Compile Include="Boolean.fs" />
+    <Compile Include="Error.fs" />
     <Compile Include="Hosting.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -53,6 +53,9 @@ module Hosting =
       String = Api.PropertyMap.getSubMap baseMap "length"
       Number = baseMap
       Boolean = baseMap
+      Regexp = 
+        Api.PropertyMap.buildSubMap baseMap [
+          "source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
     }
 
     let objectPrototype = Native.Object.createPrototype x
@@ -64,6 +67,16 @@ module Hosting =
       String = Native.String.createPrototype x objectPrototype
       Number = Native.Number.createPrototype x objectPrototype
       Boolean = Native.Boolean.createPrototype x objectPrototype
+      Date = null
+      RegExp = null
+      Error = Native.Error.createPrototype x objectPrototype
+
+      EvalError = null
+      RangeError = null
+      ReferenceError = null
+      SyntaxError = null
+      TypeError = null
+      URIError = null
     }
     
     x.Constructors <- Constructors.Empty
@@ -76,6 +89,8 @@ module Hosting =
     Native.Function.setupPrototype x
     Native.Array.setupConstructor x
     Native.Array.setupPrototype x
+    Native.Error.setupConstructor x
+    Native.Error.setupPrototype x
 
     x
 

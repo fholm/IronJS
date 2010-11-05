@@ -119,6 +119,7 @@ module Core =
       (Expr.testIsFunction
         (eval)
         (fun x -> Function.invokeAsFunction x ctx.This [target])
+        (fun x -> Expr.BoxedConstants.undefined)
         (fun x -> Expr.BoxedConstants.undefined))]
 
   //----------------------------------------------------------------------------
@@ -155,10 +156,7 @@ module Core =
           |> Seq.toArray
     }
 
-    let scopeInit, ctx = 
-      match scope.ScopeType with
-      | Ast.ScopeType.GlobalScope -> Scope.initGlobal ctx
-      | Ast.ScopeType.FunctionScope -> Scope.initFunction ctx
+    let scopeInit, ctx = Scope.init ctx
 
     let functionsInit =
       scope.Functions

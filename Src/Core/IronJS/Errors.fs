@@ -2,7 +2,6 @@
   
 open System
 
-
 type Error(msg) = inherit Exception(msg)
 type AstError(msg) = inherit Error(msg)
 type ParserError(msg) = inherit Error(msg)

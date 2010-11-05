@@ -158,9 +158,9 @@ module Environment =
     o
   
   //----------------------------------------------------------------------------
-  let createFunction env id (args:int) chain dc =
+  let createFunction env id (args:int) closureScope dynamicScope =
     let proto = createPrototype env
-    let func = IjsFunc(env, id, chain, dc)
+    let func = IjsFunc(env, id, closureScope, dynamicScope)
 
     (func :> IjsObj).Methods <- env.Methods.Object
     func.ConstructorMode <- ConstructorModes.User
@@ -170,6 +170,12 @@ module Environment =
     func.put("length", double args)
 
     func
+    
+  //----------------------------------------------------------------------------
+  let createError (env:IjsEnv) =
+    let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error, 0u)
+    o.Methods <- env.Methods.Object
+    o
     
   //----------------------------------------------------------------------------
   module Reflected =

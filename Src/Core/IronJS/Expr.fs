@@ -257,7 +257,7 @@ module Expr =
     Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
     
   //-------------------------------------------------------------------------
-  let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox (*ifOther*) =
+  let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox ifOther =
     if expr.Type = typeof<'a> || expr.Type.IsSubclassOf(typeof<'a>) then 
       ifObj expr
 
@@ -270,16 +270,16 @@ module Expr =
         ]
       )
 
-    else 
-      failwith "Que?"
+    else
+      ifOther expr
       
   //-------------------------------------------------------------------------
-  let testIsObject expr ifTrue ifFalse = 
-    testIsType<IjsObj> expr ifTrue ifFalse
+  let testIsObject expr ifTrue ifFalse ifOther = 
+    testIsType<IjsObj> expr ifTrue ifFalse ifOther
       
   //-------------------------------------------------------------------------
-  let testIsFunction expr ifTrue ifFalse = 
-    testIsType<IjsFunc> expr ifTrue ifFalse
+  let testIsFunction expr ifTrue ifFalse ifOther = 
+    testIsType<IjsFunc> expr ifTrue ifFalse ifOther
 
   //-------------------------------------------------------------------------
   let unboxIndex expr i tc =

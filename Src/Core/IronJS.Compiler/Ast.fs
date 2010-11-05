@@ -78,7 +78,7 @@ module Ast =
     | Dynamic
       
   //----------------------------------------------------------------------------
-  type RegexOption
+  type RegexFlag
     = Global (* /g *)
     | CaseInsensitive (* /i *)
     | MultiLine (* /m *)
@@ -101,7 +101,7 @@ module Ast =
     | Assign of Tree * Tree
     | In of Tree * Tree
     | InstanceOf of Tree * Tree
-    | Regex of string * RegexOption list
+    | Regex of string * RegexFlag list
 
     // Object
     | Object of Tree list

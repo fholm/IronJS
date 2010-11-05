@@ -260,9 +260,9 @@ module Parsers =
           let rec getModifiers modifiers =
             match modifiers with
             |    []   -> []
-            | 'i'::xs -> RegexOption.CaseInsensitive :: getModifiers xs
-            | 'g'::xs -> RegexOption.Global :: getModifiers xs
-            | 'm'::xs -> RegexOption.MultiLine :: getModifiers xs
+            | 'i'::xs -> RegexFlag.CaseInsensitive :: getModifiers xs
+            | 'g'::xs -> RegexFlag.Global :: getModifiers xs
+            | 'm'::xs -> RegexFlag.MultiLine :: getModifiers xs
             |  c ::xs -> Errors.invalidRegexModifier c
 
           getModifiers (modifiers.ToCharArray() |> List.ofArray)

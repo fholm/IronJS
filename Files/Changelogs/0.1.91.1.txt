@@ -5,4 +5,5 @@
 * Added arguments.callee support
 * Added instanceof operator
 * Added in operator
+* Added support for regex literals in AST/Parser
 * 

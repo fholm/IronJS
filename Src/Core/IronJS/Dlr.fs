@@ -413,6 +413,10 @@ module Dlr =
         #endif
       #endif
 
+  module Operators =
+    
+    let (!!!) x = const' x
+
   module Ext =
 
     //-------------------------------------------------------------------------

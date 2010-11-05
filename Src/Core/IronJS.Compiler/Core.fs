@@ -5,6 +5,7 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Utils
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
 type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
@@ -94,22 +95,28 @@ module Core =
       
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
-  and compileEval (ctx:Context) evalTree =
+  and compileEval (ctx:Context) evalTarget =
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
+    let evalTarget = compileAst ctx evalTarget
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Object.Property.get ctx.Globals ("eval" |> Dlr.const')))
+      (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval")
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assignValue
-        (Dlr.field target "GlobalLevel") (Dlr.const' ctx.Scope.GlobalLevel))
+        (Dlr.field target "GlobalLevel") 
+        (Dlr.const' ctx.Scope.GlobalLevel))
+
       (Expr.assignValue
-        (Dlr.field target "ClosureLevel") (Dlr.const' ctx.Scope.ClosureLevel))
+        (Dlr.field target "ClosureLevel") 
+        (Dlr.const' ctx.Scope.ClosureLevel))
+
       (Expr.assignValue
-        (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures))
+        (Dlr.field target "Closures") 
+        (Dlr.const' ctx.Scope.Closures))
         
-      (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
+      (Expr.assignValue (Dlr.field target "Target") evalTarget)
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
       (Expr.assignValue (Dlr.field target "LocalScope") ctx.LocalScope)

@@ -57,18 +57,6 @@ module Dlr =
   let returnVoid label = Et.Return(label) :> Et
   let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
 
-  //DEBUG
-  let debug x =
-    #if DEBUG 
-      constant x
-    #else
-      #if INTERACTIVE
-      constant x
-      #else
-      void'
-      #endif
-    #endif
-
   //Constants
   let true'   = const' true
   let false'  = const' false
@@ -296,8 +284,8 @@ module Dlr =
     let body = blockSimple [body; ifElse test void' (break' breakLbl)]
     Expr.Loop(body, breakLbl, continueLbl) :> Expr
 
-  let loop break' test body =
-    AstUtils.Loop(test, null, body, null, break', null)
+  let loop break' continue' test body =
+    AstUtils.Loop(test, null, body, null, break', continue')
 
   let sub left right = Et.Subtract(left, right) :> Et
   let subChk left right = Et.SubtractChecked(left, right) :> Et
@@ -412,6 +400,18 @@ module Dlr =
 
     let is type' (expr:Expr) = expr.Type = type'
     let isT<'a> (expr:Expr) = expr.Type = typeof<'a>
+
+    //DEBUG
+    let debug x =
+      #if DEBUG 
+        callStaticT<System.Console> "WriteLine" [x]
+      #else
+        #if INTERACTIVE
+        constant x
+        #else
+        void'
+        #endif
+      #endif
 
   module Ext =
 

@@ -67,14 +67,12 @@ module ControlFlow =
     let propertyCurrent = Dlr.property propertyEnumerator "Current"
 
     let indexCurrent = Dlr.paramT<uint32> "indexCurrent"
-    let indexState = Dlr.paramT<IjsBool> "indexState"
     let indexLength = Dlr.paramT<uint32> "indexLength"
 
-    let break' = Dlr.labelBreak()
     let tempVars = 
       [ pair; 
         propertyEnumerator; propertyState; 
-        indexCurrent; indexState; indexLength]
+        indexCurrent; indexLength]
 
     Dlr.block tempVars [
       (Dlr.assign pair 
@@ -83,12 +81,12 @@ module ControlFlow =
       (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
 
       (Dlr.assign propertyState Dlr.true')
-      (Dlr.assign propertyState Dlr.true')
       (Dlr.assign indexLength (Dlr.property pair "Item1"))
 
       (Dlr.loop 
         (break')
-        (Dlr.or' propertyState (*||*) indexState)
+        (continue')
+        (Dlr.true')
         (Dlr.blockSimple [
 
           (Dlr.if' propertyState  
@@ -99,17 +97,20 @@ module ControlFlow =
                 (Binary.assign ctx target (Ast.DlrExpr propertyCurrent)))]))
 
           (Dlr.if'
-            (Dlr.and' (Dlr.eq propertyState Dlr.false') (*&&*) indexState)
+            (Dlr.eq propertyState Dlr.false')
             (Dlr.ifElse
               (Dlr.eq indexLength (Dlr.uint0))
               (Dlr.break' break')
               (Binary.assign ctx target 
                 (Ast.DlrExpr (Dlr.castT<IjsNum> indexCurrent)))))
 
-          (ctx.Compile body)
+          (body |> (ctx.AddLoopLabels label break' continue').Compile)
 
-          (Dlr.sub indexLength Dlr.uint1)
-          (Dlr.add indexCurrent Dlr.uint1)
+          (Dlr.if' 
+            (Dlr.eq propertyState Dlr.false')
+            (Dlr.blockSimple [
+              (Dlr.assign indexLength (Dlr.sub indexLength Dlr.uint1))
+              (Dlr.assign indexCurrent (Dlr.add indexCurrent Dlr.uint1))]))
         ])
       )
     ]

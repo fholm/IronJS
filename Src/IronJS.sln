@@ -50,6 +50,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Changelogs", "Changelogs", 
 		..\Files\Changelogs\0.1.91.1.txt = ..\Files\Changelogs\0.1.91.1.txt
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{39A51F96-9421-4146-B875-D704349A51F4}"
+	ProjectSection(SolutionItems) = preProject
+		..\Files\Scripts\Dev.fsx = ..\Files\Scripts\Dev.fsx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = IronJS.vsmdi
@@ -170,5 +175,6 @@ Global
 		{83550B44-A2E4-49AF-A70E-9CE067DB382B} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 		{ADB528F1-B545-4A8E-87AF-D51C82DE3F06} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 		{6846E259-C63E-44FA-B201-5381D2A590AB} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
+		{39A51F96-9421-4146-B875-D704349A51F4} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 	EndGlobalSection
 EndGlobal

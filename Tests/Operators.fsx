@@ -8,8 +8,6 @@
 #r @"../Src/Core/IronJS.Compiler/bin/Debug/IronJS.Compiler.dll"
 #r @"../Src/Core/IronJS.Runtime/bin/Debug/IronJS.Runtime.dll"
 
-#load "Tests.Tools.fs"
-
 open IronJS
 open IronJS.Aliases
 open FSKit.Testing.Assert

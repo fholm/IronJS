@@ -22,7 +22,7 @@
                  IsReadOnly="True"
                  VerticalAlignment="Top" HorizontalAlignment="Left" Width="388" />
         
-        <TextBox Margin="640,230,0,12" 
+        <TextBox Margin="640,241,0,12" 
                  Name="Debug" 
                  VerticalScrollBarVisibility="Auto"
                  HorizontalScrollBarVisibility="Auto"
@@ -51,7 +51,7 @@
         <Label Content="AST Tree:" 
                Height="28" 
                HorizontalAlignment="Left" 
-               Margin="635,208,0,0" 
+               Margin="635,219,0,0" 
                Name="DebugOutputLabel" 
                VerticalAlignment="Top" />
         

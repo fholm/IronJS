@@ -50,7 +50,8 @@ module TypeTags =
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
   let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] Function = 0xFFFFFF07u
+  let [<Literal>] FastObject = 0xFFFFFF07u
+  let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
     Map.ofList [
@@ -61,14 +62,15 @@ module TypeTags =
       (String, "string")
       (Undefined, "undefined")
       (Object, "object")
-      (Function, "function")
-    ]
+      (FastObject, "object")
+      (Function, "function")]
 
-  let getName (tag:TypeTag) = 
-    Names.[tag]
+  let getName (tag:TypeTag) = Names.[tag]
 
 module BoxFields =
   let [<Literal>] Bool = "Bool"
+  let [<Literal>] Int32 = "Int32"
+  let [<Literal>] UInt32 = "UInt32"
   let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Clr"
@@ -120,11 +122,9 @@ module Classes =
       (Number, "Number")
       (Math, "Math")
       (Date, "Date")
-      (Error, "Error")
-    ]
+      (Error, "Error")]
 
-  let getName (class':Class) = 
-    Names.[class']
+  let getName (class':Class) = Names.[class']
 
 module MarshalModes =
   let [<Literal>] Default = 2
@@ -172,6 +172,8 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
+    [<FieldOffset(8)>]  val mutable Int32 : int32
+    [<FieldOffset(8)>]  val mutable UInt32 : uint32
     [<FieldOffset(8)>]  val mutable Number : IjsNum
 
     //Type & Tag

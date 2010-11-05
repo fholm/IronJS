@@ -32,14 +32,18 @@ module Parsers =
         Errors.parser "Should be CASE or DEFAULT"
 
       let syntaxError line col =
-        Errors.parser "Syntax Error at line %d after column %d" line col
+        Errors.parser 
+          (sprintf "Syntax Error at line %d after column %d" line col)
 
       let noParserForToken (tok:AntlrToken) =
         let name = ES3Parser.tokenNames.[tok.Type]
-        Errors.parser "No parser for token %s (%i)" name tok.Type
+        Errors.parser (sprintf "No parser for token %s (%i)" name tok.Type)
 
       let emptyChildrenList () =
         Errors.parser "No children exists for node"
+
+      let invalidRegexModifier c =
+        Errors.parser (sprintf "Invalid regex modifier '%c'" c)
 
     type Context = {
       Environment : IjsEnv
@@ -244,6 +248,26 @@ module Parsers =
         let ifTrue = ctx.Translate (child tok 1)
         let ifFalse = ctx.Translate (child tok 2)
         Ternary(test, ifTrue, ifFalse)
+
+      // /foo/i
+      | ES3Parser.RegularExpressionLiteral ->
+        let text = text tok
+        let lastIndex = text.LastIndexOf '/'
+        let pattern = text.Substring(1, lastIndex-1)
+        let modifiers = text.Substring(lastIndex+1, text.Length-lastIndex-1)
+
+        let getModifiers (modifiers:string) = 
+          let rec getModifiers modifiers =
+            match modifiers with
+            |    []   -> []
+            | 'i'::xs -> RegexOption.CaseInsensitive :: getModifiers xs
+            | 'g'::xs -> RegexOption.Global :: getModifiers xs
+            | 'm'::xs -> RegexOption.MultiLine :: getModifiers xs
+            |  c ::xs -> Errors.invalidRegexModifier c
+
+          getModifiers (modifiers.ToCharArray() |> List.ofArray)
+
+        Regex(pattern, modifiers |> getModifiers)
           
       // (x)
       | ES3Parser.PAREXPR

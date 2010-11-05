@@ -333,6 +333,13 @@ type TypeConverter =
         
   //----------------------------------------------------------------------------
   static member toObject (env:IjsEnv, o:IjsObj) = o
+  static member toObject (env:IjsEnv, f:IjsFunc) = f
+  static member toObject (env:IjsEnv, u:Undefined) = failwith "[[TypeError]]"
+  static member toObject (env:IjsEnv, s:IjsStr) = Environment.createString env s
+  static member toObject (env:IjsEnv, n:IjsNum) = Environment.createNumber env n
+  static member toObject (env:IjsEnv, b:IjsBool) = 
+    Environment.createBoolean env b
+
   static member toObject (env:IjsEnv, b:Box) =
     match b with
     | Function

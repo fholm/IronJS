@@ -2,11 +2,12 @@
   
 open System
 
-exception Error of string
-exception AstError of string
-exception ParserError of string
-exception CompilerError of string
-exception RuntimeError of string
+
+type Error(msg) = inherit Exception(msg)
+type AstError(msg) = inherit Error(msg)
+type ParserError(msg) = inherit Error(msg)
+type CompilerError(msg) = inherit Error(msg)
+type RuntimeError(msg) = inherit Error(msg)
 
 module Errors =
 

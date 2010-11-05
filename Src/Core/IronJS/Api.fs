@@ -1166,6 +1166,27 @@ module Object =
     | _ -> Errors.runtime "Invalid hint"
 
   let defaultValue' = Default defaultvalue
+
+  //----------------------------------------------------------------------------
+  let collectProperties (o:IjsObj) =
+    let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
+      if current <> null then
+        let length = 
+          if length < current.IndexLength 
+            then current.IndexLength else length
+
+        set.UnionWith(current.PropertyMap.PropertyMap.Keys)
+        collectProperties length set current.Prototype
+
+      else 
+        length, set
+
+    o |> collectProperties 0u (new MutableSet<IjsStr>())
+
+  module Reflected = 
+
+    let collectProperties = 
+      Utils.Reflected.methodInfo "Api.Object" "collectProperties"
     
   //----------------------------------------------------------------------------
   module Property = 

@@ -6,4 +6,4 @@
 * Added instanceof operator
 * Added in operator
 * Added support for regex literals in AST/Parser
-* 
+* Added for (... in ...) support

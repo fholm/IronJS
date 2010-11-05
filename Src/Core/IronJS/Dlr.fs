@@ -78,6 +78,11 @@ module Dlr =
   let int1 = const' 1
   let int2 = const' 2
 
+  let uint0 = const' 0u
+  let uint1 = const' 1u
+  let uint2 = const' 2u
+
+
   let dbl0 = const' 0.0
   let dbl1 = const' 1.0
   let dbl2 = const' 2.0
@@ -290,6 +295,9 @@ module Dlr =
   let doWhile test body breakLbl continueLbl =
     let body = blockSimple [body; ifElse test void' (break' breakLbl)]
     Expr.Loop(body, breakLbl, continueLbl) :> Expr
+
+  let loop break' test body =
+    AstUtils.Loop(test, null, body, null, break', null)
 
   let sub left right = Et.Subtract(left, right) :> Et
   let subChk left right = Et.SubtractChecked(left, right) :> Et

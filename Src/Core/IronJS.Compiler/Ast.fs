@@ -89,6 +89,7 @@ module Ast =
     = String of string
     | Number of double
     | Boolean of bool
+    | DlrExpr of Dlr.Expr
     | This
     | Pass
     | Null
@@ -386,6 +387,7 @@ module Ast =
       | String _
       | Number _
       | Break _
+      | DlrExpr _
       | Continue _
       | Regex(_, _)
       | Type _

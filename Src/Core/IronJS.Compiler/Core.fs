@@ -23,6 +23,7 @@ module Core =
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
+    | Ast.DlrExpr expr -> expr
 
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
@@ -188,6 +189,7 @@ module Core =
         |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
         |> Dlr.block locals
 
+    //TODO: Tidy up
     let allParameters =
       (
         if ctx.Target.IsEval then 

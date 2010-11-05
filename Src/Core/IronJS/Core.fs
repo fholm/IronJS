@@ -160,7 +160,6 @@ module TaggedBools =
 
 //------------------------------------------------------------------------------
 // Represents a value whos type is unknown at runtime
-//------------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
@@ -183,13 +182,10 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
 //------------------------------------------------------------------------------
 // 8.1 Undefined
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
     
-//------------------------------------------------------------------------------
-// Record for all default property maps
 //------------------------------------------------------------------------------
 and Maps = {
   Base : PropertyMap
@@ -245,7 +241,6 @@ and Constructors = {
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment() =
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0L
@@ -269,7 +264,6 @@ and [<AllowNullLiteral>] Environment() =
 
 //------------------------------------------------------------------------------
 // 8.6
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte // [[Class]]
   val mutable Value : Descriptor // [[Value]]
@@ -320,7 +314,6 @@ and [<AllowNullLiteral>] Object =
   
 //-------------------------------------------------------------------------
 // Property descriptor
-//-------------------------------------------------------------------------
 and [<StructuralEquality>] [<NoComparison>] Descriptor =
   struct
     val mutable Box : Box
@@ -330,7 +323,6 @@ and [<StructuralEquality>] [<NoComparison>] Descriptor =
     
 //------------------------------------------------------------------------------
 // 8.6.2
-//------------------------------------------------------------------------------
 and [<ReferenceEquality>] InternalMethods = {
   GetProperty : GetProperty // 8.6.2.1
   HasProperty : HasProperty // 8.6.2.4
@@ -436,12 +428,9 @@ and [<AllowNullLiteral>] Arguments =
 
       | _ -> failwith "Que?"
 
-
-      
 //------------------------------------------------------------------------------
 // Base class used to represent all functions exposed as native javascript
 // functions to user code.
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
@@ -500,7 +489,6 @@ and HasInstance = delegate of IjsFunc * IjsObj -> IjsBool
 
 //------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit Function
   
@@ -568,7 +556,6 @@ and [<AllowNullLiteral>] FunctionCompiler(compiler) =
 
 //------------------------------------------------------------------------------
 // Class representing a javascript user exception
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] UserError(jsValue:Box) =
   inherit Exception()
   member x.JsValue = jsValue

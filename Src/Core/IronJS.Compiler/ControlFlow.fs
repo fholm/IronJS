@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Compiler
 
 open IronJS
+open IronJS.Aliases
 open IronJS.Compiler
 
 module ControlFlow =
@@ -55,11 +56,63 @@ module ControlFlow =
   // 12.6.4 for-in
   let forIn (ctx:Ctx) label target object' body =
     let break', continue' = loopLabels()
-    let target = match target with Ast.Var target -> target | _ -> target
+    let target = match target with Ast.Var ast -> ast | _ -> target
 
+    let pair = Dlr.paramT<Pair<uint32, MutableSet<IjsStr>>> "pair"
     
+    let propertyState = Dlr.paramT<IjsBool> "propertyState"
+    let propertySet = Dlr.property pair "Item2"
+    let propertyEnumerator =
+       Dlr.paramT<MutableSet<IjsStr>.Enumerator> "propertyEnumerator"
+    let propertyCurrent = Dlr.property propertyEnumerator "Current"
 
-    Dlr.void'
+    let indexCurrent = Dlr.paramT<uint32> "indexCurrent"
+    let indexState = Dlr.paramT<IjsBool> "indexState"
+    let indexLength = Dlr.paramT<uint32> "indexLength"
+
+    let break' = Dlr.labelBreak()
+    let tempVars = 
+      [ pair; 
+        propertyEnumerator; propertyState; 
+        indexCurrent; indexState; indexLength]
+
+    Dlr.block tempVars [
+      (Dlr.assign pair 
+        (Dlr.callMethod Api.Object.Reflected.collectProperties [
+          Api.TypeConverter.toObject(ctx.Env, object' |> ctx.Compile)]))
+      (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
+
+      (Dlr.assign propertyState Dlr.true')
+      (Dlr.assign propertyState Dlr.true')
+      (Dlr.assign indexLength (Dlr.property pair "Item1"))
+
+      (Dlr.loop 
+        (break')
+        (Dlr.or' propertyState (*||*) indexState)
+        (Dlr.blockSimple [
+
+          (Dlr.if' propertyState  
+            (Dlr.blockSimple [
+              (Dlr.assign propertyState 
+                (Dlr.call propertyEnumerator "MoveNext" []))
+              (Dlr.if' propertyState
+                (Binary.assign ctx target (Ast.DlrExpr propertyCurrent)))]))
+
+          (Dlr.if'
+            (Dlr.and' (Dlr.eq propertyState Dlr.false') (*&&*) indexState)
+            (Dlr.ifElse
+              (Dlr.eq indexLength (Dlr.uint0))
+              (Dlr.break' break')
+              (Binary.assign ctx target 
+                (Ast.DlrExpr (Dlr.castT<IjsNum> indexCurrent)))))
+
+          (ctx.Compile body)
+
+          (Dlr.sub indexLength Dlr.uint1)
+          (Dlr.add indexCurrent Dlr.uint1)
+        ])
+      )
+    ]
 
   //----------------------------------------------------------------------------
   // 12.7 continue

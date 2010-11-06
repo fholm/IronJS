@@ -17,8 +17,8 @@ What you need to use IronJS
 ## Getting the source
 
 * Open a terminal/command line and go to an empty folder, in my case: C:\Users\Fredrik\Projets
-* >> git clone git@github.com:fholm/IronJS.git IronJS
-* >> cd IronJS\Src\Dependencies
-* >> git clone git@github.com:fholm/FSKit.git
-* >> cd FSKit
-* >> git checkout 0.0.4
+* ~$ git clone git@github.com:fholm/IronJS.git IronJS
+* ~$ cd IronJS\Src\Dependencies
+* ~$ git clone git@github.com:fholm/FSKit.git
+* ~$ cd FSKit
+* ~$ git checkout 0.0.4

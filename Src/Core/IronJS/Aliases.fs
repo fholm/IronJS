@@ -1,9 +1,10 @@
 ﻿namespace IronJS
 
+open System
+open System.Globalization
+open System.Collections.Generic
+
 module Aliases = 
-  open System
-  open System.Globalization
-  open System.Collections.Generic
   
   #if CLR2
   #else

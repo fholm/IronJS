@@ -28,7 +28,13 @@ module Hosting =
 
     x.Methods <- {
       Object = objectMethods
-      Array = objectMethods
+      Array = 
+        {objectMethods with
+          PutBoxProperty = Api.Array.Property.Delegates.putBox
+          PutRefProperty = Api.Array.Property.Delegates.putRef
+          PutValProperty = Api.Array.Property.Delegates.putVal
+        }
+
       Arguments = 
         {objectMethods with
           GetIndex = Api.Arguments.Index.Delegates.get

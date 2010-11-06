@@ -312,7 +312,13 @@ type TypeConverter =
 
   //----------------------------------------------------------------------------
   static member toNumber (b:IjsBool) : double = if b then 1.0 else 0.0
-  static member toNumber (d:IjsNum) = d
+  static member toNumber (d:IjsNum) = 
+    if d = TaggedBools.True
+      then 1.0
+      elif d = TaggedBools.False
+        then 0.0
+        else d
+
   static member toNumber (c:ClrObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = IjsNum.NaN
   static member toNumber (b:IjsBox) =
@@ -1667,6 +1673,85 @@ module Object =
 
       static member has (o:IjsObj, index:IjsObj) =
         Converters.has(o, TypeConverter.toPrimitive index)
+
+
+module Array =
+
+  module Property =
+
+    let private updateLength (o:IjsObj) (number:IjsNum) =
+      let length = number |> TypeConverter.toUInt32
+
+      if double length <> number then
+        failwith "[[RangeError]]"
+        
+      while length < o.IndexLength do
+        if Utils.Object.isDense o then
+          let i = int (o.IndexLength-1u)
+          o.IndexDense.[i].Box <- Box()
+          o.IndexDense.[i].Attributes <- 0us
+          o.IndexDense.[i].HasValue <- false
+
+        else
+          o.IndexSparse.Remove (o.IndexLength-1u) |> ignore
+
+        o.IndexLength <- o.IndexLength - 1u
+
+      Object.Property.putVal o "length" number
+
+    let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+      if name = "length" 
+        then updateLength o (val' |> TypeConverter.toNumber)
+        else Object.Property.putBox o name val'
+
+    let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+      if name = "length" 
+        then updateLength o (val' |> TypeConverter.toNumber)
+        else Object.Property.putVal o name val'
+
+    let putRef (o:IjsObj) (name:IjsStr) (val':IjsRef) (tag:TypeTag) =
+      if name = "length" 
+        then updateLength o (val' |> TypeConverter.toNumber)
+        else Object.Property.putRef o name val' tag
+      
+    //--------------------------------------------------------------------------
+    module Delegates =
+      let putBox = PutBoxProperty putBox
+      let putVal = PutValProperty putVal
+      let putRef = PutRefProperty putRef
+
+    (*
+        //--------------------------------------------------------------------------
+    #if DEBUG
+    let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+    #else
+    let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
+    #endif
+      let index = ensureIndex o name
+      o.PropertyDescriptors.[index].Box <- val'
+      o.PropertyDescriptors.[index].HasValue <- true
+
+    //--------------------------------------------------------------------------
+    #if DEBUG
+    let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
+    #else
+    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
+    #endif
+      let index = ensureIndex o name
+      o.PropertyDescriptors.[index].Box.Clr <- val'
+      o.PropertyDescriptors.[index].Box.Tag <- tc
+      
+    //--------------------------------------------------------------------------
+    #if DEBUG
+    let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+    #else
+    let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
+    #endif
+      let index = ensureIndex o name
+      o.PropertyDescriptors.[index].Box.Number <- val'
+      o.PropertyDescriptors.[index].HasValue <- true*)
+
+    
 
 module Arguments =
 

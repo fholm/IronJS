@@ -17,6 +17,7 @@ namespace IronJS.DevUI {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
     public partial class MainWindow : Window {
 
         IronJS.Hosting.Context ijsCtx;
@@ -58,7 +59,12 @@ namespace IronJS.DevUI {
                 IronJS.Api.HostFunction.create<Action<IronJS.Box>>(
                     ijsCtx.Environment, Inspect);
 
+            var print =
+                IronJS.Api.HostFunction.create<Action<IronJS.Box>>(
+                    ijsCtx.Environment, Print);
+
             ijsCtx.PutGlobal("inspect", inspect);
+            ijsCtx.PutGlobal("print", print);
 
             if (sender != null)
                 RenderEnvironment();
@@ -78,6 +84,10 @@ namespace IronJS.DevUI {
             return;
         }
 
+        void Print(IronJS.Box box) {
+            Result.Text += IronJS.Api.TypeConverter.toString(box) + "\r\n";
+        }
+
         void RunCode_Click(object sender, RoutedEventArgs e) {
             try {
                 System.IO.File.WriteAllText("ironjs_devgui.cache", Input.Text);
@@ -85,19 +95,20 @@ namespace IronJS.DevUI {
                 stopWatch.Restart();
                 Debug.Text = "";
                 ExpressionTree.Text = "";
+                Result.Text = "";
                 var result = Utils.box(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
-                Result.Text = IronJS.Api.TypeConverter.toString(result);
+                Result.Text += IronJS.Api.TypeConverter.toString(result);
 
-            } catch (Exception ex) {
-                stopWatch.Stop();
+              /*} catch (Exception ex) {
+                  stopWatch.Stop();
 
-                while (ex.InnerException != null) {
-                    ex = ex.InnerException;
-                }
+                  while (ex.InnerException != null) {
+                      ex = ex.InnerException;
+                  }
 
-                Result.Text = ex.Message + "\n\n";
-                Result.Text += ex.StackTrace;
+                  Result.Text = ex.Message + "\n\n";
+                  Result.Text += ex.StackTrace;*/
 
             } finally {
                 RenderEnvironment();

@@ -8,10 +8,10 @@ open System.Runtime.InteropServices
 module Version =
   let [<Literal>] Major = 0
   let [<Literal>] Minor = 1
-  let [<Literal>] Build = 91
+  let [<Literal>] Build = 92
   let [<Literal>] Revision = 0
   let [<Literal>] Tag = "preview"
-  let [<Literal>] String = "0.1.91.0"
+  let [<Literal>] String = "0.1.91.1"
   let Tupled = Major, Minor, Build, Revision, Tag
   let Tagged = sprintf "%s-%s" String Tag
   let FullName = sprintf "IronJS %s" Tagged

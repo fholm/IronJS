@@ -5,6 +5,7 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Utils
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
 type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
@@ -23,15 +24,21 @@ module Core =
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
+    | Ast.DlrExpr expr -> expr
 
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
     | Ast.Identifier name -> Identifier.getValue ctx name
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
-    | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
     | Ast.Eval tree -> compileEval ctx tree
+    | Ast.Var ast -> compileAst ctx ast
+
+    //Operators
+    | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
     | Ast.Unary(op, tree) -> compileUnary ctx op tree
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
+    | Ast.InstanceOf(left, right) -> Binary.instanceOf ctx left right
+    | Ast.In(left, right) -> Binary.in' ctx left right
 
     //Scopes
     | Ast.With(init, tree) -> Scope.with' ctx init tree
@@ -62,6 +69,9 @@ module Core =
     | Ast.For(label, init, test, incr, body) -> 
       ControlFlow.for' ctx label init test incr body
 
+    | Ast.ForIn(label, name, init, body) ->
+      ControlFlow.forIn ctx label name init body
+
     //Exceptions
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
     | Ast.Throw tree -> Exception.throw ctx tree
@@ -85,32 +95,36 @@ module Core =
       
   //----------------------------------------------------------------------------
   // Compiles a call to eval, e.g: eval('foo = 1');
-  and compileEval (ctx:Context) evalTree =
+  and compileEval (ctx:Context) evalTarget =
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
+    let evalTarget = compileAst ctx evalTarget
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Object.Property.get ctx.Globals ("eval" |> Dlr.const')))
+      (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assignValue
-        (Dlr.field target "GlobalLevel") (Dlr.const' ctx.Scope.GlobalLevel))
+        (Dlr.field target "GlobalLevel") 
+        (Dlr.const' ctx.Scope.GlobalLevel))
+
       (Expr.assignValue
-        (Dlr.field target "ClosureLevel") (Dlr.const' ctx.Scope.ClosureLevel))
+        (Dlr.field target "ClosureLevel") 
+        (Dlr.const' ctx.Scope.ClosureLevel))
+
       (Expr.assignValue
-        (Dlr.field target "Closures") (Dlr.const' ctx.Scope.Closures))
+        (Dlr.field target "Closures") 
+        (Dlr.const' ctx.Scope.Closures))
         
-      (Expr.assignValue (Dlr.field target "Target") (compileAst ctx evalTree))
+      (Expr.assignValue (Dlr.field target "Target") evalTarget)
       (Expr.assignValue (Dlr.field target "Function") ctx.Function)
       (Expr.assignValue (Dlr.field target "This") ctx.This)
-      (Expr.assignValue (Dlr.field target "Local") ctx.LocalScope)
-      (Expr.assignValue (Dlr.field target "ScopeChain") ctx.ClosureScope)
+      (Expr.assignValue (Dlr.field target "LocalScope") ctx.LocalScope)
+      (Expr.assignValue (Dlr.field target "ClosureScope") ctx.ClosureScope)
       (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
-      (Expr.testIsFunction
-        (eval)
-        (fun x -> Function.invokeAsFunction x ctx.This [target])
-        (fun x -> Expr.BoxedConstants.undefined))]
+      eval |> Function.invokeFunction ctx.This [target]
+    ]
 
   //----------------------------------------------------------------------------
   // Main compiler function that setups compilation and invokes compileAst
@@ -146,10 +160,7 @@ module Core =
           |> Seq.toArray
     }
 
-    let scopeInit, ctx = 
-      match scope.ScopeType with
-      | Ast.ScopeType.GlobalScope -> Scope.initGlobal ctx
-      | Ast.ScopeType.FunctionScope -> Scope.initFunction ctx
+    let scopeInit, ctx = Scope.init ctx
 
     let functionsInit =
       scope.Functions
@@ -180,6 +191,7 @@ module Core =
         |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
         |> Dlr.block locals
 
+    //TODO: Tidy up
     let allParameters =
       (
         if ctx.Target.IsEval then 

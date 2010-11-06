@@ -9,8 +9,9 @@
     <OutputType>Library</OutputType>
     <RootNamespace>IronJS</RootNamespace>
     <AssemblyName>IronJS</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <Name>IronJS</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,7 +45,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile />
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -104,7 +105,16 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\..\Lib\CLR4\Microsoft.Dynamic.dll</HintPath>
+      <HintPath>..\..\..\Lib\CLR2\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting">
+      <HintPath>..\..\..\Lib\CLR2\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Core">
+      <HintPath>..\..\..\Lib\CLR2\Microsoft.Scripting.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.ExtensionAttribute">
+      <HintPath>..\..\..\Lib\CLR2\Microsoft.Scripting.ExtensionAttribute.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
@@ -112,8 +122,13 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Dependencies\FSKit\Src\FSKit.fsproj">
-      <Name>FSKit</Name>
+    <ProjectReference Include="..\..\Dependencies\CLR2Support\CLR2Support.csproj">
+      <Name>CLR2Support</Name>
+      <Project>{d0bfd559-a36c-4d24-93bd-5d23bfe0ae44}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Dependencies\FSKit\Src\FSKit.CLR2.fsproj">
+      <Name>FSKit.CLR2</Name>
       <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
       <Private>True</Private>
     </ProjectReference>

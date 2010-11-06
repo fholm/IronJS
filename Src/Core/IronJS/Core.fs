@@ -50,7 +50,8 @@ module TypeTags =
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
   let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] Function = 0xFFFFFF07u
+  let [<Literal>] FastObject = 0xFFFFFF07u
+  let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
     Map.ofList [
@@ -61,14 +62,15 @@ module TypeTags =
       (String, "string")
       (Undefined, "undefined")
       (Object, "object")
-      (Function, "function")
-    ]
+      (FastObject, "object")
+      (Function, "function")]
 
-  let getName (tag:TypeTag) = 
-    Names.[tag]
+  let getName (tag:TypeTag) = Names.[tag]
 
 module BoxFields =
   let [<Literal>] Bool = "Bool"
+  let [<Literal>] Int32 = "Int32"
+  let [<Literal>] UInt32 = "UInt32"
   let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Clr"
@@ -120,11 +122,9 @@ module Classes =
       (Number, "Number")
       (Math, "Math")
       (Date, "Date")
-      (Error, "Error")
-    ]
+      (Error, "Error")]
 
-  let getName (class':Class) = 
-    Names.[class']
+  let getName (class':Class) = Names.[class']
 
 module MarshalModes =
   let [<Literal>] Default = 2
@@ -160,7 +160,6 @@ module TaggedBools =
 
 //------------------------------------------------------------------------------
 // Represents a value whos type is unknown at runtime
-//------------------------------------------------------------------------------
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
@@ -172,6 +171,8 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
+    [<FieldOffset(8)>]  val mutable Int32 : int32
+    [<FieldOffset(8)>]  val mutable UInt32 : uint32
     [<FieldOffset(8)>]  val mutable Number : IjsNum
 
     //Type & Tag
@@ -181,13 +182,10 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
 //------------------------------------------------------------------------------
 // 8.1 Undefined
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static member Instance = instance
     
-//------------------------------------------------------------------------------
-// Record for all default property maps
 //------------------------------------------------------------------------------
 and Maps = {
   Base : PropertyMap
@@ -197,6 +195,7 @@ and Maps = {
   String : PropertyMap
   Number : PropertyMap
   Boolean : PropertyMap
+  Regexp : PropertyMap
 }
 //------------------------------------------------------------------------------
 and Methods = {
@@ -213,6 +212,16 @@ and Prototypes = {
   String : IjsObj
   Number : IjsObj
   Boolean : IjsObj
+  Date : IjsObj
+  RegExp : IjsObj
+  Error: IjsObj
+
+  EvalError : IjsObj
+  RangeError : IjsObj
+  ReferenceError : IjsObj
+  SyntaxError : IjsObj
+  TypeError : IjsObj
+  URIError : IjsObj
 } with
   static member Empty = {
     Object = null
@@ -221,6 +230,16 @@ and Prototypes = {
     String = null
     Number = null
     Boolean = null
+    Date = null
+    RegExp = null
+    Error = null
+
+    EvalError = null
+    RangeError = null
+    ReferenceError = null
+    SyntaxError = null
+    TypeError  = null
+    URIError = null
   }
 
 //------------------------------------------------------------------------------
@@ -231,6 +250,16 @@ and Constructors = {
   String : IjsFunc
   Number : IjsFunc
   Boolean : IjsFunc
+  Date : IjsFunc
+  RegExp : IjsFunc
+  Error : IjsFunc
+
+  EvalError : IjsFunc
+  RangeError : IjsFunc
+  ReferenceError : IjsFunc
+  SyntaxError : IjsFunc
+  TypeError : IjsFunc
+  URIError : IjsFunc
 } with
   static member Empty = {
     Object = null
@@ -239,11 +268,20 @@ and Constructors = {
     String = null
     Number = null
     Boolean = null
+    Date = null
+    RegExp = null
+    Error = null
+
+    EvalError = null
+    RangeError = null
+    ReferenceError = null
+    SyntaxError = null
+    TypeError = null
+    URIError  = null
   }
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Environment() =
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0L
@@ -257,6 +295,7 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable Methods : Methods
+  [<DefaultValue>] val mutable FunctionMethods : FunctionMethods
 
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
@@ -266,7 +305,6 @@ and [<AllowNullLiteral>] Environment() =
 
 //------------------------------------------------------------------------------
 // 8.6
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte // [[Class]]
   val mutable Value : Descriptor // [[Value]]
@@ -317,7 +355,6 @@ and [<AllowNullLiteral>] Object =
   
 //-------------------------------------------------------------------------
 // Property descriptor
-//-------------------------------------------------------------------------
 and [<StructuralEquality>] [<NoComparison>] Descriptor =
   struct
     val mutable Box : Box
@@ -327,7 +364,6 @@ and [<StructuralEquality>] [<NoComparison>] Descriptor =
     
 //------------------------------------------------------------------------------
 // 8.6.2
-//------------------------------------------------------------------------------
 and [<ReferenceEquality>] InternalMethods = {
   GetProperty : GetProperty // 8.6.2.1
   HasProperty : HasProperty // 8.6.2.4
@@ -433,19 +469,18 @@ and [<AllowNullLiteral>] Arguments =
 
       | _ -> failwith "Que?"
 
-
-      
 //------------------------------------------------------------------------------
 // Base class used to represent all functions exposed as native javascript
 // functions to user code.
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
+  val mutable Name : IjsStr
   val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
+  val mutable FunctionMethods : FunctionMethods
 
   val mutable ScopeChain : Scope
   val mutable DynamicScope : DynamicScope
@@ -454,6 +489,7 @@ and [<AllowNullLiteral>] Function =
     inherit Object(
       env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
+    Name = ""
     Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
@@ -461,10 +497,13 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = scopeChain
     DynamicScope = dynamicScope
+    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv, propertyMap) = {
     inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
+
+    Name = ""
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
@@ -472,10 +511,13 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = null
     DynamicScope = List.empty
+    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv) = {
     inherit Object()
+
+    Name = ""
     Env = env
     Compiler = null
     FunctionId = 0UL
@@ -483,11 +525,17 @@ and [<AllowNullLiteral>] Function =
 
     ScopeChain = null
     DynamicScope = List.empty
+    FunctionMethods = env.FunctionMethods
   }
+
+and FunctionMethods = {
+  HasInstance : HasInstance
+}
+
+and HasInstance = delegate of IjsFunc * IjsObj -> IjsBool
 
 //------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit Function
   
@@ -555,7 +603,6 @@ and [<AllowNullLiteral>] FunctionCompiler(compiler) =
 
 //------------------------------------------------------------------------------
 // Class representing a javascript user exception
-//------------------------------------------------------------------------------
 and [<AllowNullLiteral>] UserError(jsValue:Box) =
   inherit Exception()
   member x.JsValue = jsValue

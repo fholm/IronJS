@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 //------------------------------------------------------------------------------
 module Function =
@@ -11,8 +12,8 @@ module Function =
   let dynamicScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "DynamicChain"
 
   //----------------------------------------------------------------------------
-  let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegateType =
-    compiler {target with Delegate = Some delegateType}
+  let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegate' =
+    compiler {target with Delegate = Some delegate'}
   
   //----------------------------------------------------------------------------
   let makeCompiler ctx compiler tree =
@@ -37,27 +38,19 @@ module Function =
       (Dlr.const' scope.Id)
       (Dlr.const' scope.ParamCount)
       (ctx.ClosureScope)
-      (ctx.DynamicScope)]
+      (ctx.DynamicScope)
+    ]
 
     Dlr.callMethod (Api.Environment.Reflected.createFunction) funcArgs
 
   //----------------------------------------------------------------------------
-  let invokeAsFunction func this' args =
-    Expr.blockTmpT<IjsFunc> func (fun f -> 
-      let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
-      let args = f :: this' :: args
-      [Dlr.callStaticGenericT<Api.Function> "call" argTypes args])
-      
-  //----------------------------------------------------------------------------
-  let invokeAsMethod target f args =
-    Expr.blockTmpT<IjsObj> target (fun object' ->
-      [
-        Expr.blockTmpT<IjsBox> (f object') (fun method' ->
-          [
-            (Expr.testIsFunction
-              (method')
-              (fun x -> invokeAsFunction x object' args)
-              (fun x -> Expr.BoxedConstants.undefined))])])
+  let invokeFunction this' args func =
+    Utils.ensureFunction func
+      (fun func -> 
+        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
+        let args = func :: this' :: args
+        Dlr.callStaticGenericT<Api.Function> "call" argTypes args)
+      (fun _ -> Expr.BoxedConstants.undefined)
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -73,34 +66,20 @@ module Function =
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =
-    if ctx.DynamicLookup then invokeIdentifierDynamic ctx name args
-    else
-      (Expr.testIsFunction 
-        (Identifier.getValue ctx name)
-        (fun x -> invokeAsFunction x ctx.Globals args)
-        (fun x -> Expr.BoxedConstants.undefined))
+    if ctx.DynamicLookup 
+      then invokeIdentifierDynamic ctx name args
+      else name |> Identifier.getValue ctx |> invokeFunction ctx.Globals args
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
-    let name = Dlr.const' name
-    (Expr.testIsObject 
-      (object')
-      (fun x -> 
-        (invokeAsMethod
-          (x)
-          (fun x -> Object.Property.get x name)
-          (args)))
+    (Utils.ensureObject ctx object'
+      (fun x -> Object.Property.get x !!!name |> invokeFunction x args)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
-    (Expr.testIsObject 
-      (object')
-      (fun x -> 
-        (invokeAsMethod
-          (x)
-          (fun x -> Object.Index.get x index)
-          (args)))
+    (Utils.ensureObject ctx object'
+      (fun x -> Object.Index.get x index |> invokeFunction x args)
       (fun x -> Expr.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
@@ -121,8 +100,7 @@ module Function =
     let args = [for a in args -> ctx.Compile a]
     let func = ctx.Compile func
 
-    (Expr.testIsFunction
-      (func)
+    Utils.ensureFunction func
       (fun f ->
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = f :: ctx.Globals :: args
@@ -130,7 +108,7 @@ module Function =
           (Expr.isConstructor f)
           (Dlr.callStaticGenericT<Api.Function> "construct" argTypes args)
           (Expr.BoxedConstants.undefined)))
-      (fun _ -> Expr.BoxedConstants.undefined))
+      (fun _ -> Expr.BoxedConstants.undefined)
       
   //----------------------------------------------------------------------------
   // 11.2.3 function calls
@@ -156,9 +134,7 @@ module Function =
         invokeIndex ctx object' index args
 
       //(function(){ ... })();
-      | _ -> 
-        let func = ctx.Compile tree
-        invokeAsFunction func ctx.Globals args
+      | _ -> tree |> ctx.Compile |> invokeFunction ctx.Globals args
 
     Dlr.block temps (assigns @ [invokeExpr])
     

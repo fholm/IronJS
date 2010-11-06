@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 module Unary =
       
@@ -29,23 +30,23 @@ module Unary =
   
   //----------------------------------------------------------------------------
   // 11.4.1 delete
-  let deleteIndex object' index =
-    (Expr.testIsObject
-      (object')
-      (fun x -> 
-        (Dlr.invoke 
-          (Dlr.property (Dlr.field x "Methods") "DeleteIndex")
-          [x; index]))
+  let deleteIndex (ctx:Ctx) object' index =
+    let delete x =
+      Dlr.invoke 
+        (Dlr.property (Dlr.field x "Methods") "DeleteIndex") [x; index]
+
+    (Utils.ensureObject ctx object'
+      (fun x ->
+        Dlr.invoke 
+          (Dlr.property (Dlr.field x "Methods") "DeleteIndex") [x; index])
       (fun x -> Dlr.false'))
     
-  let deleteProperty object' name =
-    let name = Dlr.const' name
-    (Expr.testIsObject
-      (object')
+  let deleteProperty (ctx:Ctx) object' name =
+    (Utils.ensureObject ctx object'
       (fun x ->
-        (Dlr.invoke 
+        Dlr.invoke 
           (Dlr.property (Dlr.field x "Methods") "DeleteProperty")
-          [x; name]))
+          [x; !!!name])
       (fun x -> Dlr.false'))
     
   let deleteIdentifier (ctx:Ctx) name =
@@ -55,7 +56,7 @@ module Unary =
 
     else
       if Identifier.isGlobal ctx name 
-        then deleteProperty ctx.Globals name
+        then deleteProperty ctx ctx.Globals name
         else Dlr.false'
 
   let delete (ctx:Ctx) tree =
@@ -66,11 +67,11 @@ module Unary =
     | Ast.Index(object', index) ->
       let index = Utils.compileIndex ctx index
       let object' = ctx.Compile object'
-      deleteIndex object' index
+      deleteIndex ctx object' index
 
     | Ast.Property(object', name) ->
       let object' = ctx.Compile object'
-      deleteProperty object' name
+      deleteProperty ctx object' name
 
     | _ -> failwith "Que?"
 
@@ -160,11 +161,24 @@ module Binary =
     | BinaryOp.GtEq -> Api.Operators.gtEq(l, r)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
-
+    
+  //----------------------------------------------------------------------------
   let compile (ctx:Ctx) op left right =
     let l = ctx.Compile left |> Expr.boxValue 
     let r = ctx.Compile right |> Expr.boxValue
     compileExpr op l r
+    
+  //----------------------------------------------------------------------------
+  let instanceOf (ctx:Context) left right =
+    let l = ctx.Compile left |> Expr.boxValue 
+    let r = ctx.Compile right |> Expr.boxValue
+    Api.Operators.instanceOf(l, r)
+    
+  //----------------------------------------------------------------------------
+  let in' (ctx:Context) left right =
+    let l = ctx.Compile left |> Expr.boxValue 
+    let r = ctx.Compile right |> Expr.boxValue
+    Api.Operators.in'(l, r)
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =
@@ -176,21 +190,24 @@ module Binary =
       Identifier.setValue ctx name value
 
     //Property assignment: foo.bar = 1;
-    | Ast.Property(tree, name) -> 
-      let name = Dlr.const' name
+    | Ast.Property(object', name) -> 
       Expr.blockTmp value (fun value ->
-        [ (Expr.testIsObject 
-            (ctx.Compile tree)
-            (fun x -> Object.Property.put x name value)
-            (fun x -> value))])
+        [
+          Utils.ensureObject ctx (object' |> ctx.Compile)
+            (Object.Property.put' !!!name value)
+            (fun x -> value)
+        ]
+      )
 
     //Index assignemnt: foo[0] = "bar";
-    | Ast.Index(tree, index) -> 
+    | Ast.Index(object', index) -> 
       let index = Utils.compileIndex ctx index
       Expr.blockTmp value (fun value ->
-        [ (Expr.testIsObject
-            (ctx.Compile tree)
-            (fun x -> Object.Index.put x index value)
-            (fun x -> value))])
+        [
+          Utils.ensureObject ctx (object' |> ctx.Compile)
+            (Object.Index.put' index value)
+            (fun x -> value)
+        ]
+      )
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree

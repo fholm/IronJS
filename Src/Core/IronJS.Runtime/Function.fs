@@ -52,7 +52,7 @@ module Function =
 
       match f.Env.FunctionSourceStrings.TryGetValue f.FunctionId with
       | true, value -> value
-      | _ -> "[object Function]"
+      | _ -> "function() { [native code] }"
 
     else
       failwith "Que?"

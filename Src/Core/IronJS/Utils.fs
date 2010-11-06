@@ -58,12 +58,13 @@ module Utils =
       let zero = Reflected.propertyInfo "Utils+BoxedConstants" "zero"
       let undefined = Reflected.propertyInfo "Utils+BoxedConstants" "undefined"
 
-
   let isNull (o:obj) = Object.ReferenceEquals(o, null)
   let isNotNull o = o |> isNull |> not
       
   //----------------------------------------------------------------------------
   module Box = 
+    let isObject tag = tag >= TypeTags.Object
+    let isFunction tag = tag >= TypeTags.Function
     let isNumber tag = tag < 0xFFF9us
     let isTagged tag = tag > 0xFFF8us
     let isBothNumber l r = isNumber l && isNumber r
@@ -153,7 +154,8 @@ module Utils =
   //----------------------------------------------------------------------------
   let isVoid t = typeof<System.Void> = t
 
-  let refEquals (a:obj) (b:obj) = System.Object.ReferenceEquals(a, b)
+  let refEquals (a:obj) (b:obj) = 
+    System.Object.ReferenceEquals(a, b)
 
   let isStringIndex (str:string, out:uint32 byref) = 
     str.Length > 0 
@@ -173,12 +175,6 @@ module Utils =
                                               else TypeTags.Clr
 
   let type2tcT<'a> = type2tc typeof<'a>
-
-  let obj2tc (o:obj) = 
-    if o = null 
-      then TypeTags.Clr
-      else type2tc (o.GetType())
-
   let expr2tc (e:Dlr.Expr) = type2tc e.Type
 
   let type2bf (t:System.Type) =
@@ -194,7 +190,6 @@ module Utils =
                                               else BoxFields.Clr
 
   let type2bfT<'a> = type2bf
-  let obj2bf (o:obj) = type2bf (o.GetType())
   let expr2bf (e:Dlr.Expr) = type2bf e.Type
 
   let tc2bf tc =
@@ -208,18 +203,8 @@ module Utils =
     | TypeTags.Clr        -> BoxFields.Clr
     | _ -> failwithf "Invalid typecode %i" tc
 
-  let tc2type tc =
-    match tc with
-    | TypeTags.Bool        -> TypeObjects.Bool     
-    | TypeTags.Number      -> TypeObjects.Number   
-    | TypeTags.String      -> TypeObjects.String   
-    | TypeTags.Undefined   -> TypeObjects.Undefined
-    | TypeTags.Object      -> TypeObjects.Object   
-    | TypeTags.Function    -> TypeObjects.Function 
-    | TypeTags.Clr         -> TypeObjects.Clr
-    | _ -> failwithf "Invalid typecode %i" tc
-
-  let isBox (type':ClrType) = Object.ReferenceEquals(type', TypeObjects.Box)
+  let isBox (type':ClrType) = 
+    Object.ReferenceEquals(type', TypeObjects.Box)
       
   let isObject type' = 
     (type' = typeof<Object> || type'.IsSubclassOf(typeof<Object>))
@@ -241,7 +226,7 @@ module Utils =
     else
       let mutable box = Box()
 
-      match obj2tc o with
+      match o.GetType() |> type2tc with
       | TypeTags.Bool as tc -> 
         box.Bool <- unbox o
         box.Tag <- tc

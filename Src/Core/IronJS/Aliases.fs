@@ -1,9 +1,10 @@
 ﻿namespace IronJS
 
+open System
+open System.Globalization
+open System.Collections.Generic
+
 module Aliases = 
-  open System
-  open System.Globalization
-  open System.Collections.Generic
   
   #if CLR2
   #else
@@ -14,6 +15,8 @@ module Aliases =
   type MutableStack<'a> = Stack<'a>
   type MutableDict<'k, 'v> = Dictionary<'k, 'v>
   type MutableSorted<'k, 'v> = SortedDictionary<'k, 'v>
+  type MutableSet<'a> = HashSet<'a>
+  type Pair<'a, 'b> = Tuple<'a, 'b>
 
   #if CLR2
   type ConcurrentMutableDict<'k, 'v> = Clr2Support.ConcurrentDictionary<'k, 'v>

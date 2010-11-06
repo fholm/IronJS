@@ -13,21 +13,18 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String ->
 
-      (*
+      let ast = 
+        Parsers.Ecma3.parse target.Function.Env target.Target.String
+
       let tree = 
-        Ast.Function(          
-         {Ast.Scope.New with Closures=target.Closures}, 
-          Ast.Parsers.Ecma3.parse target.Function.Env target.Target.String)
+        Ast.Function(None, {Ast.Scope.New with Closures=target.Closures}, ast)
 
       let levels = 
-        Some(
-          target.GlobalLevel, 
-          target.ClosureLevel, 
-          target.LocalLevel)
+        Some(target.GlobalLevel, target.ClosureLevel, 0)
 
       let compiled = 
         Core.compile {
-          Ast = Ast.applyAnalyzers tree levels
+          Ast = Ast.Analyzers.applyDefault tree levels
           TargetMode = TargetMode.Eval
           Delegate = None
           Environment = target.Function.Env
@@ -40,9 +37,6 @@ module Global =
           target.LocalScope,
           target.ClosureScope,
           target.DynamicScope))
-      *)
-
-      Utils.BoxedConstants.undefined
 
     | _ -> target.Target
 

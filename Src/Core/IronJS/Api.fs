@@ -176,6 +176,20 @@ module Environment =
     let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error, 0u)
     o.Methods <- env.Methods.Object
     o
+
+  let raiseError (env:IjsEnv) prototype (message:IjsStr) =
+    let error = createError env
+    error.Prototype <- prototype
+    error.put("message", message)
+    raise (new UserError(Utils.boxObject error))
+
+  let raiseEvalError (env:IjsEnv) = raiseError env env.Prototypes.EvalError
+  let raiseRangeError (env:IjsEnv) = raiseError env env.Prototypes.RangeError
+  let raiseSyntaxError (env:IjsEnv) = raiseError env env.Prototypes.SyntaxError
+  let raiseTypeError (env:IjsEnv) = raiseError env env.Prototypes.TypeError
+  let raiseURIError (env:IjsEnv) = raiseError env env.Prototypes.URIError
+  let raiseReferenceError (env:IjsEnv) = 
+    raiseError env env.Prototypes.ReferenceError
     
   //----------------------------------------------------------------------------
   module Reflected =

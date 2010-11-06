@@ -1,0 +1,3 @@
+﻿* support for defining variables in eval
+* array .length property
+* fix weird IronJS.Debug semantics

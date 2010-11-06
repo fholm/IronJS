@@ -1,0 +1,16 @@
+### Changelog for 0.1.92 ###
+
+* Re-enabled support for eval()
+* Re-enabled try/catch/finally/throw support
+* Fixed bug with try/catch in global scope
+* Added arguments.callee support
+* Added instanceof operator
+* Added in operator
+* Added support for regex literals in AST/Parser
+* Added for (... in ...) support
+* Implemented Error constructor and prototype 
+* Reworked internal handling of objects and function calls in the compiler
+* Accessing properties and invoking methods on primitive values (string, 
+  boolean, number) should now work, e.g: ("foo".hasOwnproperty("length"))
+* Implemented special [[Put]] method for arrays (15.4.5.1)
+* Added solutions for CLR2 and Mono2.8 to ease building for those platforms

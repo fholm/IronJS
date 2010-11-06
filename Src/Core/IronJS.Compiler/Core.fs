@@ -101,7 +101,7 @@ module Core =
     let evalTarget = compileAst ctx evalTarget
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval")
+      (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assignValue
@@ -127,7 +127,8 @@ module Core =
         (eval)
         (fun x -> Function.invokeAsFunction x ctx.This [target])
         (fun x -> Expr.BoxedConstants.undefined)
-        (fun x -> Expr.BoxedConstants.undefined))]
+        (fun x -> Expr.BoxedConstants.undefined))
+    ]
 
   //----------------------------------------------------------------------------
   // Main compiler function that setups compilation and invokes compileAst

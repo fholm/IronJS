@@ -1,6 +1,7 @@
 ﻿namespace IronJS
 
 open IronJS
+open IronJS.Dlr.Operators
 
 module Expr = 
 
@@ -15,6 +16,11 @@ module Expr =
 
     let (|Index|TypeCode|) (expr:Dlr.Expr) =
       if expr.Type = typeof<uint32> then Index else TypeCode
+
+    let (|IsObj|IsBox|IsClr|) (expr:Dlr.Expr) =
+      if Dlr.Utils.isT<IjsObj> expr    then IsObj
+      elif Dlr.Utils.isT<IjsBox> expr  then IsBox
+                                       else IsClr
 
   let undefined = 
     Dlr.propertyStaticT<IronJS.Undefined> "Instance"
@@ -33,6 +39,8 @@ module Expr =
       ]
     else
       expr
+
+  open Patterns
         
   //-------------------------------------------------------------------------
   let errorValue error =
@@ -43,7 +51,9 @@ module Expr =
     Dlr.assign (Dlr.field (Dlr.Ext.unwrap expr) BoxFields.Clr) Dlr.null'
     
   //-------------------------------------------------------------------------
-  let getBoxType expr = Dlr.field expr "Tag"
+  let boxTag expr = Dlr.field expr "Tag"
+  let getBoxType expr = boxTag expr
+  
   let setBoxType expr tag =
     match tag with
     | TypeTags.Number -> Dlr.void'
@@ -60,6 +70,32 @@ module Expr =
   let isBoxed (expr:Dlr.Expr) = 
     Utils.isBox expr.Type
 
+  let testTag expr (tag:TypeTag) =
+    if isBoxed expr 
+      then Dlr.eq (boxTag expr) !!!tag
+      else failwith "Can't test .Tag on non-Box expressions"
+      
+  let testTagNot expr (tag:TypeTag) =
+    if isBoxed expr 
+      then Dlr.notEq (boxTag expr) !!!tag
+      else failwith "Can't test .Tag on non-Box expressions"
+
+  let testTagAs expr (tag:TypeTag) =
+    if isBoxed expr then
+      let comparer = if tag >= TypeTags.Clr then Dlr.gtEq else Dlr.eq
+      comparer (boxTag expr) !!!tag
+
+    else
+      failwith "Can't test .Tag on non-Box expressions"
+
+  let testTagNotAs expr (tag:TypeTag) =
+    if isBoxed expr then
+      let comparer = if tag >= TypeTags.Clr then Dlr.lt else Dlr.notEq
+      comparer (boxTag expr) !!!tag
+
+    else
+      failwith "Can't test .Tag on non-Box expressions"
+
   //-------------------------------------------------------------------------
   let testBoxType expr typeCode = 
     if isBoxed expr then
@@ -70,7 +106,7 @@ module Expr =
       comparer (getBoxType expr) (Dlr.const' typeCode)
 
     else
-      failwith "Can't test .Type on non-Box expressions"
+      failwith "Can't test .Tag on non-Box expressions"
     
   //-------------------------------------------------------------------------
   let boxValue (value:Dlr.Expr) = 
@@ -157,9 +193,7 @@ module Expr =
   let unboxIntoT<'a> = unboxInto typeof<'a>
 
   //-------------------------------------------------------------------------
-  //
   // Blocks
-  //
   //-------------------------------------------------------------------------
     
   //-------------------------------------------------------------------------
@@ -206,9 +240,7 @@ module Expr =
     blockTmpType typeof<'a> expr f
 
   //-------------------------------------------------------------------------
-  //
   // Assignment
-  //
   //-------------------------------------------------------------------------
     
   //-------------------------------------------------------------------------
@@ -245,9 +277,7 @@ module Expr =
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
         
   //-------------------------------------------------------------------------
-  //
   // Types
-  //
   //-------------------------------------------------------------------------
 
   let prototype expr = Dlr.field expr "Prototype"
@@ -258,19 +288,16 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox ifOther =
-    if expr.Type = typeof<'a> || expr.Type.IsSubclassOf(typeof<'a>) then 
-      ifObj expr
-
+    if expr.Type = typeof<'a> then ifObj expr
+    elif expr.Type.IsSubclassOf typeof<'a> then ifObj expr
     elif isBoxed expr then
       blockTmp expr (fun tmp ->
         [Dlr.ternary 
           (testBoxType tmp (Utils.type2tcT<'a>))
           (ifObj (unboxT<'a> tmp))
-          (ifBox tmp)
-        ]
-      )
+          (ifBox tmp)])
 
-    else
+    else 
       ifOther expr
       
   //-------------------------------------------------------------------------
@@ -280,6 +307,30 @@ module Expr =
   //-------------------------------------------------------------------------
   let testIsFunction expr ifTrue ifFalse ifOther = 
     testIsType<IjsFunc> expr ifTrue ifFalse ifOther
+
+  let testIsObject2 (expr:Dlr.Expr) ifObj ifJs ifClr : Dlr.Expr =
+    match expr |> Utils.expr2tc with
+    | TypeTags.Function
+    | TypeTags.Object -> ifObj expr
+    | TypeTags.Clr -> ifClr expr
+    | TypeTags.Box -> 
+      blockTmp expr (fun expr ->
+        [
+          Dlr.ternary 
+            (testTagAs expr TypeTags.Object)
+            (ifObj (unboxT<IjsObj> expr))
+            (Dlr.ternary
+              (testTag expr TypeTags.Clr)
+              (ifClr (unboxClr expr))
+              (ifJs expr))
+         ]
+      )
+
+    | TypeTags.Bool
+    | TypeTags.String
+    | TypeTags.Undefined
+    | TypeTags.Number -> ifJs expr
+    | tt -> failwithf "Invalid TypeTag '%i'" tt
 
   //-------------------------------------------------------------------------
   let unboxIndex expr i tc =

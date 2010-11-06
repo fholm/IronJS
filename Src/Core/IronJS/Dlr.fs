@@ -85,8 +85,10 @@ module Dlr =
   let labelBreak () = labelVoid "break"
   let labelContinue () = labelVoid "continue"
 
-  let break' label = Et.Break label :> Expr
-  let continue' label = Et.Continue label :> Expr
+  let break' label = Expr.Break label :> Expr
+  let continue' label = Expr.Continue label :> Expr
+  let goto label (value:Expr) = Expr.Goto(label, value) :> Expr
+  let jump label = Expr.Goto label :> Expr
 
   let private _tmpCounter = ref 0L
   let tmpName () = 
@@ -398,8 +400,8 @@ module Dlr =
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (debugView expr)
 
-    let is type' (expr:Expr) = expr.Type = type'
-    let isT<'a> (expr:Expr) = expr.Type = typeof<'a>
+    let is type' (expr:Expr) = expr.Type = type' || expr.Type.IsSubclassOf type'
+    let isT<'a> (expr:Expr) = is typeof<'a> expr
 
     //DEBUG
     let debug x =

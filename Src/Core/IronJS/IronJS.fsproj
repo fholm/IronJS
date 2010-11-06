@@ -100,6 +100,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Expr.fs" />
     <Compile Include="Api.fs" />
+    <Compile Include="Binders.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">

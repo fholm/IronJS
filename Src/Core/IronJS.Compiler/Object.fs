@@ -147,26 +147,30 @@ module Object =
         [Dlr.invoke 
           (Expr.Object.Methods.deleteIndex tmp)
           [tmp; name]])
-          
+
   //----------------------------------------------------------------------------
   // 11.2.1 Property Accessors
+  open IronJS.Dlr.Operators
       
   // MemberExpression . Identifier
   let getProperty (ctx:Ctx) object' name =
-    let name = Dlr.const' name
-    (Expr.testIsObject
-      (ctx.Compile object')
-      (fun x -> Property.get x name)
-      (fun x -> Expr.BoxedConstants.undefined)
+    let objectExpr = object' |> ctx.Compile
+
+    (Expr.testIsObject2 
+      (objectExpr)
+      (fun x -> Property.get x !!!name)
+      (fun x -> Property.get (Api.TypeConverter.toObject(ctx.Env, x)) !!!name)
       (fun x -> Expr.BoxedConstants.undefined))
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
-    let index = Utils.compileIndex ctx index
-    (Expr.testIsObject
-      (ctx.Compile object')
-      (fun x -> Index.get x index)
-      (fun x -> Expr.BoxedConstants.undefined)
+    let indexExpr = index |> Utils.compileIndex ctx
+    let objectExpr = object' |> ctx.Compile 
+
+    (Expr.testIsObject2
+      (objectExpr)
+      (fun x -> Index.get x indexExpr)
+      (fun x -> Index.get (Api.TypeConverter.toObject(ctx.Env, x)) indexExpr)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------

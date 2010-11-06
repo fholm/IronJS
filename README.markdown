@@ -10,11 +10,15 @@ IronJS is released under the [Apache License Version 2.0](http://www.apache.org/
 
 What you need to use IronJS
 
-* .NET 4.0
+* .NET 4.0 (Src/IronJS.CLR4.sln)
+* .NET 3.5 (Src/IronJS.CLR2.sln)
+* Mono 2.8 (Src/IronJS.Mono28.sln)
 
 ## Getting the source
 
 * Open a terminal/command line and go to an empty folder, in my case: C:\Users\Fredrik\Projets
-* Type "git clone git@github.com:fholm/IronJS.git IronJS"
-* Type "cd IronJS\Src\Dependencies"
-* Type "git clone git@github.com:fholm/FSKit.git"
+* ~$ git clone git@github.com:fholm/IronJS.git IronJS
+* ~$ cd IronJS\Src\Dependencies
+* ~$ git clone git@github.com:fholm/FSKit.git
+* ~$ cd FSKit
+* ~$ git checkout 0.0.4

@@ -111,7 +111,11 @@ module Dlr =
         else Et.Block(parms, exprs) :> Expr
 
   let blockSimple (exprs:Expr seq) = 
-    if Seq.length exprs = 0 then void' else Expr.Block(exprs) :> Expr
+    if Seq.length exprs = 0 
+      then void' 
+      elif Seq.length exprs = 1
+        then FSKit.Seq.first exprs
+        else Expr.Block(exprs) :> Expr
 
   let blockTmp type' (f:ExprParam -> Expr seq) =
     let tmp = param (tmpName()) type'

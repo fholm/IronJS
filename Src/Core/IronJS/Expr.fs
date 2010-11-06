@@ -299,38 +299,6 @@ module Expr =
 
     else 
       ifOther expr
-      
-  //-------------------------------------------------------------------------
-  let testIsObject expr ifTrue ifFalse ifOther = 
-    testIsType<IjsObj> expr ifTrue ifFalse ifOther
-      
-  //-------------------------------------------------------------------------
-  let testIsFunction expr ifTrue ifFalse ifOther = 
-    testIsType<IjsFunc> expr ifTrue ifFalse ifOther
-
-  let testIsObject2 (expr:Dlr.Expr) ifObj ifJs ifClr : Dlr.Expr =
-    match expr |> Utils.expr2tc with
-    | TypeTags.Function
-    | TypeTags.Object -> ifObj expr
-    | TypeTags.Clr -> ifClr expr
-    | TypeTags.Box -> 
-      blockTmp expr (fun expr ->
-        [
-          Dlr.ternary 
-            (testTagAs expr TypeTags.Object)
-            (ifObj (unboxT<IjsObj> expr))
-            (Dlr.ternary
-              (testTag expr TypeTags.Clr)
-              (ifClr (unboxClr expr))
-              (ifJs expr))
-         ]
-      )
-
-    | TypeTags.Bool
-    | TypeTags.String
-    | TypeTags.Undefined
-    | TypeTags.Number -> ifJs expr
-    | tt -> failwithf "Invalid TypeTag '%i'" tt
 
   //-------------------------------------------------------------------------
   let unboxIndex expr i tc =

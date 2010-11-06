@@ -9,3 +9,7 @@
 * Added support for regex literals in AST/Parser
 * Added for (... in ...) support
 * Implemented Error constructor and prototype 
+* Reworked internal handling of objects and function calls in the compiler
+* Accessing properties and invoking methods 
+  on primitive values (string, boolean, number) 
+  e.g: ("foo".hasOwnproperty("length"))

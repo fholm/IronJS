@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Expr.Patterns
+open IronJS.Dlr.Operators
 
 //------------------------------------------------------------------------------
 module Object =
@@ -41,6 +42,8 @@ module Object =
       | Ref -> putRef expr name value
       | Val -> putVal expr name value
 
+    let put' name value expr = put expr name value
+
     //--------------------------------------------------------------------------
     let putName expr name (value:Dlr.Expr) = 
       let name = Dlr.const' name
@@ -55,6 +58,8 @@ module Object =
         [Dlr.invoke 
           (Expr.Object.Methods.getProperty tmp)
           [tmp; name]])
+
+    let get' name expr = get expr name
   
     //--------------------------------------------------------------------------
     let has expr name = 
@@ -126,6 +131,8 @@ module Object =
       | Box -> putBox expr index value
       | Val -> putVal expr index value
       | Ref -> putRef expr index value
+
+    let put' index value expr = put expr index value
   
     //--------------------------------------------------------------------------
     let get expr name = 
@@ -133,6 +140,9 @@ module Object =
         [Dlr.invoke 
           (Expr.Object.Methods.getIndex tmp)
           [tmp; name]])
+
+    //--------------------------------------------------------------------------
+    let get' name expr = get expr name
   
     //--------------------------------------------------------------------------
     let has expr name = 
@@ -150,28 +160,19 @@ module Object =
 
   //----------------------------------------------------------------------------
   // 11.2.1 Property Accessors
-  open IronJS.Dlr.Operators
       
   // MemberExpression . Identifier
   let getProperty (ctx:Ctx) object' name =
-    let objectExpr = object' |> ctx.Compile
-
-    (Expr.testIsObject2 
-      (objectExpr)
-      (fun x -> Property.get x !!!name)
-      (fun x -> Property.get (Api.TypeConverter.toObject(ctx.Env, x)) !!!name)
-      (fun x -> Expr.BoxedConstants.undefined))
+    Utils.ensureObject ctx (object' |> ctx.Compile)
+      (Property.get' !!!name)
+      (fun x -> Expr.BoxedConstants.undefined)
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let indexExpr = index |> Utils.compileIndex ctx
-    let objectExpr = object' |> ctx.Compile 
-
-    (Expr.testIsObject2
-      (objectExpr)
-      (fun x -> Index.get x indexExpr)
-      (fun x -> Index.get (Api.TypeConverter.toObject(ctx.Env, x)) indexExpr)
-      (fun x -> Expr.BoxedConstants.undefined))
+    Utils.ensureObject ctx (object' |> ctx.Compile)
+      (Index.get' indexExpr)
+      (fun x -> Expr.BoxedConstants.undefined)
 
   //----------------------------------------------------------------------------
   // 11.1.4 array initialiser

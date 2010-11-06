@@ -17,6 +17,7 @@ namespace IronJS.DevUI {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
     public partial class MainWindow : Window {
 
         IronJS.Hosting.Context ijsCtx;

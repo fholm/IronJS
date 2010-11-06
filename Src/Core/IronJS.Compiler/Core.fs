@@ -123,11 +123,7 @@ module Core =
       (Expr.assignValue (Dlr.field target "ClosureScope") ctx.ClosureScope)
       (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
-      (Expr.testIsFunction
-        (eval)
-        (fun x -> Function.invokeAsFunction x ctx.This [target])
-        (fun x -> Expr.BoxedConstants.undefined)
-        (fun x -> Expr.BoxedConstants.undefined))
+      eval |> Function.invokeFunction ctx.This [target]
     ]
 
   //----------------------------------------------------------------------------

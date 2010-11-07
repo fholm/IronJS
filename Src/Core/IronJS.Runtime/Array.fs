@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Api.Extensions
+open IronJS.DescriptorAttrs
 
 //------------------------------------------------------------------------------
 // 15.4
@@ -27,25 +28,23 @@ module Array =
       
   //----------------------------------------------------------------------------
   let setupConstructor (env:IjsEnv) =
-    let ctor = 
-      (Api.HostFunction.create 
-        env (new Func<IjsFunc, IjsObj, IjsBox array, IjsObj>(constructor')))
+    let ctor = new Func<IjsFunc, IjsObj, IjsBox array, IjsObj>(constructor')
+    let ctor = Api.HostFunction.create env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.put("prototype", env.Prototypes.Array)
+    ctor.put("prototype", env.Prototypes.Array, Immutable)
+
     env.Globals.put("Array", ctor)
     env.Constructors <- {env.Constructors with Array = ctor}
     
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) objPrototype =
     let prototype = Api.Environment.createArray env 0u
-    Api.Object.Property.setMap prototype env.Maps.Array
     prototype.Prototype <- objPrototype
     prototype.Class <- Classes.Array
     prototype
     
   //----------------------------------------------------------------------------
   let setupPrototype (env:IjsEnv) =
-    env.Prototypes.Array.put("constructor", 
-      env.Globals.get("Array"))
+    env.Prototypes.Array.put("constructor", env.Constructors.Array, DontEnum)
 

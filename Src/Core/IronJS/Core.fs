@@ -75,7 +75,6 @@ module BoxFields =
   let [<Literal>] Function = "Func"
 
 module DescriptorAttrs =
-  let [<Literal>] None = 0us
   let [<Literal>] ReadOnly = 1us
   let [<Literal>] DontEnum = 2us
   let [<Literal>] DontDelete = 4us
@@ -356,8 +355,7 @@ and [<AllowNullLiteral>] Object =
     match x.PropertyMap.PropertyMap.TryGetValue name with
     | true, index -> x.setAttrs(index, attrs)
     | _ -> ()
-  
-//-------------------------------------------------------------------------
+
 // Property descriptor
 and [<StructuralEquality>] [<NoComparison>] Descriptor =
   struct

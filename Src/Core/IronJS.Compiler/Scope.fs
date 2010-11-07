@@ -11,7 +11,11 @@ module Scope =
   let with' (ctx:Ctx) init tree =
     let object' = Expr.unboxT<IjsObj> (ctx.Compile init)
     let tree = {ctx with InsideWith=true}.Compile tree
-    let pushArgs = [ctx.DynamicScope; object'; Dlr.const' ctx.Scope.GlobalLevel]
+
+    let pushArgs = [
+      ctx.DynamicScope; object'; 
+      Dlr.const' ctx.Scope.GlobalLevel]
+
     Dlr.blockSimple [
       (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
       (tree)
@@ -65,7 +69,7 @@ module Scope =
     if ctx.Target.IsEval then Dlr.void'
     else
       match count with
-      | 0 -> Dlr.assign ctx.ClosureScope ctx.Fun_Chain
+      | 0 -> Dlr.assign ctx.ClosureScope ctx.FunctionClosureScope
       | _ -> 
         Dlr.blockSimple [
           (Dlr.assign
@@ -73,11 +77,11 @@ module Scope =
             (Dlr.newArrayBoundsT<IjsBox> (Dlr.const' (count+1))))
           (Dlr.assign
             (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
-            (ctx.Fun_Chain))]
+            (ctx.FunctionClosureScope))]
           
   //--------------------------------------------------------------------------
   let private initDynamicScope (ctx:Ctx) (dynamicLookup) =
-    Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
+    Dlr.assign ctx.DynamicScope ctx.FunctionDynamicScope
         
   //--------------------------------------------------------------------------
   let private initArguments (ctx:Ctx) (s:Ast.Scope) =

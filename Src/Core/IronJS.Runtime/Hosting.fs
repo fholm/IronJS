@@ -125,14 +125,20 @@ module Hosting =
     member x.CompileFile fileName =
       let tree = Parsers.Ecma3.parseGlobalFile env fileName
       let analyzed = Ast.Analyzers.applyDefault tree None
+
+      #if DEBUG
       Debug.printString (sprintf "%A" analyzed)
+      #endif
 
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
       let tree = Parsers.Ecma3.parseGlobalSource env source
       let analyzed = Ast.Analyzers.applyDefault tree None
+
+      #if DEBUG
       Debug.printString (sprintf "%A" analyzed)
+      #endif
 
       Compiler.Core.compileAsGlobal env analyzed
 

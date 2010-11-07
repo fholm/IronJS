@@ -174,7 +174,7 @@ module Core =
 
     let returnExpr = [
       (Dlr.labelExprVoid ctx.ReturnLabel)
-      (ctx.Env_Return)]
+      (ctx.EnvReturnBox)]
 
     let locals = 
       if ctx.Target.IsEval then [] |> Seq.ofList
@@ -208,7 +208,10 @@ module Core =
       | Some d -> Dlr.lambda d allParameters functionBody
       | _ -> Dlr.lambdaAuto allParameters functionBody
       
+    #if DEBUG
     Debug.printExpr lambda
+    #endif
+
     lambda.Compile()
       
   let compileAsGlobal env tree =

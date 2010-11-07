@@ -3,42 +3,43 @@
 open System
 open IronJS
 open IronJS.Api.Extensions
-
+open IronJS.DescriptorAttrs
 
 module Error =
 
-  module Utils = 
+  module internal Utils = 
 
-    let constructor' prototype (f:IjsFunc) (_:IjsObj) (message:IjsBox) =
+    let private constructor' proto (f:IjsFunc) (_:IjsObj) (message:IjsBox) =
       let error = Api.Environment.createError(f.Env)
+
       if message.Tag <> TypeTags.Undefined then
-        error.put("message", Api.TypeConverter.toString message)
-      error.Prototype <- prototype
+        let message = Api.TypeConverter.toString message
+        error.put("message", message, DontEnum)
+
+      error.Prototype <- proto
       error
 
-    let setupConstructor (env:IjsEnv) (name:IjsStr) (prototype:IjsObj) update =
-      let ctor =
-        (Api.HostFunction.create env
-          (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(
-            constructor' prototype)))
+    let setupConstructor (env:IjsEnv) (name:IjsStr) (proto:IjsObj) update =
+      let ctor = new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(constructor' proto)
+      let ctor = Api.HostFunction.create env ctor
       
       ctor.Prototype <- env.Prototypes.Function
       ctor.ConstructorMode <- ConstructorModes.Host
-      ctor.put("prototype", prototype)
+      ctor.put("prototype", proto, Immutable)
+
       env.Globals.put(name, ctor)
       env.Constructors <- update env.Constructors ctor
 
-    let toString (o:IjsObj) =
-      "Error: " + (Api.TypeConverter.toString (o.get "message"))
+    let setupPrototype (n:IjsStr) (ctor:IjsFunc) (proto:IjsObj) =
+      proto.put("name", n, DontEnum)
+      proto.put("constructor", ctor, DontEnum)
+      proto.put("message", "", DontEnum)
 
-    let setupPrototype(prototype:IjsObj)(env:IjsEnv)(name:IjsStr)(ctor:IjsFunc)=
-      prototype.put("name", name)
-      prototype.put("constructor", ctor)
-      prototype.put("message", "")
+  let name = "Error"
+  let updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
 
-      if name = "Error" then
-        env.Prototypes.Error.put("toString", 
-          Api.HostFunction.create env (new Func<IjsObj, IjsStr>(toString)))
+  let toString (o:IjsObj) =
+    name + ": " + Api.TypeConverter.toString(o.get "message")
 
   let createPrototype (env:IjsEnv) proto =
     let prototype = Api.Environment.createError env
@@ -46,70 +47,93 @@ module Error =
     prototype
 
   let setupConstructor (env:IjsEnv) =
-    Utils.setupConstructor env "Error" env.Prototypes.Error (
-      fun ctors ctor -> {ctors with Error=ctor})
+    let proto = env.Prototypes.Error
+    Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Utils.setupPrototype env.Prototypes.Error env "Error" env.Constructors.Error
+    let proto = env.Prototypes.Error
+    let ctor = env.Constructors.Error
+    
+    let toString = new Func<IjsObj, IjsStr>(toString)
+    let toString = Api.HostFunction.create env toString
+    proto.put("toString", toString, DontEnum)
+
+    Utils.setupPrototype name ctor proto
 
 module EvalError =
+  let name = "EvalError" 
+  let updater (ctors:Constructors) ctor = {ctors with EvalError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "EvalError" env.Prototypes.EvalError (
-      fun ctors ctor -> {ctors with EvalError=ctor})
+    let proto = env.Prototypes.EvalError
+    Error.Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.EvalError env "EvalError" env.Constructors.EvalError
+    let proto = env.Prototypes.EvalError
+    let ctor = env.Constructors.EvalError
+    Error.Utils.setupPrototype name ctor proto
 
 module RangeError =
+  let name = "RangeError" 
+  let updater (ctors:Constructors) ctor = {ctors with RangeError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "RangeError" env.Prototypes.RangeError (
-      fun ctors ctor -> {ctors with RangeError=ctor})
+    let proto = env.Prototypes.RangeError
+    Error.Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.RangeError env "RangeError" env.Constructors.RangeError
+    let proto = env.Prototypes.RangeError
+    let ctor = env.Constructors.RangeError
+    Error.Utils.setupPrototype name ctor proto
 
 module ReferenceError =
+  let name = "ReferenceError" 
+  let updater (ctors:Constructors) ctor = {ctors with ReferenceError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "ReferenceError" 
-      env.Prototypes.ReferenceError
-      (fun ctors ctor -> {ctors with ReferenceError=ctor})
+    let proto = env.Prototypes.ReferenceError
+    Error.Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.ReferenceError
-      env "ReferenceError" env.Constructors.ReferenceError
+    let proto = env.Prototypes.ReferenceError
+    let ctor = env.Constructors.ReferenceError
+    Error.Utils.setupPrototype name ctor proto
 
 module SyntaxError =
+  let name = "SyntaxError" 
+  let updater (ctors:Constructors) ctor = {ctors with SyntaxError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "SyntaxError" env.Prototypes.SyntaxError (
-      fun ctors ctor -> {ctors with SyntaxError=ctor})
+    let proto = env.Prototypes.SyntaxError
+    Error.Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.SyntaxError env "SyntaxError" env.Constructors.SyntaxError
+    let proto = env.Prototypes.SyntaxError
+    let ctor =  env.Constructors.SyntaxError
+    Error.Utils.setupPrototype name ctor proto
 
 module URIError =
+  let name = "URIError" 
+  let updater (ctors:Constructors) ctor = {ctors with URIError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "URIError" env.Prototypes.URIError (
-      fun ctors ctor -> {ctors with URIError=ctor})
+    let proto = env.Prototypes.URIError
+    Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.URIError env "URIError" env.Constructors.URIError
+  let setupPrototype (env:IjsEnv) = 
+    let proto = env.Prototypes.URIError
+    let ctor = env.Constructors.URIError
+    Error.Utils.setupPrototype name ctor proto
 
 module TypeError =
+  let name = "TypeError" 
+  let updater (ctors:Constructors) ctor = {ctors with TypeError=ctor} 
   
   let setupConstructor (env:IjsEnv) =
-    Error.Utils.setupConstructor env "TypeError" env.Prototypes.TypeError (
-      fun ctors ctor -> {ctors with TypeError=ctor})
+    let proto = env.Prototypes.TypeError
+    Error.Utils.setupConstructor env name proto updater
 
   let setupPrototype (env:IjsEnv) =
-    Error.Utils.setupPrototype 
-      env.Prototypes.TypeError env "TypeError" env.Constructors.TypeError
+    let proto = env.Prototypes.TypeError
+    let ctor = env.Constructors.TypeError
+    Error.Utils.setupPrototype name ctor proto

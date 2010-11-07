@@ -78,6 +78,7 @@ module ControlFlow =
       (Dlr.assign pair 
         (Dlr.callMethod Api.Object.Reflected.collectProperties [
           Api.TypeConverter.toObject(ctx.Env, object' |> ctx.Compile)]))
+
       (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
 
       (Dlr.assign propertyState Dlr.true')

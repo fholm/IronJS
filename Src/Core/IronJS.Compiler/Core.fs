@@ -98,7 +98,7 @@ module Core =
     let evalTarget = compileAst ctx evalTarget
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval"))
+      (Dlr.assign eval (ctx.Globals |> Object.Property.get !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Expr.assign

@@ -716,7 +716,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l &&& r |> double
+    (l &&& r) |> double
     
   //----------------------------------------------------------------------------
   // |
@@ -726,7 +726,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ||| r |> double
+    (l ||| r) |> double
     
   //----------------------------------------------------------------------------
   // ^
@@ -736,7 +736,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ^^^ r |> double
+    (l ^^^ r) |> double
     
   //----------------------------------------------------------------------------
   // <<
@@ -746,7 +746,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l <<< int r |> double
+    (l <<< int r) |> double
     
   //----------------------------------------------------------------------------
   // >>
@@ -756,7 +756,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r |> double
+    (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // >>>
@@ -766,7 +766,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r |> double
+    (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // &&

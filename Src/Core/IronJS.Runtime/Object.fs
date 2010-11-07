@@ -51,12 +51,11 @@ module Object =
     let mutable i = Array.MinIndex
     if Utils.isStringIndex(name, &i) then i < o.IndexLength
     else 
-      match Api.Object.Property.getIndex o name with
-      | true, index -> 
+      match Api.Object.Property.find o name with
+      | _, -1 -> false
+      | o, index -> 
         let attrs = o.PropertyDescriptors.[index].Attributes
         Utils.Descriptor.isEnumerable attrs
-
-      | _ -> false
       
   //----------------------------------------------------------------------------
   //15.2.4

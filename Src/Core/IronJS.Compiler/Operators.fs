@@ -184,6 +184,7 @@ module Binary =
   // 11.13.1 assignment operator =
   let assign (ctx:Context) ltree rtree =
     let value = ctx.Compile rtree
+
     match ltree with
     //Variable assignment: foo = 1;
     | Ast.Identifier(name) -> 
@@ -192,22 +193,20 @@ module Binary =
     //Property assignment: foo.bar = 1;
     | Ast.Property(object', name) -> 
       Expr.blockTmp value (fun value ->
-        [
-          Utils.ensureObject ctx (object' |> ctx.Compile)
-            (Object.Property.put' !!!name value)
-            (fun x -> value)
-        ]
+        let object' = object' |> ctx.Compile
+        let ifObj = Object.Property.put !!!name value
+        let ifClr _ = value
+        [Utils.ensureObject ctx object' ifObj ifClr]
       )
 
     //Index assignemnt: foo[0] = "bar";
     | Ast.Index(object', index) -> 
-      let index = Utils.compileIndex ctx index
       Expr.blockTmp value (fun value ->
-        [
-          Utils.ensureObject ctx (object' |> ctx.Compile)
-            (Object.Index.put' index value)
-            (fun x -> value)
-        ]
+        let object' = object' |> ctx.Compile
+        let index = Utils.compileIndex ctx index
+        let ifObj = Object.Index.put index value
+        let ifClr _ = value
+        [Utils.ensureObject ctx object' ifObj ifClr]
       )
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree

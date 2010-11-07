@@ -53,7 +53,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Changelogs", "Changelogs", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{39A51F96-9421-4146-B875-D704349A51F4}"
 	ProjectSection(SolutionItems) = preProject
-		..\Files\Scripts\Dev.fsx = ..\Files\Scripts\Dev.fsx
+		..\Files\Scripts\Debug.fsx = ..\Files\Scripts\Debug.fsx
+		..\Files\Scripts\Release.fsx = ..\Files\Scripts\Release.fsx
 	EndProjectSection
 EndProject
 Global
@@ -158,7 +159,8 @@ Global
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Any CPU.Build.0 = Release|Any CPU
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.Build.0 = Release|x86
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x64.ActiveCfg = Release|x86
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x64.ActiveCfg = Release|x64
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x64.Build.0 = Release|x64
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x86.ActiveCfg = Release|x86
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection

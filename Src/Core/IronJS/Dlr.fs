@@ -406,6 +406,7 @@ module Dlr =
 
     let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
     let isT<'a> (expr:Expr) = is typeof<'a> expr
+    let isVoid (expr:Expr) = FSKit.Utils.isVoid expr.Type
 
     //DEBUG
     let debug x =

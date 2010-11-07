@@ -73,7 +73,7 @@ module Function =
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
-      (fun x -> Object.Property.get x !!!name |> invokeFunction x args)
+      (fun x -> x |> Object.Property.get !!!name |> invokeFunction x args)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------

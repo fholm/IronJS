@@ -14,35 +14,34 @@ module Object =
     //--------------------------------------------------------------------------
     let putBox expr name value =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [ (Dlr.invoke
-            (Expr.Object.Methods.putBoxProperty tmp)
-            [tmp; name; value])
-          (value)])
+        let args = [tmp; name; value]
+        let method' = Expr.Object.Methods.putBoxProperty tmp
+        [Dlr.invoke method' args; value]
+      )
     
     //--------------------------------------------------------------------------
-    let putRef expr name value =
+    let putRef expr name (value:Dlr.Expr) =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [ (Dlr.invoke
-            (Expr.Object.Methods.putRefProperty tmp)
-            [tmp; name; value; value.Type |> Utils.type2tag |> Dlr.const'])
-          (value)])
+        let tag = value.Type |> Utils.type2tag |> Dlr.const'
+        let args = [tmp; name; value; tag]
+        let method' = Expr.Object.Methods.putRefProperty tmp
+        [Dlr.invoke method' args; value]
+      )
     
     //--------------------------------------------------------------------------
     let putVal expr name (value:Dlr.Expr) =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [ (Dlr.invoke
-            (Expr.Object.Methods.putValProperty tmp)
-            [tmp; name; Expr.normalizeVal value])
-          (value)])
+        let args = [tmp; name; Expr.normalizeVal value]
+        let method' = Expr.Object.Methods.putValProperty tmp
+        [Dlr.invoke method' args; value]
+      )
 
     //--------------------------------------------------------------------------
-    let put expr name (value:Dlr.Expr) = 
+    let put name (value:Dlr.Expr) expr = 
       match value with
       | Box -> putBox expr name value
       | Ref -> putRef expr name value
       | Val -> putVal expr name value
-
-    let put' name value expr = put expr name value
 
     //--------------------------------------------------------------------------
     let putName expr name (value:Dlr.Expr) = 
@@ -53,104 +52,93 @@ module Object =
       | Val -> putVal expr name value
   
     //--------------------------------------------------------------------------
-    let get expr name = 
+    let get name expr = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke 
-          (Expr.Object.Methods.getProperty tmp)
-          [tmp; name]])
+        let method' = Expr.Object.Methods.getProperty tmp
+        [Dlr.invoke method' [tmp; name]]
+      )
 
-    let get' name expr = get expr name
-  
-    //--------------------------------------------------------------------------
-    let has expr name = 
-      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke 
-          (Expr.Object.Methods.hasProperty tmp)
-          [tmp; name]])
-  
     //--------------------------------------------------------------------------
     let delete expr name = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke 
-          (Expr.Object.Methods.deleteProperty tmp)
-          [tmp; name]])
+        let method' = Expr.Object.Methods.deleteProperty tmp
+        [Dlr.invoke method' [tmp; name]]
+      )
       
   //----------------------------------------------------------------------------
   module Index =
   
     //--------------------------------------------------------------------------
-    let private convertIndex_BoxVal expr index value =
+    let private putConvert expr index value tag =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [ (Dlr.callStaticT<Api.Object.Index.Converters> 
-            "put" [tmp; index; value])
-          (value)])
+        let normalizedValue = Expr.normalizeVal value
+        let args =
+          match tag with
+          | None -> [tmp; index; normalizedValue] 
+          | Some tag -> [tmp; index; normalizedValue; tag] 
+
+        [Dlr.callStaticT<Api.Object.Index.Converters> "put" args; value]
+      )
     
     //--------------------------------------------------------------------------
     let putBox expr index value =
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [ (Dlr.invoke
-              (Expr.Object.Methods.putBoxIndex tmp)
-              [tmp; index; value])
-            (value)])
+          let args = [tmp; index; value]
+          let method' = Expr.Object.Methods.putBoxIndex tmp
+          let invoke = Dlr.invoke method' args
+          [invoke; value]
+        )
 
-      | TypeCode -> convertIndex_BoxVal expr index value
+      | TypeCode -> putConvert expr index value None
 
     //--------------------------------------------------------------------------
     let putVal expr index value =
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [ (Dlr.invoke
-              (Expr.Object.Methods.putValIndex tmp)
-              [tmp; index; Expr.normalizeVal value])
-            (value)])
+          let args = [tmp; index; Expr.normalizeVal value]
+          let method' = Expr.Object.Methods.putValIndex tmp
+          let invoke = Dlr.invoke method' args
+          [invoke; value]
+        )
             
-      | TypeCode -> convertIndex_BoxVal expr index value
+      | TypeCode -> putConvert expr index value None
 
     //--------------------------------------------------------------------------
-    let putRef expr index value =
+    let putRef expr index (value:Dlr.Expr) =
+      let tag = value.Type |> Utils.type2tag |> Dlr.const'
+
       match index with
       | Index ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [ (Dlr.invoke
-              (Expr.Object.Methods.putRefIndex tmp)
-              [tmp; index; value; !!!(value.Type |> Utils.type2tag)])
-            (value)])
+          let args =  [tmp; index; value; tag]
+          let method' = Expr.Object.Methods.putRefIndex tmp
+          let invoke = Dlr.invoke method' args
+          [invoke; value]
+        )
             
-      | TypeCode -> 
-        Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-          [ (Dlr.callStaticT<Api.Object.Index.Converters> 
-              "put" [tmp; index; value; !!!(value.Type |> Utils.type2tag)])
-            (value)])
+      | TypeCode -> putConvert expr index value (Some tag)
       
     //--------------------------------------------------------------------------
-    let put expr index value =
+    let put index value expr =
       match value with
       | Box -> putBox expr index value
       | Val -> putVal expr index value
       | Ref -> putRef expr index value
 
-    let put' index value expr = put expr index value
-  
     //--------------------------------------------------------------------------
-    let get expr name = 
+    let get (index:Dlr.Expr) expr = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke 
-          (Expr.Object.Methods.getIndex tmp)
-          [tmp; name]])
+        match index with
+        | Index -> 
+          [Dlr.invoke (Expr.Object.Methods.getIndex tmp) [tmp; index]]
 
-    //--------------------------------------------------------------------------
-    let get' name expr = get expr name
-  
-    //--------------------------------------------------------------------------
-    let has expr name = 
-      Expr.blockTmpT<IjsObj> expr (fun tmp -> 
-        [Dlr.invoke 
-          (Expr.Object.Methods.hasIndex tmp)
-          [tmp; name]])
-  
+        | TypeCode ->
+          [Dlr.callStaticT<Api.Object.Index.Converters> "get" [tmp; index]]
+      )
+
     //--------------------------------------------------------------------------
     let delete expr name = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
@@ -164,14 +152,14 @@ module Object =
   // MemberExpression . Identifier
   let getProperty (ctx:Ctx) object' name =
     Utils.ensureObject ctx (object' |> ctx.Compile)
-      (Property.get' !!!name)
+      (Property.get !!!name)
       (fun x -> Expr.BoxedConstants.undefined)
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let indexExpr = index |> Utils.compileIndex ctx
     Utils.ensureObject ctx (object' |> ctx.Compile)
-      (Index.get' indexExpr)
+      (Index.get indexExpr)
       (fun x -> Expr.BoxedConstants.undefined)
 
   //----------------------------------------------------------------------------
@@ -188,7 +176,7 @@ module Object =
         (List.mapi (fun i value ->
           let index = uint32 i |> Dlr.const'
           let value = ctx.Compile value
-          Index.put tmp index value
+          tmp |> Index.put index value
         ) indexes) |> Dlr.blockSimple
 
         (tmp :> Dlr.Expr)
@@ -205,7 +193,7 @@ module Object =
       | Ast.Assign(Ast.String name, expr) -> 
         let value = ctx.Compile expr
         let name = Dlr.const' name
-        Property.put tmp name value
+        tmp |> Property.put name value
 
       | _ -> failwith "Que?"
 

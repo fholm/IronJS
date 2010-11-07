@@ -10,7 +10,7 @@ module Expr =
     let (|Box|Ref|Val|) (expr:Dlr.Expr) =
       if expr.Type = typeof<IjsBox>
         then Box
-        elif expr.Type = typeof<IjsNum> || expr.Type = typeof<IjsBool>
+        elif Dlr.Utils.isT<IjsNum> expr || Dlr.Utils.isT<IjsBool> expr
           then Val
           else Ref
 
@@ -32,13 +32,9 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let voidAsUndefined (expr:Dlr.Expr) =
-    if expr.Type = typeof<System.Void> then
-      Dlr.blockSimple [
-        (expr)
-        (BoxedConstants.undefined)
-      ]
-    else
-      expr
+    if Dlr.Utils.isVoid expr
+      then Dlr.blockSimple [expr; BoxedConstants.undefined]
+      else expr
 
   open Patterns
         
@@ -125,11 +121,12 @@ module Expr =
   let num2 = Dlr.const' 2.0
   
   let bool2val expr =
-    (Dlr.ternary
-      expr (Dlr.const' TaggedBools.True) (Dlr.const' TaggedBools.False))
+    let ifTrue = Dlr.const' TaggedBools.True
+    let ifFalse = Dlr.const' TaggedBools.False
+    Dlr.ternary expr ifTrue ifFalse
 
   let normalizeVal (expr:Dlr.Expr) =
-    if expr.Type = typeof<IjsBool> then bool2val expr else expr
+    if Dlr.Utils.isT<IjsBool> expr then bool2val expr else expr
 
   let propertyValues obj = Dlr.field obj "PropertyDescriptors"
   let propertyValue obj i = Dlr.index (propertyValues obj) [i]
@@ -151,8 +148,6 @@ module Expr =
       let putBoxIndex obj = obj |> methods |> Dlr.fieldr "PutBoxIndex"
       let putRefIndex obj = obj |> methods |> Dlr.fieldr "PutRefIndex"
       let putValIndex obj = obj |> methods |> Dlr.fieldr "PutValIndex"
-
-  let expr2constTc (expr:Dlr.Expr) = Dlr.const' (expr.Type |> Utils.type2tag)
 
   let unboxNumber box = Dlr.field box BoxFields.Number
   let unboxBool box = Dlr.field box BoxFields.Bool
@@ -180,7 +175,7 @@ module Expr =
         then Dlr.Ext.static' unboxed
         else unboxed
 
-    elif expr.Type = type' then 
+    elif expr.Type |> FSKit.Utils.isType type' then 
       expr
 
     else 

@@ -49,6 +49,7 @@ module Utils =
   module BoxedConstants =
 
     let zero = Box()
+
     let undefined =
       let mutable box = Box()
       box.Tag <- TypeTags.Undefined
@@ -210,7 +211,7 @@ module Utils =
         | TypeTags.Bool -> true
         | _ -> false
       
-  let boxRef ref tc =
+  let boxRef (ref:IjsRef) tc =
     let mutable box = new Box()
     box.Clr <- ref
     box.Tag <- tc
@@ -294,7 +295,8 @@ module Utils =
   // Function + cache that creates delegates for IronJS functions, delegates
   // are cached because calling Dlr.delegateType with >16 types will generate
   // incomptabile delegates for the same arguments each time it's called.
-  // E.g: Func<Closure, Object, int, string, Box>
+  // E.g: Func<IjsFunc, IjsObj, IjsBox>
+
   let private _delegateCache = 
     new ConcurrentMutableDict<System.RuntimeTypeHandle list, ClrType>()
 

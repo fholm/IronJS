@@ -4,7 +4,6 @@ open System
 open IronJS
 open IronJS.Api.Extensions
 open IronJS.Utils.Patterns
-open IronJS.Api.Object.Property.Extensions
 
 module Function =
 

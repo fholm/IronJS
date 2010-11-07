@@ -9,6 +9,8 @@ module Extensions =
 
   type Object with 
 
+    //--------------------------------------------------------------------------
+    // Properties
     member o.put (name, v:IjsBox) =
       o.Methods.PutBoxProperty.Invoke(o, name, v)
 
@@ -37,6 +39,42 @@ module Extensions =
     member o.put (name, v:IjsRef, tc:TypeTag) =
       o.Methods.PutRefProperty.Invoke(o, name, v, tc)
 
+    member o.put (name:string, v:IjsBox, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsBool, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsNum, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:ClrObject, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsStr, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:Undefined, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsObj, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsFunc, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsRef, t:TypeTag, attrs:DescriptorAttr) =
+      o.put(name, v, t)
+      o.setAttrs(name, attrs)
+
     member o.get (name) =
       o.Methods.GetProperty.Invoke(o, name)
 
@@ -49,6 +87,8 @@ module Extensions =
     member o.delete (name) =
       o.Methods.DeleteProperty.Invoke(o, name)
       
+    //--------------------------------------------------------------------------
+    // Indexes
     member o.put (index, v:IjsBox) =
       o.Methods.PutBoxIndex.Invoke(o, index, v)
 
@@ -94,8 +134,7 @@ open Extensions
 module Environment =
 
   //----------------------------------------------------------------------------
-  let hasCompiler (env:IjsEnv) funcId =
-    env.Compilers.ContainsKey funcId
+  let hasCompiler (env:IjsEnv) funcId = env.Compilers.ContainsKey funcId
 
   //----------------------------------------------------------------------------
   let addCompilerId (env:IjsEnv) funId compiler =
@@ -166,8 +205,9 @@ module Environment =
     func.ConstructorMode <- ConstructorModes.User
 
     proto.put("constructor", func)
-    func.put("prototype", proto)
-    func.put("length", double args)
+
+    func.put("prototype", proto, DescriptorAttrs.Immutable)
+    func.put("length", double args, DescriptorAttrs.DontDelete)
 
     func
     
@@ -1220,12 +1260,6 @@ module Object =
           | _ -> find o.Prototype name
 
       find o name
-
-    //--------------------------------------------------------------------------
-    let setAttrs (o:IjsObj) (name:IjsStr) (attrs:DescriptorAttr) =
-      match getIndex o name with
-      | true, index -> o.PropertyDescriptors.[index].Attributes <- attrs
-      | _ -> ()
       
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1298,39 +1332,7 @@ module Object =
       let get = GetProperty get
       let has = HasProperty has
       let delete = DeleteProperty delete
-      
-    //--------------------------------------------------------------------------
-    module Extensions =
-      
-      type Object with
-      
-        member o.put (name:string, v:IjsBox, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
 
-        member o.put (name:string, v:IjsBool, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:IjsNum, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:ClrObject, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:IjsStr, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:Undefined, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:IjsObj, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:IjsFunc, attrs:DescriptorAttr) =
-          o.put(name, v); setAttrs o name attrs
-
-        member o.put (name:string, v:IjsRef, t:TypeTag, attrs:DescriptorAttr) =
-          o.put(name, v, t); setAttrs o name attrs
-    
   //----------------------------------------------------------------------------
   module Index =
   

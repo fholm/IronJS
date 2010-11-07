@@ -1,5 +1,0 @@
-﻿namespace IronJS
-
-  module Binders =
-    
-    ()

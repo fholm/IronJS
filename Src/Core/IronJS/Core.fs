@@ -322,8 +322,6 @@ and [<AllowNullLiteral>] Object =
 
   val mutable PropertyMap : PropertyMap
   val mutable PropertyDescriptors : Descriptor array
-
-  member x.PropertyMapId = x.PropertyMap.Id
   
   new (map, prototype, class', indexSize) = {
     Class = class'
@@ -357,6 +355,17 @@ and [<AllowNullLiteral>] Object =
     PropertyMap = null
     PropertyDescriptors = null
   }
+
+  member x.PropertyMapId = x.PropertyMap.Id
+
+  member x.setAttrs (index:int32, attrs:DescriptorAttr) =
+    x.PropertyDescriptors.[index].Attributes <-
+      x.PropertyDescriptors.[index].Attributes ||| attrs
+
+  member x.setAttrs (name:string, attrs:DescriptorAttr) =
+    match x.PropertyMap.PropertyMap.TryGetValue name with
+    | true, index -> x.setAttrs(index, attrs)
+    | _ -> ()
   
 //-------------------------------------------------------------------------
 // Property descriptor
@@ -430,8 +439,7 @@ and [<AllowNullLiteral>] PropertyMap =
     FreeIndexes = null
   }
 
-  member x.isDynamic = 
-    x.Id < 0L
+  member x.isDynamic = x.Id < 0L
 
 //------------------------------------------------------------------------------
 // 10.1.8
@@ -480,27 +488,25 @@ and [<AllowNullLiteral>] Arguments =
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
-  val mutable Name : IjsStr
   val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
   val mutable FunctionMethods : FunctionMethods
 
-  val mutable ScopeChain : Scope
+  val mutable ClosureScope : Scope
   val mutable DynamicScope : DynamicScope
      
-  new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
+  new (env:IjsEnv, funcId, closureScope, dynamicScope) = { 
     inherit Object(
       env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
-    Name = ""
     Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
     ConstructorMode = ConstructorModes.User
 
-    ScopeChain = scopeChain
+    ClosureScope = closureScope
     DynamicScope = dynamicScope
     FunctionMethods = env.FunctionMethods
   }
@@ -508,13 +514,12 @@ and [<AllowNullLiteral>] Function =
   new (env:IjsEnv, propertyMap) = {
     inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
 
-    Name = ""
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
     ConstructorMode = 0uy
 
-    ScopeChain = null
+    ClosureScope = null
     DynamicScope = List.empty
     FunctionMethods = env.FunctionMethods
   }
@@ -522,13 +527,12 @@ and [<AllowNullLiteral>] Function =
   new (env:IjsEnv) = {
     inherit Object()
 
-    Name = ""
     Env = env
     Compiler = null
     FunctionId = 0UL
     ConstructorMode = 0uy
 
-    ScopeChain = null
+    ClosureScope = null
     DynamicScope = List.empty
     FunctionMethods = env.FunctionMethods
   }

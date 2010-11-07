@@ -77,12 +77,7 @@ module Scope =
           
   //--------------------------------------------------------------------------
   let private initDynamicScope (ctx:Ctx) (dynamicLookup) =
-    match ctx.Scope.LookupMode with
-    | Ast.LookupMode.Dynamic
-    | _ when ctx.Target.IsEval ->
-      Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
-
-    | _ -> Dlr.void'
+    Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
         
   //--------------------------------------------------------------------------
   let private initArguments (ctx:Ctx) (s:Ast.Scope) =

@@ -3,7 +3,6 @@
 open System
 open IronJS
 open IronJS.Api.Extensions
-open IronJS.Api.Object.Property.Extensions
 
 //------------------------------------------------------------------------------
 //15.2

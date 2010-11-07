@@ -89,9 +89,9 @@ module Extensions =
     member o.delete (index) =
       o.Methods.DeleteIndex.Invoke(o, index)
 
-module Environment =
+open Extensions
 
-  open Extensions
+module Environment =
 
   //----------------------------------------------------------------------------
   let hasCompiler (env:IjsEnv) funcId =
@@ -220,7 +220,6 @@ module Environment =
 
 //------------------------------------------------------------------------------
 // Static class containing all type conversions
-//------------------------------------------------------------------------------
 type TypeConverter =
 
   //----------------------------------------------------------------------------
@@ -414,7 +413,6 @@ type TypeConverter =
     
 //------------------------------------------------------------------------------
 // Operators
-//------------------------------------------------------------------------------
 type Operators =
 
   //----------------------------------------------------------------------------
@@ -460,6 +458,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // Binary
   //----------------------------------------------------------------------------
+
   // in
   static member in' (l,r) = Dlr.callStaticT<Operators> "in'" [l; r]
   static member in' (l:IjsBox, r:IjsBox) = 
@@ -774,7 +773,7 @@ module PropertyMap =
       subMap
 
   //----------------------------------------------------------------------------
-  let rec buildSubMap (map:PropertyMap) names =
+  let buildSubMap (map:PropertyMap) names =
     Seq.fold (fun map name -> getSubMap map name) map names
         
   //----------------------------------------------------------------------------
@@ -800,10 +799,7 @@ module PropertyMap =
     pc
       
   //----------------------------------------------------------------------------
-  let getIndex (map:PropertyMap) name =
-    map.PropertyMap.[name]
-
-open Extensions
+  let getIndex (map:PropertyMap) name = map.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
 // Function API
@@ -824,7 +820,7 @@ type Function() =
     let prototype = f.get "prototype"
 
     if Utils.Box.isObject prototype.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError f.Env "prototype property is not an object"
 
     if o = null || o.Prototype = null
       then false 
@@ -910,7 +906,9 @@ type Function() =
       c.Invoke(f,o) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ -> 
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0) =
@@ -925,7 +923,9 @@ type Function() =
       c.Invoke(f,o,a0) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1) =
@@ -940,7 +940,9 @@ type Function() =
       c.Invoke(f,o,a0,a1) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
     
   #if CLR2
   #else
@@ -957,7 +959,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
@@ -972,7 +976,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
@@ -987,7 +993,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
@@ -1002,7 +1010,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
@@ -1017,7 +1027,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
@@ -1032,7 +1044,10 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
+
   #endif
 
 
@@ -1048,7 +1063,6 @@ type Function() =
 
 //------------------------------------------------------------------------------
 // HostFunction API
-//------------------------------------------------------------------------------
 module HostFunction =
 
   open Extensions
@@ -1109,8 +1123,8 @@ module HostFunction =
 
     let invoke = target.Invoke func marshalled
     let body = 
-      if Utils.isBox f.ReturnType then invoke
-      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
+      if FSKit.Utils.isTypeT<IjsBox> f.ReturnType then invoke
+      elif FSKit.Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
       else
         Dlr.blockTmpT<Box> (fun tmp ->
           [
@@ -1151,68 +1165,6 @@ module HostFunction =
 
 //------------------------------------------------------------------------------
 module Object =
-
-  //----------------------------------------------------------------------------
-  let defaultvalue (o:IjsObj) (hint:byte) =
-    let hint = 
-      if hint = DefaultValue.None 
-        then DefaultValue.Number 
-        else hint
-
-    let valueOf = o.Methods.GetProperty.Invoke(o, "valueOf")
-    let toString = o.Methods.GetProperty.Invoke(o, "toString")
-
-    match hint with
-    | DefaultValue.Number ->
-      match valueOf.Tag with
-      | TypeTags.Function ->
-        let mutable v = Function.call(valueOf.Func, o)
-        if Utils.isPrimitive v then v
-        else
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = Function.call(toString.Func, o)
-            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
-          | _ -> Errors.runtime "[[TypeError]]"
-      | _ -> Errors.runtime "[[TypeError]]"
-
-    | DefaultValue.String ->
-      match toString.Tag with
-      | TypeTags.Function ->
-        let mutable v = Function.call(toString.Func, o)
-        if Utils.isPrimitive v then v
-        else 
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = Function.call(valueOf.Func, o)
-            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
-          | _ -> Errors.runtime "[[TypeError]]"
-      | _ -> Errors.runtime "[[TypeError]]"
-
-    | _ -> Errors.runtime "Invalid hint"
-
-  let defaultValue' = Default defaultvalue
-
-  //----------------------------------------------------------------------------
-  let collectProperties (o:IjsObj) =
-    let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
-      if current <> null then
-        let length = 
-          if length < current.IndexLength 
-            then current.IndexLength else length
-
-        set.UnionWith(current.PropertyMap.PropertyMap.Keys)
-        collectProperties length set current.Prototype
-
-      else 
-        length, set
-
-    o |> collectProperties 0u (new MutableSet<IjsStr>())
-
-  module Reflected = 
-
-    let collectProperties = 
-      Utils.Reflected.methodInfo "Api.Object" "collectProperties"
     
   //----------------------------------------------------------------------------
   module Property = 
@@ -1261,13 +1213,19 @@ module Object =
     //--------------------------------------------------------------------------
     let find (o:IjsObj) name =
       let rec find o name =
-        if Utils.isNull o then (null, -1)
+        if FSKit.Utils.isNull o then (null, -1)
         else
           match getIndex o name with
           | true, index ->  o, index
           | _ -> find o.Prototype name
 
       find o name
+
+    //--------------------------------------------------------------------------
+    let setAttrs (o:IjsObj) (name:IjsStr) (attrs:DescriptorAttr) =
+      match getIndex o name with
+      | true, index -> o.PropertyDescriptors.[index].Attributes <- attrs
+      | _ -> ()
       
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1288,6 +1246,7 @@ module Object =
       let index = ensureIndex o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
       o.PropertyDescriptors.[index].Box.Tag <- tc
+      o.PropertyDescriptors.[index].HasValue <- true
       
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1339,6 +1298,38 @@ module Object =
       let get = GetProperty get
       let has = HasProperty has
       let delete = DeleteProperty delete
+      
+    //--------------------------------------------------------------------------
+    module Extensions =
+      
+      type Object with
+      
+        member o.put (name:string, v:IjsBox, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsBool, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsNum, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:ClrObject, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsStr, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:Undefined, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsObj, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsFunc, attrs:DescriptorAttr) =
+          o.put(name, v); setAttrs o name attrs
+
+        member o.put (name:string, v:IjsRef, t:TypeTag, attrs:DescriptorAttr) =
+          o.put(name, v, t); setAttrs o name attrs
     
   //----------------------------------------------------------------------------
   module Index =
@@ -1378,7 +1369,7 @@ module Object =
     //--------------------------------------------------------------------------
     let find (o:IjsObj) (i:uint32) =
       let rec find o (i:uint32) =
-        if Utils.isNull o then (null, 0u, false)
+        if FSKit.Utils.isNull o then (null, 0u, false)
         else 
           if Utils.Object.isDense o then
             let ii = int i
@@ -1468,6 +1459,7 @@ module Object =
           if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box.Clr <- v
           o.IndexDense.[i].Box.Tag <- tc
+          o.IndexDense.[i].HasValue <- true
 
       else
         o.IndexSparse.[i] <- Utils.boxRef v tc
@@ -1498,7 +1490,7 @@ module Object =
       match find o i with
       | null, _, _ -> true
       | o2, index, isDense ->
-        if Utils.refEquals o o2 then
+        if FSKit.Utils.refEq o o2 then
           if isDense then 
             o.IndexDense.[int i].Box <- Box()
             o.IndexDense.[int i].HasValue <- false
@@ -1687,6 +1679,74 @@ module Object =
 
       static member has (o:IjsObj, index:IjsObj) =
         Converters.has(o, TypeConverter.toPrimitive index)
+
+  //----------------------------------------------------------------------------
+  let defaultvalue (o:IjsObj) (hint:byte) =
+    let hint = 
+      if hint = DefaultValue.None 
+        then DefaultValue.Number 
+        else hint
+
+    let valueOf = o.Methods.GetProperty.Invoke(o, "valueOf")
+    let toString = o.Methods.GetProperty.Invoke(o, "toString")
+
+    match hint with
+    | DefaultValue.Number ->
+      match valueOf.Tag with
+      | TypeTags.Function ->
+        let mutable v = Function.call(valueOf.Func, o)
+        if Utils.isPrimitive v then v
+        else
+          match toString.Tag with
+          | TypeTags.Function ->
+            let mutable v = Function.call(toString.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | DefaultValue.String ->
+      match toString.Tag with
+      | TypeTags.Function ->
+        let mutable v = Function.call(toString.Func, o)
+        if Utils.isPrimitive v then v
+        else 
+          match toString.Tag with
+          | TypeTags.Function ->
+            let mutable v = Function.call(valueOf.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | _ -> Errors.runtime "Invalid hint"
+
+  let defaultValue' = Default defaultvalue
+
+
+  let collectProperties (o:IjsObj) =
+    let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
+      if current <> null then
+        let length = 
+          if length < current.IndexLength 
+            then current.IndexLength else length
+
+        let keys = current.PropertyMap.PropertyMap
+        for pair in keys do
+          let descriptor = current.PropertyDescriptors.[pair.Value]
+          let attrs = descriptor.Attributes
+          if descriptor.HasValue && DescriptorAttrs.isEnumerable attrs
+            then pair.Key |> set.Add |> ignore
+
+        collectProperties length set current.Prototype
+
+      else 
+        length, set
+
+    o |> collectProperties 0u (new MutableSet<IjsStr>())
+
+  module Reflected = 
+
+    let collectProperties = 
+      Utils.Reflected.methodInfo "Api.Object" "collectProperties"
 
 
 module Array =

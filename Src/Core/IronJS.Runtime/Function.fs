@@ -4,6 +4,7 @@ open System
 open IronJS
 open IronJS.Api.Extensions
 open IronJS.Utils.Patterns
+open IronJS.Api.Object.Property.Extensions
 
 module Function =
 
@@ -35,7 +36,12 @@ module Function =
       
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Prototype <- env.Prototypes.Function
-    ctor.put("prototype", env.Prototypes.Function)
+
+    ctor.put(
+      "prototype", 
+      env.Prototypes.Function, 
+      DescriptorAttrs.Immutable)
+
     env.Globals.put("Function", ctor)
     env.Constructors <- {env.Constructors with Function = ctor}
 
@@ -46,7 +52,7 @@ module Function =
     
   //----------------------------------------------------------------------------
   // 15.3.4.2
-  let toString (o:IjsObj) =
+  let toString (toString:IjsFunc) (o:IjsObj) =
     if o :? IjsFunc then
       let f = o :?> IjsFunc
 
@@ -55,11 +61,11 @@ module Function =
       | _ -> "function() { [native code] }"
 
     else
-      failwith "Que?"
+      Api.Environment.raiseTypeError toString.Env ""
       
   //----------------------------------------------------------------------------
   // 15.3.4.3
-  let apply (_:IjsFunc) (func:IjsObj) (this:IjsObj) (args:IjsObj) : IjsBox =
+  let apply (apply:IjsFunc) (func:IjsObj) (this:IjsObj) (args:IjsObj) : IjsBox =
     match func with
     | IsFunction f ->
       match args with
@@ -76,9 +82,9 @@ module Function =
 
         Utils.box (f.Compiler.compile(f, type').DynamicInvoke args)
 
-      | IsOther -> failwith "Que?"
+      | IsOther -> Api.Environment.raiseTypeError apply.Env ""
 
-    | _ -> failwith "Que?"
+    | _ -> Api.Environment.raiseTypeError apply.Env ""
  
   //----------------------------------------------------------------------------
   // 15.3.4.4
@@ -103,17 +109,25 @@ module Function =
       
   //----------------------------------------------------------------------------
   let setupPrototype (env:IjsEnv) =
-    env.Prototypes.Function.put("call",
-      (Api.HostFunction.create env
-        (new Func<IjsFunc, IjsObj, IjsObj, obj array, IjsBox>(call))))
+    env.Prototypes.Function.put(
+      "call",
+      Api.HostFunction.create 
+        env (new Func<IjsFunc, IjsObj, IjsObj, obj array, IjsBox>(call)),
+      DescriptorAttrs.DontEnum)
 
-    env.Prototypes.Function.put("apply",
-      (Api.HostFunction.create env
-        (new Func<IjsFunc, IjsObj, IjsObj, IjsObj, IjsBox>(apply))))
+    env.Prototypes.Function.put(
+      "apply",
+      Api.HostFunction.create 
+        env (new Func<IjsFunc, IjsObj, IjsObj, IjsObj, IjsBox>(apply)),
+      DescriptorAttrs.DontEnum)
     
-    env.Prototypes.Function.put("toString",
-      (Api.HostFunction.create env
-        (new Func<IjsObj, IjsStr>(toString))))
+    env.Prototypes.Function.put(
+      "toString",
+      Api.HostFunction.create 
+        env (new Func<IjsFunc, IjsObj, IjsStr>(toString)),
+      DescriptorAttrs.DontEnum)
 
-    env.Prototypes.Function.put("constructor", 
-      env.Globals.get("Function"))
+    env.Prototypes.Function.put(
+      "constructor", 
+      env.Constructors.Function,
+      DescriptorAttrs.DontEnum)

@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Api.Extensions
+open IronJS.Api.Object.Property.Extensions
 
 //------------------------------------------------------------------------------
 //15.2
@@ -52,40 +53,48 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4
   let setupPrototype (env:IjsEnv) =
+
     //15.2.4.2
-    env.Prototypes.Object.put("toString", 
-      Api.HostFunction.create env (new Func<IjsObj, IjsStr>(toString))
-    )
+    env.Prototypes.Object.put(
+      "toString", 
+      Api.HostFunction.create 
+        env (new Func<IjsObj, IjsStr>(toString)),
+      DescriptorAttrs.DontEnum)
     
     //15.2.4.3
-    env.Prototypes.Object.put("toLocaleString", 
-      (Api.HostFunction.create
-        env (new Func<IjsObj, IjsStr>(toLocaleString)))
-    )
+    env.Prototypes.Object.put(
+      "toLocaleString", 
+      Api.HostFunction.create 
+        env (new Func<IjsObj, IjsStr>(toLocaleString)),
+      DescriptorAttrs.DontEnum)
 
     //15.2.4.4
-    env.Prototypes.Object.put("valueOf", 
-      (Api.HostFunction.create
-        env (new Func<IjsObj, IjsObj>(valueOf)))
-    )
+    env.Prototypes.Object.put(
+      "valueOf", 
+      Api.HostFunction.create 
+        env (new Func<IjsObj, IjsObj>(valueOf)),
+      DescriptorAttrs.DontEnum)
 
     //15.2.4.5
-    env.Prototypes.Object.put("hasOwnProperty", 
-      (Api.HostFunction.create
-        env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)))
-    )
+    env.Prototypes.Object.put(
+      "hasOwnProperty", 
+      Api.HostFunction.create 
+        env (new Func<IjsObj, IjsStr, IjsBool>(hasOwnProperty)),
+      DescriptorAttrs.DontEnum)
     
     //15.2.4.6
-    env.Prototypes.Object.put("isPrototypeOf", 
-      (Api.HostFunction.create
-        env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)))
-    )
+    env.Prototypes.Object.put(
+      "isPrototypeOf", 
+      Api.HostFunction.create
+        env (new Func<IjsObj, IjsObj, IjsBool>(isPrototypeOf)),
+      DescriptorAttrs.DontEnum)
     
     //15.2.4.7
-    env.Prototypes.Object.put("propertyIsEnumerable", 
-      (Api.HostFunction.create
-        env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)))
-    )
+    env.Prototypes.Object.put(
+      "propertyIsEnumerable", 
+      Api.HostFunction.create
+        env (new Func<IjsObj, IjsStr, IjsBool>(propertyIsEnumerable)),
+      DescriptorAttrs.DontEnum)
       
   //----------------------------------------------------------------------------
   //15.2.1
@@ -103,7 +112,16 @@ module Object =
         env (new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(objectConstructor)))
 
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.put("prototype", env.Prototypes.Object)
-    env.Prototypes.Object.put("constructor", ctor)
+
+    ctor.put(
+      "prototype", 
+      env.Prototypes.Object, 
+      DescriptorAttrs.Immutable)
+
+    env.Prototypes.Object.put(
+      "constructor", 
+      ctor, 
+      DescriptorAttrs.DontEnum)
+
     env.Globals.put("Object", ctor)
     env.Constructors <- {env.Constructors with Object = ctor}

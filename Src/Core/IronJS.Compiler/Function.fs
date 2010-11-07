@@ -142,5 +142,5 @@ module Function =
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
     Dlr.blockSimple [
-      (Expr.assignValue ctx.Env_Return (ctx.Compile tree))
+      (Expr.assign ctx.Env_Return (ctx.Compile tree))
       (Dlr.returnVoid ctx.ReturnLabel)]

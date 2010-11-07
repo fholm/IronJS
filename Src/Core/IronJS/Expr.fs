@@ -66,9 +66,7 @@ module Expr =
     let bf = Utils.expr2bf value
     Dlr.assign (Dlr.field expr bf) value
 
-  //-------------------------------------------------------------------------
-  let isBoxed (expr:Dlr.Expr) = 
-    Utils.isBox expr.Type
+  let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<IjsBox> expr
 
   let testTag expr (tag:TypeTag) =
     if isBoxed expr 
@@ -244,36 +242,25 @@ module Expr =
   //-------------------------------------------------------------------------
     
   //-------------------------------------------------------------------------
-  let assignBoxValue (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
-    if isBoxed rexpr then 
-      Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
-    else
-      let typeCode = Utils.expr2tc rexpr
-      let box = Dlr.Ext.unwrap lexpr
-      let val' = Dlr.Ext.unwrap rexpr
-      if typeCode <= TypeTags.Number then
-        Dlr.blockSimple [
-          (setBoxClrNull box)
-          (setBoxTypeOf box val')
-          (setBoxValue  box val')
-        ]
+  let assign (lexpr:Dlr.Expr) rexpr = 
+
+    let assignBox (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
+      if isBoxed rexpr then 
+        Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
       else
-        Dlr.blockSimple [
-          (setBoxTypeOf box val')
-          (setBoxValue  box val')
-        ]
-          
-  //-------------------------------------------------------------------------
-  let updateBoxValue (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
-    if isBoxed rexpr then 
-      Dlr.assign (Dlr.Ext.unwrap lexpr) (Dlr.Ext.unwrap rexpr)
-    else
-      setBoxValue (Dlr.Ext.unwrap lexpr) (Dlr.Ext.unwrap rexpr)
-        
-  //-------------------------------------------------------------------------
-  let assignValue (lexpr:Dlr.Expr) rexpr = 
+        let typeCode = Utils.expr2tc rexpr
+        let box = Dlr.Ext.unwrap lexpr
+        let val' = Dlr.Ext.unwrap rexpr
+        if typeCode <= TypeTags.Number then
+          Dlr.blockSimple
+            [setBoxClrNull box; setBoxTypeOf box val'; setBoxValue  box val']
+
+        else
+          Dlr.blockSimple 
+            [setBoxTypeOf box val'; setBoxValue  box val']
+
     if isBoxed lexpr 
-      then assignBoxValue lexpr rexpr 
+      then assignBox lexpr rexpr 
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
         
   //-------------------------------------------------------------------------
@@ -285,20 +272,6 @@ module Expr =
 
   let isConstructor expr =
     Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
-    
-  //-------------------------------------------------------------------------
-  let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox ifOther =
-    if expr.Type = typeof<'a> then ifObj expr
-    elif expr.Type.IsSubclassOf typeof<'a> then ifObj expr
-    elif isBoxed expr then
-      blockTmp expr (fun tmp ->
-        [Dlr.ternary 
-          (testBoxType tmp (Utils.type2tcT<'a>))
-          (ifObj (unboxT<'a> tmp))
-          (ifBox tmp)])
-
-    else 
-      ifOther expr
 
   //-------------------------------------------------------------------------
   let unboxIndex expr i tc =

@@ -7,9 +7,6 @@ open IronJS.Utils
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 
-type Compiler = Ctx -> Ast.Tree -> Dlr.Expr
-type OptionCompiler = Ctx -> Ast.Tree option -> Dlr.Expr option
-
 module Core =
 
   //----------------------------------------------------------------------------
@@ -104,24 +101,24 @@ module Core =
       (Dlr.assign eval (Object.Property.get ctx.Globals !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
-      (Expr.assignValue
+      (Expr.assign
         (Dlr.field target "GlobalLevel") 
         (Dlr.const' ctx.Scope.GlobalLevel))
 
-      (Expr.assignValue
+      (Expr.assign
         (Dlr.field target "ClosureLevel") 
         (Dlr.const' ctx.Scope.ClosureLevel))
 
-      (Expr.assignValue
+      (Expr.assign
         (Dlr.field target "Closures") 
         (Dlr.const' ctx.Scope.Closures))
         
-      (Expr.assignValue (Dlr.field target "Target") evalTarget)
-      (Expr.assignValue (Dlr.field target "Function") ctx.Function)
-      (Expr.assignValue (Dlr.field target "This") ctx.This)
-      (Expr.assignValue (Dlr.field target "LocalScope") ctx.LocalScope)
-      (Expr.assignValue (Dlr.field target "ClosureScope") ctx.ClosureScope)
-      (Expr.assignValue (Dlr.field target "DynamicScope") ctx.DynamicScope)
+      (Expr.assign (Dlr.field target "Target") evalTarget)
+      (Expr.assign (Dlr.field target "Function") ctx.Function)
+      (Expr.assign (Dlr.field target "This") ctx.This)
+      (Expr.assign (Dlr.field target "LocalScope") ctx.LocalScope)
+      (Expr.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
+      (Expr.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
       eval |> Function.invokeFunction ctx.This [target]
     ]

@@ -27,14 +27,14 @@ module Scope =
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
       let i = Option.get var.ParamIndex
-      Expr.assignBoxValue variable ctx.Parameters.[i])  
+      Expr.assign variable ctx.Parameters.[i])  
       
   //--------------------------------------------------------------------------
   let private initNonParams ctx (locals:Ast.LocalIndex seq) =
     locals |> Seq.map (fun var ->
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
-      Expr.assignBoxValue variable Expr.undefined)
+      Expr.assign variable Expr.undefined)
       
   //--------------------------------------------------------------------------
   let private initLocals ctx (locals:Map<string, Ast.Local>) =
@@ -119,7 +119,7 @@ module Scope =
               (Dlr.const' "callee")
               (ctx.Function)
             )
-            (Expr.assignValue 
+            (Expr.assign 
               (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
               (arguments))
           ] |> Seq.ofList

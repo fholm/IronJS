@@ -97,4 +97,4 @@ module Identifier =
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)
-        Expr.assignValue (Dlr.Ext.static' varExpr) value
+        Expr.assign (Dlr.Ext.static' varExpr) value

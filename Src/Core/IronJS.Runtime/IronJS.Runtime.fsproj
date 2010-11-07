@@ -99,6 +99,11 @@
     <Compile Include="Hosting.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Dependencies\FSKit\Src\FSKit.fsproj">
+      <Name>FSKit</Name>
+      <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\IronJS.Compiler\IronJS.Compiler.fsproj">
       <Name>IronJS.Compiler</Name>
       <Project>{81bfb688-1621-42d6-9062-093865a185d3}</Project>

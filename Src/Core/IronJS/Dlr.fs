@@ -404,7 +404,7 @@ module Dlr =
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (debugView expr)
 
-    let is type' (expr:Expr) = expr.Type = type' || expr.Type.IsSubclassOf type'
+    let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
     let isT<'a> (expr:Expr) = is typeof<'a> expr
 
     //DEBUG

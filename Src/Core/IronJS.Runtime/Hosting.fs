@@ -60,8 +60,8 @@ module Hosting =
       Number = baseMap
       Boolean = baseMap
       Regexp = 
-        Api.PropertyMap.buildSubMap baseMap [
-          "source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+        Api.PropertyMap.buildSubMap baseMap
+          ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
     }
     
     x.Prototypes <- Prototypes.Empty

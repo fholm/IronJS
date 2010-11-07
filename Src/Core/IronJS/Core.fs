@@ -80,9 +80,14 @@ module BoxFields =
 
 module DescriptorAttrs =
   let [<Literal>] None = 0us
-  let [<Literal>] ReadOnly = 2us
-  let [<Literal>] DontEnum = 4us
-  let [<Literal>] DontDelete = 8us
+  let [<Literal>] ReadOnly = 1us
+  let [<Literal>] DontEnum = 2us
+  let [<Literal>] DontDelete = 4us
+  let [<Literal>] Immutable = 7us
+
+  let isEnumerable attr = DontEnum &&& attr = 0us
+  let isWritable attr = ReadOnly &&& attr = 0us
+  let isDeletable attr = DontDelete &&& attr = 0us
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
@@ -332,7 +337,7 @@ and [<AllowNullLiteral>] Object =
         then Array.zeroCreate (int indexSize) else Array.empty
 
     IndexSparse = 
-      if indexSize > Array.MaxSize && indexSize > 0u
+      if indexSize > Array.MaxSize
         then MutableSorted<uint32, Box>() else null
 
     PropertyMap = map

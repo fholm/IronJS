@@ -3,6 +3,8 @@
 open IronJS
 open IronJS.Aliases
 
+open FSKit.Utils
+
 open System
 open System.Reflection
 open System.Reflection.Emit
@@ -53,28 +55,30 @@ module Utils =
       box.Clr <- Undefined.Instance
       box
 
+    let null' =
+      let mutable box = Box()
+      box.Tag <- TypeTags.Clr
+      box.Clr <- null
+      box
+
     module Reflected =
 
+      let null' = Reflected.propertyInfo "Utils+BoxedConstants" "null'"
       let zero = Reflected.propertyInfo "Utils+BoxedConstants" "zero"
       let undefined = Reflected.propertyInfo "Utils+BoxedConstants" "undefined"
-
-  let isNull (o:obj) = Object.ReferenceEquals(o, null)
-  let isNotNull o = o |> isNull |> not
       
   //----------------------------------------------------------------------------
   module Box = 
     let isObject tag = tag >= TypeTags.Object
     let isFunction tag = tag >= TypeTags.Function
-    let isNumber tag = tag < 0xFFF9us
-    let isTagged tag = tag > 0xFFF8us
+    let isNumber marker = marker < 0xFFF9us
+    let isTagged marker = marker > 0xFFF8us
     let isBothNumber l r = isNumber l && isNumber r
     
   //----------------------------------------------------------------------------
   module Descriptor = 
     let hasValue (desc:Descriptor) =
-      if Box.isTagged desc.Box.Marker 
-        then true
-        else desc.HasValue || desc.Attributes > 0us
+      if Box.isTagged desc.Box.Marker then true else desc.HasValue
 
     let missingAttr attrs attr = attrs &&& attr = 0us
     let hasAttr attrs attr = attrs &&& attr > 0us
@@ -85,7 +89,7 @@ module Utils =
      
   //----------------------------------------------------------------------------
   module Object =
-    let isDense (x:IjsObj) = Object.ReferenceEquals(x.IndexSparse, null)
+    let isDense (x:IjsObj) = FSKit.Utils.isNull x.IndexSparse
     let isSparse (x:IjsObj) = isDense x |> not // isDense? ... pause ... NOT!
     
   //----------------------------------------------------------------------------
@@ -152,39 +156,33 @@ module Utils =
         | _ -> failwith "Que?"
         
   //----------------------------------------------------------------------------
-  let isVoid t = typeof<System.Void> = t
-
-  let refEquals (a:obj) (b:obj) = 
-    System.Object.ReferenceEquals(a, b)
-
   let isStringIndex (str:string, out:uint32 byref) = 
     str.Length > 0 
     && (str.[0] >= '0' || str.[0] <= '9') 
     && System.UInt32.TryParse(str, &out)
 
   let type2tc (t:System.Type) =   
-    if   refEquals TypeObjects.Bool t         then TypeTags.Bool
-    elif refEquals TypeObjects.Number t       then TypeTags.Number
-    elif refEquals TypeObjects.String t       then TypeTags.String
-    elif refEquals TypeObjects.Undefined t    then TypeTags.Undefined
-    elif refEquals TypeObjects.Object t       then TypeTags.Object
-    elif refEquals TypeObjects.Function t     then TypeTags.Function
-    elif refEquals TypeObjects.Box t          then TypeTags.Box
-    elif t.IsSubclassOf(TypeObjects.Function) then TypeTags.Function
-    elif t.IsSubclassOf(TypeObjects.Object)   then TypeTags.Object
-                                              else TypeTags.Clr
+    if   refEq TypeObjects.Bool t              then TypeTags.Bool
+    elif refEq TypeObjects.Number t            then TypeTags.Number
+    elif refEq TypeObjects.String t            then TypeTags.String
+    elif refEq TypeObjects.Undefined t         then TypeTags.Undefined
+    elif refEq TypeObjects.Object t            then TypeTags.Object
+    elif refEq TypeObjects.Function t          then TypeTags.Function
+    elif refEq TypeObjects.Box t               then TypeTags.Box
+    elif t.IsSubclassOf(TypeObjects.Function)   then TypeTags.Function
+    elif t.IsSubclassOf(TypeObjects.Object)     then TypeTags.Object
+                                                else TypeTags.Clr
 
   let type2tcT<'a> = type2tc typeof<'a>
   let expr2tc (e:Dlr.Expr) = type2tc e.Type
 
   let type2bf (t:System.Type) =
-    if   refEquals TypeObjects.Bool t         then BoxFields.Bool
-    elif refEquals TypeObjects.Number t       then BoxFields.Number
-    elif refEquals TypeObjects.String t       then BoxFields.String
-    elif refEquals TypeObjects.Undefined t    then BoxFields.Undefined
-    elif refEquals TypeObjects.Object t       then BoxFields.Object
-    elif refEquals TypeObjects.Function t     then BoxFields.Function
-    
+    if   refEq TypeObjects.Bool t             then BoxFields.Bool
+    elif refEq TypeObjects.Number t           then BoxFields.Number
+    elif refEq TypeObjects.String t           then BoxFields.String
+    elif refEq TypeObjects.Undefined t        then BoxFields.Undefined
+    elif refEq TypeObjects.Object t           then BoxFields.Object
+    elif refEq TypeObjects.Function t         then BoxFields.Function
     elif t.IsSubclassOf(TypeObjects.Function) then BoxFields.Function
     elif t.IsSubclassOf(TypeObjects.Object)   then BoxFields.Object
                                               else BoxFields.Clr
@@ -203,15 +201,6 @@ module Utils =
     | TypeTags.Clr        -> BoxFields.Clr
     | _ -> failwithf "Invalid typecode %i" tc
 
-  let isBox (type':ClrType) = 
-    Object.ReferenceEquals(type', TypeObjects.Box)
-      
-  let isObject type' = 
-    (type' = typeof<Object> || type'.IsSubclassOf(typeof<Object>))
-
-  let isFunction type' = 
-    (type' = typeof<Function> || type'.IsSubclassOf(typeof<Function>))
-
   let isPrimitive (b:Box) =
     if Box.isNumber b.Marker
       then true
@@ -220,9 +209,56 @@ module Utils =
         | TypeTags.String
         | TypeTags.Bool -> true
         | _ -> false
+      
+  let boxRef ref tc =
+    let mutable box = new Box()
+    box.Clr <- ref
+    box.Tag <- tc
+    box
+
+  let boxVal val' =
+    let mutable box = new Box()
+    box.Number <- val'
+    box
+
+  let boxBool (b:IjsBool) =
+    let mutable box = Box()
+    box.Bool <- b
+    box.Tag <- TypeTags.Bool
+    box
+
+  let boxNumber (n:IjsNum) =
+    let mutable box = Box()
+    box.Number <- n
+    box
+
+  let boxClr (c:ClrObject) =
+    let mutable box = Box()
+    box.Clr <- c
+    box.Tag <- TypeTags.Clr
+    box
+
+  let boxString (s:IjsStr) =
+    let mutable box = Box()
+    box.Clr <- s
+    box.Tag <- TypeTags.String
+    box
+
+  let boxObject (o:IjsObj) =
+    let mutable box = Box()
+    box.Clr <- o
+    box.Tag <- TypeTags.Object
+    box
+
+  let boxFunction (f:IjsFunc) =
+    let mutable box = Box()
+    box.Clr <- f
+    box.Tag <- TypeTags.Function
+    box
 
   let box (o:obj) =
     if o :? Box then unbox o
+    elif FSKit.Utils.isNull o then BoxedConstants.null'
     else
       let mutable box = Box()
 
@@ -253,52 +289,6 @@ module Utils =
 
   let unboxObj (o:obj) =
     if o :? Box then unbox (o :?> Box) else o
-      
-  let boxRef ref tc =
-    let mutable box = new Box()
-    box.Clr <- ref
-    box.Tag <- tc
-    box
-
-  let boxVal val' =
-    let mutable box = new Box()
-    box.Number <- val'
-    box
-
-  let boxBool (b:IjsBool) =
-    let mutable box = Box()
-    box.Bool <- b
-    box.Tag <- TypeTags.Bool
-    box
-
-  let boxNumber (d:IjsNum) =
-    let mutable box = Box()
-    box.Number <- d
-    box
-
-  let boxClr (c:ClrObject) =
-    let mutable box = Box()
-    box.Clr <- c
-    box.Tag <- TypeTags.Clr
-    box
-
-  let boxString (s:IjsStr) =
-    let mutable box = Box()
-    box.Clr <- s
-    box.Tag <- TypeTags.String
-    box
-
-  let boxObject (o:IjsObj) =
-    let mutable box = Box()
-    box.Clr <- o
-    box.Tag <- TypeTags.Object
-    box
-
-  let boxFunction (f:IjsFunc) =
-    let mutable box = Box()
-    box.Clr <- f
-    box.Tag <- TypeTags.Function
-    box
       
   //-------------------------------------------------------------------------
   // Function + cache that creates delegates for IronJS functions, delegates

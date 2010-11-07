@@ -4,16 +4,18 @@
         <script type="text/javascript">
             (function () {
                 var x = { foo: 1 };
-                x[4] = "lol";
-                x.bar = "asd";
 
-                for (var z in x) {
-                    x.foo2 = "LOL";
+                for (var z in Object.prototype) {
                     alert(z);
                 }
-
-                alert((new Error("asdf")).toString());
             })();
+
+            var foo = function (a, b, f) {
+                "n(n, n, n(n))";
+
+                return a - f(b);
+            };
+
         </script>
     </head>
     <body>

@@ -481,7 +481,7 @@ type Operators =
   static member bitCmpl (o:IjsBox) =
     let o = TypeConverter.toNumber o
     let o = TypeConverter.toInt32 o
-    ~~~ o
+    ~~~ o |> double
       
   //----------------------------------------------------------------------------
   // + (unary)
@@ -500,10 +500,10 @@ type Operators =
   //----------------------------------------------------------------------------
 
   // in
-  static member in' (l,r) = Dlr.callStaticT<Operators> "in'" [l; r]
-  static member in' (l:IjsBox, r:IjsBox) = 
+  static member in' (env, l,r) = Dlr.callStaticT<Operators> "in'" [env; l; r]
+  static member in' (env:IjsEnv, l:IjsBox, r:IjsBox) = 
     if Utils.Box.isObject r.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError env "Right operand is not a object"
 
     match l with
     | StringAndIndex i
@@ -512,10 +512,12 @@ type Operators =
       r.Object.Methods.HasProperty.Invoke(r.Object, TypeConverter.toString l)
 
   // instanceof
-  static member instanceOf (l,r)= Dlr.callStaticT<Operators> "instanceOf" [l; r]
-  static member instanceOf(l:IjsBox, r:IjsBox) =
+  static member instanceOf (env, l,r) = 
+    Dlr.callStaticT<Operators> "instanceOf" [env; l; r]
+
+  static member instanceOf(env:IjsEnv, l:IjsBox, r:IjsBox) =
     if Utils.Box.isFunction r.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError env "Right operand is not a function"
 
     if Utils.Box.isObject l.Tag |> not 
       then false
@@ -659,7 +661,7 @@ type Operators =
   // !==
   static member notSame (l, r) = Dlr.callStaticT<Operators> "notSame" [l; r]
   static member notSame (l:IjsBox, r:IjsBox) =
-    not (Operators.same(l, r))
+    Operators.same(l, r) |> not
     
   //----------------------------------------------------------------------------
   // +
@@ -678,41 +680,33 @@ type Operators =
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number - r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) - TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker 
+      then Utils.boxNumber (l.Number - r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l - TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // /
   static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number / r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) / TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number / r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l / TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // *
   static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number * r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) * TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number * r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l * TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // %
   static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number % r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber l % TypeConverter.toNumber r)
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number % r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l % TypeConverter.toNumber r)
     
   //----------------------------------------------------------------------------
   // &
@@ -722,7 +716,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l &&& r
+    l &&& r |> double
     
   //----------------------------------------------------------------------------
   // |
@@ -732,7 +726,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ||| r
+    l ||| r |> double
     
   //----------------------------------------------------------------------------
   // ^
@@ -742,7 +736,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ^^^ r
+    l ^^^ r |> double
     
   //----------------------------------------------------------------------------
   // <<
@@ -752,7 +746,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l <<< int r
+    l <<< int r |> double
     
   //----------------------------------------------------------------------------
   // >>
@@ -762,7 +756,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r
+    l >>> int r |> double
     
   //----------------------------------------------------------------------------
   // >>>
@@ -772,7 +766,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r
+    l >>> int r |> double
     
   //----------------------------------------------------------------------------
   // &&
@@ -1090,7 +1084,6 @@ type Function() =
 
   #endif
 
-
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
@@ -1104,8 +1097,6 @@ type Function() =
 //------------------------------------------------------------------------------
 // HostFunction API
 module HostFunction =
-
-  open Extensions
 
   [<ReferenceEquality>]
   type DispatchTarget<'a when 'a :> Delegate> = {
@@ -1135,7 +1126,7 @@ module HostFunction =
     |> fun x -> Seq.append m [Dlr.newArrayItemsT<ClrObject> x]
     
   //----------------------------------------------------------------------------
-  let createParam i t = Dlr.param (sprintf "a%i" i) t
+  let private createParam i t = Dlr.param (sprintf "a%i" i) t
   
   //----------------------------------------------------------------------------
   let compileDispatcher (target:DispatchTarget<'a>) = 
@@ -1198,7 +1189,7 @@ module HostFunction =
     let o = f :> IjsObj
 
     o.Methods <- env.Methods.Object
-    o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
+    o.put("length", double h.jsArgsLength, DescriptorAttrs.Immutable)
     Environment.addCompiler env f compile<'a>
 
     f
@@ -1210,20 +1201,17 @@ module Object =
   module Property = 
   
     //--------------------------------------------------------------------------
-    let requiredStorage (o:IjsObj) =
-      o.PropertyMap.PropertyMap.Count
+    let requiredStorage (o:IjsObj) = o.PropertyMap.PropertyMap.Count
       
     //--------------------------------------------------------------------------
-    let isFull (o:IjsObj) =
-      requiredStorage o >= o.PropertyDescriptors.Length
+    let isFull (o:IjsObj) = requiredStorage o >= o.PropertyDescriptors.Length
+      
+    //--------------------------------------------------------------------------
+    let setMap (o:IjsObj) pc = o.PropertyMap <- pc
       
     //--------------------------------------------------------------------------
     let getIndex (o:IjsObj) (name:string) =
       o.PropertyMap.PropertyMap.TryGetValue name
-      
-    //--------------------------------------------------------------------------
-    let setMap (o:IjsObj) pc =
-      o.PropertyMap <- pc
 
     //--------------------------------------------------------------------------
     let makeDynamic (o:IjsObj) =
@@ -1242,13 +1230,10 @@ module Object =
       o.PropertyDescriptors <- newValues
       
     //--------------------------------------------------------------------------
-    let ensureIndex (o:IjsObj) (name:string) =
-      match getIndex o name with
-      | true, index -> index
-      | _ -> 
-        o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
-        if isFull o then expandStorage o
-        o.PropertyMap.PropertyMap.[name]
+    let createIndex (o:IjsObj) (name:string) =
+      o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
+      if isFull o then expandStorage o
+      o.PropertyMap.PropertyMap.[name]
         
     //--------------------------------------------------------------------------
     let find (o:IjsObj) name =
@@ -1262,14 +1247,39 @@ module Object =
       find o name
       
     //--------------------------------------------------------------------------
+    let canPut (o:IjsObj) name =
+
+      let rec scanPrototype (o:IjsObj) name =
+        if FSKit.Utils.isNull o then true
+        else
+          match getIndex o name with
+          | true, index -> 
+            Utils.Descriptor.isWritable 
+              o.PropertyDescriptors.[index].Attributes
+          | _ -> scanPrototype o.Prototype name
+
+      match getIndex o name with
+      | true, index ->
+        let canPut =
+          Utils.Descriptor.isWritable 
+            o.PropertyDescriptors.[index].Attributes
+        canPut, index
+
+      | _ ->
+        match scanPrototype o.Prototype name with
+        | false -> false, -1
+        | true -> true, createIndex o name
+      
+    //--------------------------------------------------------------------------
     #if DEBUG
     let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
     #else
     let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
     #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box <- val'
-      o.PropertyDescriptors.[index].HasValue <- true
+      let canPut, index = canPut o name
+      if canPut then
+        o.PropertyDescriptors.[index].Box <- val'
+        o.PropertyDescriptors.[index].HasValue <- true
 
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1277,7 +1287,7 @@ module Object =
     #else
     let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
     #endif
-      let index = ensureIndex o name
+      let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
       o.PropertyDescriptors.[index].Box.Tag <- tc
       o.PropertyDescriptors.[index].HasValue <- true
@@ -1288,7 +1298,7 @@ module Object =
     #else
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
     #endif
-      let index = ensureIndex o name
+      let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Number <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
@@ -1310,12 +1320,13 @@ module Object =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
-        setMap o (PropertyMap.delete(o.PropertyMap, name))
 
         let attrs = o.PropertyDescriptors.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs
 
         if canDelete then
+          setMap o (PropertyMap.delete(o.PropertyMap, name))
+
           o.PropertyDescriptors.[index].HasValue <- false
           o.PropertyDescriptors.[index].Box.Clr <- null
           o.PropertyDescriptors.[index].Box.Number <- 0.0
@@ -1723,7 +1734,6 @@ module Object =
 
   let defaultValue' = Default defaultvalue
 
-
   let collectProperties (o:IjsObj) =
     let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
       if current <> null then
@@ -1735,7 +1745,7 @@ module Object =
         for pair in keys do
           let descriptor = current.PropertyDescriptors.[pair.Value]
           let attrs = descriptor.Attributes
-          if descriptor.HasValue && DescriptorAttrs.isEnumerable attrs
+          if descriptor.HasValue && Utils.Descriptor.isEnumerable attrs
             then pair.Key |> set.Add |> ignore
 
         collectProperties length set current.Prototype
@@ -1749,7 +1759,6 @@ module Object =
 
     let collectProperties = 
       Utils.Reflected.methodInfo "Api.Object" "collectProperties"
-
 
 module Array =
 
@@ -1795,39 +1804,6 @@ module Array =
       let putBox = PutBoxProperty putBox
       let putVal = PutValProperty putVal
       let putRef = PutRefProperty putRef
-
-    (*
-        //--------------------------------------------------------------------------
-    #if DEBUG
-    let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #else
-    let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box <- val'
-      o.PropertyDescriptors.[index].HasValue <- true
-
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #else
-    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box.Clr <- val'
-      o.PropertyDescriptors.[index].Box.Tag <- tc
-      
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #else
-    let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box.Number <- val'
-      o.PropertyDescriptors.[index].HasValue <- true*)
-
-    
 
 module Arguments =
 

@@ -419,10 +419,6 @@ module Dlr =
         #endif
       #endif
 
-  module Operators =
-    
-    let (!!!) x = const' x
-
   module Ext =
 
     //-------------------------------------------------------------------------
@@ -447,3 +443,8 @@ module Dlr =
 
     let unwrap (expr:Expr) = 
       if expr :? Static then (expr :?> Static).Inner else expr
+
+  module Operators =
+    
+    let inline (!!!) x = const' x
+    let inline (!@) x = Ext.unwrap x

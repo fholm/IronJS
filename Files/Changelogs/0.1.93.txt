@@ -1,4 +1,0 @@
-### Changelog for 0.1.93 ###
-
-* Implemented all NativeError types (15.11.6 - 15.11.7)
-* 

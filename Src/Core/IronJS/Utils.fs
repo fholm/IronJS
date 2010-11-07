@@ -162,45 +162,30 @@ module Utils =
     && (str.[0] >= '0' || str.[0] <= '9') 
     && System.UInt32.TryParse(str, &out)
 
-  let type2tc (t:System.Type) =   
-    if   refEq TypeObjects.Bool t              then TypeTags.Bool
-    elif refEq TypeObjects.Number t            then TypeTags.Number
-    elif refEq TypeObjects.String t            then TypeTags.String
-    elif refEq TypeObjects.Undefined t         then TypeTags.Undefined
-    elif refEq TypeObjects.Object t            then TypeTags.Object
-    elif refEq TypeObjects.Function t          then TypeTags.Function
-    elif refEq TypeObjects.Box t               then TypeTags.Box
-    elif t.IsSubclassOf(TypeObjects.Function)   then TypeTags.Function
-    elif t.IsSubclassOf(TypeObjects.Object)     then TypeTags.Object
-                                                else TypeTags.Clr
+  let type2tag (t:System.Type) =   
+    if   refEq TypeObjects.Bool t             then TypeTags.Bool
+    elif refEq TypeObjects.Number t           then TypeTags.Number
+    elif refEq TypeObjects.String t           then TypeTags.String
+    elif refEq TypeObjects.Undefined t        then TypeTags.Undefined
+    elif refEq TypeObjects.Object t           then TypeTags.Object
+    elif refEq TypeObjects.Function t         then TypeTags.Function
+    elif refEq TypeObjects.Box t              then TypeTags.Box
+    elif t.IsSubclassOf(TypeObjects.Function) then TypeTags.Function
+    elif t.IsSubclassOf(TypeObjects.Object)   then TypeTags.Object
+                                              else TypeTags.Clr
 
-  let type2tcT<'a> = type2tc typeof<'a>
-  let expr2tc (e:Dlr.Expr) = type2tc e.Type
-
-  let type2bf (t:System.Type) =
-    if   refEq TypeObjects.Bool t             then BoxFields.Bool
-    elif refEq TypeObjects.Number t           then BoxFields.Number
-    elif refEq TypeObjects.String t           then BoxFields.String
-    elif refEq TypeObjects.Undefined t        then BoxFields.Undefined
-    elif refEq TypeObjects.Object t           then BoxFields.Object
-    elif refEq TypeObjects.Function t         then BoxFields.Function
-    elif t.IsSubclassOf(TypeObjects.Function) then BoxFields.Function
-    elif t.IsSubclassOf(TypeObjects.Object)   then BoxFields.Object
-                                              else BoxFields.Clr
-
-  let type2bfT<'a> = type2bf
-  let expr2bf (e:Dlr.Expr) = type2bf e.Type
-
-  let tc2bf tc =
-    match tc with
-    | TypeTags.Bool        -> BoxFields.Bool     
-    | TypeTags.Number      -> BoxFields.Number   
-    | TypeTags.String      -> BoxFields.String   
-    | TypeTags.Undefined   -> BoxFields.Undefined
-    | TypeTags.Object      -> BoxFields.Object   
-    | TypeTags.Function    -> BoxFields.Function 
+  let tag2field tag =
+    match tag with
+    | TypeTags.Bool       -> BoxFields.Bool     
+    | TypeTags.Number     -> BoxFields.Number   
+    | TypeTags.String     -> BoxFields.String   
+    | TypeTags.Undefined  -> BoxFields.Undefined
+    | TypeTags.Object     -> BoxFields.Object   
+    | TypeTags.Function   -> BoxFields.Function 
     | TypeTags.Clr        -> BoxFields.Clr
-    | _ -> failwithf "Invalid typecode %i" tc
+    | _ -> failwithf "Invalid TypeTag '%i'" tag
+
+  let type2field (t:System.Type) = t |> type2tag |> tag2field
 
   let isPrimitive (b:Box) =
     if Box.isNumber b.Marker
@@ -263,7 +248,7 @@ module Utils =
     else
       let mutable box = Box()
 
-      match o.GetType() |> type2tc with
+      match o.GetType() |> type2tag with
       | TypeTags.Bool as tc -> 
         box.Bool <- unbox o
         box.Tag <- tc

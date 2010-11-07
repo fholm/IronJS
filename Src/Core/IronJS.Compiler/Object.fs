@@ -24,7 +24,7 @@ module Object =
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         [ (Dlr.invoke
             (Expr.Object.Methods.putRefProperty tmp)
-            [tmp; name; value; value |> Utils.expr2tc |> Dlr.const'])
+            [tmp; name; value; value.Type |> Utils.type2tag |> Dlr.const'])
           (value)])
     
     //--------------------------------------------------------------------------
@@ -116,13 +116,13 @@ module Object =
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           [ (Dlr.invoke
               (Expr.Object.Methods.putRefIndex tmp)
-              [tmp; index; value; value |> Utils.expr2tc |> Dlr.const'])
+              [tmp; index; value; !!!(value.Type |> Utils.type2tag)])
             (value)])
             
       | TypeCode -> 
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           [ (Dlr.callStaticT<Api.Object.Index.Converters> 
-              "put" [tmp; index; value; value |> Utils.expr2tc |> Dlr.const'])
+              "put" [tmp; index; value; !!!(value.Type |> Utils.type2tag)])
             (value)])
       
     //--------------------------------------------------------------------------

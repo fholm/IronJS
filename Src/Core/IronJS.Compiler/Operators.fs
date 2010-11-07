@@ -172,13 +172,13 @@ module Binary =
   let instanceOf (ctx:Context) left right =
     let l = ctx.Compile left |> Expr.boxValue 
     let r = ctx.Compile right |> Expr.boxValue
-    Api.Operators.instanceOf(l, r)
+    Api.Operators.instanceOf(ctx.Env, l, r)
     
   //----------------------------------------------------------------------------
   let in' (ctx:Context) left right =
     let l = ctx.Compile left |> Expr.boxValue 
     let r = ctx.Compile right |> Expr.boxValue
-    Api.Operators.in'(l, r)
+    Api.Operators.in'(ctx.Env, l, r)
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

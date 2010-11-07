@@ -50,7 +50,6 @@ module TypeTags =
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
   let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] FastObject = 0xFFFFFF07u
   let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
@@ -62,15 +61,12 @@ module TypeTags =
       (String, "string")
       (Undefined, "undefined")
       (Object, "object")
-      (FastObject, "object")
       (Function, "function")]
 
   let getName (tag:TypeTag) = Names.[tag]
 
 module BoxFields =
   let [<Literal>] Bool = "Bool"
-  let [<Literal>] Int32 = "Int32"
-  let [<Literal>] UInt32 = "UInt32"
   let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Clr"
@@ -84,10 +80,6 @@ module DescriptorAttrs =
   let [<Literal>] DontEnum = 2us
   let [<Literal>] DontDelete = 4us
   let [<Literal>] Immutable = 7us
-
-  let isEnumerable attr = DontEnum &&& attr = 0us
-  let isWritable attr = ReadOnly &&& attr = 0us
-  let isDeletable attr = DontDelete &&& attr = 0us
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
@@ -176,8 +168,6 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
-    [<FieldOffset(8)>]  val mutable Int32 : int32
-    [<FieldOffset(8)>]  val mutable UInt32 : uint32
     [<FieldOffset(8)>]  val mutable Number : IjsNum
 
     //Type & Tag

@@ -22,7 +22,7 @@ module Utils =
     
   //----------------------------------------------------------------------------
   let ensureObject (ctx:Ctx) (expr:Dlr.Expr) ifObj ifClr =
-    match expr |> Utils.expr2tc with
+    match expr.Type |> Utils.type2tag with
     | TypeTags.Function
     | TypeTags.Object -> Expr.blockTmp expr (fun expr -> [ifObj expr])
     | TypeTags.Clr -> Expr.blockTmp expr (fun expr -> [ifClr expr])
@@ -48,7 +48,7 @@ module Utils =
 
   //----------------------------------------------------------------------------
   let ensureFunction (expr:Dlr.Expr) ifFunc ifClr =
-    match expr |> Utils.expr2tc with
+    match expr.Type |> Utils.type2tag with
     | TypeTags.Function -> Expr.blockTmp expr (fun expr -> [ifFunc expr])
     | TypeTags.Clr -> Expr.blockTmp expr (fun expr -> [ifClr expr])
     | TypeTags.Object

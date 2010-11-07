@@ -84,7 +84,7 @@ type Context = {
   member x.Env_Prototype_Class = Dlr.field x.Env "Prototype_Class"
 
   member x.Fun_DynamicScope = Dlr.field x.Function "DynamicScope"
-  member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
+  member x.Fun_Chain = Dlr.field x.Function "ClosureScope"
 
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
   member x.DynamicLookup = 

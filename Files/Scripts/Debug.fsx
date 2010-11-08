@@ -9,7 +9,9 @@
 #r @"../../Src/Core/IronJS.Runtime/bin/Debug/IronJS.Runtime.dll"
 
 open System
+open System.Reflection
 open IronJS
+open FSKit
 
 let ctx = Hosting.Context.Create()
 

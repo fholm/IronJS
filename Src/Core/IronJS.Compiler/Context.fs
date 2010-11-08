@@ -74,19 +74,11 @@ type Context = {
   member x.Compile tree = x.Compiler x tree
 
   member x.Env = Dlr.field x.Function "Env"
-  member x.Env_Return = Dlr.field x.Env "Return"
-  member x.Env_Object_prototype = Dlr.field x.Env "Object_prototype"
-  member x.Env_Array_prototype = Dlr.field x.Env "Array_prototype"
-    
-  member x.Env_Base_Class = Dlr.field x.Env "Base_Class"
-  member x.Env_Function_Class = Dlr.field x.Env "Function_Class"
-  member x.Env_Array_Class = Dlr.field x.Env "Array_Class"
-  member x.Env_Prototype_Class = Dlr.field x.Env "Prototype_Class"
-
-  member x.Fun_DynamicScope = Dlr.field x.Function "DynamicScope"
-  member x.Fun_Chain = Dlr.field x.Function "ScopeChain"
-
+  member x.EnvReturnBox = Dlr.field x.Env "Return"
+  member x.FunctionDynamicScope = Dlr.field x.Function "DynamicScope"
+  member x.FunctionClosureScope = Dlr.field x.Function "ClosureScope"
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
+
   member x.DynamicLookup = 
     Ast.Utils.Scope.hasDynamicLookup x.Scope || x.InsideWith
 

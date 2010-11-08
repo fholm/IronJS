@@ -90,8 +90,8 @@ test "11.4.7 Unary - Operator" (fun ctx ->
 )
 
 test "11.4.8 Bitwise NOT Operator ( ~ )" (fun ctx ->
-  Assert.AreEqual(~~~1, ctx.ExecuteT<int>("~1"));
-  Assert.AreEqual(~~~(-1), ctx.ExecuteT<int>("~-1"));
+  Assert.AreEqual(double ~~~1, ctx.ExecuteT<double>("~1"));
+  Assert.AreEqual(double ~~~(-1), ctx.ExecuteT<double>("~-1"));
 )
 
 test "11.4.9 Logical NOT Operator ( ! )" (fun ctx ->
@@ -213,44 +213,44 @@ test "11.6.2 The Subtraction Operator ( - )" (fun ctx ->
 )
 
 test "11.7.1 The Left Shift Operator ( << )" (fun ctx ->
-  Assert.AreEqual(1 <<< int NaN, ctx.ExecuteT<int>("1 << NaN"));
-  Assert.AreEqual(int NaN <<< 1, ctx.ExecuteT<int>("NaN << 1"));
+  Assert.AreEqual(double (1 <<< int NaN), ctx.ExecuteT<double>("1 << NaN"));
+  Assert.AreEqual(double (int NaN <<< 1), ctx.ExecuteT<double>("NaN << 1"));
 
-  Assert.AreEqual(1 <<< 0, ctx.ExecuteT<int>("1 << 0"));
-  Assert.AreEqual(1 <<< 1, ctx.ExecuteT<int>("1 << 1"));
-  Assert.AreEqual(1 <<< 2, ctx.ExecuteT<int>("1 << 2"));
-  Assert.AreEqual(1 <<< 2, ctx.ExecuteT<int>("1 << '2'"));
-  Assert.AreEqual(1 <<< 1, ctx.ExecuteT<int>("1 << true"));
-  Assert.AreEqual(1 <<< 0, ctx.ExecuteT<int>("1 << false"));
+  Assert.AreEqual(double (1 <<< 0), ctx.ExecuteT<double>("1 << 0"));
+  Assert.AreEqual(double (1 <<< 1), ctx.ExecuteT<double>("1 << 1"));
+  Assert.AreEqual(double (1 <<< 2), ctx.ExecuteT<double>("1 << 2"));
+  Assert.AreEqual(double (1 <<< 2), ctx.ExecuteT<double>("1 << '2'"));
+  Assert.AreEqual(double (1 <<< 1), ctx.ExecuteT<double>("1 << true"));
+  Assert.AreEqual(double (1 <<< 0), ctx.ExecuteT<double>("1 << false"));
 )
 
 test "11.7.2 The Signed Right Shift Operator ( >> )" (fun ctx ->
-  Assert.AreEqual(1, ctx.ExecuteT<int>("1 >> NaN"));
-  Assert.AreEqual(0, ctx.ExecuteT<int>("NaN >> 1"));
+  Assert.AreEqual(1.0, ctx.ExecuteT<double>("1 >> NaN"));
+  Assert.AreEqual(0.0, ctx.ExecuteT<double>("NaN >> 1"));
 
-  Assert.AreEqual(0xFF >>> 0, ctx.ExecuteT<int>("0xFF >> 0"));
-  Assert.AreEqual(0xFF >>> 1, ctx.ExecuteT<int>("0xFF >> 1"));
-  Assert.AreEqual(0xFF >>> 2, ctx.ExecuteT<int>("0xFF >> 2"));
-  Assert.AreEqual(0xFF >>> 2, ctx.ExecuteT<int>("0xFF >> '2'"));
-  Assert.AreEqual(0xFF >>> 1, ctx.ExecuteT<int>("0xFF >> true"));
-  Assert.AreEqual(0xFF >>> 0, ctx.ExecuteT<int>("0xFF >> false"));
+  Assert.AreEqual(double (0xFF >>> 0), ctx.ExecuteT<double>("0xFF >> 0"));
+  Assert.AreEqual(double (0xFF >>> 1), ctx.ExecuteT<double>("0xFF >> 1"));
+  Assert.AreEqual(double (0xFF >>> 2), ctx.ExecuteT<double>("0xFF >> 2"));
+  Assert.AreEqual(double (0xFF >>> 2), ctx.ExecuteT<double>("0xFF >> '2'"));
+  Assert.AreEqual(double (0xFF >>> 1), ctx.ExecuteT<double>("0xFF >> true"));
+  Assert.AreEqual(double (0xFF >>> 0), ctx.ExecuteT<double>("0xFF >> false"));
 )
 
 test "11.7.3 The Unsigned Right Shift Operator ( >>> )" (fun ctx ->
-  Assert.AreEqual((uint32 -1) >>> int NaN, ctx.ExecuteT<uint32>("-1 >>> NaN"));
-  Assert.AreEqual((uint32 -0xF) >>> 0, ctx.ExecuteT<uint32>("-0xF >>> 0"));
-  Assert.AreEqual((uint32 -0xF) >>> 1, ctx.ExecuteT<uint32>("-0xF >>> 1"));
-  Assert.AreEqual((uint32 -0xF) >>> 2, ctx.ExecuteT<uint32>("-0xF >>> 2"));
-  Assert.AreEqual((uint32 -0xF) >>> 2, ctx.ExecuteT<uint32>("-0xF >>> '2'"));
-  Assert.AreEqual((uint32 -0xF) >>> 1, ctx.ExecuteT<uint32>("-0xF >>> true"));
-  Assert.AreEqual((uint32 -0xF) >>> 0, ctx.ExecuteT<uint32>("-0xF >>> false"));
+  Assert.AreEqual(double ((uint32 -1) >>> int NaN), ctx.ExecuteT<double>("-1 >>> NaN"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 0), ctx.ExecuteT<double>("-0xF >>> 0"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 1), ctx.ExecuteT<double>("-0xF >>> 1"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 2), ctx.ExecuteT<double>("-0xF >>> 2"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 2), ctx.ExecuteT<double>("-0xF >>> '2'"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 1), ctx.ExecuteT<double>("-0xF >>> true"));
+  Assert.AreEqual(double ((uint32 -0xF) >>> 0), ctx.ExecuteT<double>("-0xF >>> false"));
 
-  Assert.AreEqual((uint32 0xF) >>> 0, ctx.ExecuteT<uint32>("0xF >>> 0"));
-  Assert.AreEqual((uint32 0xF) >>> 1, ctx.ExecuteT<uint32>("0xF >>> 1"));
-  Assert.AreEqual((uint32 0xF) >>> 2, ctx.ExecuteT<uint32>("0xF >>> 2"));
-  Assert.AreEqual((uint32 0xF) >>> 2, ctx.ExecuteT<uint32>("0xF >>> '2'"));
-  Assert.AreEqual((uint32 0xF) >>> 1, ctx.ExecuteT<uint32>("0xF >>> true"));
-  Assert.AreEqual((uint32 0xF) >>> 0, ctx.ExecuteT<uint32>("0xF >>> false"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 0), ctx.ExecuteT<double>("0xF >>> 0"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 1), ctx.ExecuteT<double>("0xF >>> 1"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 2), ctx.ExecuteT<double>("0xF >>> 2"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 2), ctx.ExecuteT<double>("0xF >>> '2'"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 1), ctx.ExecuteT<double>("0xF >>> true"));
+  Assert.AreEqual(double ((uint32 0xF) >>> 0), ctx.ExecuteT<double>("0xF >>> false"));
 )
 
 test "11.8.1 The Less-than Operator ( < )" (fun ctx ->
@@ -374,24 +374,24 @@ test "11.9.5 The Strict Does-not-equal Operator ( !== )" (fun ctx ->
 )
 
 test "11.10 Binary Bitwise Operators" (fun ctx ->
-  Assert.AreEqual(1 &&& 2, ctx.ExecuteT<int>("1 & 2"));
-  Assert.AreEqual(2 &&& 1, ctx.ExecuteT<int>("2 & true"));
-  Assert.AreEqual(2 &&& 0, ctx.ExecuteT<int>("2 & false"));
-  Assert.AreEqual(2 &&& 3, ctx.ExecuteT<int>("2 & '3'"));
+  Assert.AreEqual(double (1 &&& 2), ctx.ExecuteT<double>("1 & 2"));
+  Assert.AreEqual(double (2 &&& 1), ctx.ExecuteT<double>("2 & true"));
+  Assert.AreEqual(double (2 &&& 0), ctx.ExecuteT<double>("2 & false"));
+  Assert.AreEqual(double (2 &&& 3), ctx.ExecuteT<double>("2 & '3'"));
 
-  Assert.AreEqual(1 ||| 2, ctx.ExecuteT<int>("1 | 2"));
-  Assert.AreEqual(2 ||| 1, ctx.ExecuteT<int>("2 | true"));
-  Assert.AreEqual(2 ||| 0, ctx.ExecuteT<int>("2 | false"));
-  Assert.AreEqual(2 ||| 3, ctx.ExecuteT<int>("2 | '3'"));
+  Assert.AreEqual(double (1 ||| 2), ctx.ExecuteT<double>("1 | 2"));
+  Assert.AreEqual(double (2 ||| 1), ctx.ExecuteT<double>("2 | true"));
+  Assert.AreEqual(double (2 ||| 0), ctx.ExecuteT<double>("2 | false"));
+  Assert.AreEqual(double (2 ||| 3), ctx.ExecuteT<double>("2 | '3'"));
 
-  Assert.AreEqual(1 ^^^ 2, ctx.ExecuteT<int>("1 ^ 2"));
-  Assert.AreEqual(2 ^^^ 1, ctx.ExecuteT<int>("2 ^ true"));
-  Assert.AreEqual(2 ^^^ 0, ctx.ExecuteT<int>("2 ^ false"));
-  Assert.AreEqual(2 ^^^ 3, ctx.ExecuteT<int>("2 ^ '3'"));
+  Assert.AreEqual(double (1 ^^^ 2), ctx.ExecuteT<double>("1 ^ 2"));
+  Assert.AreEqual(double (2 ^^^ 1), ctx.ExecuteT<double>("2 ^ true"));
+  Assert.AreEqual(double (2 ^^^ 0), ctx.ExecuteT<double>("2 ^ false"));
+  Assert.AreEqual(double (2 ^^^ 3), ctx.ExecuteT<double>("2 ^ '3'"));
 
-  Assert.AreEqual(2 &&& 0, ctx.ExecuteT<int>("2 & 'd'"));
-  Assert.AreEqual(2 ||| 0, ctx.ExecuteT<int>("2 | 'd'"));
-  Assert.AreEqual(2 ^^^ 0, ctx.ExecuteT<int>("2 ^ 'd'"));
+  Assert.AreEqual(double (2 &&& 0), ctx.ExecuteT<double>("2 & 'd'"));
+  Assert.AreEqual(double (2 ||| 0), ctx.ExecuteT<double>("2 | 'd'"));
+  Assert.AreEqual(double (2 ^^^ 0), ctx.ExecuteT<double>("2 ^ 'd'"));
 )
 
 test "11.11 Binary Logical Operators" (fun ctx ->

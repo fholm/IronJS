@@ -10,7 +10,7 @@ module Expr =
     let (|Box|Ref|Val|) (expr:Dlr.Expr) =
       if expr.Type = typeof<IjsBox>
         then Box
-        elif expr.Type = typeof<IjsNum> || expr.Type = typeof<IjsBool>
+        elif Dlr.Utils.isT<IjsNum> expr || Dlr.Utils.isT<IjsBool> expr
           then Val
           else Ref
 
@@ -32,13 +32,9 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let voidAsUndefined (expr:Dlr.Expr) =
-    if expr.Type = typeof<System.Void> then
-      Dlr.blockSimple [
-        (expr)
-        (BoxedConstants.undefined)
-      ]
-    else
-      expr
+    if Dlr.Utils.isVoid expr
+      then Dlr.blockSimple [expr; BoxedConstants.undefined]
+      else expr
 
   open Patterns
         
@@ -59,16 +55,15 @@ module Expr =
     | TypeTags.Number -> Dlr.void'
     | _ -> Dlr.assign (getBoxType expr) (Dlr.const' tag)
 
-  let setBoxTypeOf expr of' = setBoxType expr (Utils.expr2tc of')
+  let setBoxTypeOf expr (of':Dlr.Expr) = 
+    setBoxType expr (of'.Type |> Utils.type2tag)
       
   //-------------------------------------------------------------------------
   let setBoxValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
-    let bf = Utils.expr2bf value
+    let bf = value.Type |> Utils.type2field
     Dlr.assign (Dlr.field expr bf) value
 
-  //-------------------------------------------------------------------------
-  let isBoxed (expr:Dlr.Expr) = 
-    Utils.isBox expr.Type
+  let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<IjsBox> expr
 
   let testTag expr (tag:TypeTag) =
     if isBoxed expr 
@@ -126,11 +121,12 @@ module Expr =
   let num2 = Dlr.const' 2.0
   
   let bool2val expr =
-    (Dlr.ternary
-      expr (Dlr.const' TaggedBools.True) (Dlr.const' TaggedBools.False))
+    let ifTrue = Dlr.const' TaggedBools.True
+    let ifFalse = Dlr.const' TaggedBools.False
+    Dlr.ternary expr ifTrue ifFalse
 
   let normalizeVal (expr:Dlr.Expr) =
-    if expr.Type = typeof<IjsBool> then bool2val expr else expr
+    if Dlr.Utils.isT<IjsBool> expr then bool2val expr else expr
 
   let propertyValues obj = Dlr.field obj "PropertyDescriptors"
   let propertyValue obj i = Dlr.index (propertyValues obj) [i]
@@ -153,9 +149,6 @@ module Expr =
       let putRefIndex obj = obj |> methods |> Dlr.fieldr "PutRefIndex"
       let putValIndex obj = obj |> methods |> Dlr.fieldr "PutValIndex"
 
-  let expr2constTc expr =
-    Dlr.const' (Utils.expr2tc expr)
-
   let unboxNumber box = Dlr.field box BoxFields.Number
   let unboxBool box = Dlr.field box BoxFields.Bool
   let unboxClr box = Dlr.field box BoxFields.Clr
@@ -175,14 +168,14 @@ module Expr =
   //-------------------------------------------------------------------------
   let unbox type' (expr:Dlr.Expr) =
     if isBoxed expr then 
-      let bf = Utils.type2bf type'
+      let bf = Utils.type2field type'
       let unboxed = Dlr.field (Dlr.Ext.unwrap expr) bf
 
       if Dlr.Ext.isStatic expr 
         then Dlr.Ext.static' unboxed
         else unboxed
 
-    elif expr.Type = type' then 
+    elif expr.Type |> FSKit.Utils.isType type' then 
       expr
 
     else 
@@ -215,8 +208,7 @@ module Expr =
 
       else
         let tmp = Dlr.param (Dlr.tmpName()) expr.Type
-        let unwraped = Dlr.Ext.unwrap expr
-        Dlr.block [tmp] (Dlr.assign tmp unwraped :: f (Dlr.Ext.static' tmp))
+        Dlr.block [tmp] (Dlr.assign tmp !@expr :: f (Dlr.Ext.static' tmp))
 
     elif isBoxed expr then
       let unboxed = unbox type' (Dlr.Ext.unwrap expr)
@@ -240,68 +232,36 @@ module Expr =
     blockTmpType typeof<'a> expr f
 
   //-------------------------------------------------------------------------
-  // Assignment
-  //-------------------------------------------------------------------------
-    
-  //-------------------------------------------------------------------------
-  let assignBoxValue (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
-    if isBoxed rexpr then 
-      Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
-    else
-      let typeCode = Utils.expr2tc rexpr
-      let box = Dlr.Ext.unwrap lexpr
-      let val' = Dlr.Ext.unwrap rexpr
-      if typeCode <= TypeTags.Number then
-        Dlr.blockSimple [
-          (setBoxClrNull box)
-          (setBoxTypeOf box val')
-          (setBoxValue  box val')
-        ]
+  let assign (lexpr:Dlr.Expr) rexpr = 
+
+    let assignBox (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
+      if isBoxed rexpr then 
+        Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
+
       else
-        Dlr.blockSimple [
-          (setBoxTypeOf box val')
-          (setBoxValue  box val')
-        ]
-          
-  //-------------------------------------------------------------------------
-  let updateBoxValue (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
-    if isBoxed rexpr then 
-      Dlr.assign (Dlr.Ext.unwrap lexpr) (Dlr.Ext.unwrap rexpr)
-    else
-      setBoxValue (Dlr.Ext.unwrap lexpr) (Dlr.Ext.unwrap rexpr)
-        
-  //-------------------------------------------------------------------------
-  let assignValue (lexpr:Dlr.Expr) rexpr = 
+        let typeCode = rexpr.Type |> Utils.type2tag
+        let box = Dlr.Ext.unwrap lexpr
+        let val' = Dlr.Ext.unwrap rexpr
+        if typeCode <= TypeTags.Number then
+          Dlr.blockSimple
+            [setBoxClrNull box; setBoxTypeOf box val'; setBoxValue box val']
+
+        else
+          Dlr.blockSimple 
+            [setBoxTypeOf box val'; setBoxValue box val']
+
     if isBoxed lexpr 
-      then assignBoxValue lexpr rexpr 
+      then assignBox lexpr rexpr 
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
-        
-  //-------------------------------------------------------------------------
-  // Types
-  //-------------------------------------------------------------------------
 
   let prototype expr = Dlr.field expr "Prototype"
   let constructorMode expr = Dlr.field expr "ConstructorMode"
 
   let isConstructor expr =
     Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
-    
-  //-------------------------------------------------------------------------
-  let testIsType<'a> (expr:Dlr.Expr) ifObj ifBox ifOther =
-    if expr.Type = typeof<'a> then ifObj expr
-    elif expr.Type.IsSubclassOf typeof<'a> then ifObj expr
-    elif isBoxed expr then
-      blockTmp expr (fun tmp ->
-        [Dlr.ternary 
-          (testBoxType tmp (Utils.type2tcT<'a>))
-          (ifObj (unboxT<'a> tmp))
-          (ifBox tmp)])
-
-    else 
-      ifOther expr
 
   //-------------------------------------------------------------------------
   let unboxIndex expr i tc =
     match tc with
     | None -> Dlr.indexInt expr i
-    | Some tc -> Dlr.field (Dlr.indexInt expr i) (Utils.tc2bf tc) 
+    | Some tc -> Dlr.field (Dlr.indexInt expr i) (Utils.tag2field tc) 

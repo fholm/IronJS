@@ -50,7 +50,6 @@ module TypeTags =
   let [<Literal>] String = 0xFFFFFF04u
   let [<Literal>] Undefined = 0xFFFFFF05u
   let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] FastObject = 0xFFFFFF07u
   let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
@@ -62,15 +61,12 @@ module TypeTags =
       (String, "string")
       (Undefined, "undefined")
       (Object, "object")
-      (FastObject, "object")
       (Function, "function")]
 
   let getName (tag:TypeTag) = Names.[tag]
 
 module BoxFields =
   let [<Literal>] Bool = "Bool"
-  let [<Literal>] Int32 = "Int32"
-  let [<Literal>] UInt32 = "UInt32"
   let [<Literal>] Number = "Number"
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Clr"
@@ -79,10 +75,10 @@ module BoxFields =
   let [<Literal>] Function = "Func"
 
 module DescriptorAttrs =
-  let [<Literal>] None = 0us
-  let [<Literal>] ReadOnly = 2us
-  let [<Literal>] DontEnum = 4us
-  let [<Literal>] DontDelete = 8us
+  let [<Literal>] ReadOnly = 1us
+  let [<Literal>] DontEnum = 2us
+  let [<Literal>] DontDelete = 4us
+  let [<Literal>] Immutable = 7us
 
 module ConstructorModes =
   let [<Literal>] Function = 0uy
@@ -171,8 +167,6 @@ type [<StructLayout(LayoutKind.Explicit)>] Box =
 
     //Value Types
     [<FieldOffset(8)>]  val mutable Bool : IjsBool
-    [<FieldOffset(8)>]  val mutable Int32 : int32
-    [<FieldOffset(8)>]  val mutable UInt32 : uint32
     [<FieldOffset(8)>]  val mutable Number : IjsNum
 
     //Type & Tag
@@ -285,7 +279,8 @@ and Constructors = {
 and [<AllowNullLiteral>] Environment() =
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0L
-
+  
+  let rnd = new System.Random()
   let compilers = new MutableDict<FunctionId, FunctionCompiler>()
   let functionStrings = new MutableDict<FunctionId, IjsStr>()
 
@@ -296,7 +291,8 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable Methods : Methods
   [<DefaultValue>] val mutable FunctionMethods : FunctionMethods
-
+  
+  member x.Random = rnd
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
   
@@ -317,8 +313,6 @@ and [<AllowNullLiteral>] Object =
 
   val mutable PropertyMap : PropertyMap
   val mutable PropertyDescriptors : Descriptor array
-
-  member x.PropertyMapId = x.PropertyMap.Id
   
   new (map, prototype, class', indexSize) = {
     Class = class'
@@ -332,8 +326,22 @@ and [<AllowNullLiteral>] Object =
         then Array.zeroCreate (int indexSize) else Array.empty
 
     IndexSparse = 
-      if indexSize > Array.MaxSize && indexSize > 0u
+      if indexSize > Array.MaxSize
         then MutableSorted<uint32, Box>() else null
+
+    PropertyMap = map
+    PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
+  }
+
+  new (map, prototype, class', indexSparse:MutableSorted<uint32, Box>) = {
+    Class = class'
+    Value = Descriptor()
+    Prototype = prototype
+    Methods = Unchecked.defaultof<InternalMethods>
+
+    IndexLength = indexSparse.Count |> uint32
+    IndexDense = Array.empty
+    IndexSparse = indexSparse
 
     PropertyMap = map
     PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
@@ -352,8 +360,18 @@ and [<AllowNullLiteral>] Object =
     PropertyMap = null
     PropertyDescriptors = null
   }
-  
-//-------------------------------------------------------------------------
+
+  member x.PropertyMapId = x.PropertyMap.Id
+
+  member x.setAttrs (index:int32, attrs:DescriptorAttr) =
+    x.PropertyDescriptors.[index].Attributes <-
+      x.PropertyDescriptors.[index].Attributes ||| attrs
+
+  member x.setAttrs (name:string, attrs:DescriptorAttr) =
+    match x.PropertyMap.PropertyMap.TryGetValue name with
+    | true, index -> x.setAttrs(index, attrs)
+    | _ -> ()
+
 // Property descriptor
 and [<StructuralEquality>] [<NoComparison>] Descriptor =
   struct
@@ -425,8 +443,7 @@ and [<AllowNullLiteral>] PropertyMap =
     FreeIndexes = null
   }
 
-  member x.isDynamic = 
-    x.Id < 0L
+  member x.isDynamic = x.Id < 0L
 
 //------------------------------------------------------------------------------
 // 10.1.8
@@ -475,27 +492,25 @@ and [<AllowNullLiteral>] Arguments =
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
-  val mutable Name : IjsStr
   val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
   val mutable FunctionMethods : FunctionMethods
 
-  val mutable ScopeChain : Scope
+  val mutable ClosureScope : Scope
   val mutable DynamicScope : DynamicScope
      
-  new (env:IjsEnv, funcId, scopeChain, dynamicScope) = { 
+  new (env:IjsEnv, funcId, closureScope, dynamicScope) = { 
     inherit Object(
       env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
 
-    Name = ""
     Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
     ConstructorMode = ConstructorModes.User
 
-    ScopeChain = scopeChain
+    ClosureScope = closureScope
     DynamicScope = dynamicScope
     FunctionMethods = env.FunctionMethods
   }
@@ -503,13 +518,12 @@ and [<AllowNullLiteral>] Function =
   new (env:IjsEnv, propertyMap) = {
     inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
 
-    Name = ""
     Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
     ConstructorMode = 0uy
 
-    ScopeChain = null
+    ClosureScope = null
     DynamicScope = List.empty
     FunctionMethods = env.FunctionMethods
   }
@@ -517,13 +531,12 @@ and [<AllowNullLiteral>] Function =
   new (env:IjsEnv) = {
     inherit Object()
 
-    Name = ""
     Env = env
     Compiler = null
     FunctionId = 0UL
     ConstructorMode = 0uy
 
-    ScopeChain = null
+    ClosureScope = null
     DynamicScope = List.empty
     FunctionMethods = env.FunctionMethods
   }

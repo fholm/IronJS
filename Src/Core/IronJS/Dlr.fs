@@ -404,8 +404,9 @@ module Dlr =
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (debugView expr)
 
-    let is type' (expr:Expr) = expr.Type = type' || expr.Type.IsSubclassOf type'
+    let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
     let isT<'a> (expr:Expr) = is typeof<'a> expr
+    let isVoid (expr:Expr) = FSKit.Utils.isVoid expr.Type
 
     //DEBUG
     let debug x =
@@ -418,10 +419,6 @@ module Dlr =
         void'
         #endif
       #endif
-
-  module Operators =
-    
-    let (!!!) x = const' x
 
   module Ext =
 
@@ -447,3 +444,8 @@ module Dlr =
 
     let unwrap (expr:Expr) = 
       if expr :? Static then (expr :?> Static).Inner else expr
+
+  module Operators =
+    
+    let inline (!!!) x = const' x
+    let inline (!@) x = Ext.unwrap x

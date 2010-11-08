@@ -9,6 +9,8 @@ module Extensions =
 
   type Object with 
 
+    //--------------------------------------------------------------------------
+    // Properties
     member o.put (name, v:IjsBox) =
       o.Methods.PutBoxProperty.Invoke(o, name, v)
 
@@ -37,6 +39,42 @@ module Extensions =
     member o.put (name, v:IjsRef, tc:TypeTag) =
       o.Methods.PutRefProperty.Invoke(o, name, v, tc)
 
+    member o.put (name:string, v:IjsBox, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsBool, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsNum, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:ClrObject, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsStr, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:Undefined, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsObj, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsFunc, attrs:DescriptorAttr) =
+      o.put(name, v)
+      o.setAttrs(name, attrs)
+
+    member o.put (name:string, v:IjsRef, t:TypeTag, attrs:DescriptorAttr) =
+      o.put(name, v, t)
+      o.setAttrs(name, attrs)
+
     member o.get (name) =
       o.Methods.GetProperty.Invoke(o, name)
 
@@ -49,6 +87,8 @@ module Extensions =
     member o.delete (name) =
       o.Methods.DeleteProperty.Invoke(o, name)
       
+    //--------------------------------------------------------------------------
+    // Indexes
     member o.put (index, v:IjsBox) =
       o.Methods.PutBoxIndex.Invoke(o, index, v)
 
@@ -89,13 +129,12 @@ module Extensions =
     member o.delete (index) =
       o.Methods.DeleteIndex.Invoke(o, index)
 
+open Extensions
+
 module Environment =
 
-  open Extensions
-
   //----------------------------------------------------------------------------
-  let hasCompiler (env:IjsEnv) funcId =
-    env.Compilers.ContainsKey funcId
+  let hasCompiler (env:IjsEnv) funcId = env.Compilers.ContainsKey funcId
 
   //----------------------------------------------------------------------------
   let addCompilerId (env:IjsEnv) funId compiler =
@@ -121,10 +160,17 @@ module Environment =
     o
 
   //----------------------------------------------------------------------------
-  let createArray (env:IjsEnv) size =
+  let createArray (env:IjsEnv) (size:uint32) =
     let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
     o.Methods <- env.Methods.Array
     o.Methods.PutValProperty.Invoke(o, "length", double size)
+    o
+
+  //----------------------------------------------------------------------------
+  let createArraySparse (env:IjsEnv) (sparse:MutableSorted<uint32, Box>) =
+    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, sparse)
+    o.Methods <- env.Methods.Array
+    o.Methods.PutValProperty.Invoke(o, "length", double sparse.Count)
     o
     
   //----------------------------------------------------------------------------
@@ -141,6 +187,7 @@ module Environment =
     let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
     o.Methods <- env.Methods.Object
     o.Value.Box.Number <- n
+    o.Value.HasValue <- true
     o
     
   //----------------------------------------------------------------------------
@@ -166,8 +213,9 @@ module Environment =
     func.ConstructorMode <- ConstructorModes.User
 
     proto.put("constructor", func)
-    func.put("prototype", proto)
-    func.put("length", double args)
+
+    func.put("prototype", proto, DescriptorAttrs.Immutable)
+    func.put("length", double args, DescriptorAttrs.DontDelete)
 
     func
     
@@ -176,6 +224,20 @@ module Environment =
     let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error, 0u)
     o.Methods <- env.Methods.Object
     o
+
+  let raiseError (env:IjsEnv) prototype (message:IjsStr) =
+    let error = createError env
+    error.Prototype <- prototype
+    error.put("message", message)
+    raise (new UserError(Utils.boxObject error))
+
+  let raiseEvalError (env:IjsEnv) = raiseError env env.Prototypes.EvalError
+  let raiseRangeError (env:IjsEnv) = raiseError env env.Prototypes.RangeError
+  let raiseSyntaxError (env:IjsEnv) = raiseError env env.Prototypes.SyntaxError
+  let raiseTypeError (env:IjsEnv) = raiseError env env.Prototypes.TypeError
+  let raiseURIError (env:IjsEnv) = raiseError env env.Prototypes.URIError
+  let raiseReferenceError (env:IjsEnv) = 
+    raiseError env env.Prototypes.ReferenceError
     
   //----------------------------------------------------------------------------
   module Reflected =
@@ -206,7 +268,6 @@ module Environment =
 
 //------------------------------------------------------------------------------
 // Static class containing all type conversions
-//------------------------------------------------------------------------------
 type TypeConverter =
 
   //----------------------------------------------------------------------------
@@ -366,22 +427,23 @@ type TypeConverter =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
   //----------------------------------------------------------------------------
-  static member toInt32 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0 else int d
+  static member toInt32 (d:IjsNum) = d |> uint32 |> int
+  static member toInt32 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toInt32
 
-  static member toUInt32 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0u else uint32 d
+  static member toUInt32 (d:IjsNum) = d |> uint32 
+  static member toUInt32 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toUInt32
 
-  static member toUInt16 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0us else uint16 d
+  static member toUInt16 (d:IjsNum) = d |> uint32 |> uint16
+  static member toUInt16 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toUInt16
 
-  static member toInteger (d:IjsNum) : double = 
-    if d = NaN
-      then 0.0
-      elif d = 0.0 || Double.IsInfinity d
-        then d
-        else double (Math.Sign d) * Math.Floor(Math.Abs d)
-                
+  static member toInteger (d:IjsNum) = 
+    if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
+  static member toInteger (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toInteger
+
   //-------------------------------------------------------------------------
   static member convertTo (env:Dlr.Expr) (expr:Dlr.Expr) (t:System.Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
@@ -400,7 +462,6 @@ type TypeConverter =
     
 //------------------------------------------------------------------------------
 // Operators
-//------------------------------------------------------------------------------
 type Operators =
 
   //----------------------------------------------------------------------------
@@ -429,7 +490,7 @@ type Operators =
   static member bitCmpl (o:IjsBox) =
     let o = TypeConverter.toNumber o
     let o = TypeConverter.toInt32 o
-    ~~~ o
+    ~~~ o |> double
       
   //----------------------------------------------------------------------------
   // + (unary)
@@ -446,11 +507,12 @@ type Operators =
   //----------------------------------------------------------------------------
   // Binary
   //----------------------------------------------------------------------------
+
   // in
-  static member in' (l,r) = Dlr.callStaticT<Operators> "in'" [l; r]
-  static member in' (l:IjsBox, r:IjsBox) = 
+  static member in' (env, l,r) = Dlr.callStaticT<Operators> "in'" [env; l; r]
+  static member in' (env:IjsEnv, l:IjsBox, r:IjsBox) = 
     if Utils.Box.isObject r.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError env "Right operand is not a object"
 
     match l with
     | StringAndIndex i
@@ -459,10 +521,12 @@ type Operators =
       r.Object.Methods.HasProperty.Invoke(r.Object, TypeConverter.toString l)
 
   // instanceof
-  static member instanceOf (l,r)= Dlr.callStaticT<Operators> "instanceOf" [l; r]
-  static member instanceOf(l:IjsBox, r:IjsBox) =
+  static member instanceOf (env, l,r) = 
+    Dlr.callStaticT<Operators> "instanceOf" [env; l; r]
+
+  static member instanceOf(env:IjsEnv, l:IjsBox, r:IjsBox) =
     if Utils.Box.isFunction r.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError env "Right operand is not a function"
 
     if Utils.Box.isObject l.Tag |> not 
       then false
@@ -606,7 +670,7 @@ type Operators =
   // !==
   static member notSame (l, r) = Dlr.callStaticT<Operators> "notSame" [l; r]
   static member notSame (l:IjsBox, r:IjsBox) =
-    not (Operators.same(l, r))
+    Operators.same(l, r) |> not
     
   //----------------------------------------------------------------------------
   // +
@@ -625,41 +689,33 @@ type Operators =
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number - r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) - TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker 
+      then Utils.boxNumber (l.Number - r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l - TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // /
   static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number / r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) / TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number / r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l / TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // *
   static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number * r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber(l) * TypeConverter.toNumber(r))
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number * r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l * TypeConverter.toNumber r)
       
   //----------------------------------------------------------------------------
   // %
   static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:IjsBox, r:IjsBox) =
-    if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number % r.Number)
-
-    else
-      Utils.boxNumber (TypeConverter.toNumber l % TypeConverter.toNumber r)
+    if Utils.Box.isBothNumber l.Marker r.Marker
+      then Utils.boxNumber (l.Number % r.Number)
+      else Utils.boxNumber (TypeConverter.toNumber l % TypeConverter.toNumber r)
     
   //----------------------------------------------------------------------------
   // &
@@ -669,7 +725,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l &&& r
+    (l &&& r) |> double
     
   //----------------------------------------------------------------------------
   // |
@@ -679,7 +735,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ||| r
+    (l ||| r) |> double
     
   //----------------------------------------------------------------------------
   // ^
@@ -689,7 +745,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toInt32 r
-    l ^^^ r
+    (l ^^^ r) |> double
     
   //----------------------------------------------------------------------------
   // <<
@@ -699,7 +755,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l <<< int r
+    (l <<< int r) |> double
     
   //----------------------------------------------------------------------------
   // >>
@@ -709,7 +765,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r
+    (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // >>>
@@ -719,7 +775,7 @@ type Operators =
     let r = TypeConverter.toNumber r
     let l = TypeConverter.toUInt32 l
     let r = TypeConverter.toUInt32 r &&& 0x1Fu
-    l >>> int r
+    (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // &&
@@ -760,7 +816,7 @@ module PropertyMap =
       subMap
 
   //----------------------------------------------------------------------------
-  let rec buildSubMap (map:PropertyMap) names =
+  let buildSubMap (map:PropertyMap) names =
     Seq.fold (fun map name -> getSubMap map name) map names
         
   //----------------------------------------------------------------------------
@@ -786,10 +842,7 @@ module PropertyMap =
     pc
       
   //----------------------------------------------------------------------------
-  let getIndex (map:PropertyMap) name =
-    map.PropertyMap.[name]
-
-open Extensions
+  let getIndex (map:PropertyMap) name = map.PropertyMap.[name]
     
 //------------------------------------------------------------------------------
 // Function API
@@ -810,7 +863,7 @@ type Function() =
     let prototype = f.get "prototype"
 
     if Utils.Box.isObject prototype.Tag |> not then
-      failwith "[[TypeError]]"
+      Environment.raiseTypeError f.Env "prototype property is not an object"
 
     if o = null || o.Prototype = null
       then false 
@@ -896,7 +949,9 @@ type Function() =
       c.Invoke(f,o) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ -> 
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0) =
@@ -911,7 +966,9 @@ type Function() =
       c.Invoke(f,o,a0) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1) =
@@ -926,7 +983,9 @@ type Function() =
       c.Invoke(f,o,a0,a1) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
     
   #if CLR2
   #else
@@ -943,7 +1002,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3) =
@@ -958,7 +1019,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4) =
@@ -973,7 +1036,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5) =
@@ -988,7 +1053,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6) =
@@ -1003,7 +1070,9 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
   //----------------------------------------------------------------------------
   static member construct (f:IjsFunc,t:IjsObj,a0:'a0,a1:'a1,a2:'a2,a3:'a3,a4:'a4,a5:'a5,a6:'a6,a7:'a7) =
@@ -1018,9 +1087,11 @@ type Function() =
       c.Invoke(f,o,a0,a1,a2,a3,a4,a5,a6,a7) |> ignore
       Utils.boxObject o
 
-    | _ -> Errors.runtime "Can't call [[Construct]] on non-constructor"
-  #endif
+    | _ ->
+      Environment.raiseTypeError 
+        f.Env "Can't call [[Construct]] on non-constructor"
 
+  #endif
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
@@ -1034,10 +1105,7 @@ type Function() =
 
 //------------------------------------------------------------------------------
 // HostFunction API
-//------------------------------------------------------------------------------
 module HostFunction =
-
-  open Extensions
 
   [<ReferenceEquality>]
   type DispatchTarget<'a when 'a :> Delegate> = {
@@ -1050,7 +1118,9 @@ module HostFunction =
   let marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
     if i < args.Length 
       then TypeConverter.convertTo env args.[i] t
-      else Dlr.default' t
+      else
+        if FSKit.Utils.isTypeT<IjsBox> t
+          then Expr.BoxedConstants.undefined else Dlr.default' t
       
   //----------------------------------------------------------------------------
   let marshalBoxParams (f:IjsHostFunc<_>) args m =
@@ -1067,7 +1137,7 @@ module HostFunction =
     |> fun x -> Seq.append m [Dlr.newArrayItemsT<ClrObject> x]
     
   //----------------------------------------------------------------------------
-  let createParam i t = Dlr.param (sprintf "a%i" i) t
+  let private createParam i t = Dlr.param (sprintf "a%i" i) t
   
   //----------------------------------------------------------------------------
   let compileDispatcher (target:DispatchTarget<'a>) = 
@@ -1095,8 +1165,8 @@ module HostFunction =
 
     let invoke = target.Invoke func marshalled
     let body = 
-      if Utils.isBox f.ReturnType then invoke
-      elif Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
+      if FSKit.Utils.isTypeT<IjsBox> f.ReturnType then invoke
+      elif FSKit.Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
       else
         Dlr.blockTmpT<Box> (fun tmp ->
           [
@@ -1130,94 +1200,29 @@ module HostFunction =
     let o = f :> IjsObj
 
     o.Methods <- env.Methods.Object
-    o.Methods.PutValProperty.Invoke(f, "length", double h.jsArgsLength)
+    o.put("length", double h.jsArgsLength, DescriptorAttrs.Immutable)
     Environment.addCompiler env f compile<'a>
 
     f
 
 //------------------------------------------------------------------------------
 module Object =
-
-  //----------------------------------------------------------------------------
-  let defaultvalue (o:IjsObj) (hint:byte) =
-    let hint = 
-      if hint = DefaultValue.None 
-        then DefaultValue.Number 
-        else hint
-
-    let valueOf = o.Methods.GetProperty.Invoke(o, "valueOf")
-    let toString = o.Methods.GetProperty.Invoke(o, "toString")
-
-    match hint with
-    | DefaultValue.Number ->
-      match valueOf.Tag with
-      | TypeTags.Function ->
-        let mutable v = Function.call(valueOf.Func, o)
-        if Utils.isPrimitive v then v
-        else
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = Function.call(toString.Func, o)
-            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
-          | _ -> Errors.runtime "[[TypeError]]"
-      | _ -> Errors.runtime "[[TypeError]]"
-
-    | DefaultValue.String ->
-      match toString.Tag with
-      | TypeTags.Function ->
-        let mutable v = Function.call(toString.Func, o)
-        if Utils.isPrimitive v then v
-        else 
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = Function.call(valueOf.Func, o)
-            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
-          | _ -> Errors.runtime "[[TypeError]]"
-      | _ -> Errors.runtime "[[TypeError]]"
-
-    | _ -> Errors.runtime "Invalid hint"
-
-  let defaultValue' = Default defaultvalue
-
-  //----------------------------------------------------------------------------
-  let collectProperties (o:IjsObj) =
-    let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
-      if current <> null then
-        let length = 
-          if length < current.IndexLength 
-            then current.IndexLength else length
-
-        set.UnionWith(current.PropertyMap.PropertyMap.Keys)
-        collectProperties length set current.Prototype
-
-      else 
-        length, set
-
-    o |> collectProperties 0u (new MutableSet<IjsStr>())
-
-  module Reflected = 
-
-    let collectProperties = 
-      Utils.Reflected.methodInfo "Api.Object" "collectProperties"
     
   //----------------------------------------------------------------------------
   module Property = 
   
     //--------------------------------------------------------------------------
-    let requiredStorage (o:IjsObj) =
-      o.PropertyMap.PropertyMap.Count
+    let requiredStorage (o:IjsObj) = o.PropertyMap.PropertyMap.Count
       
     //--------------------------------------------------------------------------
-    let isFull (o:IjsObj) =
-      requiredStorage o >= o.PropertyDescriptors.Length
+    let isFull (o:IjsObj) = requiredStorage o >= o.PropertyDescriptors.Length
+      
+    //--------------------------------------------------------------------------
+    let setMap (o:IjsObj) pc = o.PropertyMap <- pc
       
     //--------------------------------------------------------------------------
     let getIndex (o:IjsObj) (name:string) =
       o.PropertyMap.PropertyMap.TryGetValue name
-      
-    //--------------------------------------------------------------------------
-    let setMap (o:IjsObj) pc =
-      o.PropertyMap <- pc
 
     //--------------------------------------------------------------------------
     let makeDynamic (o:IjsObj) =
@@ -1236,18 +1241,15 @@ module Object =
       o.PropertyDescriptors <- newValues
       
     //--------------------------------------------------------------------------
-    let ensureIndex (o:IjsObj) (name:string) =
-      match getIndex o name with
-      | true, index -> index
-      | _ -> 
-        o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
-        if isFull o then expandStorage o
-        o.PropertyMap.PropertyMap.[name]
+    let createIndex (o:IjsObj) (name:string) =
+      o.PropertyMap <- PropertyMap.getSubMap o.PropertyMap name
+      if isFull o then expandStorage o
+      o.PropertyMap.PropertyMap.[name]
         
     //--------------------------------------------------------------------------
     let find (o:IjsObj) name =
       let rec find o name =
-        if Utils.isNull o then (null, -1)
+        if FSKit.Utils.isNull o then (null, -1)
         else
           match getIndex o name with
           | true, index ->  o, index
@@ -1256,14 +1258,39 @@ module Object =
       find o name
       
     //--------------------------------------------------------------------------
+    let canPut (o:IjsObj) name =
+
+      let rec scanPrototype (o:IjsObj) name =
+        if FSKit.Utils.isNull o then true
+        else
+          match getIndex o name with
+          | true, index -> 
+            Utils.Descriptor.isWritable 
+              o.PropertyDescriptors.[index].Attributes
+          | _ -> scanPrototype o.Prototype name
+
+      match getIndex o name with
+      | true, index ->
+        let canPut =
+          Utils.Descriptor.isWritable 
+            o.PropertyDescriptors.[index].Attributes
+        canPut, index
+
+      | _ ->
+        match scanPrototype o.Prototype name with
+        | false -> false, -1
+        | true -> true, createIndex o name
+      
+    //--------------------------------------------------------------------------
     #if DEBUG
     let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
     #else
     let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
     #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box <- val'
-      o.PropertyDescriptors.[index].HasValue <- true
+      let canPut, index = canPut o name
+      if canPut then
+        o.PropertyDescriptors.[index].Box <- val'
+        o.PropertyDescriptors.[index].HasValue <- true
 
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1271,9 +1298,10 @@ module Object =
     #else
     let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
     #endif
-      let index = ensureIndex o name
+      let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
       o.PropertyDescriptors.[index].Box.Tag <- tc
+      o.PropertyDescriptors.[index].HasValue <- true
       
     //--------------------------------------------------------------------------
     #if DEBUG
@@ -1281,7 +1309,7 @@ module Object =
     #else
     let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
     #endif
-      let index = ensureIndex o name
+      let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Number <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
@@ -1303,12 +1331,13 @@ module Object =
     let delete (o:IjsObj) (name:IjsStr) =
       match getIndex o name with
       | true, index -> 
-        setMap o (PropertyMap.delete(o.PropertyMap, name))
 
         let attrs = o.PropertyDescriptors.[index].Attributes
         let canDelete = Utils.Descriptor.isDeletable attrs
 
         if canDelete then
+          setMap o (PropertyMap.delete(o.PropertyMap, name))
+
           o.PropertyDescriptors.[index].HasValue <- false
           o.PropertyDescriptors.[index].Box.Clr <- null
           o.PropertyDescriptors.[index].Box.Number <- 0.0
@@ -1325,7 +1354,7 @@ module Object =
       let get = GetProperty get
       let has = HasProperty has
       let delete = DeleteProperty delete
-    
+
   //----------------------------------------------------------------------------
   module Index =
   
@@ -1357,14 +1386,16 @@ module Object =
     //--------------------------------------------------------------------------
     let updateLength (o:IjsObj) (i:uint32) =
       if i > o.IndexLength then
-        o.IndexLength <- i+1u
-        if o.Class = Classes.Array then
+        let i = i+1u
+        o.IndexLength <- i
+
+        if o.Class = Classes.Array then 
           Property.putVal o "length" (double i)
 
     //--------------------------------------------------------------------------
     let find (o:IjsObj) (i:uint32) =
       let rec find o (i:uint32) =
-        if Utils.isNull o then (null, 0u, false)
+        if FSKit.Utils.isNull o then (null, 0u, false)
         else 
           if Utils.Object.isDense o then
             let ii = int i
@@ -1454,6 +1485,7 @@ module Object =
           if i >= o.IndexDense.Length then expandStorage o i
           o.IndexDense.[i].Box.Clr <- v
           o.IndexDense.[i].Box.Tag <- tc
+          o.IndexDense.[i].HasValue <- true
 
       else
         o.IndexSparse.[i] <- Utils.boxRef v tc
@@ -1484,7 +1516,7 @@ module Object =
       match find o i with
       | null, _, _ -> true
       | o2, index, isDense ->
-        if Utils.refEquals o o2 then
+        if FSKit.Utils.refEq o o2 then
           if isDense then 
             o.IndexDense.[int i].Box <- Box()
             o.IndexDense.[int i].HasValue <- false
@@ -1674,6 +1706,79 @@ module Object =
       static member has (o:IjsObj, index:IjsObj) =
         Converters.has(o, TypeConverter.toPrimitive index)
 
+  //----------------------------------------------------------------------------
+  let defaultvalue (o:IjsObj) (hint:byte) =
+    let hint = 
+      if hint = DefaultValue.None 
+        then DefaultValue.Number 
+        else hint
+
+    let valueOf = o.Methods.GetProperty.Invoke(o, "valueOf")
+    let toString = o.Methods.GetProperty.Invoke(o, "toString")
+
+    match hint with
+    | DefaultValue.Number ->
+      match valueOf.Tag with
+      | TypeTags.Function ->
+        let mutable v = Function.call(valueOf.Func, o)
+        if Utils.isPrimitive v then v
+        else
+          match toString.Tag with
+          | TypeTags.Function ->
+            let mutable v = Function.call(toString.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | DefaultValue.String ->
+      match toString.Tag with
+      | TypeTags.Function ->
+        let mutable v = Function.call(toString.Func, o)
+        if Utils.isPrimitive v then v
+        else 
+          match toString.Tag with
+          | TypeTags.Function ->
+            let mutable v = Function.call(valueOf.Func, o)
+            if Utils.isPrimitive v then v else Errors.runtime "[[TypeError]]"
+          | _ -> Errors.runtime "[[TypeError]]"
+      | _ -> Errors.runtime "[[TypeError]]"
+
+    | _ -> Errors.runtime "Invalid hint"
+
+  let defaultValue' = Default defaultvalue
+  
+  //----------------------------------------------------------------------------
+  let collectProperties (o:IjsObj) =
+    let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
+      if current <> null then
+        let length = 
+          if length < current.IndexLength 
+            then current.IndexLength else length
+
+        let keys = current.PropertyMap.PropertyMap
+        for pair in keys do
+          let descriptor = current.PropertyDescriptors.[pair.Value]
+          let attrs = descriptor.Attributes
+          if descriptor.HasValue && Utils.Descriptor.isEnumerable attrs
+            then pair.Key |> set.Add |> ignore
+
+        collectProperties length set current.Prototype
+
+      else 
+        length, set
+
+    o |> collectProperties 0u (new MutableSet<IjsStr>())
+    
+  //----------------------------------------------------------------------------
+  let collectIndexValues (o:IjsObj) =
+    if Utils.Object.isDense o 
+      then seq {for i in o.IndexDense do if i.HasValue then yield i.Box}
+      else seq {for i in o.IndexSparse do yield i.Value}
+
+  module Reflected = 
+
+    let collectProperties = 
+      Utils.Reflected.methodInfo "Api.Object" "collectProperties"
 
 module Array =
 
@@ -1719,39 +1824,6 @@ module Array =
       let putBox = PutBoxProperty putBox
       let putVal = PutValProperty putVal
       let putRef = PutRefProperty putRef
-
-    (*
-        //--------------------------------------------------------------------------
-    #if DEBUG
-    let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #else
-    let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box <- val'
-      o.PropertyDescriptors.[index].HasValue <- true
-
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #else
-    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box.Clr <- val'
-      o.PropertyDescriptors.[index].Box.Tag <- tc
-      
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #else
-    let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #endif
-      let index = ensureIndex o name
-      o.PropertyDescriptors.[index].Box.Number <- val'
-      o.PropertyDescriptors.[index].HasValue <- true*)
-
-    
 
 module Arguments =
 

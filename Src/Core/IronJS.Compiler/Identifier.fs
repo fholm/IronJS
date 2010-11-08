@@ -81,8 +81,7 @@ module Identifier =
       | Some(expr, i, _) -> Dlr.Ext.static' (Dlr.indexInt expr i)
       | _ -> 
         let name = Dlr.const' name
-        Object.Property.get ctx.Globals name
-
+        ctx.Globals |> Object.Property.get name 
         
   //----------------------------------------------------------------------------
   let setValue (ctx:Ctx) name value =
@@ -93,8 +92,9 @@ module Identifier =
       | None -> 
         let name = Dlr.const' name
         Expr.blockTmp value (fun value ->
-          [Object.Property.put ctx.Globals name value])
+          [ctx.Globals |> Object.Property.put name value]
+        )
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)
-        Expr.assignValue (Dlr.Ext.static' varExpr) value
+        Expr.assign (Dlr.Ext.static' varExpr) value

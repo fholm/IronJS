@@ -60,12 +60,15 @@ module Hosting =
       Number = baseMap
       Boolean = baseMap
       Regexp = 
-        Api.PropertyMap.buildSubMap baseMap [
-          "source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+        Api.PropertyMap.buildSubMap baseMap
+          ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
     }
+    
+    x.Prototypes <- Prototypes.Empty
 
     let objectPrototype = Native.Object.createPrototype x
-    x.Prototypes <- Prototypes.Empty
+    let errorPrototype = Native.Error.createPrototype x objectPrototype
+
     x.Prototypes <- {
       Object = objectPrototype
       Function = Native.Function.createPrototype x objectPrototype
@@ -75,28 +78,46 @@ module Hosting =
       Boolean = Native.Boolean.createPrototype x objectPrototype
       Date = null
       RegExp = null
-      Error = Native.Error.createPrototype x objectPrototype
+      Error = errorPrototype
 
-      EvalError = null
-      RangeError = null
-      ReferenceError = null
-      SyntaxError = null
-      TypeError = null
-      URIError = null
+      EvalError = Native.Error.createPrototype x errorPrototype
+      RangeError = Native.Error.createPrototype x errorPrototype
+      ReferenceError = Native.Error.createPrototype x errorPrototype
+      SyntaxError = Native.Error.createPrototype x errorPrototype
+      TypeError = Native.Error.createPrototype x errorPrototype
+      URIError = Native.Error.createPrototype x errorPrototype
     }
     
     x.Constructors <- Constructors.Empty
 
     Native.Global.setup x
     Native.Math.setup x
-    Native.Object.setupPrototype x
     Native.Object.setupConstructor x
+    Native.Object.setupPrototype x
     Native.Function.setupConstructor x
     Native.Function.setupPrototype x
+    Native.String.setupConstructor x
+    Native.String.setupPrototype x
+    Native.Boolean.setupConstructor x
+    Native.Boolean.setupPrototype x
+    Native.Number.setupConstructor x
+    Native.Number.setupPrototype x
     Native.Array.setupConstructor x
     Native.Array.setupPrototype x
     Native.Error.setupConstructor x
     Native.Error.setupPrototype x
+    Native.EvalError.setupConstructor x
+    Native.EvalError.setupPrototype x
+    Native.RangeError.setupConstructor x
+    Native.RangeError.setupPrototype x
+    Native.ReferenceError.setupConstructor x
+    Native.ReferenceError.setupPrototype x
+    Native.SyntaxError.setupConstructor x
+    Native.SyntaxError.setupPrototype x
+    Native.TypeError.setupConstructor x
+    Native.TypeError.setupPrototype x
+    Native.URIError.setupConstructor x
+    Native.URIError.setupPrototype x
 
     x
 
@@ -110,14 +131,20 @@ module Hosting =
     member x.CompileFile fileName =
       let tree = Parsers.Ecma3.parseGlobalFile env fileName
       let analyzed = Ast.Analyzers.applyDefault tree None
+
+      #if DEBUG
       Debug.printString (sprintf "%A" analyzed)
+      #endif
 
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
       let tree = Parsers.Ecma3.parseGlobalSource env source
       let analyzed = Ast.Analyzers.applyDefault tree None
+
+      #if DEBUG
       Debug.printString (sprintf "%A" analyzed)
+      #endif
 
       Compiler.Core.compileAsGlobal env analyzed
 

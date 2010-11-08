@@ -73,7 +73,7 @@ module Function =
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
-      (fun x -> Object.Property.get x !!!name |> invokeFunction x args)
+      (fun x -> x |> Object.Property.get !!!name |> invokeFunction x args)
       (fun x -> Expr.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
@@ -142,5 +142,5 @@ module Function =
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
     Dlr.blockSimple [
-      (Expr.assignValue ctx.Env_Return (ctx.Compile tree))
+      (Expr.assign ctx.EnvReturnBox (ctx.Compile tree))
       (Dlr.returnVoid ctx.ReturnLabel)]

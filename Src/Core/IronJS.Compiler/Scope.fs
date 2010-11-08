@@ -11,7 +11,11 @@ module Scope =
   let with' (ctx:Ctx) init tree =
     let object' = Expr.unboxT<IjsObj> (ctx.Compile init)
     let tree = {ctx with InsideWith=true}.Compile tree
-    let pushArgs = [ctx.DynamicScope; object'; Dlr.const' ctx.Scope.GlobalLevel]
+
+    let pushArgs = [
+      ctx.DynamicScope; object'; 
+      Dlr.const' ctx.Scope.GlobalLevel]
+
     Dlr.blockSimple [
       (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
       (tree)
@@ -27,14 +31,14 @@ module Scope =
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
       let i = Option.get var.ParamIndex
-      Expr.assignBoxValue variable ctx.Parameters.[i])  
+      Expr.assign variable ctx.Parameters.[i])  
       
   //--------------------------------------------------------------------------
   let private initNonParams ctx (locals:Ast.LocalIndex seq) =
     locals |> Seq.map (fun var ->
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
-      Expr.assignBoxValue variable Expr.undefined)
+      Expr.assign variable Expr.undefined)
       
   //--------------------------------------------------------------------------
   let private initLocals ctx (locals:Map<string, Ast.Local>) =
@@ -65,7 +69,7 @@ module Scope =
     if ctx.Target.IsEval then Dlr.void'
     else
       match count with
-      | 0 -> Dlr.assign ctx.ClosureScope ctx.Fun_Chain
+      | 0 -> Dlr.assign ctx.ClosureScope ctx.FunctionClosureScope
       | _ -> 
         Dlr.blockSimple [
           (Dlr.assign
@@ -73,16 +77,11 @@ module Scope =
             (Dlr.newArrayBoundsT<IjsBox> (Dlr.const' (count+1))))
           (Dlr.assign
             (Dlr.field (Dlr.index0 ctx.ClosureScope) "Scope")
-            (ctx.Fun_Chain))]
+            (ctx.FunctionClosureScope))]
           
   //--------------------------------------------------------------------------
   let private initDynamicScope (ctx:Ctx) (dynamicLookup) =
-    match ctx.Scope.LookupMode with
-    | Ast.LookupMode.Dynamic
-    | _ when ctx.Target.IsEval ->
-      Dlr.assign ctx.DynamicScope ctx.Fun_DynamicScope
-
-    | _ -> Dlr.void'
+    Dlr.assign ctx.DynamicScope ctx.FunctionDynamicScope
         
   //--------------------------------------------------------------------------
   let private initArguments (ctx:Ctx) (s:Ast.Scope) =
@@ -119,7 +118,7 @@ module Scope =
               (Dlr.const' "callee")
               (ctx.Function)
             )
-            (Expr.assignValue 
+            (Expr.assign 
               (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
               (arguments))
           ] |> Seq.ofList

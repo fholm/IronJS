@@ -333,6 +333,20 @@ and [<AllowNullLiteral>] Object =
     PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
   }
 
+  new (map, prototype, class', indexSparse:MutableSorted<uint32, Box>) = {
+    Class = class'
+    Value = Descriptor()
+    Prototype = prototype
+    Methods = Unchecked.defaultof<InternalMethods>
+
+    IndexLength = indexSparse.Count |> uint32
+    IndexDense = Array.empty
+    IndexSparse = indexSparse
+
+    PropertyMap = map
+    PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
+  }
+
   new () = {
     Class = Classes.Object
     Value = Descriptor()

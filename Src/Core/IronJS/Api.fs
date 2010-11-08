@@ -160,10 +160,17 @@ module Environment =
     o
 
   //----------------------------------------------------------------------------
-  let createArray (env:IjsEnv) size =
+  let createArray (env:IjsEnv) (size:uint32) =
     let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
     o.Methods <- env.Methods.Array
     o.Methods.PutValProperty.Invoke(o, "length", double size)
+    o
+
+  //----------------------------------------------------------------------------
+  let createArraySparse (env:IjsEnv) (sparse:MutableSorted<uint32, Box>) =
+    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, sparse)
+    o.Methods <- env.Methods.Array
+    o.Methods.PutValProperty.Invoke(o, "length", double sparse.Count)
     o
     
   //----------------------------------------------------------------------------
@@ -1739,7 +1746,8 @@ module Object =
     | _ -> Errors.runtime "Invalid hint"
 
   let defaultValue' = Default defaultvalue
-
+  
+  //----------------------------------------------------------------------------
   let collectProperties (o:IjsObj) =
     let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
       if current <> null then
@@ -1760,6 +1768,12 @@ module Object =
         length, set
 
     o |> collectProperties 0u (new MutableSet<IjsStr>())
+    
+  //----------------------------------------------------------------------------
+  let collectIndexValues (o:IjsObj) =
+    if Utils.Object.isDense o 
+      then seq {for i in o.IndexDense do if i.HasValue then yield i.Box}
+      else seq {for i in o.IndexSparse do yield i.Value}
 
   module Reflected = 
 

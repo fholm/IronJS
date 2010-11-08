@@ -84,7 +84,7 @@ module Utils =
   //----------------------------------------------------------------------------
   module Descriptor = 
     let hasValue (desc:Descriptor) =
-      if Box.isTagged desc.Box.Marker then true else desc.HasValue
+      if desc.HasValue then true else Box.isTagged desc.Box.Marker
 
     let missingAttr attrs attr = attrs &&& attr = 0us
     let hasAttr attrs attr = attrs &&& attr > 0us

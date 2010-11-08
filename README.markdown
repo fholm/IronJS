@@ -20,4 +20,4 @@ What you need to use IronJS
 * ~$ cd IronJS\Src\Dependencies
 * ~$ git clone git@github.com:fholm/FSKit.git
 * ~$ cd FSKit
-* ~$ git checkout 0.0.4
+* ~$ git checkout 0.0.5

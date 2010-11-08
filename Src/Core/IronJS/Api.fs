@@ -530,7 +530,7 @@ type Operators =
 
     if Utils.Box.isObject l.Tag |> not 
       then false
-      else r.Func.FunctionMethods.HasInstance.Invoke(r.Func, l.Object)
+      else r.Func.Methods.HasInstance.Invoke(r.Func, l.Object)
     
   //----------------------------------------------------------------------------
   // <

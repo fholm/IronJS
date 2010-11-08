@@ -24,8 +24,13 @@ module Hosting =
       PutValIndex = Api.Object.Index.Delegates.putVal
 
       Default = Api.Object.defaultValue'
+      HasInstance = 
+        new HasInstance(fun l r -> 
+          failwith "Can't call [[HasInstance]] on Objects"
+        )
     }
 
+    let hasInstance l r = Api.Function.hasInstance(l, r)
     x.Methods <- {
       Object = objectMethods
       Array = 
@@ -44,10 +49,11 @@ module Hosting =
           PutValIndex = Api.Arguments.Index.Delegates.putVal
           PutRefIndex = Api.Arguments.Index.Delegates.putRef
         }
-    }
 
-    x.FunctionMethods <- {
-      HasInstance = new HasInstance(fun l r -> Api.Function.hasInstance(l, r))
+      Function = 
+        {objectMethods with
+          HasInstance = new HasInstance(hasInstance)
+        }
     }
 
     let baseMap = PropertyMap(x)

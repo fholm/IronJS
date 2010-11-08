@@ -121,27 +121,18 @@ module Array =
 
       match a with
       | IsDense -> 
-        let length = int a.IndexLength
-        let mutable index = 0
-        let mutable continue' = true
+        if a.IndexDense.[0].HasValue then 
+          value <- a.IndexDense.[0].Box
 
-        while continue' && index < length do
-          if a.IndexDense.[index].HasValue 
-            then value <- a.IndexDense.[index].Box; continue' <- false  
-            else index <- index + 1
-
-        if not continue' then
-          a.IndexDense <- Dlr.ArrayUtils.RemoveAt(a.IndexDense, index)
+        a.IndexDense <- a.IndexDense |> Dlr.ArrayUtils.RemoveFirst
 
       | IsSparse ->
-        let sparse = new MutableSorted<uint32, Box>()
-        let mutable found = false
+        value <- a.IndexSparse.[0u]
+        a.IndexSparse.Remove 0u |> ignore
 
         for kvp in a.IndexSparse do
-          if not found then found <- true; value <- kvp.Value
-          sparse.Add(kvp.Key - 1u, kvp.Value)
-
-        a.IndexSparse <- sparse
+          a.IndexSparse.Remove kvp.Key |> ignore
+          a.IndexSparse.Add(kvp.Key - 1u, kvp.Value)
 
       a.IndexLength <- a.IndexLength - 1u
       a.put("length", double a.IndexLength)

@@ -2,7 +2,10 @@
     <head>
         <title></title>
         <script type="text/javascript">
-            alert("foo".replace("o", 1));
+            var a = [1, 2, 3, 4];
+            delete a[0];
+            a.shift(0);
+            alert(a);
         </script>
     </head>
     <body>

@@ -196,6 +196,7 @@ and Methods = {
   Object : InternalMethods
   Array : InternalMethods
   Arguments : InternalMethods
+  Function : InternalMethods
 }
 
 //------------------------------------------------------------------------------
@@ -290,7 +291,6 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable Methods : Methods
-  [<DefaultValue>] val mutable FunctionMethods : FunctionMethods
   
   member x.Random = rnd
   member x.Compilers = compilers
@@ -372,78 +372,38 @@ and [<AllowNullLiteral>] Object =
     | true, index -> x.setAttrs(index, attrs)
     | _ -> ()
 
-// Property descriptor
-and [<StructuralEquality>] [<NoComparison>] Descriptor =
-  struct
-    val mutable Box : Box
-    val mutable Attributes : uint16 // 8.6.1
-    val mutable HasValue : bool
-  end
-    
 //------------------------------------------------------------------------------
-// 8.6.2
-and [<ReferenceEquality>] InternalMethods = {
-  GetProperty : GetProperty // 8.6.2.1
-  HasProperty : HasProperty // 8.6.2.4
-  DeleteProperty : DeleteProperty // 8.6.2.5
-  PutBoxProperty : PutBoxProperty // 8.6.2.2
-  PutValProperty : PutValProperty // 8.6.2.2
-  PutRefProperty : PutRefProperty // 8.6.2.2
+and [<AllowNullLiteral>] ValueObject = 
+  inherit Object
+
+  val mutable Val : Box
   
-  GetIndex : GetIndex // 8.6.2.1
-  HasIndex : HasIndex // 8.6.2.4
-  DeleteIndex : DeleteIndex // 8.6.2.5
-  PutBoxIndex : PutBoxIndex // 8.6.2.2
-  PutValIndex : PutValIndex // 8.6.2.2
-  PutRefIndex : PutRefIndex // 8.6.2.2
-
-  Default : Default // 8.6.2.6
-}
-
-and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
-and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
-and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
-and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
-and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
-and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
-
-and GetIndex = delegate of IjsObj * uint32 -> IjsBox
-and HasIndex = delegate of IjsObj * uint32 -> IjsBool
-and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
-and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
-and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
-and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
-
-and Default = delegate of IjsObj * byte -> IjsBox
-
-//-------------------------------------------------------------------------
-and [<AllowNullLiteral>] PropertyMap =
-  val mutable Id : MapId
-  val mutable Env : IjsEnv
-  val mutable NextIndex : int
-  val mutable PropertyMap : MutableDict<string, int>
-  val mutable FreeIndexes : MutableStack<int>
-  val mutable SubClasses : MutableDict<string, PropertyMap>
-
-  new(env:IjsEnv, map) = {
-    Id = env.nextPropertyMapId()
-    Env = env
-    PropertyMap = map
-    NextIndex = map.Count
-    SubClasses = MutableDict<string, PropertyMap>() 
-    FreeIndexes = null
+  new (map, prototype, class', value) = {
+    inherit Object(map, prototype, class', 0u)
+    Val = value
   }
+  
+//------------------------------------------------------------------------------
+and [<AllowNullLiteral>] ArrayObject =
+  inherit Object
 
-  new(env:IjsEnv) = {
-    Id = 0L
-    Env = env
-    PropertyMap = new MutableDict<string, int>()
-    NextIndex = 0
-    SubClasses = MutableDict<string, PropertyMap>() 
-    FreeIndexes = null
+  val mutable Length : uint32
+  val mutable Sparse : MutableSorted<uint32, Box>
+  val mutable Dense : Descriptor array
+
+  new (env:IjsEnv, length:uint32) = {
+    inherit Object(env.Maps.Array, env.Prototypes.Array, Classes.Array, length)
+    Length = length
+    Dense = 
+      if length <= Array.MaxSize 
+        then Array.zeroCreate (int length) 
+        else Array.empty
+
+    Sparse = 
+      if length > Array.MaxSize 
+        then MutableSorted<uint32, Box>() 
+        else null
   }
-
-  member x.isDynamic = x.Id < 0L
 
 //------------------------------------------------------------------------------
 // 10.1.8
@@ -486,6 +446,81 @@ and [<AllowNullLiteral>] Arguments =
 
       | _ -> failwith "Que?"
 
+// Property descriptor
+and [<StructuralEquality>] [<NoComparison>] Descriptor =
+  struct
+    val mutable Box : Box
+    val mutable Attributes : uint16 // 8.6.1
+    val mutable HasValue : bool
+  end
+    
+//------------------------------------------------------------------------------
+// 8.6.2
+and [<ReferenceEquality>] InternalMethods = {
+  GetProperty : GetProperty // 8.6.2.1
+  HasProperty : HasProperty // 8.6.2.4
+  DeleteProperty : DeleteProperty // 8.6.2.5
+  PutBoxProperty : PutBoxProperty // 8.6.2.2
+  PutValProperty : PutValProperty // 8.6.2.2
+  PutRefProperty : PutRefProperty // 8.6.2.2
+  
+  GetIndex : GetIndex // 8.6.2.1
+  HasIndex : HasIndex // 8.6.2.4
+  DeleteIndex : DeleteIndex // 8.6.2.5
+  PutBoxIndex : PutBoxIndex // 8.6.2.2
+  PutValIndex : PutValIndex // 8.6.2.2
+  PutRefIndex : PutRefIndex // 8.6.2.2
+
+  Default : Default // 8.6.2.6
+  HasInstance : HasInstance
+}
+
+and GetProperty = delegate of IjsObj * IjsStr -> IjsBox
+and HasProperty = delegate of IjsObj * IjsStr -> IjsBool
+and DeleteProperty = delegate of IjsObj * IjsStr -> IjsBool
+and PutBoxProperty = delegate of IjsObj * IjsStr * IjsBox -> unit
+and PutValProperty = delegate of IjsObj * IjsStr * IjsNum -> unit
+and PutRefProperty = delegate of IjsObj * IjsStr * ClrObject * TypeTag -> unit
+
+and GetIndex = delegate of IjsObj * uint32 -> IjsBox
+and HasIndex = delegate of IjsObj * uint32 -> IjsBool
+and DeleteIndex = delegate of IjsObj * uint32 -> IjsBool
+and PutBoxIndex = delegate of IjsObj * uint32 * IjsBox -> unit
+and PutValIndex = delegate of IjsObj * uint32 * IjsNum -> unit
+and PutRefIndex = delegate of IjsObj * uint32 * ClrObject * TypeTag -> unit
+
+and Default = delegate of IjsObj * byte -> IjsBox
+and HasInstance = delegate of IjsFunc * IjsObj -> IjsBool
+
+//-------------------------------------------------------------------------
+and [<AllowNullLiteral>] PropertyMap =
+  val mutable Id : MapId
+  val mutable Env : IjsEnv
+  val mutable NextIndex : int
+  val mutable PropertyMap : MutableDict<string, int>
+  val mutable FreeIndexes : MutableStack<int>
+  val mutable SubClasses : MutableDict<string, PropertyMap>
+
+  new(env:IjsEnv, map) = {
+    Id = env.nextPropertyMapId()
+    Env = env
+    PropertyMap = map
+    NextIndex = map.Count
+    SubClasses = MutableDict<string, PropertyMap>() 
+    FreeIndexes = null
+  }
+
+  new(env:IjsEnv) = {
+    Id = 0L
+    Env = env
+    PropertyMap = new MutableDict<string, int>()
+    NextIndex = 0
+    SubClasses = MutableDict<string, PropertyMap>() 
+    FreeIndexes = null
+  }
+
+  member x.isDynamic = x.Id < 0L
+
 //------------------------------------------------------------------------------
 // Base class used to represent all functions exposed as native javascript
 // functions to user code.
@@ -496,7 +531,6 @@ and [<AllowNullLiteral>] Function =
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
-  val mutable FunctionMethods : FunctionMethods
 
   val mutable ClosureScope : Scope
   val mutable DynamicScope : DynamicScope
@@ -512,7 +546,6 @@ and [<AllowNullLiteral>] Function =
 
     ClosureScope = closureScope
     DynamicScope = dynamicScope
-    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv, propertyMap) = {
@@ -525,7 +558,6 @@ and [<AllowNullLiteral>] Function =
 
     ClosureScope = null
     DynamicScope = List.empty
-    FunctionMethods = env.FunctionMethods
   }
 
   new (env:IjsEnv) = {
@@ -538,14 +570,7 @@ and [<AllowNullLiteral>] Function =
 
     ClosureScope = null
     DynamicScope = List.empty
-    FunctionMethods = env.FunctionMethods
   }
-
-and FunctionMethods = {
-  HasInstance : HasInstance
-}
-
-and HasInstance = delegate of IjsFunc * IjsObj -> IjsBool
 
 //------------------------------------------------------------------------------
 // Class used to represent a .NET delegate wrapped as a javascript function

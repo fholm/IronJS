@@ -1,0 +1,11 @@
+* Fixed a bug where Array.length would always be the same as the max index 
+  intead of the expected (max index+1)
+* Implemented all Boolean.prototype functions
+* Implemented all Math functions
+
+* Implemented all of the Number constants
+* Implemented some of the Number.prototype functions (toFixed, toExponential 
+  and toPrecision are still missing)
+
+* Implemented all of the String and String.prototype functions, however the 
+  regex versions of .match, .replace and .search are currently not working

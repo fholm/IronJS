@@ -1,0 +1,21 @@
+### Changelog for 0.1.93 ###
+
+* Implemented all NativeError types
+* Cleanup of a lot of old and unused functions 
+* All methods and operations should now honor desriptor attributes (DontDelete,
+  ReadOnly, DontEnum)
+* Replaced all old TypeCode references with TypeTag
+* Implemented [[CanPut]] and [[Put]] now honors it
+* Implemented missing Object.prototype.propertyIsEnumerable
+* Cleaned up setup of Error/NativeError objects
+* Fixed a bug with bit operation (<<, >>, etc.) results getting coerced into 
+  ClrObject instead o IjsNum
+* Fixed a bug where Array.length would always be the same as the max index 
+  intead of the expected (max index+1)
+* Implemented all Boolean.prototype functions
+* Implemented all Math functions
+* Implemented all of the Number constants
+* Implemented all of the Number.prototype functions 
+* Implemented all of the String and String.prototype functions, however the 
+  regex versions of .match, .replace and .search are currently not working
+* Implemented all Array.prototype methods except slice, sort, splice, unshift

@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Global.fs" />
     <Compile Include="Math.fs" />
     <Compile Include="Object.fs" />

@@ -180,6 +180,7 @@ module Environment =
     let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
     o.Methods <- env.Methods.Object
     o.Value.Box.Number <- n
+    o.Value.HasValue <- true
     o
     
   //----------------------------------------------------------------------------

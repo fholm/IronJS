@@ -15,13 +15,12 @@ open FSKit
 
 let ctx = Hosting.Context.Create()
 
-let print = 
-  IronJS.Api.HostFunction.create
-    ctx.Environment (new Action<IronJS.Box>(fun box -> printfn "%s" (Api.TypeConverter.toString(box))))
+let print0 = fun (box:Box) -> printfn "%s" (Api.TypeConverter.toString(box))
+let print1 = new Action<IronJS.Box>(print0)
+let print2 = IronJS.Api.HostFunction.create ctx.Environment print1
+ctx.PutGlobal("print", print2)
 
 Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
-
-ctx.PutGlobal("print", print)
 
 let sw = new System.Diagnostics.Stopwatch();
 sw.Start();

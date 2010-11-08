@@ -27,7 +27,7 @@ module Error =
       ctor.ConstructorMode <- ConstructorModes.Host
       ctor.put("prototype", proto, Immutable)
 
-      env.Globals.put(name, ctor)
+      if name = "Error" then env.Globals.put(name, ctor)
       env.Constructors <- update env.Constructors ctor
 
     let setupPrototype (n:IjsStr) (ctor:IjsFunc) (proto:IjsObj) =

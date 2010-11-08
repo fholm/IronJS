@@ -96,6 +96,12 @@ module Hosting =
     Native.Object.setupPrototype x
     Native.Function.setupConstructor x
     Native.Function.setupPrototype x
+    Native.String.setupConstructor x
+    Native.String.setupPrototype x
+    Native.Boolean.setupConstructor x
+    Native.Boolean.setupPrototype x
+    Native.Number.setupConstructor x
+    Native.Number.setupPrototype x
     Native.Array.setupConstructor x
     Native.Array.setupPrototype x
     Native.Error.setupConstructor x

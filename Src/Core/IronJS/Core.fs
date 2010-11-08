@@ -279,7 +279,8 @@ and Constructors = {
 and [<AllowNullLiteral>] Environment() =
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0L
-
+  
+  let rnd = new System.Random()
   let compilers = new MutableDict<FunctionId, FunctionCompiler>()
   let functionStrings = new MutableDict<FunctionId, IjsStr>()
 
@@ -290,7 +291,8 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Globals : Object
   [<DefaultValue>] val mutable Methods : Methods
   [<DefaultValue>] val mutable FunctionMethods : FunctionMethods
-
+  
+  member x.Random = rnd
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
   

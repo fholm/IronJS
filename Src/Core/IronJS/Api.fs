@@ -420,22 +420,23 @@ type TypeConverter =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
       
   //----------------------------------------------------------------------------
-  static member toInt32 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0 else int d
+  static member toInt32 (d:IjsNum) = d |> uint32 |> int
+  static member toInt32 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toInt32
 
-  static member toUInt32 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0u else uint32 d
+  static member toUInt32 (d:IjsNum) = d |> uint32 
+  static member toUInt32 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toUInt32
 
-  static member toUInt16 (d:IjsNum) = 
-    if d <> d || Double.IsInfinity d then 0us else uint16 d
+  static member toUInt16 (d:IjsNum) = d |> uint32 |> uint16
+  static member toUInt16 (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toUInt16
 
-  static member toInteger (d:IjsNum) : double = 
-    if d = NaN
-      then 0.0
-      elif d = 0.0 || Double.IsInfinity d
-        then d
-        else double (Math.Sign d) * Math.Floor(Math.Abs d)
-                
+  static member toInteger (d:IjsNum) = 
+    if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
+  static member toInteger (b:IjsBox) =
+    b |> TypeConverter.toNumber |> TypeConverter.toInteger
+
   //-------------------------------------------------------------------------
   static member convertTo (env:Dlr.Expr) (expr:Dlr.Expr) (t:System.Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
@@ -1110,7 +1111,9 @@ module HostFunction =
   let marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
     if i < args.Length 
       then TypeConverter.convertTo env args.[i] t
-      else Dlr.default' t
+      else
+        if FSKit.Utils.isTypeT<IjsBox> t
+          then Expr.BoxedConstants.undefined else Dlr.default' t
       
   //----------------------------------------------------------------------------
   let marshalBoxParams (f:IjsHostFunc<_>) args m =
@@ -1376,8 +1379,10 @@ module Object =
     //--------------------------------------------------------------------------
     let updateLength (o:IjsObj) (i:uint32) =
       if i > o.IndexLength then
-        o.IndexLength <- i+1u
-        if o.Class = Classes.Array then
+        let i = i+1u
+        o.IndexLength <- i
+
+        if o.Class = Classes.Array then 
           Property.putVal o "length" (double i)
 
     //--------------------------------------------------------------------------

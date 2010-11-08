@@ -18,6 +18,18 @@ module Number =
     this |> Utils.mustBe Classes.Number valueOf.Env
     this.Value.Box
 
+  let private toString (toString:IjsFunc) (this:IjsObj) (radix:IjsNum) =
+    this |> Utils.mustBe Classes.Number toString.Env
+    let number = this.Value.Box.Number
+    match radix with
+    | 0.0 | 10.0 -> Api.TypeConverter.toString(number)
+    | 2.0 -> Convert.ToString(int64 number, 2)
+    | 8.0 -> Convert.ToString(int64 number, 8)
+    | 16.0 -> Convert.ToString(int64 number, 16)
+    | _ -> "Invalid radix"
+
+  let private toLocaleString (f:IjsFunc) (this:IjsObj) = toString f this 10.0
+
   let createPrototype (env:IjsEnv) objPrototype =
     let prototype = Api.Environment.createObject env
     prototype.Class <- Classes.Number
@@ -46,6 +58,17 @@ module Number =
 
     proto.put("constructor", env.Constructors.Number, DontEnum)
 
+    let toString = new Func<IjsFunc, IjsObj, IjsNum, IjsStr>(toString)
+    let toString = Api.HostFunction.create env toString
+    proto.put("toString", toString, DontEnum)
+
+    let toLocaleString = new Func<IjsFunc, IjsObj, IjsStr>(toLocaleString)
+    let toLocaleString = Api.HostFunction.create env toLocaleString
+    proto.put("toLocaleString", toLocaleString, DontEnum)
+
     let valueOf = new Func<IjsFunc, IjsObj, IjsBox>(valueOf)
     let valueOf = Api.HostFunction.create env valueOf
     proto.put("valueOf", valueOf, DontEnum)
+
+
+    

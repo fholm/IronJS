@@ -22,6 +22,7 @@ module String =
       buffer.Append(Api.TypeConverter.toUInt16 args.[i] |> char) |> ignore
 
     buffer.ToString()
+
     
   //----------------------------------------------------------------------------
   let internal toString (func:IjsFunc) (this:IjsObj) =

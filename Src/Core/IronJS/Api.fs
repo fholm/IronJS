@@ -149,58 +149,59 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createObject (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object, 0u)
+    let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object)
     o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createObjectWithMap (env:IjsEnv) map =
-    let o = IjsObj(map, env.Prototypes.Object, Classes.Object, 0u)
+    let o = IjsObj(map, env.Prototypes.Object, Classes.Object)
     o.Methods <- env.Methods.Object
     o
 
   //----------------------------------------------------------------------------
   let createArray (env:IjsEnv) (size:uint32) =
-    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, size)
+    let o = ArrayObject(env, size)
     o.Methods <- env.Methods.Array
     o.Methods.PutValProperty.Invoke(o, "length", double size)
-    o
-
-  //----------------------------------------------------------------------------
-  let createArraySparse (env:IjsEnv) (sparse:MutableSorted<uint32, Box>) =
-    let o = IjsObj(env.Maps.Array, env.Prototypes.Array, Classes.Array, sparse)
-    o.Methods <- env.Methods.Array
-    o.Methods.PutValProperty.Invoke(o, "length", double sparse.Count)
-    o
+    o :> IjsObj
     
   //----------------------------------------------------------------------------
   let createString (env:IjsEnv) (s:IjsStr) =
-    let o = IjsObj(env.Maps.String, env.Prototypes.String, Classes.String, 0u)
+    let map = env.Maps.String
+    let proto = env.Prototypes.String
+    let o = ValueObject(map, proto, Classes.String)
     o.Methods <- env.Methods.Object
     o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
     o.Value.Box.Clr <-s
     o.Value.Box.Tag <- TypeTags.String
-    o
+    o.Value.HasValue <- true
+    o :> IjsObj
     
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
-    let o = IjsObj(env.Maps.Number, env.Prototypes.Number, Classes.Number, 0u)
+    let map = env.Maps.Number
+    let proto = env.Prototypes.Number
+    let o = ValueObject(map, proto, Classes.Number)
     o.Methods <- env.Methods.Object
     o.Value.Box.Number <- n
     o.Value.HasValue <- true
-    o
+    o :> IjsObj
     
   //----------------------------------------------------------------------------
   let createBoolean (env:IjsEnv) b =
-    let o = IjsObj(env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean, 0u)
+    let map = env.Maps.Boolean
+    let proto = env.Prototypes.Boolean
+    let o = ValueObject(map, proto, Classes.Boolean)
     o.Methods <- env.Methods.Object
     o.Value.Box.Bool <- b
     o.Value.Box.Tag <- TypeTags.Bool
-    o
+    o.Value.HasValue <- true
+    o :> IjsObj
   
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object, 0u)
+    let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object)
     o.Methods <- env.Methods.Object
     o
   
@@ -221,7 +222,7 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createError (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error, 0u)
+    let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error)
     o.Methods <- env.Methods.Object
     o
 
@@ -316,14 +317,16 @@ type TypeConverter =
     | Function -> TypeConverter.toString (b.Func :> IjsObj)
 
   static member toString (o:IjsObj) = 
-    let mutable v = o.Methods.Default.Invoke(o, DefaultValue.String)
-    TypeConverter.toString(v)
+    match o.Class with
+    | Classes.String -> (o :?> ValueObject).Value.Box.String
+    | _ -> 
+      o.Methods.Default.Invoke(o, DefaultValue.String)|>TypeConverter.toString
 
   static member toString (d:IjsNum) = 
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
 
   static member toString (c:ClrObject) = 
-    if c = null then "null" else c.ToString()
+    if FSKit.Utils.isNull c then "null" else c.ToString()
 
   static member toString (expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toString" [expr]
@@ -332,7 +335,6 @@ type TypeConverter =
   static member toPrimitive (b:IjsBool, _:byte) = Utils.boxBool b
   static member toPrimitive (d:IjsNum, _:byte) = Utils.boxNumber d
   static member toPrimitive (s:IjsStr, _:byte) = Utils.boxString s
-  static member toPrimitive (u:Undefined, _:byte) = Utils.BoxedConstants.undefined
   static member toPrimitive (o:IjsObj, h:byte) = o.Methods.Default.Invoke(o, h)
   static member toPrimitive (o:IjsObj) = o.Methods.Default.Invoke(o, 0uy)
   static member toPrimitive (b:IjsBox, h:byte) =
@@ -347,6 +349,9 @@ type TypeConverter =
   
   static member toPrimitive (c:ClrObject, _:byte) = 
     Utils.boxClr (if c = null then null else c.ToString())
+
+  static member toPrimitive (u:Undefined, _:byte) = 
+    Utils.BoxedConstants.undefined
 
   static member toPrimitive (expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toPrimitive" [expr]
@@ -373,13 +378,6 @@ type TypeConverter =
 
   //----------------------------------------------------------------------------
   static member toNumber (b:IjsBool) : double = if b then 1.0 else 0.0
-  static member toNumber (d:IjsNum) = 
-    if d = TaggedBools.True
-      then 1.0
-      elif d = TaggedBools.False
-        then 0.0
-        else d
-
   static member toNumber (c:ClrObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = IjsNum.NaN
   static member toNumber (b:IjsBox) =
@@ -395,11 +393,12 @@ type TypeConverter =
   static member toNumber (o:IjsObj) : IjsNum = 
     TypeConverter.toNumber(o.Methods.Default.Invoke(o, DefaultValue.Number))
 
+  static member toNumber (d:IjsNum) = 
+    if d = TaggedBools.True then 1.0 elif d = TaggedBools.False then 0.0 else d
+
   static member toNumber (s:IjsStr) = 
     let mutable d = 0.0
-    if Double.TryParse(s, anyNumber, invariantCulture, &d) 
-      then d
-      else NaN
+    if Double.TryParse(s, anyNumber, invariantCulture, &d) then d else NaN
 
   static member toNumber (expr:Dlr.Expr) = 
     Dlr.callStaticT<TypeConverter> "toNumber" [expr]
@@ -1358,173 +1357,24 @@ module Object =
   //----------------------------------------------------------------------------
   module Index =
   
-    open Extensions
-    open Utils.Patterns
-  
     //--------------------------------------------------------------------------
-    let initSparse (o:IjsObj) =
-      o.IndexSparse <- new MutableSorted<uint32, Box>()
-
-      for i = 0 to int (o.IndexLength-1u) do
-        if Utils.Descriptor.hasValue o.IndexDense.[i] then
-          o.IndexSparse.Add(uint32 i, o.IndexDense.[i].Box)
-
-      o.IndexDense <- null
-      
-    //--------------------------------------------------------------------------
-    let expandStorage (o:IjsObj) i =
-      if o.IndexSparse = null || o.IndexDense.Length <= i then
-        let size = if i >= 1073741823 then 2147483647 else ((i+1) * 2)
-        let values = o.IndexDense
-        let newValues = Array.zeroCreate size
-
-        if values <> null && values.Length > 0 then
-          Array.Copy(values, newValues, values.Length)
-
-        o.IndexDense <- newValues
-        
-    //--------------------------------------------------------------------------
-    let updateLength (o:IjsObj) (i:uint32) =
-      if i > o.IndexLength then
-        let i = i+1u
-        o.IndexLength <- i
-
-        if o.Class = Classes.Array then 
-          Property.putVal o "length" (double i)
+    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) = Property.putBox o (string i) v
 
     //--------------------------------------------------------------------------
-    let find (o:IjsObj) (i:uint32) =
-      let rec find o (i:uint32) =
-        if FSKit.Utils.isNull o then (null, 0u, false)
-        else 
-          if Utils.Object.isDense o then
-            let ii = int i
-            if ii < o.IndexDense.Length then
-              if Utils.Descriptor.hasValue o.IndexDense.[ii] 
-                then (o, i, true)
-                else find o.Prototype i
-            else find o.Prototype i
-          else
-            if o.IndexSparse.ContainsKey i 
-              then (o, i, false)
-              else find o.Prototype i
-
-      find o i
-      
-    //--------------------------------------------------------------------------
-    let hasIndex (o:IjsObj) (i:uint32) =
-      if Utils.Object.isDense o then
-        let ii = int i
-        if ii < o.IndexDense.Length 
-          then Utils.Descriptor.hasValue o.IndexDense.[ii]
-          else false
-      else
-        o.IndexSparse.ContainsKey i
+    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) = Property.putVal o (string i) v
 
     //--------------------------------------------------------------------------
-    #if DEBUG
-    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
-    #else
-    let inline putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
-    #endif
-      if i > Array.MaxIndex then initSparse o
-      if Utils.Object.isDense o then
-        if i > 255u && i/2u > o.IndexLength then
-          initSparse o
-          o.IndexSparse.[i] <- v
-
-        else
-          let i = int i
-          if i >= o.IndexDense.Length then expandStorage o i
-          o.IndexDense.[i].Box <- v
-          o.IndexDense.[i].HasValue <- true
-
-      else
-        o.IndexSparse.[i] <- v
-
-      updateLength o i
-
+    let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tag:TypeTag) =
+      Property.putRef o (string i) v tag
 
     //--------------------------------------------------------------------------
-    #if DEBUG
-    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
-    #else
-    let inline putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
-    #endif
-      if i > Array.MaxIndex then initSparse o
-      if Utils.Object.isDense o then
-        if i > 255u && i/2u > o.IndexLength then
-          initSparse o
-          o.IndexSparse.[i] <- Utils.boxVal v
-
-        else
-          let i = int i
-          if i >= o.IndexDense.Length then expandStorage o i
-          o.IndexDense.[i].Box.Number <- v
-          o.IndexDense.[i].HasValue <- true
-
-      else
-        o.IndexSparse.[i] <- Utils.boxVal v
-
-      updateLength o i
-
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
-    #else
-    let inline putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
-    #endif
-      if i > Array.MaxIndex then initSparse o
-      if Utils.Object.isDense o then
-        if i > 255u && i/2u > o.IndexLength then
-          initSparse o
-          o.IndexSparse.[i] <- Utils.boxRef v tc
-
-        else
-          let i = int i
-          if i >= o.IndexDense.Length then expandStorage o i
-          o.IndexDense.[i].Box.Clr <- v
-          o.IndexDense.[i].Box.Tag <- tc
-          o.IndexDense.[i].HasValue <- true
-
-      else
-        o.IndexSparse.[i] <- Utils.boxRef v tc
-
-      updateLength o i
-
-    //--------------------------------------------------------------------------
-    #if DEBUG
-    let get (o:IjsObj) (i:uint32) =
-    #else
-    let inline get (o:IjsObj) (i:uint32) =
-    #endif
-      match find o i with
-      | null, _, _ -> Utils.BoxedConstants.undefined
-      | o, index, isDense ->
-        if isDense 
-          then o.IndexDense.[int index].Box
-          else o.IndexSparse.[index]
+    let inline get (o:IjsObj) (i:uint32) = Property.get o (string i)
           
     //--------------------------------------------------------------------------
-    let has (o:IjsObj) (i:uint32) =
-      match find o i with
-      | null, _, _ -> false
-      | _ -> true
+    let has (o:IjsObj) (i:uint32) = Property.has o (string i)
 
     //--------------------------------------------------------------------------
-    let delete (o:IjsObj) (i:uint32) =
-      match find o i with
-      | null, _, _ -> true
-      | o2, index, isDense ->
-        if FSKit.Utils.refEq o o2 then
-          if isDense then 
-            o.IndexDense.[int i].Box <- Box()
-            o.IndexDense.[int i].HasValue <- false
-          else 
-            o.IndexSparse.Remove i |> ignore
-
-          true
-        else false
+    let delete (o:IjsObj) (i:uint32) = Property.delete o (string i)
         
     //--------------------------------------------------------------------------
     module Delegates =
@@ -1751,9 +1601,13 @@ module Object =
   let collectProperties (o:IjsObj) =
     let rec collectProperties length (set:MutableSet<IjsStr>) (current:IjsObj) =
       if current <> null then
-        let length = 
-          if length < current.IndexLength 
-            then current.IndexLength else length
+        let length =
+          if current :? IjsArray then
+            let array = current :?> IjsArray
+            if length < array.Length then array.Length else length
+
+          else 
+            length
 
         let keys = current.PropertyMap.PropertyMap
         for pair in keys do
@@ -1768,12 +1622,6 @@ module Object =
         length, set
 
     o |> collectProperties 0u (new MutableSet<IjsStr>())
-    
-  //----------------------------------------------------------------------------
-  let collectIndexValues (o:IjsObj) =
-    if Utils.Object.isDense o 
-      then seq {for i in o.IndexDense do if i.HasValue then yield i.Box}
-      else seq {for i in o.IndexSparse do yield i.Value}
 
   module Reflected = 
 
@@ -1785,22 +1633,23 @@ module Array =
   module Property =
 
     let private updateLength (o:IjsObj) (number:IjsNum) =
+      let o = o :?> IjsArray
       let length = number |> TypeConverter.toUInt32
 
       if double length <> number then
         failwith "[[RangeError]]"
         
-      while length < o.IndexLength do
-        if Utils.Object.isDense o then
-          let i = int (o.IndexLength-1u)
-          o.IndexDense.[i].Box <- Box()
-          o.IndexDense.[i].Attributes <- 0us
-          o.IndexDense.[i].HasValue <- false
+      while length < o.Length do
+        if Utils.Array.isDense o then
+          let i = int (o.Length-1u)
+          o.Dense.[i].Box <- Box()
+          o.Dense.[i].Attributes <- 0us
+          o.Dense.[i].HasValue <- false
 
         else
-          o.IndexSparse.Remove (o.IndexLength-1u) |> ignore
+          o.Sparse.Remove (o.Length-1u) |> ignore
 
-        o.IndexLength <- o.IndexLength - 1u
+        o.Length <- o.Length - 1u
 
       Object.Property.putVal o "length" number
 
@@ -1825,6 +1674,189 @@ module Array =
       let putVal = PutValProperty putVal
       let putRef = PutRefProperty putRef
 
+  //----------------------------------------------------------------------------
+  module Index =
+  
+    open Utils.Patterns
+  
+    //--------------------------------------------------------------------------
+    let initSparse (o:IjsArray) =
+      o.Sparse <- new MutableSorted<uint32, Box>()
+
+      for i = 0 to int (o.Length-1u) do
+        if Utils.Descriptor.hasValue o.Dense.[i] then
+          o.Sparse.Add(uint32 i, o.Dense.[i].Box)
+
+      o.Dense <- null
+      
+    //--------------------------------------------------------------------------
+    let expandStorage (o:IjsArray) i =
+      if o.Sparse = null || o.Dense.Length <= i then
+        let size = if i >= 1073741823 then 2147483647 else ((i+1) * 2)
+        let values = o.Dense
+        let newValues = Array.zeroCreate size
+
+        if values <> null && values.Length > 0 then
+          Array.Copy(values, newValues, values.Length)
+
+        o.Dense <- newValues
+        
+    //--------------------------------------------------------------------------
+    let updateLength (o:IjsArray) (i:uint32) =
+      if i > o.Length then
+        let i = i+1u
+        o.Length <- i
+
+        if o.Class = Classes.Array then 
+          Property.putVal o "length" (double i)
+
+    //--------------------------------------------------------------------------
+    let find (o:IjsArray) (i:uint32) =
+      let rec find (o:IjsArray) (i:uint32) =
+        if FSKit.Utils.isNull o then (null, 0u, false)
+        else 
+          if Utils.Array.isDense o then
+            let ii = int i
+            if ii < o.Dense.Length then
+              if Utils.Descriptor.hasValue o.Dense.[ii] 
+                then (o, i, true)
+                else (null, 0u, false)
+            else (null, 0u, false)
+          else
+            if o.Sparse.ContainsKey i 
+              then (o, i, false)
+              else (null, 0u, false)
+
+      find o i
+      
+    //--------------------------------------------------------------------------
+    let hasIndex (o:IjsArray) (i:uint32) =
+      if Utils.Array.isDense o then
+        let ii = int i
+        if ii < o.Dense.Length 
+          then Utils.Descriptor.hasValue o.Dense.[ii]
+          else false
+      else
+        o.Sparse.ContainsKey i
+
+    //--------------------------------------------------------------------------
+    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) =
+      let o = o :?> IjsArray
+
+      if i > Array.MaxIndex then initSparse o
+      if Utils.Array.isDense o then
+        if i > 255u && i/2u > o.Length then
+          initSparse o
+          o.Sparse.[i] <- v
+
+        else
+          let i = int i
+          if i >= o.Dense.Length then expandStorage o i
+          o.Dense.[i].Box <- v
+          o.Dense.[i].HasValue <- true
+
+      else
+        o.Sparse.[i] <- v
+
+      updateLength o i
+
+
+    //--------------------------------------------------------------------------
+    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
+      let o = o :?> IjsArray
+
+      if i > Array.MaxIndex then initSparse o
+      if Utils.Array.isDense o then
+        if i > 255u && i/2u > o.Length then
+          initSparse o
+          o.Sparse.[i] <- Utils.boxVal v
+
+        else
+          let i = int i
+          if i >= o.Dense.Length then expandStorage o i
+          o.Dense.[i].Box.Number <- v
+          o.Dense.[i].HasValue <- true
+
+      else
+        o.Sparse.[i] <- Utils.boxVal v
+
+      updateLength o i
+
+    //--------------------------------------------------------------------------
+    let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tc:TypeTag) =
+      let o = o :?> IjsArray
+
+      if i > Array.MaxIndex then initSparse o
+      if Utils.Array.isDense o then
+        if i > 255u && i/2u > o.Length then
+          initSparse o
+          o.Sparse.[i] <- Utils.boxRef v tc
+
+        else
+          let i = int i
+          if i >= o.Dense.Length then expandStorage o i
+          o.Dense.[i].Box.Clr <- v
+          o.Dense.[i].Box.Tag <- tc
+          o.Dense.[i].HasValue <- true
+
+      else
+        o.Sparse.[i] <- Utils.boxRef v tc
+
+      updateLength o i
+
+    //--------------------------------------------------------------------------
+    let get (o:IjsObj) (i:uint32) =
+      let o = o :?> IjsArray
+
+      match find o i with
+      | null, _, _ -> Utils.BoxedConstants.undefined
+      | o, index, isDense ->
+        if isDense 
+          then o.Dense.[int index].Box
+          else o.Sparse.[index]
+          
+    //--------------------------------------------------------------------------
+    let has (o:IjsObj) (i:uint32) =
+      let o = o :?> IjsArray
+
+      match find o i with
+      | null, _, _ -> false
+      | _ -> true
+
+    //--------------------------------------------------------------------------
+    let delete (o:IjsObj) (i:uint32) =
+      let o = o :?> IjsArray
+
+      match find o i with
+      | null, _, _ -> true
+      | o2, index, isDense ->
+        if FSKit.Utils.refEq o o2 then
+          if isDense then 
+            o.Dense.[int i].Box <- Box()
+            o.Dense.[int i].HasValue <- false
+          else
+            o.Sparse.Remove i |> ignore
+
+          true
+        else false
+        
+    //--------------------------------------------------------------------------
+    module Delegates =
+      let putBox = PutBoxIndex putBox
+      let putVal = PutValIndex putVal
+      let putRef = PutRefIndex putRef
+      let get = GetIndex get
+      let has = HasIndex has
+      let delete = DeleteIndex delete
+
+  //----------------------------------------------------------------------------
+  let collectIndexValues (o:IjsObj) =
+    let o = o :?> IjsArray
+
+    if Utils.Array.isDense o 
+      then seq {for i in o.Dense do if i.HasValue then yield i.Box}
+      else seq {for i in o.Sparse do yield i.Value}
+
 module Arguments =
 
   module Index =
@@ -1840,7 +1872,7 @@ module Arguments =
         | ArgumentsLinkArray.ClosedOver, index -> a.ClosedOver.[index] <- v
         | _ -> failwith "Que?"
 
-      Object.Index.putBox o i v
+      Array.Index.putBox o i v
   
     //--------------------------------------------------------------------------
     let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
@@ -1854,7 +1886,7 @@ module Arguments =
           a.ClosedOver.[index].Number <- v
         | _ -> failwith "Que?"
 
-      Object.Index.putVal o i v
+      Array.Index.putVal o i v
 
     //--------------------------------------------------------------------------
     let putRef (o:IjsObj) (i:uint32) (v:IjsRef) (tag:TypeTag) =
@@ -1873,7 +1905,7 @@ module Arguments =
 
         | _ -> failwith "Que?"
 
-      Object.Index.putRef o i v tag
+      Array.Index.putRef o i v tag
     
     //--------------------------------------------------------------------------
     let get (o:IjsObj) (i:uint32) =
@@ -1887,7 +1919,7 @@ module Arguments =
         | _ -> failwith "Que?"
 
       else
-        Object.Index.get o i
+        Array.Index.get o i
         
     //--------------------------------------------------------------------------
     let has (o:IjsObj) (i:uint32) =
@@ -1896,7 +1928,7 @@ module Arguments =
 
       if a.LinkIntact && ii < a.LinkMap.Length 
         then true
-        else Object.Index.has o i
+        else Array.Index.has o i
         
     //--------------------------------------------------------------------------
     let delete (o:IjsObj) (i:uint32) =
@@ -1909,7 +1941,7 @@ module Arguments =
         a.Locals <- null
         a.ClosedOver <- null
 
-      Object.Index.delete o i
+      Array.Index.delete o i
         
     //--------------------------------------------------------------------------
     module Delegates =

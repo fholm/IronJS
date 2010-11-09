@@ -15,16 +15,14 @@ module Boolean =
 
   let private valueOf (valueOf:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.Boolean valueOf.Env
-    this.Value.Box
+    (this :?> ValueObject).Value.Box
 
   let private toString (toString:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.Boolean toString.Env
-    if this.Value.Box.Bool then "true" else "false"
+    if (this :?> ValueObject).Value.Box.Bool then "true" else "false"
 
   let createPrototype (env:IjsEnv) objPrototype =
-    let prototype = Api.Environment.createObject env
-    prototype.Class <- Classes.Boolean
-    prototype.Value.Box.Number <- TaggedBools.False
+    let prototype = Api.Environment.createBoolean env false
     prototype.Prototype <- objPrototype
     prototype
 

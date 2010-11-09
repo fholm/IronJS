@@ -92,11 +92,11 @@ module Utils =
     let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
     let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
     let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
-     
+
   //----------------------------------------------------------------------------
-  module Object =
-    let isDense (x:IjsObj) = FSKit.Utils.isNull x.IndexSparse
-    let isSparse (x:IjsObj) = isDense x |> not // isDense? ... pause ... NOT!
+  module Array =
+    let isDense (x:IjsArray) = FSKit.Utils.isNull x.Sparse
+    let isSparse (x:IjsArray) = isDense x |> not // isDense? ... pause ... NOT!
     
   //----------------------------------------------------------------------------
   module Patterns =

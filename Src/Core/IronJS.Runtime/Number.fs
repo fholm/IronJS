@@ -24,7 +24,7 @@ module Number =
 
   let internal toString (f:IjsFunc) (this:IjsObj) (radix:IjsNum) =
     this |> Utils.mustBe Classes.Number f.Env
-    let number = this.Value.Box.Number
+    let number = (this :?> ValueObject).Value.Box.Number
 
     if FSKit.Utils.isNaNOrInf number then nanToString number
     else
@@ -42,7 +42,7 @@ module Number =
   //----------------------------------------------------------------------------
   let internal valueOf (f:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.Number f.Env
-    this.Value.Box
+    (this :?> ValueObject).Value.Box
 
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
@@ -53,7 +53,7 @@ module Number =
   let internal toFixed (f:IjsFunc) (this:IjsObj) (fractions:IjsNum) =
     this |> Utils.mustBe Classes.Number f.Env
 
-    let number = this.Value.Box.Number
+    let number = (this :?> ValueObject).Value.Box.Number
     let fractions = fractions |> Api.TypeConverter.toInt32
 
     if number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -67,7 +67,7 @@ module Number =
     this |> Utils.mustBe Classes.Number f.Env
     
     let tag = fractions.Tag
-    let number = this.Value.Box.Number
+    let number = (this :?> ValueObject).Value.Box.Number
 
     if tag |> Utils.Box.isUndefined then toString f this 10.0
     elif number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -86,7 +86,7 @@ module Number =
     this |> Utils.mustBe Classes.Number f.Env
     
     let tag = precision.Tag
-    let number = this.Value.Box.Number
+    let number = (this :?> ValueObject).Value.Box.Number
 
     if tag |> Utils.Box.isUndefined then toString f this 10.0
     elif number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -108,10 +108,8 @@ module Number =
       
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) objPrototype =
-    let prototype = Api.Environment.createObject env
+    let prototype = Api.Environment.createNumber env 0.0
     prototype.Class <- Classes.Number
-    prototype.Value.Box.Number <- 0.0
-    prototype.Value.HasValue <- true
     prototype.Prototype <- objPrototype
     prototype
     

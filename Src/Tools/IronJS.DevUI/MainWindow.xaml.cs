@@ -131,8 +131,11 @@ namespace IronJS.DevUI {
                           kvp.Key, obj.PropertyDescriptors[kvp.Value].Box));
                 }
 
-                for (var i = 0u; i < obj.IndexLength; ++i) {
-                    items.Add(RenderIronJSValue("[" + i + "]", obj.Methods.GetIndex(obj, i)));
+                if (obj is ArrayObject) {
+                    var arr = obj as ArrayObject;
+                    for (var i = 0u; i < arr.Length; ++i) {
+                        items.Add(RenderIronJSValue("[" + i + "]", arr.Methods.GetIndex(obj, i)));
+                    }
                 }
             }
 
@@ -189,8 +192,10 @@ namespace IronJS.DevUI {
                                 item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
                             }
 
-                            if (IronJS.Utils.Descriptor.hasValue(box.Object.Value)) {
-                                item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value.Box));
+                            if (box.Object is IronJS.ValueObject) {
+                                if (IronJS.Utils.Descriptor.hasValue((box.Object as ValueObject).Value)) {
+                                    item.Items.Add(RenderIronJSValue("[[Value]]", (box.Object as ValueObject).Value.Box));
+                                }
                             }
 
                             foreach (var child in RenderIronJSPropertyValues(box.Object, false)) {

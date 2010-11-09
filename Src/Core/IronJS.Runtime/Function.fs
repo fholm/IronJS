@@ -53,11 +53,13 @@ module Function =
       match args with
       | IsArrayOrArguments -> 
 
+        let args = args :?> IjsArray
+        
         let getIndex i =
           args.Methods.GetIndex.Invoke(args, uint32 i)
 
         let args =
-          Seq.init (int args.IndexLength) getIndex
+          Seq.init (int args.Length) getIndex
           |> Seq.cast<obj>
           |> Array.ofSeq
 

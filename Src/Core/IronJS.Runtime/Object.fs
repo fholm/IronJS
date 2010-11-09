@@ -36,10 +36,15 @@ module Object =
     match Api.Object.Property.getIndex o name with
     | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
     | _ ->
-      let mutable i = Array.MinIndex
-      if Utils.isStringIndex(name, &i) 
-        then Api.Object.Index.hasIndex o i
-        else false
+      if o :? IjsArray then
+      
+        let mutable i = Array.MinIndex
+        if Utils.isStringIndex(name, &i) 
+          then Api.Array.Index.hasIndex (o :?> IjsArray) i
+          else false
+
+      else
+        false
 
   //----------------------------------------------------------------------------
   //15.2.4.6
@@ -48,19 +53,24 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4.7
   let propertyIsEnumerable (o:IjsObj) (name:IjsStr) =
-    let mutable i = Array.MinIndex
-    if Utils.isStringIndex(name, &i) then i < o.IndexLength
-    else 
-      match Api.Object.Property.find o name with
-      | _, -1 -> false
-      | o, index -> 
-        let attrs = o.PropertyDescriptors.[index].Attributes
-        Utils.Descriptor.isEnumerable attrs
+    match Api.Object.Property.find o name with
+    | _, -1 -> 
+        
+      let mutable i = Array.MinIndex
+      if Utils.isStringIndex(name, &i) then 
+        if o :? IjsArray 
+          then i < (o :?> IjsArray).Length
+          else false
+      else false
+
+    | o, index -> 
+      let attrs = o.PropertyDescriptors.[index].Attributes
+      Utils.Descriptor.isEnumerable attrs
       
   //----------------------------------------------------------------------------
   //15.2.4
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, null, Classes.Object, 0u)
+    let o = IjsObj(env.Maps.Base, null, Classes.Object)
     o.Methods <- env.Methods.Object
     o
     

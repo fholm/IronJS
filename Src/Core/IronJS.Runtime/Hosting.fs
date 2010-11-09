@@ -24,10 +24,7 @@ module Hosting =
       PutValIndex = Api.Object.Index.Delegates.putVal
 
       Default = Api.Object.defaultValue'
-      HasInstance = 
-        new HasInstance(fun l r -> 
-          failwith "Can't call [[HasInstance]] on Objects"
-        )
+      HasInstance = null
     }
 
     let hasInstance l r = Api.Function.hasInstance(l, r)
@@ -38,6 +35,13 @@ module Hosting =
           PutBoxProperty = Api.Array.Property.Delegates.putBox
           PutRefProperty = Api.Array.Property.Delegates.putRef
           PutValProperty = Api.Array.Property.Delegates.putVal
+
+          GetIndex = Api.Array.Index.Delegates.get
+          HasIndex = Api.Array.Index.Delegates.has
+          DeleteIndex = Api.Array.Index.Delegates.delete
+          PutBoxIndex = Api.Array.Index.Delegates.putBox
+          PutRefIndex = Api.Array.Index.Delegates.putRef
+          PutValIndex = Api.Array.Index.Delegates.putVal
         }
 
       Arguments = 

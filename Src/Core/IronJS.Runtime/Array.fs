@@ -10,8 +10,13 @@ open IronJS.DescriptorAttrs
 // 15.4
 module Array =
 
-  let private (|IsDense|IsSparse|) (array:IjsObj) = 
-    if Utils.Object.isDense array then IsDense else IsSparse
+  let private (|IsDense|IsSparse|) (array:IjsArray) = 
+    if Utils.Array.isDense array then IsDense else IsSparse
+
+  let private (|IsArray|IsObject|) (object':IjsObj) =
+    if object'.Class = Classes.Array 
+      then IsArray(object' :?> IjsArray) 
+      else IsObject(object')
 
   //----------------------------------------------------------------------------
   // 15.4.2
@@ -32,138 +37,175 @@ module Array =
       
   //----------------------------------------------------------------------------
   let internal join (f:IjsFunc) (a:IjsObj) (separator:IjsBox) =
-    let separator =
-      if separator.Tag |> Utils.Box.isUndefined 
-        then "," else separator |> Api.TypeConverter.toString
-
     match a with
-    | IsDense ->
-      let toString (x:Descriptor) = 
-        if x.HasValue then Api.TypeConverter.toString x.Box else "undefined"
+    | IsArray a ->
+    
+      let separator =
+        if separator.Tag |> Utils.Box.isUndefined 
+          then "," else separator |> Api.TypeConverter.toString
 
-      String.Join(separator, a.IndexDense |> Array.map toString)
+      match a with
+      | IsDense ->
+        let toString (x:Descriptor) = 
+          if x.HasValue then Api.TypeConverter.toString x.Box else "undefined"
 
-    | IsSparse ->
-      let items = new MutableList<string>();
-      let mutable i = 0u
-      let mutable box = Box()
+        String.Join(separator, a.Dense |> Array.map toString)
 
-      while i < a.IndexLength do
-        if a.IndexSparse.TryGetValue(i, &box) 
-          then items.Add (box |> Api.TypeConverter.toString) 
-          else items.Add "undefined"
+      | IsSparse ->
+        let items = new MutableList<string>();
+        let mutable i = 0u
+        let mutable box = Box()
 
-        i <- i + 1u
+        while i < a.Length do
+          if a.Sparse.TryGetValue(i, &box) 
+            then items.Add (box |> Api.TypeConverter.toString) 
+            else items.Add "undefined"
 
-      String.Join(separator, items)
+          i <- i + 1u
+
+        String.Join(separator, items)
+
+    | IsObject o ->
+      failwith "Not available for objects yet"
       
   //----------------------------------------------------------------------------
   let internal concat (f:IjsFunc) (a:IjsObj) (args:IjsBox array) =
-    let items = new MutableList<IjsBox>(Api.Object.collectIndexValues a)
-    for arg in args do
-      if arg.Tag |> Utils.Box.isObject 
-        then items.AddRange(Api.Object.collectIndexValues arg.Object)
-        else items.Add(arg)
+    match a with
+    | IsArray a ->
+      let items = new MutableList<IjsBox>(Api.Array.collectIndexValues a)
+      for arg in args do
+        if arg.Tag |> Utils.Box.isObject 
+          then items.AddRange(Api.Array.collectIndexValues arg.Object)
+          else items.Add(arg)
 
-    let array = Api.Environment.createArray f.Env (uint32 items.Count)
+      let array = 
+        Api.Environment.createArray f.Env (uint32 items.Count) :?> IjsArray
     
-    let mutable index = 0u
-    while index < array.IndexLength do
-      let i = int index
-      array.IndexDense.[i].Box <- items.[i]
-      array.IndexDense.[i].HasValue <- true
-      index <- index + 1u
+      let mutable index = 0u
+      while index < array.Length do
+        let i = int index
+        array.Dense.[i].Box <- items.[i]
+        array.Dense.[i].HasValue <- true
+        index <- index + 1u
 
-    array
+      array :> IjsObj
+
+    | IsObject o -> 
+      failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
   let internal pop (a:IjsObj) =
-    let index = a.IndexLength - 1u
-    let item = 
-      match a with
-      | IsDense ->
-        let descriptor = a.IndexDense.[int index]
-        if descriptor.HasValue 
-          then descriptor.Box 
-          else Utils.BoxedConstants.undefined
+    match a with
+    | IsArray a ->
+      let index = a.Length - 1u
+      let item = 
+        match a with
+        | IsDense ->
+          let descriptor = a.Dense.[int index]
+          if descriptor.HasValue 
+            then descriptor.Box 
+            else Utils.BoxedConstants.undefined
 
-      | IsSparse ->
-        match a.IndexSparse.TryGetValue index with
-        | true, box -> box
-        | _ -> Utils.BoxedConstants.undefined
+        | IsSparse ->
+          match a.Sparse.TryGetValue index with
+          | true, box -> box
+          | _ -> Utils.BoxedConstants.undefined
 
-    a.Methods.DeleteIndex.Invoke(a, index) |> ignore
-    item
+      a.Methods.DeleteIndex.Invoke(a, index) |> ignore
+      item
+
+    | IsObject o -> 
+      failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
   let internal push (a:IjsObj) (args:IjsBox array) =
-    for arg in args do
-      a.Methods.PutBoxIndex.Invoke(a, a.IndexLength, arg)
+    match a with
+    | IsArray a ->
+      for arg in args do
+        a.Methods.PutBoxIndex.Invoke(a, a.Length, arg)
 
-    a.IndexLength |> double
+      a.Length |> double
+
+    | IsObject o -> 
+      failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
   let internal reverse (a:IjsObj) =
     match a with
-    | IsDense -> a.IndexDense |> Array.Reverse 
-    | IsSparse -> 
-      let sparse = new MutableSorted<uint32, Box>()
-      for kvp in a.IndexSparse do
-        sparse.Add(a.IndexLength - 1u - kvp.Key, kvp.Value)
-      a.IndexSparse <- sparse
-    a
+    | IsArray a ->
+      match a with
+      | IsDense -> a.Dense |> Array.Reverse 
+      | IsSparse -> 
+        let sparse = new MutableSorted<uint32, Box>()
+        for kvp in a.Sparse do
+          sparse.Add(a.Length - 1u - kvp.Key, kvp.Value)
+        a.Sparse <- sparse
+
+      a :> IjsObj
+
+    | IsObject o -> 
+      failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
   let internal shift (a:IjsObj) =
-    if a.IndexLength = 0u then Utils.BoxedConstants.undefined
-    else
-      let mutable value = Utils.BoxedConstants.undefined
+    match a with
+    | IsArray a ->
+      if a.Length = 0u then Utils.BoxedConstants.undefined
+      else
+        let mutable value = Utils.BoxedConstants.undefined
 
-      match a with
-      | IsDense -> 
-        if a.IndexDense.[0].HasValue then 
-          value <- a.IndexDense.[0].Box
+        match a with
+        | IsDense -> 
+          if a.Dense.[0].HasValue then 
+            value <- a.Dense.[0].Box
 
-        a.IndexDense <- a.IndexDense |> Dlr.ArrayUtils.RemoveFirst
+          a.Dense <- a.Dense |> Dlr.ArrayUtils.RemoveFirst
 
-      | IsSparse ->
-        value <- a.IndexSparse.[0u]
-        a.IndexSparse.Remove 0u |> ignore
+        | IsSparse ->
+          value <- a.Sparse.[0u]
+          a.Sparse.Remove 0u |> ignore
 
-        for kvp in a.IndexSparse do
-          a.IndexSparse.Remove kvp.Key |> ignore
-          a.IndexSparse.Add(kvp.Key - 1u, kvp.Value)
+          for kvp in a.Sparse do
+            a.Sparse.Remove kvp.Key |> ignore
+            a.Sparse.Add(kvp.Key - 1u, kvp.Value)
 
-      a.IndexLength <- a.IndexLength - 1u
-      a.put("length", double a.IndexLength)
-      value
+        a.Length <- a.Length - 1u
+        a.put("length", double a.Length)
+        value
+
+    | IsObject o -> 
+      failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
   let internal slice (a:IjsObj) (start:IjsNum) (end':IjsBox) =
-    let start = start |> Api.TypeConverter.toInteger
-    let length = int a.IndexLength
+    match a with
+    | IsArray a ->
+      let start = start |> Api.TypeConverter.toInteger
+      let length = int a.Length
 
-    let end' =
-      if end'.Tag |> Utils.Box.isUndefined 
-        then a.IndexLength |> int 
-        else end' |> Api.TypeConverter.toInteger
+      let end' =
+        if end'.Tag |> Utils.Box.isUndefined 
+          then length else end' |> Api.TypeConverter.toInteger
 
-    let start = 
-      if start < 0 
-        then start + length
-        elif start > length
-          then length
-          else start
+      let start = 
+        if start < 0 
+          then start + length
+          elif start > length
+            then length
+            else start
 
-    let end' = 
-      if end' < 0 
-        then end' + length 
-        elif end' > length
-          then length
-          else end'
+      let end' = 
+        if end' < 0 
+          then end' + length 
+          elif end' > length
+            then length
+            else end'
+
+      ()
     
-    () // not done
+    | IsObject o -> 
+      failwith "Not available for objects yet"
 
       
   //----------------------------------------------------------------------------

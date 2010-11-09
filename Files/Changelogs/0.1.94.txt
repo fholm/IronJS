@@ -1,4 +1,4 @@
 ### Changelog for 0.1.94 ###
 
-* Simplified Array.shift and also fixed a bug that caused delete indexes
+* Simplified Array.shift and also fixed a bug that caused deleted indexes
   to take precendence over existing ones

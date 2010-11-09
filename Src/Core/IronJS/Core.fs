@@ -159,15 +159,16 @@ module TaggedBools =
 type [<StructLayout(LayoutKind.Explicit)>] Box =
   struct
     //Reference Types
-    [<FieldOffset(0)>]  val mutable Clr : ClrObject 
-    [<FieldOffset(0)>]  val mutable Object : IjsObj
-    [<FieldOffset(0)>]  val mutable Func : IjsFunc
-    [<FieldOffset(0)>]  val mutable String : IjsStr
-    [<FieldOffset(0)>]  val mutable Scope : Scope
+    [<FieldOffset(0)>] val mutable Clr : ClrObject 
+    [<FieldOffset(0)>] val mutable Object : IjsObj
+    [<FieldOffset(0)>] val mutable Array : IjsArray
+    [<FieldOffset(0)>] val mutable Func : IjsFunc
+    [<FieldOffset(0)>] val mutable String : IjsStr
+    [<FieldOffset(0)>] val mutable Scope : Scope
 
     //Value Types
-    [<FieldOffset(8)>]  val mutable Bool : IjsBool
-    [<FieldOffset(8)>]  val mutable Number : IjsNum
+    [<FieldOffset(8)>] val mutable Bool : IjsBool
+    [<FieldOffset(8)>] val mutable Number : IjsNum
 
     //Type & Tag
     [<FieldOffset(12)>] val mutable Tag : TypeTag
@@ -286,10 +287,12 @@ and [<AllowNullLiteral>] Environment() =
   let functionStrings = new MutableDict<FunctionId, IjsStr>()
 
   [<DefaultValue>] val mutable Return : Box
+  [<DefaultValue>] val mutable Globals : Object
+
+  [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
-  [<DefaultValue>] val mutable Maps : Maps
-  [<DefaultValue>] val mutable Globals : Object
+
   [<DefaultValue>] val mutable Methods : Methods
   
   member x.Random = rnd
@@ -303,60 +306,23 @@ and [<AllowNullLiteral>] Environment() =
 // 8.6
 and [<AllowNullLiteral>] Object = 
   val mutable Class : byte // [[Class]]
-  val mutable Value : Descriptor // [[Value]]
   val mutable Methods : InternalMethods // 8.6.2
   val mutable Prototype : Object // [[Property]]
-
-  val mutable IndexLength : uint32
-  val mutable IndexSparse : MutableSorted<uint32, Box>
-  val mutable IndexDense : Descriptor array
-
   val mutable PropertyMap : PropertyMap
   val mutable PropertyDescriptors : Descriptor array
   
-  new (map, prototype, class', indexSize) = {
+  new (map, prototype, class') = {
     Class = class'
-    Value = Descriptor()
     Prototype = prototype
     Methods = Unchecked.defaultof<InternalMethods>
-
-    IndexLength = indexSize
-    IndexDense = 
-      if indexSize <= Array.MaxSize
-        then Array.zeroCreate (int indexSize) else Array.empty
-
-    IndexSparse = 
-      if indexSize > Array.MaxSize
-        then MutableSorted<uint32, Box>() else null
-
-    PropertyMap = map
-    PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
-  }
-
-  new (map, prototype, class', indexSparse:MutableSorted<uint32, Box>) = {
-    Class = class'
-    Value = Descriptor()
-    Prototype = prototype
-    Methods = Unchecked.defaultof<InternalMethods>
-
-    IndexLength = indexSparse.Count |> uint32
-    IndexDense = Array.empty
-    IndexSparse = indexSparse
-
     PropertyMap = map
     PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
   }
 
   new () = {
     Class = Classes.Object
-    Value = Descriptor()
     Prototype = null
     Methods = Unchecked.defaultof<InternalMethods>
-
-    IndexLength = Array.MinIndex
-    IndexDense = null
-    IndexSparse = null
-
     PropertyMap = null
     PropertyDescriptors = null
   }
@@ -376,11 +342,11 @@ and [<AllowNullLiteral>] Object =
 and [<AllowNullLiteral>] ValueObject = 
   inherit Object
 
-  val mutable Val : Box
+  [<DefaultValue>]
+  val mutable Value : Descriptor
   
-  new (map, prototype, class', value) = {
-    inherit Object(map, prototype, class', 0u)
-    Val = value
+  new (map, prototype, class') = {
+    inherit Object(map, prototype, class')
   }
   
 //------------------------------------------------------------------------------
@@ -392,7 +358,7 @@ and [<AllowNullLiteral>] ArrayObject =
   val mutable Dense : Descriptor array
 
   new (env:IjsEnv, length:uint32) = {
-    inherit Object(env.Maps.Array, env.Prototypes.Array, Classes.Array, length)
+    inherit Object(env.Maps.Array, env.Prototypes.Array, Classes.Array)
     Length = length
     Dense = 
       if length <= Array.MaxSize 
@@ -408,7 +374,7 @@ and [<AllowNullLiteral>] ArrayObject =
 //------------------------------------------------------------------------------
 // 10.1.8
 and [<AllowNullLiteral>] Arguments =
-  inherit Object
+  inherit ArrayObject
   
   val mutable Locals : Box array
   val mutable ClosedOver : Box array
@@ -417,8 +383,7 @@ and [<AllowNullLiteral>] Arguments =
   val mutable LinkIntact : bool
 
   new (env:IjsEnv, linkMap, locals, closedOver) as a = 
-    {
-      inherit Object(env.Maps.Array, env.Prototypes.Object, Classes.Object, 0u)
+    { inherit ArrayObject(env, 0u)
 
       Locals = locals
       ClosedOver = closedOver
@@ -536,8 +501,7 @@ and [<AllowNullLiteral>] Function =
   val mutable DynamicScope : DynamicScope
      
   new (env:IjsEnv, funcId, closureScope, dynamicScope) = { 
-    inherit Object(
-      env.Maps.Function, env.Prototypes.Function, Classes.Function, 0u)
+    inherit Object(env.Maps.Function, env.Prototypes.Function, Classes.Function)
 
     Env = env
     Compiler = env.Compilers.[funcId]
@@ -549,7 +513,7 @@ and [<AllowNullLiteral>] Function =
   }
 
   new (env:IjsEnv, propertyMap) = {
-    inherit Object(propertyMap, env.Prototypes.Function, Classes.Function, 0u)
+    inherit Object(propertyMap, env.Prototypes.Function, Classes.Function)
 
     Env = env
     Compiler = null
@@ -655,6 +619,8 @@ and IjsEnv = Environment
 and IjsObj = Object
 and IjsFunc = Function
 and IjsHostFunc<'a when 'a :> Delegate> = HostFunction<'a>
+and IjsArray = ArrayObject
+and IjsValueObj = ValueObject
 
 //-------------------------------------------------------------------------
 module TypeObjects =

@@ -27,7 +27,7 @@ module String =
   //----------------------------------------------------------------------------
   let internal toString (func:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.String func.Env
-    this.Value.Box
+    (this :?> ValueObject).Value.Box
     
   //----------------------------------------------------------------------------
   let internal valueOf (func:IjsFunc) (this:IjsObj) = 
@@ -163,26 +163,26 @@ module String =
           
       if separator |> String.IsNullOrEmpty then
         let length = Math.Min(uint32 value.Length, limit)
-        let array = Api.Environment.createArray f.Env length
+        let array = (Api.Environment.createArray f.Env length) :?> IjsArray
         for i = 0 to value.Length-1 do
           if uint32 i < limit then
-            let descr = &array.IndexDense.[i]
+            let descr = &array.Dense.[i]
             descr.Box.Clr <- string value.[i]
             descr.Box.Tag <- TypeTags.String
             descr.HasValue <- true
-        array
+        array :> IjsObj
 
       else
         let parts = value.Split([|separator|], StringSplitOptions.None)
         let length = Math.Min(uint32 parts.Length, limit)
-        let array = Api.Environment.createArray f.Env length
+        let array = Api.Environment.createArray f.Env length :?> IjsArray
         for i = 0 to parts.Length-1 do
           if uint32 i < limit then
-            let descr = &array.IndexDense.[i]
+            let descr = &array.Dense.[i]
             descr.Box.Clr <- parts.[i]
             descr.Box.Tag <- TypeTags.String
             descr.HasValue <- true
-        array
+        array :> IjsObj
         
   //----------------------------------------------------------------------------
   let internal substring (this:IjsObj) (start:IjsNum) (end':IjsNum) =
@@ -218,11 +218,9 @@ module String =
         
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) objPrototype =
-    let prototype = Api.Environment.createObject env
+    let prototype = Api.Environment.createString env ""
     prototype.Methods.PutValProperty.Invoke(prototype, "length", 0.0)
     prototype.Class <- Classes.String
-    prototype.Value.Box.String <- ""
-    prototype.Value.Box.Tag <- TypeTags.String
     prototype.Prototype <- objPrototype
     prototype
     

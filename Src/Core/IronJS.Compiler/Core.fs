@@ -10,7 +10,6 @@ open IronJS.Dlr.Operators
 module Core =
 
   //----------------------------------------------------------------------------
-  // Compiler functions
   let rec private compileAst (ctx:Context) ast =
     match ast with
     //Constants
@@ -91,7 +90,6 @@ module Core =
     | Ast.UnaryOp.Minus -> Unary.minus ctx ast
       
   //----------------------------------------------------------------------------
-  // Compiles a call to eval, e.g: eval('foo = 1');
   and compileEval (ctx:Context) evalTarget =
     let eval = Dlr.paramT<IjsBox> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
@@ -124,7 +122,6 @@ module Core =
     ]
 
   //----------------------------------------------------------------------------
-  // Main compiler function that setups compilation and invokes compileAst
   and compile (target:Target) =
 
     //Extract scope and ast from top level ast node
@@ -180,17 +177,15 @@ module Core =
 
     //Local internal variables
     let locals = 
-      if ctx.Target.IsEval then 
-        [] |> Seq.ofList
-
+      if ctx.Target.IsEval then Seq.empty
       else
         let locals = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope;]
         locals |> Seq.cast<Dlr.ExprParam> 
 
     //Main function body
     let functionBody = 
-      returnExpr  |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
-                  |> Dlr.block locals
+      let body = [scopeInit; functionsInit; ctx.Compile ast] @ returnExpr
+      Dlr.block locals body
 
     //Parameters
     let commonParams = [ctx.Function; ctx.This] |> Seq.cast<Dlr.ExprParam>

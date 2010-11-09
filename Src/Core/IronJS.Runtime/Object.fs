@@ -70,7 +70,7 @@ module Object =
   //----------------------------------------------------------------------------
   //15.2.4
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, null, Classes.Object)
+    let o = IjsObj(env, env.Maps.Base, null, Classes.Object)
     o.Methods <- env.Methods.Object
     o
     

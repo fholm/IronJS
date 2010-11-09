@@ -23,11 +23,10 @@ module String =
 
     buffer.ToString()
 
-    
   //----------------------------------------------------------------------------
   let internal toString (func:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.String func.Env
-    (this :?> ValueObject).Value.Box
+    this |> Utils.ValueObject.getValue
     
   //----------------------------------------------------------------------------
   let internal valueOf (func:IjsFunc) (this:IjsObj) = 

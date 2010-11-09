@@ -156,8 +156,8 @@ module TaggedBools =
 
 //------------------------------------------------------------------------------
 // Represents a value whos type is unknown at runtime
-type [<StructLayout(LayoutKind.Explicit)>] Box =
-  struct
+type [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] Box =
+  struct 
     //Reference Types
     [<FieldOffset(0)>] val mutable Clr : ClrObject 
     [<FieldOffset(0)>] val mutable Object : IjsObj
@@ -305,13 +305,15 @@ and [<AllowNullLiteral>] Environment() =
 //------------------------------------------------------------------------------
 // 8.6
 and [<AllowNullLiteral>] Object = 
+  val mutable Env : IjsEnv
   val mutable Class : byte // [[Class]]
   val mutable Methods : InternalMethods // 8.6.2
   val mutable Prototype : Object // [[Property]]
   val mutable PropertyMap : PropertyMap
   val mutable PropertyDescriptors : Descriptor array
   
-  new (map, prototype, class') = {
+  new (env, map, prototype, class') = {
+    Env = env
     Class = class'
     Prototype = prototype
     Methods = Unchecked.defaultof<InternalMethods>
@@ -319,7 +321,8 @@ and [<AllowNullLiteral>] Object =
     PropertyDescriptors = Array.zeroCreate (map.PropertyMap.Count)
   }
 
-  new () = {
+  new (env) = {
+    Env = env
     Class = Classes.Object
     Prototype = null
     Methods = Unchecked.defaultof<InternalMethods>
@@ -342,11 +345,10 @@ and [<AllowNullLiteral>] Object =
 and [<AllowNullLiteral>] ValueObject = 
   inherit Object
 
-  [<DefaultValue>]
-  val mutable Value : Descriptor
+  [<DefaultValue>] val mutable Value : Descriptor
   
-  new (map, prototype, class') = {
-    inherit Object(map, prototype, class')
+  new (env, map, prototype, class') = {
+    inherit Object(env, map, prototype, class')
   }
   
 //------------------------------------------------------------------------------
@@ -354,11 +356,11 @@ and [<AllowNullLiteral>] ArrayObject =
   inherit Object
 
   val mutable Length : uint32
-  val mutable Sparse : MutableSorted<uint32, Box>
   val mutable Dense : Descriptor array
+  val mutable Sparse : MutableSorted<uint32, Box>
 
   new (env:IjsEnv, length:uint32) = {
-    inherit Object(env.Maps.Array, env.Prototypes.Array, Classes.Array)
+    inherit Object(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
     Length = length
     Dense = 
       if length <= Array.MaxSize 
@@ -412,7 +414,7 @@ and [<AllowNullLiteral>] Arguments =
       | _ -> failwith "Que?"
 
 // Property descriptor
-and [<StructuralEquality>] [<NoComparison>] Descriptor =
+and [<NoComparison>] Descriptor =
   struct
     val mutable Box : Box
     val mutable Attributes : uint16 // 8.6.1
@@ -492,7 +494,6 @@ and [<AllowNullLiteral>] PropertyMap =
 and [<AllowNullLiteral>] Function = 
   inherit Object
 
-  val mutable Env : Environment
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : FunctionId
   val mutable ConstructorMode : ConstructorMode
@@ -501,9 +502,9 @@ and [<AllowNullLiteral>] Function =
   val mutable DynamicScope : DynamicScope
      
   new (env:IjsEnv, funcId, closureScope, dynamicScope) = { 
-    inherit Object(env.Maps.Function, env.Prototypes.Function, Classes.Function)
+    inherit Object(
+      env, env.Maps.Function, env.Prototypes.Function, Classes.Function)
 
-    Env = env
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
     ConstructorMode = ConstructorModes.User
@@ -513,9 +514,8 @@ and [<AllowNullLiteral>] Function =
   }
 
   new (env:IjsEnv, propertyMap) = {
-    inherit Object(propertyMap, env.Prototypes.Function, Classes.Function)
+    inherit Object(env, propertyMap, env.Prototypes.Function, Classes.Function)
 
-    Env = env
     Compiler = null
     FunctionId = env.nextFunctionId()
     ConstructorMode = 0uy
@@ -525,9 +525,8 @@ and [<AllowNullLiteral>] Function =
   }
 
   new (env:IjsEnv) = {
-    inherit Object()
+    inherit Object(env)
 
-    Env = env
     Compiler = null
     FunctionId = 0UL
     ConstructorMode = 0uy

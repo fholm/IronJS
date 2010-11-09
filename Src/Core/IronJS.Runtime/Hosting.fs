@@ -6,8 +6,12 @@ open IronJS
 module Hosting =
 
   let createEnvironment () =
-    let x = IjsEnv()
+    let env = IjsEnv()
 
+    env.Prototypes <- Prototypes.Empty
+    env.Constructors <- Constructors.Empty
+
+    // Setup internal methods for Object, Array, Arguments and Function
     let objectMethods = {
       GetProperty = Api.Object.Property.Delegates.get
       HasProperty = Api.Object.Property.Delegates.has
@@ -27,9 +31,10 @@ module Hosting =
       HasInstance = null
     }
 
-    let hasInstance l r = Api.Function.hasInstance(l, r)
-    x.Methods <- {
+    env.Methods <- {
       Object = objectMethods
+
+      //Array methods with special Index and Property semantics
       Array = 
         {objectMethods with
           PutBoxProperty = Api.Array.Property.Delegates.putBox
@@ -44,6 +49,7 @@ module Hosting =
           PutValIndex = Api.Array.Index.Delegates.putVal
         }
 
+      //Arguments methods with special index semantics
       Arguments = 
         {objectMethods with
           GetIndex = Api.Arguments.Index.Delegates.get
@@ -54,14 +60,18 @@ module Hosting =
           PutRefIndex = Api.Arguments.Index.Delegates.putRef
         }
 
+      //Function objects are the only ones that have HasInstance
       Function = 
         {objectMethods with
-          HasInstance = new HasInstance(hasInstance)
+          HasInstance = 
+            new HasInstance(
+              FuncConvert.FuncFromTupled(Api.Function.hasInstance)
+            )
         }
     }
-
-    let baseMap = PropertyMap(x)
-    x.Maps <- {
+    
+    let baseMap = PropertyMap env
+    env.Maps <- {
       Base = baseMap
       Array = Api.PropertyMap.getSubMap baseMap "length"
       Function = Api.PropertyMap.buildSubMap baseMap ["length"; "prototype"]
@@ -70,70 +80,76 @@ module Hosting =
       Number = baseMap
       Boolean = baseMap
       Regexp = 
-        Api.PropertyMap.buildSubMap baseMap
-          ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+        let names = ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+        Api.PropertyMap.buildSubMap baseMap names
     }
-    
-    x.Prototypes <- Prototypes.Empty
 
-    let objectPrototype = Native.Object.createPrototype x
-    let errorPrototype = Native.Error.createPrototype x objectPrototype
-
-    x.Prototypes <- {
+    let objectPrototype = Native.Object.createPrototype env
+    let errorPrototype = Native.Error.createPrototype env objectPrototype
+    env.Prototypes <- {
       Object = objectPrototype
-      Function = Native.Function.createPrototype x objectPrototype
-      Array = Native.Array.createPrototype x objectPrototype
-      String = Native.String.createPrototype x objectPrototype
-      Number = Native.Number.createPrototype x objectPrototype
-      Boolean = Native.Boolean.createPrototype x objectPrototype
+      Function = Native.Function.createPrototype env objectPrototype
+      Array = Native.Array.createPrototype env objectPrototype
+      String = Native.String.createPrototype env objectPrototype
+      Number = Native.Number.createPrototype env objectPrototype
+      Boolean = Native.Boolean.createPrototype env objectPrototype
       Date = null
       RegExp = null
       Error = errorPrototype
 
-      EvalError = Native.Error.createPrototype x errorPrototype
-      RangeError = Native.Error.createPrototype x errorPrototype
-      ReferenceError = Native.Error.createPrototype x errorPrototype
-      SyntaxError = Native.Error.createPrototype x errorPrototype
-      TypeError = Native.Error.createPrototype x errorPrototype
-      URIError = Native.Error.createPrototype x errorPrototype
+      EvalError = Native.Error.createPrototype env errorPrototype
+      RangeError = Native.Error.createPrototype env errorPrototype
+      ReferenceError = Native.Error.createPrototype env errorPrototype
+      SyntaxError = Native.Error.createPrototype env errorPrototype
+      TypeError = Native.Error.createPrototype env errorPrototype
+      URIError = Native.Error.createPrototype env errorPrototype
     }
     
-    x.Constructors <- Constructors.Empty
+    env.Constructors <- Constructors.Empty
 
-    Native.Global.setup x
-    Native.Math.setup x
-    Native.Object.setupConstructor x
-    Native.Object.setupPrototype x
-    Native.Function.setupConstructor x
-    Native.Function.setupPrototype x
-    Native.String.setupConstructor x
-    Native.String.setupPrototype x
-    Native.Boolean.setupConstructor x
-    Native.Boolean.setupPrototype x
-    Native.Number.setupConstructor x
-    Native.Number.setupPrototype x
-    Native.Array.setupConstructor x
-    Native.Array.setupPrototype x
-    Native.Error.setupConstructor x
-    Native.Error.setupPrototype x
-    Native.EvalError.setupConstructor x
-    Native.EvalError.setupPrototype x
-    Native.RangeError.setupConstructor x
-    Native.RangeError.setupPrototype x
-    Native.ReferenceError.setupConstructor x
-    Native.ReferenceError.setupPrototype x
-    Native.SyntaxError.setupConstructor x
-    Native.SyntaxError.setupPrototype x
-    Native.TypeError.setupConstructor x
-    Native.TypeError.setupPrototype x
-    Native.URIError.setupConstructor x
-    Native.URIError.setupPrototype x
+    env |> Native.Global.setup
+    env |> Native.Math.setup
+        
+    env |> Native.Object.setupConstructor
+    env |> Native.Object.setupPrototype
+        
+    env |> Native.Function.setupConstructor
+    env |> Native.Function.setupPrototype
+        
+    env |> Native.String.setupConstructor
+    env |> Native.String.setupPrototype
+        
+    env |> Native.Boolean.setupConstructor
+    env |> Native.Boolean.setupPrototype
+        
+    env |> Native.Number.setupConstructor
+    env |> Native.Number.setupPrototype
+        
+    env |> Native.Array.setupConstructor
+    env |> Native.Array.setupPrototype
+        
+    env |> Native.Error.setupConstructor
+    env |> Native.Error.setupPrototype
 
-    x
+    //Native Errors
+    env |> Native.EvalError.setupConstructor
+    env |> Native.EvalError.setupPrototype
+    env |> Native.RangeError.setupConstructor
+    env |> Native.RangeError.setupPrototype
+    env |> Native.ReferenceError.setupConstructor
+    env |> Native.ReferenceError.setupPrototype
+    env |> Native.SyntaxError.setupConstructor
+    env |> Native.SyntaxError.setupPrototype
+    env |> Native.TypeError.setupConstructor
+    env |> Native.TypeError.setupPrototype
+    env |> Native.URIError.setupConstructor
+    env |> Native.URIError.setupPrototype
+
+    env
 
   type Context(env:IjsEnv) =
     
-    let globalFunc = new IronJS.Function(env)
+    let globalFunc = IjsFunc env
 
     member x.Environment = env
     member x.GlobalFunc = globalFunc

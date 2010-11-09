@@ -149,68 +149,66 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createObject (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, env.Prototypes.Object, Classes.Object)
-    o.Methods <- env.Methods.Object
-    o
-
-  //----------------------------------------------------------------------------
-  let createObjectWithMap (env:IjsEnv) map =
-    let o = IjsObj(map, env.Prototypes.Object, Classes.Object)
-    o.Methods <- env.Methods.Object
-    o
+    let map = env.Maps.Base
+    let proto = env.Prototypes.Object
+    let object' = IjsObj(env, map, proto, Classes.Object)
+    object'.Methods <- env.Methods.Object
+    object'
 
   //----------------------------------------------------------------------------
   let createArray (env:IjsEnv) (size:uint32) =
-    let o = ArrayObject(env, size)
-    o.Methods <- env.Methods.Array
-    o.Methods.PutValProperty.Invoke(o, "length", double size)
-    o :> IjsObj
+    let array = ArrayObject(env, size)
+    array.Methods <- env.Methods.Array
+    array.Methods.PutValProperty.Invoke(array, "length", double size)
+    array :> IjsObj
     
   //----------------------------------------------------------------------------
   let createString (env:IjsEnv) (s:IjsStr) =
     let map = env.Maps.String
     let proto = env.Prototypes.String
-    let o = ValueObject(map, proto, Classes.String)
-    o.Methods <- env.Methods.Object
-    o.Methods.PutValProperty.Invoke(o, "length", double s.Length)
-    o.Value.Box.Clr <-s
-    o.Value.Box.Tag <- TypeTags.String
-    o.Value.HasValue <- true
-    o :> IjsObj
+    let string = ValueObject(env, map, proto, Classes.String)
+    string.Methods <- env.Methods.Object
+    string.Methods.PutValProperty.Invoke(string, "length", double s.Length)
+    string.Value.Box.Clr <-s
+    string.Value.Box.Tag <- TypeTags.String
+    string.Value.HasValue <- true
+    string :> IjsObj
     
   //----------------------------------------------------------------------------
   let createNumber (env:IjsEnv) n =
     let map = env.Maps.Number
     let proto = env.Prototypes.Number
-    let o = ValueObject(map, proto, Classes.Number)
-    o.Methods <- env.Methods.Object
-    o.Value.Box.Number <- n
-    o.Value.HasValue <- true
-    o :> IjsObj
+    let number = ValueObject(env, map, proto, Classes.Number)
+    number.Methods <- env.Methods.Object
+    number.Value.Box.Number <- n
+    number.Value.HasValue <- true
+    number :> IjsObj
     
   //----------------------------------------------------------------------------
   let createBoolean (env:IjsEnv) b =
     let map = env.Maps.Boolean
     let proto = env.Prototypes.Boolean
-    let o = ValueObject(map, proto, Classes.Boolean)
-    o.Methods <- env.Methods.Object
-    o.Value.Box.Bool <- b
-    o.Value.Box.Tag <- TypeTags.Bool
-    o.Value.HasValue <- true
-    o :> IjsObj
+    let boolean = ValueObject(env, map, proto, Classes.Boolean)
+    boolean.Methods <- env.Methods.Object
+    boolean.Value.Box.Bool <- b
+    boolean.Value.Box.Tag <- TypeTags.Bool
+    boolean.Value.HasValue <- true
+    boolean :> IjsObj
   
   //----------------------------------------------------------------------------
   let createPrototype (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Prototype, env.Prototypes.Object, Classes.Object)
-    o.Methods <- env.Methods.Object
-    o
+    let map = env.Maps.Prototype
+    let proto = env.Prototypes.Object
+    let prototype = IjsObj(env, map, proto, Classes.Object)
+    prototype .Methods <- env.Methods.Object
+    prototype
   
   //----------------------------------------------------------------------------
   let createFunction env id (args:int) closureScope dynamicScope =
     let proto = createPrototype env
     let func = IjsFunc(env, id, closureScope, dynamicScope)
 
-    (func :> IjsObj).Methods <- env.Methods.Object
+    func.Methods <- env.Methods.Object
     func.ConstructorMode <- ConstructorModes.User
 
     proto.put("constructor", func)
@@ -222,9 +220,11 @@ module Environment =
     
   //----------------------------------------------------------------------------
   let createError (env:IjsEnv) =
-    let o = IjsObj(env.Maps.Base, env.Prototypes.Error, Classes.Error)
-    o.Methods <- env.Methods.Object
-    o
+    let map = env.Maps.Base
+    let proto = env.Prototypes.Error
+    let error = IjsObj(env, map, proto, Classes.Error)
+    error.Methods <- env.Methods.Object
+    error
 
   let raiseError (env:IjsEnv) prototype (message:IjsStr) =
     let error = createError env
@@ -246,23 +246,8 @@ module Environment =
     let createObject = 
       Utils.Reflected.methodInfo "Api.Environment" "createObject"
 
-    let createObjectWithMap = 
-      Utils.Reflected.methodInfo "Api.Environment" "createObjectWithMap"
-
     let createArray = 
       Utils.Reflected.methodInfo "Api.Environment" "createArray"
-
-    let createString = 
-      Utils.Reflected.methodInfo "Api.Environment" "createString"
-
-    let createNumber = 
-      Utils.Reflected.methodInfo "Api.Environment" "createNumber"
-
-    let createBoolean = 
-      Utils.Reflected.methodInfo "Api.Environment" "createBoolean"
-
-    let createPrototype = 
-      Utils.Reflected.methodInfo "Api.Environment" "createPrototype"
 
     let createFunction = 
       Utils.Reflected.methodInfo "Api.Environment" "createFunction"
@@ -391,7 +376,11 @@ type TypeConverter =
     | Function -> TypeConverter.toNumber(b.Object)
 
   static member toNumber (o:IjsObj) : IjsNum = 
-    TypeConverter.toNumber(o.Methods.Default.Invoke(o, DefaultValue.Number))
+    match o.Class with
+    | Classes.Number -> (Utils.ValueObject.getValue o).Number
+    | _ -> 
+      let boxedValue = o.Methods.Default.Invoke(o, DefaultValue.Number)
+      boxedValue |> TypeConverter.toNumber 
 
   static member toNumber (d:IjsNum) = 
     if d = TaggedBools.True then 1.0 elif d = TaggedBools.False then 0.0 else d
@@ -1676,8 +1665,6 @@ module Array =
 
   //----------------------------------------------------------------------------
   module Index =
-  
-    open Utils.Patterns
   
     //--------------------------------------------------------------------------
     let initSparse (o:IjsArray) =

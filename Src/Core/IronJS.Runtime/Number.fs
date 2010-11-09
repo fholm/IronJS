@@ -24,7 +24,7 @@ module Number =
 
   let internal toString (f:IjsFunc) (this:IjsObj) (radix:IjsNum) =
     this |> Utils.mustBe Classes.Number f.Env
-    let number = (this :?> ValueObject).Value.Box.Number
+    let number = (this |> Utils.ValueObject.getValue).Number
 
     if FSKit.Utils.isNaNOrInf number then nanToString number
     else
@@ -42,7 +42,7 @@ module Number =
   //----------------------------------------------------------------------------
   let internal valueOf (f:IjsFunc) (this:IjsObj) =
     this |> Utils.mustBe Classes.Number f.Env
-    (this :?> ValueObject).Value.Box
+    this |> Utils.ValueObject.getValue
 
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
@@ -53,7 +53,7 @@ module Number =
   let internal toFixed (f:IjsFunc) (this:IjsObj) (fractions:IjsNum) =
     this |> Utils.mustBe Classes.Number f.Env
 
-    let number = (this :?> ValueObject).Value.Box.Number
+    let number = (this |> Utils.ValueObject.getValue).Number
     let fractions = fractions |> Api.TypeConverter.toInt32
 
     if number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -67,7 +67,7 @@ module Number =
     this |> Utils.mustBe Classes.Number f.Env
     
     let tag = fractions.Tag
-    let number = (this :?> ValueObject).Value.Box.Number
+    let number = (this |> Utils.ValueObject.getValue).Number
 
     if tag |> Utils.Box.isUndefined then toString f this 10.0
     elif number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -86,7 +86,7 @@ module Number =
     this |> Utils.mustBe Classes.Number f.Env
     
     let tag = precision.Tag
-    let number = (this :?> ValueObject).Value.Box.Number
+    let number = (this |> Utils.ValueObject.getValue).Number
 
     if tag |> Utils.Box.isUndefined then toString f this 10.0
     elif number |> FSKit.Utils.isNaNOrInf then nanToString number

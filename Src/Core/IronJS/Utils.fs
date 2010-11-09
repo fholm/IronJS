@@ -99,6 +99,10 @@ module Utils =
     let isSparse (x:IjsArray) = isDense x |> not // isDense? ... pause ... NOT!
     
   //----------------------------------------------------------------------------
+  module ValueObject =
+    let getValue (o:IjsObj) = (o :?> IjsValueObj).Value.Box
+    
+  //----------------------------------------------------------------------------
   module Patterns =
 
     let (|IsObject|_|) (box:IjsBox) =

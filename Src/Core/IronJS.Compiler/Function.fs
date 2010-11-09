@@ -8,8 +8,8 @@ open IronJS.Dlr.Operators
 //------------------------------------------------------------------------------
 module Function =
 
-  let closureScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "ScopeChain"
-  let dynamicScope (expr:Dlr.Expr) = Dlr.propertyOrField expr "DynamicChain"
+  let closureScope expr = Dlr.propertyOrField expr "ScopeChain"
+  let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
 
   //----------------------------------------------------------------------------
   let applyCompiler (compiler:Target -> Delegate) target (_:IjsFunc) delegate' =

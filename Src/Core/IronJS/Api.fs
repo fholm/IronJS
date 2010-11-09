@@ -1128,6 +1128,12 @@ module HostFunction =
   let private createParam i t = Dlr.param (sprintf "a%i" i) t
   
   //----------------------------------------------------------------------------
+  let private addEmptyParamsObject<'a> (args:Dlr.ExprParam array) =
+    args |> Array.map (fun x -> x :> Dlr.Expr)
+         |> FSKit.Array.appendOne Dlr.newArrayEmptyT<'a> 
+         |> Seq.ofArray
+  
+  //----------------------------------------------------------------------------
   let compileDispatcher (target:DispatchTarget<'a>) = 
     let f = target.Function
 
@@ -1143,11 +1149,15 @@ module HostFunction =
       let paramsExist = f.ArgTypes.Length < passedArgs.Length 
 
       match f.ParamsMode with
-      | ParamsModes.BoxParams when paramsExist -> 
-        marshalBoxParams f passedArgs marshalled
+      | ParamsModes.BoxParams -> 
+        if paramsExist
+          then marshalBoxParams f passedArgs marshalled
+          else addEmptyParamsObject<IjsBox> passedArgs 
 
       | ParamsModes.ObjectParams when paramsExist -> 
-        marshalObjectParams f passedArgs marshalled
+        if paramsExist
+          then marshalObjectParams f passedArgs marshalled
+          else addEmptyParamsObject<ClrObject> passedArgs 
 
       | _ -> marshalled
 
@@ -1747,7 +1757,6 @@ module Array =
 
       updateLength o i
 
-
     //--------------------------------------------------------------------------
     let putVal (o:IjsObj) (i:uint32) (v:IjsNum) =
       let o = o :?> IjsArray
@@ -1841,8 +1850,23 @@ module Array =
     let o = o :?> IjsArray
 
     if Utils.Array.isDense o 
-      then seq {for i in o.Dense do if i.HasValue then yield i.Box}
-      else seq {for i in o.Sparse do yield i.Value}
+      then seq {
+          for i in o.Dense do 
+            if i.HasValue 
+              then yield i.Box
+              else yield Utils.BoxedConstants.undefined
+        }
+
+      else seq {
+        let i = ref 0u
+        while !i < o.Length do
+          
+          match o.Sparse.TryGetValue !i with
+          | true, box -> yield box
+          | _ -> yield Utils.BoxedConstants.undefined
+
+          i := !i + 1u
+      }
 
 module Arguments =
 
@@ -1964,15 +1988,15 @@ module DynamicScope =
     match findObject name dc stop with
     | Some o -> Some(o.Methods.GetProperty.Invoke(o, name))
     | _ -> None
-      
+
   //----------------------------------------------------------------------------
-  let set (name) dc stop (g:IjsObj) (s:Scope) i =
+  let get name dc stop (g:IjsObj) (s:Scope) i =
     match findObject name dc stop with
     | Some o -> o.Methods.GetProperty.Invoke(o, name)
     | _ -> if s = null then g.Methods.GetProperty.Invoke(g, name) else s.[i]
       
   //----------------------------------------------------------------------------
-  let get name (v:IjsBox) dc stop (g:IjsObj) (s:Scope) i =
+  let set name (v:IjsBox) dc stop (g:IjsObj) (s:Scope) i =
     match findObject name dc stop with
     | Some o -> o.Methods.PutBoxProperty.Invoke(o, name, v)
     | _ -> 

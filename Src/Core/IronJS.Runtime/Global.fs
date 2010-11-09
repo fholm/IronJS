@@ -18,7 +18,7 @@ module Global =
       let ast = Parsers.Ecma3.parse target.Function.Env target.Target.String
       let scope = {Ast.Scope.New with Closures=target.Closures}
       let tree = Ast.Function(None, scope, ast)
-      let levels = Some(target.GlobalLevel, target.ClosureLevel, 0)
+      let levels = Some(target.GlobalLevel, target.ClosureLevel)
 
       let compiled = 
         Core.compile {

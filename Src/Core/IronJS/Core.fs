@@ -354,7 +354,7 @@ and [<AllowNullLiteral>] ValueObject =
 //------------------------------------------------------------------------------
 and [<AllowNullLiteral>] ArrayObject =
   inherit Object
-
+  
   val mutable Length : uint32
   val mutable Dense : Descriptor array
   val mutable Sparse : MutableSorted<uint32, Box>
@@ -369,8 +369,7 @@ and [<AllowNullLiteral>] ArrayObject =
 
     Sparse = 
       if length > Array.MaxSize 
-        then MutableSorted<uint32, Box>() 
-        else null
+        then MutableSorted<uint32, Box>() else null
   }
 
 //------------------------------------------------------------------------------

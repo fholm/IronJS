@@ -40,7 +40,6 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable Target : IjsBox
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int
-  [<DefaultValue>] val mutable LocalLevel: int
   [<DefaultValue>] val mutable Closures : Map<string, Ast.Closure>
   [<DefaultValue>] val mutable Function : IjsFunc
   [<DefaultValue>] val mutable This : IjsObj

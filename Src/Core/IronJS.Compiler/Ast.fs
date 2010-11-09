@@ -1,6 +1,5 @@
 ﻿namespace IronJS
 
-
 open IronJS
 open IronJS.Utils
 open IronJS.Aliases
@@ -578,7 +577,7 @@ module Ast =
         | _ -> walkAst (calculate wl gl cl) tree
         
       match levels with 
-      | Some(gl, cl, _) -> calculate 0 gl cl tree
+      | Some(gl, cl) -> calculate 0 gl cl tree
       | _ -> calculate 0 0 -1 tree
     
     //--------------------------------------------------------------------------

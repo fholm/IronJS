@@ -1,4 +1,13 @@
 ### Changelog for 0.1.94 ###
 
-* Simplified Array.shift and also fixed a bug that caused deleted indexes
-  to take precendence over existing ones
+* Simplified Array.prototype.shift and also fixed a bug that caused deleted 
+  indexes to take precendence over existing ones
+* Implemented Array.prototype.sort
+* Split functionality from Object into Object, ValueObject and ArrayObject to
+  decrease the memory overhead of normal (non array/value) objects by 40 bytes. 
+* Fixed a bug where delegates with "Box array" and "Object array" as last
+  parameter would fail if no arguments were supplied
+* Fixed a bug where the calls to DynamicScope.get and DynamicScope.set had
+  gotten their arguments switched causing any usage of the with statement
+  to crash the runtime
+* Cleaned up Compiler.Core.compile

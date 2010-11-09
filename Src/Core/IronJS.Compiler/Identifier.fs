@@ -5,24 +5,14 @@ open IronJS.Compiler
   
 //------------------------------------------------------------------------------
 module Identifier =
-  
-  //----------------------------------------------------------------------------
-  let private walkScopeChain expr target current =
-    let rec walk expr times = 
-      if times = 0 
-        then expr else walk (Dlr.field (Dlr.index0 expr) "Scope") (times-1)
-
-    walk expr (current - target)
       
   //----------------------------------------------------------------------------
   let private closureExprAndIndex ctx (closure:Ast.Closure) =
-    let expr = 
-      (walkScopeChain
-        (ctx.ClosureScope)
-        (closure.ClosureLevel)
-        (ctx.Scope.ClosureLevel))
+    let rec walk expr n = 
+      if n = 0 then expr else walk (Dlr.field (Dlr.index0 expr) "Scope") (n-1)
 
-    Some(expr, closure.Index, closure.GlobalLevel)
+    let n = closure.ClosureLevel - ctx.Scope.ClosureLevel
+    Some(walk ctx.ClosureScope n, closure.Index, closure.GlobalLevel)
       
   //----------------------------------------------------------------------------
   let private localExprAndIndex (ctx:Ctx) (group:Ast.Local) =
@@ -39,20 +29,13 @@ module Identifier =
     | Ast.VariableOption.Global -> None
     | Ast.VariableOption.Local group -> localExprAndIndex ctx group
     | Ast.VariableOption.Closure closure -> closureExprAndIndex ctx closure
-
-  //----------------------------------------------------------------------------
-  let private dynamicGetGlobalArgs (ctx:Ctx) name = 
-    [Dlr.neg1; ctx.Globals; Dlr.defaultT<Scope>; Dlr.neg1]
-
-  //----------------------------------------------------------------------------
-  let private dynamicGetVariableArgs (ctx:Ctx) expr (name:string) (i:int) (l:int) =
-    [Dlr.const' l; ctx.Globals; expr; Dlr.const' i]
           
   //----------------------------------------------------------------------------
   let getDynamicArgs (ctx:Ctx) name =
     match getExprIndexLevelType ctx name with
-    | None -> dynamicGetGlobalArgs ctx name
-    | Some(expr, i, level) -> dynamicGetVariableArgs ctx expr name i level
+    | None -> [Dlr.neg1; ctx.Globals; Dlr.defaultT<Scope>; Dlr.neg1]
+    | Some(expr, index, level) -> 
+      [Dlr.const' level; ctx.Globals; expr; Dlr.const' index]
           
   //----------------------------------------------------------------------------
   let private getValueDynamic (ctx:Ctx) name =

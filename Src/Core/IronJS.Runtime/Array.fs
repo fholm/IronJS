@@ -10,6 +10,8 @@ open IronJS.DescriptorAttrs
 // 15.4
 module Array =
 
+  type private Sort = Func<IjsFunc, IjsObj, IjsBox, IjsBox, IjsBox>
+
   let private (|IsDense|IsSparse|) (array:IjsArray) = 
     if Utils.Array.isDense array then IsDense else IsSparse
 
@@ -36,8 +38,8 @@ module Array =
       array
       
   //----------------------------------------------------------------------------
-  let internal join (f:IjsFunc) (a:IjsObj) (separator:IjsBox) =
-    match a with
+  let internal join (f:IjsFunc) (this:IjsObj) (separator:IjsBox) =
+    match this with
     | IsArray a ->
     
       let separator =
@@ -69,8 +71,8 @@ module Array =
       failwith "Not available for objects yet"
       
   //----------------------------------------------------------------------------
-  let internal concat (f:IjsFunc) (a:IjsObj) (args:IjsBox array) =
-    match a with
+  let internal concat (f:IjsFunc) (this:IjsObj) (args:IjsBox array) =
+    match this with
     | IsArray a ->
       let items = new MutableList<IjsBox>(Api.Array.collectIndexValues a)
       for arg in args do
@@ -94,8 +96,8 @@ module Array =
       failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
-  let internal pop (a:IjsObj) =
-    match a with
+  let internal pop (this:IjsObj) =
+    match this with
     | IsArray a ->
       let index = a.Length - 1u
       let item = 
@@ -118,8 +120,8 @@ module Array =
       failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
-  let internal push (a:IjsObj) (args:IjsBox array) =
-    match a with
+  let internal push (this:IjsObj) (args:IjsBox array) =
+    match this with
     | IsArray a ->
       for arg in args do
         a.Methods.PutBoxIndex.Invoke(a, a.Length, arg)
@@ -130,8 +132,8 @@ module Array =
       failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
-  let internal reverse (a:IjsObj) =
-    match a with
+  let internal reverse (this:IjsObj) =
+    match this with
     | IsArray a ->
       match a with
       | IsDense -> a.Dense |> Array.Reverse 
@@ -147,8 +149,8 @@ module Array =
       failwith "Not available for objects yet"
     
   //----------------------------------------------------------------------------
-  let internal shift (a:IjsObj) =
-    match a with
+  let internal shift (this:IjsObj) =
+    match this with
     | IsArray a ->
       if a.Length = 0u then Utils.BoxedConstants.undefined
       else
@@ -178,15 +180,16 @@ module Array =
     
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
-  let internal slice (a:IjsObj) (start:IjsNum) (end':IjsBox) =
-    match a with
+  let internal slice (f:IjsFunc) (this:IjsObj) (start:IjsNum) (end':IjsBox) =
+    match this with
     | IsArray a ->
       let start = start |> Api.TypeConverter.toInteger
       let length = int a.Length
 
       let end' =
         if end'.Tag |> Utils.Box.isUndefined 
-          then length else end' |> Api.TypeConverter.toInteger
+          then length 
+          else end' |> Api.TypeConverter.toInteger
 
       let start = 
         if start < 0 
@@ -202,11 +205,49 @@ module Array =
             then length
             else end'
 
-      ()
+      let size = end' - start
+      let absSize = if size < 0 then 0 else size
+      let array = Api.Environment.createArray f.Env (uint32 absSize):?> IjsArray
+
+      for i = 0 to (size-1) do
+        let item = array.Methods.GetIndex.Invoke(a, uint32 (start+i))
+        array.Methods.PutBoxIndex.Invoke(array, uint32 i, item)
+      
+      array :> IjsObj
     
     | IsObject o -> 
       failwith "Not available for objects yet"
+      
+  //----------------------------------------------------------------------------
+  let internal sort (f:IjsFunc) (this:IjsObj) (cmp:IjsBox) =
+    
+    let denseSortFunc (f:IjsFunc) (x:Descriptor) (y:Descriptor) =
+      let sort = f.Compiler.compileAs<Sort>(f)
+      let x = if x.HasValue then x.Box else Utils.BoxedConstants.undefined
+      let y = if y.HasValue then y.Box else Utils.BoxedConstants.undefined
+      let result = sort.Invoke(f, f.Env.Globals, x, y)
+      result |> Api.TypeConverter.toNumber |> int
 
+    let denseSortDefault (x:Descriptor) (y:Descriptor) =
+      let x = if x.HasValue then x.Box else Utils.BoxedConstants.undefined
+      let y = if y.HasValue then y.Box else Utils.BoxedConstants.undefined
+      String.Compare(Api.TypeConverter.toString x, Api.TypeConverter.toString y)
+
+    match this with
+    | IsArray a ->
+      if cmp.Tag |> Utils.Box.isFunction then
+        match a with
+        | IsDense -> a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
+        | IsSparse -> failwith ".sort currently does not support sparse arrays"
+
+      else
+        match a with
+        | IsDense -> a.Dense |> Array.sortInPlaceWith denseSortDefault
+        | IsSparse -> failwith ".sort currently does not support sparse arrays"
+
+    | IsObject o -> failwith ".sort currently does not support non-arrays"
+
+    this
       
   //----------------------------------------------------------------------------
   let internal toString (f:IjsFunc) (a:IjsObj) =
@@ -269,4 +310,12 @@ module Array =
     let shift = new Func<IjsObj, IjsBox>(shift)
     let shift = Api.HostFunction.create env shift
     proto.put("shift", shift, DontEnum)
+
+    let slice = new Func<IjsFunc, IjsObj, IjsNum, IjsBox, IjsObj>(slice)
+    let slice = Api.HostFunction.create env slice
+    proto.put("slice", slice, DontEnum)
+
+    let sort = new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(sort)
+    let sort = Api.HostFunction.create env sort
+    proto.put("sort", sort, DontEnum)
 

@@ -72,7 +72,7 @@ module Core =
     //Exceptions
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
     | Ast.Throw tree -> Exception.throw ctx tree
-      
+
     | _ -> failwithf "Failed to compile %A" ast
       
   //----------------------------------------------------------------------------
@@ -127,13 +127,13 @@ module Core =
   // Main compiler function that setups compilation and invokes compileAst
   and compile (target:Target) =
 
+    //Extract scope and ast from top level ast node
     let scope, ast =
       match target.Ast with
       | Ast.Function(_, scope, ast) -> scope, ast
       | _ -> failwith "Top AST node must be Tree.Function"
 
-    //--------------------------------------------------------------------------
-    // Main Context
+    //Context
     let ctx = {
       Compiler = compileAst
       Target = target
@@ -151,62 +151,64 @@ module Core =
       LocalScope = Dlr.paramT<Scope> "~localScope"
       ClosureScope = Dlr.paramT<Scope> "~closureScope"
       DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"
-      Parameters = 
-        target.ParamTypes
-          |> Seq.mapi (fun i type' -> Dlr.param (sprintf "param%i" i) type')
-          |> Seq.toArray
+      Parameters = target.ParamTypes |> Seq.mapi Dlr.paramI |> Seq.toArray
     }
 
+    //Initialize scope
     let scopeInit, ctx = Scope.init ctx
+    
+    //Initialize hoisted function definitions
+    let initializeFunction (_, func) =
+      match func with
+      | Ast.Function(Some name, scope, body) ->
+        let func = Function.create ctx compile scope func
+        Identifier.setValue ctx name func
+
+      | _ -> failwith "Que?"
 
     let functionsInit =
       scope.Functions
       |> Map.toSeq
-      |> Seq.map (fun (_, func) ->
-          match func with
-          | Ast.Function(Some name, scope, body) ->
-            let func = Function.create ctx compile scope func
-            Identifier.setValue ctx name func
-
-          | _ -> failwith "Que?"
-        )
+      |> Seq.map initializeFunction
       |> Dlr.blockSimple
 
-    let returnExpr = [
-      (Dlr.labelExprVoid ctx.ReturnLabel)
-      (ctx.EnvReturnBox)]
+    //Return expression
+    let returnExpr = 
+      if ctx.Target.IsFunction 
+        then [Dlr.labelExprVoid ctx.ReturnLabel; ctx.EnvReturnBox]
+        else []
 
+    //Local internal variables
     let locals = 
-      if ctx.Target.IsEval then [] |> Seq.ofList
+      if ctx.Target.IsEval then 
+        [] |> Seq.ofList
+
       else
-        [ ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope; 
-        ] |> Seq.cast<Dlr.ExprParam> 
+        let locals = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope;]
+        locals |> Seq.cast<Dlr.ExprParam> 
 
     //Main function body
     let functionBody = 
-      (if ctx.Target.IsFunction then returnExpr else [])
-        |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
-        |> Dlr.block locals
+      returnExpr  |> Seq.append [scopeInit; functionsInit; ctx.Compile ast]
+                  |> Dlr.block locals
 
-    //TODO: Tidy up
-    let allParameters =
-      (
-        if ctx.Target.IsEval then 
-          [ ctx.Function; ctx.This; ctx.LocalScope; 
-            ctx.ClosureScope; ctx.DynamicScope
-          ] |> Seq.cast<Dlr.ExprParam>
-        else 
-          ctx.Parameters
-            |> Seq.cast<Dlr.ExprParam>
-            |> Seq.append (Seq.cast<Dlr.ExprParam> [ctx.Function; ctx.This])
+    //Parameters
+    let commonParams = [ctx.Function; ctx.This] |> Seq.cast<Dlr.ExprParam>
+    let specificParams = 
+      if ctx.Target.IsEval then 
+        let evalParams = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope]
+        evalParams |> Seq.cast<Dlr.ExprParam>
 
-      ) |> Array.ofSeq
+      else 
+        ctx.Parameters |> Seq.ofArray
 
+    let parameters = Seq.append commonParams specificParams
 
+    //Build lambda
     let lambda = 
       match target.Delegate with 
-      | Some d -> Dlr.lambda d allParameters functionBody
-      | _ -> Dlr.lambdaAuto allParameters functionBody
+      | Some d -> Dlr.lambda d parameters functionBody
+      | _ -> Dlr.lambdaAuto parameters functionBody
       
     #if DEBUG
     Debug.printExpr lambda

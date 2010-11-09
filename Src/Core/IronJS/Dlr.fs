@@ -46,6 +46,8 @@ module Dlr =
   //Variables
   let var name typ = Et.Variable(typ, name)
   let varT<'a> name = var name typeof<'a>
+  let paramI i typ = Et.Parameter(typ, sprintf "param%i" i)
+  let paramIT<'a> i = paramI i typeof<'a>
   let param name typ = Et.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>
   let paramRef name (typ:System.Type) = Et.Parameter(typ.MakeByRefType(), name)
@@ -224,7 +226,7 @@ module Dlr =
     let item = expr.Type.GetProperty("Item")
     Expr.MakeIndex(expr, item, [const' index]) :> Expr
 
-  let index target (exprs:Et seq) = Et.ArrayAccess(target, exprs) :> Et
+  let index target (exprs:Et seq) = Et.ArrayAccess(target, exprs) :> Expr
   let indexInts target indexes = 
     index target (indexes |> Seq.map (fun (x:int) -> const' x))
   let indexInt target index = indexInts target [index]
@@ -232,14 +234,17 @@ module Dlr =
   let index1 target = index target [const' 1]
   let index2 target = index target [const' 2]
 
-  let newArray typ (bounds:Et seq) = Et.NewArrayBounds(typ, bounds) :> Et
+  let newArray typ (bounds:Et seq) = Et.NewArrayBounds(typ, bounds) :> Expr
   let newArrayT<'a> = new' typeof<'a>
 
-  let newArrayItems typ (exprs:Et seq) = Et.NewArrayInit(typ, exprs) :> Et
+  let newArrayItems typ (exprs:Et seq) = Et.NewArrayInit(typ, exprs) :> Expr
   let newArrayItemsT<'a> = newArrayItems typeof<'a>
 
-  let newArrayBounds typ (size:Expr) = Expr.NewArrayBounds(typ, size)
+  let newArrayBounds typ (size:Expr) = Expr.NewArrayBounds(typ, size) :> Expr
   let newArrayBoundsT<'a> = newArrayBounds typeof<'a>
+
+  let newArrayEmpty typ = Expr.NewArrayBounds(typ, int0) :> Expr
+  let newArrayEmptyT<'a> = newArrayEmpty typeof<'a>
 
   let throw (typ:System.Type) (args:Expr seq) = 
     Et.Throw(newArgs typ args) :> Expr
@@ -257,20 +262,20 @@ module Dlr =
 
   let tryFault try' fault = Et.TryFault(try', fault) :> Expr
 
-  let bAnd' left right = Et.And(left, right) :> Et
-  let bAndAsn left right = Et.AndAssign(left, right) :> Et
+  let bAnd' left right = Et.And(left, right) :> Expr
+  let bAndAsn left right = Et.AndAssign(left, right) :> Expr
 
-  let bOr' left right = Et.Or(left, right) :> Et
-  let bOrAsn left right = Et.OrAssign(left, right) :> Et
+  let bOr' left right = Et.Or(left, right) :> Expr
+  let bOrAsn left right = Et.OrAssign(left, right) :> Expr
 
-  let xor left right = Et.ExclusiveOr(left, right) :> Et
-  let xorAsn left right = Et.ExclusiveOrAssign(left, right) :> Et
+  let xor left right = Et.ExclusiveOr(left, right) :> Expr
+  let xorAsn left right = Et.ExclusiveOrAssign(left, right) :> Expr
 
-  let rhs left right = Et.RightShift(left, right) :> Et
-  let rhsAsn left right = Et.RightShiftAssign(left, right) :> Et
+  let rhs left right = Et.RightShift(left, right) :> Expr
+  let rhsAsn left right = Et.RightShiftAssign(left, right) :> Expr
 
-  let lhs left right = Et.LeftShift(left, right) :> Et
-  let lhsAsn left right = Et.LeftShiftAssign(left, right) :> Et
+  let lhs left right = Et.LeftShift(left, right) :> Expr
+  let lhsAsn left right = Et.LeftShiftAssign(left, right) :> Expr
 
   let cmpl target = (Et.Not target) :> Et
 

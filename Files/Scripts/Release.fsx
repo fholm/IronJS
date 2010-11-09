@@ -23,71 +23,40 @@ ctx.PutGlobal("print", print2)
 Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
 
 let sw = new System.Diagnostics.Stopwatch();
-sw.Start();
-let result = ctx.Execute @"(function(){
-function fannkuch(n) {
-   var check = 0;
-   var perm = Array(n);
-   var perm1 = Array(n);
-   var count = Array(n);
-   var maxPerm = Array(n);
-   var maxFlipsCount = 0;
-   var m = n - 1;
+let source = @"(function(){
+  var loops = 15
+  var nx = 120
+  var nz = 120
 
-   for (var i = 0; i < n; i++) perm1[i] = i;
-   var r = n;
-
-   while (true) {
-      // write-out the first 30 permutations
-      if (check < 30){
-         var s = '';
-         for(var i=0; i<n; i++) s += (perm1[i]+1).toString();
-         check++;
+  function morph(a, f) {
+      var PI2nx = Math.PI * 8/nx
+      var sin = Math.sin
+      var f30 = -(50 * sin(f*Math.PI*2))
+    
+      for (var i = 0; i < nz; ++i) {
+          for (var j = 0; j < nx; ++j) {
+              a[3*(i*nx+j)+1]    = sin((j-1) * PI2nx ) * -f30
+          }
       }
+  }
+    
+  var a = Array()
+  for (var i=0; i < nx*nz*3; ++i) 
+      a[i] = 0
 
-      while (r != 1) { count[r - 1] = r; r--; }
-      if (!(perm1[0] == 0 || perm1[m] == m)) {
-         for (var i = 0; i < n; i++) perm[i] = perm1[i];
+  for (var i = 0; i < loops; ++i) {
+      morph(a, i/loops)
+  }
 
-         var flipsCount = 0;
-         var k;
-
-         while (!((k = perm[0]) == 0)) {
-            var k2 = (k + 1) >> 1;
-            for (var i = 0; i < k2; i++) {
-               var temp = perm[i]; perm[i] = perm[k - i]; perm[k - i] = temp;
-            }
-            flipsCount++;
-         }
-
-         if (flipsCount > maxFlipsCount) {
-            maxFlipsCount = flipsCount;
-            for (var i = 0; i < n; i++) maxPerm[i] = perm1[i];
-         }
-      }
-
-      while (true) {
-         if (r == n) return maxFlipsCount;
-         var perm0 = perm1[0];
-         var i = 0;
-         while (i < r) {
-            var j = i + 1;
-            perm1[i] = perm1[j];
-            i = j;
-         }
-         perm1[r] = perm0;
-
-         count[r] = count[r] - 1;
-         if (count[r] > 0) break;
-         r++;
-      }
-   }
-}
-
-var n = 8;
-var ret = fannkuch(n);
+  testOutput = 0;
+  for (var i = 0; i < nx; i++)
+      testOutput += a[3*(i*nx+i)+1];
+  a = null;
 })();
 "
+ctx.Execute source |> ignore
+sw.Restart();
+ctx.Execute source |> ignore
 sw.Stop();
 
 printfn "%i" sw.ElapsedMilliseconds

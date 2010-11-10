@@ -7,28 +7,23 @@ module Expr =
 
   module Patterns =
     
-    let (|Box|Ref|Val|) (expr:Dlr.Expr) =
+    let (|IsBox|IsRef|IsVal|) (expr:Dlr.Expr) =
       if expr.Type = typeof<IjsBox>
-        then Box
+        then IsBox
         elif Dlr.Utils.isT<IjsNum> expr || Dlr.Utils.isT<IjsBool> expr
-          then Val
-          else Ref
+          then IsVal
+          else IsRef
 
-    let (|Index|TypeCode|) (expr:Dlr.Expr) =
-      if expr.Type = typeof<uint32> then Index else TypeCode
+    let (|IsIndex|_|) (expr:Dlr.Expr) =
+      if expr.Type = typeof<uint32> then Some () else None
 
-    let (|IsObj|IsBox|IsClr|) (expr:Dlr.Expr) =
-      if Dlr.Utils.isT<IjsObj> expr    then IsObj
-      elif Dlr.Utils.isT<IjsBox> expr  then IsBox
-                                       else IsClr
-
-  let undefined = 
-    Dlr.propertyStaticT<IronJS.Undefined> "Instance"
+  let undefined = Dlr.propertyStaticT<IronJS.Undefined> "Instance"
     
   module BoxedConstants =
     //-------------------------------------------------------------------------
     let zero = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.zero
-    let undefined = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
+    let undefined = 
+      Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
     
   //-------------------------------------------------------------------------
   let voidAsUndefined (expr:Dlr.Expr) =
@@ -92,13 +87,18 @@ module Expr =
       failwith "Can't test .Tag on non-Box expressions"
 
   //-------------------------------------------------------------------------
-  let testBoxType expr typeCode = 
+  let testBoxType expr tag = 
     if isBoxed expr then
-      let comparer = 
-        if typeCode >= TypeTags.Clr
-          then Dlr.gtEq
-          else Dlr.eq
-      comparer (getBoxType expr) (Dlr.const' typeCode)
+      match tag with
+      | TypeTags.Number ->
+        Dlr.lt (Dlr.field expr "Marker") (!!!0xFFF9us)  
+
+      | _ -> 
+        let comparer = 
+          if tag >= TypeTags.Clr
+            then Dlr.gtEq
+            else Dlr.eq
+        comparer (getBoxType expr) (!!!tag)
 
     else
       failwith "Can't test .Tag on non-Box expressions"
@@ -259,9 +259,3 @@ module Expr =
 
   let isConstructor expr =
     Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)
-
-  //-------------------------------------------------------------------------
-  let unboxIndex expr i tc =
-    match tc with
-    | None -> Dlr.indexInt expr i
-    | Some tc -> Dlr.field (Dlr.indexInt expr i) (Utils.tag2field tc) 

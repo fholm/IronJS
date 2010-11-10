@@ -5,20 +5,13 @@ open IronJS
 open IronJS.Aliases
 open IronJS.Api.Extensions
 open IronJS.DescriptorAttrs
+open IronJS.Utils.Patterns
 
 //------------------------------------------------------------------------------
 // 15.4
 module Array =
 
   type private Sort = Func<IjsFunc, IjsObj, IjsBox, IjsBox, IjsBox>
-
-  let private (|IsDense|IsSparse|) (array:IjsArray) = 
-    if Utils.Array.isDense array then IsDense else IsSparse
-
-  let private (|IsArray|IsObject|) (object':IjsObj) =
-    if object'.Class = Classes.Array 
-      then IsArray(object' :?> IjsArray) 
-      else IsObject(object')
 
   //----------------------------------------------------------------------------
   // 15.4.2
@@ -45,22 +38,22 @@ module Array =
         then "," else separator |> Api.TypeConverter.toString
 
     match this with
-    | IsArray a ->
+    | IsArray array ->
 
-      match a with
+      match array with
       | IsDense ->
         let toString (x:Descriptor) = 
           if x.HasValue then Api.TypeConverter.toString x.Box else "undefined"
 
-        String.Join(separator, a.Dense |> Array.map toString)
+        String.Join(separator, array.Dense |> Array.map toString)
 
       | IsSparse ->
         let items = new MutableList<string>();
         let mutable i = 0u
         let mutable box = Box()
 
-        while i < a.Length do
-          if a.Sparse.TryGetValue(i, &box) 
+        while i < array.Length do
+          if array.Sparse.TryGetValue(i, &box) 
             then items.Add (box |> Api.TypeConverter.toString) 
             else items.Add "undefined"
 
@@ -68,41 +61,37 @@ module Array =
 
         String.Join(separator, items)
 
-    | IsObject o ->
-      let length = o |> Api.Object.getLength
+    | _ ->
+      let length = this |> Api.Object.getLength
       let items = new MutableList<string>()
       
       let mutable index = 0u
       while index < length do
-        items.Add(o.get index |> Api.TypeConverter.toString)  
+        items.Add(this.get index |> Api.TypeConverter.toString)  
         index <- index + 1u
 
       String.Join(separator, items)
       
   //----------------------------------------------------------------------------
   let internal concat (f:IjsFunc) (this:IjsObj) (args:IjsBox array) =
-    match this with
-    | IsArray a ->
-      let items = new MutableList<IjsBox>(Api.Array.collectIndexValues a)
-      for arg in args do
-        if arg.Tag |> Utils.Box.isObject 
-          then items.AddRange(Api.Array.collectIndexValues arg.Object)
-          else items.Add arg
+    let items = new MutableList<IjsBox>(Api.Array.collectIndexValues this)
 
-      let array = 
-        Api.Environment.createArray f.Env (uint32 items.Count) :?> IjsArray
+    for arg in args do
+      if arg.Tag |> Utils.Box.isObject 
+        then items.AddRange(Api.Array.collectIndexValues arg.Object)
+        else items.Add arg
+
+    let array = 
+      Api.Environment.createArray f.Env (uint32 items.Count) :?> IjsArray
     
-      let mutable index = 0u
-      while index < array.Length do
-        let i = int index
-        array.Dense.[i].Box <- items.[i]
-        array.Dense.[i].HasValue <- true
-        index <- index + 1u
+    let mutable index = 0u
+    while index < array.Length do
+      let i = int index
+      array.Dense.[i].Box <- items.[i]
+      array.Dense.[i].HasValue <- true
+      index <- index + 1u
 
-      array :> IjsObj
-
-    | IsObject o -> 
-      failwith "Not available for objects yet"
+    array :> IjsObj
     
   //----------------------------------------------------------------------------
   let internal pop (this:IjsObj) =
@@ -137,18 +126,18 @@ module Array =
         a.delete index |> ignore
         item
 
-    | IsObject o -> 
-      let length = Api.Object.getLength o
+    | _ -> 
+      let length = Api.Object.getLength this
       
       if length = 0u then
-        o.put("length", 0.0)
+        this.put("length", 0.0)
         Utils.BoxedConstants.undefined
 
       else
         let index = length - 1u
-        let item = o.get index
-        o.delete index |> ignore
-        o.put("length", double index)
+        let item = this.get index
+        this.delete index |> ignore
+        this.put("length", double index)
         item
     
   //----------------------------------------------------------------------------
@@ -178,7 +167,7 @@ module Array =
 
       a :> IjsObj
 
-    | IsObject o -> 
+    | _ -> 
       let rec reverseObject (o:IjsObj) length (index:uint32) items =
         if index >= length then items
         else
@@ -193,12 +182,12 @@ module Array =
 
             
       let length = this |> Api.Object.getLength
-      let items = reverseObject o length 0u []
+      let items = reverseObject this length 0u []
 
       for index, item in items do
-        o.put(index, item)
+        this.put(index, item)
 
-      o
+      this
     
   //----------------------------------------------------------------------------
   let internal shift (this:IjsObj) =
@@ -243,12 +232,12 @@ module Array =
           updateArrayLength a
           item
 
-    | IsObject o -> 
+    | _ -> 
       let length = this |> Api.Object.getLength 
       if length = 0u then Utils.BoxedConstants.undefined
       else
-        let item = o.get 0u
-        o.delete 0u |> ignore
+        let item = this.get 0u
+        this.delete 0u |> ignore
         item
     
   //----------------------------------------------------------------------------
@@ -277,13 +266,24 @@ module Array =
       
     array :> IjsObj
 
-  type SparseComparer(cmp) =
+  type private SparseComparer(cmp) =
     interface System.Collections.Generic.IComparer<bool * IjsBox> with
       member x.Compare((_, a), (_, b)) = cmp a b
 
   //----------------------------------------------------------------------------
   let internal sort (f:IjsFunc) (this:IjsObj) (cmp:IjsBox) =
     
+    (*
+    // Note that the implementation for sorting sparse arrays is incredibly
+    // slow and consumes a lot of memory. This comes from the fact that
+    // I've cheated and implemented sparse arrays using a sorted dictionary.
+    // 
+    // This will be addressed when I get time to replace the sparse array
+    // implementation with something more space effective (possibly a BitTrie)
+    // that also gives me access to the internals of the data structure 
+    // allowing me to sort the sparse array in place.
+    *)
+
     let denseSortFunc (f:IjsFunc) =
       let sort = f.Compiler.compileAs<Sort> f
 
@@ -299,7 +299,7 @@ module Array =
       String.Compare(Api.TypeConverter.toString x, Api.TypeConverter.toString y)
 
     let sparseSort (cmp:SparseComparer) (length:uint32) (vals:SparseArray) =
-      let items = MutableList<bool * IjsBox>()
+      let items = new MutableList<bool * IjsBox>()
       let newArray = new SparseArray()
 
       let i = ref 0u
@@ -348,7 +348,7 @@ module Array =
           let cmp = new SparseComparer(sparseSortDefault)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
-    | IsObject o -> failwith ".sort currently does not support non-arrays"
+    | _ -> failwith ".sort currently does not support non-arrays"
 
     this
       

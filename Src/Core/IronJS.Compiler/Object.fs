@@ -39,17 +39,17 @@ module Object =
     //--------------------------------------------------------------------------
     let put name (value:Dlr.Expr) expr = 
       match value with
-      | Box -> putBox expr name value
-      | Ref -> putRef expr name value
-      | Val -> putVal expr name value
+      | IsBox -> putBox expr name value
+      | IsRef -> putRef expr name value
+      | IsVal -> putVal expr name value
 
     //--------------------------------------------------------------------------
     let putName expr name (value:Dlr.Expr) = 
       let name = Dlr.const' name
       match value with
-      | Box -> putBox expr name value
-      | Ref -> putRef expr name value
-      | Val -> putVal expr name value
+      | IsBox -> putBox expr name value
+      | IsRef -> putRef expr name value
+      | IsVal -> putVal expr name value
   
     //--------------------------------------------------------------------------
     let get name expr = 
@@ -83,7 +83,7 @@ module Object =
     //--------------------------------------------------------------------------
     let putBox expr index value =
       match index with
-      | Index ->
+      | IsIndex ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           let args = [tmp; index; value]
           let method' = Expr.Object.Methods.putBoxIndex tmp
@@ -91,12 +91,12 @@ module Object =
           [invoke; value]
         )
 
-      | TypeCode -> putConvert expr index value None
+      | _ -> putConvert expr index value None
 
     //--------------------------------------------------------------------------
     let putVal expr index value =
       match index with
-      | Index ->
+      | IsIndex ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           let args = [tmp; index; Expr.normalizeVal value]
           let method' = Expr.Object.Methods.putValIndex tmp
@@ -104,14 +104,14 @@ module Object =
           [invoke; value]
         )
             
-      | TypeCode -> putConvert expr index value None
+      | _ -> putConvert expr index value None
 
     //--------------------------------------------------------------------------
     let putRef expr index (value:Dlr.Expr) =
       let tag = value.Type |> Utils.type2tag |> Dlr.const'
 
       match index with
-      | Index ->
+      | IsIndex ->
         Expr.blockTmpT<IjsObj> expr (fun tmp -> 
           let args =  [tmp; index; value; tag]
           let method' = Expr.Object.Methods.putRefIndex tmp
@@ -119,23 +119,23 @@ module Object =
           [invoke; value]
         )
             
-      | TypeCode -> putConvert expr index value (Some tag)
+      | _ -> putConvert expr index value (Some tag)
       
     //--------------------------------------------------------------------------
     let put index value expr =
       match value with
-      | Box -> putBox expr index value
-      | Val -> putVal expr index value
-      | Ref -> putRef expr index value
+      | IsBox -> putBox expr index value
+      | IsVal -> putVal expr index value
+      | IsRef -> putRef expr index value
 
     //--------------------------------------------------------------------------
     let get (index:Dlr.Expr) expr = 
       Expr.blockTmpT<IjsObj> expr (fun tmp -> 
         match index with
-        | Index -> 
+        | IsIndex -> 
           [Dlr.invoke (Expr.Object.Methods.getIndex tmp) [tmp; index]]
 
-        | TypeCode ->
+        | _ ->
           [Dlr.callStaticT<Api.Object.Index.Converters> "get" [tmp; index]]
       )
 

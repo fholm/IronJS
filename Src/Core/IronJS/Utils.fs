@@ -73,6 +73,9 @@ module Utils =
     let isObject tag = tag >= TypeTags.Object
     let isFunction tag = tag >= TypeTags.Function
     let isUndefined tag = tag = TypeTags.Undefined
+    let isString tag = tag = TypeTags.String
+    let isBool tag = tag = TypeTags.Bool
+    let isClr tag = tag = TypeTags.Clr
 
     let isRegExp (box:IjsBox) =
       isObject box.Tag && box.Object.Class = Classes.Regexp
@@ -104,66 +107,84 @@ module Utils =
     
   //----------------------------------------------------------------------------
   module Patterns =
-
-    let (|IsObject|_|) (box:IjsBox) =
-      if box.Tag >= TypeTags.Object
-        then Some box.Object else None
-
-    let (|IsNull|_|) (box:IjsBox) =
-      if box.Tag = TypeTags.Clr && box.Clr = null then Some null else None
+  
+    let (|IsArray|_|) (obj:IjsObj) =
+      if obj.Class = Classes.Array
+        then Some(obj :?> IjsArray)
+        else None
 
     let (|IsFunction|_|) (o:IjsObj) =
-      if o.Class = Classes.Function then Some (o :?> IjsFunc) else None
+      if o.Class = Classes.Function 
+        then Some(o :?> IjsFunc) 
+        else None
 
-    let (|IsArrayOrArguments|IsOther|) (o:IjsObj) =
-      if o.Class = Classes.Array || o :? Arguments 
-        then IsArrayOrArguments else IsOther
+    let (|IsDense|IsSparse|) (array:IjsArray) =
+      if Array.isDense array then IsDense else IsSparse
 
-    let (|Tagged|_|) (box:IjsBox) = 
-      if Box.isTagged box.Marker then Some box.Tag else None
-    
-    let (|Number|_|) (box:IjsBox) = 
+    let (|IsNull|_|) (box:IjsBox) =
+      if box.Tag = TypeTags.Clr && FSKit.Utils.isNull box.Clr
+        then Some ()
+        else None
+
+    let (|IsNumber|_|) (box:IjsBox) = 
       if Box.isNumber box.Marker then Some box.Number else None
 
-    let (|NumberIndex|_|) (num:IjsNum) =
-      let index = uint32 num
-      if double index = num then Some index else None
+    let (|IsString|_|) (box:IjsBox) =
+      if Box.isString box.Tag then Some box.String else None
 
-    let (|NumberAndIndex|_|) (box:IjsBox) =
-      match box with
-      | Number n -> 
-        match n with
-        | NumberIndex i -> Some i
-        | _ -> None
-      | _ -> None
+    let (|IsBool|_|) (box:IjsBox) =
+      if Box.isBool box.Tag then Some box.Bool else None
 
-    let (|String|_|) (box:IjsBox) =
-      if box.Tag = TypeTags.String then Some box.String else None
+    let (|IsUndefined|_|) (box:IjsBox) =
+      if Box.isUndefined box.Tag then Some(box.Clr :?> Undefined) else None
 
-    let (|StringIndex|_|) (str:IjsStr) =
+    let (|IsTagged|_|) (box:IjsBox) = 
+      if Box.isTagged box.Marker then Some box.Tag else None
+
+    let (|IsNumberIndex|_|) (number:IjsNum) =
+      let index = uint32 number
+      if double index = number then Some index else None
+
+    let (|IsStringIndex|_|) (str:IjsStr) =
+      //Handles 0, 1, etc.
       match UInt32.TryParse str with
-      | true, num -> Some num
-      | _ -> None
+      | true, index -> Some index
+      | _ -> 
+        //Handles 0.0, 1.0, etc.
+        match Double.TryParse str with
+        | true, num ->
+          let index = uint32 num
+          if (index |> double) = num then Some index else None
 
-    let (|StringAndIndex|_|) (box:IjsBox) =
-      match box with
-      | String s ->
-        match s with
-        | StringIndex i -> Some i
         | _ -> None
+
+    let (|IsIndex|_|) (box:IjsBox) =
+      match box with
+      | IsNumber n ->
+        match n with
+        | IsNumberIndex i -> Some i
+        | _ -> None
+
+      | IsString s ->
+        match s with
+        | IsStringIndex i -> Some i
+        | _ -> None
+
       | _ -> None
 
     let (|Boolean|Number|Clr|String|Undefined|Object|Function|) (box:IjsBox) =
-      if Box.isNumber box.Marker then Number
-      else
-        match box.Tag with
-        | TypeTags.Bool -> Boolean
-        | TypeTags.Clr -> Clr
-        | TypeTags.String -> String
-        | TypeTags.Undefined -> Undefined
-        | TypeTags.Object -> Object
-        | TypeTags.Function -> Function
-        | _ -> failwith "Que?"
+        if Box.isNumber box.Marker then 
+          Number(box.Number)
+
+        else
+          match box.Tag with
+          | TypeTags.Bool -> Boolean(box.Bool)
+          | TypeTags.Clr -> Clr(box.Clr)
+          | TypeTags.String -> String(box.String)
+          | TypeTags.Undefined -> Undefined(box.Clr :?> Undefined)
+          | TypeTags.Object -> Object(box.Object)
+          | TypeTags.Function -> Function(box.Func)
+          | _ -> failwithf "Invalid runtime type tag '%i'" box.Tag
         
   //----------------------------------------------------------------------------
   let isStringIndex (str:string, out:uint32 byref) = 

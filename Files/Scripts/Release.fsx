@@ -23,7 +23,7 @@ ctx.PutGlobal("print", print2)
 Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
 
 let sw = new System.Diagnostics.Stopwatch();
-let source = @"(function(){
+let source = @"var z = function(){
 var AG_CONST = 0.6072529350;
 
 function FIXED(X)
@@ -86,11 +86,17 @@ function cordic( runs ) {
 }
 
 cordic(25000);
-})();
+}; z();
 "
 ctx.Execute source |> ignore
 sw.Restart();
-ctx.Execute source |> ignore
+ctx.Execute "z();"
 sw.Stop();
 
 printfn "%i" sw.ElapsedMilliseconds
+
+
+let mutable u = UInt32.MaxValue
+
+for i = 1 to 10000000 do
+  u <- u % (uint32 i)

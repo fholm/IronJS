@@ -51,10 +51,8 @@ module Function =
     match func with
     | IsFunction f ->
       match args with
-      | IsArrayOrArguments -> 
+      | IsArray args -> 
 
-        let args = args :?> IjsArray
-        
         let getIndex i =
           args.Methods.GetIndex.Invoke(args, uint32 i)
 
@@ -70,7 +68,7 @@ module Function =
         let result = compiled.DynamicInvoke(args)
         Utils.box result
 
-      | IsOther -> Api.Environment.raiseTypeError apply.Env ""
+      | _ -> Api.Environment.raiseTypeError apply.Env ""
 
     | _ -> Api.Environment.raiseTypeError apply.Env ""
  

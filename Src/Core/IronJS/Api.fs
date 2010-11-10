@@ -276,13 +276,13 @@ type TypeConverter =
   static member toClrObject(c:ClrObject) = c
   static member toClrObject(b:IjsBox) =
     match b with
-    | Number -> b.Number :> ClrObject
-    | Undefined -> null
-    | String -> b.String :> ClrObject
-    | Boolean -> b.Bool :> ClrObject
-    | Clr -> b.Clr
-    | Object -> b.Object :> ClrObject
-    | Function -> b.Func :> ClrObject
+    | Number number -> box number
+    | Undefined _ -> null
+    | String string -> box string
+    | Boolean boolean -> box boolean
+    | Clr clr -> clr
+    | Object obj -> box obj
+    | Function func -> box func
 
   static member toClrObject (expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toClrObject" [expr]
@@ -291,15 +291,15 @@ type TypeConverter =
   static member toString (b:IjsBool) = if b then "true" else "false"
   static member toString (s:IjsStr) = s
   static member toString (u:Undefined) = "undefined"
-  static member toString (b:IjsBox) =
-    match b with
-    | Undefined -> "undefined"
-    | String -> b.String
-    | Number -> TypeConverter.toString b.Number
-    | Boolean -> TypeConverter.toString b.Bool
-    | Clr -> TypeConverter.toString b.Clr
-    | Object -> TypeConverter.toString b.Object
-    | Function -> TypeConverter.toString (b.Func :> IjsObj)
+  static member toString (box:IjsBox) =
+    match box with
+    | Undefined _ -> "undefined"
+    | String string -> string
+    | Number number -> number |> TypeConverter.toString
+    | Boolean boolean -> boolean |> TypeConverter.toString
+    | Clr clr -> clr |> TypeConverter.toString
+    | Object obj -> obj |> TypeConverter.toString
+    | Function func -> (func :> IjsObj) |> TypeConverter.toString
 
   static member toString (o:IjsObj) = 
     match o.Class with
@@ -322,15 +322,15 @@ type TypeConverter =
   static member toPrimitive (s:IjsStr, _:byte) = Utils.boxString s
   static member toPrimitive (o:IjsObj, h:byte) = o.Methods.Default.Invoke(o, h)
   static member toPrimitive (o:IjsObj) = o.Methods.Default.Invoke(o, 0uy)
-  static member toPrimitive (b:IjsBox, h:byte) =
+  static member toPrimitive2 (b:IjsBox, h:byte) =
     match b with
-    | Number
-    | Boolean
-    | String
-    | Undefined -> b
-    | Clr -> TypeConverter.toPrimitive(b.Clr, h)
-    | Object
-    | Function -> b.Object.Methods.Default.Invoke(b.Object, h)
+    | Number _
+    | Boolean _
+    | String _
+    | Undefined _ -> b
+    | Clr clr -> TypeConverter.toPrimitive(clr, h)
+    | Object obj -> obj.Methods.Default.Invoke(obj, h)
+    | Function func -> func.Methods.Default.Invoke(func, h)
   
   static member toPrimitive (c:ClrObject, _:byte) = 
     Utils.boxClr (if c = null then null else c.ToString())
@@ -348,15 +348,15 @@ type TypeConverter =
   static member toBoolean (s:IjsStr) = s.Length > 0
   static member toBoolean (u:Undefined) = false
   static member toBoolean (o:IjsObj) = true
-  static member toBoolean (b:IjsBox) =
-    match b with 
-    | Number -> TypeConverter.toBoolean b.Number
-    | Boolean -> b.Bool
-    | Undefined -> false
-    | String -> b.String.Length > 0
-    | Clr -> TypeConverter.toBoolean b.Clr
-    | Object 
-    | Function -> true
+  static member toBoolean (box:IjsBox) =
+    match box with 
+    | Number number -> TypeConverter.toBoolean number
+    | Boolean boolean -> boolean
+    | Undefined _ -> false
+    | String string -> string.Length > 0
+    | Clr clr -> TypeConverter.toBoolean clr
+    | Object _
+    | Function _ -> true
     
   static member toBoolean (expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toBoolean" [expr]
@@ -365,15 +365,15 @@ type TypeConverter =
   static member toNumber (b:IjsBool) : double = if b then 1.0 else 0.0
   static member toNumber (c:ClrObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = IjsNum.NaN
-  static member toNumber (b:IjsBox) =
-    match b with
-    | Number -> b.Number
-    | Boolean -> if b.Bool then 1.0 else 0.0
-    | String -> TypeConverter.toNumber(b.String)
-    | Undefined -> NaN
-    | Clr -> TypeConverter.toNumber b.Clr
-    | Object 
-    | Function -> TypeConverter.toNumber(b.Object)
+  static member toNumber (box:IjsBox) =
+    match box with
+    | Number number -> number
+    | Boolean boolean -> if boolean then 1.0 else 0.0
+    | String string -> string |> TypeConverter.toNumber
+    | Undefined _ -> NaN
+    | Clr clr -> TypeConverter.toNumber clr
+    | Object obj -> obj |> TypeConverter.toNumber
+    | Function func -> (func :> IjsObj) |> TypeConverter.toNumber
 
   static member toNumber (o:IjsObj) : IjsNum = 
     match o.Class with
@@ -403,13 +403,15 @@ type TypeConverter =
 
   static member toObject (env:IjsEnv, b:Box) =
     match b with
-    | Function
-    | Object -> b.Object
-    | Undefined
-    | Clr -> Errors.Generic.notImplemented()
-    | Number -> Environment.createNumber env b.Number
-    | String -> Environment.createString env b.String
-    | Boolean -> Environment.createBoolean env b.Bool
+    | Function _ 
+    | Object _ -> b.Object
+
+    | Undefined _
+    | Clr _ -> Errors.Generic.notImplemented()
+
+    | Number number -> Environment.createNumber env number
+    | String string -> Environment.createString env string
+    | Boolean boolean -> Environment.createBoolean env boolean
 
   static member toObject (env:Dlr.Expr, expr:Dlr.Expr) =
     Dlr.callStaticT<TypeConverter> "toObject" [env; expr]
@@ -460,8 +462,8 @@ type Operators =
   // typeof
   static member typeOf (o:IjsBox) = 
     match o with
-    | Number _ -> "number" 
-    | IsNull _ -> "object"
+    | IsNumber _ -> "number" 
+    | IsNull -> "object"
     | _ -> TypeTags.Names.[o.Tag]
 
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
@@ -503,10 +505,10 @@ type Operators =
       Environment.raiseTypeError env "Right operand is not a object"
 
     match l with
-    | StringAndIndex i
-    | NumberAndIndex i -> r.Object.Methods.HasIndex.Invoke(r.Object, i)
+    | IsIndex i -> r.Object.Methods.HasIndex.Invoke(r.Object, i)
     | _ -> 
-      r.Object.Methods.HasProperty.Invoke(r.Object, TypeConverter.toString l)
+      let name = TypeConverter.toString l
+      r.Object.Methods.HasProperty.Invoke(r.Object, name)
 
   // instanceof
   static member instanceOf (env, l,r) = 
@@ -1376,9 +1378,8 @@ module Object =
       //------------------------------------------------------------------------
       static member put (o:IjsObj, index:IjsBox, value:IjsBox) =
         match index with
-        | NumberAndIndex i 
-        | StringAndIndex i -> o.put(i, value)
-        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | IsIndex i -> o.put(i, value)
+        | IsTagged _ -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
       
       static member put (o:IjsObj, index:IjsBool, value:IjsBox) =
@@ -1386,12 +1387,12 @@ module Object =
       
       static member put (o:IjsObj, index:IjsNum, value:IjsBox) =
         match index with
-        | NumberIndex i -> o.put(i, value)
+        | IsNumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
         
       static member put (o:IjsObj, index:ClrObject, value:IjsBox) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
 
       static member put (o:IjsObj, index:Undefined, value:IjsBox) =
@@ -1399,20 +1400,19 @@ module Object =
       
       static member put (o:IjsObj, index:IjsStr, value:IjsBox) =
         match index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
 
       static member put (o:IjsObj, index:IjsObj, value:IjsBox) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
         
       //------------------------------------------------------------------------
       static member put (o:IjsObj, index:IjsBox, value:IjsVal) =
         match index with
-        | NumberAndIndex i
-        | StringAndIndex i -> o.put(i, value)
-        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | IsIndex i -> o.put(i, value)
+        | IsTagged _ -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
       
       static member put (o:IjsObj, index:IjsBool, value:IjsVal) =
@@ -1420,12 +1420,12 @@ module Object =
       
       static member put (o:IjsObj, index:IjsNum, value:IjsVal) =
         match index with
-        | NumberIndex i -> o.put(i, value)
+        | IsNumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
         
       static member put (o:IjsObj, index:ClrObject, value:IjsVal) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
 
       static member put (o:IjsObj, index:Undefined, value:IjsVal) =
@@ -1433,20 +1433,19 @@ module Object =
       
       static member put (o:IjsObj, index:IjsStr, value:IjsVal) =
         match index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value)
 
       static member put (o:IjsObj, index:IjsObj, value:IjsVal) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value)
+        | IsStringIndex i -> o.put(i, value)
         | index -> o.put(index, value)
         
       //------------------------------------------------------------------------
       static member put (o:IjsObj, index:IjsBox, value:IjsRef, tc:TypeTag) =
         match index with
-        | NumberAndIndex i
-        | StringAndIndex i -> o.put(i, value, tc)
-        | Tagged tc -> o.put(TypeConverter.toString index, value)
+        | IsIndex i -> o.put(i, value, tc)
+        | IsTagged tc -> o.put(TypeConverter.toString index, value)
         | _ -> failwith "Que?"
       
       static member put (o:IjsObj, index:IjsBool, value:IjsRef, tc:TypeTag) =
@@ -1454,12 +1453,12 @@ module Object =
       
       static member put (o:IjsObj, index:IjsNum, value:IjsRef, tc:TypeTag) =
         match index with
-        | NumberIndex i -> o.put(i, value)
+        | IsNumberIndex i -> o.put(i, value)
         | _ -> o.put(TypeConverter.toString index, value, tc)
         
       static member put (o:IjsObj, index:ClrObject, value:IjsRef, tc:TypeTag) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value, tc)
+        | IsStringIndex i -> o.put(i, value, tc)
         | index -> o.put(index, value, tc)
 
       static member put (o:IjsObj, index:Undefined, value:IjsRef, tc:TypeTag) =
@@ -1467,20 +1466,19 @@ module Object =
       
       static member put (o:IjsObj, index:IjsStr, value:IjsRef, tc:TypeTag) =
         match index with
-        | StringIndex i -> o.put(i, value, tc)
+        | IsStringIndex i -> o.put(i, value, tc)
         | _ -> o.put(TypeConverter.toString index, value, tc)
 
       static member put (o:IjsObj, index:IjsObj, value:IjsRef, tc:TypeTag) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.put(i, value, tc)
+        | IsStringIndex i -> o.put(i, value, tc)
         | index -> o.put(index, value, tc)
 
       //------------------------------------------------------------------------
       static member get (o:IjsObj, index:IjsBox) =
         match index with
-        | NumberAndIndex i
-        | StringAndIndex i -> o.get i
-        | Tagged tc -> o.get(TypeConverter.toString index)
+        | IsIndex i -> o.get i
+        | IsTagged _ -> o.get(TypeConverter.toString index)
         | _ -> failwith "Que?"
       
       static member get (o:IjsObj, index:IjsBool) =
@@ -1488,12 +1486,12 @@ module Object =
       
       static member get (o:IjsObj, index:IjsNum) =
         match index with
-        | NumberIndex i -> o.get i
+        | IsNumberIndex i -> o.get i
         | _ -> o.get(TypeConverter.toString index)
         
       static member get (o:IjsObj, index:ClrObject) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.get i
+        | IsStringIndex i -> o.get i
         | index -> o.get(TypeConverter.toString index)
 
       static member get (o:IjsObj, index:Undefined) =
@@ -1501,20 +1499,19 @@ module Object =
       
       static member get (o:IjsObj, index:IjsStr) =
         match index with
-        | StringIndex i -> o.get i
+        | IsStringIndex i -> o.get i
         | _ -> o.get index
 
       static member get (o:IjsObj, index:IjsObj) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.get i
+        | IsStringIndex i -> o.get i
         | index -> o.get index
 
       //------------------------------------------------------------------------
       static member has (o:IjsObj, index:IjsBox) =
         match index with
-        | NumberAndIndex i
-        | StringAndIndex i -> o.has i
-        | Tagged tc -> o.has(TypeConverter.toString index)
+        | IsIndex i -> o.has i
+        | IsTagged _ -> o.has(TypeConverter.toString index)
         | _ -> failwith "Que?"
       
       static member has (o:IjsObj, index:IjsBool) =
@@ -1522,12 +1519,12 @@ module Object =
       
       static member has (o:IjsObj, index:IjsNum) =
         match index with
-        | NumberIndex i -> o.has i
+        | IsNumberIndex i -> o.has i
         | _ -> o.has(TypeConverter.toString index)
         
       static member has (o:IjsObj, index:ClrObject) =
         match TypeConverter.toString index with
-        | StringIndex i -> o.has i
+        | IsStringIndex i -> o.has i
         | index -> o.has(TypeConverter.toString index)
 
       static member has (o:IjsObj, index:Undefined) =
@@ -1535,7 +1532,7 @@ module Object =
       
       static member has (o:IjsObj, index:IjsStr) =
         match index with
-        | StringIndex i -> o.has i
+        | IsStringIndex i -> o.has i
         | _ -> o.has index
 
       static member has (o:IjsObj, index:IjsObj) =
@@ -1840,38 +1837,51 @@ module Array =
 
   //----------------------------------------------------------------------------
   let collectIndexValues (o:IjsObj) =
-    let o = o :?> IjsArray
-    if Utils.Array.isDense o 
-      
+    //Array
+    if o :? IjsArray then 
+      let o = o :?> IjsArray
+
       //Dense array
-      then seq {
+      if Utils.Array.isDense o then
+        seq {
         
-        let i = ref 0u
-        while !i < o.Length do
-          let descr = o.Dense.[int !i]
-          if descr.HasValue 
-            then yield descr.Box
+          let i = ref 0u
+          while !i < o.Length do
+            let descr = o.Dense.[int !i]
+            if descr.HasValue 
+              then yield descr.Box
 
-          elif o.hasPrototype
-            then yield o.Prototype.get !i
-            else yield Utils.BoxedConstants.undefined
-
-          i := !i + 1u
-      }
-
-      //Sparse array
-      else seq {
-        let i = ref 0u
-        while !i < o.Length do
-          
-          match o.Sparse.TryGetValue !i with
-          | true, box -> yield box
-          | _ -> 
-            if o.hasPrototype 
+            elif o.hasPrototype
               then yield o.Prototype.get !i
               else yield Utils.BoxedConstants.undefined
 
-          i := !i + 1u
+            i := !i + 1u
+        }
+
+      //Sparse array
+      else 
+        seq {
+          let i = ref 0u
+          while !i < o.Length do
+          
+            match o.Sparse.TryGetValue !i with
+            | true, box -> yield box
+            | _ -> 
+              if o.hasPrototype 
+                then yield o.Prototype.get !i
+                else yield Utils.BoxedConstants.undefined
+
+            i := !i + 1u
+        }
+        
+    //Object
+    else
+      seq { 
+        let length = o |> Object.getLength
+        let index = ref 0u
+        while !index < length do
+          yield o.get !index  
+          index := !index + 1u
       }
 
 

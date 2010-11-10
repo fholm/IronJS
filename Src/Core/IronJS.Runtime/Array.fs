@@ -39,12 +39,13 @@ module Array =
       
   //----------------------------------------------------------------------------
   let internal join (f:IjsFunc) (this:IjsObj) (separator:IjsBox) =
+  
+    let separator =
+      if separator.Tag |> Utils.Box.isUndefined 
+        then "," else separator |> Api.TypeConverter.toString
+
     match this with
     | IsArray a ->
-    
-      let separator =
-        if separator.Tag |> Utils.Box.isUndefined 
-          then "," else separator |> Api.TypeConverter.toString
 
       match a with
       | IsDense ->
@@ -68,7 +69,15 @@ module Array =
         String.Join(separator, items)
 
     | IsObject o ->
-      failwith "Not available for objects yet"
+      let length = o |> Api.Object.getLength
+      let items = new MutableList<string>()
+      
+      let mutable index = 0u
+      while index < length do
+        items.Add(o.get index |> Api.TypeConverter.toString)  
+        index <- index + 1u
+
+      String.Join(separator, items)
       
   //----------------------------------------------------------------------------
   let internal concat (f:IjsFunc) (this:IjsObj) (args:IjsBox array) =
@@ -78,7 +87,7 @@ module Array =
       for arg in args do
         if arg.Tag |> Utils.Box.isObject 
           then items.AddRange(Api.Array.collectIndexValues arg.Object)
-          else items.Add(arg)
+          else items.Add arg
 
       let array = 
         Api.Environment.createArray f.Env (uint32 items.Count) :?> IjsArray
@@ -100,36 +109,60 @@ module Array =
     match this with
     | IsArray a ->
       let index = a.Length - 1u
-      let item = 
-        match a with
-        | IsDense ->
-          let descriptor = a.Dense.[int index]
-          if descriptor.HasValue 
-            then descriptor.Box 
-            else Utils.BoxedConstants.undefined
 
-        | IsSparse ->
-          match a.Sparse.TryGetValue index with
-          | true, box -> box
-          | _ -> Utils.BoxedConstants.undefined
+      if index >= a.Length then 
+        Utils.BoxedConstants.undefined
 
-      a.Methods.DeleteIndex.Invoke(a, index) |> ignore
-      item
+      else
+        let item = 
+          match a with
+          | IsDense ->
+            let descriptor = a.Dense.[int index]
+            if descriptor.HasValue then 
+              descriptor.Box 
+
+            else 
+              if a.hasPrototype 
+                then a.Prototype.get index
+                else Utils.BoxedConstants.undefined
+
+          | IsSparse ->
+            match a.Sparse.TryGetValue index with
+            | true, box -> box
+            | _ -> 
+              if a.hasPrototype 
+                then a.Prototype.get index
+                else Utils.BoxedConstants.undefined
+
+        a.delete index |> ignore
+        item
 
     | IsObject o -> 
-      failwith "Not available for objects yet"
+      let length = Api.Object.getLength o
+      
+      if length = 0u then
+        o.put("length", 0.0)
+        Utils.BoxedConstants.undefined
+
+      else
+        let index = length - 1u
+        let item = o.get index
+        o.delete index |> ignore
+        o.put("length", double index)
+        item
     
   //----------------------------------------------------------------------------
   let internal push (this:IjsObj) (args:IjsBox array) =
-    match this with
-    | IsArray a ->
-      for arg in args do
-        a.Methods.PutBoxIndex.Invoke(a, a.Length, arg)
+    let mutable length = this |> Api.Object.getLength
 
-      a.Length |> double
+    for arg in args do 
+      this.put(length, arg)
+      length <- length + 1u
 
-    | IsObject o -> 
-      failwith "Not available for objects yet"
+    if not (this :? IjsArray) then
+      this.put("length", double length)
+
+    this |> Api.Object.getLength |> double
     
   //----------------------------------------------------------------------------
   let internal reverse (this:IjsObj) =
@@ -140,97 +173,161 @@ module Array =
       | IsSparse -> 
         let sparse = new MutableSorted<uint32, Box>()
         for kvp in a.Sparse do
-          sparse.Add(a.Length - 1u - kvp.Key, kvp.Value)
+          sparse.Add(a.Length - kvp.Key - 1u, kvp.Value)
         a.Sparse <- sparse
 
       a :> IjsObj
 
     | IsObject o -> 
-      failwith "Not available for objects yet"
+      let rec reverseObject (o:IjsObj) length (index:uint32) items =
+        if index >= length then items
+        else
+          if o.has index then
+            let item = o.get index
+            let newIndex = length - index - 1u
+            o.delete index |> ignore
+            reverseObject o length (index+1u) ((newIndex, item) :: items)
+
+          else
+            reverseObject o length (index+1u) items
+
+            
+      let length = this |> Api.Object.getLength
+      let items = reverseObject o length 0u []
+
+      for index, item in items do
+        o.put(index, item)
+
+      o
     
   //----------------------------------------------------------------------------
   let internal shift (this:IjsObj) =
+
+    let updateArrayLength (a:IjsArray) =
+      a.Length <- a.Length - 1u
+      a.put("length", double a.Length)
+
     match this with
     | IsArray a ->
       if a.Length = 0u then Utils.BoxedConstants.undefined
       else
-        let mutable value = Utils.BoxedConstants.undefined
-
         match a with
-        | IsDense -> 
-          if a.Dense.[0].HasValue then 
-            value <- a.Dense.[0].Box
+        | IsDense ->
+          let item =  
+            if a.Dense.[0].HasValue 
+              then a.Dense.[0].Box
 
+            elif a.hasPrototype 
+              then a.Prototype.get 0u
+              else Utils.BoxedConstants.undefined
+
+          //Remove first element of dense array, also updates indexes
           a.Dense <- a.Dense |> Dlr.ArrayUtils.RemoveFirst
+          updateArrayLength a
+          item
 
         | IsSparse ->
-          value <- a.Sparse.[0u]
-          a.Sparse.Remove 0u |> ignore
+          let item = 
+            match a.Sparse.TryGetValue 0u with
+            | true, item -> a.Sparse.Remove 0u |> ignore; item
+            | _ -> 
+              if a.hasPrototype 
+                then a.Prototype.get 0u
+                else Utils.BoxedConstants.undefined
 
+          //Update sparse indexes
           for kvp in a.Sparse do
             a.Sparse.Remove kvp.Key |> ignore
             a.Sparse.Add(kvp.Key - 1u, kvp.Value)
 
-        a.Length <- a.Length - 1u
-        a.put("length", double a.Length)
-        value
+          updateArrayLength a
+          item
 
     | IsObject o -> 
-      failwith "Not available for objects yet"
+      let length = this |> Api.Object.getLength 
+      if length = 0u then Utils.BoxedConstants.undefined
+      else
+        let item = o.get 0u
+        o.delete 0u |> ignore
+        item
     
   //----------------------------------------------------------------------------
-  // This implementation is a C# to F# adaption of the Jint sources
   let internal slice (f:IjsFunc) (this:IjsObj) (start:IjsNum) (end':IjsBox) =
-    match this with
-    | IsArray a ->
-      let start = start |> Api.TypeConverter.toInteger
-      let length = int a.Length
+    let start = start |> Api.TypeConverter.toInteger
 
-      let end' =
-        if end'.Tag |> Utils.Box.isUndefined 
-          then length 
-          else end' |> Api.TypeConverter.toInteger
+    let constrainStartAndEnd st en le = 
+      let st = if st < 0 then st + le elif st > le then le else st
+      let en = if en < 0 then en + le elif en > le then le else en
+      st, en
 
-      let start = 
-        if start < 0 
-          then start + length
-          elif start > length
-            then length
-            else start
+    let getEnd (en:IjsBox) (le:int) =
+        if en.Tag |> Utils.Box.isUndefined 
+          then le else en |> Api.TypeConverter.toInteger
 
-      let end' = 
-        if end' < 0 
-          then end' + length 
-          elif end' > length
-            then length
-            else end'
+    let length = this |> Api.Object.getLength |> int
+    let end' = getEnd end' length
+    let start, end' = constrainStartAndEnd start end' length
+    let size = end' - start
+    let absSize = if size < 0 then 0 else size
+    let array = Api.Environment.createArray f.Env (uint32 absSize) :?> IjsArray
 
-      let size = end' - start
-      let absSize = if size < 0 then 0 else size
-      let array = Api.Environment.createArray f.Env (uint32 absSize):?> IjsArray
-
-      for i = 0 to (size-1) do
-        let item = array.Methods.GetIndex.Invoke(a, uint32 (start+i))
-        array.Methods.PutBoxIndex.Invoke(array, uint32 i, item)
+    for i = 0 to (size-1) do
+      let item = array.Methods.GetIndex.Invoke(this, uint32 (start+i))
+      array.Methods.PutBoxIndex.Invoke(array, uint32 i, item)
       
-      array :> IjsObj
-    
-    | IsObject o -> 
-      failwith "Not available for objects yet"
-      
+    array :> IjsObj
+
+  type SparseComparer(cmp) =
+    interface System.Collections.Generic.IComparer<bool * IjsBox> with
+      member x.Compare((_, a), (_, b)) = cmp a b
+
   //----------------------------------------------------------------------------
   let internal sort (f:IjsFunc) (this:IjsObj) (cmp:IjsBox) =
     
-    let denseSortFunc (f:IjsFunc) (x:Descriptor) (y:Descriptor) =
-      let sort = f.Compiler.compileAs<Sort>(f)
-      let x = if x.HasValue then x.Box else Utils.BoxedConstants.undefined
-      let y = if y.HasValue then y.Box else Utils.BoxedConstants.undefined
-      let result = sort.Invoke(f, f.Env.Globals, x, y)
-      result |> Api.TypeConverter.toNumber |> int
+    let denseSortFunc (f:IjsFunc) =
+      let sort = f.Compiler.compileAs<Sort> f
+
+      fun (x:Descriptor) (y:Descriptor) -> 
+        let x = if x.HasValue then x.Box else Utils.BoxedConstants.undefined
+        let y = if y.HasValue then y.Box else Utils.BoxedConstants.undefined
+        let result = sort.Invoke(f, f.Env.Globals, x, y)
+        result |> Api.TypeConverter.toNumber |> int
 
     let denseSortDefault (x:Descriptor) (y:Descriptor) =
       let x = if x.HasValue then x.Box else Utils.BoxedConstants.undefined
       let y = if y.HasValue then y.Box else Utils.BoxedConstants.undefined
+      String.Compare(Api.TypeConverter.toString x, Api.TypeConverter.toString y)
+
+    let sparseSort (cmp:SparseComparer) (length:uint32) (vals:SparseArray) =
+      let items = MutableList<bool * IjsBox>()
+      let newArray = new SparseArray()
+
+      let i = ref 0u
+      while !i < length do
+          
+        match vals.TryGetValue !i with
+        | true, box -> items.Add(true, box)
+        | _ -> items.Add(false, Utils.BoxedConstants.undefined)
+
+        i := !i + 1u
+
+      items.Sort cmp
+
+      i := 0u
+      for org, item in items do
+        if org then 
+          newArray.Add(!i, item)
+        i := !i + 1u
+
+      newArray
+
+    let sparseSortFunc (f:IjsFunc) =
+      let sort = f.Compiler.compileAs<Sort> f
+      fun (x:Box) (y:Box) -> 
+        let result = sort.Invoke(f, f.Env.Globals, x, y)
+        result |> Api.TypeConverter.toNumber |> int
+
+    let sparseSortDefault (x:Box) (y:Box) =
       String.Compare(Api.TypeConverter.toString x, Api.TypeConverter.toString y)
 
     match this with
@@ -238,12 +335,18 @@ module Array =
       if cmp.Tag |> Utils.Box.isFunction then
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
-        | IsSparse -> failwith ".sort currently does not support sparse arrays"
+        | IsSparse -> 
+          let sort = f.Compiler.compileAs<Sort> f
+          let cmp = new SparseComparer(sparseSortFunc cmp.Func)
+          a.Sparse <- sparseSort cmp a.Length a.Sparse
 
       else
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith denseSortDefault
-        | IsSparse -> failwith ".sort currently does not support sparse arrays"
+        | IsSparse ->
+          let sort = f.Compiler.compileAs<Sort> f
+          let cmp = new SparseComparer(sparseSortDefault)
+          a.Sparse <- sparseSort cmp a.Length a.Sparse
 
     | IsObject o -> failwith ".sort currently does not support non-arrays"
 

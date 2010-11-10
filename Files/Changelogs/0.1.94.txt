@@ -11,3 +11,9 @@
   gotten their arguments switched causing any usage of the with statement
   to crash the runtime
 * Cleaned up Compiler.Core.compile
+* Fixed a bug in Array.prototype.pop where it would crash if .length was 0 
+* Fixed a bug in Array.prototype.pop and .shift where it would return undefined 
+  even if the index existed in the prototype
+* Most Array.prototype functions should no work on normal objects (e.g: if you
+  transfer .pop to Object.prototype it will work correctly with normal objects)
+* Added support for sparse arrays in Array.prototype.sort

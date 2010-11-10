@@ -330,6 +330,7 @@ and [<AllowNullLiteral>] Object =
     PropertyDescriptors = null
   }
 
+  member x.hasPrototype = FSKit.Utils.notNull x.Prototype
   member x.PropertyMapId = x.PropertyMap.Id
 
   member x.setAttrs (index:int32, attrs:DescriptorAttr) =
@@ -357,7 +358,7 @@ and [<AllowNullLiteral>] ArrayObject =
   
   val mutable Length : uint32
   val mutable Dense : Descriptor array
-  val mutable Sparse : MutableSorted<uint32, Box>
+  val mutable Sparse : SparseArray
 
   new (env:IjsEnv, length:uint32) = {
     inherit Object(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
@@ -369,8 +370,11 @@ and [<AllowNullLiteral>] ArrayObject =
 
     Sparse = 
       if length > Array.MaxSize 
-        then MutableSorted<uint32, Box>() else null
+        then SparseArray() 
+        else null
   }
+
+and SparseArray = MutableSorted<uint32, Box>
 
 //------------------------------------------------------------------------------
 // 10.1.8

@@ -24,34 +24,68 @@ Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
 
 let sw = new System.Diagnostics.Stopwatch();
 let source = @"(function(){
-  var loops = 15
-  var nx = 120
-  var nz = 120
+var AG_CONST = 0.6072529350;
 
-  function morph(a, f) {
-      var PI2nx = Math.PI * 8/nx
-      var sin = Math.sin
-      var f30 = -(50 * sin(f*Math.PI*2))
-    
-      for (var i = 0; i < nz; ++i) {
-          for (var j = 0; j < nx; ++j) {
-              a[3*(i*nx+j)+1]    = sin((j-1) * PI2nx ) * -f30
-          }
-      }
+function FIXED(X)
+{
+  return X * 65536.0;
+}
+
+function FLOAT(X)
+{
+  return X / 65536.0;
+}
+
+function DEG2RAD(X)
+{
+  return 0.017453 * (X);
+}
+
+var Angles = [
+  FIXED(45.0), FIXED(26.565), FIXED(14.0362), FIXED(7.12502),
+  FIXED(3.57633), FIXED(1.78991), FIXED(0.895174), FIXED(0.447614),
+  FIXED(0.223811), FIXED(0.111906), FIXED(0.055953),
+  FIXED(0.027977) 
+              ];
+
+
+function cordicsincos() {
+    var X;
+    var Y;
+    var TargetAngle;
+    var CurrAngle;
+    var Step;
+ 
+    X = FIXED(AG_CONST);         /* AG_CONST * cos(0) */
+    Y = 0;                       /* AG_CONST * sin(0) */
+
+    TargetAngle = FIXED(28.027);
+    CurrAngle = 0;
+    for (Step = 0; Step < 12; Step++) {
+        var NewX;
+        if (TargetAngle > CurrAngle) {
+            NewX = X - (Y >> Step);
+            Y = (X >> Step) + Y;
+            X = NewX;
+            CurrAngle += Angles[Step];
+        } else {
+            NewX = X + (Y >> Step);
+            Y = -(X >> Step) + Y;
+            X = NewX;
+            CurrAngle -= Angles[Step];
+        }
+    }
+}
+
+///// End CORDIC
+
+function cordic( runs ) {
+  for ( var i = 0 ; i < runs ; i++ ) {
+      cordicsincos();
   }
-    
-  var a = Array()
-  for (var i=0; i < nx*nz*3; ++i) 
-      a[i] = 0
+}
 
-  for (var i = 0; i < loops; ++i) {
-      morph(a, i/loops)
-  }
-
-  testOutput = 0;
-  for (var i = 0; i < nx; i++)
-      testOutput += a[3*(i*nx+i)+1];
-  a = null;
+cordic(25000);
 })();
 "
 ctx.Execute source |> ignore

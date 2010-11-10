@@ -1280,43 +1280,27 @@ module Object =
         | true -> true, createIndex o name
       
     //--------------------------------------------------------------------------
-    #if DEBUG
     let putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #else
-    let inline putBox (o:IjsObj) (name:IjsStr) (val':IjsBox) =
-    #endif
       let canPut, index = canPut o name
       if canPut then
         o.PropertyDescriptors.[index].Box <- val'
         o.PropertyDescriptors.[index].HasValue <- true
 
     //--------------------------------------------------------------------------
-    #if DEBUG
     let putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #else
-    let inline putRef (o:IjsObj) (name:IjsStr) (val':ClrObject) (tc:TypeTag) =
-    #endif
       let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Clr <- val'
       o.PropertyDescriptors.[index].Box.Tag <- tc
       o.PropertyDescriptors.[index].HasValue <- true
       
     //--------------------------------------------------------------------------
-    #if DEBUG
     let putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #else
-    let inline putVal (o:IjsObj) (name:IjsStr) (val':IjsNum) =
-    #endif
       let canPut, index = canPut o name
       o.PropertyDescriptors.[index].Box.Number <- val'
       o.PropertyDescriptors.[index].HasValue <- true
 
     //--------------------------------------------------------------------------
-    #if DEBUG
     let get (o:IjsObj) (name:IjsStr) =
-    #else
-    let inline get (o:IjsObj) (name:IjsStr) =
-    #endif
       match find o name with
       | _, -1 -> Utils.BoxedConstants.undefined
       | pair -> (fst pair).PropertyDescriptors.[snd pair].Box
@@ -1357,23 +1341,25 @@ module Object =
   module Index =
   
     //--------------------------------------------------------------------------
-    let putBox (o:IjsObj) (i:uint32) (v:IjsBox) = Property.putBox o (string i) v
+    let putBox (o:IjsObj) (index:uint32) (value:IjsBox) = 
+      Property.putBox o (string index) value
 
     //--------------------------------------------------------------------------
-    let putVal (o:IjsObj) (i:uint32) (v:IjsNum) = Property.putVal o (string i) v
+    let putVal (o:IjsObj) (index:uint32) (value:IjsNum) = 
+      Property.putVal o (string index) value
 
     //--------------------------------------------------------------------------
-    let putRef (o:IjsObj) (i:uint32) (v:ClrObject) (tag:TypeTag) =
-      Property.putRef o (string i) v tag
+    let putRef (o:IjsObj) (index:uint32) (value:ClrObject) (tag:TypeTag) =
+      Property.putRef o (string index) value tag
 
     //--------------------------------------------------------------------------
-    let inline get (o:IjsObj) (i:uint32) = Property.get o (string i)
+    let get (o:IjsObj) (index:uint32) = Property.get o (string index)
           
     //--------------------------------------------------------------------------
-    let has (o:IjsObj) (i:uint32) = Property.has o (string i)
+    let has (o:IjsObj) (index:uint32) = Property.has o (string index)
 
     //--------------------------------------------------------------------------
-    let delete (o:IjsObj) (i:uint32) = Property.delete o (string i)
+    let delete (o:IjsObj) (index:uint32) = Property.delete o (string index)
         
     //--------------------------------------------------------------------------
     module Delegates =
@@ -1622,6 +1608,12 @@ module Object =
 
     o |> collectProperties 0u (new MutableSet<IjsStr>())
 
+  //----------------------------------------------------------------------------
+  let getLength (o:IjsObj) = 
+    if o :? IjsArray 
+      then (o :?> IjsArray).Length 
+      else o.get "length" |> TypeConverter.toUInt32
+
   module Reflected = 
 
     let collectProperties = 
@@ -1634,6 +1626,9 @@ module Array =
     let private updateLength (o:IjsObj) (number:IjsNum) =
       let o = o :?> IjsArray
       let length = number |> TypeConverter.toUInt32
+
+      if number < 0.0 then
+        failwith "[[RangeError]]"
 
       if double length <> number then
         failwith "[[RangeError]]"
@@ -1703,9 +1698,7 @@ module Array =
       if i > o.Length then
         let i = i+1u
         o.Length <- i
-
-        if o.Class = Classes.Array then 
-          Property.putVal o "length" (double i)
+        Property.putVal o "length" (double i)
 
     //--------------------------------------------------------------------------
     let find (o:IjsArray) (i:uint32) =
@@ -1848,25 +1841,39 @@ module Array =
   //----------------------------------------------------------------------------
   let collectIndexValues (o:IjsObj) =
     let o = o :?> IjsArray
-
     if Utils.Array.isDense o 
+      
+      //Dense array
       then seq {
-          for i in o.Dense do 
-            if i.HasValue 
-              then yield i.Box
-              else yield Utils.BoxedConstants.undefined
-        }
+        
+        let i = ref 0u
+        while !i < o.Length do
+          let descr = o.Dense.[int !i]
+          if descr.HasValue 
+            then yield descr.Box
 
+          elif o.hasPrototype
+            then yield o.Prototype.get !i
+            else yield Utils.BoxedConstants.undefined
+
+          i := !i + 1u
+      }
+
+      //Sparse array
       else seq {
         let i = ref 0u
         while !i < o.Length do
           
           match o.Sparse.TryGetValue !i with
           | true, box -> yield box
-          | _ -> yield Utils.BoxedConstants.undefined
+          | _ -> 
+            if o.hasPrototype 
+              then yield o.Prototype.get !i
+              else yield Utils.BoxedConstants.undefined
 
           i := !i + 1u
       }
+
 
 module Arguments =
 

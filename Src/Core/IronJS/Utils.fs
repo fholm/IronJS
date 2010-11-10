@@ -70,17 +70,17 @@ module Utils =
       
   //----------------------------------------------------------------------------
   module Box = 
-    let isObject tag = tag >= TypeTags.Object
-    let isFunction tag = tag >= TypeTags.Function
-    let isUndefined tag = tag = TypeTags.Undefined
-    let isString tag = tag = TypeTags.String
+    let isNumber marker = marker < Markers.Tagged
     let isBool tag = tag = TypeTags.Bool
     let isClr tag = tag = TypeTags.Clr
+    let isString tag = tag = TypeTags.String
+    let isUndefined tag = tag = TypeTags.Undefined
+    let isObject tag = tag >= TypeTags.Object
+    let isFunction tag = tag >= TypeTags.Function
 
     let isRegExp (box:IjsBox) =
       isObject box.Tag && box.Object.Class = Classes.Regexp
 
-    let isNumber marker = marker < Markers.Tagged
     let isTagged marker = marker > Markers.Number
     let isBothNumber l r = isNumber l && isNumber r
     

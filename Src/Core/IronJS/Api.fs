@@ -362,7 +362,7 @@ type TypeConverter =
     Dlr.callStaticT<TypeConverter> "toBoolean" [expr]
 
   //----------------------------------------------------------------------------
-  static member toNumber (b:IjsBool) : double = if b then 1.0 else 0.0
+  static member toNumber (b:IjsBool) = if b then 1.0 else 0.0
   static member toNumber (c:ClrObject) = if c = null then 0.0 else 1.0
   static member toNumber (u:Undefined) = IjsNum.NaN
   static member toNumber (box:IjsBox) =
@@ -375,7 +375,7 @@ type TypeConverter =
     | Object obj -> obj |> TypeConverter.toNumber
     | Function func -> (func :> IjsObj) |> TypeConverter.toNumber
 
-  static member toNumber (o:IjsObj) : IjsNum = 
+  static member toNumber (o:IjsObj) = 
     match o.Class with
     | Classes.Number -> (Utils.ValueObject.getValue o).Number
     | _ -> 
@@ -840,7 +840,7 @@ module PropertyMap =
 type Function() =
 
   //----------------------------------------------------------------------------
-  static let getPrototype(f:IjsFunc) =
+  static let getPrototype (f:IjsFunc) =
     let prototype = (f :> IjsObj).Methods.GetProperty.Invoke(f, "prototype")
     match prototype.Tag with
     | TypeTags.Function

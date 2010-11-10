@@ -17,3 +17,5 @@
 * Most Array.prototype functions should no work on normal objects (e.g: if you
   transfer .pop to Object.prototype it will work correctly with normal objects)
 * Added support for sparse arrays in Array.prototype.sort
+* Big cleanup of IronJS.Utils and IronJS.Expr
+* Implemented decodeURI, decodeURIComponent, encodeURI, encodeURIComponent

@@ -58,6 +58,44 @@ module Global =
       elif  number = Double.NegativeInfinity  then false
                                               else true
 
+
+  //----------------------------------------------------------------------------
+  // These two arrays are copied from the Jint sources
+  let private reservedEncoded = 
+    [|';'; ','; '/'; '?'; ':'; '@'; '&'; '='; '+'; '$'; '#'|]
+
+  let private reservedEncodedComponent = 
+    [|'-'; '_'; '.'; '!'; '~'; '*'; '\''; '('; ')'; '['; ']'|]
+
+  let private replaceChar (uri:string) (c:char) =
+    uri.Replace(Uri.EscapeDataString(string c), string c)
+
+  let decodeURI (uri:IjsBox) =
+    match uri.Tag with
+    | TypeTags.Undefined -> ""
+    | _ ->
+      let uri = uri |> Api.TypeConverter.toString
+      Uri.UnescapeDataString(uri.Replace('+', ' '))
+
+  let decodeURIComponent = decodeURI
+
+  let encodeURI (uri:IjsBox) =
+    match uri.Tag with
+    | TypeTags.Undefined -> ""
+    | _ ->
+      let uri = uri |> Api.TypeConverter.toString |> Uri.EscapeDataString
+      let uri = Array.fold replaceChar uri reservedEncoded
+      let uri = Array.fold replaceChar uri reservedEncodedComponent
+      uri.ToUpperInvariant()
+
+  let encodeURIComponent (uri:IjsBox) =
+    match uri.Tag with
+    | TypeTags.Undefined -> ""
+    | _ ->
+      let uri = uri |> Api.TypeConverter.toString |> Uri.EscapeDataString
+      let uri = Array.fold replaceChar uri reservedEncodedComponent
+      uri.ToUpperInvariant()
+
   //----------------------------------------------------------------------------
   let setup (env:IjsEnv) =
     let attrs = DontDelete ||| DontEnum
@@ -91,3 +129,23 @@ module Global =
     let isFinite = new Func<IjsNum, IjsBool>(isFinite)
     let isFinite = Api.HostFunction.create env isFinite
     env.Globals.put("isFinite", isFinite, DontEnum)
+
+    //15.1.3.1
+    let decodeURI = new Func<IjsBox, IjsStr>(decodeURI)
+    let decodeURI = Api.HostFunction.create env decodeURI
+    env.Globals.put("decodeURI", decodeURI, DontEnum)
+    
+    //15.1.3.2
+    let decodeURIComponent = new Func<IjsBox, IjsStr>(decodeURIComponent)
+    let decodeURIComponent = Api.HostFunction.create env decodeURIComponent
+    env.Globals.put("decodeURIComponent", decodeURIComponent, DontEnum)
+    
+    //15.1.3.3
+    let encodeURI = new Func<IjsBox, IjsStr>(encodeURI)
+    let encodeURI = Api.HostFunction.create env encodeURI
+    env.Globals.put("encodeURI", encodeURI, DontEnum)
+
+    //15.1.3.4
+    let encodeURIComponent = new Func<IjsBox, IjsStr>(encodeURIComponent)
+    let encodeURIComponent = Api.HostFunction.create env encodeURIComponent
+    env.Globals.put("encodeURIComponent", encodeURIComponent, DontEnum)

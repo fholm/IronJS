@@ -43,19 +43,18 @@ module Array =
       match array with
       | IsDense ->
         let toString (x:Descriptor) = 
-          if x.HasValue then Api.TypeConverter.toString x.Box else "undefined"
+          if x.HasValue then Api.TypeConverter.toString x.Box else ""
 
         String.Join(separator, array.Dense |> Array.map toString)
 
       | IsSparse ->
         let items = new MutableList<string>();
         let mutable i = 0u
-        let mutable box = Box()
 
         while i < array.Length do
-          if array.Sparse.TryGetValue(i, &box) 
-            then items.Add (box |> Api.TypeConverter.toString) 
-            else items.Add "undefined"
+          match array.Sparse.TryGetValue i with
+          | true, box -> items.Add (box |> Api.TypeConverter.toString) 
+          | _ -> items.Add ""
 
           i <- i + 1u
 

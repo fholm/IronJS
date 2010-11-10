@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Utils.Patterns
 open IronJS.DescriptorAttrs
 open IronJS.Api.Extensions
 
@@ -11,7 +12,7 @@ module Object =
 
   //----------------------------------------------------------------------------
   //15.2.1
-  let private constructor' (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
+  let internal constructor' (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
     match v.Tag with
     | TypeTags.Undefined -> Api.Environment.createObject f.Env
     | TypeTags.Clr when v.Clr = null -> Api.Environment.createObject f.Env
@@ -19,49 +20,49 @@ module Object =
 
   //----------------------------------------------------------------------------
   //15.2.4.2
-  let toString (o:IjsObj) = 
+  let internal toString (o:IjsObj) = 
     sprintf "[object %s]" Classes.Names.[o.Class]
     
   //----------------------------------------------------------------------------
   //15.2.4.3
-  let toLocaleString = toString
+  let internal toLocaleString = toString
   
   //----------------------------------------------------------------------------
   //15.2.4.4
-  let valueOf (o:IjsObj) = o
+  let internal valueOf (o:IjsObj) = o
 
   //----------------------------------------------------------------------------
   //15.2.4.5
-  let hasOwnProperty (o:IjsObj) (name:IjsStr) =
+  let internal hasOwnProperty (o:IjsObj) (name:IjsStr) =
     match Api.Object.Property.getIndex o name with
     | true, index -> Utils.Descriptor.hasValue o.PropertyDescriptors.[index]
     | _ ->
-      if o :? IjsArray then
       
-        let mutable i = Array.MinIndex
-        if Utils.isStringIndex(name, &i) 
-          then Api.Array.Index.hasIndex (o :?> IjsArray) i
-          else false
+      match o with
+      | IsArray array ->
+        match name with
+        | IsStringIndex index -> Api.Array.Index.hasIndex array index
+        | _ -> false
 
-      else
-        false
+      | _ -> false
 
   //----------------------------------------------------------------------------
   //15.2.4.6
-  let isPrototypeOf (o:IjsObj) (v:IjsObj) = v.Prototype = o
+  let internal isPrototypeOf (o:IjsObj) (v:IjsObj) = v.Prototype = o
 
   //----------------------------------------------------------------------------
   //15.2.4.7
-  let propertyIsEnumerable (o:IjsObj) (name:IjsStr) =
+  let internal propertyIsEnumerable (o:IjsObj) (name:IjsStr) =
     match Api.Object.Property.find o name with
     | _, -1 -> 
-        
-      let mutable i = Array.MinIndex
-      if Utils.isStringIndex(name, &i) then 
-        if o :? IjsArray 
-          then i < (o :?> IjsArray).Length
-          else false
-      else false
+
+      match o with
+      | IsArray array ->
+        match name with
+        | IsStringIndex index ->index < array.Length
+        | _ -> false
+
+      | _ -> false
 
     | o, index -> 
       let attrs = o.PropertyDescriptors.[index].Attributes

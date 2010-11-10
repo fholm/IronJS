@@ -1116,7 +1116,7 @@ module HostFunction =
   let marshalBoxParams (f:IjsHostFunc<_>) args m =
     args
     |> Seq.skip f.ArgTypes.Length
-    |> Seq.map Expr.boxValue
+    |> Seq.map Expr.box
     |> fun x -> Seq.append m [Dlr.newArrayItemsT<IjsBox> x]
     
   //----------------------------------------------------------------------------
@@ -1170,7 +1170,7 @@ module HostFunction =
       else
         Dlr.blockTmpT<Box> (fun tmp ->
           [
-            (Expr.setBoxTypeOf tmp invoke)
+            (Expr.setBoxTagOf tmp invoke)
             (Expr.setBoxValue tmp invoke)
             (tmp :> Dlr.Expr)
           ] |> Seq.ofList

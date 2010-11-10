@@ -1,6 +1,8 @@
 ﻿namespace IronJS.Compiler
 
 open IronJS
+open IronJS.Dlr.Operators
+open IronJS.Utils.Patterns
 
 module Utils =
   
@@ -8,15 +10,14 @@ module Utils =
   let compileIndex (ctx:Ctx) index =
     match index with
     | Ast.Number n ->
-      if double (uint32 n) = n
-        then Dlr.const' (uint32 n)
-        else ctx.Compile index
+      match n with
+      | IsNumberIndex index -> !!!index
+      | _ -> ctx.Compile index
 
     | Ast.String s ->
-      let mutable ui = 0u
-      if Utils.isStringIndex(s, &ui)
-        then Dlr.const' ui
-        else ctx.Compile index
+      match s with
+      | IsStringIndex index -> !!!index
+      | _ -> ctx.Compile index
 
     | _ -> ctx.Compile index
     

@@ -46,7 +46,7 @@ module Identifier =
           
   //----------------------------------------------------------------------------
   let private setValueDynamic (ctx:Ctx) name value =
-    let defaultArgs = [Dlr.const' name; Expr.boxValue value; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; Expr.box value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callMethod Api.DynamicScope.Reflected.set args

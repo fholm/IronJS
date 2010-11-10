@@ -185,24 +185,16 @@ module Utils =
           | TypeTags.Object -> Object(box.Object)
           | TypeTags.Function -> Function(box.Func)
           | _ -> failwithf "Invalid runtime type tag '%i'" box.Tag
-        
-  //----------------------------------------------------------------------------
-  let isStringIndex (str:string, out:uint32 byref) = 
-    str.Length > 0 
-    && (str.[0] >= '0' || str.[0] <= '9') 
-    && System.UInt32.TryParse(str, &out)
 
   let type2tag (t:System.Type) =   
-    if   refEq TypeObjects.Bool t             then TypeTags.Bool
-    elif refEq TypeObjects.Number t           then TypeTags.Number
-    elif refEq TypeObjects.String t           then TypeTags.String
-    elif refEq TypeObjects.Undefined t        then TypeTags.Undefined
-    elif refEq TypeObjects.Object t           then TypeTags.Object
-    elif refEq TypeObjects.Function t         then TypeTags.Function
-    elif refEq TypeObjects.Box t              then TypeTags.Box
-    elif t.IsSubclassOf(TypeObjects.Function) then TypeTags.Function
-    elif t.IsSubclassOf(TypeObjects.Object)   then TypeTags.Object
-                                              else TypeTags.Clr
+    if   t |> FSKit.Utils.isTypeT<IjsBool>   then TypeTags.Bool
+    elif t |> FSKit.Utils.isTypeT<IjsNum>    then TypeTags.Number
+    elif t |> FSKit.Utils.isTypeT<IjsStr>    then TypeTags.String
+    elif t |> FSKit.Utils.isTypeT<Undefined> then TypeTags.Undefined
+    elif t |> FSKit.Utils.isTypeT<IjsFunc>   then TypeTags.Function
+    elif t |> FSKit.Utils.isTypeT<IjsObj>    then TypeTags.Object
+    elif t |> FSKit.Utils.isTypeT<IjsBox>    then TypeTags.Box
+                                             else TypeTags.Clr
 
   let tag2field tag =
     match tag with

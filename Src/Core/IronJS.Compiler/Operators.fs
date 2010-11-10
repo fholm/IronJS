@@ -83,7 +83,7 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.3
   let typeOf (expr:Dlr.Expr) = 
-    Api.Operators.typeOf (expr |> Expr.boxValue)
+    Api.Operators.typeOf (expr |> Expr.box)
       
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
@@ -103,22 +103,22 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.6
   let plus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Expr.boxValue]
+    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Expr.box]
 
   //----------------------------------------------------------------------------
   // 11.4.7
   let minus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Expr.boxValue]
+    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Expr.box]
   
   //----------------------------------------------------------------------------
   // 11.4.8
   let complement (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "bitCmpl" [ctx.Compile ast |> Expr.boxValue]
+    Dlr.callStaticT<Api.Operators> "bitCmpl" [ctx.Compile ast |> Expr.box]
 
   //----------------------------------------------------------------------------
   // 11.4.9
   let not (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "not" [ctx.Compile ast |> Expr.boxValue]
+    Dlr.callStaticT<Api.Operators> "not" [ctx.Compile ast |> Expr.box]
     
   //----------------------------------------------------------------------------
   let convert (ctx:Ctx) (tag:TypeTag) (ast:Ast.Tree) =
@@ -164,20 +164,20 @@ module Binary =
     
   //----------------------------------------------------------------------------
   let compile (ctx:Ctx) op left right =
-    let l = ctx.Compile left |> Expr.boxValue 
-    let r = ctx.Compile right |> Expr.boxValue
+    let l = ctx.Compile left |> Expr.box 
+    let r = ctx.Compile right |> Expr.box
     compileExpr op l r
     
   //----------------------------------------------------------------------------
   let instanceOf (ctx:Context) left right =
-    let l = ctx.Compile left |> Expr.boxValue 
-    let r = ctx.Compile right |> Expr.boxValue
+    let l = ctx.Compile left |> Expr.box 
+    let r = ctx.Compile right |> Expr.box
     Api.Operators.instanceOf(ctx.Env, l, r)
     
   //----------------------------------------------------------------------------
   let in' (ctx:Context) left right =
-    let l = ctx.Compile left |> Expr.boxValue 
-    let r = ctx.Compile right |> Expr.boxValue
+    let l = ctx.Compile left |> Expr.box 
+    let r = ctx.Compile right |> Expr.box
     Api.Operators.in'(ctx.Env, l, r)
 
   //----------------------------------------------------------------------------

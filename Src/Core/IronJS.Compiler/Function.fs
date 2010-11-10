@@ -104,10 +104,8 @@ module Function =
       (fun f ->
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = f :: ctx.Globals :: args
-        (Dlr.ternary
-          (Expr.isConstructor f)
-          (Dlr.callStaticGenericT<Api.Function> "construct" argTypes args)
-          (Expr.BoxedConstants.undefined)))
+        Dlr.callStaticGenericT<Api.Function> "construct" argTypes args
+      )
       (fun _ -> Expr.BoxedConstants.undefined)
       
   //----------------------------------------------------------------------------

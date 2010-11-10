@@ -8,7 +8,7 @@ module Exception =
   //--------------------------------------------------------------------------
   // 12.13 the throw statement
   let throw (ctx:Ctx) expr =
-    Dlr.throwT<UserError> [ctx.Compile expr |> Expr.boxValue]
+    Dlr.throwT<UserError> [ctx.Compile expr |> Expr.box]
       
   //--------------------------------------------------------------------------
   // 12.14 the try statement

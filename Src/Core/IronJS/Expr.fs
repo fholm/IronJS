@@ -43,15 +43,14 @@ module Expr =
     
   //-------------------------------------------------------------------------
   let boxTag expr = Dlr.field expr "Tag"
-  let getBoxType expr = boxTag expr
   
-  let setBoxType expr tag =
+  let setBoxTag expr tag =
     match tag with
     | TypeTags.Number -> Dlr.void'
-    | _ -> Dlr.assign (getBoxType expr) (Dlr.const' tag)
+    | _ -> Dlr.assign (boxTag expr) !!!tag
 
-  let setBoxTypeOf expr (of':Dlr.Expr) = 
-    setBoxType expr (of'.Type |> Utils.type2tag)
+  let setBoxTagOf expr (of':Dlr.Expr) = 
+    setBoxTag expr (of'.Type |> Utils.type2tag)
       
   //-------------------------------------------------------------------------
   let setBoxValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
@@ -98,41 +97,39 @@ module Expr =
           if tag >= TypeTags.Clr
             then Dlr.gtEq
             else Dlr.eq
-        comparer (getBoxType expr) (!!!tag)
+        comparer (boxTag expr) (!!!tag)
 
     else
       failwith "Can't test .Tag on non-Box expressions"
     
   //-------------------------------------------------------------------------
-  let boxValue (value:Dlr.Expr) = 
+  let box value = 
     if isBoxed value then value
     else
       Dlr.blockTmpT<IronJS.Box> (fun tmp ->
         [
-          (setBoxTypeOf tmp value)
+          (setBoxTagOf tmp value)
           (setBoxValue tmp value)
           (tmp :> Dlr.Expr)
         ] |> Seq.ofList
       )
 
-  let neg1 = Dlr.const' -1.0
-  let num0 = Dlr.const' 0.0
-  let num1 = Dlr.const' 1.0
-  let num2 = Dlr.const' 2.0
+  let neg1 = !!! -1.0
+  let num0 = !!! 0.0
+  let num1 = !!! 1.0
+  let num2 = !!! 2.0
   
-  let bool2val expr =
-    let ifTrue = Dlr.const' TaggedBools.True
-    let ifFalse = Dlr.const' TaggedBools.False
-    Dlr.ternary expr ifTrue ifFalse
-
   let normalizeVal (expr:Dlr.Expr) =
-    if Dlr.Utils.isT<IjsBool> expr then bool2val expr else expr
+    if Dlr.Utils.isT<IjsBool> expr 
+      then Dlr.ternary expr !!!TaggedBools.True !!!TaggedBools.False
+      else expr
 
   let propertyValues obj = Dlr.field obj "PropertyDescriptors"
   let propertyValue obj i = Dlr.index (propertyValues obj) [i]
 
   module Object =
     let methods obj = Dlr.field obj "Methods"
+    let prototype expr = Dlr.field expr "Prototype"
 
     module Methods = 
       let getProperty obj = obj |> methods |> Dlr.fieldr "GetProperty"
@@ -185,10 +182,6 @@ module Expr =
   let unboxInto clrType expr into = Dlr.assign into (unbox clrType expr)
   let unboxIntoT<'a> = unboxInto typeof<'a>
 
-  //-------------------------------------------------------------------------
-  // Blocks
-  //-------------------------------------------------------------------------
-    
   //-------------------------------------------------------------------------
   let blockTmp (expr:Dlr.Expr) (f:Dlr.Expr -> Dlr.Expr list) = 
     if Dlr.Ext.isStatic expr then
@@ -244,18 +237,12 @@ module Expr =
         let val' = Dlr.Ext.unwrap rexpr
         if typeCode <= TypeTags.Number then
           Dlr.blockSimple
-            [setBoxClrNull box; setBoxTypeOf box val'; setBoxValue box val']
+            [setBoxClrNull box; setBoxTagOf box val'; setBoxValue box val']
 
         else
           Dlr.blockSimple 
-            [setBoxTypeOf box val'; setBoxValue box val']
+            [setBoxTagOf box val'; setBoxValue box val']
 
     if isBoxed lexpr 
       then assignBox lexpr rexpr 
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
-
-  let prototype expr = Dlr.field expr "Prototype"
-  let constructorMode expr = Dlr.field expr "ConstructorMode"
-
-  let isConstructor expr =
-    Dlr.gt (constructorMode expr) (Dlr.const' ConstructorModes.Function)

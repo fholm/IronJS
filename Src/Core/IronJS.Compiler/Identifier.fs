@@ -33,7 +33,7 @@ module Identifier =
   //----------------------------------------------------------------------------
   let getDynamicArgs (ctx:Ctx) name =
     match getExprIndexLevelType ctx name with
-    | None -> [Dlr.neg1; ctx.Globals; Dlr.defaultT<Scope>; Dlr.neg1]
+    | None -> [Dlr.int_1; ctx.Globals; Dlr.defaultT<Scope>; Dlr.int_1]
     | Some(expr, index, level) -> 
       [Dlr.const' level; ctx.Globals; expr; Dlr.const' index]
           

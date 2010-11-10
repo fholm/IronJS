@@ -12,11 +12,11 @@ module Object =
 
   //----------------------------------------------------------------------------
   //15.2.1
-  let internal constructor' (f:IjsFunc) (t:IjsObj) (v:IjsBox) : IjsObj =
-    match v.Tag with
+  let internal constructor' (f:IjsFunc) (this:IjsObj) (value:IjsBox) =
+    match value.Tag with
     | TypeTags.Undefined -> Api.Environment.createObject f.Env
-    | TypeTags.Clr when v.Clr = null -> Api.Environment.createObject f.Env
-    | _ -> Api.TypeConverter.toObject(f.Env, v)
+    | TypeTags.Clr -> Api.Environment.createObject f.Env
+    | _ -> Api.TypeConverter.toObject(f.Env, value)
 
   //----------------------------------------------------------------------------
   //15.2.4.2

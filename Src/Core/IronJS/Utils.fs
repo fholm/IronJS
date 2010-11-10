@@ -80,8 +80,8 @@ module Utils =
     let isRegExp (box:IjsBox) =
       isObject box.Tag && box.Object.Class = Classes.Regexp
 
-    let isNumber marker = marker < 0xFFF9us
-    let isTagged marker = marker > 0xFFF8us
+    let isNumber marker = marker < Markers.Tagged
+    let isTagged marker = marker > Markers.Number
     let isBothNumber l r = isNumber l && isNumber r
     
   //----------------------------------------------------------------------------

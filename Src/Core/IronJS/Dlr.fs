@@ -62,8 +62,26 @@ module Dlr =
   //Constants
   let true'   = const' true
   let false'  = const' false
+  
+  let sbyte_1 = const' -1y
+  let sbyte0 = const' 0y
+  let sbyte1 = const' 1y
+  let sbyte2 = const' 2y
 
-  let neg1 = const' -1
+  let byte0 = const' 0uy
+  let byte1 = const' 1uy
+  let byte2 = const' 2uy
+
+  let short_1 = const' -1s
+  let short0 = const' 0s
+  let short1 = const' 1s
+  let short2 = const' 2s
+
+  let ushort0 = const' 0us
+  let ushort1 = const' 1us
+  let ushort2 = const' 2us
+
+  let int_1 = const' -1
   let int0 = const' 0
   let int1 = const' 1
   let int2 = const' 2
@@ -72,7 +90,21 @@ module Dlr =
   let uint1 = const' 1u
   let uint2 = const' 2u
 
+  let long_1 = const' -1l
+  let long0 = const' 0l
+  let long1 = const' 1l
+  let long2 = const' 2l
 
+  let ulong0 = const' 0ul
+  let ulong1 = const' 1ul
+  let ulong2 = const' 2ul
+  
+  let float32_1 = const' -1.0f
+  let float320 = const' 0.0f
+  let float321 = const' 1.0f
+  let float322 = const' 2.0f
+
+  let dbl_1 = const' -1.0
   let dbl0 = const' 0.0
   let dbl1 = const' 1.0
   let dbl2 = const' 2.0

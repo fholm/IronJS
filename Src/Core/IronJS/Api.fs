@@ -1165,16 +1165,11 @@ module HostFunction =
 
     let invoke = target.Invoke func marshalled
     let body = 
-      if FSKit.Utils.isTypeT<IjsBox> f.ReturnType then invoke
-      elif FSKit.Utils.isVoid f.ReturnType then Expr.voidAsUndefined invoke
-      else
-        Dlr.blockTmpT<Box> (fun tmp ->
-          [
-            (Expr.setBoxTagOf tmp invoke)
-            (Expr.setBoxValue tmp invoke)
-            (tmp :> Dlr.Expr)
-          ] |> Seq.ofList
-        )
+      if FSKit.Utils.isTypeT<IjsBox> f.ReturnType 
+        then invoke
+        elif FSKit.Utils.isVoid f.ReturnType 
+          then Expr.voidAsUndefined invoke
+          else Expr.box invoke
             
     let lambda = Dlr.lambda target.Delegate args body
     Debug.printExpr lambda

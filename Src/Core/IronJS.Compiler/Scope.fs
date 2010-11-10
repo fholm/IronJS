@@ -9,7 +9,7 @@ module Scope =
   //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
-    let object' = Expr.unboxT<IjsObj> (ctx.Compile init)
+    let object' = Expr.Box.unboxObject (ctx.Compile init)
     let tree = {ctx with InsideWith=true}.Compile tree
 
     let pushArgs = [

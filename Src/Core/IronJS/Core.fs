@@ -136,6 +136,10 @@ module ArgumentsLinkArray =
   let [<Literal>] Locals = 0uy
   let [<Literal>] ClosedOver = 1uy
 
+module Markers =
+  let [<Literal>] Number = 0xFFF8us
+  let [<Literal>] Tagged = 0xFFF9us
+
 module TaggedBools =
   let True = 
     let bytes = FSKit.Bit.double2bytes 0.0

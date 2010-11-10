@@ -38,11 +38,11 @@ module Utils =
       Expr.blockTmp expr (fun expr ->
         [
           Dlr.ternary 
-            (Expr.testTagAs expr TypeTags.Object)
-            (ifObj (Expr.unboxT<IjsObj> expr))
+            (Expr.Box.isObject expr)
+            (ifObj (Expr.Box.unboxObject expr))
             (Dlr.ternary
-              (Expr.testTag expr TypeTags.Clr)
-              (ifClr (Expr.unboxClr expr))
+              (Expr.Box.isClr expr)
+              (ifClr (Expr.Box.unboxClr expr))
               (ifObj (Api.TypeConverter.toObject(ctx.Env, expr))))
         ])
     | tt -> failwithf "Invalid TypeTag '%i'" tt
@@ -61,11 +61,11 @@ module Utils =
       Expr.blockTmp expr (fun expr ->
         [
           Dlr.ternary 
-            (Expr.testTagAs expr TypeTags.Function)
-            (ifFunc (Expr.unboxT<IjsFunc> expr))
+            (Expr.Box.isFunction expr)
+            (ifFunc (Expr.Box.unboxFunction expr))
             (Dlr.ternary
-              (Expr.testTag expr TypeTags.Clr)
-              (ifClr (Expr.unboxClr expr))
+              (Expr.Box.isClr expr)
+              (ifClr (Expr.Box.unboxClr expr))
               (Expr.BoxedConstants.undefined))
         ])
     | tt -> failwithf "Invalid TypeTag '%i'" tt

@@ -57,8 +57,6 @@ module Global =
       elif  number = Double.PositiveInfinity  then false
       elif  number = Double.NegativeInfinity  then false
                                               else true
-
-
   //----------------------------------------------------------------------------
   // These two arrays are copied from the Jint sources
   let private reservedEncoded = 
@@ -66,7 +64,9 @@ module Global =
 
   let private reservedEncodedComponent = 
     [|'-'; '_'; '.'; '!'; '~'; '*'; '\''; '('; ')'; '['; ']'|]
-
+    
+  //----------------------------------------------------------------------------
+  //15.1.3.1
   let private replaceChar (uri:string) (c:char) =
     uri.Replace(Uri.EscapeDataString(string c), string c)
 
@@ -76,9 +76,13 @@ module Global =
     | _ ->
       let uri = uri |> Api.TypeConverter.toString
       Uri.UnescapeDataString(uri.Replace('+', ' '))
-
+      
+  //----------------------------------------------------------------------------
+  //15.1.3.2
   let decodeURIComponent = decodeURI
-
+  
+  //----------------------------------------------------------------------------
+  //15.1.3.3
   let encodeURI (uri:IjsBox) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
@@ -87,7 +91,9 @@ module Global =
       let uri = Array.fold replaceChar uri reservedEncoded
       let uri = Array.fold replaceChar uri reservedEncodedComponent
       uri.ToUpperInvariant()
-
+      
+  //----------------------------------------------------------------------------
+  //15.1.3.4
   let encodeURIComponent (uri:IjsBox) =
     match uri.Tag with
     | TypeTags.Undefined -> ""

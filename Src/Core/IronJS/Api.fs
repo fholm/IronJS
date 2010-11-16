@@ -1829,6 +1829,11 @@ module Array =
       let get = GetIndex get
       let has = HasIndex has
       let delete = DeleteIndex delete
+      
+  //----------------------------------------------------------------------------
+  let setLength (a:IjsArray) length =
+    a.Length <- length
+    Object.Property.putVal a "length" (double length)
 
   //----------------------------------------------------------------------------
   let collectIndexValues (o:IjsObj) =

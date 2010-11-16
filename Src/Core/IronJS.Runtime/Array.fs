@@ -331,7 +331,8 @@ module Array =
 
     match this with
     | IsArray a ->
-      if cmp.Tag |> Utils.Box.isFunction then
+      match cmp.Tag with
+      | TypeTags.Function ->
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
         | IsSparse -> 
@@ -339,7 +340,7 @@ module Array =
           let cmp = new SparseComparer(sparseSortFunc cmp.Func)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
-      else
+      | _ ->
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith denseSortDefault
         | IsSparse ->
@@ -348,6 +349,54 @@ module Array =
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
     | _ -> failwith ".sort currently does not support non-arrays"
+
+    this
+    
+  //----------------------------------------------------------------------------
+  let internal unshift (f:IjsFunc) (this:IjsObj) (args:IjsBox array) =
+    match this with
+    | IsArray array ->
+
+      match array with
+      | IsDense ->
+        let minLength = int array.Length + args.Length
+
+        let newDense =
+          if minLength > array.Dense.Length 
+            then Array.zeroCreate minLength 
+            else array.Dense
+
+        Array.Copy(array.Dense, 0, newDense, args.Length, array.Dense.Length)
+        array.Dense <- newDense
+        
+        for i = 0 to args.Length-1 do
+          newDense.[i].Box <- args.[i]
+          newDense.[i].HasValue <- true
+
+        Api.Array.setLength array (uint32 args.Length + array.Length)
+
+      | IsSparse -> 
+
+        let mutable index = array.Length - 1u
+        let offset = uint32 args.Length
+
+        while index >= 0u && index <= array.Length do
+          
+          match array.Sparse.TryGetValue index with
+          | true, box ->
+            array.Sparse.Remove index |> ignore
+            array.Sparse.Add(index + offset, box)
+
+          | _ -> ()
+
+          index <- index - 1u
+          
+        for i = 0 to args.Length-1 do
+          array.Sparse.Add(uint32 i, args.[i])
+
+        Api.Array.setLength array (offset + array.Length)
+        
+    | _ -> failwith ".unshift currently does not support non-arrays"
 
     this
       
@@ -420,4 +469,8 @@ module Array =
     let sort = new Func<IjsFunc, IjsObj, IjsBox, IjsObj>(sort)
     let sort = Api.HostFunction.create env sort
     proto.put("sort", sort, DontEnum)
+
+    let unshift = new Func<IjsFunc, IjsObj, IjsBox array, IjsObj>(unshift)
+    let unshift = Api.HostFunction.create env unshift
+    proto.put("unshift", unshift, DontEnum)
 

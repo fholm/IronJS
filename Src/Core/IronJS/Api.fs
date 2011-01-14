@@ -886,7 +886,7 @@ type Function() =
     let c = f.Compiler
     let c = c.compileAs<Func<IjsFunc,IjsObj,'a0,'a1,IjsBox>>(f)
     c.Invoke(f,t,a0,a1)
-  
+
   #if CLR2
   #else
   //----------------------------------------------------------------------------

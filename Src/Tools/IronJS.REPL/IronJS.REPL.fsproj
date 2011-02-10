@@ -99,16 +99,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\IronJS.Compiler\IronJS.Compiler.fsproj">
-      <Name>IronJS.Compiler</Name>
-      <Project>{81bfb688-1621-42d6-9062-093865a185d3}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Core\IronJS.Runtime\IronJS.Runtime.fsproj">
-      <Name>IronJS.Runtime</Name>
-      <Project>{ba1d9fb7-b9eb-4f11-9148-1c0bfdf8c74e}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\Core\IronJS\IronJS.fsproj">
       <Name>IronJS</Name>
       <Project>{9e257324-94e7-49af-ae83-718288e925d8}</Project>

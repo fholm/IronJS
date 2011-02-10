@@ -134,15 +134,7 @@
     <Resource Include="IronJS.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\IronJS.Compiler\IronJS.Compiler.fsproj">
-      <Project>{81BFB688-1621-42D6-9062-093865A185D3}</Project>
-      <Name>IronJS.Compiler</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Core\IronJS.Runtime\IronJS.Runtime.fsproj">
-      <Project>{BA1D9FB7-B9EB-4F11-9148-1C0BFDF8C74E}</Project>
-      <Name>IronJS.Runtime</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Core\IronJS\IronJS.fsproj">
+    <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>
     </ProjectReference>

@@ -10,7 +10,6 @@
 
 open IronJS
 open IronJS.Aliases
-open IronJS.Api.Extensions
 open FSKit.Testing.Assert
 
 let test, clean, state, report = 
@@ -20,8 +19,8 @@ test "12.2 Variable statement" (fun ctx ->
   same Undefined.Instance (ctx.ExecuteT<Undefined> "foo")
 
   ctx.Execute "var foo = {}" |> ignore
-  isT<IjsObj> (ctx.ExecuteT<IjsObj> "foo")
-  same (ctx.ExecuteT<IjsObj> "foo") (ctx.Environment.Globals.get<IjsObj> "foo")
+  isT<CommonObject> (ctx.ExecuteT<CommonObject> "foo")
+  same (ctx.ExecuteT<CommonObject> "foo") (ctx.Environment.Globals.Get<CommonObject> "foo")
 
   (same Undefined.Instance 
     (ctx.ExecuteT<Undefined> "(function(){ return x; })();"))
@@ -111,7 +110,26 @@ test "12.6.3 The for Statement" (fun ctx ->
 )
 
 test "12.6.4 The for-in Statement" (fun ctx ->
-  fail "Not implemented"
+  equal "abcdeflength01234" (ctx.ExecuteT<string> @"
+    var obj = {a:0, b:1, c:2, d:3, e:4, f:5};
+    var result = '';
+
+    for (var x in obj) {
+      result += x;
+    }
+
+    for(var x in Object.prototype) {
+      result += x;
+    }
+
+    var arr = [10, 20, 30, 40, 50];
+    for(var x in arr) {
+      result += x;
+    }
+
+    result;
+
+  ")
 )
 
 test "12.7 The continue Statement" (fun ctx ->

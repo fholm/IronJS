@@ -14,6 +14,9 @@ using System.Windows.Shapes;
 using System.Reflection;
 
 namespace IronJS.DevUI {
+
+    
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -22,14 +25,14 @@ namespace IronJS.DevUI {
 
         IronJS.Hosting.Context ijsCtx;
         System.Diagnostics.Stopwatch stopWatch;
-        Dictionary<IronJS.Object, TreeViewItem> printedObjects;
+        Dictionary<IronJS.CommonObject, TreeViewItem> printedObjects;
 
         public MainWindow() {
             InitializeComponent();
             Title = IronJS.Version.FullName + " DevUI";
 
             stopWatch = new System.Diagnostics.Stopwatch();
-            printedObjects = new Dictionary<Object, TreeViewItem>();
+            printedObjects = new Dictionary<CommonObject, TreeViewItem>();
 
             RunCode.Click += new RoutedEventHandler(RunCode_Click);
             ResetEnv.Click += new RoutedEventHandler(ResetEnv_Click);
@@ -56,11 +59,11 @@ namespace IronJS.DevUI {
             ijsCtx = IronJS.Hosting.Context.Create();
 
             var inspect =
-                IronJS.Api.HostFunction.create<Action<IronJS.Box>>(
+                IronJS.Api.HostFunction.create<Action<IronJS.BoxedValue>>(
                     ijsCtx.Environment, Inspect);
 
             var print =
-                IronJS.Api.HostFunction.create<Action<IronJS.Box>>(
+                IronJS.Api.HostFunction.create<Action<IronJS.BoxedValue>>(
                     ijsCtx.Environment, Print);
 
             ijsCtx.PutGlobal("inspect", inspect);
@@ -80,12 +83,12 @@ namespace IronJS.DevUI {
             }
         }
 
-        void Inspect(IronJS.Box box) {
+        void Inspect(IronJS.BoxedValue box) {
             return;
         }
 
-        void Print(IronJS.Box box) {
-            Result.Text += IronJS.Api.TypeConverter.toString(box) + "\r\n";
+        void Print(IronJS.BoxedValue box) {
+            Result.Text += IronJS.TypeConverter2.ToString(box) + "\r\n";
         }
 
         void RunCode_Click(object sender, RoutedEventArgs e) {
@@ -98,7 +101,7 @@ namespace IronJS.DevUI {
                 Result.Text = "";
                 var result = Utils.box(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
-                Result.Text += IronJS.Api.TypeConverter.toString(result);
+                Result.Text += IronJS.TypeConverter2.ToString(result);
 
               /*} catch (Exception ex) {
                   stopWatch.Stop();
@@ -117,52 +120,59 @@ namespace IronJS.DevUI {
 
         }
 
-        List<TreeViewItem> RenderIronJSPropertyValues(IronJS.Object obj, bool isGlobal) {
+        List<TreeViewItem> RenderIronJSPropertyValues(IronJS.CommonObject obj, bool isGlobal) {
             var items = new List<TreeViewItem>();
 
             if (obj != null) {
-                foreach (var kvp in obj.PropertyMap.PropertyMap) {
+                foreach (var kvp in obj.PropertyMap.IndexMap) {
+                  if (obj.Properties[kvp.Value].HasValue) {
                     if (isGlobal) {
-                        printedObjects.Clear();
+                      printedObjects.Clear();
                     }
 
                     items.Add(
                       RenderIronJSValue(
-                          kvp.Key, obj.PropertyDescriptors[kvp.Value].Box));
+                          kvp.Key, obj.Properties[kvp.Value].Value));
+
+                  }
                 }
 
-                for (var i = 0u; i < obj.IndexLength; ++i) {
-                    items.Add(RenderIronJSValue("[" + i + "]", obj.Methods.GetIndex(obj, i)));
+                if (obj is ArrayObject) {
+                    var arr = obj as ArrayObject;
+                    for (var i = 0u; i < arr.Length; ++i) {
+                        items.Add(RenderIronJSValue("[" + i + "]", arr.Get(i)));
+                    }
                 }
             }
 
             return items;
         }
 
-        TreeViewItem RenderIronJSValue(string name, IronJS.Box box) {
+        TreeViewItem RenderIronJSValue(string name, IronJS.BoxedValue box) {
             var item = new TreeViewItem();
             var header = item as HeaderedItemsControl;
+            var isNum = IronJS.Utils.Box.isNumber(box.Marker);
 
-            if (IronJS.Utils.Box.isNumber(box.Marker)) {
-                header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
+            if (box.IsNumber) {
+                header.Header = name + ": " + IronJS.TypeConverter2.ToString(box);
                 item.Foreground = new SolidColorBrush(Colors.DarkOrchid);
 
             } else {
 
                 switch (box.Tag) {
                     case IronJS.TypeTags.Undefined:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
+                        header.Header = name + ": " + IronJS.TypeConverter2.ToString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkGoldenrod);
                         break;
 
                     case IronJS.TypeTags.Bool:
-                        header.Header = name + ": " + IronJS.Api.TypeConverter.toString(box);
+                        header.Header = name + ": " + IronJS.TypeConverter2.ToString(box);
                         item.Foreground = new SolidColorBrush(Colors.DarkBlue);
                         break;
 
                     case IronJS.TypeTags.String:
                         item.Foreground = new SolidColorBrush(Colors.Brown);
-                        header.Header = name + ": \"" + IronJS.Api.TypeConverter.toString(box) + "\"";
+                        header.Header = name + ": \"" + IronJS.TypeConverter2.ToString(box) + "\"";
                         break;
 
                     case IronJS.TypeTags.Object:
@@ -189,8 +199,10 @@ namespace IronJS.DevUI {
                                 item.Items.Add(RenderIronJSValue("[[Prototype]]", IronJS.Utils.boxObject(box.Object.Prototype)));
                             }
 
-                            if (IronJS.Utils.Descriptor.hasValue(box.Object.Value)) {
-                                item.Items.Add(RenderIronJSValue("[[Value]]", box.Object.Value.Box));
+                            if (box.Object is IronJS.ValueObject) {
+                                if (IronJS.Utils.Descriptor.hasValue((box.Object as ValueObject).Value)) {
+                                  item.Items.Add(RenderIronJSValue("[[Value]]", (box.Object as ValueObject).Value.Value));
+                                }
                             }
 
                             foreach (var child in RenderIronJSPropertyValues(box.Object, false)) {

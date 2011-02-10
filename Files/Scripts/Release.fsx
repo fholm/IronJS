@@ -15,79 +15,97 @@ open FSKit
 
 let ctx = Hosting.Context.Create()
 
-let print0 = fun (box:Box) -> printfn "%s" (Api.TypeConverter.toString(box))
-let print1 = new Action<IronJS.Box>(print0)
+let print0 = fun (box:BoxedValue) -> printfn "%s" (TypeConverter2.ToString(box))
+let print1 = new Action<BoxedValue>(print0)
 let print2 = IronJS.Api.HostFunction.create ctx.Environment print1
 ctx.PutGlobal("print", print2)
 
 Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
 
 let sw = new System.Diagnostics.Stopwatch();
-sw.Start();
-let result = ctx.Execute @"(function(){
-function fannkuch(n) {
-   var check = 0;
-   var perm = Array(n);
-   var perm1 = Array(n);
-   var count = Array(n);
-   var maxPerm = Array(n);
-   var maxFlipsCount = 0;
-   var m = n - 1;
 
-   for (var i = 0; i < n; i++) perm1[i] = i;
-   var r = n;
+ctx.Execute @"
+  var x = {};
+  x.y = 2;
+"
 
-   while (true) {
-      // write-out the first 30 permutations
-      if (check < 30){
-         var s = '';
-         for(var i=0; i<n; i++) s += (perm1[i]+1).toString();
-         check++;
-      }
+ctx.Environment.Globals.PropertyMap.IndexMap
+ctx.Environment.Globals.Get("x").Object.Properties.[0].Value
 
-      while (r != 1) { count[r - 1] = r; r--; }
-      if (!(perm1[0] == 0 || perm1[m] == m)) {
-         for (var i = 0; i < n; i++) perm[i] = perm1[i];
+let source = @"var z = function(){
+var AG_CONST = 0.6072529350;
 
-         var flipsCount = 0;
-         var k;
-
-         while (!((k = perm[0]) == 0)) {
-            var k2 = (k + 1) >> 1;
-            for (var i = 0; i < k2; i++) {
-               var temp = perm[i]; perm[i] = perm[k - i]; perm[k - i] = temp;
-            }
-            flipsCount++;
-         }
-
-         if (flipsCount > maxFlipsCount) {
-            maxFlipsCount = flipsCount;
-            for (var i = 0; i < n; i++) maxPerm[i] = perm1[i];
-         }
-      }
-
-      while (true) {
-         if (r == n) return maxFlipsCount;
-         var perm0 = perm1[0];
-         var i = 0;
-         while (i < r) {
-            var j = i + 1;
-            perm1[i] = perm1[j];
-            i = j;
-         }
-         perm1[r] = perm0;
-
-         count[r] = count[r] - 1;
-         if (count[r] > 0) break;
-         r++;
-      }
-   }
+function FIXED(X)
+{
+  return X * 65536.0;
 }
 
-var n = 8;
-var ret = fannkuch(n);
-})();
+function FLOAT(X)
+{
+  return X / 65536.0;
+}
+
+function DEG2RAD(X)
+{
+  return 0.017453 * (X);
+}
+
+var Angles = [
+  FIXED(45.0), FIXED(26.565), FIXED(14.0362), FIXED(7.12502),
+  FIXED(3.57633), FIXED(1.78991), FIXED(0.895174), FIXED(0.447614),
+  FIXED(0.223811), FIXED(0.111906), FIXED(0.055953),
+  FIXED(0.027977) 
+              ];
+
+
+function cordicsincos() {
+    var X;
+    var Y;
+    var TargetAngle;
+    var CurrAngle;
+    var Step;
+ 
+    X = FIXED(AG_CONST);         /* AG_CONST * cos(0) */
+    Y = 0;                       /* AG_CONST * sin(0) */
+
+    TargetAngle = FIXED(28.027);
+    CurrAngle = 0;
+    for (Step = 0; Step < 12; Step++) {
+        var NewX;
+        if (TargetAngle > CurrAngle) {
+            NewX = X - (Y >> Step);
+            Y = (X >> Step) + Y;
+            X = NewX;
+            CurrAngle += Angles[Step];
+        } else {
+            NewX = X + (Y >> Step);
+            Y = -(X >> Step) + Y;
+            X = NewX;
+            CurrAngle -= Angles[Step];
+        }
+    }
+}
+
+///// End CORDIC
+
+function cordic( runs ) {
+  for ( var i = 0 ; i < runs ; i++ ) {
+      cordicsincos();
+  }
+}
+
+cordic(25000);
+}; z();
 "
+ctx.Execute source |> ignore
+sw.Restart();
+ctx.Execute "z();"
 sw.Stop();
 
 printfn "%i" sw.ElapsedMilliseconds
+
+
+let mutable u = UInt32.MaxValue
+
+for i = 1 to 10000000 do
+  u <- u % (uint32 i)

@@ -7,13 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{EEE4C960
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS", "IronJS\IronJS.fsproj", "{9E257324-94E7-49AF-AE83-718288E925D8}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.REPL", "Tools\IronJS.REPL\IronJS.REPL.fsproj", "{0F78334F-EA74-4C5C-8232-B7D329BE2226}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "REPL", "Tools\REPL\REPL.fsproj", "{0F78334F-EA74-4C5C-8232-B7D329BE2226}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.DevUI", "Tools\IronJS.DevUI\IronJS.DevUI.csproj", "{02F37695-7FA2-4C83-82D2-76FCFE468B38}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevUI", "Tools\DevUI\DevUI.csproj", "{02F37695-7FA2-4C83-82D2-76FCFE468B38}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{8AF0E644-8747-4DFD-B922-6429EBDA29E8}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSKit", "Dependencies\FSKit\Src\FSKit.fsproj", "{15E5E5EE-B919-46B4-8B04-A323F6D01B66}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{7E895BE2-763D-4384-B17C-4EEC183D7479}"
 	ProjectSection(SolutionItems) = preProject
@@ -29,7 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Development", "Development"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5070932B-551A-4C31-9AB7-606F11B762ED}"
 	ProjectSection(SolutionItems) = preProject
-		..\Tests\CoffeeScript.fsx = ..\Tests\CoffeeScript.fsx
 		..\Tests\Functions.fsx = ..\Tests\Functions.fsx
 		..\Tests\Operators.fsx = ..\Tests\Operators.fsx
 		..\Tests\Statements.fsx = ..\Tests\Statements.fsx
@@ -96,6 +93,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SunSpider", "SunSpider", "{
 		..\Benchmarks\SunSpider-0.9.1\string-validate-input.js = ..\Benchmarks\SunSpider-0.9.1\string-validate-input.js
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSKit", "FSKit\Src\FSKit.fsproj", "{15E5E5EE-B919-46B4-8B04-A323F6D01B66}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = IronJS.vsmdi
@@ -158,15 +157,16 @@ Global
 		{02F37695-7FA2-4C83-82D2-76FCFE468B38}.Release|x86.Build.0 = Release|x86
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|x64.ActiveCfg = Debug|x86
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|x64.ActiveCfg = Debug|x64
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|x64.Build.0 = Debug|x64
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|x86.ActiveCfg = Debug|x86
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Debug|x86.Build.0 = Debug|x86
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Any CPU.Build.0 = Release|Any CPU
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.Build.0 = Release|x86
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|Mixed Platforms.Build.0 = Release|x64
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x64.ActiveCfg = Release|x64
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x64.Build.0 = Release|x64
 		{15E5E5EE-B919-46B4-8B04-A323F6D01B66}.Release|x86.ActiveCfg = Release|x86

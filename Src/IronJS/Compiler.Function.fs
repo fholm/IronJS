@@ -59,7 +59,7 @@ module Function =
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
     
-    Dlr.callStaticGenericT<Api.DynScope> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
+    Dlr.callStaticGenericT<DynScope> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =

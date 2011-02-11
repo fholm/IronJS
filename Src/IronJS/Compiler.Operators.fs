@@ -43,7 +43,7 @@ module Unary =
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
       let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
-      Dlr.callStaticT<Api.DynScope> "Delete" args
+      Dlr.callStaticT<DynScope> "Delete" args
 
     elif Identifier.isGlobal ctx name then
       deleteProperty ctx ctx.Globals name

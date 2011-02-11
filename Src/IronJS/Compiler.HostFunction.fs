@@ -6,7 +6,7 @@ open IronJS
 //------------------------------------------------------------------------------
 // HostFunction API
 module HostFunction =
-
+  
   [<ReferenceEquality>]
   type DispatchTarget<'a when 'a :> Delegate> = {
     Delegate : System.Type

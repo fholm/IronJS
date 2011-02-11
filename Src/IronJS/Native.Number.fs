@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
 module Number =

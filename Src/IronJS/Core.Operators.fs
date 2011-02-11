@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.Utils.Patterns
 
 //------------------------------------------------------------------------------
@@ -411,7 +411,11 @@ module HostFunction =
           else Expr.box invoke
             
     let lambda = Dlr.lambda target.Delegate args body
-    Debug.printExpr lambda
+
+    #if DEBUG
+    Support.Debug.print lambda
+    #endif
+
     lambda.Compile()
 
   //----------------------------------------------------------------------------
@@ -438,50 +442,41 @@ module HostFunction =
 
     f
 
-//------------------------------------------------------------------------------
-module DynamicScope =
-  
-  //----------------------------------------------------------------------------
-  let findObject (name:string) (dc:DynamicScope) stop =
-    let rec find (dc:DynamicScope) =
-      match dc with
+type DynScope() =
+
+  (**)
+  static let findObject (name:string) (dc:DynamicScope) stop =
+      
+    let rec find = 
+      function
       | [] -> None
-      | (level, o)::xs ->
-        if level >= stop then
-          let mutable h = null
-          let mutable i = 0
-          if o.Has(name)
-            then Some o
-            else find xs
-        else
-          None
+      | (level, o:CommonObject)::xs ->
+        if level >= stop 
+          then (if o.Has name then Some o else find xs)
+          else None
 
     find dc
       
-  //----------------------------------------------------------------------------
-  let findVariable (name:string) (dc:DynamicScope) stop = 
+  (**)
+  static let findVariable (name:string) (dc:DynamicScope) stop = 
     match findObject name dc stop with
-    | Some o -> Some(o.Get(name))
+    | Some o -> name |> o.Get |> Some
     | _ -> None
-
-  //----------------------------------------------------------------------------
-  let get (name:string) dc stop (g:CommonObject) (s:Scope) i =
+    
+  (**)
+  static member Get (name:string, dc, stop, g:CommonObject, s:Scope, i) =
     match findObject name dc stop with
-    | Some o -> o.Get(name)
-    | _ -> if s = null then g.Get(name) else s.[i]
-      
-  //----------------------------------------------------------------------------
-  let set (name:string) (v:BoxedValue) dc stop (g:CommonObject) (s:Scope) i =
+    | Some o -> o.Get name
+    | _ -> if s = null then g.Get name else s.[i]
+    
+  (**)
+  static member Set (name:string, v:BoxedValue, dc, stop, g:CommonObject, s:Scope, i) =
     match findObject name dc stop with
     | Some o -> o.Put(name, v)
-    | _ -> 
-      if s = null 
-        then g.Put(name, v)
-        else s.[i] <- v
-          
-  //----------------------------------------------------------------------------
-  let call<'a when 'a :> Delegate> (name:string) args dc stop g (s:Scope) i =
-
+    | _ -> if s = null then g.Put(name, v) else s.[i] <- v
+    
+  (**)
+  static member Call<'a when 'a :> Delegate> (name:string, args, dc, stop, g, s:Scope, i) =
     let this, func = 
       match findObject name dc stop with
       | Some o -> o, o.Get(name)
@@ -494,26 +489,18 @@ module DynamicScope =
       Utils.box (compiled.DynamicInvoke(Array.append internalArgs args))
 
     else
-      Errors.runtime "Can only call javascript function dynamically"
-        
-  //----------------------------------------------------------------------------
-  let delete (dc:DynamicScope) (g:CommonObject) (name:string) =
+      Support.Errors.runtime "Can only call javascript functions inside with-blocks"
+      
+  (**)
+  static member Delete (dc:DynamicScope, g:CommonObject, name:string) =
     match findObject name dc -1 with
     | Some o -> o.Delete(name)
     | _ -> g.Delete(name)
-
-  //----------------------------------------------------------------------------
-  let push (dc:DynamicScope byref) new' level =
+    
+  (**)
+  static member Push (dc:DynamicScope byref, new', level) = 
     dc <- (level, new') :: dc
       
-  //----------------------------------------------------------------------------
-  let pop (dc:DynamicScope byref) =
+  (**)
+  static member Pop (dc:DynamicScope byref) = 
     dc <- List.tail dc
-
-  module Reflected =
-    let set = Utils.Reflected.methodInfo "Api.DynamicScope" "set"
-    let get = Utils.Reflected.methodInfo "Api.DynamicScope" "get"
-    let call = Utils.Reflected.methodInfo "Api.DynamicScope" "call"
-    let delete = Utils.Reflected.methodInfo "Api.DynamicScope" "delete"
-    let push = Utils.Reflected.methodInfo "Api.DynamicScope" "push"
-    let pop = Utils.Reflected.methodInfo "Api.DynamicScope" "pop"

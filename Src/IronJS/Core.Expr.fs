@@ -21,8 +21,8 @@ module Expr =
   //----------------------------------------------------------------------------
   module BoxedConstants =
 
-    let zero = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.zero
-    let undefined = Dlr.propertyInfoStatic Utils.BoxedConstants.Reflected.undefined
+    let zero = Dlr.propertyStaticT<Utils.BoxedConstants> "Zero"
+    let undefined = Dlr.propertyStaticT<Utils.BoxedConstants> "Undefined"
       
   //----------------------------------------------------------------------------
   module Box =

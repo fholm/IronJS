@@ -3,7 +3,7 @@
 open System
 open IronJS
 open IronJS.Compiler
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
 module Global =

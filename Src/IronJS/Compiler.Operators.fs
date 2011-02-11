@@ -43,12 +43,13 @@ module Unary =
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
       let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
-      Dlr.callMethod Api.DynamicScope.Reflected.delete args
+      Dlr.callStaticT<Api.DynScope> "Delete" args
+
+    elif Identifier.isGlobal ctx name then
+      deleteProperty ctx ctx.Globals name
 
     else
-      if Identifier.isGlobal ctx name 
-        then deleteProperty ctx ctx.Globals name
-        else Dlr.false'
+      Dlr.false'
 
   let delete (ctx:Ctx) tree =
     match tree with

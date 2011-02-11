@@ -3,8 +3,7 @@
 
 open IronJS
 open IronJS.Utils
-open IronJS.Aliases
-open IronJS.Operators
+open IronJS.Support.Aliases
 
 open Antlr.Runtime
 open System.Globalization
@@ -15,35 +14,12 @@ module Parsers =
   open IronJS
   open IronJS.Ast
   open IronJS.Ast.Utils
+  open IronJS.Support.Aliases
 
   //--------------------------------------------------------------------------
   module Ecma3 = 
 
     open Xebic.ES3
-
-    type private AntlrToken = Antlr.Runtime.Tree.CommonTree
-
-    module Errors =
-      
-      let shouldBeForToken () =
-        Errors.parser "Token should be FORSTEP or FORITER"
-
-      let shouldBeDefaultOrCase () =
-        Errors.parser "Should be CASE or DEFAULT"
-
-      let syntaxError line col =
-        Errors.parser 
-          (sprintf "Syntax Error at line %d after column %d" line col)
-
-      let noParserForToken (tok:AntlrToken) =
-        let name = ES3Parser.tokenNames.[tok.Type]
-        Errors.parser (sprintf "No parser for token %s (%i)" name tok.Type)
-
-      let emptyChildrenList () =
-        Errors.parser "No children exists for node"
-
-      let invalidRegexModifier c =
-        Errors.parser (sprintf "Invalid regex modifier '%c'" c)
 
     type Context = {
       Environment : Environment
@@ -102,7 +78,7 @@ module Parsers =
           let body = ctx.Translate (child tok 1)
           ForIn(label, name, init, body)
 
-        | _ -> Errors.shouldBeForToken()
+        | _ -> Support.Errors.shouldBeForToken()
         
       //----------------------------------------------------------------------
       let while' (ctx:Context) label tok =
@@ -263,7 +239,7 @@ module Parsers =
             | 'i'::xs -> RegexFlag.CaseInsensitive :: getModifiers xs
             | 'g'::xs -> RegexFlag.Global :: getModifiers xs
             | 'm'::xs -> RegexFlag.MultiLine :: getModifiers xs
-            |  c ::xs -> Errors.invalidRegexModifier c
+            |  c ::xs -> Support.Errors.invalidRegexModifier c
 
           getModifiers (modifiers.ToCharArray() |> List.ofArray)
 
@@ -433,7 +409,7 @@ module Parsers =
 
         let value, cases =
           match children tok with
-          | [] -> Errors.emptyChildrenList()
+          | [] -> Support.Errors.emptyChildrenList()
           | x::xs -> x, xs
 
         let cases =
@@ -448,14 +424,14 @@ module Parsers =
               let children = children case
 
               match children with
-              | [] -> Errors.emptyChildrenList()
+              | [] -> Support.Errors.emptyChildrenList()
               | test::[] -> test :: tests, cases
               | test::body ->
                 let body = Block [for x in body -> ctx.Translate x]
                 let tests = [for t in test :: tests -> ctx.Translate t]
                 [], Case(tests, body) :: cases
 
-            | _ -> Errors.shouldBeDefaultOrCase()
+            | _ -> Support.Errors.shouldBeDefaultOrCase()
 
           ) ([], []) cases |> snd
 
@@ -467,10 +443,10 @@ module Parsers =
           let errorTok = ctx.TokenStream.Get(error.TokenStopIndex)
           let line = errorTok.Line 
           let col = errorTok.CharPositionInLine + 1
-          Errors.syntaxError line col
+          Support.Errors.syntaxError line col
 
         | _ -> 
-          Errors.noParserForToken tok
+          Support.Errors.noParserForToken tok
           
     //------------------------------------------------------------------------
     let parse env source = 

@@ -29,7 +29,7 @@ module Function =
   //----------------------------------------------------------------------------
   // 15.3.4 Function.prototype
   let private prototype (f:FunctionObject) _ =
-    Utils.BoxedConstants.undefined
+    Utils.BoxedConstants.Undefined
     
   //----------------------------------------------------------------------------
   // 15.3.4.2 Function.prototype.toString

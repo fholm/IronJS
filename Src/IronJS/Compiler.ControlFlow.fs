@@ -1,7 +1,7 @@
 ﻿namespace IronJS.Compiler
 
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.Compiler
 
 module ControlFlow =
@@ -123,12 +123,12 @@ module ControlFlow =
     | None -> 
       match ctx.Continue with
       | Some label -> Dlr.continue' label
-      | _ -> Errors.noContinueTargetAvailable()
+      | _ -> Support.Errors.noContinueTargetAvailable()
 
     | Some label ->
       match ctx.ContinueLabels.TryFind label with
       | Some label -> Dlr.continue' label
-      | _ -> Errors.missingLabel label
+      | _ -> Support.Errors.missingLabel label
 
   //----------------------------------------------------------------------------
   // 12.8 break
@@ -137,12 +137,12 @@ module ControlFlow =
     | None -> 
       match ctx.Break with
       | Some label -> Dlr.break' label
-      | _ -> Errors.noBreakTargetAvailable()
+      | _ -> Support.Errors.noBreakTargetAvailable()
 
     | Some label ->
       match ctx.BreakLabels.TryFind label with
       | Some label -> Dlr.continue' label
-      | _ -> Errors.missingLabel label
+      | _ -> Support.Errors.missingLabel label
 
   //----------------------------------------------------------------------------
   // 12.11 switch
@@ -158,7 +158,7 @@ module ControlFlow =
       Dlr.if' tests (ctx.Compile body)
 
     | Ast.Default body -> ctx.Compile body
-    | _ -> Errors.invalidCaseNodeType()
+    | _ -> Support.Errors.invalidCaseNodeType()
     
   let switch (ctx:Ctx) value cases =
     let value = ctx.Compile value

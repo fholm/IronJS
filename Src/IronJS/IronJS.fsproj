@@ -90,15 +90,12 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Core.Support.fs" />
-    <Compile Include="Core.Dlr.fs" />
-    <Compile Include="Core.Debug.fs" />
-    <Compile Include="Core.Errors.fs" />
+    <Compile Include="Support.Dlr.fs" />
+    <Compile Include="Support.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Core.Utils.fs" />
     <Compile Include="Core.Expr.fs" />
     <Compile Include="Core.Operators.fs" />
-    <Compile Include="Compiler.Errors.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Parser.fs" />
     <Compile Include="Compiler.Context.fs" />

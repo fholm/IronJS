@@ -5,7 +5,7 @@
 #nowarn "9"
 
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 
 open System
 open System.Reflection
@@ -244,7 +244,19 @@ and [<NoComparison>] Descriptor =
 // 8.1 Undefined
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
+
+  static let boxed = 
+    let mutable box = BoxedValue()
+    box.Clr <- instance
+    box.Tag <- TypeTags.Undefined
+    box
+
   static member Instance = instance
+  static member InstanceExpr = Dlr.propertyStaticT<Undefined> "Instance"
+
+  static member Boxed = boxed
+  static member BoxedExpr = Dlr.propertyStaticT<Undefined> "Boxed"
+
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
@@ -1268,8 +1280,8 @@ and [<AllowNullLiteral>] ArgumentsObject =
       x.ClosedOver <- null
 
     base.Delete(index)
-
-//-------------------------------------------------------------------------
+    
+(**)
 and [<AllowNullLiteral>] ObjectClass =
   val mutable Id : uint64
   val mutable Env : Environment
@@ -1340,7 +1352,7 @@ and [<AllowNullLiteral>] ObjectClass =
 
       subClass
 
-//------------------------------------------------------------------------------
+(**)
 and [<AllowNullLiteral>] FunctionObject = 
   inherit CommonObject
 
@@ -1486,8 +1498,13 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
-//------------------------------------------------------------------------------
-// Class used to represent a .NET delegate wrapped as a javascript function
+and [<ReferenceEquality>] DispatchTarget<'a when 'a :> Delegate> = {
+  Delegate : System.Type
+  Function : HostFunction<'a>
+  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
+}
+    
+(* Represents a .NET delegate wrapped as a JavaScript function *)
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit FunctionObject
   
@@ -1529,14 +1546,126 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
           x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
           x.ParamsMode <- ParamsModes.ObjectParams
         
-  //----------------------------------------------------------------------------
   member x.ArgsLength =
     match x.MarshalMode with
     | MarshalModes.Function -> x.ArgTypes.Length - 2
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
+(*
+    
 //------------------------------------------------------------------------------
+// HostFunction API
+module HostFunction =
+
+  [<ReferenceEquality>]
+  type DispatchTarget<'a when 'a :> Delegate> = {
+    Delegate : System.Type
+    Function : HostFunction<'a>
+    Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
+  }
+
+  //----------------------------------------------------------------------------
+  let marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
+    if i < args.Length 
+      then TypeConverter2.ConvertTo(env, args.[i], t)
+      else
+        if FSKit.Utils.isTypeT<BoxedValue> t
+          then Expr.BoxedConstants.undefined else Dlr.default' t
+      
+  //----------------------------------------------------------------------------
+  let marshalBoxParams (f:HostFunction<_>) args m =
+    args
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map Expr.box
+    |> fun x -> Seq.append m [Dlr.newArrayItemsT<BoxedValue> x]
+    
+  //----------------------------------------------------------------------------
+  let marshalObjectParams (f:HostFunction<_>) (args:Dlr.ExprParam array) m =
+    args
+    |> Seq.skip f.ArgTypes.Length
+    |> Seq.map TypeConverter2.ToClrObject
+    |> fun x -> Seq.append m [Dlr.newArrayItemsT<System.Object> x]
+    
+  //----------------------------------------------------------------------------
+  let private createParam i t = Dlr.param (sprintf "a%i" i) t
+  
+  //----------------------------------------------------------------------------
+  let private addEmptyParamsObject<'a> (args:Dlr.ExprParam array) =
+    args |> Array.map (fun x -> x :> Dlr.Expr)
+         |> FSKit.Array.appendOne Dlr.newArrayEmptyT<'a> 
+         |> Seq.ofArray
+  
+  //----------------------------------------------------------------------------
+  let compileDispatcher (target:DispatchTarget<'a>) = 
+    let f = target.Function
+
+    let argTypes = FSKit.Reflection.getDelegateArgTypes target.Delegate
+    let args = argTypes |> Array.mapi createParam
+    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
+
+    let func = args.[0] :> Dlr.Expr
+    let env = Dlr.field func "Env"
+
+    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
+    let marshalled = 
+      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
+
+      match f.ParamsMode with
+      | ParamsModes.BoxParams -> 
+        if paramsExist
+          then marshalBoxParams f passedArgs marshalled
+          else addEmptyParamsObject<BoxedValue> passedArgs 
+
+      | ParamsModes.ObjectParams when paramsExist -> 
+        if paramsExist
+          then marshalObjectParams f passedArgs marshalled
+          else addEmptyParamsObject<System.Object> passedArgs 
+
+      | _ -> marshalled
+
+    let invoke = target.Invoke func marshalled
+    let body = 
+      if FSKit.Utils.isTypeT<BoxedValue> f.ReturnType 
+        then invoke
+        elif FSKit.Utils.isVoid f.ReturnType 
+          then Expr.voidAsUndefined invoke
+          else Expr.box invoke
+            
+    let lambda = Dlr.lambda target.Delegate args body
+
+    #if DEBUG
+    Support.Debug.print lambda
+    #endif
+
+    lambda.Compile()
+
+  //----------------------------------------------------------------------------
+  let generateInvoke<'a when 'a :> Delegate> f args =
+    let casted = Dlr.castT<HostFunction<'a>> f
+    Dlr.invoke (Dlr.field casted "Delegate") args
+  
+  //----------------------------------------------------------------------------
+  let compile<'a when 'a :> Delegate> (x:FunctionObject) (delegate':System.Type) =
+    compileDispatcher {
+      Delegate = delegate'
+      Function = x :?> HostFunction<'a>
+      Invoke = generateInvoke<'a>
+    }
+    
+  //----------------------------------------------------------------------------
+  let create (env:Environment) (delegate':'a) =
+    let h = HostFunction<'a>(env, delegate')
+    let f = h :> FunctionObject
+    let o = f :> CommonObject
+
+    o.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
+    env.AddCompiler(f, compile<'a>)
+
+    f
+ *)
+    
+(**)
 and [<AllowNullLiteral>] FunctionCompiler(compiler:CompilerFunction) = 
 
   let cache = new MutableDict<System.Type, Delegate>()
@@ -1553,10 +1682,9 @@ and [<AllowNullLiteral>] FunctionCompiler(compiler:CompilerFunction) =
   member x.Compile<'a when 'a :> Delegate> (f:FunctionObject) : 'a = 
     x.Compile(f, typeof<'a>) :?> 'a
 
-//------------------------------------------------------------------------------
-// Class representing a javascript user exception
-and [<AllowNullLiteral>] UserError(jsValue:BoxedValue) =
-  inherit Exception()
+(**)
+and UserError(jsValue:BoxedValue) =
+  inherit IronJS.Support.Error("UserError")
   member x.JsValue = jsValue
   
 //------------------------------------------------------------------------------
@@ -1748,7 +1876,7 @@ and TypeConverter2() =
       elif t = typeof<BoxedValue> then TypeConverter2.ToBoxedValue expr
       elif t = typeof<CommonObject> then TypeConverter2.ToObject(env, expr)
       elif t = typeof<System.Object> then TypeConverter2.ToClrObject expr
-      else Errors.Generic.noConversion expr.Type t
+      else Support.Errors.noConversion expr.Type t
     
 //------------------------------------------------------------------------------
 and Maps = {

@@ -17,9 +17,9 @@ module Scope =
       Dlr.const' ctx.Scope.GlobalLevel]
 
     Dlr.blockSimple [
-      (Dlr.callMethod Api.DynamicScope.Reflected.push pushArgs)
+      (Dlr.callStaticT<Api.DynScope> "Push" pushArgs)
       (tree)
-      (Dlr.callMethod Api.DynamicScope.Reflected.pop [ctx.DynamicScope])]
+      (Dlr.callStaticT<Api.DynScope> "Pop" [ctx.DynamicScope])]
     
   //--------------------------------------------------------------------------
   let private storageExpr ctx (var:Ast.LocalIndex) =

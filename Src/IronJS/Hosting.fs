@@ -130,7 +130,7 @@ module Hosting =
       let analyzed = Ast.Analyzers.applyDefault tree None
 
       #if DEBUG
-      Debug.printString (sprintf "%A" analyzed)
+      Support.Debug.print analyzed
       #endif
 
       Compiler.Core.compileAsGlobal env analyzed
@@ -140,7 +140,7 @@ module Hosting =
       let analyzed = Ast.Analyzers.applyDefault tree None
 
       #if DEBUG
-      Debug.printString (sprintf "%A" analyzed)
+      Support.Debug.print analyzed
       #endif
 
       Compiler.Core.compileAsGlobal env analyzed

@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 open IronJS.Utils.Patterns
 
@@ -98,7 +98,7 @@ module Array =
       let index = a.Length - 1u
 
       if index >= a.Length then 
-        Utils.BoxedConstants.undefined
+        Utils.BoxedConstants.Undefined
 
       else
         let item = 
@@ -111,7 +111,7 @@ module Array =
             else 
               if a.HasPrototype 
                 then a.Prototype.Get index
-                else Utils.BoxedConstants.undefined
+                else Utils.BoxedConstants.Undefined
 
           | IsSparse ->
             match a.Sparse.TryGetValue index with
@@ -119,7 +119,7 @@ module Array =
             | _ -> 
               if a.HasPrototype 
                 then a.Prototype.Get index
-                else Utils.BoxedConstants.undefined
+                else Utils.BoxedConstants.Undefined
 
         a.Delete index |> ignore
         item
@@ -129,7 +129,7 @@ module Array =
       
       if length = 0u then
         this.Put("length", 0.0)
-        Utils.BoxedConstants.undefined
+        Utils.BoxedConstants.Undefined
 
       else
         let index = length - 1u
@@ -196,7 +196,7 @@ module Array =
 
     match this with
     | IsArray a ->
-      if a.Length = 0u then Utils.BoxedConstants.undefined
+      if a.Length = 0u then Utils.BoxedConstants.Undefined
       else
         match a with
         | IsDense ->
@@ -206,7 +206,7 @@ module Array =
 
             elif a.HasPrototype 
               then a.Prototype.Get 0u
-              else Utils.BoxedConstants.undefined
+              else Utils.BoxedConstants.Undefined
 
           //Remove first element of dense array, also updates indexes
           a.Dense <- a.Dense |> Dlr.ArrayUtils.RemoveFirst
@@ -220,7 +220,7 @@ module Array =
             | _ -> 
               if a.HasPrototype 
                 then a.Prototype.Get 0u
-                else Utils.BoxedConstants.undefined
+                else Utils.BoxedConstants.Undefined
 
           //Update sparse indexes
           for kvp in a.Sparse do
@@ -232,7 +232,7 @@ module Array =
 
     | _ -> 
       let length = this.GetLength()
-      if length = 0u then Utils.BoxedConstants.undefined
+      if length = 0u then Utils.BoxedConstants.Undefined
       else
         let item = this.Get 0u
         this.Delete 0u |> ignore
@@ -287,14 +287,14 @@ module Array =
       let sort = f.Compiler.Compile<Sort> f
 
       fun (x:Descriptor) (y:Descriptor) -> 
-        let x = if x.HasValue then x.Value else Utils.BoxedConstants.undefined
-        let y = if y.HasValue then y.Value else Utils.BoxedConstants.undefined
+        let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
+        let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
         let result = sort.Invoke(f, f.Env.Globals, x, y)
         result |> TypeConverter2.ToNumber |> int
 
     let denseSortDefault (x:Descriptor) (y:Descriptor) =
-      let x = if x.HasValue then x.Value else Utils.BoxedConstants.undefined
-      let y = if y.HasValue then y.Value else Utils.BoxedConstants.undefined
+      let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
+      let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
       String.Compare(TypeConverter2.ToString x, TypeConverter2.ToString y)
 
     let sparseSort (cmp:SparseComparer) (length:uint32) (vals:SparseArray) =
@@ -306,7 +306,7 @@ module Array =
           
         match vals.TryGetValue !i with
         | true, box -> items.Add(true, box)
-        | _ -> items.Add(false, Utils.BoxedConstants.undefined)
+        | _ -> items.Add(false, Utils.BoxedConstants.Undefined)
 
         i := !i + 1u
 
@@ -403,7 +403,7 @@ module Array =
   //----------------------------------------------------------------------------
   let internal toString (f:FunctionObject) (a:CommonObject) =
     a |> Utils.mustBe Classes.Array f.Env
-    join f a Utils.BoxedConstants.undefined
+    join f a Utils.BoxedConstants.Undefined
 
   let internal toLocaleString = toString
 

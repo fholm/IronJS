@@ -1,7 +1,7 @@
 ﻿namespace IronJS
 
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 
 open FSKit.Utils
 
@@ -11,62 +11,27 @@ open System.Reflection.Emit
 open System.Runtime.InteropServices
 
 module Utils =
-
-  //----------------------------------------------------------------------------
-  module Reflected =
-
-    open System.Reflection
-
-    let private apiTypes = ConcurrentMutableDict<string, System.Type>()
-    let private bindingFlags = BindingFlags.Static ||| BindingFlags.Public
-
-    let private assembly = 
-      AppDomain.CurrentDomain.GetAssemblies() 
-        |> Array.find (fun x -> x.FullName.StartsWith("IronJS,"))
-
-    let rec methodInfo type' method' =
-      let found, typeObj = apiTypes.TryGetValue type'
-      if found then typeObj.GetMethod(method', bindingFlags)
-      else
-        match assembly.GetType("IronJS." + type', false) with
-        | null -> null
-        | typeObj ->
-          apiTypes.TryAdd(type', typeObj) |> ignore
-          methodInfo type' method'
-
-    let rec propertyInfo type' property =
-      let found, typeObj = apiTypes.TryGetValue type'
-      if found then typeObj.GetProperty(property, bindingFlags)
-      else
-        let types = assembly.GetTypes()
-        match assembly.GetType("IronJS." + type', false) with
-        | null -> null
-        | typeObj ->
-          apiTypes.TryAdd(type', typeObj) |> ignore
-          propertyInfo type' property
           
   //----------------------------------------------------------------------------
-  module BoxedConstants =
+  type BoxedConstants() =
 
-    let zero = BoxedValue()
+    static let zero = BoxedValue()
 
-    let undefined =
+    static let undefined =
       let mutable box = BoxedValue()
       box.Tag <- TypeTags.Undefined
       box.Clr <- Undefined.Instance
       box
 
-    let null' =
+    static let null' =
       let mutable box = BoxedValue()
       box.Tag <- TypeTags.Clr
       box.Clr <- null
       box
 
-    module Reflected =
-
-      let null' = Reflected.propertyInfo "Utils+BoxedConstants" "null'"
-      let zero = Reflected.propertyInfo "Utils+BoxedConstants" "zero"
-      let undefined = Reflected.propertyInfo "Utils+BoxedConstants" "undefined"
+    static member Zero = zero
+    static member Undefined = undefined
+    static member Null = null'
       
   //----------------------------------------------------------------------------
   module Box = 
@@ -194,14 +159,14 @@ module Utils =
       env.RaiseTypeError(error)
 
   let type2tag (t:System.Type) =   
-    if   t |> FSKit.Utils.isTypeT<bool>   then TypeTags.Bool
-    elif t |> FSKit.Utils.isTypeT<double>    then TypeTags.Number
-    elif t |> FSKit.Utils.isTypeT<string>    then TypeTags.String
-    elif t |> FSKit.Utils.isTypeT<Undefined> then TypeTags.Undefined
-    elif t |> FSKit.Utils.isTypeT<FunctionObject>   then TypeTags.Function
-    elif t |> FSKit.Utils.isTypeT<CommonObject>    then TypeTags.Object
-    elif t |> FSKit.Utils.isTypeT<BoxedValue>    then TypeTags.Box
-                                             else TypeTags.Clr
+    if   t |> FSKit.Utils.isTypeT<bool>           then TypeTags.Bool
+    elif t |> FSKit.Utils.isTypeT<double>         then TypeTags.Number
+    elif t |> FSKit.Utils.isTypeT<string>         then TypeTags.String
+    elif t |> FSKit.Utils.isTypeT<Undefined>      then TypeTags.Undefined
+    elif t |> FSKit.Utils.isTypeT<FunctionObject> then TypeTags.Function
+    elif t |> FSKit.Utils.isTypeT<CommonObject>   then TypeTags.Object
+    elif t |> FSKit.Utils.isTypeT<BoxedValue>     then TypeTags.Box
+                                                  else TypeTags.Clr
 
   let tag2field tag =
     match tag with
@@ -212,7 +177,7 @@ module Utils =
     | TypeTags.Object     -> BoxFields.Object   
     | TypeTags.Function   -> BoxFields.Function 
     | TypeTags.Clr        -> BoxFields.Clr
-    | _ -> failwithf "Invalid TypeTag '%i'" tag
+    | _ -> Support.Errors.invalidTypeTag tag
 
   let type2field (t:System.Type) = t |> type2tag |> tag2field
 
@@ -273,7 +238,7 @@ module Utils =
 
   let box (o:obj) =
     if o :? BoxedValue then unbox o
-    elif FSKit.Utils.isNull o then BoxedConstants.null'
+    elif FSKit.Utils.isNull o then BoxedConstants.Null
     else
       let mutable box = BoxedValue()
 
@@ -311,25 +276,25 @@ module Utils =
   // incomptabile delegates for the same arguments each time it's called.
   // E.g: Func<FunctionObject, CommonObject, BoxedValue>
 
-  let private _delegateCache = 
+  let private delegateCache = 
     new ConcurrentMutableDict<System.RuntimeTypeHandle list, System.Type>()
 
   let createDelegate (types:System.Type seq) =
-    let key = Seq.fold (fun s (t:System.Type) -> t.TypeHandle :: s) [] types
+    let toTypeHandle state (type':System.Type) = type'.TypeHandle :: state
+    let key = Seq.fold toTypeHandle [] types
 
     let rec createDelegate' types =
-      let success, func = _delegateCache.TryGetValue key
+      let success, func = delegateCache.TryGetValue key
       if success then func
       else
         let funcType = Dlr.delegateType types
-        if _delegateCache.TryAdd(key, funcType) 
+        if delegateCache.TryAdd(key, funcType) 
           then funcType
           else createDelegate' types
 
     createDelegate' types
 
-  let private _internalArgs = Seq.ofList [typeof<FunctionObject>; typeof<CommonObject>]
-  let private _interanlReturnType = Seq.ofList [typeof<BoxedValue>]
-  let addInternalArgs (types:System.Type seq) =
-    Seq.concat [_internalArgs; types; _interanlReturnType]
+  let private internalArgs = Seq.ofList [typeof<FunctionObject>; typeof<CommonObject>]
+  let private interanlReturnType = Seq.ofList [typeof<BoxedValue>]
+  let addInternalArgs (types:System.Type seq) = Seq.concat [internalArgs; types; interanlReturnType]
         

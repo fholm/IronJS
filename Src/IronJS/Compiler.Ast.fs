@@ -2,22 +2,14 @@
 
 open IronJS
 open IronJS.Utils
-open IronJS.Aliases
-open IronJS.Operators
+open IronJS.Support.Aliases
 
 open Antlr.Runtime
 open System.Globalization
 
-module Ast = 
+module Ast =  
 
-  module Errors =
-    
-    let emptyScopeChain() = Errors.ast "Empty scope chain"
-    let missingVariable n = Errors.ast (sprintf "Missing variable '%s'" n)
-    let variableIndexOutOfRange() =
-      Errors.ast "Active index larger then indexes array length"
-
-  //----------------------------------------------------------------------------
+  (**)
   type BinaryOp 
     = Add = 1 // x + y
     | Sub = 2 // x - y
@@ -44,7 +36,7 @@ module Ast =
     | Gt = 106 // x > y
     | GtEq = 107 // x >= y
       
-  //----------------------------------------------------------------------------
+  (**)
   type UnaryOp 
     = Inc // ++x
     | Dec // --x
@@ -60,29 +52,29 @@ module Ast =
     | Delete // delete x.y
     | TypeOf // typeof x
     
-  //----------------------------------------------------------------------------
+  (**)
   type ScopeType
     = GlobalScope
     | FunctionScope
     
-  //----------------------------------------------------------------------------
+  (**)
   type EvalMode
     = Clean
     | Contains
     | Effected
     
-  //----------------------------------------------------------------------------
+  (**)
   type LookupMode
     = Static
     | Dynamic
       
-  //----------------------------------------------------------------------------
+  (**)
   type RegexFlag
     = Global (* /g *)
     | CaseInsensitive (* /i *)
     | MultiLine (* /m *)
     
-  //----------------------------------------------------------------------------
+  (**)
   type Tree
     // Simple
     = String of string
@@ -143,7 +135,7 @@ module Ast =
     | Block of Tree list
     | Type of uint32
 
-  //----------------------------------------------------------------------------
+  (**)
   and Local = {
     Name: string
     Active: int
@@ -155,7 +147,7 @@ module Ast =
       Indexes = [|index|]
     }
   
-  //----------------------------------------------------------------------------
+  (**)
   and LocalIndex = {
     Index: int
     ParamIndex: int option
@@ -167,21 +159,21 @@ module Ast =
       IsClosedOver = false
     }
     
-  //----------------------------------------------------------------------------
+  (**)
   and Closure = {
     Name: string
     Index: int
     ClosureLevel: int
     GlobalLevel: int
   } with
-    static member New n i cl gl = {
-      Name  = n
-      Index = i
-      ClosureLevel = cl
-      GlobalLevel = gl
+    static member New name index closureLevel globalLevel = {
+      Name  = name
+      Index = index
+      ClosureLevel = closureLevel
+      GlobalLevel = globalLevel
     }
     
-  //----------------------------------------------------------------------------
+  (**)
   and Scope = {
     Id : uint64
 
@@ -221,13 +213,12 @@ module Ast =
       ClosedOverCount = 0
     }
 
-  //----------------------------------------------------------------------------
+  (**)
   type VariableOption 
     = Global
     | Local of Local
     | Closure of Closure
-      
-  //----------------------------------------------------------------------------
+
   module Utils =
 
     module Local =
@@ -238,7 +229,7 @@ module Ast =
       
       let private activeIndex (local:Local) =
         if local.Active >= local.Indexes.Length then 
-          Errors.variableIndexOutOfRange()
+          Support.Errors.variableIndexOutOfRange()
 
         local.Indexes.[local.Active]
 
@@ -331,7 +322,7 @@ module Ast =
       //------------------------------------------------------------------------
       let closeOverVar (scope:Scope) name =
         match scope |> tryGetLocal name with
-        | None -> Errors.missingVariable name
+        | None -> Support.Errors.missingVariable name
         | Some group ->
           match group.Indexes.[group.Active] with
           | active when active.IsClosedOver |> not ->
@@ -354,20 +345,27 @@ module Ast =
     module ScopeChain =
       let notEmpty sc = match !sc with [] -> false | _ -> true
       let tryCurrentScope sc = match !sc with [] -> None | x::_ -> Some x
+
       let currentScope sc =
-        match !sc with [] -> Errors.emptyScopeChain() | x::_ -> x
+        match !sc with 
+        | [] -> Support.Errors.emptyScopeChain() 
+        | x::_ -> x
       
       let pop sc =
         match !sc with
-        | [] -> Errors.emptyScopeChain()
+        | [] -> Support.Errors.emptyScopeChain()
         | scope::sc' -> sc := sc'; scope
 
       let replace old new' sc =
-        sc := sc |!> List.map (fun scope ->
-          if scope.Id = old.Id then new' else scope)
+        let replace scope = 
+          if scope.Id = old.Id then new' else scope
+
+        sc := !sc |> List.map replace
 
       let modifyCurrent (f:Scope -> Scope) sc =
-        match !sc with [] -> Errors.emptyScopeChain() | x::xs -> sc := f x :: xs
+        match !sc with 
+        | [] -> Support.Errors.emptyScopeChain() 
+        | x::xs -> sc := f x :: xs
 
       let pushAnd sc s f t = sc := s :: !sc; let t' = f t in pop sc, t'
 
@@ -422,7 +420,7 @@ module Ast =
       | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
       | Case(tests, body) -> Case([for t in tests -> f t], f body)
       | Default body -> Default (f body)
-      | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, ifFalse |?> f)
+      | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, ifFalse |> Option.map f)
       | Ternary(test, ifTrue, ifFalse) -> Ternary(f test, f ifTrue, f ifFalse)
       | While(label, test, body) -> While(label, f test, f body)
       | DoWhile(label, test, body) -> DoWhile(label, f test, f body)
@@ -435,7 +433,7 @@ module Ast =
       | Finally body -> Finally (f body)
       | Throw tree -> Throw (f tree)
       | Try(body, catch, finally') -> 
-        Try(f body, [for x in catch -> f x], finally' |?> f)
+        Try(f body, [for x in catch -> f x], finally' |> Option.map f)
 
       // Others
       | Block trees -> Block [for t in trees -> f t]

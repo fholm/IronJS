@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open IronJS.Utils
 open IronJS.Compiler
 open IronJS.Dlr.Operators
@@ -206,7 +206,7 @@ module Core =
       | _ -> Dlr.lambdaAuto parameters functionBody
       
     #if DEBUG
-    Debug.printExpr lambda
+    Support.Debug.print lambda
     #endif
 
     lambda.Compile()

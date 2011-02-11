@@ -4,22 +4,14 @@ module Dlr =
 
   open System.Dynamic
   open System.Reflection
-
-  #if CLR2
-  open Microsoft.Scripting.Ast
-
-  type private Et = Microsoft.Scripting.Ast.Expression
-  type private EtParam = Microsoft.Scripting.Ast.ParameterExpression
-  type Expr = Microsoft.Scripting.Ast.Expression
-  type ExprParam = Microsoft.Scripting.Ast.ParameterExpression
-  #else
   open System.Linq.Expressions
 
+  //Type Aliases
   type private Et = Expression
   type private EtParam = ParameterExpression
+
   type Expr = Expression
   type ExprParam = ParameterExpression
-  #endif
 
   type Label = LabelTarget
   type ExprType = ExpressionType
@@ -33,6 +25,9 @@ module Dlr =
   type MathUtils = Microsoft.Scripting.Utils.MathUtils
   type EnumUtils = Microsoft.Scripting.Utils.EnumUtils
   type ReflectionUtils = Microsoft.Scripting.Utils.ReflectionUtils
+  type StringUtils = Microsoft.Scripting.Utils.StringUtils
+  type CollectionUtils = Microsoft.Scripting.Utils.CollectionUtils
+  type ExceptionUtils = Microsoft.Scripting.Utils.ExceptionUtils
 
   type MetaObj = DynamicMetaObject
   type IMetaObjProvider = IDynamicMetaObjectProvider
@@ -158,16 +153,15 @@ module Dlr =
   let blockTmpT<'a> f =
     blockTmp typeof<'a> f
 
-  let field expr (name:string) = Et.PropertyOrField(expr, name) :> Et
-  let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
+  let field expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
+  let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Expr
 
-  let propertyInfoStatic (pi:PropertyInfo) = Et.Property(null, pi) :> Et
-
-  let property expr (name:string) = Et.PropertyOrField(expr, name) :> Et
-  let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Et
-  let propertyStatic (type':System.Type) name = Et.Property(null, type', name)
+  let propertyInfoStatic (pi:PropertyInfo) = Et.Property(null, pi) :> Expr
+  let property expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
+  let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Expr
+  let propertyStatic (type':System.Type) name = Et.Property(null, type', name) :> Expr
   let propertyStaticT<'a> = propertyStatic typeof<'a>
-  let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Et
+  let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
 
   let private exprTypes (args:Expr seq) = [|for a in args -> a.Type|]
 
@@ -398,6 +392,12 @@ module Dlr =
   let assignDefault ex = assign ex (default' ex.Type)
   let assignNull = assignDefault
 
+  module V2 = 
+
+    let field (name:string) expr = Expr.Field(expr, name) :> Expr
+    let property (name:string) expr = Expr.Property(expr, name) :> Expr
+    let fieldOrProperty (name:string) expr = Expr.PropertyOrField(expr, name) :> Expr
+
   module Restrict =
     let notAtAll = Br.Empty
     let byExpr expr = Br.GetExpressionRestriction(expr)
@@ -427,19 +427,19 @@ module Dlr =
         | 5 -> typedefof<System.Tuple<_, _, _, _, _>>
         | 6 -> typedefof<System.Tuple<_, _, _, _, _, _>>
         | 7 -> typedefof<System.Tuple<_, _, _, _, _, _, _>>
-        | 8 -> typedefof<System.Tuple<_, _, _, _, _, _, _, _>>
-        | _ -> failwith "Max length on tuples is 8 items"
+        | _ -> failwith "Max length on tuples is 7 items"
+
       newGenericArgs type' [for expr in itemExprs -> expr.Type] itemExprs
 
   module Utils =
+    open System.Reflection
+
     let private _dbgViewProp = 
-      typeof<System.Linq.Expressions.Expression>.
-        GetProperty("DebugView", 
-          System.Reflection.BindingFlags.NonPublic 
-            ||| System.Reflection.BindingFlags.Instance)
+      let flags = BindingFlags.NonPublic ||| BindingFlags.Instance
+      typeof<System.Linq.Expressions.Expression>.GetProperty("DebugView", flags)
 
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
-    let printDebugView (expr:Expr) = printf "%s" (debugView expr)
+    let printDebugView (expr:Expr) = printf "%s" (expr |> debugView)
 
     let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
     let isT<'a> (expr:Expr) = is typeof<'a> expr
@@ -448,7 +448,11 @@ module Dlr =
     //DEBUG
     let debug x =
       #if DEBUG 
+        #if INTERACTIVE
+        constant x
+        #else
         callStaticT<System.Console> "WriteLine" [x]
+        #endif
       #else
         #if INTERACTIVE
         constant x

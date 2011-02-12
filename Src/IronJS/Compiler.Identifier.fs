@@ -46,7 +46,7 @@ module Identifier =
           
   //----------------------------------------------------------------------------
   let private setValueDynamic (ctx:Ctx) name value =
-    let defaultArgs = [Dlr.const' name; Expr.box value; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; Utils.box value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<DynamicScopeHelpers> "Set" args
@@ -74,10 +74,10 @@ module Identifier =
       match getExprIndexLevelType ctx name with
       | None -> 
         let name = Dlr.const' name
-        Expr.blockTmp value (fun value ->
+        Utils.blockTmp value (fun value ->
           [ctx.Globals |> Object.Property.put name value]
         )
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)
-        Expr.assign (Dlr.Ext.static' varExpr) value
+        Utils.assign (Dlr.Ext.static' varExpr) value

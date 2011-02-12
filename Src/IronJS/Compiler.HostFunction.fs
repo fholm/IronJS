@@ -4,6 +4,7 @@ module HostFunction =
 
   open System
   open IronJS
+  open IronJS.Compiler.Utils
   
   [<ReferenceEquality>]
   type private DispatchTarget<'a when 'a :> Delegate> = {
@@ -17,12 +18,12 @@ module HostFunction =
       then TypeConverter2.ConvertTo(env, args.[i], t)
       else
         if FSKit.Utils.isTypeT<BoxedValue> t
-          then Expr.BoxedConstants.undefined else Dlr.default' t
+          then Utils.BoxedConstants.undefined else Dlr.default' t
       
   let private marshalBoxParams (f:HostFunction<_>) args m =
     args
     |> Seq.skip f.ArgTypes.Length
-    |> Seq.map Expr.box
+    |> Seq.map Compiler.Utils.box
     |> fun x -> Seq.append m [Dlr.newArrayItemsT<BoxedValue> x]
     
   let private marshalObjectParams (f:HostFunction<_>) (args:Dlr.ExprParam array) m =
@@ -70,8 +71,8 @@ module HostFunction =
       if FSKit.Utils.isTypeT<BoxedValue> f.ReturnType 
         then invoke
         elif FSKit.Utils.isVoid f.ReturnType 
-          then Expr.voidAsUndefined invoke
-          else Expr.box invoke
+          then Utils.voidAsUndefined invoke
+          else Compiler.Utils.box invoke
             
     let lambda = Dlr.lambda target.Delegate args body
 

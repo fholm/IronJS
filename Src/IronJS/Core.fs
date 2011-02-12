@@ -1104,7 +1104,6 @@ and [<AllowNullLiteral>] ArrayObject =
 
       x.UpdateLength(index + 1u)
 
-
   override x.Get(index:uint32) =
     let array = x.Find(index)
     if FSKit.Utils.isNull array

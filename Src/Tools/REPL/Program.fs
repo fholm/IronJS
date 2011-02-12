@@ -9,6 +9,11 @@ module Main =
 
   let main () =
 
+    let console = Seq.initInfinite (fun _ -> Console.ReadLine())
+    console |> Seq.iter (fun line ->
+      printfn "You said %s" line
+    )
+    
     let ctx = Hosting.Context.Create()
     let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())
     let toString : BoxedValue -> string = TypeConverter2.ToString

@@ -96,7 +96,7 @@
     <Compile Include="Core.Utils.fs" />
     <Compile Include="Core.Expr.fs" />
     <Compile Include="Core.Operators.fs" />
-    <Compile Include="Core.DynamicScope.fs" />
+    <Compile Include="Core.Helpers.fs" />
     <Compile Include="Compiler.HostFunction.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Parser.fs" />

@@ -15,7 +15,7 @@ let ctx = Hosting.Context.Create()
 
 let print0 = fun (box:BoxedValue) -> printfn "%s" (TypeConverter2.ToString(box))
 let print1 = new Action<BoxedValue>(print0)
-let print2 = IronJS.Api.HostFunction.create ctx.Environment print1
+let print2 = IronJS.Utils.createHostFunction ctx.Environment print1
 ctx.PutGlobal("print", print2)
 
 Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))

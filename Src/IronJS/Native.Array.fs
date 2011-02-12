@@ -410,7 +410,7 @@ module Array =
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, CommonObject>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Array, Immutable)
@@ -431,46 +431,46 @@ module Array =
     proto.Put("constructor", env.Constructors.Array, DontEnum)
     
     let toString = new Func<FunctionObject, CommonObject, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 
     let toLocaleString = new Func<FunctionObject, CommonObject, string>(toLocaleString)
-    let toLocaleString = Api.HostFunction.create env toLocaleString
+    let toLocaleString = Utils.createHostFunction env toLocaleString
     proto.Put("toLocaleString", toLocaleString, DontEnum)
 
     let concat = new Func<FunctionObject, CommonObject, BoxedValue array, CommonObject>(concat)
-    let concat = Api.HostFunction.create env concat
+    let concat = Utils.createHostFunction env concat
     proto.Put("concat", concat, DontEnum)
     
     let join = new Func<FunctionObject, CommonObject, BoxedValue, string>(join)
-    let join = Api.HostFunction.create env join
+    let join = Utils.createHostFunction env join
     proto.Put("join", join, DontEnum)
     
     let pop = new Func<CommonObject, BoxedValue>(pop)
-    let pop = Api.HostFunction.create env pop
+    let pop = Utils.createHostFunction env pop
     proto.Put("pop", pop, DontEnum)
 
     let push = new Func<CommonObject, BoxedValue array, double>(push)
-    let push = Api.HostFunction.create env push
+    let push = Utils.createHostFunction env push
     proto.Put("push", push, DontEnum)
 
     let reverse = new Func<CommonObject, CommonObject>(reverse)
-    let reverse = Api.HostFunction.create env reverse
+    let reverse = Utils.createHostFunction env reverse
     proto.Put("reverse", reverse, DontEnum)
     
     let shift = new Func<CommonObject, BoxedValue>(shift)
-    let shift = Api.HostFunction.create env shift
+    let shift = Utils.createHostFunction env shift
     proto.Put("shift", shift, DontEnum)
 
     let slice = new Func<FunctionObject, CommonObject, double, BoxedValue, CommonObject>(slice)
-    let slice = Api.HostFunction.create env slice
+    let slice = Utils.createHostFunction env slice
     proto.Put("slice", slice, DontEnum)
 
     let sort = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(sort)
-    let sort = Api.HostFunction.create env sort
+    let sort = Utils.createHostFunction env sort
     proto.Put("sort", sort, DontEnum)
 
     let unshift = new Func<FunctionObject, CommonObject, BoxedValue array, CommonObject>(unshift)
-    let unshift = Api.HostFunction.create env unshift
+    let unshift = Utils.createHostFunction env unshift
     proto.Put("unshift", unshift, DontEnum)
 

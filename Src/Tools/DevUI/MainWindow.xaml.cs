@@ -59,11 +59,11 @@ namespace IronJS.DevUI {
             ijsCtx = IronJS.Hosting.Context.Create();
 
             var inspect =
-                IronJS.Api.HostFunction.create<Action<IronJS.BoxedValue>>(
+                IronJS.Utils.createHostFunction<Action<IronJS.BoxedValue>>(
                     ijsCtx.Environment, Inspect);
 
             var print =
-                IronJS.Api.HostFunction.create<Action<IronJS.BoxedValue>>(
+                IronJS.Utils.createHostFunction<Action<IronJS.BoxedValue>>(
                     ijsCtx.Environment, Print);
 
             ijsCtx.PutGlobal("inspect", inspect);

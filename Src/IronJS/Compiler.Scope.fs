@@ -17,9 +17,9 @@ module Scope =
       Dlr.const' ctx.Scope.GlobalLevel]
 
     Dlr.blockSimple [
-      (Dlr.callStaticT<DynScope> "Push" pushArgs)
+      (Dlr.callStaticT<DynamicScopeHelpers> "Push" pushArgs)
       (tree)
-      (Dlr.callStaticT<DynScope> "Pop" [ctx.DynamicScope])
+      (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.DynamicScope])
     ]
     
   //--------------------------------------------------------------------------

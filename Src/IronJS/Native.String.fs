@@ -225,10 +225,10 @@ module String =
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
 
     let fromCharCode = new Func<BoxedValue array, string>(fromCharCode)
-    let fromCharCode = Api.HostFunction.create env fromCharCode
+    let fromCharCode = Utils.createHostFunction env fromCharCode
     ctor.Put("fromCharCode", fromCharCode, DontEnum)
 
     ctor.ConstructorMode <- ConstructorModes.Host
@@ -244,73 +244,73 @@ module String =
     proto.Put("constructor", env.Constructors.String, DontEnum) // 15.6.4.1
 
     let toString = new Func<FunctionObject, CommonObject, BoxedValue>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 
     let valueOf = new Func<FunctionObject, CommonObject, BoxedValue>(valueOf)
-    let valueOf = Api.HostFunction.create env valueOf
+    let valueOf = Utils.createHostFunction env valueOf
     proto.Put("valueOf", valueOf, DontEnum)
 
     let charAt = new Func<CommonObject, double, string>(charAt)
-    let charAt = Api.HostFunction.create env charAt
+    let charAt = Utils.createHostFunction env charAt
     proto.Put("charAt", charAt, DontEnum)
 
     let charCodeAt = new Func<CommonObject, double, double>(charCodeAt)
-    let charCodeAt = Api.HostFunction.create env charCodeAt
+    let charCodeAt = Utils.createHostFunction env charCodeAt
     proto.Put("charCodeAt", charCodeAt, DontEnum)
 
     let concat = new Func<CommonObject, BoxedValue array, string>(concat)
-    let concat = Api.HostFunction.create env concat
+    let concat = Utils.createHostFunction env concat
     proto.Put("concat", concat, DontEnum)
 
     let indexOf = new Func<CommonObject, string, double, double>(indexOf)
-    let indexOf = Api.HostFunction.create env indexOf
+    let indexOf = Utils.createHostFunction env indexOf
     proto.Put("indexOf", indexOf, DontEnum)
 
     let lastIndexOf = new Func<CommonObject, string, double, double>(lastIndexOf)
-    let lastIndexOf = Api.HostFunction.create env lastIndexOf
+    let lastIndexOf = Utils.createHostFunction env lastIndexOf
     proto.Put("lastIndexOf", lastIndexOf, DontEnum)
 
     let localeCompare = new Func<CommonObject, CommonObject, double>(localeCompare)
-    let localeCompare = Api.HostFunction.create env localeCompare
+    let localeCompare = Utils.createHostFunction env localeCompare
     proto.Put("localeCompare", localeCompare, DontEnum)
 
     let match' = new Func<CommonObject, CommonObject, bool>(match')
-    let match' = Api.HostFunction.create env match'
+    let match' = Utils.createHostFunction env match'
     proto.Put("match", match', DontEnum)
 
     let replace = new Func<CommonObject, BoxedValue, BoxedValue, string>(replace)
-    let replace = Api.HostFunction.create env replace
+    let replace = Utils.createHostFunction env replace
     proto.Put("replace", replace, DontEnum)
 
     let search = new Func<CommonObject, BoxedValue, double>(search)
-    let search = Api.HostFunction.create env search
+    let search = Utils.createHostFunction env search
     proto.Put("search", search, DontEnum)
 
     let slice = new Func<CommonObject, double, BoxedValue, string>(slice)
-    let slice = Api.HostFunction.create env slice
+    let slice = Utils.createHostFunction env slice
     proto.Put("slice", slice, DontEnum)
 
     let split = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue, CommonObject>(split)
-    let split = Api.HostFunction.create env split
+    let split = Utils.createHostFunction env split
     proto.Put("split", split, DontEnum)
 
     let substring = new Func<CommonObject, double, double, string>(substring)
-    let substring = Api.HostFunction.create env substring
+    let substring = Utils.createHostFunction env substring
     proto.Put("substring", substring, DontEnum)
 
     let toLowerCase = new Func<CommonObject, string>(toLowerCase)
-    let toLowerCase = Api.HostFunction.create env toLowerCase
+    let toLowerCase = Utils.createHostFunction env toLowerCase
     proto.Put("toLowerCase", toLowerCase, DontEnum)
     
     let toLocaleLowerCase = new Func<CommonObject, string>(toLocaleLowerCase)
-    let toLocaleLowerCase = Api.HostFunction.create env toLocaleLowerCase
+    let toLocaleLowerCase = Utils.createHostFunction env toLocaleLowerCase
     proto.Put("toLocaleLowerCase", toLocaleLowerCase, DontEnum)
 
     let toUpperCase = new Func<CommonObject, string>(toUpperCase)
-    let toUpperCase = Api.HostFunction.create env toUpperCase
+    let toUpperCase = Utils.createHostFunction env toUpperCase
     proto.Put("toUpperCase", toUpperCase, DontEnum)
 
     let toLocaleUpperCase = new Func<CommonObject, string>(toLocaleUpperCase)
-    let toLocaleUpperCase = Api.HostFunction.create env toLocaleUpperCase
+    let toLocaleUpperCase = Utils.createHostFunction env toLocaleUpperCase
     proto.Put("toLocaleUpperCase", toLocaleUpperCase, DontEnum)

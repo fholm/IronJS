@@ -42,14 +42,14 @@ module Identifier =
     let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<DynScope> "Get" args
+    Dlr.callStaticT<DynamicScopeHelpers> "Get" args
           
   //----------------------------------------------------------------------------
   let private setValueDynamic (ctx:Ctx) name value =
     let defaultArgs = [Dlr.const' name; Expr.box value; ctx.DynamicScope]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
-    Dlr.callStaticT<DynScope> "Set" args
+    Dlr.callStaticT<DynamicScopeHelpers> "Set" args
     
   //----------------------------------------------------------------------------
   let isGlobal ctx name =

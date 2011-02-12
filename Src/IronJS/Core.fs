@@ -257,7 +257,6 @@ and [<AllowNullLiteral>] Undefined() =
   static member Boxed = boxed
   static member BoxedExpr = Dlr.propertyStaticT<Undefined> "Boxed"
 
-
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
 and [<AllowNullLiteral>] Environment() =
@@ -344,10 +343,9 @@ and [<AllowNullLiteral>] Environment() =
     let proto = x.NewPrototype()
     let func = FunctionObject(x, id, closureScope, dynamicScope)
 
-    func.ConstructorMode <- ConstructorModes.User
-
     proto.Put("constructor", func)
-
+    
+    func.ConstructorMode <- ConstructorModes.User
     func.Put("prototype", proto, DescriptorAttrs.Immutable)
     func.Put("length", double args, DescriptorAttrs.DontDelete)
 

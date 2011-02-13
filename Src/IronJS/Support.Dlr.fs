@@ -208,10 +208,10 @@ module Dlr =
   let castAs typ expr = Et.TypeAs(expr, typ) :> Et
   let castAsT<'a> = castAs typeof<'a> 
 
-  let castVoid (expr:Expr) = 
-    if expr.Type = typeof<System.Void> 
-      then expr
-      else blockSimple [expr; void']
+let castVoid (expr:Expr) = 
+  if expr.Type = typeof<System.Void> 
+    then expr
+    else blockSimple [expr; void']
 
   let new' (typ:System.Type) = Et.New(typ) :> Et
   let newT<'a> = new' typeof<'a>

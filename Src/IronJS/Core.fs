@@ -99,10 +99,6 @@ module MarshalModes =
   let [<Literal>] Function = 0
 
 module Array =
-  let [<Literal>] MinIndex = 0u
-  let [<Literal>] MaxIndex = 2147483646u
-  let [<Literal>] MaxSize = 2147483647u
-
   let [<Literal>] DenseMaxIndex = 2147483646u
   let [<Literal>] DenseMaxSize = 2147483647u
 
@@ -283,13 +279,13 @@ and [<AllowNullLiteral>] Environment() =
 
   member x.HasCompiler id = x.Compilers.ContainsKey id
 
-  member x.AddCompiler(id, compiler) =
+  member x.AddCompiler(id, compiler : FunctionCompiler) =
     if x.HasCompiler id |> not then 
-      x.Compilers.Add(id, FunctionCompiler compiler)
+      x.Compilers.Add(id, compiler)
 
-  member x.AddCompiler(f:FunctionObject, compiler) =
+  member x.AddCompiler(f:FunctionObject, compiler:FunctionCompiler) =
     if x.HasCompiler f.FunctionId |> not then
-      f.Compiler <- FunctionCompiler compiler
+      f.Compiler <- compiler
       x.Compilers.Add(f.FunctionId, f.Compiler)
 
   member x.NewObject() =
@@ -960,12 +956,12 @@ and [<AllowNullLiteral>] ArrayObject =
     inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
     Length = length
     Dense = 
-      if length <= Array.MaxSize 
+      if length <= Array.DenseMaxSize 
         then Array.zeroCreate (int length) 
         else Array.empty
 
     Sparse = 
-      if length > Array.MaxSize 
+      if length > Array.DenseMaxSize 
         then SparseArray() 
         else null
   }
@@ -1018,7 +1014,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.Dense <- newValues
 
   member x.Find(index:uint32) =
-    let denseExists = x.IsDense && index < Array.MaxSize && x.Dense.[int index].HasValue
+    let denseExists = x.IsDense && index < Array.DenseMaxSize && x.Dense.[int index].HasValue
     let sparseExists = x.IsSparse && x.Sparse.ContainsKey index
 
     if index < x.Length && (denseExists || sparseExists) 
@@ -1044,7 +1040,7 @@ and [<AllowNullLiteral>] ArrayObject =
       else base.Put(name, value, tag)
 
   override x.Put(index:uint32, value:BoxedValue) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1066,7 +1062,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:double) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1085,7 +1081,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:Object, tag:uint32) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1374,7 +1370,7 @@ and [<AllowNullLiteral>] FunctionObject =
   new (env:Environment, propertyMap) = {
     inherit CommonObject(env, propertyMap, env.Prototypes.Function, Classes.Function)
 
-    Compiler = null
+    Compiler = fun _ _ -> null
     FunctionId = env.NextFunctionId()
     ConstructorMode = 0uy
 
@@ -1385,7 +1381,7 @@ and [<AllowNullLiteral>] FunctionObject =
   new (env:Environment) = {
     inherit CommonObject(env)
 
-    Compiler = null
+    Compiler = fun _ _ -> null
     FunctionId = 0UL
     ConstructorMode = 0uy
 
@@ -1410,28 +1406,31 @@ and [<AllowNullLiteral>] FunctionObject =
       then false 
       else Object.ReferenceEquals(prototype.Object, cobj.Prototype)
 
+  member x.CompileAs<'a when 'a :> Delegate>() =
+    (x.Compiler x typeof<'a>) :?> 'a
+
   member x.Call(this) : BoxedValue =
-    let func = x.Compiler.Compile<Call>(x)
+    let func = x.CompileAs<Call>()
     func.Invoke(x, this)
 
   member x.Call(this,a:'a) : BoxedValue =
-    let func = x.Compiler.Compile<Call<'a>>(x)
+    let func = x.CompileAs<Call<'a>>()
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) =
-    let func = x.Compiler.Compile<Call<'a,'b>>(x)
+    let func = x.CompileAs<Call<'a,'b>>()
     func.Invoke(x, this, a, b)
 
   member x.Call(this,a:'a,b:'b,c:'c) =
-    let func = x.Compiler.Compile<Call<'a,'b,'c>>(x)
+    let func = x.CompileAs<Call<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) =
-    let func = x.Compiler.Compile<Call<'a,'b,'c,'d>>(x)
+    let func = x.CompileAs<Call<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
   member x.Construct (this:CommonObject) =
-    let func = x.Compiler.Compile<Call>(x)
+    let func = x.CompileAs<Call>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null)
@@ -1444,7 +1443,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a) =
-    let func = x.Compiler.Compile<Call<'a>>(x)
+    let func = x.CompileAs<Call<'a>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a)
@@ -1457,7 +1456,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b) =
-    let func = x.Compiler.Compile<Call<'a, 'b>>(x)
+    let func = x.CompileAs<Call<'a, 'b>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b)
@@ -1470,7 +1469,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c) =
-    let func = x.Compiler.Compile<Call<'a, 'b, 'c>>(x)
+    let func = x.CompileAs<Call<'a, 'b, 'c>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c)
@@ -1483,7 +1482,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c, d:'d) =
-    let func = x.Compiler.Compile<Call<'a, 'b, 'c, 'd>>(x)
+    let func = x.CompileAs<Call<'a, 'b, 'c, 'd>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d)
@@ -1542,23 +1541,6 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.Function -> x.ArgTypes.Length - 2
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
-    
-(**)
-and [<AllowNullLiteral>] FunctionCompiler(compiler:CompilerFunction) = 
-
-  let cache = new MutableDict<System.Type, Delegate>()
-
-  member x.Compile(f:FunctionObject, t:System.Type) : Delegate = 
-    let mutable delegate' = null
-
-    if not (cache.TryGetValue(t, &delegate')) then
-      delegate' <- compiler f t
-      cache.Add(t, delegate')
-
-    delegate'
-
-  member x.Compile<'a when 'a :> Delegate> (f:FunctionObject) : 'a = 
-    x.Compile(f, typeof<'a>) :?> 'a
 
 (**)
 and UserError(jsValue:BoxedValue) =
@@ -1810,7 +1792,7 @@ and Constructors = {
 and Scope = BoxedValue array
 and DynamicScope = (int * CommonObject) list
 and SparseArray = MutableSorted<uint32, BoxedValue>
-and CompilerFunction = FunctionObject -> System.Type -> System.Delegate
+and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
 
 (**)
 and Call = Func<FunctionObject,CommonObject,BoxedValue>

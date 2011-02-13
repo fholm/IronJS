@@ -44,7 +44,7 @@ type DynamicScopeHelpers() =
     if func.IsFunction then
       let func = func.Func
       let internalArgs = [|func :> obj; this :> obj|]
-      let compiled = func.Compiler.Compile<'a>(func)
+      let compiled = func.CompileAs<'a>()
       Utils.box (compiled.DynamicInvoke(Array.append internalArgs args))
 
     else

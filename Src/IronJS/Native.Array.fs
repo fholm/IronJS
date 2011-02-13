@@ -284,7 +284,7 @@ module Array =
     *)
 
     let denseSortFunc (f:FunctionObject) =
-      let sort = f.Compiler.Compile<Sort> f
+      let sort = f.CompileAs<Sort>()
 
       fun (x:Descriptor) (y:Descriptor) -> 
         let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
@@ -321,7 +321,7 @@ module Array =
       newArray
 
     let sparseSortFunc (f:FunctionObject) =
-      let sort = f.Compiler.Compile<Sort> f
+      let sort = f.CompileAs<Sort>()
       fun (x:BoxedValue) (y:BoxedValue) -> 
         let result = sort.Invoke(f, f.Env.Globals, x, y)
         result |> TypeConverter2.ToNumber |> int
@@ -336,7 +336,7 @@ module Array =
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
         | IsSparse -> 
-          let sort = f.Compiler.Compile<Sort>(f)
+          let sort = f.CompileAs<Sort>()
           let cmp = new SparseComparer(sparseSortFunc cmp.Func)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
@@ -344,7 +344,7 @@ module Array =
         match a with
         | IsDense -> a.Dense |> Array.sortInPlaceWith denseSortDefault
         | IsSparse ->
-          let sort = f.Compiler.Compile<Sort>(f)
+          let sort = f.CompileAs<Sort>()
           let cmp = new SparseComparer(sparseSortDefault)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 

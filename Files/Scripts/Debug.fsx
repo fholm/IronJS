@@ -14,9 +14,11 @@ open FSKit.Bit
 
 let ctx = Hosting.Context.Create()
 
-Support.Debug.registerDefaultPrinter()
+Support.Debug.registerConsolePrinter()
 
 let print = (new Action<BoxedValue>(fun box -> printfn "%s" (TypeConverter2.ToString(box))))
 
 ctx.PutGlobal("print", IronJS.Native.Utils.createHostFunction ctx.Environment print)
 ctx.Execute @"print(Math.pow(2, 2));"
+
+Seq.scan (fun s i -> (i, i)) (' ', ' ') "asdg"

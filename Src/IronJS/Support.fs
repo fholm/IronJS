@@ -46,7 +46,7 @@ module Debug =
   let registerPrinter x = 
     printers.Add x
 
-  let registerDefaultPrinter () =
+  let registerConsolePrinter () =
     registerPrinter (new Action<string>(fun s -> printfn "%s" s))
 
 type Error(msg) = inherit Exception(msg)

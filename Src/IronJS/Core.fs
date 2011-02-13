@@ -1494,12 +1494,6 @@ and [<AllowNullLiteral>] FunctionObject =
       BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
-
-and [<ReferenceEquality>] DispatchTarget<'a when 'a :> Delegate> = {
-  Delegate : System.Type
-  Function : HostFunction<'a>
-  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
-}
     
 (* Represents a .NET delegate wrapped as a JavaScript function *)
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
@@ -1571,10 +1565,10 @@ and UserError(jsValue:BoxedValue) =
   inherit IronJS.Support.Error("UserError")
   member x.JsValue = jsValue
   
-//------------------------------------------------------------------------------
+(**)
 and TypeConverter2() =
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToBoxedValue(v:BoxedValue) = v
   static member ToBoxedValue(d:double) = BoxedValue.Box(d)
   static member ToBoxedValue(b:bool) = BoxedValue.Box(b)
@@ -1585,7 +1579,7 @@ and TypeConverter2() =
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToBoxedValue" [expr]
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ToClrObject(d:double) : Object = box d
   static member ToClrObject(b:bool) : Object = box b
   static member ToClrObject(s:string) : Object = box s
@@ -1605,7 +1599,7 @@ and TypeConverter2() =
   static member ToClrObject(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToClrObject" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToObject(env:Environment, o:CommonObject) : CommonObject = o
   static member ToObject(env:Environment, f:FunctionObject) : CommonObject = f :> CommonObject
   static member ToObject(env:Environment, u:Undefined) : CommonObject = env.RaiseTypeError()
@@ -1625,7 +1619,7 @@ and TypeConverter2() =
   static member ToObject(env:Dlr.Expr, expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToObject" [env; expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToBoolean(b:bool) : bool = b
   static member ToBoolean(d:double) : bool = d > 0.0 || d < 0.0
   static member ToBoolean(c:Object) : bool = if c = null then false else true
@@ -1645,7 +1639,7 @@ and TypeConverter2() =
   static member ToBoolean(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToBoolean" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToPrimitive(b:bool, _:byte) : BoxedValue = BoxedValue.Box(b)
   static member ToPrimitive(d:double, _:byte) : BoxedValue = BoxedValue.Box(d)
   static member ToPrimitive(s:String, _:byte) : BoxedValue = BoxedValue.Box(s)
@@ -1664,7 +1658,7 @@ and TypeConverter2() =
   static member ToPrimitive(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToPrimitive" [expr]
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ToString(b:bool) : string = if b then "true" else "false"
   static member ToString(s:string) : string = s
   static member ToString(u:Undefined) : string = "undefined"
@@ -1692,7 +1686,7 @@ and TypeConverter2() =
   static member ToString(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToString" [expr]
   
-  //----------------------------------------------------------------------------
+  (**)
   static member ToNumber(b:bool) : double = if b then 1.0 else 0.0
   static member ToNumber(c:Object) : double = if c = null then 0.0 else 1.0
   static member ToNumber(u:Undefined) : double = NaN
@@ -1727,29 +1721,29 @@ and TypeConverter2() =
   static member ToNumber(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToNumber" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToInt32(d:double) : int32 = d |> uint32 |> int
   static member ToInt32(b:BoxedValue) : int32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToInt32
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToUInt32(d:double) : uint32 = d |> uint32 
   static member ToUInt32(b:BoxedValue) : uint32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToUInt32
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToUInt16(d:double) : uint16 = d |> uint32 |> uint16
   static member ToUInt16(b:BoxedValue) : uint16 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToUInt16
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToInteger(d:double) : int32 = 
     if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
 
   static member ToInteger(b:BoxedValue) : int32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToInteger
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:System.Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
     elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
@@ -1762,7 +1756,7 @@ and TypeConverter2() =
       elif t = typeof<System.Object> then TypeConverter2.ToClrObject expr
       else Support.Errors.noConversion expr.Type t
     
-//------------------------------------------------------------------------------
+(**)
 and Maps = {
   Base : ObjectClass
   Array : ObjectClass
@@ -1774,7 +1768,7 @@ and Maps = {
   Regexp : ObjectClass
 }
 
-//------------------------------------------------------------------------------
+(**)
 and Prototypes = {
   Object : CommonObject
   Array : CommonObject
@@ -1793,7 +1787,7 @@ and Prototypes = {
   URIError : CommonObject
 }
 
-//------------------------------------------------------------------------------
+(**)
 and Constructors = {
   Object : FunctionObject
   Array : FunctionObject
@@ -1812,13 +1806,13 @@ and Constructors = {
   URIError : FunctionObject
 }
 
-//-------------------------------------------------------------------------
+(**)
 and Scope = BoxedValue array
 and DynamicScope = (int * CommonObject) list
 and SparseArray = MutableSorted<uint32, BoxedValue>
 and CompilerFunction = FunctionObject -> System.Type -> System.Delegate
 
-//-------------------------------------------------------------------------
+(**)
 and Call = Func<FunctionObject,CommonObject,BoxedValue>
 and Call<'a> = Func<FunctionObject,CommonObject,'a,BoxedValue>
 and Call<'a,'b> = Func<FunctionObject,CommonObject,'a,'b,BoxedValue>

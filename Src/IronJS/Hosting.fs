@@ -9,44 +9,23 @@ module Hosting =
     let env = Environment()
 
     env.Prototypes <- {
-      Object = null
-      Function = null
-      Array = null
-      String = null
-      Number = null
-      Boolean = null
-      Date = null
-      RegExp = null
-      Error = null
-
-      EvalError = null
-      RangeError = null
-      ReferenceError = null
-      SyntaxError = null
-      TypeError  = null
-      URIError = null
+      Object = null; Function = null; Array = null
+      String = null; Number = null; Boolean = null
+      Date = null; RegExp = null; Error = null
+      EvalError = null; RangeError = null; ReferenceError = null
+      SyntaxError = null; TypeError  = null; URIError = null
     }
 
     env.Constructors <- {
-      Object = null
-      Function = null
-      Array = null
-      String = null
-      Number = null
-      Boolean = null
-      Date = null
-      RegExp = null
-      Error = null
-
-      EvalError = null
-      RangeError = null
-      ReferenceError = null
-      SyntaxError = null
-      TypeError = null
-      URIError  = null
+      Object = null; Function = null; Array = null
+      String = null; Number = null; Boolean = null
+      Date = null; RegExp = null; Error = null
+      EvalError = null; RangeError = null; ReferenceError = null
+      SyntaxError = null; TypeError = null; URIError  = null
     }
     
     let baseMap = ObjectClass env
+
     env.Maps <- {
       Base = baseMap
       Array = baseMap.SubClass "length"
@@ -60,6 +39,7 @@ module Hosting =
 
     let objectPrototype = Native.Object.createPrototype env
     let errorPrototype = Native.Error.createPrototype env objectPrototype
+
     env.Prototypes <- {
       Object = objectPrototype
       Function = Native.Function.createPrototype env objectPrototype

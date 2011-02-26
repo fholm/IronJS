@@ -16,7 +16,7 @@ module Core =
     | Ast.Null -> Dlr.null'
     | Ast.Pass -> Dlr.void'
     | Ast.This -> ctx.This
-    | Ast.Undefined -> Expr.BoxedConstants.undefined
+    | Ast.Undefined -> Utils.BoxedConstants.undefined
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
@@ -99,24 +99,24 @@ module Core =
       (Dlr.assign eval (ctx.Globals |> Object.Property.get !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
-      (Expr.assign
+      (Utils.assign
         (Dlr.field target "GlobalLevel") 
         (Dlr.const' ctx.Scope.GlobalLevel))
 
-      (Expr.assign
+      (Utils.assign
         (Dlr.field target "ClosureLevel") 
         (Dlr.const' ctx.Scope.ClosureLevel))
 
-      (Expr.assign
+      (Utils.assign
         (Dlr.field target "Closures") 
         (Dlr.const' ctx.Scope.Closures))
         
-      (Expr.assign (Dlr.field target "Target") evalTarget)
-      (Expr.assign (Dlr.field target "Function") ctx.Function)
-      (Expr.assign (Dlr.field target "This") ctx.This)
-      (Expr.assign (Dlr.field target "LocalScope") ctx.LocalScope)
-      (Expr.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
-      (Expr.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
+      (Utils.assign (Dlr.field target "Target") evalTarget)
+      (Utils.assign (Dlr.field target "Function") ctx.Function)
+      (Utils.assign (Dlr.field target "This") ctx.This)
+      (Utils.assign (Dlr.field target "LocalScope") ctx.LocalScope)
+      (Utils.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
+      (Utils.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
       eval |> Function.invokeFunction ctx.This [target]
     ]
@@ -206,7 +206,7 @@ module Core =
       | _ -> Dlr.lambdaAuto parameters functionBody
       
     #if DEBUG
-    Support.Debug.print lambda
+    Support.Debug.printExpr lambda
     #endif
 
     lambda.Compile()

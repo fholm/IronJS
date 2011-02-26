@@ -49,7 +49,7 @@ module Function =
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = this' :: args
         Dlr.callGeneric func "Call" argTypes args)
-      (fun _ -> Expr.BoxedConstants.undefined)
+      (fun _ -> Utils.BoxedConstants.undefined)
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -59,7 +59,7 @@ module Function =
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
     
-    Dlr.callStaticGenericT<Api.DynScope> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
+    Dlr.callStaticGenericT<DynamicScopeHelpers> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
     
   //----------------------------------------------------------------------------
   let invokeIdentifier (ctx:Ctx) name args =
@@ -71,13 +71,13 @@ module Function =
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
       (fun x -> x |> Object.Property.get !!!name |> invokeFunction x args)
-      (fun x -> Expr.BoxedConstants.undefined))
+      (fun x -> Utils.BoxedConstants.undefined))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
     (Utils.ensureObject ctx object'
       (fun x -> Object.Index.get x index |> invokeFunction x args)
-      (fun x -> Expr.BoxedConstants.undefined))
+      (fun x -> Utils.BoxedConstants.undefined))
     
   //----------------------------------------------------------------------------
   let createTempVars args =
@@ -102,7 +102,7 @@ module Function =
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = ctx.Globals :: args
         Dlr.callGeneric f "Construct" argTypes args)
-      (fun _ -> Expr.BoxedConstants.undefined)
+      (fun _ -> Utils.BoxedConstants.undefined)
       
   //----------------------------------------------------------------------------
   // 11.2.3 function calls
@@ -136,5 +136,5 @@ module Function =
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
     Dlr.blockSimple [
-      (Expr.assign ctx.EnvReturnBox (ctx.Compile tree))
+      (Utils.assign ctx.EnvReturnBox (ctx.Compile tree))
       (Dlr.returnVoid ctx.ReturnLabel)]

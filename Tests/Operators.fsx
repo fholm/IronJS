@@ -7,7 +7,7 @@
 #r @"../Src/IronJS/bin/Debug/IronJS.dll"
 
 open IronJS
-open IronJS.Aliases
+open IronJS.Support.Aliases
 open FSKit.Testing.Assert
 open Microsoft.VisualStudio.TestTools.UnitTesting
 

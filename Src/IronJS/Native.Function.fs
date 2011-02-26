@@ -62,7 +62,7 @@ module Function =
         let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
         let type' = Utils.createDelegate argTypes
         let args = Array.append [|func :> obj; this :> obj|] args
-        let compiled = f.Compiler.Compile(f, type')
+        let compiled = f.Compiler f type'
         let result = compiled.DynamicInvoke(args)
         Utils.box result
 
@@ -78,14 +78,14 @@ module Function =
       let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
       let type' = Utils.createDelegate argTypes
       let args = Array.append [|func :> obj; this :> obj|] args
-      Utils.box (f.Compiler.Compile(f, type').DynamicInvoke args)
+      Utils.box ((f.Compiler f type').DynamicInvoke args)
 
     | _ -> failwith "Que?"
 
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, FunctionObject>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
       
     ctor.Prototype <- env.Prototypes.Function
     ctor.ConstructorMode <- ConstructorModes.Host
@@ -97,7 +97,7 @@ module Function =
   //----------------------------------------------------------------------------
   let createPrototype (env:Environment) ownPrototype =
     let prototype = new Func<FunctionObject, CommonObject, BoxedValue>(prototype)
-    let prototype = Api.HostFunction.create env prototype
+    let prototype = Utils.createHostFunction env prototype
     prototype.Prototype <- ownPrototype
     prototype
       
@@ -107,17 +107,17 @@ module Function =
 
     //Function.prototype.call
     let call = new Func<FunctionObject, CommonObject, CommonObject, obj array, BoxedValue>(call)
-    let call = Api.HostFunction.create env call
+    let call = Utils.createHostFunction env call
     env.Prototypes.Function.Put("call", call, attrs)
 
     //Function.prototype.apply
     let apply = new Func<FunctionObject, CommonObject, CommonObject, CommonObject, BoxedValue>(apply)
-    let apply = Api.HostFunction.create env apply
+    let apply = Utils.createHostFunction env apply
     env.Prototypes.Function.Put("apply", apply, attrs)
     
     //Function.prototype.toString
     let toString = new Func<FunctionObject, CommonObject, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     env.Prototypes.Function.Put("toString", toString, attrs)
 
     //Function.prototype.constructor

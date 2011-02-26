@@ -27,7 +27,7 @@ module Boolean =
 
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
@@ -41,9 +41,9 @@ module Boolean =
     proto.Put("constructor", env.Constructors.Boolean, DontEnum)    
     
     let valueOf = new Func<FunctionObject, CommonObject, BoxedValue>(valueOf)
-    let valueOf = Api.HostFunction.create env valueOf
+    let valueOf = Utils.createHostFunction env valueOf
     proto.Put("valueOf", valueOf, DontEnum)
 
     let toString = new Func<FunctionObject, CommonObject, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)

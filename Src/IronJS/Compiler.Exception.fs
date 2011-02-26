@@ -8,7 +8,7 @@ module Exception =
   //--------------------------------------------------------------------------
   // 12.13 the throw statement
   let throw (ctx:Ctx) expr =
-    Dlr.throwT<UserError> [ctx.Compile expr |> Expr.box]
+    Dlr.throwT<UserError> [ctx.Compile expr |> Utils.box]
       
   //--------------------------------------------------------------------------
   // 12.14 the try statement
@@ -20,7 +20,7 @@ module Exception =
 
       Dlr.catchVar param (
         Dlr.blockSimple[
-          (Identifier.setValue ctx name (Expr.errorValue param))
+          (Identifier.setValue ctx name (Utils.errorValue param))
           (ctx.Compile ast |> Dlr.castVoid)
         ])
 

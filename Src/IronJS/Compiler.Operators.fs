@@ -43,7 +43,7 @@ module Unary =
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
       let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
-      Dlr.callStaticT<Api.DynScope> "Delete" args
+      Dlr.callStaticT<DynamicScopeHelpers> "Delete" args
 
     elif Identifier.isGlobal ctx name then
       deleteProperty ctx ctx.Globals name
@@ -70,12 +70,12 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.2
   let void' (ctx:Ctx) ast =
-    Dlr.blockSimple [ctx.Compile ast; Expr.undefined]
+    Dlr.blockSimple [ctx.Compile ast; Utils.undefined]
         
   //----------------------------------------------------------------------------
   // 11.4.3
   let typeOf (expr:Dlr.Expr) = 
-    Api.Operators.typeOf (expr |> Expr.box)
+    Api.Operators.typeOf (expr |> Utils.box)
       
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
@@ -95,22 +95,22 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.6
   let plus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Expr.box]
+    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Utils.box]
 
   //----------------------------------------------------------------------------
   // 11.4.7
   let minus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Expr.box]
+    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Utils.box]
   
   //----------------------------------------------------------------------------
   // 11.4.8
   let complement (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "bitCmpl" [ctx.Compile ast |> Expr.box]
+    Dlr.callStaticT<Api.Operators> "bitCmpl" [ctx.Compile ast |> Utils.box]
 
   //----------------------------------------------------------------------------
   // 11.4.9
   let not (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "not" [ctx.Compile ast |> Expr.box]
+    Dlr.callStaticT<Api.Operators> "not" [ctx.Compile ast |> Utils.box]
     
   //----------------------------------------------------------------------------
   let convert (ctx:Ctx) (tag:uint32) (ast:Ast.Tree) =
@@ -156,20 +156,20 @@ module Binary =
     
   //----------------------------------------------------------------------------
   let compile (ctx:Ctx) op left right =
-    let l = ctx.Compile left |> Expr.box 
-    let r = ctx.Compile right |> Expr.box
+    let l = ctx.Compile left |> Utils.box 
+    let r = ctx.Compile right |> Utils.box
     compileExpr op l r
     
   //----------------------------------------------------------------------------
   let instanceOf (ctx:Context) left right =
-    let l = ctx.Compile left |> Expr.box 
-    let r = ctx.Compile right |> Expr.box
+    let l = ctx.Compile left |> Utils.box 
+    let r = ctx.Compile right |> Utils.box
     Api.Operators.instanceOf(ctx.Env, l, r)
     
   //----------------------------------------------------------------------------
   let in' (ctx:Context) left right =
-    let l = ctx.Compile left |> Expr.box 
-    let r = ctx.Compile right |> Expr.box
+    let l = ctx.Compile left |> Utils.box 
+    let r = ctx.Compile right |> Utils.box
     Api.Operators.in'(ctx.Env, l, r)
 
   //----------------------------------------------------------------------------
@@ -184,7 +184,7 @@ module Binary =
 
     //Property assignment: foo.bar = 1;
     | Ast.Property(object', name) -> 
-      Expr.blockTmp value (fun value ->
+      Utils.blockTmp value (fun value ->
         let object' = object' |> ctx.Compile
         let ifObj = Object.Property.put !!!name value
         let ifClr _ = value
@@ -193,7 +193,7 @@ module Binary =
 
     //Index assignemnt: foo[0] = "bar";
     | Ast.Index(object', index) -> 
-      Expr.blockTmp value (fun value ->
+      Utils.blockTmp value (fun value ->
         let object' = object' |> ctx.Compile
         let index = Utils.compileIndex ctx index
         let ifObj = Object.Index.put index value

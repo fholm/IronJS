@@ -20,7 +20,7 @@ module Error =
 
     let setupConstructor (env:Environment) (name:string) (proto:CommonObject) update =
       let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor' proto)
-      let ctor = Api.HostFunction.create env ctor
+      let ctor = Utils.createHostFunction env ctor
       
       ctor.Prototype <- env.Prototypes.Function
       ctor.ConstructorMode <- ConstructorModes.Host
@@ -54,7 +54,7 @@ module Error =
     let ctor = env.Constructors.Error
     
     let toString = new Func<CommonObject, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 
     Utils.setupPrototype name ctor proto

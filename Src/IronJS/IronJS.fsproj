@@ -94,12 +94,13 @@
     <Compile Include="Support.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Core.Utils.fs" />
-    <Compile Include="Core.Expr.fs" />
     <Compile Include="Core.Operators.fs" />
+    <Compile Include="Core.Helpers.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Parser.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Utils.fs" />
+    <Compile Include="Compiler.HostFunction.fs" />
     <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.Identifier.fs" />
     <Compile Include="Compiler.Function.fs" />
@@ -108,6 +109,7 @@
     <Compile Include="Compiler.Operators.fs" />
     <Compile Include="Compiler.ControlFlow.fs" />
     <Compile Include="Compiler.Core.fs" />
+    <Compile Include="Native.Utils.fs" />
     <Compile Include="Native.Global.fs" />
     <Compile Include="Native.Math.fs" />
     <Compile Include="Native.Object.fs" />

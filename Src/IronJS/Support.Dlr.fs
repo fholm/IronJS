@@ -394,9 +394,78 @@ module Dlr =
 
   module V2 = 
 
-    let field (name:string) expr = Expr.Field(expr, name) :> Expr
-    let property (name:string) expr = Expr.Property(expr, name) :> Expr
-    let fieldOrProperty (name:string) expr = Expr.PropertyOrField(expr, name) :> Expr
+    open System
+
+    module Utils =
+      let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
+      let isT<'a> (expr:Expr) = is typeof<'a> expr
+      let isVoid (expr:Expr) = FSKit.Utils.isVoid expr.Type
+
+    let toExpr (x:'a when 'a :> Expr) = x :> Expr
+
+    let local name type' = Expr.Variable(type', name)
+    let localT<'a> name = var name typeof<'a>
+    
+    let param name type' = Et.Parameter(type', name)
+    let paramT<'a> name = param name typeof<'a>
+
+    let paramRef name (type':Type) = param name (type'.MakeByRefType())
+    let paramRefT<'a> name = paramRef name typeof<'a>
+
+    let paramN n type' = param (sprintf "param%i" n) type'
+    let paramNT<'a> n = paramI n typeof<'a>
+  
+    let defaultOf type' = Expr.Default(type') :> Expr
+    let defaultOfT<'a> = default' typeof<'a>
+
+    let void' = default' typeof<System.Void>
+    let null' = default' typeof<System.Object>
+    
+    let constant value = Et.Constant(value, value.GetType()) :> Expr
+    let assign (left:Expr) (right:Expr) = Expr.Assign(left, right) :> Expr
+
+    let returnValue label (value:Expr) = Expr.Return(label, value, value.GetType()) :> Expr
+    let returnVoid label = Expr.Return(label) :> Expr
+    
+    let field (name:string) (expr:Expr) = Expr.Field(expr, name) :> Expr
+    let fieldStatic (name:string) (type':Type) = Expr.Field(null, type'.GetField(name))
+    let fieldStaticT<'a> (name:string) = fieldStatic name typeof<'a>
+
+    let property (name:string) (expr:Expr) = Expr.Property(expr, name) :> Expr
+    let propertyOrField (name:string) (expr:Expr) = Expr.PropertyOrField(expr, name) :> Expr
+
+    let cast type' expr = Expr.Convert(expr, type') :> Expr
+    let castT<'a> = cast typeof<'a> 
+
+    let castChecked type' expr = Et.ConvertChecked(expr, type') :> Expr
+    let castCheckedT<'a> = castChk typeof<'a> 
+
+    let castAs type' expr = Expr.TypeAs(expr, type') :> Expr
+    let castAsT<'a> = castAs typeof<'a> 
+
+    let castToVoid (expr:Expr) = 
+      if expr.Type = typeof<System.Void> 
+        then expr
+        else blockSimple [expr; void']
+
+    let call (name:string) (args:Expr seq) (expr:Expr) =
+      match FSKit.Reflection.getMethodArgs expr.Type name (exprTypes args) with
+      | Some method' -> Expr.Call(expr, method', args) :> Expr
+      | None -> failwith "No method found with matching name and arguments"
+
+    module Object =
+      
+      let toString expr = 
+        if expr |> Utils.isT<string> then expr else expr |> call "ToString" []
+
+    module String = 
+      
+      let empty = fieldStaticT<string> "Empty"
+      
+      let concat left right = 
+        let left = left |> Object.toString
+        let right = right |> Object.toString
+        callStaticT<string> "Concat" [left; right]
 
   module Restrict =
     let notAtAll = Br.Empty

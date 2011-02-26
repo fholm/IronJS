@@ -99,7 +99,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\IronJS\IronJS.fsproj">
+    <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Name>IronJS</Name>
       <Project>{9e257324-94e7-49af-ae83-718288e925d8}</Project>
       <Private>True</Private>

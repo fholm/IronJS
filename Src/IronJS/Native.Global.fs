@@ -27,7 +27,7 @@ module Global =
           Environment = target.Function.Env
         }
 
-      Utils.box (
+      IronJS.Utils.box (
         compiled.DynamicInvoke(
           target.Function,
           target.This,
@@ -112,45 +112,45 @@ module Global =
 
     //15.1.2.1
     let eval = new Func<Compiler.EvalTarget, BoxedValue>(eval)
-    let eval = Api.HostFunction.create env eval
+    let eval = Utils.createHostFunction env eval
     env.Globals.Put("eval", eval, DontEnum)
 
     //15.1.2.2
     let parseFloat = new Func<string, BoxedValue>(parseFloat)
-    let parseFloat = Api.HostFunction.create env parseFloat
+    let parseFloat = Utils.createHostFunction env parseFloat
     env.Globals.Put("parseFloat", parseFloat, DontEnum)
     
     //15.1.2.3
     let parseInt = new Func<string, BoxedValue>(parseInt)
-    let parseInt = Api.HostFunction.create env parseInt
+    let parseInt = Utils.createHostFunction env parseInt
     env.Globals.Put("parseInt", parseInt, DontEnum)
     
     //15.1.2.4
     let isNaN = new Func<double, BoxedValue>(isNaN)
-    let isNaN = Api.HostFunction.create env isNaN
+    let isNaN = Utils.createHostFunction env isNaN
     env.Globals.Put("isNaN", isNaN, DontEnum)
     
     //15.1.2.5
     let isFinite = new Func<double, bool>(isFinite)
-    let isFinite = Api.HostFunction.create env isFinite
+    let isFinite = Utils.createHostFunction env isFinite
     env.Globals.Put("isFinite", isFinite, DontEnum)
 
     //15.1.3.1
     let decodeURI = new Func<BoxedValue, string>(decodeURI)
-    let decodeURI = Api.HostFunction.create env decodeURI
+    let decodeURI = Utils.createHostFunction env decodeURI
     env.Globals.Put("decodeURI", decodeURI, DontEnum)
     
     //15.1.3.2
     let decodeURIComponent = new Func<BoxedValue, string>(decodeURIComponent)
-    let decodeURIComponent = Api.HostFunction.create env decodeURIComponent
+    let decodeURIComponent = Utils.createHostFunction env decodeURIComponent
     env.Globals.Put("decodeURIComponent", decodeURIComponent, DontEnum)
     
     //15.1.3.3
     let encodeURI = new Func<BoxedValue, string>(encodeURI)
-    let encodeURI = Api.HostFunction.create env encodeURI
+    let encodeURI = Utils.createHostFunction env encodeURI
     env.Globals.Put("encodeURI", encodeURI, DontEnum)
 
     //15.1.3.4
     let encodeURIComponent = new Func<BoxedValue, string>(encodeURIComponent)
-    let encodeURIComponent = Api.HostFunction.create env encodeURIComponent
+    let encodeURIComponent = Utils.createHostFunction env encodeURIComponent
     env.Globals.Put("encodeURIComponent", encodeURIComponent, DontEnum)

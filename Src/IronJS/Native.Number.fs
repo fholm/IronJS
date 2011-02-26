@@ -114,7 +114,7 @@ module Number =
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Number, Immutable) // 15.7.3.1
@@ -134,26 +134,26 @@ module Number =
     proto.Put("constructor", env.Constructors.Number, DontEnum)
 
     let toString = new Func<FunctionObject, CommonObject, double, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 
     let toLocaleString = new Func<FunctionObject, CommonObject, string>(toLocaleString)
-    let toLocaleString = Api.HostFunction.create env toLocaleString
+    let toLocaleString = Utils.createHostFunction env toLocaleString
     proto.Put("toLocaleString", toLocaleString, DontEnum)
 
     let valueOf = new Func<FunctionObject, CommonObject, BoxedValue>(valueOf)
-    let valueOf = Api.HostFunction.create env valueOf
+    let valueOf = Utils.createHostFunction env valueOf
     proto.Put("valueOf", valueOf, DontEnum)
 
     let toFixed = new Func<FunctionObject, CommonObject, double, string>(toFixed)
-    let toFixed = Api.HostFunction.create env toFixed
+    let toFixed = Utils.createHostFunction env toFixed
     proto.Put("toFixed", toFixed, DontEnum)
     
     let toExponential = new Func<FunctionObject, CommonObject, BoxedValue, string>(toExponential)
-    let toExponential = Api.HostFunction.create env toExponential
+    let toExponential = Utils.createHostFunction env toExponential
     proto.Put("toExponential", toExponential, DontEnum)
     
     let toPrecision = new Func<FunctionObject, CommonObject, BoxedValue, string>(toPrecision)
-    let toPrecision = Api.HostFunction.create env toPrecision
+    let toPrecision = Utils.createHostFunction env toPrecision
     proto.Put("toPrecision", toPrecision, DontEnum)
     

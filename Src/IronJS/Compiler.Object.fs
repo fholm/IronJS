@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.Expr.Patterns
+open IronJS.Compiler.Utils.Patterns
 open IronJS.Dlr.Operators
 
 //------------------------------------------------------------------------------
@@ -13,14 +13,14 @@ module Object =
 
     //--------------------------------------------------------------------------
     let putBox expr name value =
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         let args = [name; value]
         [Dlr.call tmp "Put" args; value]
       )
     
     //--------------------------------------------------------------------------
     let putRef expr name (value:Dlr.Expr) =
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         let tag = value.Type |> Utils.type2tag |> Dlr.const'
         let args = [name; value; tag]
         [Dlr.call tmp "Put" args; value]
@@ -28,8 +28,8 @@ module Object =
     
     //--------------------------------------------------------------------------
     let putVal expr name (value:Dlr.Expr) =
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
-        let args = [name; Expr.normalizeVal value]
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+        let args = [name; Utils.normalizeVal value]
         [Dlr.call tmp "Put" args; value]
       )
 
@@ -50,13 +50,13 @@ module Object =
   
     //--------------------------------------------------------------------------
     let get name expr = 
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Get" [name]]
       )
 
     //--------------------------------------------------------------------------
     let delete expr name = 
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Delete" [name]]
       )
       
@@ -65,8 +65,8 @@ module Object =
   
     //--------------------------------------------------------------------------
     let private putConvert expr index value tag =
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
-        let normalizedValue = Expr.normalizeVal value
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+        let normalizedValue = Utils.normalizeVal value
         let args =
           match tag with
           | None -> [ index; normalizedValue] 
@@ -79,7 +79,7 @@ module Object =
     let putBox expr index value =
       match index with
       | IsIndex ->
-        Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
           let args = [index; value]
           [Dlr.call tmp "Put" args; value]
         )
@@ -90,8 +90,8 @@ module Object =
     let putVal expr index value =
       match index with
       | IsIndex ->
-        Expr.blockTmpT<CommonObject> expr (fun tmp -> 
-          let args = [index; Expr.normalizeVal value]
+        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+          let args = [index; Utils.normalizeVal value]
           [Dlr.call tmp "Put" args; value]
         )
             
@@ -103,7 +103,7 @@ module Object =
 
       match index with
       | IsIndex ->
-        Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
           let args =  [index; value; tag]
           [Dlr.call tmp "Put" args; value]
         )
@@ -119,13 +119,13 @@ module Object =
 
     //--------------------------------------------------------------------------
     let get (index:Dlr.Expr) expr = 
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Get" [index]]
       )
 
     //--------------------------------------------------------------------------
     let delete expr index = 
-      Expr.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Delete" [index]])
 
   //----------------------------------------------------------------------------
@@ -135,14 +135,14 @@ module Object =
   let getProperty (ctx:Ctx) object' name =
     Utils.ensureObject ctx (object' |> ctx.Compile)
       (Property.get !!!name)
-      (fun x -> Expr.BoxedConstants.undefined)
+      (fun x -> Utils.BoxedConstants.undefined)
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let indexExpr = index |> Utils.compileIndex ctx
     Utils.ensureObject ctx (object' |> ctx.Compile)
       (Index.get indexExpr)
-      (fun x -> Expr.BoxedConstants.undefined)
+      (fun x -> Utils.BoxedConstants.undefined)
 
   //----------------------------------------------------------------------------
   // 11.1.4 array initialiser

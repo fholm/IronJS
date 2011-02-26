@@ -99,10 +99,6 @@ module MarshalModes =
   let [<Literal>] Function = 0
 
 module Array =
-  let [<Literal>] MinIndex = 0u
-  let [<Literal>] MaxIndex = 2147483646u
-  let [<Literal>] MaxSize = 2147483647u
-
   let [<Literal>] DenseMaxIndex = 2147483646u
   let [<Literal>] DenseMaxSize = 2147483647u
 
@@ -257,7 +253,6 @@ and [<AllowNullLiteral>] Undefined() =
   static member Boxed = boxed
   static member BoxedExpr = Dlr.propertyStaticT<Undefined> "Boxed"
 
-
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
 and [<AllowNullLiteral>] Environment() =
@@ -284,13 +279,13 @@ and [<AllowNullLiteral>] Environment() =
 
   member x.HasCompiler id = x.Compilers.ContainsKey id
 
-  member x.AddCompiler(id, compiler) =
+  member x.AddCompiler(id, compiler : FunctionCompiler) =
     if x.HasCompiler id |> not then 
-      x.Compilers.Add(id, FunctionCompiler compiler)
+      x.Compilers.Add(id, compiler)
 
-  member x.AddCompiler(f:FunctionObject, compiler) =
+  member x.AddCompiler(f:FunctionObject, compiler:FunctionCompiler) =
     if x.HasCompiler f.FunctionId |> not then
-      f.Compiler <- FunctionCompiler compiler
+      f.Compiler <- compiler
       x.Compilers.Add(f.FunctionId, f.Compiler)
 
   member x.NewObject() =
@@ -344,10 +339,9 @@ and [<AllowNullLiteral>] Environment() =
     let proto = x.NewPrototype()
     let func = FunctionObject(x, id, closureScope, dynamicScope)
 
-    func.ConstructorMode <- ConstructorModes.User
-
     proto.Put("constructor", func)
-
+    
+    func.ConstructorMode <- ConstructorModes.User
     func.Put("prototype", proto, DescriptorAttrs.Immutable)
     func.Put("length", double args, DescriptorAttrs.DontDelete)
 
@@ -962,12 +956,12 @@ and [<AllowNullLiteral>] ArrayObject =
     inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
     Length = length
     Dense = 
-      if length <= Array.MaxSize 
+      if length <= Array.DenseMaxSize 
         then Array.zeroCreate (int length) 
         else Array.empty
 
     Sparse = 
-      if length > Array.MaxSize 
+      if length > Array.DenseMaxSize 
         then SparseArray() 
         else null
   }
@@ -1020,7 +1014,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.Dense <- newValues
 
   member x.Find(index:uint32) =
-    let denseExists = x.IsDense && index < Array.MaxSize && x.Dense.[int index].HasValue
+    let denseExists = x.IsDense && index < Array.DenseMaxSize && x.Dense.[int index].HasValue
     let sparseExists = x.IsSparse && x.Sparse.ContainsKey index
 
     if index < x.Length && (denseExists || sparseExists) 
@@ -1046,7 +1040,7 @@ and [<AllowNullLiteral>] ArrayObject =
       else base.Put(name, value, tag)
 
   override x.Put(index:uint32, value:BoxedValue) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1068,7 +1062,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:double) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1087,7 +1081,7 @@ and [<AllowNullLiteral>] ArrayObject =
       x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:Object, tag:uint32) =
-      if index > Array.MaxIndex then x.ConvertToSparse()
+      if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
       if x.IsDense then
         if index > 255u && index/2u > x.Length then
@@ -1105,7 +1099,6 @@ and [<AllowNullLiteral>] ArrayObject =
         x.Sparse.[index] <- BoxedValue.Box(value, tag)
 
       x.UpdateLength(index + 1u)
-
 
   override x.Get(index:uint32) =
     let array = x.Find(index)
@@ -1377,7 +1370,7 @@ and [<AllowNullLiteral>] FunctionObject =
   new (env:Environment, propertyMap) = {
     inherit CommonObject(env, propertyMap, env.Prototypes.Function, Classes.Function)
 
-    Compiler = null
+    Compiler = fun _ _ -> null
     FunctionId = env.NextFunctionId()
     ConstructorMode = 0uy
 
@@ -1388,7 +1381,7 @@ and [<AllowNullLiteral>] FunctionObject =
   new (env:Environment) = {
     inherit CommonObject(env)
 
-    Compiler = null
+    Compiler = fun _ _ -> null
     FunctionId = 0UL
     ConstructorMode = 0uy
 
@@ -1413,28 +1406,31 @@ and [<AllowNullLiteral>] FunctionObject =
       then false 
       else Object.ReferenceEquals(prototype.Object, cobj.Prototype)
 
+  member x.CompileAs<'a when 'a :> Delegate>() =
+    (x.Compiler x typeof<'a>) :?> 'a
+
   member x.Call(this) : BoxedValue =
-    let func = x.Compiler.Compile<Call>(x)
+    let func = x.CompileAs<Call>()
     func.Invoke(x, this)
 
   member x.Call(this,a:'a) : BoxedValue =
-    let func = x.Compiler.Compile<Call<'a>>(x)
+    let func = x.CompileAs<Call<'a>>()
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) =
-    let func = x.Compiler.Compile<Call<'a,'b>>(x)
+    let func = x.CompileAs<Call<'a,'b>>()
     func.Invoke(x, this, a, b)
 
   member x.Call(this,a:'a,b:'b,c:'c) =
-    let func = x.Compiler.Compile<Call<'a,'b,'c>>(x)
+    let func = x.CompileAs<Call<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) =
-    let func = x.Compiler.Compile<Call<'a,'b,'c,'d>>(x)
+    let func = x.CompileAs<Call<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
   member x.Construct (this:CommonObject) =
-    let func = x.Compiler.Compile<Call>(x)
+    let func = x.CompileAs<Call>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null)
@@ -1447,7 +1443,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a) =
-    let func = x.Compiler.Compile<Call<'a>>(x)
+    let func = x.CompileAs<Call<'a>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a)
@@ -1460,7 +1456,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b) =
-    let func = x.Compiler.Compile<Call<'a, 'b>>(x)
+    let func = x.CompileAs<Call<'a, 'b>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b)
@@ -1473,7 +1469,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c) =
-    let func = x.Compiler.Compile<Call<'a, 'b, 'c>>(x)
+    let func = x.CompileAs<Call<'a, 'b, 'c>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c)
@@ -1486,7 +1482,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c, d:'d) =
-    let func = x.Compiler.Compile<Call<'a, 'b, 'c, 'd>>(x)
+    let func = x.CompileAs<Call<'a, 'b, 'c, 'd>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d)
@@ -1497,12 +1493,6 @@ and [<AllowNullLiteral>] FunctionObject =
       BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
-
-and [<ReferenceEquality>] DispatchTarget<'a when 'a :> Delegate> = {
-  Delegate : System.Type
-  Function : HostFunction<'a>
-  Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
-}
     
 (* Represents a .NET delegate wrapped as a JavaScript function *)
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
@@ -1552,145 +1542,15 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
-(*
-    
-//------------------------------------------------------------------------------
-// HostFunction API
-module HostFunction =
-
-  [<ReferenceEquality>]
-  type DispatchTarget<'a when 'a :> Delegate> = {
-    Delegate : System.Type
-    Function : HostFunction<'a>
-    Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
-  }
-
-  //----------------------------------------------------------------------------
-  let marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
-    if i < args.Length 
-      then TypeConverter2.ConvertTo(env, args.[i], t)
-      else
-        if FSKit.Utils.isTypeT<BoxedValue> t
-          then Expr.BoxedConstants.undefined else Dlr.default' t
-      
-  //----------------------------------------------------------------------------
-  let marshalBoxParams (f:HostFunction<_>) args m =
-    args
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map Expr.box
-    |> fun x -> Seq.append m [Dlr.newArrayItemsT<BoxedValue> x]
-    
-  //----------------------------------------------------------------------------
-  let marshalObjectParams (f:HostFunction<_>) (args:Dlr.ExprParam array) m =
-    args
-    |> Seq.skip f.ArgTypes.Length
-    |> Seq.map TypeConverter2.ToClrObject
-    |> fun x -> Seq.append m [Dlr.newArrayItemsT<System.Object> x]
-    
-  //----------------------------------------------------------------------------
-  let private createParam i t = Dlr.param (sprintf "a%i" i) t
-  
-  //----------------------------------------------------------------------------
-  let private addEmptyParamsObject<'a> (args:Dlr.ExprParam array) =
-    args |> Array.map (fun x -> x :> Dlr.Expr)
-         |> FSKit.Array.appendOne Dlr.newArrayEmptyT<'a> 
-         |> Seq.ofArray
-  
-  //----------------------------------------------------------------------------
-  let compileDispatcher (target:DispatchTarget<'a>) = 
-    let f = target.Function
-
-    let argTypes = FSKit.Reflection.getDelegateArgTypes target.Delegate
-    let args = argTypes |> Array.mapi createParam
-    let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
-
-    let func = args.[0] :> Dlr.Expr
-    let env = Dlr.field func "Env"
-
-    let marshalled = f.ArgTypes |> Seq.mapi (marshalArgs passedArgs env)
-    let marshalled = 
-      let paramsExist = f.ArgTypes.Length < passedArgs.Length 
-
-      match f.ParamsMode with
-      | ParamsModes.BoxParams -> 
-        if paramsExist
-          then marshalBoxParams f passedArgs marshalled
-          else addEmptyParamsObject<BoxedValue> passedArgs 
-
-      | ParamsModes.ObjectParams when paramsExist -> 
-        if paramsExist
-          then marshalObjectParams f passedArgs marshalled
-          else addEmptyParamsObject<System.Object> passedArgs 
-
-      | _ -> marshalled
-
-    let invoke = target.Invoke func marshalled
-    let body = 
-      if FSKit.Utils.isTypeT<BoxedValue> f.ReturnType 
-        then invoke
-        elif FSKit.Utils.isVoid f.ReturnType 
-          then Expr.voidAsUndefined invoke
-          else Expr.box invoke
-            
-    let lambda = Dlr.lambda target.Delegate args body
-
-    #if DEBUG
-    Support.Debug.print lambda
-    #endif
-
-    lambda.Compile()
-
-  //----------------------------------------------------------------------------
-  let generateInvoke<'a when 'a :> Delegate> f args =
-    let casted = Dlr.castT<HostFunction<'a>> f
-    Dlr.invoke (Dlr.field casted "Delegate") args
-  
-  //----------------------------------------------------------------------------
-  let compile<'a when 'a :> Delegate> (x:FunctionObject) (delegate':System.Type) =
-    compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> HostFunction<'a>
-      Invoke = generateInvoke<'a>
-    }
-    
-  //----------------------------------------------------------------------------
-  let create (env:Environment) (delegate':'a) =
-    let h = HostFunction<'a>(env, delegate')
-    let f = h :> FunctionObject
-    let o = f :> CommonObject
-
-    o.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
-    env.AddCompiler(f, compile<'a>)
-
-    f
- *)
-    
-(**)
-and [<AllowNullLiteral>] FunctionCompiler(compiler:CompilerFunction) = 
-
-  let cache = new MutableDict<System.Type, Delegate>()
-
-  member x.Compile(f:FunctionObject, t:System.Type) : Delegate = 
-    let mutable delegate' = null
-
-    if not (cache.TryGetValue(t, &delegate')) then
-      delegate' <- compiler f t
-      cache.Add(t, delegate')
-
-    delegate'
-
-  member x.Compile<'a when 'a :> Delegate> (f:FunctionObject) : 'a = 
-    x.Compile(f, typeof<'a>) :?> 'a
-
 (**)
 and UserError(jsValue:BoxedValue) =
   inherit IronJS.Support.Error("UserError")
   member x.JsValue = jsValue
   
-//------------------------------------------------------------------------------
+(**)
 and TypeConverter2() =
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToBoxedValue(v:BoxedValue) = v
   static member ToBoxedValue(d:double) = BoxedValue.Box(d)
   static member ToBoxedValue(b:bool) = BoxedValue.Box(b)
@@ -1701,7 +1561,7 @@ and TypeConverter2() =
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToBoxedValue" [expr]
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ToClrObject(d:double) : Object = box d
   static member ToClrObject(b:bool) : Object = box b
   static member ToClrObject(s:string) : Object = box s
@@ -1721,7 +1581,7 @@ and TypeConverter2() =
   static member ToClrObject(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToClrObject" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToObject(env:Environment, o:CommonObject) : CommonObject = o
   static member ToObject(env:Environment, f:FunctionObject) : CommonObject = f :> CommonObject
   static member ToObject(env:Environment, u:Undefined) : CommonObject = env.RaiseTypeError()
@@ -1741,7 +1601,7 @@ and TypeConverter2() =
   static member ToObject(env:Dlr.Expr, expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToObject" [env; expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToBoolean(b:bool) : bool = b
   static member ToBoolean(d:double) : bool = d > 0.0 || d < 0.0
   static member ToBoolean(c:Object) : bool = if c = null then false else true
@@ -1761,7 +1621,7 @@ and TypeConverter2() =
   static member ToBoolean(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToBoolean" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToPrimitive(b:bool, _:byte) : BoxedValue = BoxedValue.Box(b)
   static member ToPrimitive(d:double, _:byte) : BoxedValue = BoxedValue.Box(d)
   static member ToPrimitive(s:String, _:byte) : BoxedValue = BoxedValue.Box(s)
@@ -1780,7 +1640,7 @@ and TypeConverter2() =
   static member ToPrimitive(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToPrimitive" [expr]
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ToString(b:bool) : string = if b then "true" else "false"
   static member ToString(s:string) : string = s
   static member ToString(u:Undefined) : string = "undefined"
@@ -1808,7 +1668,7 @@ and TypeConverter2() =
   static member ToString(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToString" [expr]
   
-  //----------------------------------------------------------------------------
+  (**)
   static member ToNumber(b:bool) : double = if b then 1.0 else 0.0
   static member ToNumber(c:Object) : double = if c = null then 0.0 else 1.0
   static member ToNumber(u:Undefined) : double = NaN
@@ -1843,29 +1703,29 @@ and TypeConverter2() =
   static member ToNumber(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter2> "ToNumber" [expr]
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToInt32(d:double) : int32 = d |> uint32 |> int
   static member ToInt32(b:BoxedValue) : int32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToInt32
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToUInt32(d:double) : uint32 = d |> uint32 
   static member ToUInt32(b:BoxedValue) : uint32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToUInt32
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToUInt16(d:double) : uint16 = d |> uint32 |> uint16
   static member ToUInt16(b:BoxedValue) : uint16 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToUInt16
 
-  //----------------------------------------------------------------------------
+  (**)
   static member ToInteger(d:double) : int32 = 
     if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
 
   static member ToInteger(b:BoxedValue) : int32 =
     b |> TypeConverter2.ToNumber |> TypeConverter2.ToInteger
     
-  //----------------------------------------------------------------------------
+  (**)
   static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:System.Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
     elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
@@ -1878,7 +1738,7 @@ and TypeConverter2() =
       elif t = typeof<System.Object> then TypeConverter2.ToClrObject expr
       else Support.Errors.noConversion expr.Type t
     
-//------------------------------------------------------------------------------
+(**)
 and Maps = {
   Base : ObjectClass
   Array : ObjectClass
@@ -1890,7 +1750,7 @@ and Maps = {
   Regexp : ObjectClass
 }
 
-//------------------------------------------------------------------------------
+(**)
 and Prototypes = {
   Object : CommonObject
   Array : CommonObject
@@ -1909,7 +1769,7 @@ and Prototypes = {
   URIError : CommonObject
 }
 
-//------------------------------------------------------------------------------
+(**)
 and Constructors = {
   Object : FunctionObject
   Array : FunctionObject
@@ -1928,13 +1788,13 @@ and Constructors = {
   URIError : FunctionObject
 }
 
-//-------------------------------------------------------------------------
+(**)
 and Scope = BoxedValue array
 and DynamicScope = (int * CommonObject) list
 and SparseArray = MutableSorted<uint32, BoxedValue>
-and CompilerFunction = FunctionObject -> System.Type -> System.Delegate
+and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
 
-//-------------------------------------------------------------------------
+(**)
 and Call = Func<FunctionObject,CommonObject,BoxedValue>
 and Call<'a> = Func<FunctionObject,CommonObject,'a,BoxedValue>
 and Call<'a,'b> = Func<FunctionObject,CommonObject,'a,'b,BoxedValue>

@@ -14,28 +14,11 @@ open FSKit.Bit
 
 let ctx = Hosting.Context.Create()
 
-ctx.Environment.Globals.PropertyMap.IndexMap
+Support.Debug.registerConsolePrinter()
 
-let v = ctx.Environment.Globals.Properties.[0].Value.Number
-let m = ctx.Environment.Globals.Properties.[0].Value.Marker
+let print = (new Action<BoxedValue>(fun box -> printfn "%s" (TypeConverter2.ToString(box))))
 
-v |> double2bytes |> hexOrder |> bytes2string
-m |> ushort2bytes |> hexOrder |> bytes2string
+ctx.PutGlobal("print", IronJS.Native.Utils.createHostFunction ctx.Environment print)
+ctx.Execute @"print(Math.pow(2, 2));"
 
-IronJS.Markers.Number |> ushort2bytes |> hexOrder |> bytes2string
-
-
-let print = 
-  IronJS.Api.HostFunction.create
-    ctx.Environment (new Action<BoxedValue>(fun box -> printfn "%s" (TypeConverter2.ToString(box))))
-
-
-Debug.exprPrinters.Add (new Action<Dlr.Expr>(Dlr.Utils.printDebugView))
-
-ctx.PutGlobal("print", print)
-
-ctx.Execute @"
-  for(var y in [1, 2, 3]) {
-	  print(y);
-  }
-"
+Seq.scan (fun s i -> (i, i)) (' ', ' ') "asdg"

@@ -318,8 +318,8 @@ module Ast =
                       then i else {i with Index=i.Index-1}) 
               })
         }
-    
-      //------------------------------------------------------------------------
+
+      (**)
       let closeOverVar (scope:Scope) name =
         match scope |> tryGetLocal name with
         | None -> Support.Errors.missingVariable name
@@ -375,7 +375,7 @@ module Ast =
         modifyCurrent (Scope.decrLocal name) sc
         tree
 
-    //--------------------------------------------------------------------------
+    (**)
     let walkAst f tree = 
       match tree with
       // Simple
@@ -443,7 +443,7 @@ module Ast =
 
     open Utils
 
-    //--------------------------------------------------------------------------
+    (**)
     let stripVarStatements tree =
       let sc = ref List.empty<Scope>
 
@@ -481,7 +481,7 @@ module Ast =
 
       analyze tree
     
-    //--------------------------------------------------------------------------
+    (**)
     let markClosedOverVars tree =
       let sc = ref List.empty
 
@@ -520,7 +520,7 @@ module Ast =
 
       mark tree
       
-    //--------------------------------------------------------------------------
+    (**)
     let calculateScopeLevels levels tree =
 
       let getClosureLevel closureLevel (scope:Scope) = 

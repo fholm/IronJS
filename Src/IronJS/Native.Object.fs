@@ -60,39 +60,39 @@ module Object =
 
     //15.2.4.2
     let toString = new Func<CommonObject, string>(toString)
-    let toString = Api.HostFunction.create env toString
+    let toString = Utils.createHostFunction env toString
     env.Prototypes.Object.Put("toString", toString, dontEnum)
     
     //15.2.4.3
     let toLocaleString = new Func<CommonObject, string>(toLocaleString)
-    let toLocaleString = Api.HostFunction.create env toLocaleString
+    let toLocaleString = Utils.createHostFunction env toLocaleString
     env.Prototypes.Object.Put("toLocaleString", toLocaleString, dontEnum)
 
     //15.2.4.4
     let valueOf = new Func<CommonObject, CommonObject>(valueOf)
-    let valueOf = Api.HostFunction.create env valueOf
+    let valueOf = Utils.createHostFunction env valueOf
     env.Prototypes.Object.Put("valueOf", valueOf, dontEnum)
 
     //15.2.4.5
     let hasOwnProperty = new Func<CommonObject, string, bool>(hasOwnProperty)
-    let hasOwnProperty = Api.HostFunction.create env hasOwnProperty
+    let hasOwnProperty = Utils.createHostFunction env hasOwnProperty
     env.Prototypes.Object.Put("hasOwnProperty", hasOwnProperty, dontEnum)
     
     //15.2.4.6
     let isPrototypeOf = new Func<CommonObject, CommonObject, bool>(isPrototypeOf)
-    let isPrototypeOf = Api.HostFunction.create env isPrototypeOf
+    let isPrototypeOf = Utils.createHostFunction env isPrototypeOf
     env.Prototypes.Object.Put("isPrototypeOf", isPrototypeOf, dontEnum)
     
     //15.2.4.7
     let isNumerable = new Func<CommonObject, string, bool>(propertyIsEnumerable)
-    let isNumerable = Api.HostFunction.create env isNumerable
+    let isNumerable = Utils.createHostFunction env isNumerable
     env.Prototypes.Object.Put("propertyIsEnumerable", isNumerable, dontEnum)
 
   //----------------------------------------------------------------------------
   //15.2.1
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor')
-    let ctor = Api.HostFunction.create env ctor
+    let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Object, Immutable)

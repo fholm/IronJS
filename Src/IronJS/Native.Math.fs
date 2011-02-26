@@ -36,76 +36,76 @@ module Math =
     env.Globals.Put("Math", math)
 
     let abs = new Func<double, double>(Math.Abs)
-    let abs = Api.HostFunction.create env abs
+    let abs = Utils.createHostFunction env abs
     math.Put("abs", abs, DontEnum)
 
     let acos = new Func<double, double>(Math.Acos)
-    let acos = Api.HostFunction.create env acos
+    let acos = Utils.createHostFunction env acos
     math.Put("acos", acos, DontEnum)
 
     let asin = new Func<double, double>(Math.Asin)
-    let asin = Api.HostFunction.create env asin
+    let asin = Utils.createHostFunction env asin
     math.Put("acos", asin, DontEnum)
 
     let atan = new Func<double, double>(Math.Atan)
-    let atan = Api.HostFunction.create env atan
+    let atan = Utils.createHostFunction env atan
     math.Put("atan", atan, DontEnum)
 
     let inline atan2 a b = Math.Atan2(a, b)
     let atan2 = new Func<double, double, double>(atan2)
-    let atan2 = Api.HostFunction.create env atan2
+    let atan2 = Utils.createHostFunction env atan2
     math.Put("atan2", atan2, DontEnum)
 
     let ceil = new Func<double, double>(Math.Ceiling)
-    let ceil = Api.HostFunction.create env ceil
+    let ceil = Utils.createHostFunction env ceil
     math.Put("ceil", ceil, DontEnum)
 
     let cos = new Func<double, double>(Math.Cos)
-    let cos = Api.HostFunction.create env cos
+    let cos = Utils.createHostFunction env cos
     math.Put("cos", cos, DontEnum)
 
     let exp = new Func<double, double>(Math.Exp)
-    let exp = Api.HostFunction.create env exp
+    let exp = Utils.createHostFunction env exp
     math.Put("exp", exp, DontEnum)
 
     let floor = new Func<double, double>(Math.Floor)
-    let floor = Api.HostFunction.create env floor
+    let floor = Utils.createHostFunction env floor
     math.Put("floor", floor, DontEnum)
 
     let log = new Func<double, double>(Math.Log)
-    let log = Api.HostFunction.create env log
+    let log = Utils.createHostFunction env log
     math.Put("log", log, DontEnum)
 
     let max = new Func<BoxedValue array, double>(max)
-    let max = Api.HostFunction.create env max
+    let max = Utils.createHostFunction env max
     math.Put("max", max, DontEnum)
     
     let min = new Func<BoxedValue array, double>(min)
-    let min = Api.HostFunction.create env min
+    let min = Utils.createHostFunction env min
     math.Put("min", min, DontEnum)
 
     let inline pow a b = Math.Pow(a, b)
     let pow = new Func<double, double, double>(pow)
-    let pow = Api.HostFunction.create env pow
+    let pow = Utils.createHostFunction env pow
     math.Put("pow", pow, DontEnum)
 
     let random = new Func<FunctionObject, CommonObject, double>(random)
-    let random = Api.HostFunction.create env random
+    let random = Utils.createHostFunction env random
     math.Put("random", random, DontEnum)
 
     let round = new Func<double, double>(Math.Round)
-    let round = Api.HostFunction.create env round
+    let round = Utils.createHostFunction env round
     math.Put("round", round, DontEnum)
     
     let sin = new Func<double, double>(Math.Sin)
-    let sin = Api.HostFunction.create env sin
+    let sin = Utils.createHostFunction env sin
     math.Put("sin", sin, DontEnum)
     
     let sqrt = new Func<double, double>(Math.Sqrt)
-    let sqrt = Api.HostFunction.create env sqrt
+    let sqrt = Utils.createHostFunction env sqrt
     math.Put("sqrt", sqrt, DontEnum)
     
     let tan = new Func<double, double>(Math.Tan)
-    let tan = Api.HostFunction.create env tan
+    let tan = Utils.createHostFunction env tan
     math.Put("tan", tan, DontEnum)
     

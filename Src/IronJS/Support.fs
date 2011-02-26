@@ -40,8 +40,14 @@ module Debug =
     for printer in printers do
       printer.Invoke (sprintf "%A" x)
 
+  let internal printExpr x = 
+    x |> IronJS.Dlr.Utils.debugView |> print
+
   let registerPrinter x = 
     printers.Add x
+
+  let registerConsolePrinter () =
+    registerPrinter (new Action<string>(fun s -> printfn "%s" s))
 
 type Error(msg) = inherit Exception(msg)
 type CompilerError(msg) = inherit Error(msg)

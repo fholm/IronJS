@@ -9,7 +9,7 @@ module Scope =
   //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
-    let object' = Expr.Box.unboxObject (ctx.Compile init)
+    let object' = Utils.Box.unboxObject (ctx.Compile init)
     let tree = {ctx with InsideWith=true}.Compile tree
 
     let pushArgs = [
@@ -17,9 +17,10 @@ module Scope =
       Dlr.const' ctx.Scope.GlobalLevel]
 
     Dlr.blockSimple [
-      (Dlr.callStaticT<Api.DynScope> "Push" pushArgs)
+      (Dlr.callStaticT<DynamicScopeHelpers> "Push" pushArgs)
       (tree)
-      (Dlr.callStaticT<Api.DynScope> "Pop" [ctx.DynamicScope])]
+      (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.DynamicScope])
+    ]
     
   //--------------------------------------------------------------------------
   let private storageExpr ctx (var:Ast.LocalIndex) =
@@ -31,14 +32,14 @@ module Scope =
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
       let i = Option.get var.ParamIndex
-      Expr.assign variable ctx.Parameters.[i])  
+      Utils.assign variable ctx.Parameters.[i])  
       
   //--------------------------------------------------------------------------
   let private initNonParams ctx (locals:Ast.LocalIndex seq) =
     locals |> Seq.map (fun var ->
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
-      Expr.assign variable Expr.undefined)
+      Utils.assign variable Utils.undefined)
       
   //--------------------------------------------------------------------------
   let private initLocals ctx (locals:Map<string, Ast.Local>) =
@@ -118,7 +119,7 @@ module Scope =
               (Dlr.const' "callee")
               (ctx.Function)
             )
-            (Expr.assign 
+            (Utils.assign 
               (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
               (arguments))
           ] |> Seq.ofList

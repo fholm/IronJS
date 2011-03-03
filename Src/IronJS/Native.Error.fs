@@ -12,7 +12,7 @@ module Error =
       let error = f.Env.NewError()
 
       if message.Tag <> TypeTags.Undefined then
-        let message = TypeConverter2.ToString message
+        let message = TypeConverter.ToString message
         error.Put("message", message, DontEnum)
 
       error.Prototype <- proto
@@ -38,7 +38,7 @@ module Error =
   let updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
 
   let toString (o:CommonObject) =
-    name + ": " + TypeConverter2.ToString(o.Get "message")
+    name + ": " + TypeConverter.ToString(o.Get "message")
 
   let createPrototype (env:Environment) proto =
     let prototype = env.NewError()

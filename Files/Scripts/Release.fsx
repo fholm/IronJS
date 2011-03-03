@@ -13,7 +13,7 @@ open FSKit
 
 let ctx = Hosting.Context.Create()
 
-let print0 = fun (box:BoxedValue) -> printfn "%s" (TypeConverter2.ToString(box))
+let print0 = fun (box:BoxedValue) -> printfn "%s" (TypeConverter.ToString(box))
 let print1 = new Action<BoxedValue>(print0)
 let print2 = IronJS.Utils.createHostFunction ctx.Environment print1
 ctx.PutGlobal("print", print2)

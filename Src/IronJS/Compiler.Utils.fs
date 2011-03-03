@@ -187,7 +187,7 @@ module Utils =
     | TypeTags.String
     | TypeTags.Undefined
     | TypeTags.Number -> 
-      let expr = TypeConverter2.ToObject(ctx.Env, expr)
+      let expr = TypeConverter.ToObject(ctx.Env, expr)
       blockTmp expr (fun expr -> [ifObj expr])
 
     | TypeTags.Box -> 
@@ -199,7 +199,7 @@ module Utils =
             (Dlr.ternary
               (Box.isClr expr)
               (ifClr (Box.unboxClr expr))
-              (ifObj (TypeConverter2.ToObject(ctx.Env, expr))))
+              (ifObj (TypeConverter.ToObject(ctx.Env, expr))))
         ])
     | tt -> failwithf "Invalid TypeTag '%i'" tt
 

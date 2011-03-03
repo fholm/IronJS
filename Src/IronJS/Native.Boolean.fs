@@ -4,10 +4,22 @@ open System
 open IronJS
 open IronJS.DescriptorAttrs
 
+(*
+//  This module implements the javascript Boolean object, its prototype, functions and properties.
+//
+//  State (ECMA-262 3rd Edition):
+//  15.6.1.1 Boolean (value) - DONE
+//  15.6.2.1 new Boolean (value) - DONE
+//  15.6.3.1 Boolean.prototype - DONE
+//  15.6.4.1 Boolean.prototype.constructor - DONE
+//  15.6.4.2 Boolean.prototype.toString ( ) - DONE
+//  15.6.4.3 Boolean.prototype.valueOf ( ) - DONE
+*)
+
 module Boolean =
 
   let private constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
-    let value = TypeConverter2.ToBoolean value
+    let value = TypeConverter.ToBoolean value
     match this with
     | null -> ctor.Env.NewBoolean(value) |> Utils.boxObject
     | _ -> value |> Utils.boxBool
@@ -18,7 +30,7 @@ module Boolean =
 
   let private toString (toString:FunctionObject) (this:CommonObject) =
     this |> Utils.mustBe Classes.Boolean toString.Env
-    this |> Utils.ValueObject.getValue |> TypeConverter2.ToString
+    this |> Utils.ValueObject.getValue |> TypeConverter.ToString
 
   let createPrototype (env:Environment) objPrototype =
     let prototype = env.NewBoolean()

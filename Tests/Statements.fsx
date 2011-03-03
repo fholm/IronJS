@@ -126,7 +126,6 @@ test "12.6.4 The for-in Statement" (fun ctx ->
     }
 
     result;
-
   ")
 )
 

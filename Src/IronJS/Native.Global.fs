@@ -6,10 +6,27 @@ open IronJS.Compiler
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
+(*
+//  This module implements the javascript Global object, its functions and values.
+// 
+//  State (ECMA-262 3rd Edition):
+//  15.1.1.1 NaN - DONE
+//  15.1.1.2 Infinity - DONE
+//  15.1.1.3 undefined - DONE
+//  15.1.2.1 eval (x) - DONE
+//  15.1.2.2 parseInt (string , radix) - DONE
+//  15.1.2.3 parseFloat (string) - DONE
+//  15.1.2.4 isNaN (number) - DONE
+//  15.1.2.5 isFinite (number) - DONE
+//  15.1.3.1 decodeURI (encodedURI) - DONE
+//  15.1.3.2 decodeURIComponent (encodedURIComponent) - DONE
+//  15.1.3.3 encodeURI (uri) - DONE
+//  15.1.3.4 encodeURIComponent (uriComponent) - DONE
+//  15.1.5.1 Math - DONE (Native.Math.fs)
+*)
+
 module Global =
 
-  //----------------------------------------------------------------------------
-  //15.1.2.1
   let eval (target:Compiler.EvalTarget) =
     match target.Target.Tag with
     | TypeTags.String ->
@@ -37,26 +54,21 @@ module Global =
 
     | _ -> target.Target
 
-  //----------------------------------------------------------------------------
-  //15.1.2.2
-  let parseInt (str:string) = Utils.boxNumber(double (System.Int32.Parse(str)))
+  let parseInt (str:string) = 
+    Utils.boxNumber(double (System.Int32.Parse(str)))
 
-  //----------------------------------------------------------------------------
-  //15.1.2.3
-  let parseFloat (str:string) = Utils.boxNumber(TypeConverter2.ToNumber str)
+  let parseFloat (str:string) = 
+    Utils.boxNumber(TypeConverter.ToNumber str)
 
-  //----------------------------------------------------------------------------
-  //15.1.2.4
-  let isNaN (number:double) = Utils.boxBool (number = Double.NaN)
+  let isNaN (number:double) = 
+    Utils.boxBool (number = Double.NaN)
 
-  //----------------------------------------------------------------------------
-  //15.1.2.5
   let isFinite (number:double) =
       if    number = Double.NaN               then false
       elif  number = Double.PositiveInfinity  then false
       elif  number = Double.NegativeInfinity  then false
                                               else true
-  //----------------------------------------------------------------------------
+
   // These two arrays are copied from the Jint sources
   let private reservedEncoded = 
     [|';'; ','; '/'; '?'; ':'; '@'; '&'; '='; '+'; '$'; '#'|]
@@ -64,8 +76,6 @@ module Global =
   let private reservedEncodedComponent = 
     [|'-'; '_'; '.'; '!'; '~'; '*'; '\''; '('; ')'; '['; ']'|]
     
-  //----------------------------------------------------------------------------
-  //15.1.3.1
   let private replaceChar (uri:string) (c:char) =
     uri.Replace(Uri.EscapeDataString(string c), string c)
 
@@ -73,35 +83,29 @@ module Global =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
-      let uri = uri |> TypeConverter2.ToString
+      let uri = uri |> TypeConverter.ToString
       Uri.UnescapeDataString(uri.Replace('+', ' '))
       
-  //----------------------------------------------------------------------------
-  //15.1.3.2
-  let decodeURIComponent = decodeURI
+  let decodeURIComponent = 
+    decodeURI
   
-  //----------------------------------------------------------------------------
-  //15.1.3.3
   let encodeURI (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
-      let uri = uri |> TypeConverter2.ToString |> Uri.EscapeDataString
+      let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
       let uri = Array.fold replaceChar uri reservedEncoded
       let uri = Array.fold replaceChar uri reservedEncodedComponent
       uri.ToUpperInvariant()
       
-  //----------------------------------------------------------------------------
-  //15.1.3.4
   let encodeURIComponent (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
-      let uri = uri |> TypeConverter2.ToString |> Uri.EscapeDataString
+      let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
       let uri = Array.fold replaceChar uri reservedEncodedComponent
       uri.ToUpperInvariant()
 
-  //----------------------------------------------------------------------------
   let setup (env:Environment) =
     let attrs = DontDelete ||| DontEnum
 
@@ -110,47 +114,38 @@ module Global =
     env.Globals.Put("Infinity", PosInf, attrs) //15.1.1.2
     env.Globals.Put("undefined", Undefined.Instance, attrs) //15.1.1.3
 
-    //15.1.2.1
     let eval = new Func<Compiler.EvalTarget, BoxedValue>(eval)
     let eval = Utils.createHostFunction env eval
     env.Globals.Put("eval", eval, DontEnum)
 
-    //15.1.2.2
     let parseFloat = new Func<string, BoxedValue>(parseFloat)
     let parseFloat = Utils.createHostFunction env parseFloat
     env.Globals.Put("parseFloat", parseFloat, DontEnum)
     
-    //15.1.2.3
     let parseInt = new Func<string, BoxedValue>(parseInt)
     let parseInt = Utils.createHostFunction env parseInt
     env.Globals.Put("parseInt", parseInt, DontEnum)
     
-    //15.1.2.4
     let isNaN = new Func<double, BoxedValue>(isNaN)
     let isNaN = Utils.createHostFunction env isNaN
     env.Globals.Put("isNaN", isNaN, DontEnum)
     
-    //15.1.2.5
     let isFinite = new Func<double, bool>(isFinite)
     let isFinite = Utils.createHostFunction env isFinite
     env.Globals.Put("isFinite", isFinite, DontEnum)
 
-    //15.1.3.1
     let decodeURI = new Func<BoxedValue, string>(decodeURI)
     let decodeURI = Utils.createHostFunction env decodeURI
     env.Globals.Put("decodeURI", decodeURI, DontEnum)
     
-    //15.1.3.2
     let decodeURIComponent = new Func<BoxedValue, string>(decodeURIComponent)
     let decodeURIComponent = Utils.createHostFunction env decodeURIComponent
     env.Globals.Put("decodeURIComponent", decodeURIComponent, DontEnum)
     
-    //15.1.3.3
     let encodeURI = new Func<BoxedValue, string>(encodeURI)
     let encodeURI = Utils.createHostFunction env encodeURI
     env.Globals.Put("encodeURI", encodeURI, DontEnum)
 
-    //15.1.3.4
     let encodeURIComponent = new Func<BoxedValue, string>(encodeURIComponent)
     let encodeURIComponent = Utils.createHostFunction env encodeURIComponent
     env.Globals.Put("encodeURIComponent", encodeURIComponent, DontEnum)

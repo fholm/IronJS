@@ -5,17 +5,49 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
+(*
+//  This module implements the javascript Math object, its functions and properties.
+//
+//  State (ECMA-262 3rd Edition):
+//  15.8.1.1 E - DONE
+//  15.8.1.2 LN10 - DONE
+//  15.8.1.3 LN2 - DONE
+//  15.8.1.4 LOG2E - DONE
+//  15.8.1.5 LOG10E - DONE
+//  15.8.1.6 PI - DONE
+//  15.8.1.7 SQRT1_2 - DONE
+//  15.8.1.8 SQRT2 - DONE
+//  15.8.2.1 abs (x) - DONE
+//  15.8.2.2 acos (x) - DONE
+//  15.8.2.3 asin (x) - DONE
+//  15.8.2.4 atan (x) - DONE
+//  15.8.2.5 atan2 (y, x) - DONE
+//  15.8.2.6 ceil (x) - DONE
+//  15.8.2.7 cos (x) - DONE
+//  15.8.2.8 exp (x) - DONE
+//  15.8.2.9 floor (x) - DONE
+//  15.8.2.10 log (x) - DONE
+//  15.8.2.11 max ( [ value1 [ , value2 [ , … ] ] ] ) - DONE
+//  15.8.2.12 min ( [ value1 [ , value2 [ , … ] ] ] ) - DONE
+//  15.8.2.13 pow (x, y) - DONE
+//  15.8.2.14 random ( ) - DONE
+//  15.8.2.15 round (x) - DONE
+//  15.8.2.16 sin (x) - DONE
+//  15.8.2.17 sqrt (x) - DONE
+//  15.8.2.18 tan (x) - DONE
+*)
+
 module Math =
 
   let private random (random:FunctionObject) (_:CommonObject) =
     random.Env.Random.NextDouble()
 
   let private max (args:BoxedValue array) =
-    let toNumber (x:BoxedValue) = TypeConverter2.ToNumber x
+    let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
     if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.max
 
   let private min (args:BoxedValue array) =
-    let toNumber (x:BoxedValue) = TypeConverter2.ToNumber x
+    let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
     if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.min
 
   let setup (env:Environment) =
@@ -108,4 +140,3 @@ module Math =
     let tan = new Func<double, double>(Math.Tan)
     let tan = Utils.createHostFunction env tan
     math.Put("tan", tan, DontEnum)
-    

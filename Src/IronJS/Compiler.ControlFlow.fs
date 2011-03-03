@@ -9,7 +9,7 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
-    let test = TypeConverter2.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx.Compile test)
     let ifTrue = ctx.Compile ifTrue
     let ifFalse = ctx.Compile ifFalse
     Dlr.ternary test ifTrue ifFalse
@@ -17,7 +17,7 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 12.5 if
   let if' (ctx:Ctx) test ifTrue ifFalse =
-    let test = TypeConverter2.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx.Compile test)
     let ifTrue = Dlr.castVoid (ctx.Compile ifTrue)
     match ifFalse with
     | None -> Dlr.if' test ifTrue
@@ -30,7 +30,7 @@ module ControlFlow =
 
   let doWhile' (ctx:Ctx) label body test =
     let break', continue' = loopLabels()
-    let test = TypeConverter2.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx.Compile test)
     let body = (ctx.AddLoopLabels label break' continue').Compile body
     Dlr.doWhile test body break' continue'
 
@@ -38,7 +38,7 @@ module ControlFlow =
   // 12.6.2 while
   let while' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TypeConverter2.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx.Compile test)
     let body = (ctx.AddLoopLabels label break' continue').Compile body
     Dlr.while' test body break' continue'
 
@@ -77,7 +77,7 @@ module ControlFlow =
     Dlr.block tempVars [
       (Dlr.assign pair 
         (Dlr.call 
-          (TypeConverter2.ToObject(ctx.Env, object' |> ctx.Compile)) "CollectProperties" []))
+          (TypeConverter.ToObject(ctx.Env, object' |> ctx.Compile)) "CollectProperties" []))
 
       (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
 

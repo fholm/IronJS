@@ -4,11 +4,42 @@ open System
 open IronJS
 open IronJS.DescriptorAttrs
 
+(*
+//  This module implements the javascript String objects functions and properties.
+//
+//  DONE:
+//  15.5.1.1 String ( [ value ] )
+//  15.5.2.1 new String ( [ value ] )
+//  15.5.3.1 String.prototype
+//  15.5.3.2 String.fromCharCode ( [ char0 [ , char1 [ , … ] ] ] )
+//  15.5.4.1 String.prototype.constructor
+//  15.5.4.2 String.prototype.toString ( )
+//  15.5.4.3 String.prototype.valueOf ( )
+//  15.5.4.4 String.prototype.charAt (pos)
+//  15.5.4.5 String.prototype.charCodeAt (pos)
+//  15.5.4.6 String.prototype.concat ( [ string1 [ , string2 [ , … ] ] ] )
+//  15.5.4.7 String.prototype.indexOf (searchString, position)
+//  15.5.4.8 String.prototype.lastIndexOf (searchString, position)
+//  15.5.4.9 String.prototype.localeCompare (that)
+//  15.5.4.13 String.prototype.slice (start, end)
+//  15.5.4.15 String.prototype.substring (start, end)
+//  15.5.4.16 String.prototype.toLowerCase ( )
+//  15.5.4.17 String.prototype.toLocaleLowerCase ( )
+//  15.5.4.18 String.prototype.toUpperCase ( )
+//  15.5.4.19 String.prototype.toLocaleUpperCase ( )
+//
+//  NOT DONE:
+//  15.5.4.10 String.prototype.match (regexp)
+//  15.5.4.11 String.prototype.replace (searchValue, replaceValue) - REGEXP/FUNCTION MISSING
+//  15.5.4.12 String.prototype.search (regexp) - REGEXP MISSING
+//  15.5.4.14 String.prototype.split (separator, limit) - REGEXP MISSING
+*)
+
 module String =
 
   //----------------------------------------------------------------------------
   let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
-    let value = TypeConverter2.ToString value
+    let value = TypeConverter.ToString value
     match this with
     | null -> ctor.Env.NewString(value) |> Utils.boxObject
     | _ -> value |> Utils.boxString
@@ -18,7 +49,7 @@ module String =
     let buffer = Text.StringBuilder(args.Length)
 
     for i = 0 to args.Length-1 do
-      buffer.Append(TypeConverter2.ToUInt16 args.[i] |> char) |> ignore
+      buffer.Append(TypeConverter.ToUInt16 args.[i] |> char) |> ignore
 
     buffer.ToString()
 
@@ -33,38 +64,38 @@ module String =
     
   //----------------------------------------------------------------------------
   let internal charAt (this:CommonObject) (pos:double) =
-    let value = TypeConverter2.ToString this
-    let index = TypeConverter2.ToInt32 pos
+    let value = TypeConverter.ToString this
+    let index = TypeConverter.ToInt32 pos
     if index < 0 || index >= value.Length then "" else value.[index] |> string
 
   //----------------------------------------------------------------------------
   let internal charCodeAt (this:CommonObject) (pos:double) =
-    let value = TypeConverter2.ToString this
-    let index = TypeConverter2.ToInt32 pos
+    let value = TypeConverter.ToString this
+    let index = TypeConverter.ToInt32 pos
     if index < 0 || index >= value.Length then nan else value.[index] |> double
     
   //----------------------------------------------------------------------------
   let internal concat (this:CommonObject) (args:BoxedValue array) =
-    let buffer = new Text.StringBuilder(TypeConverter2.ToString this)
-    let toString (x:BoxedValue) = buffer.Append(TypeConverter2.ToString x)
+    let buffer = new Text.StringBuilder(TypeConverter.ToString this)
+    let toString (x:BoxedValue) = buffer.Append(TypeConverter.ToString x)
     args |> Array.iter (toString >> ignore)
     buffer.ToString()
     
   //----------------------------------------------------------------------------
   let internal indexOf (this:CommonObject) (subString:string) (index:double) =
-    let value = this |> TypeConverter2.ToString
-    let index = index |> TypeConverter2.ToInt32
+    let value = this |> TypeConverter.ToString
+    let index = index |> TypeConverter.ToInt32
     let index = Math.Min(Math.Max(index, 0), value.Length);
     value.IndexOf(subString, index, StringComparison.Ordinal) |> double
     
   //----------------------------------------------------------------------------
   let internal lastIndexOf (this:CommonObject) (subString:string) (index:double) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
 
     let index = 
       if Double.IsNaN index 
         then Int32.MaxValue 
-        else TypeConverter2.ToInteger index
+        else TypeConverter.ToInteger index
 
     let index = Math.Min(index, value.Length-1)
     let index = Math.Min(index + subString.Length-1, value.Length-1)
@@ -78,8 +109,8 @@ module String =
       
   //----------------------------------------------------------------------------
   let internal localeCompare (this:CommonObject) (that:CommonObject) =
-    let value = this |> TypeConverter2.ToString
-    let that = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
+    let that = this |> TypeConverter.ToString
     String.Compare(value, that) |> double
     
   //----------------------------------------------------------------------------
@@ -89,7 +120,7 @@ module String =
     
   //----------------------------------------------------------------------------
   let internal replace (this:CommonObject) (search:BoxedValue) (replace:BoxedValue) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
 
     //replace(regex, *)
     if search.Tag >= TypeTags.Object then 
@@ -97,7 +128,7 @@ module String =
       
     //replace(string, *)
     else
-      let search = search |> TypeConverter2.ToString
+      let search = search |> TypeConverter.ToString
       
       if replace.Tag >= TypeTags.Function then 
         //replace(string, function)
@@ -105,7 +136,7 @@ module String =
 
       else
         //replace(string, string)
-        let replace = replace |> TypeConverter2.ToString
+        let replace = replace |> TypeConverter.ToString
         let startIndex = value.IndexOf search
         if startIndex = -1 then value
         else
@@ -119,7 +150,7 @@ module String =
           
   //----------------------------------------------------------------------------
   let internal search (this:CommonObject) (search:BoxedValue) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
 
     //search(regex)
     if search.Tag >= TypeTags.Object then 
@@ -127,13 +158,13 @@ module String =
       
     //search(string)
     else
-      let search = search |> TypeConverter2.ToString
+      let search = search |> TypeConverter.ToString
       value.IndexOf(search, StringComparison.Ordinal) |> double
       
   //----------------------------------------------------------------------------
   let internal slice (this:CommonObject) (start:double) (end':BoxedValue) =
-    let value = this  |> TypeConverter2.ToString
-    let start = start |> TypeConverter2.ToInteger
+    let value = this  |> TypeConverter.ToString
+    let start = start |> TypeConverter.ToInteger
 
     let isUndefined = end'.Tag |> Utils.Box.isUndefined  
     let end' = if isUndefined then start else value.Length
@@ -145,7 +176,7 @@ module String =
     
   //----------------------------------------------------------------------------
   let internal split (f:FunctionObject) (this:CommonObject) (sep:BoxedValue) (limit:BoxedValue) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
 
     if sep |> Utils.Box.isRegExp then
       failwith "Not implemented"
@@ -153,11 +184,11 @@ module String =
     else
       let separator =
         if sep.Tag |> Utils.Box.isUndefined
-          then "" else sep |> TypeConverter2.ToString
+          then "" else sep |> TypeConverter.ToString
 
       let limit =
         if limit.Tag |> Utils.Box.isUndefined
-          then UInt32.MaxValue else limit |> TypeConverter2.ToUInt32
+          then UInt32.MaxValue else limit |> TypeConverter.ToUInt32
           
       if separator |> String.IsNullOrEmpty then
         let length = Math.Min(uint32 value.Length, limit)
@@ -184,34 +215,34 @@ module String =
         
   //----------------------------------------------------------------------------
   let internal substring (this:CommonObject) (start:double) (end':double) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
 
-    let start = start |> TypeConverter2.ToInt32
+    let start = start |> TypeConverter.ToInt32
     let start = if start < 0 then Math.Max(start + value.Length, 0) else start
 
-    let end' = end' |> TypeConverter2.ToInt32
+    let end' = end' |> TypeConverter.ToInt32
     let end' = Math.Max(Math.Min(end', value.Length-start), 0)
 
     if end' <= 0 then "" else value.Substring(start, end')
     
   //----------------------------------------------------------------------------
   let internal toLowerCase (this:CommonObject) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
     value.ToLowerInvariant()
     
   //----------------------------------------------------------------------------
   let internal toLocaleLowerCase (this:CommonObject) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
     value.ToLower()
     
   //----------------------------------------------------------------------------
   let internal toUpperCase (this:CommonObject) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
     value.ToUpperInvariant()
     
   //----------------------------------------------------------------------------
   let internal toLocaleUpperCase (this:CommonObject) =
-    let value = this |> TypeConverter2.ToString
+    let value = this |> TypeConverter.ToString
     value.ToUpper()
         
   //----------------------------------------------------------------------------

@@ -16,8 +16,8 @@ module Array =
   // 15.4.2
   let internal constructor' (f:FunctionObject) (_:CommonObject) (args:BoxedValue array) =
     if args.Length = 1 then
-      let number = TypeConverter2.ToNumber args.[0]
-      let size = TypeConverter2.ToUInt32 number
+      let number = TypeConverter.ToNumber args.[0]
+      let size = TypeConverter.ToUInt32 number
       f.Env.NewArray(size)
 
     else
@@ -34,7 +34,7 @@ module Array =
   
     let separator =
       if separator.Tag |> Utils.Box.isUndefined 
-        then "," else separator |> TypeConverter2.ToString
+        then "," else separator |> TypeConverter.ToString
 
     match this with
     | IsArray array ->
@@ -42,7 +42,7 @@ module Array =
       match array with
       | IsDense ->
         let toString (x:Descriptor) = 
-          if x.HasValue then TypeConverter2.ToString x.Value else ""
+          if x.HasValue then TypeConverter.ToString x.Value else ""
 
         String.Join(separator, array.Dense |> Array.map toString)
 
@@ -52,7 +52,7 @@ module Array =
 
         while i < array.Length do
           match array.Sparse.TryGetValue i with
-          | true, box -> items.Add (box |> TypeConverter2.ToString) 
+          | true, box -> items.Add (box |> TypeConverter.ToString) 
           | _ -> items.Add ""
 
           i <- i + 1u
@@ -65,7 +65,7 @@ module Array =
       
       let mutable index = 0u
       while index < length do
-        items.Add(this.Get index |> TypeConverter2.ToString)  
+        items.Add(this.Get index |> TypeConverter.ToString)  
         index <- index + 1u
 
       String.Join(separator, items)
@@ -240,7 +240,7 @@ module Array =
     
   //----------------------------------------------------------------------------
   let internal slice (f:FunctionObject) (this:CommonObject) (start:double) (end':BoxedValue) =
-    let start = start |> TypeConverter2.ToInteger
+    let start = start |> TypeConverter.ToInteger
 
     let constrainStartAndEnd st en le = 
       let st = if st < 0 then st + le elif st > le then le else st
@@ -249,7 +249,7 @@ module Array =
 
     let getEnd (en:BoxedValue) (le:int) =
         if en.Tag |> Utils.Box.isUndefined 
-          then le else en |> TypeConverter2.ToInteger
+          then le else en |> TypeConverter.ToInteger
 
     let length = this.GetLength() |> int
     let end' = getEnd end' length
@@ -259,7 +259,6 @@ module Array =
     let array = f.Env.NewArray(uint32 absSize) :?> ArrayObject
 
     for i = 0 to (size-1) do
-      // array.Methods.GetIndex.Invoke(this, uint32 (start+i))
       let item = array.Get(uint32 (start+i))
       array.Put(uint32 i, item)
       
@@ -290,12 +289,12 @@ module Array =
         let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
         let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
         let result = sort.Invoke(f, f.Env.Globals, x, y)
-        result |> TypeConverter2.ToNumber |> int
+        result |> TypeConverter.ToNumber |> int
 
     let denseSortDefault (x:Descriptor) (y:Descriptor) =
       let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
       let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
-      String.Compare(TypeConverter2.ToString x, TypeConverter2.ToString y)
+      String.Compare(TypeConverter.ToString x, TypeConverter.ToString y)
 
     let sparseSort (cmp:SparseComparer) (length:uint32) (vals:SparseArray) =
       let items = new MutableList<bool * BoxedValue>()
@@ -324,10 +323,10 @@ module Array =
       let sort = f.CompileAs<Sort>()
       fun (x:BoxedValue) (y:BoxedValue) -> 
         let result = sort.Invoke(f, f.Env.Globals, x, y)
-        result |> TypeConverter2.ToNumber |> int
+        result |> TypeConverter.ToNumber |> int
 
     let sparseSortDefault (x:BoxedValue) (y:BoxedValue) =
-      String.Compare(TypeConverter2.ToString x, TypeConverter2.ToString y)
+      String.Compare(TypeConverter.ToString x, TypeConverter.ToString y)
 
     match this with
     | IsArray a ->

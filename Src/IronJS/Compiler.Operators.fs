@@ -116,7 +116,7 @@ module Unary =
   let convert (ctx:Ctx) (tag:uint32) (ast:Ast.Tree) =
     match tag with
     | TypeTags.Number ->
-      Dlr.callStaticT<TypeConverter2> "ToNumber" [ctx.Compile ast]
+      Dlr.callStaticT<TypeConverter> "ToNumber" [ctx.Compile ast]
 
     | _ -> failwith "Que?"
 

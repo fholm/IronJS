@@ -15,7 +15,7 @@ module HostFunction =
 
   let private marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
     if i < args.Length 
-      then TypeConverter2.ConvertTo(env, args.[i], t)
+      then TypeConverter.ConvertTo(env, args.[i], t)
       else
         if FSKit.Utils.isTypeT<BoxedValue> t
           then Utils.BoxedConstants.undefined else Dlr.default' t
@@ -29,7 +29,7 @@ module HostFunction =
   let private marshalObjectParams (f:HostFunction<_>) (args:Dlr.ExprParam array) m =
     args
     |> Seq.skip f.ArgTypes.Length
-    |> Seq.map TypeConverter2.ToClrObject
+    |> Seq.map TypeConverter.ToClrObject
     |> fun x -> Seq.append m [Dlr.newArrayItemsT<System.Object> x]
     
   let private createParam i t = Dlr.param (sprintf "a%i" i) t

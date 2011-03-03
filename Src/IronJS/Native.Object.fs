@@ -5,91 +5,80 @@ open IronJS
 open IronJS.Utils.Patterns
 open IronJS.DescriptorAttrs
 
-//------------------------------------------------------------------------------
-//15.2
+(*
+//  This module implements the javascript Object object, its prototype, functions and properties.
+//
+//  State (ECMA-262 3rd Edition):
+//  15.2.1.1 Object ( [ value ] ) - DONE
+//  15.2.2.1 new Object ( [ value ] ) - DONE
+//  15.2.3.1 Object.prototype - DONE
+//  15.2.4.1 Object.prototype.constructor - DONE
+//  15.2.4.2 Object.prototype.toString ( ) - DONE
+//  15.2.4.3 Object.prototype.toLocaleString ( ) - DONE
+//  15.2.4.4 Object.prototype.valueOf ( ) - DONE
+//  15.2.4.5 Object.prototype.hasOwnProperty (V) - DONE
+//  15.2.4.6 Object.prototype.isPrototypeOf (V) - DONE
+//  15.2.4.7 Object.prototype.propertyIsEnumerable (V) - DONE
+*)
+
 module Object =
 
-  //----------------------------------------------------------------------------
-  //15.2.1
   let internal constructor' (f:FunctionObject) (this:CommonObject) (value:BoxedValue) =
     match value.Tag with
     | TypeTags.Undefined -> f.Env.NewObject()
     | TypeTags.Clr -> f.Env.NewObject()
-    | _ -> TypeConverter2.ToObject(f.Env, value)
+    | _ -> TypeConverter.ToObject(f.Env, value)
 
-  //----------------------------------------------------------------------------
-  //15.2.4.2
   let internal toString (o:CommonObject) = 
     sprintf "[object %s]" Classes.Names.[o.Class]
     
-  //----------------------------------------------------------------------------
-  //15.2.4.3
   let internal toLocaleString = toString
   
-  //----------------------------------------------------------------------------
-  //15.2.4.4
   let internal valueOf (o:CommonObject) = o
 
-  //----------------------------------------------------------------------------
-  //15.2.4.5
   let internal hasOwnProperty (o:CommonObject) (name:string) =
     let mutable index = 0
     if o.PropertyMap.IndexMap.TryGetValue(name, &index) 
       then o.Properties.[index].HasValue
       else false
 
-  //----------------------------------------------------------------------------
-  //15.2.4.6
-  let internal isPrototypeOf (o:CommonObject) (v:CommonObject) = v.Prototype = o
+  let internal isPrototypeOf (o:CommonObject) (v:CommonObject) = 
+    v.Prototype = o
 
-  //----------------------------------------------------------------------------
-  //15.2.4.7
   let internal propertyIsEnumerable (o:CommonObject) (name:string) =
     let descriptor = o.Find(name)
     descriptor.HasValue && descriptor.IsEnumerable
       
-  //----------------------------------------------------------------------------
-  //15.2.4
   let createPrototype (env:Environment) =
     CommonObject(env, env.Maps.Base, null, Classes.Object)
-    
-  //----------------------------------------------------------------------------
-  //15.2.4
+
   let setupPrototype (env:Environment) =
     let dontEnum = DescriptorAttrs.DontEnum
 
-    //15.2.4.2
     let toString = new Func<CommonObject, string>(toString)
     let toString = Utils.createHostFunction env toString
     env.Prototypes.Object.Put("toString", toString, dontEnum)
     
-    //15.2.4.3
     let toLocaleString = new Func<CommonObject, string>(toLocaleString)
     let toLocaleString = Utils.createHostFunction env toLocaleString
     env.Prototypes.Object.Put("toLocaleString", toLocaleString, dontEnum)
 
-    //15.2.4.4
     let valueOf = new Func<CommonObject, CommonObject>(valueOf)
     let valueOf = Utils.createHostFunction env valueOf
     env.Prototypes.Object.Put("valueOf", valueOf, dontEnum)
 
-    //15.2.4.5
     let hasOwnProperty = new Func<CommonObject, string, bool>(hasOwnProperty)
     let hasOwnProperty = Utils.createHostFunction env hasOwnProperty
     env.Prototypes.Object.Put("hasOwnProperty", hasOwnProperty, dontEnum)
     
-    //15.2.4.6
     let isPrototypeOf = new Func<CommonObject, CommonObject, bool>(isPrototypeOf)
     let isPrototypeOf = Utils.createHostFunction env isPrototypeOf
     env.Prototypes.Object.Put("isPrototypeOf", isPrototypeOf, dontEnum)
     
-    //15.2.4.7
     let isNumerable = new Func<CommonObject, string, bool>(propertyIsEnumerable)
     let isNumerable = Utils.createHostFunction env isNumerable
     env.Prototypes.Object.Put("propertyIsEnumerable", isNumerable, dontEnum)
 
-  //----------------------------------------------------------------------------
-  //15.2.1
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor')
     let ctor = Utils.createHostFunction env ctor

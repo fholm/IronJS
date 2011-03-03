@@ -5,11 +5,32 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
+(*
+//  This module implements the javascript Number object, its prototype, functions and properties.
+//
+//  State (ECMA-262 3rd Edition):
+//  15.7.1.1 Number ( [ value ] ) - DONE
+//  15.7.2.1 new Number ( [ value ] ) - DONE
+//  15.7.3.1 Number.prototype - DONE
+//  15.7.3.2 Number.MAX_VALUE - DONE
+//  15.7.3.3 Number.MIN_VALUE - DONE
+//  15.7.3.4 Number.NaN - DONE
+//  15.7.3.5 Number.NEGATIVE_INFINITY - DONE
+//  15.7.3.6 Number.POSITIVE_INFINITY - DONE
+//  15.7.4.1 Number.prototype.constructor - DONE
+//  15.7.4.2 Number.prototype.toString (radix) - DONE
+//  15.7.4.3 Number.prototype.toLocaleString() - DONE
+//  15.7.4.4 Number.prototype.valueOf ( ) - DONE
+//  15.7.4.5 Number.prototype.toFixed (fractionDigits) - DONE
+//  15.7.4.6 Number.prototype.toExponential (fractionDigits) - DONE
+//  15.7.4.7 Number.prototype.toPrecision (precision) - DONE
+*)
+
 module Number =
 
   //----------------------------------------------------------------------------
   let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
-    let value = TypeConverter2.ToNumber value
+    let value = TypeConverter.ToNumber value
     match this with
     | null -> ctor.Env.NewNumber(value) |> Utils.boxObject
     | _ -> value |> Utils.boxNumber
@@ -28,7 +49,7 @@ module Number =
     if FSKit.Utils.isNaNOrInf number then nanToString number
     else
       match radix with
-      | 0.0 | 10.0 -> TypeConverter2.ToString(number)
+      | 0.0 | 10.0 -> TypeConverter.ToString(number)
       | 2.0 -> Convert.ToString(int64 number, 2)
       | 8.0 -> Convert.ToString(int64 number, 8)
       | 16.0 -> Convert.ToString(int64 number, 16)
@@ -53,7 +74,7 @@ module Number =
     this |> Utils.mustBe Classes.Number f.Env
 
     let number = (this |> Utils.ValueObject.getValue).Number
-    let fractions = fractions |> TypeConverter2.ToInt32
+    let fractions = fractions |> TypeConverter.ToInt32
 
     if number |> FSKit.Utils.isNaNOrInf then nanToString number
     else
@@ -73,7 +94,7 @@ module Number =
     else
       let fractions = 
         if Utils.Box.isUndefined fractions.Tag 
-          then 16 else fractions |> TypeConverter2.ToInt32
+          then 16 else fractions |> TypeConverter.ToInt32
 
       verifyFractions f.Env fractions
       let format = String.Concat("#.", new String('0', fractions), "e+0");
@@ -90,7 +111,7 @@ module Number =
     if tag |> Utils.Box.isUndefined then toString f this 10.0
     elif number |> FSKit.Utils.isNaNOrInf then nanToString number
     else
-      let precision = precision |> TypeConverter2.ToInt32
+      let precision = precision |> TypeConverter.ToInt32
 
       if precision < 1 || precision > 21 then
         f.Env.RaiseRangeError("precision must be between 1 and 21")

@@ -7,14 +7,14 @@ open IronJS.Utils.Patterns
 (*
 //  This module implements the javascript Function object, its prototype, functions and properties.
 //
-//  State (ECMA-262 3rd Edition):
-//  15.3.1.1 Function (p1, p2, … , pn, body) - DONE
-//  15.3.2.1 new Function (p1, p2, … , pn, body) - DONE
-//  15.3.3.1 Function.prototype - DONE
-//  15.3.4.1 Function.prototype.constructor - DONE
-//  15.3.4.2 Function.prototype.toString ( ) - DONE
-//  15.3.4.3 Function.prototype.apply (thisArg, argArray) - DONE
-//  15.3.4.4 Function.prototype.call (thisArg [ , arg1 [ , arg2, … ] ] ) - DONE
+//  DONE:
+//  15.3.1.1 Function (p1, p2, … , pn, body) 
+//  15.3.2.1 new Function (p1, p2, … , pn, body) 
+//  15.3.3.1 Function.prototype 
+//  15.3.4.1 Function.prototype.constructor 
+//  15.3.4.2 Function.prototype.toString ( )
+//  15.3.4.3 Function.prototype.apply (thisArg, argArray) 
+//  15.3.4.4 Function.prototype.call (thisArg [ , arg1 [ , arg2, … ] ] ) 
 *)
 
 module Function =

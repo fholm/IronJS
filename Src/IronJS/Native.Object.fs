@@ -8,17 +8,17 @@ open IronJS.DescriptorAttrs
 (*
 //  This module implements the javascript Object object, its prototype, functions and properties.
 //
-//  State (ECMA-262 3rd Edition):
-//  15.2.1.1 Object ( [ value ] ) - DONE
-//  15.2.2.1 new Object ( [ value ] ) - DONE
-//  15.2.3.1 Object.prototype - DONE
-//  15.2.4.1 Object.prototype.constructor - DONE
-//  15.2.4.2 Object.prototype.toString ( ) - DONE
-//  15.2.4.3 Object.prototype.toLocaleString ( ) - DONE
-//  15.2.4.4 Object.prototype.valueOf ( ) - DONE
-//  15.2.4.5 Object.prototype.hasOwnProperty (V) - DONE
-//  15.2.4.6 Object.prototype.isPrototypeOf (V) - DONE
-//  15.2.4.7 Object.prototype.propertyIsEnumerable (V) - DONE
+//  DONE:
+//  15.2.1.1 Object ( [ value ] ) 
+//  15.2.2.1 new Object ( [ value ] ) 
+//  15.2.3.1 Object.prototype 
+//  15.2.4.1 Object.prototype.constructor 
+//  15.2.4.2 Object.prototype.toString ( ) 
+//  15.2.4.3 Object.prototype.toLocaleString ( ) 
+//  15.2.4.4 Object.prototype.valueOf ( ) 
+//  15.2.4.5 Object.prototype.hasOwnProperty (V) 
+//  15.2.4.6 Object.prototype.isPrototypeOf (V) 
+//  15.2.4.7 Object.prototype.propertyIsEnumerable (V) 
 *)
 
 module Object =

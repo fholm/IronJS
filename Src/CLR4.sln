@@ -11,18 +11,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "REPL", "Tools\REPL\REPL.fsp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevUI", "Tools\DevUI\DevUI.csproj", "{02F37695-7FA2-4C83-82D2-76FCFE468B38}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{8AF0E644-8747-4DFD-B922-6429EBDA29E8}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{7E895BE2-763D-4384-B17C-4EEC183D7479}"
 	ProjectSection(SolutionItems) = preProject
 		..\LICENSE.txt = ..\LICENSE.txt
 		..\README.markdown = ..\README.markdown
-		..\Files\TODO.txt = ..\Files\TODO.txt
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Development", "Development", "{83550B44-A2E4-49AF-A70E-9CE067DB382B}"
-	ProjectSection(SolutionItems) = preProject
-		..\Files\BrowserTesting.html = ..\Files\BrowserTesting.html
+		..\Files\todo.txt = ..\Files\todo.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5070932B-551A-4C31-9AB7-606F11B762ED}"
@@ -50,47 +43,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Changelogs", "Changelogs", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{39A51F96-9421-4146-B875-D704349A51F4}"
 	ProjectSection(SolutionItems) = preProject
+		..\Files\Scripts\Browser.html = ..\Files\Scripts\Browser.html
 		..\Files\Scripts\Debug.fsx = ..\Files\Scripts\Debug.fsx
 		..\Files\Scripts\Release.fsx = ..\Files\Scripts\Release.fsx
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Benchmarks", "Benchmarks", "{2BB31B8E-3CA7-43F5-82EA-4BE3F0735078}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IjsBench", "IjsBench", "{1BE8D9F9-F0F4-4ECC-9D95-CDFB3717C84B}"
-	ProjectSection(SolutionItems) = preProject
-		..\Benchmarks\IjsBench-0.1\global-access.js = ..\Benchmarks\IjsBench-0.1\global-access.js
-		..\Benchmarks\IjsBench-0.1\recursion.js = ..\Benchmarks\IjsBench-0.1\recursion.js
-		..\Benchmarks\IjsBench-0.1\sort.js = ..\Benchmarks\IjsBench-0.1\sort.js
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SunSpider", "SunSpider", "{EBA03ADA-DE43-4387-95CE-5DB778A1B519}"
-	ProjectSection(SolutionItems) = preProject
-		..\Benchmarks\SunSpider-0.9.1\3d-cube.js = ..\Benchmarks\SunSpider-0.9.1\3d-cube.js
-		..\Benchmarks\SunSpider-0.9.1\3d-morph.js = ..\Benchmarks\SunSpider-0.9.1\3d-morph.js
-		..\Benchmarks\SunSpider-0.9.1\3d-raytrace.js = ..\Benchmarks\SunSpider-0.9.1\3d-raytrace.js
-		..\Benchmarks\SunSpider-0.9.1\access-binary-trees.js = ..\Benchmarks\SunSpider-0.9.1\access-binary-trees.js
-		..\Benchmarks\SunSpider-0.9.1\access-fannkuch.js = ..\Benchmarks\SunSpider-0.9.1\access-fannkuch.js
-		..\Benchmarks\SunSpider-0.9.1\access-nbody.js = ..\Benchmarks\SunSpider-0.9.1\access-nbody.js
-		..\Benchmarks\SunSpider-0.9.1\access-nsieve.js = ..\Benchmarks\SunSpider-0.9.1\access-nsieve.js
-		..\Benchmarks\SunSpider-0.9.1\bitops-3bit-bits-in-byte.js = ..\Benchmarks\SunSpider-0.9.1\bitops-3bit-bits-in-byte.js
-		..\Benchmarks\SunSpider-0.9.1\bitops-bits-in-byte.js = ..\Benchmarks\SunSpider-0.9.1\bitops-bits-in-byte.js
-		..\Benchmarks\SunSpider-0.9.1\bitops-bitwise-and.js = ..\Benchmarks\SunSpider-0.9.1\bitops-bitwise-and.js
-		..\Benchmarks\SunSpider-0.9.1\bitops-nsieve-bits.js = ..\Benchmarks\SunSpider-0.9.1\bitops-nsieve-bits.js
-		..\Benchmarks\SunSpider-0.9.1\controlflow-recursive.js = ..\Benchmarks\SunSpider-0.9.1\controlflow-recursive.js
-		..\Benchmarks\SunSpider-0.9.1\crypto-aes.js = ..\Benchmarks\SunSpider-0.9.1\crypto-aes.js
-		..\Benchmarks\SunSpider-0.9.1\crypto-md5.js = ..\Benchmarks\SunSpider-0.9.1\crypto-md5.js
-		..\Benchmarks\SunSpider-0.9.1\crypto-sha1.js = ..\Benchmarks\SunSpider-0.9.1\crypto-sha1.js
-		..\Benchmarks\SunSpider-0.9.1\date-format-tofte.js = ..\Benchmarks\SunSpider-0.9.1\date-format-tofte.js
-		..\Benchmarks\SunSpider-0.9.1\date-format-xparb.js = ..\Benchmarks\SunSpider-0.9.1\date-format-xparb.js
-		..\Benchmarks\SunSpider-0.9.1\math-cordic.js = ..\Benchmarks\SunSpider-0.9.1\math-cordic.js
-		..\Benchmarks\SunSpider-0.9.1\math-partial-sums.js = ..\Benchmarks\SunSpider-0.9.1\math-partial-sums.js
-		..\Benchmarks\SunSpider-0.9.1\math-spectral-norm.js = ..\Benchmarks\SunSpider-0.9.1\math-spectral-norm.js
-		..\Benchmarks\SunSpider-0.9.1\regexp-dna.js = ..\Benchmarks\SunSpider-0.9.1\regexp-dna.js
-		..\Benchmarks\SunSpider-0.9.1\string-base64.js = ..\Benchmarks\SunSpider-0.9.1\string-base64.js
-		..\Benchmarks\SunSpider-0.9.1\string-fasta.js = ..\Benchmarks\SunSpider-0.9.1\string-fasta.js
-		..\Benchmarks\SunSpider-0.9.1\string-tagcloud.js = ..\Benchmarks\SunSpider-0.9.1\string-tagcloud.js
-		..\Benchmarks\SunSpider-0.9.1\string-unpack-code.js = ..\Benchmarks\SunSpider-0.9.1\string-unpack-code.js
-		..\Benchmarks\SunSpider-0.9.1\string-validate-input.js = ..\Benchmarks\SunSpider-0.9.1\string-validate-input.js
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSKit", "FSKit\Src\FSKit.fsproj", "{15E5E5EE-B919-46B4-8B04-A323F6D01B66}"
@@ -175,15 +130,11 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9E257324-94E7-49AF-AE83-718288E925D8} = {618021F9-119A-4D63-8665-6706D3AA4B66}
-		{8AF0E644-8747-4DFD-B922-6429EBDA29E8} = {618021F9-119A-4D63-8665-6706D3AA4B66}
+		{39A51F96-9421-4146-B875-D704349A51F4} = {618021F9-119A-4D63-8665-6706D3AA4B66}
+		{15E5E5EE-B919-46B4-8B04-A323F6D01B66} = {618021F9-119A-4D63-8665-6706D3AA4B66}
 		{0F78334F-EA74-4C5C-8232-B7D329BE2226} = {EEE4C960-93E5-40EE-B827-75A33C1AF9A8}
 		{02F37695-7FA2-4C83-82D2-76FCFE468B38} = {EEE4C960-93E5-40EE-B827-75A33C1AF9A8}
-		{15E5E5EE-B919-46B4-8B04-A323F6D01B66} = {8AF0E644-8747-4DFD-B922-6429EBDA29E8}
-		{83550B44-A2E4-49AF-A70E-9CE067DB382B} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 		{ADB528F1-B545-4A8E-87AF-D51C82DE3F06} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
 		{6846E259-C63E-44FA-B201-5381D2A590AB} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
-		{39A51F96-9421-4146-B875-D704349A51F4} = {7E895BE2-763D-4384-B17C-4EEC183D7479}
-		{1BE8D9F9-F0F4-4ECC-9D95-CDFB3717C84B} = {2BB31B8E-3CA7-43F5-82EA-4BE3F0735078}
-		{EBA03ADA-DE43-4387-95CE-5DB778A1B519} = {2BB31B8E-3CA7-43F5-82EA-4BE3F0735078}
 	EndGlobalSection
 EndGlobal

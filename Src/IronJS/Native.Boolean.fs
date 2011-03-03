@@ -7,13 +7,13 @@ open IronJS.DescriptorAttrs
 (*
 //  This module implements the javascript Boolean object, its prototype, functions and properties.
 //
-//  State (ECMA-262 3rd Edition):
-//  15.6.1.1 Boolean (value) - DONE
-//  15.6.2.1 new Boolean (value) - DONE
-//  15.6.3.1 Boolean.prototype - DONE
-//  15.6.4.1 Boolean.prototype.constructor - DONE
-//  15.6.4.2 Boolean.prototype.toString ( ) - DONE
-//  15.6.4.3 Boolean.prototype.valueOf ( ) - DONE
+//  DONE:
+//  15.6.1.1 Boolean (value) 
+//  15.6.2.1 new Boolean (value) 
+//  15.6.3.1 Boolean.prototype 
+//  15.6.4.1 Boolean.prototype.constructor 
+//  15.6.4.2 Boolean.prototype.toString ( ) 
+//  15.6.4.3 Boolean.prototype.valueOf ( ) 
 *)
 
 module Boolean =

@@ -9,20 +9,20 @@ open IronJS.DescriptorAttrs
 (*
 //  This module implements the javascript Global object, its functions and values.
 // 
-//  State (ECMA-262 3rd Edition):
-//  15.1.1.1 NaN - DONE
-//  15.1.1.2 Infinity - DONE
-//  15.1.1.3 undefined - DONE
-//  15.1.2.1 eval (x) - DONE
-//  15.1.2.2 parseInt (string , radix) - DONE
-//  15.1.2.3 parseFloat (string) - DONE
-//  15.1.2.4 isNaN (number) - DONE
-//  15.1.2.5 isFinite (number) - DONE
-//  15.1.3.1 decodeURI (encodedURI) - DONE
-//  15.1.3.2 decodeURIComponent (encodedURIComponent) - DONE
-//  15.1.3.3 encodeURI (uri) - DONE
-//  15.1.3.4 encodeURIComponent (uriComponent) - DONE
-//  15.1.5.1 Math - DONE (Native.Math.fs)
+//  DONE:
+//  15.1.1.1 NaN 
+//  15.1.1.2 Infinity
+//  15.1.1.3 undefined
+//  15.1.2.1 eval (x)
+//  15.1.2.2 parseInt (string , radix)
+//  15.1.2.3 parseFloat (string)
+//  15.1.2.4 isNaN (number)
+//  15.1.2.5 isFinite (number)
+//  15.1.3.1 decodeURI (encodedURI)
+//  15.1.3.2 decodeURIComponent (encodedURIComponent)
+//  15.1.3.3 encodeURI (uri)
+//  15.1.3.4 encodeURIComponent (uriComponent)
+//  15.1.5.1 Math, found in Native.Math.fs
 *)
 
 module Global =

@@ -5,6 +5,44 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.Utils.Patterns
 
+(*
+//  This file implements all (non-assign) binary and unary operators
+//  
+//  DONE:
+//  11.3.1 Postfix Increment Operator
+//  11.3.2 Postfix Decrement Operator
+//  11.4.1 The delete Operator
+//  11.4.2 The void Operator
+//  11.4.3 The typeof Operator
+//  11.4.4 Prefix Increment Operator
+//  11.4.5 Prefix Decrement Operator
+//  11.4.6 Unary + Operator
+//  11.4.7 Unary - Operator
+//  11.4.8 Bitwise NOT Operator ( ~ )
+//  11.4.9 Logical NOT Operator ( ! )
+//  11.5.1 Applying the * Operator
+//  11.5.2 Applying the / Operator
+//  11.5.3 Applying the % Operator
+//  11.6.1 The Addition operator ( + )
+//  11.6.2 The Subtraction Operator ( - )
+//  11.7.1 The Left Shift Operator ( << )
+//  11.7.2 The Signed Right Shift Operator ( >> )
+//  11.7.3 The Unsigned Right Shift Operator ( >>> )
+//  11.8.1 The Less-than Operator ( < )
+//  11.8.2 The Greater-than Operator ( > )
+//  11.8.3 The Less-than-or-equal Operator ( <= )
+//  11.8.4 The Greater-than-or-equal Operator ( >= )
+//  11.8.6 The instanceof operator
+//  11.8.7 The in operator
+//  11.9.1 The Equals Operator ( == )
+//  11.9.2 The Does-not-equals Operator ( != )
+//  11.9.4 The Strict Equals Operator ( === )
+//  11.9.5 The Strict Does-not-equal Operator ( !== )
+//  11.10 Binary Bitwise Operators
+//  11.11 Binary Logical Operators
+//  11.12 Conditional Operator ( ?: )
+*)
+
 //------------------------------------------------------------------------------
 // Operators
 type Operators =
@@ -52,7 +90,8 @@ type Operators =
   //----------------------------------------------------------------------------
   // Binary
   //----------------------------------------------------------------------------
-
+  
+  //----------------------------------------------------------------------------
   // in
   static member in' (env, l,r) = Dlr.callStaticT<Operators> "in'" [env; l; r]
   static member in' (env:Environment, l:BoxedValue, r:BoxedValue) = 
@@ -62,7 +101,8 @@ type Operators =
     match l with
     | IsIndex i -> r.Object.Has(i)
     | _ -> let name = TypeConverter.ToString(l) in r.Object.Has(name)
-
+    
+  //----------------------------------------------------------------------------
   // instanceof
   static member instanceOf (env, l,r) = 
     Dlr.callStaticT<Operators> "instanceOf" [env; l; r]

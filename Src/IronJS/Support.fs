@@ -20,7 +20,7 @@ module Aliases =
   type MutableDict<'k, 'v> = Dictionary<'k, 'v>
   type MutableSorted<'k, 'v> = SortedDictionary<'k, 'v>
   type MutableSet<'a> = HashSet<'a>
-  type Pair<'a, 'b> = Tuple<'a, 'b>
+  
   type ConcurrentMutableDict<'k, 'v> = ConcurrentDictionary<'k, 'v>
   type AntlrToken = Antlr.Runtime.Tree.CommonTree
 

@@ -34,7 +34,7 @@ module Hosting =
       String = baseMap.SubClass "length"
       Number = baseMap
       Boolean = baseMap
-      Regexp = baseMap.SubClass ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+      RegExp = baseMap.SubClass ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
     }
 
     let objectPrototype = Native.Object.createPrototype env

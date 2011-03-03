@@ -43,7 +43,7 @@ module Utils =
     let isFunction tag = tag >= TypeTags.Function
 
     let isRegExp (box:BoxedValue) =
-      isObject box.Tag && box.Object.Class = Classes.Regexp
+      isObject box.Tag && box.Object.Class = Classes.RegExp
       
     let isNumber marker = marker < Markers.Tagged
     let isTagged marker = marker > Markers.Number

@@ -12,6 +12,7 @@ open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
 open System.Globalization
+open System.Text.RegularExpressions
 
 module TypeTags =
   let [<Literal>] Box = 0x00000000u
@@ -71,7 +72,7 @@ module Classes =
   let [<Literal>] Function = 2uy
   let [<Literal>] Array = 3uy
   let [<Literal>] String = 4uy
-  let [<Literal>] Regexp  = 5uy
+  let [<Literal>] RegExp  = 5uy
   let [<Literal>] Boolean = 6uy
   let [<Literal>] Number = 7uy
   let [<Literal>] Math = 8uy
@@ -84,7 +85,7 @@ module Classes =
       (Function, "Function")
       (Array, "Array")
       (String, "String")
-      (Regexp, "Regexp")
+      (RegExp, "Regexp")
       (Boolean, "Boolean")
       (Number, "Number")
       (Math, "Math")
@@ -1164,6 +1165,22 @@ and [<AllowNullLiteral>] ArrayObject =
           i := !i + 1u
       }
 
+(*
+//  
+*)
+and [<AllowNullLiteral>] RegExpObject =
+  inherit CommonObject
+
+  val mutable RegExp : Regex
+
+  new (env, pattern, options) = {
+    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp, Classes.RegExp) 
+    RegExp = new Regex(pattern, options)
+  }
+
+  new (env, pattern) = 
+    RegExpObject(env, pattern, RegexOptions.None)
+
 //------------------------------------------------------------------------------
 // 10.1.8
 and [<AllowNullLiteral>] ArgumentsObject =
@@ -1747,7 +1764,7 @@ and Maps = {
   String : ObjectClass
   Number : ObjectClass
   Boolean : ObjectClass
-  Regexp : ObjectClass
+  RegExp : ObjectClass
 }
 
 (**)

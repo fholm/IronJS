@@ -1,5 +1,6 @@
 ﻿namespace IronJS.Compiler
 
+open System
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.Compiler
@@ -58,7 +59,7 @@ module ControlFlow =
     let break', continue' = loopLabels()
     let target = match target with Ast.Var ast -> ast | _ -> target
 
-    let pair = Dlr.paramT<Pair<uint32, MutableSet<string>>> "pair"
+    let pair = Dlr.paramT<Tuple<uint32, MutableSet<string>>> "pair"
     
     let propertyState = Dlr.paramT<bool> "propertyState"
     let propertySet = Dlr.property pair "Item2"

@@ -133,7 +133,7 @@ module TaggedBools =
 
 //------------------------------------------------------------------------------
 // A dynamic value whos type is unknown at runtime.
-type [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
+type [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue = // Alias: BV
   struct 
     //Reference Types
     [<FieldOffset(0)>] val mutable Clr : Object 
@@ -256,7 +256,7 @@ and [<AllowNullLiteral>] Undefined() =
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
-and [<AllowNullLiteral>] Environment() =
+and [<AllowNullLiteral>] Environment() = // Alias: Env
   let currentFunctionId = ref 0UL
   let currentPropertyMapId = ref 0UL
   
@@ -330,6 +330,31 @@ and [<AllowNullLiteral>] Environment() =
     boolean.Value.HasValue <- true
     boolean :> CommonObject
 
+  member x.NewRegExp() = x.NewRegExp("")
+  member x.NewRegExp(pattern) = x.NewRegExp(pattern, "")
+  member x.NewRegExp(pattern:string, options:string) =
+    let options = string options // gets rid of null
+    let mutable opts = RegexOptions.None
+
+    if options.Contains("m") then
+      opts <- opts ||| RegexOptions.Multiline
+
+    if options.Contains("i") then
+      opts <- opts ||| RegexOptions.IgnoreCase
+
+    x.NewRegExp(pattern, opts, options.Contains("g"))
+
+  member x.NewRegExp(pattern:string, options:RegexOptions, isGlobal:bool) =
+    let regexp = new RegExpObject(x, pattern, options, isGlobal)
+
+    regexp.Put("source", pattern, DescriptorAttrs.Immutable)
+    regexp.Put("global", isGlobal, DescriptorAttrs.Immutable)
+    regexp.Put("ignoreCase", regexp.IgnoreCase, DescriptorAttrs.Immutable)
+    regexp.Put("multiline", regexp.MultiLine, DescriptorAttrs.Immutable)
+    regexp.Put("lastindex", 0, DescriptorAttrs.DontDelete ||| DescriptorAttrs.DontEnum)
+
+    regexp :> CommonObject
+
   member x.NewPrototype() =
     let map = x.Maps.Prototype
     let proto = x.Prototypes.Object
@@ -341,7 +366,6 @@ and [<AllowNullLiteral>] Environment() =
     let func = FunctionObject(x, id, closureScope, dynamicScope)
 
     proto.Put("constructor", func)
-    
     func.ConstructorMode <- ConstructorModes.User
     func.Put("prototype", proto, DescriptorAttrs.Immutable)
     func.Put("length", double args, DescriptorAttrs.DontDelete)
@@ -420,8 +444,8 @@ and Utils2() =
 
 //------------------------------------------------------------------------------
 // 8.6
-and [<AllowNullLiteral>] CommonObject = 
-  val mutable Env : Environment
+and [<AllowNullLiteral>] CommonObject = // Alias: CO
+  val Env : Environment
 
   val mutable Class : byte // [[Class]]
   val mutable Prototype : CommonObject // [[Prototype]]
@@ -653,6 +677,12 @@ and [<AllowNullLiteral>] CommonObject =
   abstract GetLength : unit -> uint32
   default x.GetLength() =
     x.Get("length") |> TypeConverter.ToUInt32
+
+  member x.CallMember (name:string) =
+    let func = x.Get(name)
+    match func.Tag with
+    | TypeTags.Function -> func.Func.Call(x)
+    | _ -> x.Env.RaiseTypeError()
 
   //----------------------------------------------------------------------------
   member x.Put(name:String, value:bool) : unit = x.Put(name, value |> TaggedBools.ToTagged)
@@ -935,7 +965,7 @@ and [<AllowNullLiteral>] CommonObject =
     }
 
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ValueObject = 
+and [<AllowNullLiteral>] ValueObject = // Alias: VO
   inherit CommonObject
 
   [<DefaultValue>]
@@ -944,9 +974,33 @@ and [<AllowNullLiteral>] ValueObject =
   new (env, map, prototype, class') = {
     inherit CommonObject(env, map, prototype, class')
   }
+
+(*
+//  
+*)
+and [<AllowNullLiteral>] RegExpObject = // Alias: RO
+  inherit CommonObject
+
+  val RegExp : Regex
+  val Global : bool
+
+  member x.IgnoreCase:bool =
+    (x.RegExp.Options &&& RegexOptions.IgnoreCase) = RegexOptions.IgnoreCase
+
+  member x.MultiLine:bool =
+    (x.RegExp.Options &&& RegexOptions.Multiline) = RegexOptions.Multiline
+
+  new (env, pattern, options, global') = {
+    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp, Classes.RegExp) 
+    RegExp = new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
+    Global = global'
+  }
+
+  new (env, pattern) = 
+    RegExpObject(env, pattern, RegexOptions.None, false)
   
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ArrayObject =
+and [<AllowNullLiteral>] ArrayObject = // Alias: AO
   inherit CommonObject
 
   val mutable Length : uint32
@@ -1165,22 +1219,6 @@ and [<AllowNullLiteral>] ArrayObject =
           i := !i + 1u
       }
 
-(*
-//  
-*)
-and [<AllowNullLiteral>] RegExpObject =
-  inherit CommonObject
-
-  val mutable RegExp : Regex
-
-  new (env, pattern, options) = {
-    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp, Classes.RegExp) 
-    RegExp = new Regex(pattern, options)
-  }
-
-  new (env, pattern) = 
-    RegExpObject(env, pattern, RegexOptions.None)
-
 //------------------------------------------------------------------------------
 // 10.1.8
 and [<AllowNullLiteral>] ArgumentsObject =
@@ -1362,8 +1400,7 @@ and [<AllowNullLiteral>] ObjectClass =
 
       subClass
 
-(**)
-and [<AllowNullLiteral>] FunctionObject = 
+and [<AllowNullLiteral>] FunctionObject = // Alias: FO
   inherit CommonObject
 
   val mutable Compiler : FunctionCompiler
@@ -1427,27 +1464,27 @@ and [<AllowNullLiteral>] FunctionObject =
     (x.Compiler x typeof<'a>) :?> 'a
 
   member x.Call(this) : BoxedValue =
-    let func = x.CompileAs<Call>()
+    let func = x.CompileAs<JsFunc>()
     func.Invoke(x, this)
 
   member x.Call(this,a:'a) : BoxedValue =
-    let func = x.CompileAs<Call<'a>>()
+    let func = x.CompileAs<JsFunc<'a>>()
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) =
-    let func = x.CompileAs<Call<'a,'b>>()
+    let func = x.CompileAs<JsFunc<'a,'b>>()
     func.Invoke(x, this, a, b)
 
   member x.Call(this,a:'a,b:'b,c:'c) =
-    let func = x.CompileAs<Call<'a,'b,'c>>()
+    let func = x.CompileAs<JsFunc<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) =
-    let func = x.CompileAs<Call<'a,'b,'c,'d>>()
+    let func = x.CompileAs<JsFunc<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
   member x.Construct (this:CommonObject) =
-    let func = x.CompileAs<Call>()
+    let func = x.CompileAs<JsFunc>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null)
@@ -1460,7 +1497,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a) =
-    let func = x.CompileAs<Call<'a>>()
+    let func = x.CompileAs<JsFunc<'a>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a)
@@ -1473,7 +1510,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b) =
-    let func = x.CompileAs<Call<'a, 'b>>()
+    let func = x.CompileAs<JsFunc<'a, 'b>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b)
@@ -1486,7 +1523,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c) =
-    let func = x.CompileAs<Call<'a, 'b, 'c>>()
+    let func = x.CompileAs<JsFunc<'a, 'b, 'c>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c)
@@ -1499,7 +1536,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct (this:CommonObject, a:'a, b:'b, c:'c, d:'d) =
-    let func = x.CompileAs<Call<'a, 'b, 'c, 'd>>()
+    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd>>()
 
     match x.ConstructorMode with
     | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d)
@@ -1537,9 +1574,9 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
       let length = x.ArgTypes.Length
 
-      if length >= 2 && x.ArgTypes.[0] = typeof<FunctionObject>
+      if length >= 2 && x.ArgTypes.[0] = typeof<FO>
         then x.MarshalMode <- MarshalModes.Function
-        elif length >= 1 && x.ArgTypes.[0] = typeof<CommonObject>
+        elif length >= 1 && x.ArgTypes.[0] = typeof<CO>
           then x.MarshalMode <- MarshalModes.This
           else x.MarshalMode <- MarshalModes.Default
 
@@ -1572,8 +1609,8 @@ and TypeConverter() =
   static member ToBoxedValue(d:double) = BoxedValue.Box(d)
   static member ToBoxedValue(b:bool) = BoxedValue.Box(b)
   static member ToBoxedValue(s:string) = BoxedValue.Box(s)
-  static member ToBoxedValue(o:CommonObject) = BoxedValue.Box(o)
-  static member ToBoxedValue(f:FunctionObject) = BoxedValue.Box(f)
+  static member ToBoxedValue(o:CO) = BoxedValue.Box(o)
+  static member ToBoxedValue(f:FO) = BoxedValue.Box(f)
   static member ToBoxedValue(c:Object) = BoxedValue.Box(c)
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TypeConverter> "ToBoxedValue" [expr]
@@ -1582,8 +1619,8 @@ and TypeConverter() =
   static member ToClrObject(d:double) : Object = box d
   static member ToClrObject(b:bool) : Object = box b
   static member ToClrObject(s:string) : Object = box s
-  static member ToClrObject(o:CommonObject) : Object = box o
-  static member ToClrObject(f:FunctionObject) : Object = box f
+  static member ToClrObject(o:CO) : Object = box o
+  static member ToClrObject(f:FO) : Object = box f
   static member ToClrObject(c:Object) : Object = c
   static member ToClrObject(v:BoxedValue) : Object =
     match v.Tag with
@@ -1811,27 +1848,16 @@ and DynamicScope = (int * CommonObject) list
 and SparseArray = MutableSorted<uint32, BoxedValue>
 and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
 
-(**)
-and Call = Func<FunctionObject,CommonObject,BoxedValue>
-and Call<'a> = Func<FunctionObject,CommonObject,'a,BoxedValue>
-and Call<'a,'b> = Func<FunctionObject,CommonObject,'a,'b,BoxedValue>
-and Call<'a,'b,'c> = Func<FunctionObject,CommonObject,'a,'b,'c,BoxedValue>
-and Call<'a,'b,'c,'d> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,BoxedValue>
-
-and JsFunc = Func<FunctionObject,CommonObject,BoxedValue>
-and JsFunc<'a> = Func<FunctionObject,CommonObject,'a,BoxedValue>
-and JsFunc<'a,'b> = Func<FunctionObject,CommonObject,'a,'b,BoxedValue>
-and JsFunc<'a,'b,'c> = Func<FunctionObject,CommonObject,'a,'b,'c,BoxedValue>
-and JsFunc<'a,'b,'c,'d> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,BoxedValue>
+and JsFunc = Func<FO,CO,BV>
+and JsFunc<'a> = Func<FO,CO,'a,BV>
+and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>
+and JsFunc<'a,'b,'c> = Func<FO,CO,'a,'b,'c,BV>
+and JsFunc<'a,'b,'c,'d> = Func<FO,CO,'a,'b,'c,'d,BV>
 
 and CO = CommonObject
 and AO = ArrayObject
 and FO = FunctionObject
 and VO = ValueObject
-
-(*
-and JsFunc<'a,'b,'c,'d,'e> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,'e,BoxedValue>
-and JsFunc<'a,'b,'c,'d,'e,'f> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,'e,'f,BoxedValue>
-and JsFunc<'a,'b,'c,'d,'e,'f,'g> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,'e,'f,'g,BoxedValue>
-and JsFunc<'a,'b,'c,'d,'e,'f,'g,'h> = Func<FunctionObject,CommonObject,'a,'b,'c,'d,'e,'f,'g,'h,BoxedValue>
-*)
+and RO = RegExpObject
+and BV = BoxedValue
+and Env = Environment

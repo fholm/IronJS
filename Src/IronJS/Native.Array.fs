@@ -269,7 +269,7 @@ module Array =
       member x.Compare((_, a), (_, b)) = cmp a b
 
   //----------------------------------------------------------------------------
-  let internal sort (f:FunctionObject) (this:CommonObject) (cmp:BoxedValue) =
+  let internal sort (f:FO) (this:CO) (cmp:BV) =
     
     (*
     // Note that the implementation for sorting sparse arrays is incredibly
@@ -282,7 +282,7 @@ module Array =
     // allowing me to sort the sparse array in place.
     *)
 
-    let denseSortFunc (f:FunctionObject) =
+    let denseSortFunc (f:FO) =
       let sort = f.CompileAs<Sort>()
 
       fun (x:Descriptor) (y:Descriptor) -> 

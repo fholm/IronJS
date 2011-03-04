@@ -117,6 +117,7 @@
     <Compile Include="Native.Array.fs" />
     <Compile Include="Native.String.fs" />
     <Compile Include="Native.Number.fs" />
+    <Compile Include="Native.RegExp.fs" />
     <Compile Include="Native.Boolean.fs" />
     <Compile Include="Native.Error.fs" />
     <Compile Include="Hosting.fs" />

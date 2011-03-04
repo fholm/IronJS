@@ -138,12 +138,12 @@ module Number =
     let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.Put("prototype", env.Prototypes.Number, Immutable) // 15.7.3.1
-    ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) // 15.7.3.2
-    ctor.Put("MIN_VALUE", Double.MinValue, Immutable) // 15.7.3.3
-    ctor.Put("NaN", Double.NaN, Immutable) // 15.7.3.4
-    ctor.Put("NEGATIVE_INFINITY", PosInf, Immutable) // 15.7.3.5
-    ctor.Put("POSITIVE_INFINITY", NegInf, Immutable) // 15.7.3.6
+    ctor.Put("prototype", env.Prototypes.Number, Immutable) 
+    ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) 
+    ctor.Put("MIN_VALUE", Double.MinValue, Immutable) 
+    ctor.Put("NaN", Double.NaN, Immutable) 
+    ctor.Put("NEGATIVE_INFINITY", PosInf, Immutable) 
+    ctor.Put("POSITIVE_INFINITY", NegInf, Immutable) 
 
     env.Globals.Put("Number", ctor)
     env.Constructors <- {env.Constructors with Number=ctor}

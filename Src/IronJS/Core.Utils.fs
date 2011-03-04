@@ -181,6 +181,9 @@ module Utils =
 
   let type2field (t:System.Type) = t |> type2tag |> tag2field
 
+  let castObject<'a when 'a :> CO> (o:CO) =
+    if o :? 'a then o :?> 'a else o.Env.RaiseTypeError()
+
   let isPrimitive (b:BoxedValue) =
     if Box.isNumber b.Marker
       then true

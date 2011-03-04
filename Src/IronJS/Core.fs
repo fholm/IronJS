@@ -92,7 +92,7 @@ module Classes =
       (Date, "Date")
       (Error, "Error")]
 
-  let getName (class':byte) = Names.[class']
+  let getName cls = Names.[cls]
 
 module MarshalModes =
   let [<Literal>] Default = 2
@@ -133,7 +133,8 @@ module TaggedBools =
 
 //------------------------------------------------------------------------------
 // A dynamic value whos type is unknown at runtime.
-type [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue = // Alias: BV
+type BV = BoxedValue
+and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
     //Reference Types
     [<FieldOffset(0)>] val mutable Clr : Object 
@@ -256,13 +257,15 @@ and [<AllowNullLiteral>] Undefined() =
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
+and Env = Environment
 and [<AllowNullLiteral>] Environment() = // Alias: Env
   let currentFunctionId = ref 0UL
-  let currentPropertyMapId = ref 0UL
+  let currentSchemaId = ref 0UL
   
   let rnd = new System.Random()
   let compilers = new MutableDict<uint64, FunctionCompiler>()
   let functionStrings = new MutableDict<uint64, string>()
+  let null' = BV.Box(null, TypeTags.Clr)
 
   [<DefaultValue>] val mutable Return : BoxedValue
   [<DefaultValue>] val mutable Globals : CommonObject
@@ -271,12 +274,13 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
 
+  member x.Null = null'
   member x.Random = rnd
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
 
   member x.NextFunctionId() = FSKit.Ref.incru64 currentFunctionId
-  member x.NextPropertyMapId() = FSKit.Ref.incru64 currentPropertyMapId
+  member x.NextPropertyMapId() = FSKit.Ref.incru64 currentSchemaId
 
   member x.HasCompiler id = x.Compilers.ContainsKey id
 
@@ -444,13 +448,14 @@ and Utils2() =
 
 //------------------------------------------------------------------------------
 // 8.6
-and [<AllowNullLiteral>] CommonObject = // Alias: CO
+and CO = CommonObject
+and [<AllowNullLiteral>] CommonObject = 
   val Env : Environment
 
   val mutable Class : byte // [[Class]]
   val mutable Prototype : CommonObject // [[Prototype]]
 
-  val mutable PropertyMap : ObjectClass
+  val mutable PropertyMap : Schema
   val mutable Properties : Descriptor array
   
   new (env, map, prototype, class') = {
@@ -470,24 +475,9 @@ and [<AllowNullLiteral>] CommonObject = // Alias: CO
   }
 
   //----------------------------------------------------------------------------
-  //Id of the ObjectClass
   member x.ClassId = x.PropertyMap.Id
-  
-  //----------------------------------------------------------------------------
-  //If this object has a [[Prototype]] or not
-  member x.HasPrototype = FSKit.Utils.notNull x.Prototype
-  
-  //----------------------------------------------------------------------------
-  //Number of elements required in Properties array
+  member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
   member x.RequiredStorage = x.PropertyMap.IndexMap.Count
-  
-  //----------------------------------------------------------------------------
-  //If the object is backed by a dynamic ObjectClass
-  member x.IsDynamic = x.PropertyMap.IsDynamic
-  
-  //----------------------------------------------------------------------------
-  //Is the object storage full
-  member x.IsFull = x.RequiredStorage >= x.Properties.Length
   
   //----------------------------------------------------------------------------
   //Makes the object dynamic
@@ -508,7 +498,7 @@ and [<AllowNullLiteral>] CommonObject = // Alias: CO
   //Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
     x.PropertyMap <- x.PropertyMap.SubClass name
-    if x.IsFull then x.ExpandStorage()
+    if x.RequiredStorage >= x.Properties.Length then x.ExpandStorage()
     x.PropertyMap.IndexMap.[name]
     
   //----------------------------------------------------------------------------
@@ -965,7 +955,8 @@ and [<AllowNullLiteral>] CommonObject = // Alias: CO
     }
 
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ValueObject = // Alias: VO
+and VO = ValueObject
+and [<AllowNullLiteral>] ValueObject = 
   inherit CommonObject
 
   [<DefaultValue>]
@@ -978,7 +969,8 @@ and [<AllowNullLiteral>] ValueObject = // Alias: VO
 (*
 //  
 *)
-and [<AllowNullLiteral>] RegExpObject = // Alias: RO
+and RO = RegExpObject
+and [<AllowNullLiteral>] RegExpObject = 
   inherit CommonObject
 
   val RegExp : Regex
@@ -1000,7 +992,8 @@ and [<AllowNullLiteral>] RegExpObject = // Alias: RO
     RegExpObject(env, pattern, RegexOptions.None, false)
   
 //------------------------------------------------------------------------------
-and [<AllowNullLiteral>] ArrayObject = // Alias: AO
+and AO = ArrayObject
+and [<AllowNullLiteral>] ArrayObject = 
   inherit CommonObject
 
   val mutable Length : uint32
@@ -1221,6 +1214,7 @@ and [<AllowNullLiteral>] ArrayObject = // Alias: AO
 
 //------------------------------------------------------------------------------
 // 10.1.8
+and ArgLink = byte * int
 and [<AllowNullLiteral>] ArgumentsObject =
   inherit ArrayObject
   
@@ -1231,7 +1225,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
   val mutable LinkIntact : bool
     
   //----------------------------------------------------------------------------
-  private new (env:Environment, linkMap:(byte * int) array, locals, closedOver) = { 
+  private new (env:Environment, linkMap:ArgLink array, locals, closedOver) = { 
     inherit ArrayObject(env, linkMap.Length |> uint32)
 
     Locals = locals
@@ -1329,78 +1323,101 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
     base.Delete(index)
     
-(**)
-and [<AllowNullLiteral>] ObjectClass =
-  val mutable Id : uint64
-  val mutable Env : Environment
-  val mutable IndexMap : MutableDict<string, int>
-  val mutable FreeIndexes : MutableStack<int>
-  val mutable SubClasses : MutableDict<string, ObjectClass>
+(*
+//  
+*)
+
+and IndexMap   = MutableDict<string, int>
+and IndexStack = MutableStack<int>
+and SchemaMap  = MutableDict<string, Schema>
+
+and [<AllowNullLiteral>] Schema =
+
+  val Env : Environment
+
+  val mutable Id          : uint64
+  val mutable IndexMap    : IndexMap
+  val mutable FreeIndexes : IndexStack
+  val mutable SubClasses  : SchemaMap
   
-  //----------------------------------------------------------------------------
   new(env:Environment, map) = {
     Id = env.NextPropertyMapId()
     Env = env
     IndexMap = map
-    SubClasses = MutableDict<string, ObjectClass>() 
+    SubClasses = MutableDict<string, Schema>() 
     FreeIndexes = null
   }
   
-  new(env:Environment) = {
-    Id = 1UL
+  new(env) = {
+    Id = 0UL
     Env = env
-    IndexMap = new MutableDict<string, int>()
-    SubClasses = MutableDict<string, ObjectClass>() 
+    IndexMap = null
+    SubClasses = null
     FreeIndexes = null
   }
   
-  //----------------------------------------------------------------------------
-  member x.IsDynamic : bool = x.Id = 0UL
-  
-  member x.MakeDynamic() : ObjectClass =
-    if x.IsDynamic then x
-    else
-      let dynamicClass = ObjectClass(x.Env)
-      dynamicClass.Id <- 0UL
-      dynamicClass.FreeIndexes <- new MutableStack<int>()
-      dynamicClass.IndexMap <- new MutableDict<string, int>(x.IndexMap)
-      dynamicClass
+  abstract MakeDynamic : unit -> DynamicSchema
+  default x.MakeDynamic() : DynamicSchema = 
+    let ds = DynamicSchema(x.Env)
+    ds.Id <- 0UL
+    ds.FreeIndexes <- new IndexStack()
+    ds.IndexMap <- new IndexMap(x.IndexMap)
+    ds
       
-  member x.Delete(name:string) : ObjectClass =
-    let dynamicClass = x.MakeDynamic()
+  abstract Delete : string -> Schema
+  default x.Delete(name:string) : Schema =
+    x.MakeDynamic().Delete(name)
+     
+  abstract SubClass : string -> Schema
+  default x.SubClass(name) : Schema =
+    let mutable subClass = null
+      
+    if x.SubClasses.TryGetValue(name, &subClass) |> not then
+      let properties = new IndexMap(x.IndexMap)
+      properties.Add(name, properties.Count)
+      subClass <- Schema(x.Env, properties)
+      x.SubClasses.Add(name, subClass)
 
+    subClass
+    
+  member x.SubClass(names:string list) : Schema =
+    names |> Seq.fold (fun (map:Schema) name -> map.SubClass name) x
+
+  static member CreateBaseSchema (env:Environment) =
+    new Schema(env, new IndexMap())
+
+(*
+//
+*)
+and [<AllowNullLiteral>] DynamicSchema =
+  inherit Schema
+
+  new (env) = {
+    inherit Schema(env)
+  }
+
+  override x.MakeDynamic () = x
+
+  override x.Delete (name) =
     let mutable index = 0
-    if dynamicClass.IndexMap.TryGetValue(name, &index) then 
-      dynamicClass.FreeIndexes.Push index
-      dynamicClass.IndexMap.Remove name |> ignore
 
-    dynamicClass
+    if x.IndexMap.TryGetValue(name, &index) then 
+      x.FreeIndexes.Push index
+      x.IndexMap.Remove name |> ignore
+
+    x :> Schema
+
+  override x.SubClass(name) =
+    let index = 
+      if x.FreeIndexes.Count > 0 
+        then x.FreeIndexes.Pop() 
+        else x.IndexMap.Count
+
+    x.IndexMap.Add(name, index)
+    x :> Schema
     
-  member x.SubClass(names:string list) : ObjectClass =
-    names |> Seq.fold (fun (map:ObjectClass) name -> map.SubClass name) x
-    
-  member x.SubClass(name) : ObjectClass =
-    if x.IsDynamic then
-      let index = 
-        if x.FreeIndexes.Count > 0 
-          then x.FreeIndexes.Pop() 
-          else x.IndexMap.Count
-
-      x.IndexMap.Add(name, index)
-      x
-
-    else
-      let mutable subClass = null
-      
-      if x.SubClasses.TryGetValue(name, &subClass) |> not then
-        let properties = new MutableDict<string, int>(x.IndexMap)
-        properties.Add(name, properties.Count)
-        subClass <- ObjectClass(x.Env, properties)
-        x.SubClasses.Add(name, subClass)
-
-      subClass
-
-and [<AllowNullLiteral>] FunctionObject = // Alias: FO
+and FO = FunctionObject
+and [<AllowNullLiteral>] FunctionObject =
   inherit CommonObject
 
   val mutable Compiler : FunctionCompiler
@@ -1549,6 +1566,7 @@ and [<AllowNullLiteral>] FunctionObject = // Alias: FO
     | _ -> x.Env.RaiseTypeError()
     
 (* Represents a .NET delegate wrapped as a JavaScript function *)
+and HFO<'a when 'a :> Delegate> = HostFunction<'a>
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit FunctionObject
   
@@ -1794,14 +1812,14 @@ and TypeConverter() =
     
 (**)
 and Maps = {
-  Base : ObjectClass
-  Array : ObjectClass
-  Function : ObjectClass
-  Prototype : ObjectClass
-  String : ObjectClass
-  Number : ObjectClass
-  Boolean : ObjectClass
-  RegExp : ObjectClass
+  Base : Schema
+  Array : Schema
+  Function : Schema
+  Prototype : Schema
+  String : Schema
+  Number : Schema
+  Boolean : Schema
+  RegExp : Schema
 }
 
 (**)
@@ -1853,11 +1871,3 @@ and JsFunc<'a> = Func<FO,CO,'a,BV>
 and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>
 and JsFunc<'a,'b,'c> = Func<FO,CO,'a,'b,'c,BV>
 and JsFunc<'a,'b,'c,'d> = Func<FO,CO,'a,'b,'c,'d,BV>
-
-and CO = CommonObject
-and AO = ArrayObject
-and FO = FunctionObject
-and VO = ValueObject
-and RO = RegExpObject
-and BV = BoxedValue
-and Env = Environment

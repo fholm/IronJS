@@ -104,7 +104,8 @@ module Utils =
     | TypeTags.Clr        -> BoxFields.Clr
     | _ -> Support.Errors.invalidTypeTag tag
 
-  let type2field (t:System.Type) = t |> type2tag |> tag2field
+  let type2field (t:System.Type) = 
+    t |> type2tag |> tag2field
 
   let castCommonObject<'a when 'a :> CO> (o:CO) =
     if o :? 'a then o :?> 'a else o.Env.RaiseTypeError()

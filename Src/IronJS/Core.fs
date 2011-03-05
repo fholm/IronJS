@@ -449,11 +449,13 @@ and Utils2() =
 //------------------------------------------------------------------------------
 // 8.6
 and CO = CommonObject
+and ObjectClass = byte
+
 and [<AllowNullLiteral>] CommonObject = 
   val Env : Environment
 
-  val mutable Class : byte // [[Class]]
-  val mutable Prototype : CommonObject // [[Prototype]]
+  val mutable Class : byte
+  val mutable Prototype : CommonObject
 
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
@@ -478,6 +480,10 @@ and [<AllowNullLiteral>] CommonObject =
   member x.ClassId = x.PropertySchema.Id
   member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
   member x.RequiredStorage = x.PropertySchema.IndexMap.Count
+
+  abstract GetLength : unit -> uint32
+  default x.GetLength() =
+    x.Get("length") |> TypeConverter.ToUInt32
     
   //----------------------------------------------------------------------------
   //Expands object property storage
@@ -493,7 +499,10 @@ and [<AllowNullLiteral>] CommonObject =
   //Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
     x.PropertySchema <- x.PropertySchema.SubClass name
-    if x.RequiredStorage >= x.Properties.Length then x.ExpandStorage()
+
+    if x.RequiredStorage >= x.Properties.Length then 
+      x.ExpandStorage()
+
     x.PropertySchema.IndexMap.[name]
     
   //----------------------------------------------------------------------------
@@ -507,7 +516,7 @@ and [<AllowNullLiteral>] CommonObject =
 
     else
       
-      let rec find (o:CommonObject) name =
+      let rec find (o:CO) name =
         if FSKit.Utils.isNull o then Descriptor()
         else
           let mutable index = 0
@@ -625,49 +634,30 @@ and [<AllowNullLiteral>] CommonObject =
         then DefaultValue.Number
         else hint
         
-    let valueOf = x.Get("valueOf")
-    let toString = x.Get("toString")
-
     match hint with
     | DefaultValue.Number ->
-      match valueOf.Tag with
-      | TypeTags.Function ->
-        let mutable v = valueOf.Func.Call(x)
-        if v.IsPrimitive then v
-        else
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = toString.Func.Call(x)
-            if v.IsPrimitive then v else x.Env.RaiseTypeError()
-
-          | _ -> x.Env.RaiseTypeError()
-      | _ -> x.Env.RaiseTypeError()
+      match x.TryCallMember("valueOf") with
+      | Some v when v.IsPrimitive -> v
+      | _ -> 
+        match x.TryCallMember("toString") with
+        | Some v when v.IsPrimitive -> v
+        | _ -> x.Env.RaiseTypeError()
 
     | DefaultValue.String ->
-      match toString.Tag with
-      | TypeTags.Function ->
-        let mutable v = toString.Func.Call(x)
-        if v.IsPrimitive then v
-        else 
-          match toString.Tag with
-          | TypeTags.Function ->
-            let mutable v = valueOf.Func.Call(x)
-            if v.IsPrimitive then v else x.Env.RaiseTypeError()
-
-          | _ -> x.Env.RaiseTypeError()
-      | _ -> x.Env.RaiseTypeError()
+      match x.TryCallMember("toString") with
+      | Some v when v.IsPrimitive -> v
+      | _ -> 
+        match x.TryCallMember("valueOf") with
+        | Some v when v.IsPrimitive -> v
+        | _ -> x.Env.RaiseTypeError()
 
     | _ -> x.Env.RaiseTypeError()
 
-  abstract GetLength : unit -> uint32
-  default x.GetLength() =
-    x.Get("length") |> TypeConverter.ToUInt32
-
-  member x.CallMember (name:string) =
+  member x.TryCallMember (name:string) : BV option =
     let func = x.Get(name)
     match func.Tag with
-    | TypeTags.Function -> func.Func.Call(x)
-    | _ -> x.Env.RaiseTypeError()
+    | TypeTags.Function -> Some(func.Func.Call(x))
+    | _ -> None
 
   //----------------------------------------------------------------------------
   member x.Put(name:String, value:bool) : unit = x.Put(name, value |> TaggedBools.ToTagged)

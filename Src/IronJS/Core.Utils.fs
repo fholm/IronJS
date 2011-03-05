@@ -51,23 +51,6 @@ module Utils =
     let isBothNumber l r = isNumber l && isNumber r
     
   //----------------------------------------------------------------------------
-  module Descriptor = 
-    let hasValue (desc:Descriptor) =
-      if desc.HasValue then true else Box.isTagged desc.Value.Marker
-
-    let missingAttr attrs attr = attrs &&& attr = 0us
-    let hasAttr attrs attr = attrs &&& attr > 0us
-
-    let isWritable attrs = missingAttr attrs DescriptorAttrs.ReadOnly 
-    let isEnumerable attrs = missingAttr attrs DescriptorAttrs.DontEnum 
-    let isDeletable attrs = missingAttr attrs DescriptorAttrs.DontDelete 
-
-  //----------------------------------------------------------------------------
-  module Array =
-    let isDense (x:ArrayObject) = FSKit.Utils.isNull x.Sparse
-    let isSparse (x:ArrayObject) = isDense x |> not // isDense? ... pause ... NOT!
-    
-  //----------------------------------------------------------------------------
   module ValueObject =
     let getValue (o:CommonObject) = (o :?> ValueObject).Value.Value
     
@@ -85,7 +68,7 @@ module Utils =
         else None
 
     let (|IsDense|IsSparse|) (array:ArrayObject) =
-      if Array.isDense array then IsDense else IsSparse
+      if array.IsDense then IsDense else IsSparse
 
     let (|IsNull|_|) (box:BoxedValue) =
       if box.Tag = TypeTags.Clr && FSKit.Utils.isNull box.Clr

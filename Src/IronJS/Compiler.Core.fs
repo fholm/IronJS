@@ -16,7 +16,7 @@ module Core =
     | Ast.Null -> Dlr.null'
     | Ast.Pass -> Dlr.void'
     | Ast.This -> ctx.This
-    | Ast.Undefined -> Utils.BoxedConstants.undefined
+    | Ast.Undefined -> Utils.Constants.Boxed.undefined
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b

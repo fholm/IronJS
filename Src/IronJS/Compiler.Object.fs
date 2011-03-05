@@ -135,14 +135,14 @@ module Object =
   let getProperty (ctx:Ctx) object' name =
     Utils.ensureObject ctx (object' |> ctx.Compile)
       (Property.get !!!name)
-      (fun x -> Utils.BoxedConstants.undefined)
+      (fun x -> Utils.Constants.Boxed.undefined)
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let indexExpr = index |> Utils.compileIndex ctx
     Utils.ensureObject ctx (object' |> ctx.Compile)
       (Index.get indexExpr)
-      (fun x -> Utils.BoxedConstants.undefined)
+      (fun x -> Utils.Constants.Boxed.undefined)
 
   //----------------------------------------------------------------------------
   // 11.1.4 array initialiser

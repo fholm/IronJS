@@ -86,15 +86,19 @@ module Number =
   let internal toExponential (f:FunctionObject) (this:CommonObject) (fractions:BoxedValue) =
     this |> Utils.checkCommonObjectClass Classes.Number
     
-    let tag = fractions.Tag
     let number = (this |> Utils.ValueObject.getValue).Number
 
-    if tag |> Utils.Box.isUndefined then toString f this 10.0
-    elif number |> FSKit.Utils.isNaNOrInf then nanToString number
+    if fractions.IsUndefined then 
+      toString f this 10.0
+
+    elif number |> FSKit.Utils.isNaNOrInf then 
+      nanToString number
+
     else
       let fractions = 
-        if Utils.Box.isUndefined fractions.Tag 
-          then 16 else fractions |> TypeConverter.ToInt32
+        if fractions.IsUndefined
+          then 16 
+          else fractions |> TypeConverter.ToInt32
 
       verifyFractions f.Env fractions
       let format = String.Concat("#.", new String('0', fractions), "e+0");
@@ -105,11 +109,14 @@ module Number =
   let internal toPrecision (f:FunctionObject) (this:CommonObject) (precision:BoxedValue) =
     this |> Utils.checkCommonObjectClass Classes.Number
     
-    let tag = precision.Tag
     let number = (this |> Utils.ValueObject.getValue).Number
 
-    if tag |> Utils.Box.isUndefined then toString f this 10.0
-    elif number |> FSKit.Utils.isNaNOrInf then nanToString number
+    if precision.IsUndefined then 
+      toString f this 10.0
+
+    elif number |> FSKit.Utils.isNaNOrInf then 
+      nanToString number
+
     else
       let precision = precision |> TypeConverter.ToInt32
 

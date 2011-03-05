@@ -91,7 +91,7 @@ type Operators =
   // in
   static member in' (env, l,r) = Dlr.callStaticT<Operators> "in'" [env; l; r]
   static member in' (env:Environment, l:BoxedValue, r:BoxedValue) = 
-    if Utils.Box.isObject r.Tag |> not then
+    if not r.IsObject then
       env.RaiseTypeError("Right operand is not a object")
 
     match l with
@@ -104,10 +104,10 @@ type Operators =
     Dlr.callStaticT<Operators> "instanceOf" [env; l; r]
 
   static member instanceOf(env:Environment, l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isFunction r.Tag |> not then
+    if r.IsFunction |> not then
       env.RaiseTypeError("Right operand is not a function")
 
-    if Utils.Box.isObject l.Tag |> not 
+    if not l.IsObject
       then false
       else r.Func.HasInstance(l.Object)
     
@@ -115,7 +115,7 @@ type Operators =
   // <
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
   static member lt (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then l.Number < r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String < r.String
@@ -125,7 +125,7 @@ type Operators =
   // <=
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
   static member ltEq (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then l.Number <= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String <= r.String
@@ -135,7 +135,7 @@ type Operators =
   // >
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
   static member gt (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then l.Number > r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String > r.String
@@ -145,7 +145,7 @@ type Operators =
   // >=
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
   static member gtEq (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then l.Number >= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String >= r.String
@@ -155,7 +155,7 @@ type Operators =
   // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:BoxedValue, r:BoxedValue) = 
-    if Utils.Box.isNumber l.Marker && Utils.Box.isNumber r.Marker then
+    if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 
     elif l.Tag = r.Tag then
@@ -177,10 +177,10 @@ type Operators =
         && r.Clr = null 
         && l.Tag = TypeTags.Undefined then true
 
-      elif Utils.Box.isNumber l.Marker && r.Tag = TypeTags.String then
+      elif l.IsNumber && r.Tag = TypeTags.String then
         l.Number = TypeConverter.ToNumber r.String
         
-      elif r.Tag = TypeTags.String && Utils.Box.isNumber r.Marker then
+      elif r.Tag = TypeTags.String && r.IsNumber then
         TypeConverter.ToNumber l.String = r.Number
 
       elif l.Tag = TypeTags.Bool then
@@ -198,7 +198,7 @@ type Operators =
           Operators.eq(l, r)
 
         | _ -> 
-          if Utils.Box.isNumber l.Marker then
+          if l.IsNumber then
             let r = TypeConverter.ToPrimitive(r.Object, DefaultValue.None)
             Operators.eq(l, r)
           else
@@ -211,7 +211,7 @@ type Operators =
           Operators.eq(l, r)
 
         | _ -> 
-          if Utils.Box.isNumber r.Marker then
+          if r.IsNumber then
             let l = TypeConverter.ToPrimitive(l.Object, DefaultValue.None)
             Operators.eq(l, r)
           else
@@ -229,7 +229,7 @@ type Operators =
   // ===
   static member same (l, r) = Dlr.callStaticT<Operators> "same" [l; r]
   static member same (l:BoxedValue, r:BoxedValue) = 
-    if Utils.Box.isBothNumber l.Marker r.Marker then
+    if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 
     elif l.Tag = r.Tag then
@@ -255,7 +255,7 @@ type Operators =
   // +
   static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
   static member add (l:BoxedValue, r:BoxedValue) = 
-    if Utils.Box.isBothNumber l.Marker r.Marker then
+    if l.IsNumber && r.IsNumber then
       BV.Box (l.Number + r.Number)
 
     elif l.Tag = TypeTags.String || r.Tag = TypeTags.String then
@@ -268,7 +268,7 @@ type Operators =
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker 
+    if l.IsNumber && r.IsNumber
       then BV.Box (l.Number - r.Number)
       else BV.Box (TypeConverter.ToNumber l - TypeConverter.ToNumber r)
       
@@ -276,7 +276,7 @@ type Operators =
   // /
   static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then BV.Box (l.Number / r.Number)
       else BV.Box (TypeConverter.ToNumber l / TypeConverter.ToNumber r)
       
@@ -284,7 +284,7 @@ type Operators =
   // *
   static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then BV.Box (l.Number * r.Number)
       else BV.Box (TypeConverter.ToNumber l * TypeConverter.ToNumber r)
       
@@ -292,7 +292,7 @@ type Operators =
   // %
   static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:BoxedValue, r:BoxedValue) =
-    if Utils.Box.isBothNumber l.Marker r.Marker
+    if l.IsNumber && r.IsNumber
       then BV.Box (l.Number % r.Number)
       else BV.Box (TypeConverter.ToNumber l % TypeConverter.ToNumber r)
     

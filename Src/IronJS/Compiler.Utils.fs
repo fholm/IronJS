@@ -20,10 +20,17 @@ module Utils =
       if expr.Type = typeof<uint32> then Some () else None
     
   //----------------------------------------------------------------------------
-  module BoxedConstants =
+  module Constants =
+  
+    let zero = Dlr.dbl0
+    let one = Dlr.dbl1
+    let two = Dlr.dbl2
+    let undefined = Dlr.propertyStaticT<Undefined> "Instance"
 
-    let zero = Dlr.propertyStaticT<Utils.BoxedConstants> "Zero"
-    let undefined = Dlr.propertyStaticT<Utils.BoxedConstants> "Undefined"
+    module Boxed = 
+      let null' = Dlr.propertyStaticT<BoxedConstants> "Null"
+      let zero = Dlr.propertyStaticT<BoxedConstants> "Zero"
+      let undefined = Dlr.propertyStaticT<Undefined> "Boxed"
       
   //----------------------------------------------------------------------------
   module Box =
@@ -64,10 +71,6 @@ module Utils =
     let prototype expr = Dlr.field expr "Prototype"
       
   //----------------------------------------------------------------------------
-  let num_1 = !!! -1.0
-  let num0 = !!! 0.0
-  let num1 = !!! 1.0
-  let num2 = !!! 2.0
         
   //----------------------------------------------------------------------------
   let undefined = Dlr.propertyStaticT<Undefined> "Instance"
@@ -76,7 +79,7 @@ module Utils =
     
   let voidAsUndefined (expr:Dlr.Expr) =
     if Dlr.Utils.isVoid expr
-      then Dlr.blockSimple [expr; BoxedConstants.undefined]
+      then Dlr.blockSimple [expr; Constants.Boxed.undefined]
       else expr
   
   let normalizeVal (expr:Dlr.Expr) =
@@ -212,7 +215,7 @@ module Utils =
     | TypeTags.Bool
     | TypeTags.String
     | TypeTags.Undefined
-    | TypeTags.Number -> BoxedConstants.undefined
+    | TypeTags.Number -> Constants.Boxed.undefined
     | TypeTags.Box -> 
       blockTmp expr (fun expr ->
         [
@@ -222,6 +225,6 @@ module Utils =
             (Dlr.ternary
               (Box.isClr expr)
               (ifClr (Box.unboxClr expr))
-              (BoxedConstants.undefined))
+              (Constants.Boxed.undefined))
         ])
     | tt -> failwithf "Invalid TypeTag '%i'" tt

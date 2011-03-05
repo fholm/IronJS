@@ -166,8 +166,7 @@ module String =
     let value = this  |> TypeConverter.ToString
     let start = start |> TypeConverter.ToInteger
 
-    let isUndefined = end'.Tag |> Utils.Box.isUndefined  
-    let end' = if isUndefined then start else value.Length
+    let end' = if end'.IsUndefined then start else value.Length
 
     let start = Math.Min(Math.Max(start, 0), value.Length)
     let end'  = Math.Min(Math.Max(end', 0), value.Length)
@@ -178,16 +177,16 @@ module String =
   let internal split (f:FunctionObject) (this:CommonObject) (sep:BoxedValue) (limit:BoxedValue) =
     let value = this |> TypeConverter.ToString
 
-    if sep |> Utils.Box.isRegExp then
+    if sep.IsRegExp then
       failwith "Not implemented"
 
     else
       let separator =
-        if sep.Tag |> Utils.Box.isUndefined
+        if sep.IsUndefined
           then "" else sep |> TypeConverter.ToString
 
       let limit =
-        if limit.Tag |> Utils.Box.isUndefined
+        if limit.IsUndefined
           then UInt32.MaxValue else limit |> TypeConverter.ToUInt32
           
       if separator |> String.IsNullOrEmpty then

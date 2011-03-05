@@ -11,45 +11,7 @@ open System.Reflection.Emit
 open System.Runtime.InteropServices
 
 module Utils =
-          
-  //----------------------------------------------------------------------------
-  type BoxedConstants() =
 
-    static let zero = BoxedValue()
-
-    static let undefined =
-      let mutable box = BoxedValue()
-      box.Tag <- TypeTags.Undefined
-      box.Clr <- Undefined.Instance
-      box
-
-    static let null' =
-      let mutable box = BoxedValue()
-      box.Tag <- TypeTags.Clr
-      box.Clr <- null
-      box
-
-    static member Zero = zero
-    static member Undefined = undefined
-    static member Null = null'
-      
-  //----------------------------------------------------------------------------
-  module Box = 
-    let isBool tag = tag = TypeTags.Bool
-    let isClr tag = tag = TypeTags.Clr
-    let isString tag = tag = TypeTags.String
-    let isUndefined tag = tag = TypeTags.Undefined
-    let isObject tag = tag >= TypeTags.Object
-    let isFunction tag = tag >= TypeTags.Function
-
-    let isRegExp (box:BoxedValue) =
-      isObject box.Tag && box.Object.Class = Classes.RegExp
-      
-    let isNumber marker = marker < Markers.Tagged
-    let isTagged marker = marker > Markers.Number
-
-    let isBothNumber l r = isNumber l && isNumber r
-    
   //----------------------------------------------------------------------------
   module ValueObject =
     let getValue (o:CommonObject) = (o :?> ValueObject).Value.Value
@@ -76,19 +38,19 @@ module Utils =
         else None
 
     let (|IsNumber|_|) (box:BoxedValue) = 
-      if Box.isNumber box.Marker then Some box.Number else None
+      if box.IsNumber then Some box.Number else None
 
     let (|IsString|_|) (box:BoxedValue) =
-      if Box.isString box.Tag then Some box.String else None
+      if box.IsString then Some box.String else None
 
     let (|IsBool|_|) (box:BoxedValue) =
-      if Box.isBool box.Tag then Some box.Bool else None
+      if box.IsBoolean then Some box.Bool else None
 
     let (|IsUndefined|_|) (box:BoxedValue) =
-      if Box.isUndefined box.Tag then Some(box.Clr :?> Undefined) else None
+      if box.IsUndefined then Some(box.Clr :?> Undefined) else None
 
     let (|IsTagged|_|) (box:BoxedValue) = 
-      if Box.isTagged box.Marker then Some box.Tag else None
+      if box.IsTagged then Some box.Tag else None
 
     let (|IsNumberIndex|_|) (number:double) =
       let index = uint32 number
@@ -120,20 +82,6 @@ module Utils =
         | _ -> None
 
       | _ -> None
-
-    let (|Boolean|Number|Clr|String|Undefined|Object|Function|) (box:BoxedValue) =
-        if Box.isNumber box.Marker then 
-          Number(box.Number)
-
-        else
-          match box.Tag with
-          | TypeTags.Bool -> Boolean(box.Bool)
-          | TypeTags.Clr -> Clr(box.Clr)
-          | TypeTags.String -> String(box.String)
-          | TypeTags.Undefined -> Undefined(box.Clr :?> Undefined)
-          | TypeTags.Object -> Object(box.Object)
-          | TypeTags.Function -> Function(box.Func)
-          | _ -> failwithf "Invalid runtime type tag '%i'" box.Tag
 
   let type2tag (t:System.Type) =   
     if   t |> FSKit.Utils.isTypeT<bool>           then TypeTags.Bool

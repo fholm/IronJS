@@ -49,7 +49,7 @@ module Function =
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = this' :: args
         Dlr.callGeneric func "Call" argTypes args)
-      (fun _ -> Utils.BoxedConstants.undefined)
+      (fun _ -> Utils.Constants.Boxed.undefined)
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -71,13 +71,13 @@ module Function =
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
       (fun x -> x |> Object.Property.get !!!name |> invokeFunction x args)
-      (fun x -> Utils.BoxedConstants.undefined))
+      (fun x -> Utils.Constants.Boxed.undefined))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
     (Utils.ensureObject ctx object'
       (fun x -> Object.Index.get x index |> invokeFunction x args)
-      (fun x -> Utils.BoxedConstants.undefined))
+      (fun x -> Utils.Constants.Boxed.undefined))
     
   //----------------------------------------------------------------------------
   let createTempVars args =
@@ -102,7 +102,7 @@ module Function =
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = ctx.Globals :: args
         Dlr.callGeneric f "Construct" argTypes args)
-      (fun _ -> Utils.BoxedConstants.undefined)
+      (fun _ -> Utils.Constants.Boxed.undefined)
       
   //----------------------------------------------------------------------------
   // 11.2.3 function calls

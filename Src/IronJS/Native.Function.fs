@@ -38,7 +38,7 @@ module Function =
       (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxObj) :?> FunctionObject
 
   let private prototype (f:FunctionObject) _ =
-    Utils.BoxedConstants.Undefined
+    Undefined.Boxed
     
   let toString (toString:FunctionObject) (o:CommonObject) =
     if o :? FunctionObject then

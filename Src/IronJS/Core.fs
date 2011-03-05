@@ -160,6 +160,8 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool
     member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
     member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
+    member x.IsRegExp =
+      x.IsObject && x.Object.Class = Classes.RegExp
 
     member x.IsPrimitive =
       if x.IsNumber then 
@@ -242,7 +244,6 @@ and [<NoComparison>] Descriptor =
 // 8.1 Undefined
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
-
   static let boxed = 
     let mutable box = BoxedValue()
     box.Clr <- instance
@@ -250,10 +251,18 @@ and [<AllowNullLiteral>] Undefined() =
     box
 
   static member Instance = instance
-  static member InstanceExpr = Dlr.propertyStaticT<Undefined> "Instance"
-
   static member Boxed = boxed
-  static member BoxedExpr = Dlr.propertyStaticT<Undefined> "Boxed"
+
+and [<AbstractClass>] BoxedConstants() =
+  static let zero = BoxedValue()
+  static let null' =
+    let mutable box = BoxedValue()
+    box.Tag <- TypeTags.Clr
+    box.Clr <- null
+    box
+
+  static member Zero = zero
+  static member Null = null'
 
 //------------------------------------------------------------------------------
 // Class that encapsulates a runtime environment
@@ -936,8 +945,10 @@ and [<AllowNullLiteral>] CommonObject =
         yield x.Get(!index)
         index := !index + 1u
     }
-
-//------------------------------------------------------------------------------
+    
+(*
+//  
+*)
 and VO = ValueObject
 and [<AllowNullLiteral>] ValueObject = 
   inherit CommonObject
@@ -977,6 +988,7 @@ and [<AllowNullLiteral>] RegExpObject =
 //------------------------------------------------------------------------------
 and ArrayIndex = uint32
 and ArrayLength = uint32
+and SparseArray = MutableSorted<uint32, BoxedValue>
 
 and AO = ArrayObject
 and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
@@ -1846,7 +1858,6 @@ and Constructors = {
 (**)
 and Scope = BoxedValue array
 and DynamicScope = (int * CommonObject) list
-and SparseArray = MutableSorted<uint32, BoxedValue>
 and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
 
 and JsFunc = Func<FO,CO,BV>

@@ -33,7 +33,7 @@ module Array =
   let internal join (f:FunctionObject) (this:CommonObject) (separator:BoxedValue) =
   
     let separator =
-      if separator.Tag |> Utils.Box.isUndefined 
+      if separator.IsUndefined
         then "," else separator |> TypeConverter.ToString
 
     match this with
@@ -75,7 +75,7 @@ module Array =
     let items = new MutableList<BoxedValue>(this.CollectIndexValues())
 
     for arg in args do
-      if arg.Tag |> Utils.Box.isObject 
+      if arg.IsObject
         then items.AddRange(arg.Object.CollectIndexValues())
         else items.Add arg
 
@@ -98,7 +98,7 @@ module Array =
       let index = a.Length - 1u
 
       if index >= a.Length then 
-        Utils.BoxedConstants.Undefined
+        Undefined.Boxed
 
       else
         let item = 
@@ -111,7 +111,7 @@ module Array =
             else 
               if a.HasPrototype 
                 then a.Prototype.Get index
-                else Utils.BoxedConstants.Undefined
+                else Undefined.Boxed
 
           | IsSparse ->
             match a.Sparse.TryGetValue index with
@@ -119,7 +119,7 @@ module Array =
             | _ -> 
               if a.HasPrototype 
                 then a.Prototype.Get index
-                else Utils.BoxedConstants.Undefined
+                else Undefined.Boxed
 
         a.Delete index |> ignore
         item
@@ -129,7 +129,7 @@ module Array =
       
       if length = 0u then
         this.Put("length", 0.0)
-        Utils.BoxedConstants.Undefined
+        Undefined.Boxed
 
       else
         let index = length - 1u
@@ -196,7 +196,7 @@ module Array =
 
     match this with
     | IsArray a ->
-      if a.Length = 0u then Utils.BoxedConstants.Undefined
+      if a.Length = 0u then Undefined.Boxed
       else
         match a with
         | IsDense ->
@@ -206,7 +206,7 @@ module Array =
 
             elif a.HasPrototype 
               then a.Prototype.Get 0u
-              else Utils.BoxedConstants.Undefined
+              else Undefined.Boxed
 
           //Remove first element of dense array, also updates indexes
           a.Dense <- a.Dense |> Dlr.ArrayUtils.RemoveFirst
@@ -220,7 +220,7 @@ module Array =
             | _ -> 
               if a.HasPrototype 
                 then a.Prototype.Get 0u
-                else Utils.BoxedConstants.Undefined
+                else Undefined.Boxed
 
           //Update sparse indexes
           for kvp in a.Sparse do
@@ -232,7 +232,7 @@ module Array =
 
     | _ -> 
       let length = this.GetLength()
-      if length = 0u then Utils.BoxedConstants.Undefined
+      if length = 0u then Undefined.Boxed
       else
         let item = this.Get 0u
         this.Delete 0u |> ignore
@@ -248,7 +248,7 @@ module Array =
       st, en
 
     let getEnd (en:BoxedValue) (le:int) =
-        if en.Tag |> Utils.Box.isUndefined 
+        if en.IsUndefined 
           then le else en |> TypeConverter.ToInteger
 
     let length = this.GetLength() |> int
@@ -286,14 +286,14 @@ module Array =
       let sort = f.CompileAs<Sort>()
 
       fun (x:Descriptor) (y:Descriptor) -> 
-        let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
-        let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
+        let x = if x.HasValue then x.Value else Undefined.Boxed
+        let y = if y.HasValue then y.Value else Undefined.Boxed
         let result = sort.Invoke(f, f.Env.Globals, x, y)
         result |> TypeConverter.ToNumber |> int
 
     let denseSortDefault (x:Descriptor) (y:Descriptor) =
-      let x = if x.HasValue then x.Value else Utils.BoxedConstants.Undefined
-      let y = if y.HasValue then y.Value else Utils.BoxedConstants.Undefined
+      let x = if x.HasValue then x.Value else Undefined.Boxed
+      let y = if y.HasValue then y.Value else Undefined.Boxed
       String.Compare(TypeConverter.ToString x, TypeConverter.ToString y)
 
     let sparseSort (cmp:SparseComparer) (length:uint32) (vals:SparseArray) =
@@ -305,7 +305,7 @@ module Array =
           
         match vals.TryGetValue !i with
         | true, box -> items.Add(true, box)
-        | _ -> items.Add(false, Utils.BoxedConstants.Undefined)
+        | _ -> items.Add(false, Undefined.Boxed)
 
         i := !i + 1u
 
@@ -402,7 +402,7 @@ module Array =
   //----------------------------------------------------------------------------
   let internal toString (f:FunctionObject) (a:CommonObject) =
     a |> Utils.checkCommonObjectType<AO>
-    join f a Utils.BoxedConstants.Undefined
+    join f a Undefined.Boxed
 
   let internal toLocaleString = toString
 

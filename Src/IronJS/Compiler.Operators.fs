@@ -75,7 +75,7 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.3
   let typeOf (expr:Dlr.Expr) = 
-    Api.Operators.typeOf (expr |> Utils.box)
+    Operators.typeOf (expr |> Utils.box)
       
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
@@ -95,22 +95,22 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.6
   let plus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "plus" [ctx.Compile ast |> Utils.box]
+    Dlr.callStaticT<Operators> "plus" [ctx.Compile ast |> Utils.box]
 
   //----------------------------------------------------------------------------
   // 11.4.7
   let minus (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "minus" [ctx.Compile ast |> Utils.box]
+    Dlr.callStaticT<Operators> "minus" [ctx.Compile ast |> Utils.box]
   
   //----------------------------------------------------------------------------
   // 11.4.8
   let complement (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "bitCmpl" [ctx.Compile ast |> Utils.box]
+    Dlr.callStaticT<Operators> "bitCmpl" [ctx.Compile ast |> Utils.box]
 
   //----------------------------------------------------------------------------
   // 11.4.9
   let not (ctx:Ctx) ast =
-    Dlr.callStaticT<Api.Operators> "not" [ctx.Compile ast |> Utils.box]
+    Dlr.callStaticT<Operators> "not" [ctx.Compile ast |> Utils.box]
     
   //----------------------------------------------------------------------------
   let convert (ctx:Ctx) (tag:uint32) (ast:Ast.Tree) =
@@ -127,30 +127,30 @@ module Binary =
   //----------------------------------------------------------------------------
   let compileExpr op (l:Dlr.Expr) r =
     match op with
-    | BinaryOp.Add -> Api.Operators.add(l, r)
-    | BinaryOp.Sub -> Api.Operators.sub(l, r)
-    | BinaryOp.Div -> Api.Operators.div(l, r)
-    | BinaryOp.Mul -> Api.Operators.mul(l, r)
-    | BinaryOp.Mod -> Api.Operators.mod'(l, r)
+    | BinaryOp.Add -> Operators.add(l, r)
+    | BinaryOp.Sub -> Operators.sub(l, r)
+    | BinaryOp.Div -> Operators.div(l, r)
+    | BinaryOp.Mul -> Operators.mul(l, r)
+    | BinaryOp.Mod -> Operators.mod'(l, r)
 
-    | BinaryOp.And -> Api.Operators.and'(l, r)
-    | BinaryOp.Or -> Api.Operators.or'(l, r)
+    | BinaryOp.And -> Operators.and'(l, r)
+    | BinaryOp.Or -> Operators.or'(l, r)
 
-    | BinaryOp.BitAnd -> Api.Operators.bitAnd(l, r)
-    | BinaryOp.BitOr -> Api.Operators.bitOr(l, r)
-    | BinaryOp.BitXor -> Api.Operators.bitXOr(l, r)
-    | BinaryOp.BitShiftLeft -> Api.Operators.bitLhs(l, r)
-    | BinaryOp.BitShiftRight -> Api.Operators.bitRhs(l, r)
-    | BinaryOp.BitUShiftRight -> Api.Operators.bitURhs(l, r)
+    | BinaryOp.BitAnd -> Operators.bitAnd(l, r)
+    | BinaryOp.BitOr -> Operators.bitOr(l, r)
+    | BinaryOp.BitXor -> Operators.bitXOr(l, r)
+    | BinaryOp.BitShiftLeft -> Operators.bitLhs(l, r)
+    | BinaryOp.BitShiftRight -> Operators.bitRhs(l, r)
+    | BinaryOp.BitUShiftRight -> Operators.bitURhs(l, r)
 
-    | BinaryOp.Eq -> Api.Operators.eq(l, r)
-    | BinaryOp.NotEq -> Api.Operators.notEq(l, r)
-    | BinaryOp.Same -> Api.Operators.same(l, r)
-    | BinaryOp.NotSame -> Api.Operators.notSame(l, r)
-    | BinaryOp.Lt -> Api.Operators.lt(l, r)
-    | BinaryOp.LtEq -> Api.Operators.ltEq(l, r)
-    | BinaryOp.Gt -> Api.Operators.gt(l, r)
-    | BinaryOp.GtEq -> Api.Operators.gtEq(l, r)
+    | BinaryOp.Eq -> Operators.eq(l, r)
+    | BinaryOp.NotEq -> Operators.notEq(l, r)
+    | BinaryOp.Same -> Operators.same(l, r)
+    | BinaryOp.NotSame -> Operators.notSame(l, r)
+    | BinaryOp.Lt -> Operators.lt(l, r)
+    | BinaryOp.LtEq -> Operators.ltEq(l, r)
+    | BinaryOp.Gt -> Operators.gt(l, r)
+    | BinaryOp.GtEq -> Operators.gtEq(l, r)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
     
@@ -164,13 +164,13 @@ module Binary =
   let instanceOf (ctx:Context) left right =
     let l = ctx.Compile left |> Utils.box 
     let r = ctx.Compile right |> Utils.box
-    Api.Operators.instanceOf(ctx.Env, l, r)
+    Operators.instanceOf(ctx.Env, l, r)
     
   //----------------------------------------------------------------------------
   let in' (ctx:Context) left right =
     let l = ctx.Compile left |> Utils.box 
     let r = ctx.Compile right |> Utils.box
-    Api.Operators.in'(ctx.Env, l, r)
+    Operators.in'(ctx.Env, l, r)
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

@@ -1,4 +1,4 @@
-﻿namespace IronJS.Api
+﻿namespace IronJS
 
 open System
 open IronJS
@@ -9,13 +9,9 @@ open IronJS.Utils.Patterns
 //  This file implements all (non-assign) binary and unary operators
 //  
 //  DONE:
-//  11.3.1 Postfix Increment Operator
-//  11.3.2 Postfix Decrement Operator
 //  11.4.1 The delete Operator
 //  11.4.2 The void Operator
 //  11.4.3 The typeof Operator
-//  11.4.4 Prefix Increment Operator
-//  11.4.5 Prefix Decrement Operator
 //  11.4.6 Unary + Operator
 //  11.4.7 Unary - Operator
 //  11.4.8 Bitwise NOT Operator ( ~ )

@@ -401,7 +401,7 @@ module Array =
       
   //----------------------------------------------------------------------------
   let internal toString (f:FunctionObject) (a:CommonObject) =
-    a |> Utils.mustBe Classes.Array f.Env
+    a |> Utils.checkCommonObjectType<AO>
     join f a Utils.BoxedConstants.Undefined
 
   let internal toLocaleString = toString

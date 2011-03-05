@@ -152,12 +152,6 @@ module Utils =
           | TypeTags.Function -> Function(box.Func)
           | _ -> failwithf "Invalid runtime type tag '%i'" box.Tag
 
-  let mustBe (class':byte) (env:IronJS.Environment) (o:CommonObject) =
-    if o.Class <> class' then
-      let className = class' |> Classes.getName
-      let error = sprintf "Object is not an instance of %s" className
-      env.RaiseTypeError(error)
-
   let type2tag (t:System.Type) =   
     if   t |> FSKit.Utils.isTypeT<bool>           then TypeTags.Bool
     elif t |> FSKit.Utils.isTypeT<double>         then TypeTags.Number
@@ -181,8 +175,17 @@ module Utils =
 
   let type2field (t:System.Type) = t |> type2tag |> tag2field
 
-  let castObject<'a when 'a :> CO> (o:CO) =
+  let castCommonObject<'a when 'a :> CO> (o:CO) =
     if o :? 'a then o :?> 'a else o.Env.RaiseTypeError()
+
+  let checkCommonObjectType<'a when 'a :> CO> (o:CO) =
+    o |> castCommonObject<'a> |> ignore
+
+  let checkCommonObjectClass (class':byte) (o:CommonObject) =
+    if o.Class <> class' then
+      let className = class' |> Classes.getName
+      let error = sprintf "Object is not an instance of %s" className
+      o.Env.RaiseTypeError(error)
 
   let box (o:obj) =
     if o :? BoxedValue then unbox o

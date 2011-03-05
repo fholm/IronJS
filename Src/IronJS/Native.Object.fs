@@ -38,7 +38,7 @@ module Object =
 
   let internal hasOwnProperty (o:CommonObject) (name:string) =
     let mutable index = 0
-    if o.PropertyMap.IndexMap.TryGetValue(name, &index) 
+    if o.PropertySchema.IndexMap.TryGetValue(name, &index) 
       then o.Properties.[index].HasValue
       else false
 

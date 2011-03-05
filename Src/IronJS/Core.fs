@@ -455,14 +455,14 @@ and [<AllowNullLiteral>] CommonObject =
   val mutable Class : byte // [[Class]]
   val mutable Prototype : CommonObject // [[Prototype]]
 
-  val mutable PropertyMap : Schema
+  val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
   
   new (env, map, prototype, class') = {
     Env = env
     Class = class'
     Prototype = prototype
-    PropertyMap = map
+    PropertySchema = map
     Properties = Array.zeroCreate (map.IndexMap.Count)
   }
 
@@ -470,19 +470,19 @@ and [<AllowNullLiteral>] CommonObject =
     Env = env
     Class = Classes.Object
     Prototype = null
-    PropertyMap = null
+    PropertySchema = null
     Properties = null
   }
 
   //----------------------------------------------------------------------------
-  member x.ClassId = x.PropertyMap.Id
+  member x.ClassId = x.PropertySchema.Id
   member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
-  member x.RequiredStorage = x.PropertyMap.IndexMap.Count
+  member x.RequiredStorage = x.PropertySchema.IndexMap.Count
   
   //----------------------------------------------------------------------------
   //Makes the object dynamic
   member x.MakeDynamic() =
-    x.PropertyMap <- x.PropertyMap.MakeDynamic()
+    x.PropertySchema <- x.PropertySchema.MakeDynamic()
     
   //----------------------------------------------------------------------------
   //Expands object property storage
@@ -497,9 +497,9 @@ and [<AllowNullLiteral>] CommonObject =
   //----------------------------------------------------------------------------
   //Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
-    x.PropertyMap <- x.PropertyMap.SubClass name
+    x.PropertySchema <- x.PropertySchema.SubClass name
     if x.RequiredStorage >= x.Properties.Length then x.ExpandStorage()
-    x.PropertyMap.IndexMap.[name]
+    x.PropertySchema.IndexMap.[name]
     
   //----------------------------------------------------------------------------
   //Finds a property in the Prototype chain
@@ -507,7 +507,7 @@ and [<AllowNullLiteral>] CommonObject =
     
     let mutable index = 0
 
-    if x.PropertyMap.IndexMap.TryGetValue(name, &index) then
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
       x.Properties.[index]
 
     else
@@ -516,7 +516,7 @@ and [<AllowNullLiteral>] CommonObject =
         if FSKit.Utils.isNull o then Descriptor()
         else
           let mutable index = 0
-          if o.PropertyMap.IndexMap.TryGetValue(name, &index) 
+          if o.PropertySchema.IndexMap.TryGetValue(name, &index) 
             then o.Properties.[index]
             else find o.Prototype name
 
@@ -526,7 +526,7 @@ and [<AllowNullLiteral>] CommonObject =
   //Can we put property named 'name' ?
   member x.CanPut(name:string, index:int32 byref) =
     
-    if x.PropertyMap.IndexMap.TryGetValue(name, &index) then
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
       x.Properties.[index].IsWritable
 
     else
@@ -534,7 +534,7 @@ and [<AllowNullLiteral>] CommonObject =
       let mutable cobj = x.Prototype
 
       while loop && (FSKit.Utils.isNull cobj |> not) do
-        if cobj.PropertyMap.IndexMap.TryGetValue(name, &index) 
+        if cobj.PropertySchema.IndexMap.TryGetValue(name, &index) 
           then loop <- false
           else cobj <- cobj.Prototype
 
@@ -587,10 +587,10 @@ and [<AllowNullLiteral>] CommonObject =
   abstract Delete : String -> bool
   default x.Delete(name:String) =
     let mutable index = 0
-    if x.PropertyMap.IndexMap.TryGetValue(name, &index) then
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
 
       if x.Properties.[index].IsDeletable then
-        x.PropertyMap <- x.PropertyMap.Delete(name)
+        x.PropertySchema <- x.PropertySchema.Delete(name)
         x.Properties.[index] <- Descriptor()
 
       x.Properties.[index].IsDeletable
@@ -913,7 +913,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.SetAttrs(name:string, attrs:uint16) =
     let mutable index = 0
 
-    if x.PropertyMap.IndexMap.TryGetValue(name, &index) then
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
       let currentAttrs = x.Properties.[index].Attributes
       x.Properties.[index].Attributes <- currentAttrs ||| attrs
       
@@ -930,7 +930,7 @@ and [<AllowNullLiteral>] CommonObject =
           else 
             length
 
-        let keys = current.PropertyMap.IndexMap
+        let keys = current.PropertySchema.IndexMap
         for pair in keys do
           let descriptor = current.Properties.[pair.Value]
 
@@ -992,30 +992,31 @@ and [<AllowNullLiteral>] RegExpObject =
     RegExpObject(env, pattern, RegexOptions.None, false)
   
 //------------------------------------------------------------------------------
+and ArrayIndex = uint32
+and ArrayLength = uint32
+
 and AO = ArrayObject
-and [<AllowNullLiteral>] ArrayObject = 
-  inherit CommonObject
+and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
+  inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
 
-  val mutable Length : uint32
-  val mutable Dense : Descriptor array
-  val mutable Sparse : SparseArray
+  let mutable length = size
 
-  new (env:Environment, length:uint32) = {
-    inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
-    Length = length
-    Dense = 
-      if length <= Array.DenseMaxSize 
-        then Array.zeroCreate (int length) 
-        else Array.empty
+  let mutable dense = 
+    if size <= 4096u
+      then Array.zeroCreate<Descriptor> (int size) 
+      else null
 
-    Sparse = 
-      if length > Array.DenseMaxSize 
-        then SparseArray() 
-        else null
-  }
+  let mutable sparse = 
+    if size > 4096u
+      then SparseArray() 
+      else null
 
-  member x.IsDense = x.Sparse |> FSKit.Utils.isNull
-  member x.IsSparse = x.Sparse |> FSKit.Utils.notNull
+  member x.Length with get() = length and set(v) = length <- v
+  member x.Dense with get() = dense and set(v) = dense <- v
+  member x.Sparse with get() = sparse and set(v) = sparse <- v
+
+  member x.IsDense = 
+    sparse |> FSKit.Utils.isNull
 
   member x.UpdateLength(number:double) =
     if number < 0.0 then
@@ -1063,7 +1064,7 @@ and [<AllowNullLiteral>] ArrayObject =
 
   member x.Find(index:uint32) =
     let denseExists = x.IsDense && index < Array.DenseMaxSize && x.Dense.[int index].HasValue
-    let sparseExists = x.IsSparse && x.Sparse.ContainsKey index
+    let sparseExists = x.IsDense |> not && x.Sparse.ContainsKey index
 
     if index < x.Length && (denseExists || sparseExists) 
       then x
@@ -1088,65 +1089,65 @@ and [<AllowNullLiteral>] ArrayObject =
       else base.Put(name, value, tag)
 
   override x.Put(index:uint32, value:BoxedValue) =
-      if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
-      if x.IsDense then
-        if index > 255u && index/2u > x.Length then
-          x.ConvertToSparse()
-          x.Sparse.[index] <- value
-
-        else
-          let i = int index
-
-          if i >= x.Dense.Length then 
-            x.ExpandArrayStorage(i)
-
-          x.Dense.[i].Value <- value
-          x.Dense.[i].HasValue <- true
-
-      else
+    if x.IsDense then
+      if index > 255u && index/2u > x.Length then
+        x.ConvertToSparse()
         x.Sparse.[index] <- value
 
-      x.UpdateLength(index + 1u)
+      else
+        let i = int index
+
+        if i >= x.Dense.Length then 
+          x.ExpandArrayStorage(i)
+
+        x.Dense.[i].Value <- value
+        x.Dense.[i].HasValue <- true
+
+    else
+      x.Sparse.[index] <- value
+
+    x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:double) =
-      if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
-      if x.IsDense then
-        if index > 255u && index/2u > x.Length then
-          x.ConvertToSparse()
-          x.Sparse.[index] <- BoxedValue.Box value
-
-        else
-          let i = int index
-          if i >= x.Dense.Length then x.ExpandArrayStorage(i)
-          x.Dense.[i].Value.Number <- value
-          x.Dense.[i].HasValue <- true
-
-      else
+    if x.IsDense then
+      if index > 255u && index/2u > x.Length then
+        x.ConvertToSparse()
         x.Sparse.[index] <- BoxedValue.Box value
 
-      x.UpdateLength(index + 1u)
+      else
+        let i = int index
+        if i >= x.Dense.Length then x.ExpandArrayStorage(i)
+        x.Dense.[i].Value.Number <- value
+        x.Dense.[i].HasValue <- true
+
+    else
+      x.Sparse.[index] <- BoxedValue.Box value
+
+    x.UpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:Object, tag:uint32) =
-      if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
-      if x.IsDense then
-        if index > 255u && index/2u > x.Length then
-          x.ConvertToSparse()
-          x.Sparse.[index] <- BoxedValue.Box(value, tag)
-
-        else
-          let i = int index
-          if i >= x.Dense.Length then x.ExpandArrayStorage(i)
-          x.Dense.[i].Value.Clr <- value
-          x.Dense.[i].Value.Tag <- tag
-          x.Dense.[i].HasValue <- true
-
-      else
+    if x.IsDense then
+      if index > 255u && index/2u > x.Length then
+        x.ConvertToSparse()
         x.Sparse.[index] <- BoxedValue.Box(value, tag)
 
-      x.UpdateLength(index + 1u)
+      else
+        let i = int index
+        if i >= x.Dense.Length then x.ExpandArrayStorage(i)
+        x.Dense.[i].Value.Clr <- value
+        x.Dense.[i].Value.Tag <- tag
+        x.Dense.[i].HasValue <- true
+
+    else
+      x.Sparse.[index] <- BoxedValue.Box(value, tag)
+
+    x.UpdateLength(index + 1u)
 
   override x.Get(index:uint32) =
     let array = x.Find(index)
@@ -1333,36 +1334,28 @@ and SchemaMap  = MutableDict<string, Schema>
 
 and [<AllowNullLiteral>] Schema =
 
+  val Id : uint64
   val Env : Environment
-
-  val mutable Id          : uint64
-  val mutable IndexMap    : IndexMap
-  val mutable FreeIndexes : IndexStack
-  val mutable SubClasses  : SchemaMap
+  val IndexMap : IndexMap
+  val SubSchemas : SchemaMap
   
   new(env:Environment, map) = {
     Id = env.NextPropertyMapId()
     Env = env
     IndexMap = map
-    SubClasses = MutableDict<string, Schema>() 
-    FreeIndexes = null
+    SubSchemas = MutableDict<string, Schema>() 
   }
   
-  new(env) = {
+  new(env, indexMap, subSchemas) = {
     Id = 0UL
     Env = env
-    IndexMap = null
-    SubClasses = null
-    FreeIndexes = null
+    IndexMap = indexMap
+    SubSchemas = subSchemas
   }
   
   abstract MakeDynamic : unit -> DynamicSchema
   default x.MakeDynamic() : DynamicSchema = 
-    let ds = DynamicSchema(x.Env)
-    ds.Id <- 0UL
-    ds.FreeIndexes <- new IndexStack()
-    ds.IndexMap <- new IndexMap(x.IndexMap)
-    ds
+    DynamicSchema(x.Env, x.IndexMap)
       
   abstract Delete : string -> Schema
   default x.Delete(name:string) : Schema =
@@ -1370,15 +1363,16 @@ and [<AllowNullLiteral>] Schema =
      
   abstract SubClass : string -> Schema
   default x.SubClass(name) : Schema =
-    let mutable subClass = null
+    let mutable subSchema = null
       
-    if x.SubClasses.TryGetValue(name, &subClass) |> not then
+    if x.SubSchemas.TryGetValue(name, &subSchema) |> not then
       let properties = new IndexMap(x.IndexMap)
       properties.Add(name, properties.Count)
-      subClass <- Schema(x.Env, properties)
-      x.SubClasses.Add(name, subClass)
 
-    subClass
+      subSchema <- Schema(x.Env, properties)
+      x.SubSchemas.Add(name, subSchema)
+
+    subSchema
     
   member x.SubClass(names:string list) : Schema =
     names |> Seq.fold (fun (map:Schema) name -> map.SubClass name) x
@@ -1391,9 +1385,12 @@ and [<AllowNullLiteral>] Schema =
 *)
 and [<AllowNullLiteral>] DynamicSchema =
   inherit Schema
+  
+  val FreeIndexes : IndexStack
 
-  new (env) = {
-    inherit Schema(env)
+  new (env, indexMap) = {
+    inherit Schema(env, new IndexMap(indexMap), null)
+    FreeIndexes = new IndexStack()
   }
 
   override x.MakeDynamic () = x

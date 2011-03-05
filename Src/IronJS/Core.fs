@@ -478,11 +478,6 @@ and [<AllowNullLiteral>] CommonObject =
   member x.ClassId = x.PropertySchema.Id
   member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
   member x.RequiredStorage = x.PropertySchema.IndexMap.Count
-  
-  //----------------------------------------------------------------------------
-  //Makes the object dynamic
-  member x.MakeDynamic() =
-    x.PropertySchema <- x.PropertySchema.MakeDynamic()
     
   //----------------------------------------------------------------------------
   //Expands object property storage

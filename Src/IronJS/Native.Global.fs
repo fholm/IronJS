@@ -55,13 +55,13 @@ module Global =
     | _ -> target.Target
 
   let parseInt (str:string) = 
-    Utils.boxNumber(double (System.Int32.Parse(str)))
+    BV.Box(double (System.Int32.Parse(str)))
 
   let parseFloat (str:string) = 
-    Utils.boxNumber(TypeConverter.ToNumber str)
+    BV.Box(TypeConverter.ToNumber str)
 
   let isNaN (number:double) = 
-    Utils.boxBool (number = Double.NaN)
+    number = Double.NaN |> BV.Box
 
   let isFinite (number:double) =
       if    number = Double.NaN               then false

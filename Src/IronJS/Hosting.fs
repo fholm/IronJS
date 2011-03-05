@@ -150,8 +150,7 @@ module Hosting =
       env.Globals.Get(name)
 
     member x.GetGlobalT<'a> (name:string) =
-      let value = env.Globals.Get(name) 
-      value |> Utils.unboxT<'a> 
+      env.Globals.Get(name).Unbox<'a>()
 
     static member Create () =
       new Context(createEnvironment())

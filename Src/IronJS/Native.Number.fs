@@ -32,8 +32,8 @@ module Number =
   let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
     let value = TypeConverter.ToNumber value
     match this with
-    | null -> ctor.Env.NewNumber(value) |> Utils.boxObject
-    | _ -> value |> Utils.boxNumber
+    | null -> ctor.Env.NewNumber(value) |> BV.Box
+    | _ -> value |> BV.Box
     
   //----------------------------------------------------------------------------
   let private nanToString number =

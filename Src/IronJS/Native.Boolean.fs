@@ -21,8 +21,8 @@ module Boolean =
   let private constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
     let value = TypeConverter.ToBoolean value
     match this with
-    | null -> ctor.Env.NewBoolean(value) |> Utils.boxObject
-    | _ -> value |> Utils.boxBool
+    | null -> ctor.Env.NewBoolean(value) |> BV.Box
+    | _ -> value |> BV.Box
 
   let private valueOf (valueOf:FunctionObject) (this:CommonObject) =
     this |> Utils.mustBe Classes.Boolean valueOf.Env

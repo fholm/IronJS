@@ -79,13 +79,13 @@ type Operators =
   // + (unary)
   static member plus (l, r) = Dlr.callStaticT<Operators> "plus" [l; r]
   static member plus (o:BoxedValue) =
-    Utils.boxNumber (TypeConverter.ToNumber o)
+    o |> TypeConverter.ToNumber |> BV.Box
     
   //----------------------------------------------------------------------------
   // - (unary)
   static member minus (l, r) = Dlr.callStaticT<Operators> "minus" [l; r]
   static member minus (o:BoxedValue) =
-    Utils.boxNumber ((TypeConverter.ToNumber o) * -1.0)
+    BV.Box ((TypeConverter.ToNumber o) * -1.0)
 
   //----------------------------------------------------------------------------
   // Binary
@@ -188,11 +188,11 @@ type Operators =
         TypeConverter.ToNumber l.String = r.Number
 
       elif l.Tag = TypeTags.Bool then
-        let mutable l = Utils.boxNumber(TypeConverter.ToNumber l)
+        let mutable l = BV.Box(TypeConverter.ToNumber l)
         Operators.eq(l, r)
 
       elif r.Tag = TypeTags.Bool then
-        let mutable r = Utils.boxNumber(TypeConverter.ToNumber r)
+        let mutable r = BV.Box(TypeConverter.ToNumber r)
         Operators.eq(l, r)
 
       elif r.Tag >= TypeTags.Object then
@@ -260,45 +260,45 @@ type Operators =
   static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
   static member add (l:BoxedValue, r:BoxedValue) = 
     if Utils.Box.isBothNumber l.Marker r.Marker then
-      Utils.boxNumber (l.Number + r.Number)
+      BV.Box (l.Number + r.Number)
 
     elif l.Tag = TypeTags.String || r.Tag = TypeTags.String then
-      Utils.boxString (TypeConverter.ToString(l) + TypeConverter.ToString(r))
+      BV.Box (TypeConverter.ToString(l) + TypeConverter.ToString(r))
 
     else
-      Utils.boxNumber (TypeConverter.ToNumber(l) + TypeConverter.ToNumber(r))
+      BV.Box (TypeConverter.ToNumber(l) + TypeConverter.ToNumber(r))
       
   //----------------------------------------------------------------------------
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
   static member sub (l:BoxedValue, r:BoxedValue) =
     if Utils.Box.isBothNumber l.Marker r.Marker 
-      then Utils.boxNumber (l.Number - r.Number)
-      else Utils.boxNumber (TypeConverter.ToNumber l - TypeConverter.ToNumber r)
+      then BV.Box (l.Number - r.Number)
+      else BV.Box (TypeConverter.ToNumber l - TypeConverter.ToNumber r)
       
   //----------------------------------------------------------------------------
   // /
   static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
   static member div (l:BoxedValue, r:BoxedValue) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then Utils.boxNumber (l.Number / r.Number)
-      else Utils.boxNumber (TypeConverter.ToNumber l / TypeConverter.ToNumber r)
+      then BV.Box (l.Number / r.Number)
+      else BV.Box (TypeConverter.ToNumber l / TypeConverter.ToNumber r)
       
   //----------------------------------------------------------------------------
   // *
   static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
   static member mul (l:BoxedValue, r:BoxedValue) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then Utils.boxNumber (l.Number * r.Number)
-      else Utils.boxNumber (TypeConverter.ToNumber l * TypeConverter.ToNumber r)
+      then BV.Box (l.Number * r.Number)
+      else BV.Box (TypeConverter.ToNumber l * TypeConverter.ToNumber r)
       
   //----------------------------------------------------------------------------
   // %
   static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
   static member mod' (l:BoxedValue, r:BoxedValue) =
     if Utils.Box.isBothNumber l.Marker r.Marker
-      then Utils.boxNumber (l.Number % r.Number)
-      else Utils.boxNumber (TypeConverter.ToNumber l % TypeConverter.ToNumber r)
+      then BV.Box (l.Number % r.Number)
+      else BV.Box (TypeConverter.ToNumber l % TypeConverter.ToNumber r)
     
   //----------------------------------------------------------------------------
   // &

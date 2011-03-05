@@ -41,8 +41,8 @@ module String =
   let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
     let value = TypeConverter.ToString value
     match this with
-    | null -> ctor.Env.NewString(value) |> Utils.boxObject
-    | _ -> value |> Utils.boxString
+    | null -> ctor.Env.NewString(value) |> BV.Box
+    | _ -> value |> BV.Box
     
   //----------------------------------------------------------------------------
   let internal fromCharCode (args:BoxedValue array) =

@@ -184,61 +184,6 @@ module Utils =
   let castObject<'a when 'a :> CO> (o:CO) =
     if o :? 'a then o :?> 'a else o.Env.RaiseTypeError()
 
-  let isPrimitive (b:BoxedValue) =
-    if Box.isNumber b.Marker
-      then true
-      else 
-        match b.Tag with
-        | TypeTags.String
-        | TypeTags.Bool -> true
-        | _ -> false
-      
-  let boxRef (ref:System.Object) tag =
-    let mutable box = new BoxedValue()
-    box.Clr <- ref
-    box.Tag <- tag
-    box
-
-  let boxVal val' =
-    let mutable box = new BoxedValue()
-    box.Number <- val'
-    box
-
-  let boxBool (b:bool) =
-    let mutable box = BoxedValue()
-    box.Bool <- b
-    box.Tag <- TypeTags.Bool
-    box
-
-  let boxNumber (n:double) =
-    let mutable box = BoxedValue()
-    box.Number <- n
-    box
-
-  let boxClr (c:System.Object) =
-    let mutable box = BoxedValue()
-    box.Clr <- c
-    box.Tag <- TypeTags.Clr
-    box
-
-  let boxString (s:string) =
-    let mutable box = BoxedValue()
-    box.Clr <- s
-    box.Tag <- TypeTags.String
-    box
-
-  let boxObject (o:CommonObject) =
-    let mutable box = BoxedValue()
-    box.Clr <- o
-    box.Tag <- TypeTags.Object
-    box
-
-  let boxFunction (f:FunctionObject) =
-    let mutable box = BoxedValue()
-    box.Clr <- f
-    box.Tag <- TypeTags.Function
-    box
-
   let box (o:obj) =
     if o :? BoxedValue then unbox o
     elif FSKit.Utils.isNull o then BoxedConstants.Null
@@ -259,19 +204,8 @@ module Utils =
 
       box
 
-  let unbox (b:BoxedValue) =
-    if Box.isNumber b.Marker
-      then b.Number :> obj
-      else
-      match b.Tag with
-      | TypeTags.Bool -> b.Bool :> obj
-      | _ -> b.Clr
-
-  let unboxT<'a> (b:BoxedValue) =
-    unbox b :?> 'a
-
   let unboxObj (o:obj) =
-    if o :? BoxedValue then unbox (o :?> BoxedValue) else o
+    if o :? BoxedValue then (o :?> BoxedValue).ClrBoxed else o
       
   //-------------------------------------------------------------------------
   // Function + cache that creates delegates for IronJS functions, delegates

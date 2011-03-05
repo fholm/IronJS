@@ -454,7 +454,7 @@ and ObjectClass = byte
 and [<AllowNullLiteral>] CommonObject = 
   val Env : Environment
 
-  val mutable Class : byte
+  val mutable Class : ObjectClass
   val mutable Prototype : CommonObject
 
   val mutable PropertySchema : Schema
@@ -477,7 +477,6 @@ and [<AllowNullLiteral>] CommonObject =
   }
 
   //----------------------------------------------------------------------------
-  member x.ClassId = x.PropertySchema.Id
   member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
   member x.RequiredStorage = x.PropertySchema.IndexMap.Count
 
@@ -541,7 +540,6 @@ and [<AllowNullLiteral>] CommonObject =
         if cobj.PropertySchema.IndexMap.TryGetValue(name, &index) 
           then loop <- false
           else cobj <- cobj.Prototype
-
 
       if FSKit.Utils.isNull cobj || cobj.Properties.[index].IsWritable then 
         index <- x.CreateIndex name
@@ -1361,6 +1359,9 @@ and [<AllowNullLiteral>] Schema =
     
   member x.SubClass(names:string list) : Schema =
     names |> Seq.fold (fun (map:Schema) name -> map.SubClass name) x
+
+  member x.TryGetIndex(name:string, index:int byref) =
+    x.IndexMap.TryGetValue(name, &index)
 
   static member CreateBaseSchema (env:Environment) =
     new Schema(env, new IndexMap())

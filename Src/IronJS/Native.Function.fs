@@ -35,7 +35,7 @@ module Function =
       let tree = Parsers.Ecma3.parseGlobalSource f.Env func
       let analyzed = Ast.Analyzers.applyDefault tree None
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
-      (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxObj) :?> FunctionObject
+      (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxAsClrBox) :?> FunctionObject
 
   let private prototype (f:FunctionObject) _ =
     Undefined.Boxed

@@ -130,7 +130,7 @@ module Hosting =
 
     member x.InvokeCompiled (compiled:Delegate) =
       let result = compiled.DynamicInvoke(globalFunc, env.Globals)
-      Utils.unboxObj result
+      Utils.unboxAsClrBox result
 
     member x.ExecuteFile fileName = x.InvokeCompiled (x.CompileFile fileName)
     member x.ExecuteFileT<'a> fileName = x.ExecuteFile fileName :?> 'a

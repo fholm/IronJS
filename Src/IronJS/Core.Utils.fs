@@ -138,7 +138,7 @@ module Utils =
 
       box
 
-  let unboxObj (o:obj) =
+  let unboxAsClrBox (o:obj) =
     if o :? BoxedValue then (o :?> BoxedValue).ClrBoxed else o
       
   //-------------------------------------------------------------------------

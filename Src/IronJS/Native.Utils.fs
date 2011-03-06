@@ -13,14 +13,6 @@ module Utils =
   type private HostFunctionHack() =
     static member Get<'a when 'a :> Delegate>() = 
       Compiler.HostFunction.compile<'a>
-    
-  let createHostFunction (env:Environment) (delegate':'a) =
-    let h = HostFunction<'a>(env, delegate')
-
-    env.AddCompiler(h, Compiler.HostFunction.compile<'a>)
-    
-    h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
-    h :> FunctionObject
 
   let createHostFunctionDynamic (env:Environment) (delegate':Delegate) =
     let delegateType = delegate'.GetType()
@@ -42,3 +34,13 @@ module Utils =
 
     hostFunction.Put("length", double argsLength, DescriptorAttrs.Immutable)
     hostFunction
+    
+  let createHostFunction (env:Environment) (delegate':'a) =
+    if typeof<'a> = typeof<Delegate> then
+      createHostFunctionDynamic env delegate'
+
+    else
+      let h = HostFunction<'a>(env, delegate')
+      env.AddCompiler(h, Compiler.HostFunction.compile<'a>)
+      h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
+      h :> FunctionObject

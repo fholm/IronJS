@@ -394,7 +394,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     let error = x.NewError()
     error.Prototype <- prototype
     error.Put("message", message)
-    raise (new UserError(BoxedValue.Box error))
+    raise (new UserError(BoxedValue.Box error, 0, 0))
 
   member x.RaiseEvalError() = x.RaiseEvalError("")
   member x.RaiseEvalError(message) = x.RaiseError(x.Prototypes.EvalError, message)
@@ -1610,9 +1610,11 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | _ -> x.ArgTypes.Length
 
 (**)
-and UserError(jsValue:BoxedValue) =
-  inherit IronJS.Support.Error("UserError")
-  member x.JsValue = jsValue
+and UserError(value:BoxedValue, line:int, column:int) =
+  inherit IronJS.Support.Error("UserError: " + TypeConverter.ToString(value))
+  member x.Value = value
+  member x.Line = line
+  member x.Column = column
   
 (**)
 and TypeConverter() =

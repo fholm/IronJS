@@ -149,10 +149,10 @@ module Utils =
   // E.g: Func<FunctionObject, CommonObject, BoxedValue>
 
   let private delegateCache = 
-    new ConcurrentMutableDict<System.RuntimeTypeHandle list, System.Type>()
+    new ConcurrentMutableDict<RuntimeTypeHandle list, Type>()
 
-  let createDelegate (types:System.Type seq) =
-    let toTypeHandle state (type':System.Type) = type'.TypeHandle :: state
+  let createDelegate (types:Type seq) =
+    let toTypeHandle state (type':Type) = type'.TypeHandle :: state
     let key = Seq.fold toTypeHandle [] types
 
     let rec createDelegate' types =
@@ -166,7 +166,8 @@ module Utils =
 
     createDelegate' types
 
-  let private internalArgs = Seq.ofList [typeof<FunctionObject>; typeof<CommonObject>]
-  let private interanlReturnType = Seq.ofList [typeof<BoxedValue>]
-  let addInternalArgs (types:System.Type seq) = Seq.concat [internalArgs; types; interanlReturnType]
+  let private internalArgs = Seq.ofList [typeof<FO>; typeof<CO>]
+  let private interanlReturnType = Seq.ofList [typeof<BV>]
+  let addInternalArgs (types:Type seq) = 
+    Seq.concat [internalArgs; types; interanlReturnType]
         

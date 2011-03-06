@@ -14,7 +14,7 @@ module Utils =
     static member Get<'a when 'a :> Delegate>() = 
       Compiler.HostFunction.compile<'a>
 
-  let createHostFunctionDynamic (env:Environment) (delegate':Delegate) =
+  let private createHostFunctionDynamic (env:Environment) (delegate':Delegate) =
     let delegateType = delegate'.GetType()
     let genericHostFunc = typeof<HostFunction<_>>.GetGenericTypeDefinition()
     let concreteHostFunc = genericHostFunc.MakeGenericType([|delegateType|])
@@ -36,7 +36,7 @@ module Utils =
     hostFunction
     
   let createHostFunction (env:Environment) (delegate':'a) =
-    if typeof<'a> = typeof<Delegate> then
+    if FSKit.Utils.isSameTypeT<'a, Delegate> then
       createHostFunctionDynamic env delegate'
 
     else

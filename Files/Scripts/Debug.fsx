@@ -18,6 +18,6 @@ let ctx = Hosting.Context.Create()
 
 //Example of using createHostFunctionDynamic
 let print = new Action<string>(System.Console.WriteLine) :> Delegate
-let printFunc = IronJS.Native.Utils.createHostFunctionDynamic ctx.Environment print
+let printFunc = IronJS.Native.Utils.createHostFunction ctx.Environment print
 ctx.PutGlobal("print", printFunc)
 ctx.Execute("print('lol')");

@@ -15,3 +15,9 @@ open FSKit.Bit
 IronJS.Support.Debug.registerConsolePrinter()
 
 let ctx = Hosting.Context.Create()
+
+//Example of using createHostFunctionDynamic
+let print = new Action<string>(System.Console.WriteLine) :> Delegate
+let printFunc = IronJS.Native.Utils.createHostFunctionDynamic ctx.Environment print
+ctx.PutGlobal("print", printFunc)
+ctx.Execute("print('lol')");

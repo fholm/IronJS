@@ -44,7 +44,7 @@ module Global =
           Environment = target.Function.Env
         }
 
-      IronJS.Utils.box (
+      Utils.jsBox (
         compiled.DynamicInvoke(
           target.Function,
           target.This,

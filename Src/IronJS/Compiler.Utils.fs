@@ -169,13 +169,13 @@ module Utils =
   let compileIndex (ctx:Ctx) index =
     match index with
     | Ast.Number n ->
-      match n with
-      | IsNumberIndex index -> !!!index
+      match n |> Utils.numberToIndex with
+      | Some index -> !!!index
       | _ -> ctx.Compile index
 
     | Ast.String s ->
-      match s with
-      | IsStringIndex index -> !!!index
+      match s |> Utils.stringToIndex with
+      | Some index -> !!!index
       | _ -> ctx.Compile index
 
     | _ -> ctx.Compile index

@@ -11,79 +11,39 @@ open System.Reflection.Emit
 open System.Runtime.InteropServices
 
 module Utils =
-
-  //----------------------------------------------------------------------------
-  module ValueObject =
-    let getValue (o:CommonObject) = (o :?> ValueObject).Value.Value
     
-  //----------------------------------------------------------------------------
   module Patterns =
-  
-    let (|IsArray|_|) (obj:CommonObject) =
-      if obj.Class = Classes.Array
-        then Some(obj :?> ArrayObject)
+    
+    let (|IsArray|_|) (o:CO) =
+      if o.Class = Classes.Array
+        then Some(o :?> AO)
         else None
 
-    let (|IsFunction|_|) (o:CommonObject) =
+    let (|IsFunction|_|) (o:CO) =
       if o.Class = Classes.Function 
-        then Some(o :?> FunctionObject) 
+        then Some(o :?> FO) 
         else None
 
-    let (|IsDense|IsSparse|) (array:ArrayObject) =
-      if array.IsDense then IsDense else IsSparse
+  let numberToIndex (n:double) =
+    let i = uint32 n
+    if double i = n 
+      then Some i 
+      else None
 
-    let (|IsNull|_|) (box:BoxedValue) =
-      if box.Tag = TypeTags.Clr && FSKit.Utils.isNull box.Clr
-        then Some ()
-        else None
+  let stringToIndex (str:string) =
+    match UInt32.TryParse str with
+    | true, index -> Some index
+    | _ -> None
 
-    let (|IsNumber|_|) (box:BoxedValue) = 
-      if box.IsNumber then Some box.Number else None
+  let boxToIndex (box:BoxedValue) =
+    if box.IsNumber then box.Number |> numberToIndex
+    elif box.IsString then box.String |> stringToIndex
+    else None
 
-    let (|IsString|_|) (box:BoxedValue) =
-      if box.IsString then Some box.String else None
+  let getValueObjectValue (o:CommonObject) = 
+    (o :?> ValueObject).Value.Value
 
-    let (|IsBool|_|) (box:BoxedValue) =
-      if box.IsBoolean then Some box.Bool else None
-
-    let (|IsUndefined|_|) (box:BoxedValue) =
-      if box.IsUndefined then Some(box.Clr :?> Undefined) else None
-
-    let (|IsTagged|_|) (box:BoxedValue) = 
-      if box.IsTagged then Some box.Tag else None
-
-    let (|IsNumberIndex|_|) (number:double) =
-      let index = uint32 number
-      if double index = number then Some index else None
-
-    let (|IsStringIndex|_|) (str:string) =
-      //Handles 0, 1, etc.
-      match UInt32.TryParse str with
-      | true, index -> Some index
-      | _ -> 
-        //Handles 0.0, 1.0, etc.
-        match Double.TryParse str with
-        | true, num ->
-          let index = uint32 num
-          if (index |> double) = num then Some index else None
-
-        | _ -> None
-
-    let (|IsIndex|_|) (box:BoxedValue) =
-      match box with
-      | IsNumber n ->
-        match n with
-        | IsNumberIndex i -> Some i
-        | _ -> None
-
-      | IsString s ->
-        match s with
-        | IsStringIndex i -> Some i
-        | _ -> None
-
-      | _ -> None
-
-  let type2tag (t:System.Type) =   
+  let type2tag (t:Type) =   
     if   t |> FSKit.Utils.isTypeT<bool>           then TypeTags.Bool
     elif t |> FSKit.Utils.isTypeT<double>         then TypeTags.Number
     elif t |> FSKit.Utils.isTypeT<string>         then TypeTags.String
@@ -95,7 +55,7 @@ module Utils =
 
   let tag2field tag =
     match tag with
-    | TypeTags.Bool       -> BoxFields.Bool     
+    | TypeTags.Bool       -> BoxFields.Bool
     | TypeTags.Number     -> BoxFields.Number   
     | TypeTags.String     -> BoxFields.String   
     | TypeTags.Undefined  -> BoxFields.Undefined
@@ -104,7 +64,7 @@ module Utils =
     | TypeTags.Clr        -> BoxFields.Clr
     | _ -> Support.Errors.invalidTypeTag tag
 
-  let type2field (t:System.Type) = 
+  let type2field (t:Type) = 
     t |> type2tag |> tag2field
 
   let castCommonObject<'a when 'a :> CO> (o:CO) =
@@ -119,27 +79,20 @@ module Utils =
       let error = sprintf "Object is not an instance of %s" className
       o.Env.RaiseTypeError(error)
 
-  let box (o:obj) =
-    if o :? BoxedValue then unbox o
-    elif FSKit.Utils.isNull o then BoxedConstants.Null
+  let jsBox (o:obj) =
+    if o :? BoxedValue then 
+      unbox o
+
+    elif FSKit.Utils.isNull o then 
+      BoxedConstants.Null
+
     else
-      let mutable box = BoxedValue()
-
       match o.GetType() |> type2tag with
-      | TypeTags.Bool as tag -> 
-        box.Bool <- unbox o
-        box.Tag <- tag
+      | TypeTags.Bool -> BV.Box (o :?> bool)
+      | TypeTags.Number -> BV.Box (o :?> double)
+      | tag -> BV.Box(o, tag)
 
-      | TypeTags.Number -> 
-        box.Number <- unbox o
-
-      | tag -> 
-        box.Clr <- o
-        box.Tag <- tag
-
-      box
-
-  let unboxAsClrBox (o:obj) =
+  let clrBox (o:obj) =
     if o :? BoxedValue then (o :?> BoxedValue).ClrBoxed else o
       
   //-------------------------------------------------------------------------

@@ -44,7 +44,7 @@ module Number =
 
   let internal toString (f:FunctionObject) (this:CommonObject) (radix:double) =
     this |> Utils.checkCommonObjectClass Classes.Number
-    let number = (this |> Utils.ValueObject.getValue).Number
+    let number = (this |> Utils.getValueObjectValue).Number
 
     if FSKit.Utils.isNaNOrInf number then nanToString number
     else
@@ -62,7 +62,7 @@ module Number =
   //----------------------------------------------------------------------------
   let internal valueOf (f:FunctionObject) (this:CommonObject) =
     this |> Utils.checkCommonObjectClass Classes.Number
-    this |> Utils.ValueObject.getValue
+    this |> Utils.getValueObjectValue
 
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
@@ -73,7 +73,7 @@ module Number =
   let internal toFixed (f:FunctionObject) (this:CommonObject) (fractions:double) =
     this |> Utils.checkCommonObjectClass Classes.Number
 
-    let number = (this |> Utils.ValueObject.getValue).Number
+    let number = (this |> Utils.getValueObjectValue).Number
     let fractions = fractions |> TypeConverter.ToInt32
 
     if number |> FSKit.Utils.isNaNOrInf then nanToString number
@@ -86,7 +86,7 @@ module Number =
   let internal toExponential (f:FunctionObject) (this:CommonObject) (fractions:BoxedValue) =
     this |> Utils.checkCommonObjectClass Classes.Number
     
-    let number = (this |> Utils.ValueObject.getValue).Number
+    let number = (this |> Utils.getValueObjectValue).Number
 
     if fractions.IsUndefined then 
       toString f this 10.0
@@ -109,7 +109,7 @@ module Number =
   let internal toPrecision (f:FunctionObject) (this:CommonObject) (precision:BoxedValue) =
     this |> Utils.checkCommonObjectClass Classes.Number
     
-    let number = (this |> Utils.ValueObject.getValue).Number
+    let number = (this |> Utils.getValueObjectValue).Number
 
     if precision.IsUndefined then 
       toString f this 10.0

@@ -35,7 +35,7 @@ module Function =
       let tree = Parsers.Ecma3.parseGlobalSource f.Env func
       let analyzed = Ast.Analyzers.applyDefault tree None
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
-      (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.unboxAsClrBox) :?> FunctionObject
+      (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.clrBox) :?> FunctionObject
 
   let private prototype (f:FunctionObject) _ =
     Undefined.Boxed
@@ -68,8 +68,7 @@ module Function =
         let type' = Utils.createDelegate argTypes
         let args = Array.append [|func :> obj; this :> obj|] args
         let compiled = f.Compiler f type'
-        let result = compiled.DynamicInvoke(args)
-        Utils.box result
+        compiled.DynamicInvoke(args) |> Utils.jsBox
 
       | _ -> apply.Env.RaiseTypeError()
 
@@ -81,7 +80,7 @@ module Function =
       let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
       let type' = Utils.createDelegate argTypes
       let args = Array.append [|func :> obj; this :> obj|] args
-      Utils.box ((f.Compiler f type').DynamicInvoke args)
+      (f.Compiler f type').DynamicInvoke args |> Utils.jsBox
 
     | _ -> failwith "Que?"
 

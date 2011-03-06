@@ -39,14 +39,13 @@ module Array =
     match this with
     | IsArray array ->
 
-      match array with
-      | IsDense ->
+      if array.IsDense then
         let toString (x:Descriptor) = 
           if x.HasValue then TypeConverter.ToString x.Value else ""
 
         String.Join(separator, array.Dense |> Array.map toString)
-
-      | IsSparse ->
+        
+      else
         let items = new MutableList<string>();
         let mutable i = 0u
 
@@ -102,8 +101,7 @@ module Array =
 
       else
         let item = 
-          match a with
-          | IsDense ->
+          if a.IsDense then
             let descriptor = a.Dense.[int index]
             if descriptor.HasValue then 
               descriptor.Value 
@@ -113,7 +111,7 @@ module Array =
                 then a.Prototype.Get index
                 else Undefined.Boxed
 
-          | IsSparse ->
+          else
             match a.Sparse.TryGetValue index with
             | true, box -> box
             | _ -> 
@@ -155,9 +153,10 @@ module Array =
   let internal reverse (this:CommonObject) =
     match this with
     | IsArray a ->
-      match a with
-      | IsDense -> a.Dense |> Array.Reverse 
-      | IsSparse -> 
+      if a.IsDense then
+        a.Dense |> Array.Reverse 
+
+      else
         let sparse = new MutableSorted<uint32, BoxedValue>()
         for kvp in a.Sparse do
           sparse.Add(a.Length - kvp.Key - 1u, kvp.Value)
@@ -198,8 +197,7 @@ module Array =
     | IsArray a ->
       if a.Length = 0u then Undefined.Boxed
       else
-        match a with
-        | IsDense ->
+        if a.IsDense then
           let item =  
             if a.Dense.[0].HasValue 
               then a.Dense.[0].Value
@@ -213,7 +211,7 @@ module Array =
           updateArrayLength a
           item
 
-        | IsSparse ->
+        else
           let item = 
             match a.Sparse.TryGetValue 0u with
             | true, item -> a.Sparse.Remove 0u |> ignore; item
@@ -332,17 +330,19 @@ module Array =
     | IsArray a ->
       match cmp.Tag with
       | TypeTags.Function ->
-        match a with
-        | IsDense -> a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
-        | IsSparse -> 
+        if a.IsDense then
+          a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
+
+        else
           let sort = f.CompileAs<Sort>()
           let cmp = new SparseComparer(sparseSortFunc cmp.Func)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
       | _ ->
-        match a with
-        | IsDense -> a.Dense |> Array.sortInPlaceWith denseSortDefault
-        | IsSparse ->
+        if a.IsDense then
+          a.Dense |> Array.sortInPlaceWith denseSortDefault
+
+        else
           let sort = f.CompileAs<Sort>()
           let cmp = new SparseComparer(sparseSortDefault)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
@@ -356,8 +356,7 @@ module Array =
     match this with
     | IsArray array ->
 
-      match array with
-      | IsDense ->
+      if array.IsDense then
         let minLength = int array.Length + args.Length
 
         let newDense =
@@ -374,8 +373,7 @@ module Array =
 
         array.UpdateLength(uint32 args.Length + array.Length)
 
-      | IsSparse -> 
-
+      else
         let mutable index = array.Length - 1u
         let offset = uint32 args.Length
 

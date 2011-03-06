@@ -160,8 +160,8 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool
     member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
     member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
-    member x.IsRegExp =
-      x.IsObject && x.Object.Class = Classes.RegExp
+    member x.IsRegExp = x.IsObject && x.Object.Class = Classes.RegExp
+    member x.IsNull = x.IsClr && x.Clr |> FSKit.Utils.isNull
 
     member x.IsPrimitive =
       if x.IsNumber then 

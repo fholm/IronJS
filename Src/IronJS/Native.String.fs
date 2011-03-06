@@ -56,7 +56,7 @@ module String =
   //----------------------------------------------------------------------------
   let internal toString (func:FunctionObject) (this:CommonObject) =
     this |> Utils.checkCommonObjectClass Classes.String
-    this |> Utils.ValueObject.getValue
+    this |> Utils.getValueObjectValue
     
   //----------------------------------------------------------------------------
   let internal valueOf (func:FunctionObject) (this:CommonObject) = 

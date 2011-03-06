@@ -50,10 +50,9 @@ type Operators =
   //----------------------------------------------------------------------------
   // typeof
   static member typeOf (o:BoxedValue) = 
-    match o with
-    | IsNumber _ -> "number" 
-    | IsNull -> "object"
-    | _ -> TypeTags.Names.[o.Tag]
+    if o.IsNumber then "number"
+    elif o.IsNull then "object"
+    else TypeTags.Names.[o.Tag]
 
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
   
@@ -94,8 +93,8 @@ type Operators =
     if not r.IsObject then
       env.RaiseTypeError("Right operand is not a object")
 
-    match l with
-    | IsIndex i -> r.Object.Has(i)
+    match l |> Utils.boxToIndex with
+    | Some i -> r.Object.Has(i)
     | _ -> let name = TypeConverter.ToString(l) in r.Object.Has(name)
     
   //----------------------------------------------------------------------------

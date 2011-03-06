@@ -13,7 +13,6 @@ module Array =
   type private Sort = Func<FunctionObject, CommonObject, BoxedValue, BoxedValue, BoxedValue>
 
   //----------------------------------------------------------------------------
-  // 15.4.2
   let internal constructor' (f:FunctionObject) (_:CommonObject) (args:BoxedValue array) =
     if args.Length = 1 then
       let number = TypeConverter.ToNumber args.[0]

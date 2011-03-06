@@ -131,8 +131,9 @@ module TaggedBools =
 
   let ToTagged b = if b then True else False
 
-//------------------------------------------------------------------------------
-// A dynamic value whos type is unknown at runtime.
+(*
+//  A dynamic value tagged with it's type
+*)
 type BV = BoxedValue
 and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
@@ -141,8 +142,8 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     [<FieldOffset(0)>] val mutable Object : CommonObject
     [<FieldOffset(0)>] val mutable Array : ArrayObject
     [<FieldOffset(0)>] val mutable Func : FunctionObject
-    [<FieldOffset(0)>] val mutable String : String
-    [<FieldOffset(0)>] val mutable Scope : BoxedValue array
+    [<FieldOffset(0)>] val mutable String : string
+    [<FieldOffset(0)>] val mutable Scope : BV array
 
     //Value Types
     [<FieldOffset(8)>] val mutable Bool : bool
@@ -223,12 +224,27 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box
 
     static member Box(value:Undefined) =
-      Utils2.BoxedUndefined
+      Undefined.Boxed
+
+    static member FieldOfTag tag =
+      match tag with
+      | TypeTags.Bool       -> BoxFields.Bool
+      | TypeTags.Number     -> BoxFields.Number   
+      | TypeTags.String     -> BoxFields.String   
+      | TypeTags.Undefined  -> BoxFields.Undefined
+      | TypeTags.Object     -> BoxFields.Object   
+      | TypeTags.Function   -> BoxFields.Function 
+      | TypeTags.Clr        -> BoxFields.Clr
+      | _ -> Support.Errors.invalidTypeTag tag
+
+    static member FieldOfType (t:Type) = 
+      t |> TypeTag.OfType |> BV.FieldOfTag
 
   end
-  
-//------------------------------------------------------------------------------
-// Property descriptor
+
+(*
+//  
+*)
 and [<NoComparison>] Descriptor =
   struct
     val mutable Value : BoxedValue
@@ -240,8 +256,10 @@ and [<NoComparison>] Descriptor =
     member x.IsEnumerable = (x.Attributes &&& DescriptorAttrs.DontEnum) = 0us
   end
 
-//------------------------------------------------------------------------------
-// 8.1 Undefined
+(*
+//  
+*)
+and Undef = Undefined
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
   static let boxed = 
@@ -264,8 +282,29 @@ and [<AbstractClass>] BoxedConstants() =
   static member Zero = zero
   static member Null = null'
 
-//------------------------------------------------------------------------------
-// Class that encapsulates a runtime environment
+(*
+//  
+*)
+and [<AbstractClass>] TypeTag() =
+
+  static member OfType (t:Type) =
+    if   t |> FSKit.Utils.isTypeT<bool>   then TypeTags.Bool
+    elif t |> FSKit.Utils.isTypeT<double> then TypeTags.Number
+    elif t |> FSKit.Utils.isTypeT<string> then TypeTags.String
+    elif t |> FSKit.Utils.isTypeT<Undef>  then TypeTags.Undefined
+    elif t |> FSKit.Utils.isTypeT<FO>     then TypeTags.Function
+    elif t |> FSKit.Utils.isTypeT<CO>     then TypeTags.Object
+    elif t |> FSKit.Utils.isTypeT<BV>     then TypeTags.Box
+                                          else TypeTags.Clr
+
+  static member OfObject (o:obj) = 
+    if o |> FSKit.Utils.isNull 
+      then TypeTags.Clr
+      else o.GetType() |> TypeTag.OfType
+
+(*
+//  
+*)
 and Env = Environment
 and [<AllowNullLiteral>] Environment() = // Alias: Env
   let currentFunctionId = ref 0UL
@@ -413,50 +452,27 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   
   member x.RaiseReferenceError() = x.RaiseReferenceError("")
   member x.RaiseReferenceError(message) = x.RaiseError(x.Prototypes.ReferenceError, message)
+
+(*
+//  
+*)
+and CoreUtils() =
+
+  static member TryConvertToIndex (value:double, index:uint32 byref) =
+    index <- uint32 value
+    double index = value
+
+  static member TryConvertToIndex (value:string, index:uint32 byref) =
+    UInt32.TryParse(value, &index)
   
-//------------------------------------------------------------------------------
-and Utils2() =
-  
-  static let boxedUndefined = 
-    let mutable box = BoxedValue()
-    box.Tag <- TypeTags.Undefined
-    box.Clr <- Undefined.Instance
-    box
+  static member TryConvertToIndex (value:BoxedValue, index:uint32 byref) =
+    if    value.IsNumber  then CoreUtils.TryConvertToIndex(value.Number, &index)
+    elif  value.IsString  then CoreUtils.TryConvertToIndex(value.String, &index)
+                          else false
 
-  static member BoxedUndefined = boxedUndefined
-
-  static member IsBoxedValueIndex (box:BoxedValue, index:uint32 byref) =
-    if box.IsNumber then
-      index <- uint32 box.Number
-      double index = box.Number
-
-    elif box.IsString then
-      UInt32.TryParse(box.String, &index)
-
-    else
-      false
-
-  static member IsStringIndex (index:String, parsed:uint32 byref) =
-    let mutable dblParsed = 0.0
-
-    if UInt32.TryParse(index, &parsed) then
-      true
-
-    elif Double.TryParse(index, &dblParsed) then
-      parsed <- uint32 dblParsed
-      if double parsed = dblParsed 
-        then true 
-        else false
-
-    else
-      false
-
-  static member IsNumberIndex (index:double, parsed:uint32 byref) =
-    parsed <- uint32 index
-    double parsed = index
-
-//------------------------------------------------------------------------------
-// 8.6
+(*
+//  
+*)
 and CO = CommonObject
 and ObjectClass = byte
 
@@ -589,7 +605,7 @@ and [<AllowNullLiteral>] CommonObject =
     let descriptor = x.Find name
     if descriptor.HasValue 
       then descriptor.Value
-      else Utils2.BoxedUndefined
+      else Undefined.Boxed
 
   abstract Has : String -> bool
   default x.Has(name:String) = 
@@ -717,7 +733,7 @@ and [<AllowNullLiteral>] CommonObject =
   // Put methods for setting indexes to BoxedValues
   member x.Put(index:BoxedValue, value:BoxedValue) : unit =
     let mutable i = 0u
-    if Utils2.IsBoxedValueIndex(index, &i) 
+    if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Put(i, value)
       else x.Put(TypeConverter.ToString(index), value)
 
@@ -727,7 +743,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(index:double, value:BoxedValue) : unit = 
     let mutable parsed = 0u
 
-    if Utils2.IsNumberIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(TypeConverter.ToString(index), value)
 
@@ -735,7 +751,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(index, value)
 
@@ -746,7 +762,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(index, value)
       
@@ -754,7 +770,7 @@ and [<AllowNullLiteral>] CommonObject =
   // Put methods for setting indexes to doubles
   member x.Put(index:BoxedValue, value:double) =
     let mutable i = 0u
-    if Utils2.IsBoxedValueIndex(index, &i) 
+    if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Put(i, value)
       else x.Put(TypeConverter.ToString(index), value)
       
@@ -764,7 +780,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(index:double, value:double) : unit = 
     let mutable parsed = 0u
 
-    if Utils2.IsNumberIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(TypeConverter.ToString(index), value)
 
@@ -772,7 +788,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(index, value)
 
@@ -783,7 +799,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
       else x.Put(index, value)
       
@@ -791,7 +807,7 @@ and [<AllowNullLiteral>] CommonObject =
   // Put methods for setting indexes to doubles
   member x.Put(index:BoxedValue, value:Object, tag:uint32) =
     let mutable i = 0u
-    if Utils2.IsBoxedValueIndex(index, &i) 
+    if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Put(i, value, tag)
       else x.Put(TypeConverter.ToString(index), value, tag)
       
@@ -801,7 +817,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(index:double, value:Object, tag:uint32) : unit = 
     let mutable parsed = 0u
 
-    if Utils2.IsNumberIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value, tag)
       else x.Put(TypeConverter.ToString(index), value, tag)
 
@@ -809,7 +825,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value, tag)
       else x.Put(index, value, tag)
 
@@ -820,7 +836,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value, tag)
       else x.Put(index, value, tag)
       
@@ -828,7 +844,7 @@ and [<AllowNullLiteral>] CommonObject =
   // Get
   member x.Get(index:BoxedValue) : BoxedValue =
     let mutable i = 0u
-    if Utils2.IsBoxedValueIndex(index, &i) 
+    if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Get(i)
       else x.Get(TypeConverter.ToString(index))
 
@@ -838,7 +854,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Get(index:double) : BoxedValue = 
     let mutable parsed = 0u
 
-    if Utils2.IsNumberIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Get(parsed)
       else x.Get(TypeConverter.ToString(index))
 
@@ -846,7 +862,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Get(parsed)
       else x.Get(index)
       
@@ -857,7 +873,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Get(parsed)
       else x.Get(index)
 
@@ -868,7 +884,8 @@ and [<AllowNullLiteral>] CommonObject =
   // Has
   member x.Has(index:BoxedValue) : bool =
     let mutable i = 0u
-    if Utils2.IsBoxedValueIndex(index, &i) 
+
+    if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Has(i)
       else x.Has(TypeConverter.ToString(index))
 
@@ -878,7 +895,7 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Has(index:double) : bool = 
     let mutable parsed = 0u
 
-    if Utils2.IsNumberIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(TypeConverter.ToString(index))
 
@@ -886,7 +903,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString index
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(index)
       
@@ -897,7 +914,7 @@ and [<AllowNullLiteral>] CommonObject =
     let index = TypeConverter.ToString(index)
     let mutable parsed = 0u
     
-    if Utils2.IsStringIndex(index, &parsed) 
+    if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(index)
       
@@ -1147,7 +1164,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
   override x.Get(index:uint32) =
     let array = x.Find(index)
     if FSKit.Utils.isNull array
-      then Utils2.BoxedUndefined
+      then Undefined.Boxed
       elif x.IsDense 
         then x.Dense.[int index].Value
         else x.Sparse.[index]
@@ -1186,7 +1203,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 
           elif x.HasPrototype
             then yield x.Prototype.Get !i
-            else yield Utils2.BoxedUndefined
+            else yield Undefined.Boxed
 
           i := !i + 1u
       }
@@ -1203,7 +1220,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
           | _ -> 
             if x.HasPrototype 
               then yield x.Prototype.Get !i
-              else yield Utils2.BoxedUndefined
+              else yield Undefined.Boxed
 
           i := !i + 1u
       }
@@ -1695,7 +1712,7 @@ and TypeConverter() =
   static member ToPrimitive(d:double, _:byte) : BoxedValue = BoxedValue.Box(d)
   static member ToPrimitive(s:String, _:byte) : BoxedValue = BoxedValue.Box(s)
   static member ToPrimitive(o:CommonObject, hint:byte) : BoxedValue = o.DefaultValue(hint)
-  static member ToPrimitive(u:Undefined, _:byte) : BoxedValue = Utils2.BoxedUndefined
+  static member ToPrimitive(u:Undefined, _:byte) : BoxedValue = Undefined.Boxed
   static member ToPrimitive(c:System.Object, _:byte) : BoxedValue = 
     BoxedValue.Box (if c = null then null else c.ToString())
 

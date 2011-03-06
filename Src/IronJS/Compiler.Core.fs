@@ -206,7 +206,7 @@ module Core =
       | _ -> Dlr.lambdaAuto parameters functionBody
       
     #if DEBUG
-    Support.Debug.printExpr lambda Support.Debug.Expression
+    lambda |> Support.Debug.printExpr
     #endif
 
     lambda.Compile()

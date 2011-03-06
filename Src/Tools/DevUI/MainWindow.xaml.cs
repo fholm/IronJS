@@ -39,8 +39,8 @@ namespace IronJS.DevUI {
 
             ResetEnv_Click(null, null);
 
-            IronJS.Support.Debug.registerPrinter(IronJS.Support.Debug.Output.Ast, PrintDebug);
-            IronJS.Support.Debug.registerPrinter(IronJS.Support.Debug.Output.Expression, Print);
+            IronJS.Support.Debug.registerAstPrinter(PrintDebug);
+            IronJS.Support.Debug.registerExprPrinter(Print);
 
             if (System.IO.File.Exists("ironjs_devgui.cache")) {
                 Input.Text = System.IO.File.ReadAllText("ironjs_devgui.cache");

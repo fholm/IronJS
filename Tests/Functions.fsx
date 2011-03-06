@@ -10,8 +10,13 @@ open IronJS
 open IronJS.Support.Aliases
 open FSKit.Testing.Assert
 
+Microsoft.FSharp.Compiler.Interactive.Settings.fsi.CommandLineArgs
+
+let setup () = IronJS.Hosting.Context.Create()
+let teardown () = ()
+
 let test, clean, state, report = 
-  FSKit.Testing.createTesters (fun () -> IronJS.Hosting.Context.Create())
+  FSKit.Testing.createTesters setup
 
 test "13.2 Creating Function Objects" (fun ctx ->
   ctx.Execute "var foo = function(a) { }" |> ignore
@@ -20,7 +25,7 @@ test "13.2 Creating Function Objects" (fun ctx ->
   let prototype = foo.Get<CommonObject> "prototype"
 
   isT<FunctionObject> foo
-  isT<CommonObject> prototype
+  isT<FunctionObject> prototype
   equal foo.Class Classes.Function
   same foo.Prototype ctx.Environment.Prototypes.Function
   equal 1.0 (foo.Get<double> "length")

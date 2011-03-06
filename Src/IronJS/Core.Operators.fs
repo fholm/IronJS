@@ -154,6 +154,8 @@ type Operators =
   // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:BoxedValue, r:BoxedValue) = 
+    failwith "LOL"
+
     if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 

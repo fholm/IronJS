@@ -77,7 +77,7 @@ module HostFunction =
     let lambda = Dlr.lambda target.Delegate args body
 
     #if DEBUG
-    Support.Debug.printExpr lambda
+    Support.Debug.printExpr lambda Support.Debug.Expression
     #endif
 
     lambda.Compile()

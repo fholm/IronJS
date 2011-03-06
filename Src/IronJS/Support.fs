@@ -33,12 +33,17 @@ module Aliases =
 
 module Debug =
 
-  let private printers = 
-    new Aliases.MutableList<Action<string>>()
+  type Output
+    = Ast
+    | Expression
 
-  let internal print x =
-    for printer in printers do
-      printer.Invoke (sprintf "%A" x)
+  let private printers = 
+    new Aliases.MutableList<Output * Action<string>>()
+
+  let internal print x filter =
+    for output, printer in printers do
+      if output = filter then
+        printer.Invoke (sprintf "%A" x)
 
   let internal printExpr x = 
     x |> IronJS.Dlr.Utils.debugView |> print
@@ -47,7 +52,9 @@ module Debug =
     printers.Add x
 
   let registerConsolePrinter () =
-    registerPrinter (new Action<string>(fun s -> printfn "%s" s))
+    let print = new Action<string>(fun s -> printfn "%s" s)
+    registerPrinter(Ast, print)
+    registerPrinter(Expression, print)
 
 type Error(msg) = inherit Exception(msg)
 type CompilerError(msg) = inherit Error(msg)

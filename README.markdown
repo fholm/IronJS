@@ -10,12 +10,12 @@ IronJS is released under the [Apache License Version 2.0](http://www.apache.org/
 
 What you need to use IronJS
 
-* .NET 4.0 (Src/IronJS.CLR4.sln)
+* .NET 4.0 (Src/CLR4.sln)
 
 ## Getting the source (Including FSKit)
 
-* ~$ git clone git://github.com/fholm/IronJS.git IronJS
-* ~$ cd IronJS\Src
-* ~$ git clone git://github.com/fholm/FSKit.git
-* ~$ cd FSKit
-* ~$ cd ..
+* $ git clone git://github.com/fholm/IronJS.git IronJS
+* $ cd IronJS\Src
+* $ git clone git://github.com/fholm/FSKit.git
+* $ cd FSKit
+* $ cd ..

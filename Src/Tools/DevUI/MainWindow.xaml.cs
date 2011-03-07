@@ -99,7 +99,7 @@ namespace IronJS.DevUI {
                 Debug.Text = "";
                 ExpressionTree.Text = "";
                 Result.Text = "";
-                var result = Utils.jsBox(ijsCtx.Execute(Input.Text));
+                var result = IronJS.CoreUtils.JsBox(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
                 Result.Text += IronJS.TypeConverter.ToString(result);
 

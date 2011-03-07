@@ -73,8 +73,7 @@ module Utils =
   //----------------------------------------------------------------------------
         
   //----------------------------------------------------------------------------
-  let undefined = Dlr.propertyStaticT<Undefined> "Instance"
-  let errorValue error = Dlr.field error "JsValue"
+  let errorValue error = Dlr.field error "Value"
   let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<BoxedValue> expr
     
   let voidAsUndefined (expr:Dlr.Expr) =

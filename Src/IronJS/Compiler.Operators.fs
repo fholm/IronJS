@@ -70,7 +70,7 @@ module Unary =
   //----------------------------------------------------------------------------
   // 11.4.2
   let void' (ctx:Ctx) ast =
-    Dlr.blockSimple [ctx.Compile ast; Utils.undefined]
+    Dlr.blockSimple [ctx.Compile ast; Utils.Constants.undefined]
         
   //----------------------------------------------------------------------------
   // 11.4.3

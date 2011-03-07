@@ -39,7 +39,7 @@ module Scope =
     locals |> Seq.map (fun var ->
       let expr = storageExpr ctx var
       let variable = Dlr.indexInt expr var.Index
-      Utils.assign variable Utils.undefined)
+      Utils.assign variable Utils.Constants.undefined)
       
   //--------------------------------------------------------------------------
   let private initLocals ctx (locals:Map<string, Ast.Local>) =

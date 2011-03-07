@@ -63,8 +63,7 @@ module ControlFlow =
     
     let propertyState = Dlr.paramT<bool> "propertyState"
     let propertySet = Dlr.property pair "Item2"
-    let propertyEnumerator =
-       Dlr.paramT<MutableSet<string>.Enumerator> "propertyEnumerator"
+    let propertyEnumerator = Dlr.paramT<MutableSet<string>.Enumerator> "propertyEnumerator"
     let propertyCurrent = Dlr.property propertyEnumerator "Current"
 
     let indexCurrent = Dlr.paramT<uint32> "indexCurrent"
@@ -81,7 +80,6 @@ module ControlFlow =
           (TypeConverter.ToObject(ctx.Env, object' |> ctx.Compile)) "CollectProperties" []))
 
       (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
-
       (Dlr.assign propertyState Dlr.true')
       (Dlr.assign indexLength (Dlr.property pair "Item1"))
 

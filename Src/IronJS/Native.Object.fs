@@ -28,11 +28,8 @@ module Object =
     | TypeTags.Clr -> f.Env.NewObject()
     | _ -> TypeConverter.ToObject(f.Env, value)
 
-  let internal toString (o:CO) = 
-    sprintf "[object %s]" o.ClassName
-    
+  let internal toString (o:CO) = sprintf "[object %s]" o.ClassName
   let internal toLocaleString = toString
-  
   let internal valueOf (o:CO) = o
 
   let internal hasOwnProperty (o:CommonObject) (name:string) =
@@ -41,9 +38,7 @@ module Object =
       then o.Properties.[index].HasValue
       else false
 
-  let internal isPrototypeOf (o:CommonObject) (v:CommonObject) = 
-    v.Prototype = o
-
+  let internal isPrototypeOf (o:CommonObject) (v:CommonObject) = v.Prototype = o
   let internal propertyIsEnumerable (o:CommonObject) (name:string) =
     let descriptor = o.Find(name)
     descriptor.HasValue && descriptor.IsEnumerable

@@ -449,24 +449,24 @@ and [<AllowNullLiteral>] CommonObject =
   abstract ClassName : string with get
   default x.ClassName = "Object"
 
-  //--
+  //
   member x.HasPrototype = 
     x.Prototype |> FSKit.Utils.notNull
 
-  //--
+  //
   member x.RequiredStorage = 
     x.PropertySchema.IndexMap.Count
     
-  //--
+  //
   abstract GetLength : unit -> uint32
   default x.GetLength() =
     x.Get("length") |> TypeConverter.ToUInt32
 
-  //--
+  //
   member x.CastTo<'a when 'a :> CO>() =
     if x :? 'a then x :?> 'a else x.Env.RaiseTypeError()
     
-  //--
+  //
   member x.TryCastTo<'a when 'a :> CO>(o:'a byref) =
     if x :? 'a then
       o <- x :?> 'a
@@ -475,11 +475,11 @@ and [<AllowNullLiteral>] CommonObject =
     else
       false
     
-  //--
+  //
   member x.CheckType<'a when 'a :> CO>() =
     x.CastTo<'a>() |> ignore
     
-  //-- Expands object property storage
+  // Expands object property storage
   member x.ExpandStorage() =
     let newValues = Array.zeroCreate (x.RequiredStorage * 2)
 
@@ -488,7 +488,7 @@ and [<AllowNullLiteral>] CommonObject =
       
     x.Properties <- newValues
     
-  //-- Creates an index for property named 'name'
+  // Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
     x.PropertySchema <- x.PropertySchema.SubClass name
 
@@ -497,7 +497,7 @@ and [<AllowNullLiteral>] CommonObject =
 
     x.PropertySchema.IndexMap.[name]
     
-  //-- Finds a property in the Prototype chain
+  // Finds a property in the prototype chain
   member x.Find(name:string) =
     
     let mutable index = 0
@@ -517,7 +517,7 @@ and [<AllowNullLiteral>] CommonObject =
 
       find x.Prototype name
     
-  //-- Can we put property named 'name' ?
+  // Can we put property named 'name' ?
   member x.CanPut(name:string, index:int32 byref) =
     
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
@@ -538,6 +538,21 @@ and [<AllowNullLiteral>] CommonObject =
 
       else
         false
+
+  //
+  member x.SetAttrs(name:string, attrs:uint16) =
+    let mutable index = 0
+
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
+      let currentAttrs = x.Properties.[index].Attributes
+      x.Properties.[index].Attributes <- currentAttrs ||| attrs
+
+  //
+  member x.TryCallMember (name:string) : BV option =
+    let func = x.Get(name)
+    match func.Tag with
+    | TypeTags.Function -> Some(func.Func.Call(x))
+    | _ -> None
         
   //----------------------------------------------------------------------------
   // These methods are the core Put/Get/Has/Delete methods for property access
@@ -886,29 +901,12 @@ and [<AllowNullLiteral>] CommonObject =
     if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(index)
-
-  //----------------------------------------------------------------------------
-      
-  //
-  member x.SetAttrs(name:string, attrs:uint16) =
-    let mutable index = 0
-
-    if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
-      let currentAttrs = x.Properties.[index].Attributes
-      x.Properties.[index].Attributes <- currentAttrs ||| attrs
-
-  //
-  member x.TryCallMember (name:string) : BV option =
-    let func = x.Get(name)
-    match func.Tag with
-    | TypeTags.Function -> Some(func.Func.Call(x))
-    | _ -> None
       
   //
   abstract CollectProperties : unit -> uint32 * MutableSet<String>
   default x.CollectProperties() =
     let rec collectProperties length (set:MutableSet<String>) (current:CommonObject) =
-      if FSKit.Utils.notNull current then
+      if current |> FSKit.Utils.notNull then
         let length =
           if current :? ArrayObject then
             let array = current :?> ArrayObject
@@ -917,10 +915,8 @@ and [<AllowNullLiteral>] CommonObject =
           else 
             length
 
-        let keys = current.PropertySchema.IndexMap
-        for pair in keys do
+        for pair in current.PropertySchema.IndexMap do
           let descriptor = current.Properties.[pair.Value]
-
           if descriptor.HasValue && descriptor.IsEnumerable
             then pair.Key |> set.Add |> ignore
 

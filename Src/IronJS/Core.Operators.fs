@@ -154,8 +154,6 @@ type Operators =
   // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
   static member eq (l:BoxedValue, r:BoxedValue) = 
-    failwith "LOL"
-
     if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 
@@ -195,12 +193,12 @@ type Operators =
       elif r.Tag >= TypeTags.Object then
         match l.Tag with
         | TypeTags.String -> 
-          let r = TypeConverter.ToPrimitive(r.Object, DefaultValue.None)
+          let r = TypeConverter.ToPrimitive(r.Object, DefaultValueHint.None)
           Operators.eq(l, r)
 
         | _ -> 
           if l.IsNumber then
-            let r = TypeConverter.ToPrimitive(r.Object, DefaultValue.None)
+            let r = TypeConverter.ToPrimitive(r.Object, DefaultValueHint.None)
             Operators.eq(l, r)
           else
             false
@@ -208,12 +206,12 @@ type Operators =
       elif l.Tag >= TypeTags.Object then
         match r.Tag with
         | TypeTags.String -> 
-          let l = TypeConverter.ToPrimitive(l.Object, DefaultValue.None)
+          let l = TypeConverter.ToPrimitive(l.Object, DefaultValueHint.None)
           Operators.eq(l, r)
 
         | _ -> 
           if r.IsNumber then
-            let l = TypeConverter.ToPrimitive(l.Object, DefaultValue.None)
+            let l = TypeConverter.ToPrimitive(l.Object, DefaultValueHint.None)
             Operators.eq(l, r)
           else
             false

@@ -62,10 +62,10 @@ module ParamsModes =
   let [<Literal>] ObjectParams = 1uy
   let [<Literal>] BoxParams = 2uy
 
-module DefaultValue =
-  let [<Literal>] None = 0uy
-  let [<Literal>] String = 1uy
-  let [<Literal>] Number = 2uy
+type DefaultValueHint
+    = None = 0
+    | String = 1
+    | Number = 2
 
 module Classes =
   let [<Literal>] Object = 1uy
@@ -650,15 +650,17 @@ and [<AllowNullLiteral>] CommonObject =
   default x.Delete(index:uint32) =
     x.Delete(index.ToString())
 
-  abstract DefaultValue : byte -> BoxedValue
-  default x.DefaultValue(hint:byte) =
+  abstract DefaultValue : DefaultValueHint -> BoxedValue
+  default x.DefaultValue(hint:DefaultValueHint) =
     let hint =
-      if hint = DefaultValue.None
-        then DefaultValue.Number
-        else hint
+      match hint with
+      | DefaultValueHint.None -> 
+        DefaultValueHint.Number
+
+      | _ -> hint
         
     match hint with
-    | DefaultValue.Number ->
+    | DefaultValueHint.Number ->
       match x.TryCallMember("valueOf") with
       | Some v when v.IsPrimitive -> v
       | _ -> 
@@ -666,7 +668,7 @@ and [<AllowNullLiteral>] CommonObject =
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
 
-    | DefaultValue.String ->
+    | DefaultValueHint.String ->
       match x.TryCallMember("toString") with
       | Some v when v.IsPrimitive -> v
       | _ -> 
@@ -1708,15 +1710,15 @@ and TypeConverter() =
     Dlr.callStaticT<TypeConverter> "ToBoolean" [expr]
 
   (**)
-  static member ToPrimitive(b:bool, _:byte) : BoxedValue = BoxedValue.Box(b)
-  static member ToPrimitive(d:double, _:byte) : BoxedValue = BoxedValue.Box(d)
-  static member ToPrimitive(s:String, _:byte) : BoxedValue = BoxedValue.Box(s)
-  static member ToPrimitive(o:CommonObject, hint:byte) : BoxedValue = o.DefaultValue(hint)
-  static member ToPrimitive(u:Undefined, _:byte) : BoxedValue = Undefined.Boxed
-  static member ToPrimitive(c:System.Object, _:byte) : BoxedValue = 
+  static member ToPrimitive(b:bool, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(b)
+  static member ToPrimitive(d:double, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(d)
+  static member ToPrimitive(s:String, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(s)
+  static member ToPrimitive(o:CommonObject, hint:DefaultValueHint) : BoxedValue = o.DefaultValue(hint)
+  static member ToPrimitive(u:Undefined, _:DefaultValueHint) : BoxedValue = Undefined.Boxed
+  static member ToPrimitive(c:System.Object, _:DefaultValueHint) : BoxedValue = 
     BoxedValue.Box (if c = null then null else c.ToString())
 
-  static member ToPrimitive(v:BoxedValue, hint:byte) : BoxedValue =
+  static member ToPrimitive(v:BoxedValue, hint:DefaultValueHint) : BoxedValue =
     match v.Tag with
     | TypeTags.Clr -> TypeConverter.ToPrimitive(v.Clr, hint)
     | TypeTags.Object 
@@ -1739,7 +1741,7 @@ and TypeConverter() =
   static member ToString(o:CommonObject) : string = 
     match o.Class with
     | Classes.String -> (o :?> ValueObject).Value.Value.String
-    | _ -> o.DefaultValue(DefaultValue.String) |> TypeConverter.ToString
+    | _ -> o.DefaultValue(DefaultValueHint.String) |> TypeConverter.ToString
 
   static member ToString(v:BoxedValue) : string =
     match v.Tag with
@@ -1771,7 +1773,7 @@ and TypeConverter() =
   static member ToNumber(o:CommonObject) : double = 
     match o.Class with
     | Classes.Number -> (o :?> ValueObject).Value.Value.Number
-    | _ -> o.DefaultValue(DefaultValue.Number) |> TypeConverter.ToNumber 
+    | _ -> o.DefaultValue(DefaultValueHint.Number) |> TypeConverter.ToNumber 
 
   static member ToNumber(s:String) : double =
     let mutable d = 0.0

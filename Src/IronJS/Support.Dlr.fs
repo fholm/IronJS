@@ -559,3 +559,39 @@ module Dlr =
     
     let inline (!!!) x = const' x
     let inline (!@) x = Ext.unwrap x
+
+    // Binary operators, starts with .
+    let (.=) a b = assign a b
+    let (.+) a b = add a b
+    let (.-) a b = sub a b
+    let (.*) a b = mul a b
+    let (./) a b = div a b
+    let (.%) a b = mod' a b
+    let (.^) a b = pow a b
+
+    let (.+=) a b = addAsn a b
+    let (.-=) a b = subAsn a b
+    let (.*=) a b = mulAsn a b
+    let (./=) a b = divAsn a b
+    let (.%=) a b = modAsn a b
+    let (.^=) a b = powAsn a b
+
+    let (.==) a b = eq a b
+    let (.!=) a b = notEq a b
+    let (.<) a b  = lt a b
+    let (.<=) a b = ltEq a b 
+    let (.>) a b  = gt a b
+    let (.>=) a b = gtEq a b
+
+    let (.<<) a b = lhs a b
+    let (.>>) a b = rhs a b
+    let (.^^) a b = xor a b
+    let (.&) a b  = bAnd' a b
+    let (.|) a b  = bOr' a b
+
+    let (.||) a b = or' a b
+    let (.&&) a b = and' a b
+    
+    // Unary operators, starts with !
+    let (!~) a = cmpl a
+    let (!!) a = not a

@@ -36,16 +36,16 @@ module Utils =
   //----------------------------------------------------------------------------
   module Box =
     
-    let tag expr = Dlr.field expr "Tag"
-    let marker expr = Dlr.field expr "Marker"
+    let tagField    expr  = Dlr.field expr "Tag"
+    let markerField expr  = Dlr.field expr "Marker"
     
-    let isBool (expr:Dlr.Expr) = Dlr.eq (tag expr) !!!TypeTags.Bool
-    let isNumber (expr:Dlr.Expr) = Dlr.lt (marker expr) !!!Markers.Tagged
-    let isClr (expr:Dlr.Expr) = Dlr.eq (tag expr) !!!TypeTags.Clr
-    let isString (expr:Dlr.Expr) = Dlr.eq (tag expr) !!!TypeTags.String
-    let isUndefined (expr:Dlr.Expr) = Dlr.eq (tag expr) !!!TypeTags.Undefined
-    let isObject (expr:Dlr.Expr) = Dlr.gtEq (tag expr) !!!TypeTags.Object
-    let isFunction (expr:Dlr.Expr) = Dlr.eq (tag expr) !!!TypeTags.Function
+    let isBool      boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Bool)
+    let isNumber    boxExpr = Dlr.lt    (markerField boxExpr) (Dlr.const' Markers.Tagged)
+    let isClr       boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Clr)
+    let isString    boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.String)
+    let isUndefined boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Undefined)
+    let isObject    boxExpr = Dlr.gtEq  (tagField boxExpr)    (Dlr.const' TypeTags.Object)
+    let isFunction  boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Function)
 
     let unboxNumber box = Dlr.field box BoxFields.Number
     let unboxBool box = Dlr.field box BoxFields.Bool
@@ -58,7 +58,7 @@ module Utils =
     let setTag expr t =
       match t with
       | TypeTags.Number -> Dlr.void'
-      | _ -> Dlr.assign (tag expr) !!!t
+      | _ -> Dlr.assign (tagField expr) (Dlr.const' t)
 
     let setTagOf expr (of':Dlr.Expr) = 
       setTag expr (of'.Type |> TypeTag.OfType)

@@ -67,33 +67,6 @@ type DefaultValueHint
     | String = 1
     | Number = 2
 
-module Classes =
-  let [<Literal>] Object = 1uy
-  let [<Literal>] Function = 2uy
-  let [<Literal>] Array = 3uy
-  let [<Literal>] String = 4uy
-  let [<Literal>] RegExp  = 5uy
-  let [<Literal>] Boolean = 6uy
-  let [<Literal>] Number = 7uy
-  let [<Literal>] Math = 8uy
-  let [<Literal>] Date = 9uy
-  let [<Literal>] Error = 10uy
-
-  let Names = 
-    Map.ofList [
-      (Object, "Object")
-      (Function, "Function")
-      (Array, "Array")
-      (String, "String")
-      (RegExp, "Regexp")
-      (Boolean, "Boolean")
-      (Number, "Number")
-      (Math, "Math")
-      (Date, "Date")
-      (Error, "Error")]
-
-  let getName cls = Names.[cls]
-
 module MarshalModes =
   let [<Literal>] Default = 2
   let [<Literal>] This = 1

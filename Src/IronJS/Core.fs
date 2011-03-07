@@ -946,7 +946,7 @@ and [<AllowNullLiteral>] CommonObject =
 //  
 *)
 and VO = ValueObject
-and [<AllowNullLiteral>] ValueObject = 
+and [<AllowNullLiteral>][<AbstractClass>] ValueObject = 
   inherit CommonObject
 
   [<DefaultValue>]

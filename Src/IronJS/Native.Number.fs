@@ -43,7 +43,7 @@ module Number =
     else failwith "Number is not NaN, Infinity or -Infinity"
 
   let internal toString (f:FunctionObject) (this:CommonObject) (radix:double) =
-    this |> Utils.checkCommonObjectClass Classes.Number
+    this.CheckClass Classes.Number
     let number = (this |> Utils.getValueObjectValue).Number
 
     if FSKit.Utils.isNaNOrInf number then nanToString number
@@ -61,7 +61,7 @@ module Number =
     
   //----------------------------------------------------------------------------
   let internal valueOf (f:FunctionObject) (this:CommonObject) =
-    this |> Utils.checkCommonObjectClass Classes.Number
+    this.CheckClass Classes.Number
     this |> Utils.getValueObjectValue
 
   //----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ module Number =
       env.RaiseRangeError("fractions must be between 0 and 20")
 
   let internal toFixed (f:FunctionObject) (this:CommonObject) (fractions:double) =
-    this |> Utils.checkCommonObjectClass Classes.Number
+    this.CheckClass Classes.Number
 
     let number = (this |> Utils.getValueObjectValue).Number
     let fractions = fractions |> TypeConverter.ToInt32
@@ -84,7 +84,7 @@ module Number =
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
   let internal toExponential (f:FunctionObject) (this:CommonObject) (fractions:BoxedValue) =
-    this |> Utils.checkCommonObjectClass Classes.Number
+    this.CheckClass Classes.Number
     
     let number = (this |> Utils.getValueObjectValue).Number
 
@@ -107,7 +107,7 @@ module Number =
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
   let internal toPrecision (f:FunctionObject) (this:CommonObject) (precision:BoxedValue) =
-    this |> Utils.checkCommonObjectClass Classes.Number
+    this.CheckClass Classes.Number
     
     let number = (this |> Utils.getValueObjectValue).Number
 

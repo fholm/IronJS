@@ -4,6 +4,7 @@
 * Implement missing functionality in Array object
 * Make all internal methods respect DontDelete, ReadOnly and DontEnum
 * Refactor the Core.Utils (module) and Core.Utils2 (class)
+* Remove the current limitation of max four arguments for function calls
 * Remove abuse of active patterns in Utils module
 * Adding unit tests for the whole ECMA-262 (3rd edition) spec
 * Replace the generated ANTLR parser with a pure F# implementation

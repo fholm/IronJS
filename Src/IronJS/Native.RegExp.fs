@@ -10,7 +10,7 @@ module RegExp =
     f.Env.NewRegExp(pattern, options) |> BV.Box
 
   let private toString (f:FO) (this:CO) =
-    let this = Utils.castCommonObject<RO> this
+    let this = this.CastTo<RO>()
     let source = this.Get("source") |> TypeConverter.ToString
     let result = ref ("/" + source + "/")
 

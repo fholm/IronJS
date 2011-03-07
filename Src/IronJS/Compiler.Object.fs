@@ -21,7 +21,7 @@ module Object =
     //--------------------------------------------------------------------------
     let putRef expr name (value:Dlr.Expr) =
       Utils.blockTmpT<CommonObject> expr (fun tmp -> 
-        let tag = value.Type |> Utils.type2tag |> Dlr.const'
+        let tag = value.Type |> TypeTag.OfType |> Dlr.const'
         let args = [name; value; tag]
         [Dlr.call tmp "Put" args; value]
       )
@@ -99,7 +99,7 @@ module Object =
 
     //--------------------------------------------------------------------------
     let putRef expr index (value:Dlr.Expr) =
-      let tag = value.Type |> Utils.type2tag |> Dlr.const'
+      let tag = value.Type |> TypeTag.OfType |> Dlr.const'
 
       match index with
       | IsIndex ->

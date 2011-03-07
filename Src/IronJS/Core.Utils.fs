@@ -24,60 +24,8 @@ module Utils =
         then Some(o :?> FO) 
         else None
 
-  let numberToIndex (n:double) =
-    let i = uint32 n
-    if double i = n 
-      then Some i 
-      else None
-
-  let stringToIndex (str:string) =
-    match UInt32.TryParse str with
-    | true, index -> Some index
-    | _ -> None
-
-  let boxToIndex (box:BoxedValue) =
-    if box.IsNumber then box.Number |> numberToIndex
-    elif box.IsString then box.String |> stringToIndex
-    else None
-
   let getValueObjectValue (o:CommonObject) = 
     (o :?> ValueObject).Value.Value
-
-  let type2tag (t:Type) =   
-    if   t |> FSKit.Utils.isTypeT<bool>           then TypeTags.Bool
-    elif t |> FSKit.Utils.isTypeT<double>         then TypeTags.Number
-    elif t |> FSKit.Utils.isTypeT<string>         then TypeTags.String
-    elif t |> FSKit.Utils.isTypeT<Undefined>      then TypeTags.Undefined
-    elif t |> FSKit.Utils.isTypeT<FunctionObject> then TypeTags.Function
-    elif t |> FSKit.Utils.isTypeT<CommonObject>   then TypeTags.Object
-    elif t |> FSKit.Utils.isTypeT<BoxedValue>     then TypeTags.Box
-                                                  else TypeTags.Clr
-
-  let tag2field tag =
-    match tag with
-    | TypeTags.Bool       -> BoxFields.Bool
-    | TypeTags.Number     -> BoxFields.Number   
-    | TypeTags.String     -> BoxFields.String   
-    | TypeTags.Undefined  -> BoxFields.Undefined
-    | TypeTags.Object     -> BoxFields.Object   
-    | TypeTags.Function   -> BoxFields.Function 
-    | TypeTags.Clr        -> BoxFields.Clr
-    | _ -> Support.Errors.invalidTypeTag tag
-
-  let type2field (t:Type) = 
-    t |> type2tag |> tag2field
-
-  let castCommonObject<'a when 'a :> CO> (o:CO) =
-    if o :? 'a then o :?> 'a else o.Env.RaiseTypeError()
-
-  let checkCommonObjectType<'a when 'a :> CO> (o:CO) =
-    o |> castCommonObject<'a> |> ignore
-
-  let checkCommonObjectClass (class':byte) (o:CommonObject) =
-    if o.Class <> class' then
-      let className = class' |> Classes.getName
-      let error = sprintf "Object is not an instance of %s" className
-      o.Env.RaiseTypeError(error)
 
   let jsBox (o:obj) =
     if o :? BoxedValue then 
@@ -87,7 +35,7 @@ module Utils =
       BoxedConstants.Null
 
     else
-      match o.GetType() |> type2tag with
+      match o.GetType() |> TypeTag.OfType with
       | TypeTags.Bool -> BV.Box (o :?> bool)
       | TypeTags.Number -> BV.Box (o :?> double)
       | tag -> BV.Box(o, tag)

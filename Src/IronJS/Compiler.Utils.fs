@@ -60,11 +60,11 @@ module Utils =
       | _ -> Dlr.assign (tag expr) !!!t
 
     let setTagOf expr (of':Dlr.Expr) = 
-      setTag expr (of'.Type |> Utils.type2tag)
+      setTag expr (of'.Type |> TypeTag.OfType)
 
     let setValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
-      let bf = value.Type |> Utils.type2field
-      Dlr.assign (Dlr.field expr bf) value
+      let field = value.Type |> TypeTag.OfType |> BV.FieldOfTag
+      Dlr.assign (Dlr.field expr field) value
       
   //----------------------------------------------------------------------------
   module Object =
@@ -158,7 +158,7 @@ module Utils =
         Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
 
       else
-        let typeCode = rexpr.Type |> Utils.type2tag
+        let typeCode = rexpr.Type |> TypeTag.OfType
         let box = Dlr.Ext.unwrap lexpr
         let val' = Dlr.Ext.unwrap rexpr
         if typeCode <= TypeTags.Number then
@@ -174,23 +174,17 @@ module Utils =
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
 
   //----------------------------------------------------------------------------
-  let compileIndex (ctx:Ctx) index =
-    match index with
-    | Ast.Number n ->
-      match n |> Utils.numberToIndex with
-      | Some index -> !!!index
-      | _ -> ctx.Compile index
+  let compileIndex (ctx:Ctx) indexAst =
+    let mutable index = 0u
 
-    | Ast.String s ->
-      match s |> Utils.stringToIndex with
-      | Some index -> !!!index
-      | _ -> ctx.Compile index
-
-    | _ -> ctx.Compile index
+    match indexAst with
+    | Ast.Number n when CoreUtils.TryConvertToIndex(n, &index) -> Dlr.const' index
+    | Ast.String s when CoreUtils.TryConvertToIndex(s, &index) -> Dlr.const' index
+    | _ -> ctx.Compile indexAst
     
   //----------------------------------------------------------------------------
   let ensureObject (ctx:Ctx) (expr:Dlr.Expr) ifObj ifClr =
-    match expr.Type |> Utils.type2tag with
+    match expr.Type |> TypeTag.OfType with
     | TypeTags.Function
     | TypeTags.Object -> blockTmp expr (fun expr -> [ifObj expr])
     | TypeTags.Clr -> blockTmp expr (fun expr -> [ifClr expr])
@@ -216,7 +210,7 @@ module Utils =
 
   //----------------------------------------------------------------------------
   let ensureFunction (expr:Dlr.Expr) ifFunc ifClr =
-    match expr.Type |> Utils.type2tag with
+    match expr.Type |> TypeTag.OfType with
     | TypeTags.Function -> blockTmp expr (fun expr -> [ifFunc expr])
     | TypeTags.Clr -> blockTmp expr (fun expr -> [ifClr expr])
     | TypeTags.Object

@@ -398,7 +398,7 @@ module Array =
       
   //----------------------------------------------------------------------------
   let internal toString (f:FunctionObject) (a:CommonObject) =
-    a |> Utils.checkCommonObjectType<AO>
+    a.CheckType<AO>()
     join f a Undefined.Boxed
 
   let internal toLocaleString = toString

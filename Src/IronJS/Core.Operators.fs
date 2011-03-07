@@ -93,9 +93,13 @@ type Operators =
     if not r.IsObject then
       env.RaiseTypeError("Right operand is not a object")
 
-    match l |> Utils.boxToIndex with
-    | Some i -> r.Object.Has(i)
-    | _ -> let name = TypeConverter.ToString(l) in r.Object.Has(name)
+    let mutable index = 0u
+    if CoreUtils.TryConvertToIndex(l, &index) then
+      r.Object.Has(index)
+
+    else
+      let name = TypeConverter.ToString(l)
+      r.Object.Has(name)
     
   //----------------------------------------------------------------------------
   // instanceof

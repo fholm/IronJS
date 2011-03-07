@@ -237,9 +237,6 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       | TypeTags.Clr        -> BoxFields.Clr
       | _ -> Support.Errors.invalidTypeTag tag
 
-    static member FieldOfType (t:Type) = 
-      t |> TypeTag.OfType |> BV.FieldOfTag
-
   end
 
 (*
@@ -501,13 +498,33 @@ and [<AllowNullLiteral>] CommonObject =
     Properties = null
   }
 
-  //----------------------------------------------------------------------------
-  member x.HasPrototype = x.Prototype |> FSKit.Utils.notNull
-  member x.RequiredStorage = x.PropertySchema.IndexMap.Count
+  //--
+  member x.HasPrototype = 
+    x.Prototype |> FSKit.Utils.notNull
 
+  //--
+  member x.RequiredStorage = 
+    x.PropertySchema.IndexMap.Count
+    
+  //--
   abstract GetLength : unit -> uint32
   default x.GetLength() =
     x.Get("length") |> TypeConverter.ToUInt32
+
+  //--
+  member x.CastTo<'a when 'a :> CO>() =
+    if x :? 'a then x :?> 'a else x.Env.RaiseTypeError()
+    
+  //--
+  member x.CheckType<'a when 'a :> CO>() =
+    x.CastTo<'a>() |> ignore
+    
+  //--
+  member x.CheckClass (cls:byte) =
+    if x.Class <> cls then
+      let className = cls |> Classes.getName
+      let error = sprintf "Object is not an instance of %s" className
+      x.Env.RaiseTypeError(error)
     
   //----------------------------------------------------------------------------
   //Expands object property storage
@@ -1430,6 +1447,9 @@ and [<AllowNullLiteral>] DynamicSchema =
     x.IndexMap.Add(name, index)
     x :> Schema
     
+(*
+//
+*)
 and FO = FunctionObject
 and [<AllowNullLiteral>] FunctionObject =
   inherit CommonObject
@@ -1579,7 +1599,10 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
     
-(* Represents a .NET delegate wrapped as a JavaScript function *)
+
+(*
+//
+*)
 and HFO<'a when 'a :> Delegate> = HostFunction<'a>
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit FunctionObject
@@ -1628,14 +1651,18 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
-(**)
+(*
+//
+*)
 and UserError(value:BoxedValue, line:int, column:int) =
   inherit IronJS.Support.Error("UserError: " + TypeConverter.ToString(value))
   member x.Value = value
   member x.Line = line
   member x.Column = column
-  
-(**)
+
+(*
+//
+*)
 and TypeConverter() =
 
   (**)

@@ -25,11 +25,11 @@ module Boolean =
     | _ -> value |> BV.Box
 
   let private valueOf (valueOf:FunctionObject) (this:CommonObject) =
-    this |> Utils.checkCommonObjectClass Classes.Boolean
+    this.CheckClass Classes.Boolean
     this |> Utils.getValueObjectValue
 
   let private toString (toString:FunctionObject) (this:CommonObject) =
-    this |> Utils.checkCommonObjectClass Classes.Boolean
+    this.CheckClass Classes.Boolean
     this |> Utils.getValueObjectValue |> TypeConverter.ToString
 
   let createPrototype (env:Environment) objPrototype =

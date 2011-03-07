@@ -71,8 +71,6 @@ module Utils =
     let prototype expr = Dlr.field expr "Prototype"
       
   //----------------------------------------------------------------------------
-        
-  //----------------------------------------------------------------------------
   let errorValue error = Dlr.field error "Value"
   let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<BoxedValue> expr
     
@@ -97,10 +95,21 @@ module Utils =
         ] |> Seq.ofList
       )
 
+  let tempBlock (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
+    if value |> Dlr.Ext.isStatic then
+      Dlr.blockSimple (body value)
+
+    else
+      let name = Dlr.tmpName()
+      let temp = Dlr.param name value.Type
+      let assign = Dlr.assign temp value
+      Dlr.block [temp] (assign :: (body temp))
+
   //----------------------------------------------------------------------------
   let blockTmp (expr:Dlr.Expr) (f:Dlr.Expr -> Dlr.Expr list) = 
     if Dlr.Ext.isStatic expr then
       Dlr.blockSimple (f expr)
+
     else
       let tmp = Dlr.param (Dlr.tmpName()) expr.Type
       Dlr.block [tmp] (Dlr.assign tmp expr :: f (Dlr.Ext.static' tmp))

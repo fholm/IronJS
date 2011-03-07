@@ -28,12 +28,12 @@ module Object =
     | TypeTags.Clr -> f.Env.NewObject()
     | _ -> TypeConverter.ToObject(f.Env, value)
 
-  let internal toString (o:CommonObject) = 
-    sprintf "[object %s]" Classes.Names.[o.Class]
+  let internal toString (o:CO) = 
+    sprintf "[object %s]" o.ClassName
     
   let internal toLocaleString = toString
   
-  let internal valueOf (o:CommonObject) = o
+  let internal valueOf (o:CO) = o
 
   let internal hasOwnProperty (o:CommonObject) (name:string) =
     let mutable index = 0
@@ -49,7 +49,7 @@ module Object =
     descriptor.HasValue && descriptor.IsEnumerable
       
   let createPrototype (env:Environment) =
-    CommonObject(env, env.Maps.Base, null, Classes.Object)
+    CO(env, env.Maps.Base, null)
 
   let setupPrototype (env:Environment) =
     let dontEnum = DescriptorAttrs.DontEnum

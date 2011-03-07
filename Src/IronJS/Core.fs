@@ -162,7 +162,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool
     member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
     member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
-    member x.IsRegExp = x.IsObject && x.Object.Class = Classes.RegExp
+    member x.IsRegExp = x.IsObject && x.Object :? RegExpObject
     member x.IsNull = x.IsClr && x.Clr |> FSKit.Utils.isNull
 
     member x.IsPrimitive =
@@ -345,7 +345,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewObject() =
     let map = x.Maps.Base
     let proto = x.Prototypes.Object
-    CO(x, map, proto, Classes.Object)
+    CO(x, map, proto)
 
   member x.NewMath() =
     MO(x)
@@ -408,7 +408,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewPrototype() =
     let map = x.Maps.Prototype
     let proto = x.Prototypes.Object
-    let prototype = CommonObject(x, map, proto, Classes.Object)
+    let prototype = CommonObject(x, map, proto)
     prototype
 
   member x.NewFunction (id, args, closureScope, dynamicScope) =
@@ -452,20 +452,15 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 //  
 *)
 and CO = CommonObject
-and ObjectClass = byte
-
 and [<AllowNullLiteral>] CommonObject = 
+
   val Env : Environment
-
-  val mutable Class : ObjectClass
   val mutable Prototype : CommonObject
-
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
   
-  new (env, map, prototype, class') = {
+  new (env, map, prototype) = {
     Env = env
-    Class = class'
     Prototype = prototype
     PropertySchema = map
     Properties = Array.zeroCreate (map.IndexMap.Count)
@@ -473,11 +468,13 @@ and [<AllowNullLiteral>] CommonObject =
 
   new (env) = {
     Env = env
-    Class = Classes.Object
     Prototype = null
     PropertySchema = null
     Properties = null
   }
+
+  abstract ClassName : string with get
+  default x.ClassName = "Object"
 
   //--
   member x.HasPrototype = 
@@ -508,13 +505,6 @@ and [<AllowNullLiteral>] CommonObject =
   //--
   member x.CheckType<'a when 'a :> CO>() =
     x.CastTo<'a>() |> ignore
-    
-  //--
-  member x.CheckClass (cls:byte) =
-    if x.Class <> cls then
-      let className = cls |> Classes.getName
-      let error = sprintf "Object is not an instance of %s" className
-      x.Env.RaiseTypeError(error)
     
   //-- Expands object property storage
   member x.ExpandStorage() =
@@ -989,8 +979,8 @@ and [<AllowNullLiteral>] ValueObject =
   [<DefaultValue>]
   val mutable Value : Descriptor
   
-  new (env, map, prototype, class') = {
-    inherit CommonObject(env, map, prototype, class')
+  new (env, map, prototype) = {
+    inherit CommonObject(env, map, prototype)
   }
 
   static member GetValue(o:CommonObject) =
@@ -1016,7 +1006,7 @@ and [<AllowNullLiteral>] RegExpObject =
     (x.RegExp.Options &&& RegexOptions.Multiline) = RegexOptions.Multiline
 
   new (env, pattern, options, global') = {
-    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp, Classes.RegExp) 
+    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp) 
     RegExp = new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
     Global = global'
   }
@@ -1032,7 +1022,7 @@ and ArrayLength = uint32
 and SparseArray = MutableSorted<uint32, BoxedValue>
 and AO = ArrayObject
 and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
-  inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
+  inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array)
 
   let mutable length = size
 
@@ -1375,7 +1365,7 @@ and [<AllowNullLiteral>] FunctionObject =
   val mutable DynamicScope : DynamicScope
      
   new (env:Environment, funcId, closureScope, dynamicScope) = { 
-    inherit CommonObject(env, env.Maps.Function, env.Prototypes.Function, Classes.Function)
+    inherit CommonObject(env, env.Maps.Function, env.Prototypes.Function)
 
     Compiler = env.Compilers.[funcId]
     FunctionId = funcId
@@ -1386,7 +1376,7 @@ and [<AllowNullLiteral>] FunctionObject =
   }
 
   new (env:Environment, propertyMap) = {
-    inherit CommonObject(env, propertyMap, env.Prototypes.Function, Classes.Function)
+    inherit CommonObject(env, propertyMap, env.Prototypes.Function)
 
     Compiler = fun _ _ -> null
     FunctionId = env.NextFunctionId()
@@ -1571,7 +1561,7 @@ and [<AllowNullLiteral>] StringObject =
   inherit ValueObject
 
   new (env:Env) = {
-    inherit ValueObject(env, env.Maps.String, env.Prototypes.String, Classes.String)
+    inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
   }
 
 (*
@@ -1582,7 +1572,7 @@ and [<AllowNullLiteral>] NumberObject =
   inherit ValueObject
 
   new (env:Env) = {
-    inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number, Classes.Number)
+    inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
   }
 
 (*
@@ -1593,7 +1583,7 @@ and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
 
   new (env:Env) = {
-    inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean)
+    inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean)
   }
 
 (*
@@ -1604,7 +1594,7 @@ and [<AllowNullLiteral>] MathObject =
   inherit CommonObject
 
   new (env:Env) = {
-    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object, Classes.Math)
+    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
   }
 
 (*
@@ -1615,7 +1605,7 @@ and [<AllowNullLiteral>] ErrorObject =
   inherit CommonObject
 
   new (env:Env) = {
-    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Error, Classes.Error)
+    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Error)
   }
     
 (*
@@ -1859,9 +1849,9 @@ and TypeConverter() =
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
 
   static member ToString(o:CommonObject) : string = 
-    match o.Class with
-    | Classes.String -> (o :?> ValueObject).Value.Value.String
-    | _ -> o.DefaultValue(DefaultValueHint.String) |> TypeConverter.ToString
+    if o :? StringObject 
+      then (o :?> ValueObject).Value.Value.String
+      else o.DefaultValue(DefaultValueHint.String) |> TypeConverter.ToString
 
   static member ToString(v:BoxedValue) : string =
     match v.Tag with
@@ -1891,9 +1881,9 @@ and TypeConverter() =
     | _ -> v.Number
 
   static member ToNumber(o:CommonObject) : double = 
-    match o.Class with
-    | Classes.Number -> (o :?> ValueObject).Value.Value.Number
-    | _ -> o.DefaultValue(DefaultValueHint.Number) |> TypeConverter.ToNumber 
+    if o :? NumberObject 
+      then (o :?> ValueObject).Value.Value.Number
+      else o.DefaultValue(DefaultValueHint.Number) |> TypeConverter.ToNumber 
 
   static member ToNumber(s:String) : double =
     let mutable d = 0.0

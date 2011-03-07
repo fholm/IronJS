@@ -26,7 +26,6 @@ test "13.2 Creating Function Objects" (fun ctx ->
 
   isT<FunctionObject> foo
   isT<CommonObject> prototype
-  equal foo.Class Classes.Function
   same foo.Prototype ctx.Environment.Prototypes.Function
   equal 1.0 (foo.Get<double> "length")
   same foo (prototype.Get<FunctionObject> "constructor")

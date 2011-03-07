@@ -28,7 +28,6 @@ module RegExp =
   
   let internal createPrototype (env:Environment) prototype =
     let prototype = env.NewObject()
-    prototype.Class <- Classes.Object
     prototype.Prototype <- prototype
     prototype
 

@@ -55,7 +55,7 @@ module String =
 
   //----------------------------------------------------------------------------
   let internal toString (func:FunctionObject) (this:CommonObject) =
-    this.CheckClass Classes.String
+    this.CheckType<SO>()
     this |> ValueObject.GetValue
     
   //----------------------------------------------------------------------------
@@ -248,7 +248,6 @@ module String =
   let createPrototype (env:Environment) objPrototype =
     let prototype = env.NewString()
     prototype.Put("length", 0.0)
-    prototype.Class <- Classes.String
     prototype.Prototype <- objPrototype
     prototype
     

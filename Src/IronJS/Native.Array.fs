@@ -430,7 +430,6 @@ module Array =
   let createPrototype (env:Environment) objPrototype =
     let prototype = env.NewArray()
     prototype.Prototype <- objPrototype
-    prototype.Class <- Classes.Array
     prototype
     
   //----------------------------------------------------------------------------

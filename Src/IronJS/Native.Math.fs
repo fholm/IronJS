@@ -53,9 +53,7 @@ module Math =
   let setup (env:Environment) =
     let math = env.NewMath()
     
-    math.Class <- Classes.Math
     math.Prototype <- env.Prototypes.Object
-
     math.Put("E", Math.E, Immutable)
     math.Put("LN10", 2.302585092994046, Immutable)
     math.Put("LN2", 0.6931471805599453, Immutable)

@@ -43,7 +43,7 @@ module Number =
     else failwith "Number is not NaN, Infinity or -Infinity"
 
   let internal toString (f:FunctionObject) (this:CommonObject) (radix:double) =
-    this.CheckClass Classes.Number
+    this.CheckType<NO>()
     let number = (this |> ValueObject.GetValue).Number
 
     if FSKit.Utils.isNaNOrInf number then nanToString number
@@ -61,7 +61,7 @@ module Number =
     
   //----------------------------------------------------------------------------
   let internal valueOf (f:FunctionObject) (this:CommonObject) =
-    this.CheckClass Classes.Number
+    this.CheckType<NO>()
     this |> ValueObject.GetValue
 
   //----------------------------------------------------------------------------
@@ -71,7 +71,7 @@ module Number =
       env.RaiseRangeError("fractions must be between 0 and 20")
 
   let internal toFixed (f:FunctionObject) (this:CommonObject) (fractions:double) =
-    this.CheckClass Classes.Number
+    this.CheckType<NO>()
 
     let number = (this |> ValueObject.GetValue).Number
     let fractions = fractions |> TypeConverter.ToInt32
@@ -84,7 +84,7 @@ module Number =
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
   let internal toExponential (f:FunctionObject) (this:CommonObject) (fractions:BoxedValue) =
-    this.CheckClass Classes.Number
+    this.CheckType<NO>()
     
     let number = (this |> ValueObject.GetValue).Number
 
@@ -107,7 +107,7 @@ module Number =
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
   let internal toPrecision (f:FunctionObject) (this:CommonObject) (precision:BoxedValue) =
-    this.CheckClass Classes.Number
+    this.CheckType<NO>()
     
     let number = (this |> ValueObject.GetValue).Number
 
@@ -135,7 +135,6 @@ module Number =
   //----------------------------------------------------------------------------
   let createPrototype (env:Environment) objPrototype =
     let prototype = env.NewNumber()
-    prototype.Class <- Classes.Number
     prototype.Prototype <- objPrototype
     prototype
     

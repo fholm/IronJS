@@ -18,5 +18,4 @@ What you need to use IronJS
 * ~$ cd IronJS\Src
 * ~$ git clone git://github.com/fholm/FSKit.git
 * ~$ cd FSKit
-* ~$ git checkout 0.0.7
-* ~$ cd ../..
+* ~$ cd ..

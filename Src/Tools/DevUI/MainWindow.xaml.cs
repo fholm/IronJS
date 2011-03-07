@@ -15,8 +15,6 @@ using System.Reflection;
 
 namespace IronJS.DevUI {
 
-    
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -102,16 +100,6 @@ namespace IronJS.DevUI {
                 var result = IronJS.CoreUtils.JsBox(ijsCtx.Execute(Input.Text));
                 stopWatch.Stop();
                 Result.Text += IronJS.TypeConverter.ToString(result);
-
-              /*} catch (Exception ex) {
-                  stopWatch.Stop();
-
-                  while (ex.InnerException != null) {
-                      ex = ex.InnerException;
-                  }
-
-                  Result.Text = ex.Message + "\n\n";
-                  Result.Text += ex.StackTrace;*/
 
             } finally {
                 RenderEnvironment();

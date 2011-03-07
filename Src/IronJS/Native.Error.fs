@@ -16,7 +16,7 @@ module Error =
         error.Put("message", msg, DontEnum)
 
       error.Prototype <- proto
-      error
+      error :> CO
 
     let setupConstructor (env:Environment) (name:string) (proto:CommonObject) update =
       let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor' proto)

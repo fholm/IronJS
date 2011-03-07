@@ -345,19 +345,20 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewObject() =
     let map = x.Maps.Base
     let proto = x.Prototypes.Object
-    CommonObject(x, map, proto, Classes.Object)
+    CO(x, map, proto, Classes.Object)
+
+  member x.NewMath() =
+    MO(x)
 
   member x.NewArray() = x.NewArray(0u)
   member x.NewArray(size) =
-    let array = ArrayObject(x, size)
+    let array = AO(x, size)
     array.Put("length", double size)
     array :> CommonObject
 
   member x.NewString() = x.NewString(String.Empty)
   member x.NewString(value:string) =
-    let map = x.Maps.String
-    let proto = x.Prototypes.String
-    let string = ValueObject(x, map, proto, Classes.String)
+    let string = SO(x)
     string.Put("length", double value.Length)
     string.Value.Value.Clr <- value
     string.Value.Value.Tag <- TypeTags.String
@@ -366,18 +367,14 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
   member x.NewNumber() = x.NewNumber(0.0)
   member x.NewNumber(value:double) =
-    let map = x.Maps.Number
-    let proto = x.Prototypes.Number
-    let number = ValueObject(x, map, proto, Classes.Number)
+    let number = NO(x)
     number.Value.Value.Number <- value
     number.Value.HasValue <- true
     number :> CommonObject
 
   member x.NewBoolean() = x.NewBoolean(false)
   member x.NewBoolean(value:bool) =
-    let map = x.Maps.Boolean
-    let proto = x.Prototypes.Boolean
-    let boolean = ValueObject(x, map, proto, Classes.Boolean)
+    let boolean = BO(x)
     boolean.Value.Value.Bool <- value
     boolean.Value.Value.Tag <- TypeTags.Bool
     boolean.Value.HasValue <- true
@@ -425,10 +422,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
     func
 
-  member x.NewError() =
-    let map = x.Maps.Base
-    let proto = x.Prototypes.Error
-    CommonObject(x, map, proto, Classes.Error)
+  member x.NewError() = EO(x)
 
   member x.RaiseError (prototype, message:string) =
     let error = x.NewError()
@@ -453,41 +447,6 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   
   member x.RaiseReferenceError() = x.RaiseReferenceError("")
   member x.RaiseReferenceError(message) = x.RaiseError(x.Prototypes.ReferenceError, message)
-
-(*
-//  
-*)
-and CoreUtils() =
-
-  static member TryConvertToIndex (value:double, index:uint32 byref) =
-    index <- uint32 value
-    double index = value
-
-  static member TryConvertToIndex (value:string, index:uint32 byref) =
-    UInt32.TryParse(value, &index)
-  
-  static member TryConvertToIndex (value:BoxedValue, index:uint32 byref) =
-    if    value.IsNumber  then CoreUtils.TryConvertToIndex(value.Number, &index)
-    elif  value.IsString  then CoreUtils.TryConvertToIndex(value.String, &index)
-                          else false
-
-  static member JsBox (o:obj) =
-    if o :? BoxedValue then 
-      unbox o
-
-    elif o |> FSKit.Utils.isNull then 
-      BoxedConstants.Null
-
-    else
-      match o.GetType() |> TypeTag.OfType with
-      | TypeTags.Bool -> BV.Box (o :?> bool)
-      | TypeTags.Number -> BV.Box (o :?> double)
-      | tag -> BV.Box(o, tag)
-
-  static member ClrBox (o:obj) =
-    if o :? BoxedValue 
-      then (o :?> BoxedValue).ClrBoxed 
-      else o
 
 (*
 //  
@@ -1071,7 +1030,6 @@ and [<AllowNullLiteral>] RegExpObject =
 and ArrayIndex = uint32
 and ArrayLength = uint32
 and SparseArray = MutableSorted<uint32, BoxedValue>
-
 and AO = ArrayObject
 and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
   inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array, Classes.Array)
@@ -1401,97 +1359,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
       x.ClosedOver <- null
 
     base.Delete(index)
-    
-(*
-//  
-*)
-and IndexMap   = MutableDict<string, int>
-and IndexStack = MutableStack<int>
-and SchemaMap  = MutableDict<string, Schema>
-and [<AllowNullLiteral>] Schema =
 
-  val Id : uint64
-  val Env : Environment
-  val IndexMap : IndexMap
-  val SubSchemas : SchemaMap
-  
-  new(env:Environment, map) = {
-    Id = env.NextPropertyMapId()
-    Env = env
-    IndexMap = map
-    SubSchemas = MutableDict<string, Schema>() 
-  }
-  
-  new(env, indexMap, subSchemas) = {
-    Id = 0UL
-    Env = env
-    IndexMap = indexMap
-    SubSchemas = subSchemas
-  }
-  
-  abstract MakeDynamic : unit -> DynamicSchema
-  default x.MakeDynamic() : DynamicSchema = 
-    DynamicSchema(x.Env, x.IndexMap)
-      
-  abstract Delete : string -> Schema
-  default x.Delete(name:string) : Schema =
-    x.MakeDynamic().Delete(name)
-     
-  abstract SubClass : string -> Schema
-  default x.SubClass(name) : Schema =
-    let mutable subSchema = null
-      
-    if x.SubSchemas.TryGetValue(name, &subSchema) |> not then
-      let properties = new IndexMap(x.IndexMap)
-      properties.Add(name, properties.Count)
-
-      subSchema <- Schema(x.Env, properties)
-      x.SubSchemas.Add(name, subSchema)
-
-    subSchema
-    
-  member x.SubClass(names:string list) : Schema =
-    names |> Seq.fold (fun (map:Schema) name -> map.SubClass name) x
-
-  member x.TryGetIndex(name:string, index:int byref) =
-    x.IndexMap.TryGetValue(name, &index)
-
-  static member CreateBaseSchema (env:Environment) =
-    new Schema(env, new IndexMap())
-
-(*
-//
-*)
-and [<AllowNullLiteral>] DynamicSchema =
-  inherit Schema
-  
-  val FreeIndexes : IndexStack
-
-  new (env, indexMap) = {
-    inherit Schema(env, new IndexMap(indexMap), null)
-    FreeIndexes = new IndexStack()
-  }
-
-  override x.MakeDynamic () = x
-
-  override x.Delete (name) =
-    let mutable index = 0
-
-    if x.IndexMap.TryGetValue(name, &index) then 
-      x.FreeIndexes.Push index
-      x.IndexMap.Remove name |> ignore
-
-    x :> Schema
-
-  override x.SubClass(name) =
-    let index = 
-      if x.FreeIndexes.Count > 0 
-        then x.FreeIndexes.Pop() 
-        else x.IndexMap.Count
-
-    x.IndexMap.Add(name, index)
-    x :> Schema
-    
 (*
 //
 *)
@@ -1643,7 +1511,6 @@ and [<AllowNullLiteral>] FunctionObject =
       BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
-    
 
 (*
 //
@@ -1697,6 +1564,152 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | _ -> x.ArgTypes.Length
 
 (*
+//  
+*)
+and SO = StringObject
+and [<AllowNullLiteral>] StringObject =
+  inherit ValueObject
+
+  new (env:Env) = {
+    inherit ValueObject(env, env.Maps.String, env.Prototypes.String, Classes.String)
+  }
+
+(*
+//  
+*)
+and NO = NumberObject
+and [<AllowNullLiteral>] NumberObject =
+  inherit ValueObject
+
+  new (env:Env) = {
+    inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number, Classes.Number)
+  }
+
+(*
+//  
+*)
+and BO = NumberObject
+and [<AllowNullLiteral>] BooleanObject =
+  inherit ValueObject
+
+  new (env:Env) = {
+    inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean, Classes.Boolean)
+  }
+
+(*
+//  
+*)
+and MO = MathObject
+and [<AllowNullLiteral>] MathObject =
+  inherit CommonObject
+
+  new (env:Env) = {
+    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object, Classes.Math)
+  }
+
+(*
+//  
+*)
+and EO = ErrorObject
+and [<AllowNullLiteral>] ErrorObject =
+  inherit CommonObject
+
+  new (env:Env) = {
+    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Error, Classes.Error)
+  }
+    
+(*
+//  
+*)
+and IndexMap   = MutableDict<string, int>
+and IndexStack = MutableStack<int>
+and SchemaMap  = MutableDict<string, Schema>
+and [<AllowNullLiteral>] Schema =
+
+  val Id : uint64
+  val Env : Environment
+  val IndexMap : IndexMap
+  val SubSchemas : SchemaMap
+  
+  new(env:Environment, map) = {
+    Id = env.NextPropertyMapId()
+    Env = env
+    IndexMap = map
+    SubSchemas = MutableDict<string, Schema>() 
+  }
+  
+  new(env, indexMap, subSchemas) = {
+    Id = 0UL
+    Env = env
+    IndexMap = indexMap
+    SubSchemas = subSchemas
+  }
+  
+  abstract MakeDynamic : unit -> DynamicSchema
+  default x.MakeDynamic() : DynamicSchema = 
+    DynamicSchema(x.Env, x.IndexMap)
+      
+  abstract Delete : string -> Schema
+  default x.Delete(name:string) : Schema =
+    x.MakeDynamic().Delete(name)
+     
+  abstract SubClass : string -> Schema
+  default x.SubClass(name) : Schema =
+    let mutable subSchema = null
+      
+    if x.SubSchemas.TryGetValue(name, &subSchema) |> not then
+      let properties = new IndexMap(x.IndexMap)
+      properties.Add(name, properties.Count)
+
+      subSchema <- Schema(x.Env, properties)
+      x.SubSchemas.Add(name, subSchema)
+
+    subSchema
+    
+  member x.SubClass(names:string list) : Schema =
+    names |> Seq.fold (fun (map:Schema) name -> map.SubClass name) x
+
+  member x.TryGetIndex(name:string, index:int byref) =
+    x.IndexMap.TryGetValue(name, &index)
+
+  static member CreateBaseSchema (env:Environment) =
+    new Schema(env, new IndexMap())
+
+(*
+//
+*)
+and [<AllowNullLiteral>] DynamicSchema =
+  inherit Schema
+  
+  val FreeIndexes : IndexStack
+
+  new (env, indexMap) = {
+    inherit Schema(env, new IndexMap(indexMap), null)
+    FreeIndexes = new IndexStack()
+  }
+
+  override x.MakeDynamic() = 
+    x
+
+  override x.Delete(name) =
+    let mutable index = 0
+
+    if x.IndexMap.TryGetValue(name, &index) then 
+      x.FreeIndexes.Push index
+      x.IndexMap.Remove name |> ignore
+
+    x :> Schema
+
+  override x.SubClass(name) =
+    let index = 
+      if x.FreeIndexes.Count > 0 
+        then x.FreeIndexes.Pop() 
+        else x.IndexMap.Count
+
+    x.IndexMap.Add(name, index)
+    x :> Schema
+
+(*
 //
 *)
 and UserError(value:BoxedValue, line:int, column:int) =
@@ -1704,6 +1717,41 @@ and UserError(value:BoxedValue, line:int, column:int) =
   member x.Value = value
   member x.Line = line
   member x.Column = column
+
+(*
+//  
+*)
+and CoreUtils() =
+
+  static member TryConvertToIndex (value:double, index:uint32 byref) =
+    index <- uint32 value
+    double index = value
+
+  static member TryConvertToIndex (value:string, index:uint32 byref) =
+    UInt32.TryParse(value, &index)
+  
+  static member TryConvertToIndex (value:BoxedValue, index:uint32 byref) =
+    if    value.IsNumber  then CoreUtils.TryConvertToIndex(value.Number, &index)
+    elif  value.IsString  then CoreUtils.TryConvertToIndex(value.String, &index)
+                          else false
+
+  static member JsBox (o:obj) =
+    if o :? BoxedValue then 
+      unbox o
+
+    elif o |> FSKit.Utils.isNull then 
+      BoxedConstants.Null
+
+    else
+      match o.GetType() |> TypeTag.OfType with
+      | TypeTags.Bool -> BV.Box (o :?> bool)
+      | TypeTags.Number -> BV.Box (o :?> double)
+      | tag -> BV.Box(o, tag)
+
+  static member ClrBox (o:obj) =
+    if o :? BoxedValue 
+      then (o :?> BoxedValue).ClrBoxed 
+      else o
 
 (*
 //

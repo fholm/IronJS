@@ -51,7 +51,7 @@ module Math =
     if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.min
 
   let setup (env:Environment) =
-    let math = env.NewObject()
+    let math = env.NewMath()
     
     math.Class <- Classes.Math
     math.Prototype <- env.Prototypes.Object

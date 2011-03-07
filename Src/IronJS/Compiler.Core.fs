@@ -3,7 +3,6 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
-open IronJS.Utils
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 

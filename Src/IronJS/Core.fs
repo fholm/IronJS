@@ -137,6 +137,7 @@ module TaggedBools =
 type BV = BoxedValue
 and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
+
     //Reference Types
     [<FieldOffset(0)>] val mutable Clr : Object 
     [<FieldOffset(0)>] val mutable Object : CommonObject
@@ -268,6 +269,9 @@ and [<AllowNullLiteral>] Undefined() =
   static member Instance = instance
   static member Boxed = boxed
 
+(*
+//  
+*)
 and [<AbstractClass>] BoxedConstants() =
   static let zero = BoxedValue()
   static let null' =
@@ -467,6 +471,24 @@ and CoreUtils() =
     elif  value.IsString  then CoreUtils.TryConvertToIndex(value.String, &index)
                           else false
 
+  static member JsBox (o:obj) =
+    if o :? BoxedValue then 
+      unbox o
+
+    elif o |> FSKit.Utils.isNull then 
+      BoxedConstants.Null
+
+    else
+      match o.GetType() |> TypeTag.OfType with
+      | TypeTags.Bool -> BV.Box (o :?> bool)
+      | TypeTags.Number -> BV.Box (o :?> double)
+      | tag -> BV.Box(o, tag)
+
+  static member ClrBox (o:obj) =
+    if o :? BoxedValue 
+      then (o :?> BoxedValue).ClrBoxed 
+      else o
+
 (*
 //  
 *)
@@ -535,8 +557,7 @@ and [<AllowNullLiteral>] CommonObject =
       let error = sprintf "Object is not an instance of %s" className
       x.Env.RaiseTypeError(error)
     
-  //----------------------------------------------------------------------------
-  //Expands object property storage
+  //-- Expands object property storage
   member x.ExpandStorage() =
     let newValues = Array.zeroCreate (x.RequiredStorage * 2)
 
@@ -545,8 +566,7 @@ and [<AllowNullLiteral>] CommonObject =
       
     x.Properties <- newValues
     
-  //----------------------------------------------------------------------------
-  //Creates an index for property named 'name'
+  //-- Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
     x.PropertySchema <- x.PropertySchema.SubClass name
 
@@ -555,8 +575,7 @@ and [<AllowNullLiteral>] CommonObject =
 
     x.PropertySchema.IndexMap.[name]
     
-  //----------------------------------------------------------------------------
-  //Finds a property in the Prototype chain
+  //-- Finds a property in the Prototype chain
   member x.Find(name:string) =
     
     let mutable index = 0
@@ -576,8 +595,7 @@ and [<AllowNullLiteral>] CommonObject =
 
       find x.Prototype name
     
-  //----------------------------------------------------------------------------
-  //Can we put property named 'name' ?
+  //-- Can we put property named 'name' ?
   member x.CanPut(name:string, index:int32 byref) =
     
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
@@ -601,6 +619,8 @@ and [<AllowNullLiteral>] CommonObject =
         
   //----------------------------------------------------------------------------
   // These methods are the core Put/Get/Has/Delete methods for property access
+  //----------------------------------------------------------------------------
+
   abstract Put : String * BoxedValue -> unit
   default x.Put(name:String, value:BoxedValue) : unit =
     let mutable holder = null
@@ -678,14 +698,8 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract DefaultValue : DefaultValueHint -> BoxedValue
   default x.DefaultValue(hint:DefaultValueHint) =
-    let hint =
-      match hint with
-      | DefaultValueHint.None -> 
-        DefaultValueHint.Number
-
-      | _ -> hint
-        
     match hint with
+    | DefaultValueHint.None 
     | DefaultValueHint.Number ->
       match x.TryCallMember("valueOf") with
       | Some v when v.IsPrimitive -> v
@@ -694,21 +708,13 @@ and [<AllowNullLiteral>] CommonObject =
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
 
-    | DefaultValueHint.String ->
+    | _ ->
       match x.TryCallMember("toString") with
       | Some v when v.IsPrimitive -> v
       | _ -> 
         match x.TryCallMember("valueOf") with
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
-
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.TryCallMember (name:string) : BV option =
-    let func = x.Get(name)
-    match func.Tag with
-    | TypeTags.Function -> Some(func.Func.Call(x))
-    | _ -> None
 
   //----------------------------------------------------------------------------
   member x.Put(name:String, value:bool) : unit = x.Put(name, value |> TaggedBools.ToTagged)
@@ -869,7 +875,10 @@ and [<AllowNullLiteral>] CommonObject =
       else x.Put(index, value, tag)
       
   //----------------------------------------------------------------------------
-  // Get
+  // Overloaded .Get methods that convert their argument into either a string
+  // or uint32 and forwards the call to the correct .Get method
+  //----------------------------------------------------------------------------
+
   member x.Get(index:BoxedValue) : BoxedValue =
     let mutable i = 0u
     if CoreUtils.TryConvertToIndex(index, &i) 
@@ -905,11 +914,21 @@ and [<AllowNullLiteral>] CommonObject =
       then x.Get(parsed)
       else x.Get(index)
 
-  member x.Get<'a>(name:String) = x.Get(name).Unbox<'a>()
-  member x.Get<'a>(index:uint32) = x.Get(index).Unbox<'a>()
+  // Convenience method for getting a property
+  // that you already know is strongly typed
+  member x.Get<'a>(name:String) = 
+    x.Get(name).Unbox<'a>()
+
+  // Convenience method for getting an index
+  // that you already know is strongly typed
+  member x.Get<'a>(index:uint32) = 
+    x.Get(index).Unbox<'a>()
 
   //----------------------------------------------------------------------------
-  // Has
+  // Overloaded .Has methods that convert their argument into either a string 
+  // (property) or uint32 (index) and fowards the call to the correct .Has
+  //----------------------------------------------------------------------------
+
   member x.Has(index:BoxedValue) : bool =
     let mutable i = 0u
 
@@ -945,16 +964,25 @@ and [<AllowNullLiteral>] CommonObject =
     if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(index)
-      
+
   //----------------------------------------------------------------------------
+      
+  //
   member x.SetAttrs(name:string, attrs:uint16) =
     let mutable index = 0
 
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
       let currentAttrs = x.Properties.[index].Attributes
       x.Properties.[index].Attributes <- currentAttrs ||| attrs
+
+  //
+  member x.TryCallMember (name:string) : BV option =
+    let func = x.Get(name)
+    match func.Tag with
+    | TypeTags.Function -> Some(func.Func.Call(x))
+    | _ -> None
       
-  //----------------------------------------------------------------------------
+  //
   abstract CollectProperties : unit -> uint32 * MutableSet<String>
   default x.CollectProperties() =
     let rec collectProperties length (set:MutableSet<String>) (current:CommonObject) =
@@ -981,6 +1009,7 @@ and [<AllowNullLiteral>] CommonObject =
 
     x |> collectProperties 0u (new MutableSet<String>())
 
+  //
   abstract CollectIndexValues : unit -> seq<BoxedValue>
   default x.CollectIndexValues() =
     seq { 
@@ -1036,7 +1065,9 @@ and [<AllowNullLiteral>] RegExpObject =
   new (env, pattern) = 
     RegExpObject(env, pattern, RegexOptions.None, false)
   
-//------------------------------------------------------------------------------
+(*
+//  
+*)
 and ArrayIndex = uint32
 and ArrayLength = uint32
 and SparseArray = MutableSorted<uint32, BoxedValue>
@@ -1259,8 +1290,9 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
           i := !i + 1u
       }
 
-//------------------------------------------------------------------------------
-// 10.1.8
+(*
+//  
+*)
 and ArgLink = byte * int
 and [<AllowNullLiteral>] ArgumentsObject =
   inherit ArrayObject
@@ -1373,11 +1405,9 @@ and [<AllowNullLiteral>] ArgumentsObject =
 (*
 //  
 *)
-
 and IndexMap   = MutableDict<string, int>
 and IndexStack = MutableStack<int>
 and SchemaMap  = MutableDict<string, Schema>
-
 and [<AllowNullLiteral>] Schema =
 
   val Id : uint64

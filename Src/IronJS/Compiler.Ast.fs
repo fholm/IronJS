@@ -1,7 +1,6 @@
 ﻿namespace IronJS
 
 open IronJS
-open IronJS.Utils
 open IronJS.Support.Aliases
 
 open Antlr.Runtime

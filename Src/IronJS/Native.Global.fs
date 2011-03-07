@@ -44,7 +44,7 @@ module Global =
           Environment = target.Function.Env
         }
 
-      Utils.jsBox (
+      CoreUtils.JsBox (
         compiled.DynamicInvoke(
           target.Function,
           target.This,

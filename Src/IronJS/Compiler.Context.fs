@@ -3,7 +3,6 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
-open IronJS.Utils
 
 //------------------------------------------------------------------------------
 // Record representing a compilation target

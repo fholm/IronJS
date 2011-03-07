@@ -54,8 +54,8 @@ module Function =
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
     let argsArray = Dlr.newArrayItemsT<obj> [for a in args -> Dlr.castT<obj> a]
-    let typeArgs = Utils.addInternalArgs [for a in args -> a.Type]
-    let delegateType = Utils.createDelegate typeArgs
+    let typeArgs = DelegateCache.addInternalArgs [for a in args -> a.Type]
+    let delegateType = DelegateCache.getDelegate typeArgs
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
     

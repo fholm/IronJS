@@ -34,7 +34,7 @@ module Function =
       let tree = Parsers.Ecma3.parseGlobalSource f.Env func
       let analyzed = Ast.Analyzers.applyDefault tree None
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
-      (compiled.DynamicInvoke(f, f.Env.Globals) |> Utils.clrBox) :?> FunctionObject
+      (compiled.DynamicInvoke(f, f.Env.Globals) |> CoreUtils.ClrBox) :?> FunctionObject
 
   let private prototype (f:FunctionObject) _ =
     Undefined.Boxed
@@ -55,18 +55,18 @@ module Function =
       |> Seq.cast<obj>
       |> Array.ofSeq
 
-    let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
-    let type' = Utils.createDelegate argTypes
+    let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
+    let type' = DelegateCache.getDelegate argTypes
     let args = Array.append [|func :> obj; this :> obj|] args
     let compiled = f.Compiler f type'
-    compiled.DynamicInvoke(args) |> Utils.jsBox
+    compiled.DynamicInvoke(args) |> CoreUtils.JsBox
  
   let call (_:FunctionObject) (func:CommonObject) (this:CommonObject) (args:obj array) : BoxedValue =
     let f = func.CastTo<FO>()
-    let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
-    let type' = Utils.createDelegate argTypes
+    let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
+    let type' = DelegateCache.getDelegate argTypes
     let args = Array.append [|func :> obj; this :> obj|] args
-    (f.Compiler f type').DynamicInvoke args |> Utils.jsBox
+    (f.Compiler f type').DynamicInvoke args |> CoreUtils.JsBox
 
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, FunctionObject>(constructor')

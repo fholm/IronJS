@@ -93,8 +93,8 @@
     <Compile Include="Support.Dlr.fs" />
     <Compile Include="Support.fs" />
     <Compile Include="Core.fs" />
-    <Compile Include="Core.Utils.fs" />
     <Compile Include="Core.Operators.fs" />
+    <Compile Include="Core.DelegateCache.fs" />
     <Compile Include="Core.Helpers.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Parser.fs" />

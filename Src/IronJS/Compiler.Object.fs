@@ -13,14 +13,14 @@ module Object =
 
     //--------------------------------------------------------------------------
     let putBox expr name value =
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         let args = [name; value]
         [Dlr.call tmp "Put" args; value]
       )
     
     //--------------------------------------------------------------------------
     let putRef expr name (value:Dlr.Expr) =
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         let tag = value.Type |> TypeTag.OfType |> Dlr.const'
         let args = [name; value; tag]
         [Dlr.call tmp "Put" args; value]
@@ -28,7 +28,7 @@ module Object =
     
     //--------------------------------------------------------------------------
     let putVal expr name (value:Dlr.Expr) =
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         let args = [name; Utils.normalizeVal value]
         [Dlr.call tmp "Put" args; value]
       )
@@ -50,13 +50,13 @@ module Object =
   
     //--------------------------------------------------------------------------
     let get name expr = 
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Get" [name]]
       )
 
     //--------------------------------------------------------------------------
     let delete expr name = 
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Delete" [name]]
       )
       
@@ -65,7 +65,7 @@ module Object =
   
     //--------------------------------------------------------------------------
     let private putConvert expr index value tag =
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         let normalizedValue = Utils.normalizeVal value
         let args =
           match tag with
@@ -79,7 +79,7 @@ module Object =
     let putBox expr index value =
       match index with
       | IsIndex ->
-        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+        Utils.tempBlockT<CommonObject> expr (fun tmp -> 
           let args = [index; value]
           [Dlr.call tmp "Put" args; value]
         )
@@ -90,7 +90,7 @@ module Object =
     let putVal expr index value =
       match index with
       | IsIndex ->
-        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+        Utils.tempBlockT<CommonObject> expr (fun tmp -> 
           let args = [index; Utils.normalizeVal value]
           [Dlr.call tmp "Put" args; value]
         )
@@ -103,7 +103,7 @@ module Object =
 
       match index with
       | IsIndex ->
-        Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+        Utils.tempBlockT<CommonObject> expr (fun tmp -> 
           let args =  [index; value; tag]
           [Dlr.call tmp "Put" args; value]
         )
@@ -119,13 +119,13 @@ module Object =
 
     //--------------------------------------------------------------------------
     let get (index:Dlr.Expr) expr = 
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Get" [index]]
       )
 
     //--------------------------------------------------------------------------
     let delete expr index = 
-      Utils.blockTmpT<CommonObject> expr (fun tmp -> 
+      Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         [Dlr.call tmp "Delete" [index]])
 
   //----------------------------------------------------------------------------

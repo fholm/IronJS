@@ -184,7 +184,7 @@ module Binary =
 
     //Property assignment: foo.bar = 1;
     | Ast.Property(object', name) -> 
-      Utils.blockTmp value (fun value ->
+      Utils.tempBlock value (fun value ->
         let object' = object' |> ctx.Compile
         let ifObj = Object.Property.put !!!name value
         let ifClr _ = value
@@ -193,7 +193,7 @@ module Binary =
 
     //Index assignemnt: foo[0] = "bar";
     | Ast.Index(object', index) -> 
-      Utils.blockTmp value (fun value ->
+      Utils.tempBlock value (fun value ->
         let object' = object' |> ctx.Compile
         let index = Utils.compileIndex ctx index
         let ifObj = Object.Index.put index value

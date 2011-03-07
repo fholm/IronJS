@@ -1,5 +1,7 @@
 ﻿namespace IronJS.Compiler
 
+open System
+
 open IronJS
 open IronJS.Dlr.Operators
 
@@ -104,47 +106,13 @@ module Utils =
       let assign = Dlr.assign temp value
       Dlr.block [temp] (assign :: (body temp))
 
-  //----------------------------------------------------------------------------
-  let blockTmp (expr:Dlr.Expr) (f:Dlr.Expr -> Dlr.Expr list) = 
-    if Dlr.Ext.isStatic expr then
-      Dlr.blockSimple (f expr)
+  let tempBlockT<'a> (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
+    if value.Type = typeof<'a> then
+      tempBlock value body
 
     else
-      let tmp = Dlr.param (Dlr.tmpName()) expr.Type
-      Dlr.block [tmp] (Dlr.assign tmp expr :: f (Dlr.Ext.static' tmp))
-        
-  let blockTmpType (type':System.Type) (expr:Dlr.Expr) f =
-    if expr.Type = type' then
-      if Dlr.Ext.isStatic expr then
-        let exprs : Dlr.Expr list = f expr
-        if exprs.Length = 0 
-          then exprs.[0] 
-          else Dlr.blockSimple exprs
-
-      else
-        let tmp = Dlr.param (Dlr.tmpName()) expr.Type
-        Dlr.block [tmp] (Dlr.assign tmp !@expr :: f (Dlr.Ext.static' tmp))
-
-    elif isBoxed expr then
-      let unboxed = unbox type' (Dlr.Ext.unwrap expr)
-
-      if Dlr.Ext.isStatic unboxed then
-        let exprs = f unboxed
-        if exprs.Length = 0
-          then exprs.[0]
-          else Dlr.blockSimple exprs
-
-      else
-        let tmp = Dlr.param (Dlr.tmpName()) type'
-        Dlr.block [tmp] (Dlr.assign tmp unboxed :: f (Dlr.Ext.static' tmp))
-
-    else
-      let tmp = Dlr.param (Dlr.tmpName()) type'
-      let casted = Dlr.cast type' expr
-      Dlr.block [tmp] (Dlr.assign tmp casted :: f (Dlr.Ext.static' tmp))
-        
-  let blockTmpT<'a> expr f = 
-    blockTmpType typeof<'a> expr f
+      let value = value |> Dlr.cast typeof<'a>
+      tempBlock value body
 
   //----------------------------------------------------------------------------
   let assign (lexpr:Dlr.Expr) rexpr = 
@@ -175,7 +143,6 @@ module Utils =
   //----------------------------------------------------------------------------
   let compileIndex (ctx:Ctx) indexAst =
     let mutable index = 0u
-
     match indexAst with
     | Ast.Number n when CoreUtils.TryConvertToIndex(n, &index) -> Dlr.const' index
     | Ast.String s when CoreUtils.TryConvertToIndex(s, &index) -> Dlr.const' index
@@ -185,17 +152,17 @@ module Utils =
   let ensureObject (ctx:Ctx) (expr:Dlr.Expr) ifObj ifClr =
     match expr.Type |> TypeTag.OfType with
     | TypeTags.Function
-    | TypeTags.Object -> blockTmp expr (fun expr -> [ifObj expr])
-    | TypeTags.Clr -> blockTmp expr (fun expr -> [ifClr expr])
+    | TypeTags.Object -> tempBlock expr (fun expr -> [ifObj expr])
+    | TypeTags.Clr -> tempBlock expr (fun expr -> [ifClr expr])
     | TypeTags.Bool
     | TypeTags.String
     | TypeTags.Undefined
     | TypeTags.Number -> 
       let expr = TypeConverter.ToObject(ctx.Env, expr)
-      blockTmp expr (fun expr -> [ifObj expr])
+      tempBlock expr (fun expr -> [ifObj expr])
 
     | TypeTags.Box -> 
-      blockTmp expr (fun expr ->
+      tempBlock expr (fun expr ->
         [
           Dlr.ternary 
             (Box.isObject expr)
@@ -210,15 +177,15 @@ module Utils =
   //----------------------------------------------------------------------------
   let ensureFunction (expr:Dlr.Expr) ifFunc ifClr =
     match expr.Type |> TypeTag.OfType with
-    | TypeTags.Function -> blockTmp expr (fun expr -> [ifFunc expr])
-    | TypeTags.Clr -> blockTmp expr (fun expr -> [ifClr expr])
+    | TypeTags.Function -> tempBlock expr (fun expr -> [ifFunc expr])
+    | TypeTags.Clr -> tempBlock expr (fun expr -> [ifClr expr])
     | TypeTags.Object
     | TypeTags.Bool
     | TypeTags.String
     | TypeTags.Undefined
     | TypeTags.Number -> Constants.Boxed.undefined
     | TypeTags.Box -> 
-      blockTmp expr (fun expr ->
+      tempBlock expr (fun expr ->
         [
           Dlr.ternary 
             (Box.isFunction expr)

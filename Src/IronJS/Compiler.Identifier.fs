@@ -74,7 +74,7 @@ module Identifier =
       match getExprIndexLevelType ctx name with
       | None -> 
         let name = Dlr.const' name
-        Utils.blockTmp value (fun value ->
+        Utils.tempBlock value (fun value ->
           [ctx.Globals |> Object.Property.put name value]
         )
 

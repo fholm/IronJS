@@ -2,7 +2,6 @@
 
 open System
 open IronJS
-open IronJS.Utils.Patterns
 open IronJS.DescriptorAttrs
 
 (*

@@ -4,7 +4,6 @@ open System
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
-open IronJS.Utils.Patterns
 
 //------------------------------------------------------------------------------
 // 15.4
@@ -33,10 +32,11 @@ module Array =
   
     let separator =
       if separator.IsUndefined
-        then "," else separator |> TypeConverter.ToString
+        then "," 
+        else separator |> TypeConverter.ToString
 
-    match this with
-    | IsArray array ->
+    let mutable array = null
+    if this.TryCastTo<AO>(&array) then
 
       if array.IsDense then
         let toString (x:Descriptor) = 
@@ -57,7 +57,7 @@ module Array =
 
         String.Join(separator, items)
 
-    | _ ->
+    else
       let length = this.GetLength()
       let items = new MutableList<string>()
       
@@ -91,8 +91,10 @@ module Array =
     
   //----------------------------------------------------------------------------
   let internal pop (this:CommonObject) =
-    match this with
-    | IsArray a ->
+    let mutable a = null
+
+    // Is Array
+    if this.TryCastTo<AO>(&a) then
       let index = a.Length - 1u
 
       if index >= a.Length then 
@@ -121,7 +123,8 @@ module Array =
         a.Delete index |> ignore
         item
 
-    | _ -> 
+    // Not array
+    else
       let length = this.GetLength()
       
       if length = 0u then
@@ -150,8 +153,9 @@ module Array =
     
   //----------------------------------------------------------------------------
   let internal reverse (this:CommonObject) =
-    match this with
-    | IsArray a ->
+    let mutable a = null
+
+    if this.TryCastTo<AO>(&a) then
       if a.IsDense then
         a.Dense |> Array.Reverse 
 
@@ -163,7 +167,7 @@ module Array =
 
       a :> CommonObject
 
-    | _ -> 
+    else
       let rec reverseObject (o:CommonObject) length (index:uint32) items =
         if index >= length then items
         else
@@ -192,8 +196,8 @@ module Array =
       a.Length <- a.Length - 1u
       a.Put("length", double a.Length)
 
-    match this with
-    | IsArray a ->
+    let mutable a = null
+    if this.TryCastTo<AO>(&a) then
       if a.Length = 0u then Undefined.Boxed
       else
         if a.IsDense then
@@ -227,7 +231,7 @@ module Array =
           updateArrayLength a
           item
 
-    | _ -> 
+    else
       let length = this.GetLength()
       if length = 0u then Undefined.Boxed
       else
@@ -325,8 +329,9 @@ module Array =
     let sparseSortDefault (x:BoxedValue) (y:BoxedValue) =
       String.Compare(TypeConverter.ToString x, TypeConverter.ToString y)
 
-    match this with
-    | IsArray a ->
+    let mutable a = null
+    if this.TryCastTo<AO>(&a) then
+
       match cmp.Tag with
       | TypeTags.Function ->
         if a.IsDense then
@@ -346,15 +351,19 @@ module Array =
           let cmp = new SparseComparer(sparseSortDefault)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
-    | _ -> failwith ".sort currently does not support non-arrays"
+    else
+      failwith ".sort currently does not support non-arrays"
 
     this
     
   //----------------------------------------------------------------------------
   let internal unshift (f:FunctionObject) (this:CommonObject) (args:BoxedValue array) =
-    match this with
-    | IsArray array ->
+    let mutable array = null
 
+    // Array
+    if this.TryCastTo<AO>(&array) then
+
+      // Dense Array
       if array.IsDense then
         let minLength = int array.Length + args.Length
 
@@ -372,6 +381,7 @@ module Array =
 
         array.UpdateLength(uint32 args.Length + array.Length)
 
+      // Sparse Array
       else
         let mutable index = array.Length - 1u
         let offset = uint32 args.Length
@@ -392,7 +402,9 @@ module Array =
 
         array.UpdateLength(offset + array.Length)
         
-    | _ -> failwith ".unshift currently does not support non-arrays"
+    // Object
+    else 
+      failwith ".unshift currently does not support non-arrays"
 
     this
       

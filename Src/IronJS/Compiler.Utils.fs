@@ -2,7 +2,6 @@
 
 open IronJS
 open IronJS.Dlr.Operators
-open IronJS.Utils.Patterns
 
 module Utils =
 

@@ -26,11 +26,11 @@ module Boolean =
 
   let private valueOf (valueOf:FunctionObject) (this:CommonObject) =
     this.CheckClass Classes.Boolean
-    this |> Utils.getValueObjectValue
+    this |> ValueObject.GetValue
 
   let private toString (toString:FunctionObject) (this:CommonObject) =
     this.CheckClass Classes.Boolean
-    this |> Utils.getValueObjectValue |> TypeConverter.ToString
+    this |> ValueObject.GetValue |> TypeConverter.ToString
 
   let createPrototype (env:Environment) objPrototype =
     let prototype = env.NewBoolean()

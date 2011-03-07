@@ -2,7 +2,6 @@
 
 open System
 open IronJS
-open IronJS.Utils.Patterns
 
 (*
 //  This module implements the javascript Function object, its prototype, functions and properties.
@@ -41,48 +40,33 @@ module Function =
     Undefined.Boxed
     
   let toString (toString:FunctionObject) (o:CommonObject) =
-    if o :? FunctionObject then
-      let f = o :?> FunctionObject
-
-      match f.Env.FunctionSourceStrings.TryGetValue f.FunctionId with
-      | true, value -> value
-      | _ -> "function() { [native code] }"
-
-    else
-      toString.Env.RaiseTypeError()
+    let f = o.CastTo<FO>()
+    match f.Env.FunctionSourceStrings.TryGetValue f.FunctionId with
+    | true, value -> value
+    | _ -> "function() { [native code] }"
       
   let apply (apply:FunctionObject) (func:CommonObject) (this:CommonObject) (args:CommonObject) : BoxedValue =
-    match func with
-    | IsFunction f ->
-      match args with
-      | IsArray args -> 
+    let f = func.CastTo<FO>()
+    let args = args.CastTo<AO>()
+    let getIndex i = args.Get(uint32 i)
 
-        let getIndex i = args.Get(uint32 i)
+    let args =
+      Seq.init (int args.Length) getIndex
+      |> Seq.cast<obj>
+      |> Array.ofSeq
 
-        let args =
-          Seq.init (int args.Length) getIndex
-          |> Seq.cast<obj>
-          |> Array.ofSeq
-
-        let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
-        let type' = Utils.createDelegate argTypes
-        let args = Array.append [|func :> obj; this :> obj|] args
-        let compiled = f.Compiler f type'
-        compiled.DynamicInvoke(args) |> Utils.jsBox
-
-      | _ -> apply.Env.RaiseTypeError()
-
-    | _ -> apply.Env.RaiseTypeError()
+    let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
+    let type' = Utils.createDelegate argTypes
+    let args = Array.append [|func :> obj; this :> obj|] args
+    let compiled = f.Compiler f type'
+    compiled.DynamicInvoke(args) |> Utils.jsBox
  
   let call (_:FunctionObject) (func:CommonObject) (this:CommonObject) (args:obj array) : BoxedValue =
-    match func with
-    | IsFunction f ->
-      let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
-      let type' = Utils.createDelegate argTypes
-      let args = Array.append [|func :> obj; this :> obj|] args
-      (f.Compiler f type').DynamicInvoke args |> Utils.jsBox
-
-    | _ -> failwith "Que?"
+    let f = func.CastTo<FO>()
+    let argTypes = Utils.addInternalArgs [for a in args -> a.GetType()]
+    let type' = Utils.createDelegate argTypes
+    let args = Array.append [|func :> obj; this :> obj|] args
+    (f.Compiler f type').DynamicInvoke args |> Utils.jsBox
 
   let setupConstructor (env:Environment) =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, FunctionObject>(constructor')

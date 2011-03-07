@@ -3,7 +3,6 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
-open IronJS.Utils.Patterns
 
 (*
 //  This file implements all (non-assign) binary and unary operators

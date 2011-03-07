@@ -516,6 +516,15 @@ and [<AllowNullLiteral>] CommonObject =
     if x :? 'a then x :?> 'a else x.Env.RaiseTypeError()
     
   //--
+  member x.TryCastTo<'a when 'a :> CO>(o:'a byref) =
+    if x :? 'a then
+      o <- x :?> 'a
+      true
+
+    else
+      false
+    
+  //--
   member x.CheckType<'a when 'a :> CO>() =
     x.CastTo<'a>() |> ignore
     
@@ -995,6 +1004,12 @@ and [<AllowNullLiteral>] ValueObject =
   new (env, map, prototype, class') = {
     inherit CommonObject(env, map, prototype, class')
   }
+
+  static member GetValue(o:CommonObject) =
+    if not(o :? ValueObject) then
+      o.Env.RaiseTypeError()
+
+    (o :?> ValueObject).Value.Value
 
 (*
 //  

@@ -11,21 +11,6 @@ open System.Reflection.Emit
 open System.Runtime.InteropServices
 
 module Utils =
-    
-  module Patterns =
-    
-    let (|IsArray|_|) (o:CO) =
-      if o.Class = Classes.Array
-        then Some(o :?> AO)
-        else None
-
-    let (|IsFunction|_|) (o:CO) =
-      if o.Class = Classes.Function 
-        then Some(o :?> FO) 
-        else None
-
-  let getValueObjectValue (o:CommonObject) = 
-    (o :?> ValueObject).Value.Value
 
   let jsBox (o:obj) =
     if o :? BoxedValue then 
@@ -43,11 +28,12 @@ module Utils =
   let clrBox (o:obj) =
     if o :? BoxedValue then (o :?> BoxedValue).ClrBoxed else o
       
-  //-------------------------------------------------------------------------
+  (*
   // Function + cache that creates delegates for IronJS functions, delegates
   // are cached because calling Dlr.delegateType with >16 types will generate
   // incomptabile delegates for the same arguments each time it's called.
   // E.g: Func<FunctionObject, CommonObject, BoxedValue>
+  *)
 
   let private delegateCache = 
     new ConcurrentMutableDict<RuntimeTypeHandle list, Type>()

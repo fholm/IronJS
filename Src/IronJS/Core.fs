@@ -1009,9 +1009,17 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
       then SparseArray() 
       else null
 
-  member x.Length with get() = length and set(v) = length <- v
-  member x.Dense with get() = dense and set(v) = dense <- v
-  member x.Sparse with get() = sparse and set(v) = sparse <- v
+  member x.Length 
+    with get() = length 
+    and set(v) = length <- v
+
+  member x.Dense 
+    with get() = dense 
+    and set(v) = dense <- v
+
+  member x.Sparse 
+    with get() = sparse 
+    and set(v) = sparse <- v
 
   member x.IsDense = 
     sparse |> FSKit.Utils.isNull
@@ -1041,7 +1049,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
     base.Put("length", double length)
 
   member x.ConvertToSparse() =
-    if x.Sparse |> FSKit.Utils.isNull then
+    if x.IsDense then
       x.Sparse <- new MutableSorted<uint32, BoxedValue>()
 
       for i = 0 to int (x.Length-1u) do

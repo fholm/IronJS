@@ -36,43 +36,34 @@ module Utils =
   //----------------------------------------------------------------------------
   module Box =
     
-    let tagField    expr  = Dlr.field expr "Tag"
-    let markerField expr  = Dlr.field expr "Marker"
-    
-    let isBool      boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Bool)
-    let isNumber    boxExpr = Dlr.lt    (markerField boxExpr) (Dlr.const' Markers.Tagged)
-    let isClr       boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Clr)
-    let isString    boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.String)
-    let isUndefined boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Undefined)
-    let isObject    boxExpr = Dlr.gtEq  (tagField boxExpr)    (Dlr.const' TypeTags.Object)
-    let isFunction  boxExpr = Dlr.eq    (tagField boxExpr)    (Dlr.const' TypeTags.Function)
+    let isBool box      = box?Tag    .=  !!!TypeTags.Bool
+    let isNumber box    = box?Marker .<  !!!Markers.Tagged
+    let isClr box       = box?Tag    .=  !!!TypeTags.Clr
+    let isString box    = box?Tag    .=  !!!TypeTags.String
+    let isUndefined box = box?Tag    .=  !!!TypeTags.Undefined
+    let isObject box    = box?Tag    .>= !!!TypeTags.Object
+    let isFunction box  = box?Tag    .=  !!!TypeTags.Function
 
-    let unboxNumber box = Dlr.field box BoxFields.Number
-    let unboxBool box = Dlr.field box BoxFields.Bool
-    let unboxClr box = Dlr.field box BoxFields.Clr
-    let unboxString box = Dlr.field box BoxFields.String
-    let unboxUndefined box = Dlr.field box BoxFields.Undefined
-    let unboxObject box = Dlr.field box BoxFields.Object
-    let unboxFunction box = Dlr.field box BoxFields.Function
+    let unboxNumber box = box?Number
+    let unboxBool box = box?Bool
+    let unboxClr box = box?Clr
+    let unboxString box = box?String
+    let unboxUndefined box = box?Undefined
+    let unboxObject box = box?Object
+    let unboxFunction box = box?Func
 
     let setTag expr t =
       match t with
       | TypeTags.Number -> Dlr.void'
-      | _ -> Dlr.assign (tagField expr) (Dlr.const' t)
+      | _ -> expr?Tag .= !!!t
 
     let setTagOf expr (of':Dlr.Expr) = 
       setTag expr (of'.Type |> TypeTag.OfType)
 
     let setValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
       let field = value.Type |> TypeTag.OfType |> BV.FieldOfTag
-      Dlr.assign (Dlr.field expr field) value
+      Dlr.field expr field .= value
       
-  //----------------------------------------------------------------------------
-  module Object =
-    let prototype expr = Dlr.field expr "Prototype"
-      
-  //----------------------------------------------------------------------------
-  let errorValue error = Dlr.field error "Value"
   let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<BoxedValue> expr
     
   let voidAsUndefined (expr:Dlr.Expr) =

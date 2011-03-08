@@ -2,6 +2,7 @@
 
 open IronJS
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 module Exception =
 
@@ -15,12 +16,12 @@ module Exception =
   let private catch (ctx:Ctx) catch =
     match catch with
     | Ast.Catch(name, ast) ->
-      let param = Dlr.paramT<UserError> "error"
+      let exnParam = Dlr.paramT<UserError> "error"
       let ctx = {ctx with Scope=ctx.Scope |> Ast.Utils.Scope.incrLocal name}
 
-      Dlr.catchVar param (
+      Dlr.catchVar exnParam (
         Dlr.blockSimple[
-          (Identifier.setValue ctx name (Utils.errorValue param))
+          (Identifier.setValue ctx name exnParam?Value)
           (ctx.Compile ast |> Dlr.castVoid)
         ])
 

@@ -560,6 +560,9 @@ module Dlr =
     let inline (!!!) x = const' x
     let inline (!@) x = Ext.unwrap x
 
+    // Dynamic bind operator for accessing fields
+    let (?) (expr:Expr) field = propertyOrField expr field
+
     // Binary operators, starts with .
     let (.=) a b = assign a b
     let (.+) a b = add a b

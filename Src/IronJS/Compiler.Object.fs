@@ -164,7 +164,8 @@ module Object =
 
         (List.mapi (fun i value ->
           let value = ctx.Compile value
-          tmp |> Index.put !!!(uint32 i) value
+          let index = !!!(uint32 i)
+          tmp |> Index.put index value
         ) indexes) |> blockSimple
 
         tmp :> Dlr.Expr

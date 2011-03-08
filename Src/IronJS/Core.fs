@@ -982,7 +982,38 @@ and [<AllowNullLiteral>] RegExpObject =
 
   new (env, pattern) = 
     RegExpObject(env, pattern, RegexOptions.None, false)
+    
+(*
+//  
+*)
+and DO = DateObject
+and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
+  inherit CommonObject(env, env.Maps.Base, env.Prototypes.Date)
+
+  static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
+  static let ticks = 10000L
   
+  [<DefaultValue>] 
+  val mutable Date : DateTime
+
+  do 
+    x.Date <- date
+
+  new (env:Env, ticks:int64) = 
+    DateObject(env, DateObject.TicksToDateTime(ticks))
+
+  new (env:Env, ticks:double) = 
+    DateObject(env, DateObject.TicksToDateTime(ticks))
+
+  static member TicksToDateTime(ticks:int64) : DateTime =
+    new DateTime(ticks * ticks + offset, DateTimeKind.Utc)
+    
+  static member TicksToDateTime(ticks:double) : DateTime = 
+    DateObject.TicksToDateTime(int64 ticks)
+
+  static member DateTimeToTicks(date:DateTime) : int64 =
+    (date.ToUniversalTime().Ticks - offset) / ticks
+
 (*
 //  
 *)

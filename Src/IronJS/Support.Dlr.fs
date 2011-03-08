@@ -604,5 +604,5 @@ module Dlr =
 
   module ExtensionMethods =
     type System.Linq.Expressions.Expression with
-      member x.CallMember(name) = x.Call(name, [])
+      member x.CallMember(name) = x.CallMember(name, [])
       member x.CallMember(name, args) = call x name args

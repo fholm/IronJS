@@ -563,6 +563,9 @@ module Dlr =
     // Dynamic bind operator for accessing fields
     let (?) (expr:Expr) field = propertyOrField expr field
 
+    // Dot operator for binding field access
+    let (.->) a b = propertyOrField a b
+
     // Binary operators, starts with .
     let (.=) a b = assign a b
     let (.+) a b = add a b
@@ -570,7 +573,7 @@ module Dlr =
     let (.*) a b = mul a b
     let (./) a b = div a b
     let (.%) a b = mod' a b
-    let (.^) a b = pow a b
+    let (.**) a b = pow a b
 
     let (.+=) a b = addAsn a b
     let (.-=) a b = subAsn a b
@@ -588,7 +591,7 @@ module Dlr =
 
     let (.<<) a b = lhs a b
     let (.>>) a b = rhs a b
-    let (.^^) a b = xor a b
+    let (.^) a b = xor a b
     let (.&) a b  = bAnd' a b
     let (.|) a b  = bOr' a b
 

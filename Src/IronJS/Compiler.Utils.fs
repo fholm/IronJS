@@ -55,16 +55,18 @@ module Utils =
     let setTag expr t =
       match t with
       | TypeTags.Number -> Dlr.void'
-      | _ -> expr?Tag .= !!!t
+      | _ -> let expr = expr |> Dlr.Ext.unwrap in expr?Tag .= !!!t
 
     let setTagOf expr (of':Dlr.Expr) = 
       setTag expr (of'.Type |> TypeTag.OfType)
 
     let setValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
+      let expr = Dlr.Ext.unwrap expr
       let field = value.Type |> TypeTag.OfType |> BV.FieldOfTag
-      Dlr.field expr field .= value
+      expr.->field .= value
       
-  let isBoxed (expr:Dlr.Expr) = Dlr.Utils.isT<BoxedValue> expr
+  let isBoxed (expr:Dlr.Expr) = 
+    Dlr.Utils.isT<BoxedValue> expr
     
   let voidAsUndefined (expr:Dlr.Expr) =
     if Dlr.Utils.isVoid expr
@@ -135,8 +137,8 @@ module Utils =
   let compileIndex (ctx:Ctx) indexAst =
     let mutable index = 0u
     match indexAst with
-    | Ast.Number n when CoreUtils.TryConvertToIndex(n, &index) -> Dlr.const' index
-    | Ast.String s when CoreUtils.TryConvertToIndex(s, &index) -> Dlr.const' index
+    | Ast.Number n when CoreUtils.TryConvertToIndex(n, &index) -> !!!index
+    | Ast.String s when CoreUtils.TryConvertToIndex(s, &index) -> !!!index
     | _ -> ctx.Compile indexAst
     
   //----------------------------------------------------------------------------
@@ -163,7 +165,8 @@ module Utils =
               (ifClr (Box.unboxClr expr))
               (ifObj (TypeConverter.ToObject(ctx.Env, expr))))
         ])
-    | tt -> failwithf "Invalid TypeTag '%i'" tt
+
+    | tag -> failwithf "Invalid TypeTag '%i'" tag
 
   //----------------------------------------------------------------------------
   let ensureFunction (expr:Dlr.Expr) ifFunc ifClr =
@@ -186,4 +189,5 @@ module Utils =
               (ifClr (Box.unboxClr expr))
               (Constants.Boxed.undefined))
         ])
-    | tt -> failwithf "Invalid TypeTag '%i'" tt
+
+    | tag -> failwithf "Invalid TypeTag '%i'" tag

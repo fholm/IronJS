@@ -6,19 +6,13 @@ open IronJS
 open IronJS.Dlr.Operators
 
 module Utils =
-
-  //----------------------------------------------------------------------------
-  module Patterns =
     
-    let (|IsBox|IsRef|IsVal|) (expr:Dlr.Expr) =
-      if expr.Type = typeof<BoxedValue>
-        then IsBox
-        elif Dlr.Utils.isT<double> expr || Dlr.Utils.isT<bool> expr
-          then IsVal
-          else IsRef
-
-    let (|IsIndex|_|) (expr:Dlr.Expr) =
-      if expr.Type = typeof<uint32> then Some () else None
+  let (|IsBox|IsRef|IsVal|) (expr:Dlr.Expr) =
+    if expr.Type = typeof<BoxedValue>
+      then IsBox
+      elif Dlr.Utils.isT<double> expr || Dlr.Utils.isT<bool> expr
+        then IsVal
+        else IsRef
     
   //----------------------------------------------------------------------------
   module Constants =

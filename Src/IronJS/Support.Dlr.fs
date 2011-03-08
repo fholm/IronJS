@@ -601,3 +601,8 @@ module Dlr =
     // Unary operators, starts with !
     let (!~) a = cmpl a
     let (!!) a = not a
+
+  module ExtensionMethods =
+    type System.Linq.Expressions.Expression with
+      member x.CallMember(name) = x.Call(name, [])
+      member x.CallMember(name, args) = call x name args

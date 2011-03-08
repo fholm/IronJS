@@ -128,7 +128,7 @@ module Object =
     //
     let get (index:Dlr.Expr) expr = 
       tempBlockT<CO> expr (fun tmp -> 
-        [Dlr.call tmp "Get" [index]]
+        [tmp.CallMember("Get", [index])]
       )
 
     //
@@ -163,9 +163,8 @@ module Object =
         tmp .= ctx.Env.CallMember("NewArray", [!!!length])
 
         (List.mapi (fun i value ->
-          let index = uint32 i |> Dlr.const'
           let value = ctx.Compile value
-          tmp |> Index.put index value
+          tmp |> Index.put !!!(uint32 i) value
         ) indexes) |> blockSimple
 
         tmp :> Dlr.Expr
@@ -179,8 +178,7 @@ module Object =
       match assign with
       | Ast.Assign(Ast.String name, expr) -> 
         let value = ctx.Compile expr
-        let name = Dlr.const' name
-        tmp |> Property.put name value
+        tmp |> Property.put !!!name value
 
       | _ -> failwith "Que?"
 

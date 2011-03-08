@@ -30,13 +30,13 @@ module Utils =
   //----------------------------------------------------------------------------
   module Box =
     
-    let isBool box      = box?Tag    .=  !!!TypeTags.Bool
-    let isNumber box    = box?Marker .<  !!!Markers.Tagged
-    let isClr box       = box?Tag    .=  !!!TypeTags.Clr
-    let isString box    = box?Tag    .=  !!!TypeTags.String
-    let isUndefined box = box?Tag    .=  !!!TypeTags.Undefined
-    let isObject box    = box?Tag    .>= !!!TypeTags.Object
-    let isFunction box  = box?Tag    .=  !!!TypeTags.Function
+    let isBool box      = box?Tag    .==  !!!TypeTags.Bool
+    let isNumber box    = box?Marker .<   !!!Markers.Tagged
+    let isClr box       = box?Tag    .==  !!!TypeTags.Clr
+    let isString box    = box?Tag    .==  !!!TypeTags.String
+    let isUndefined box = box?Tag    .==  !!!TypeTags.Undefined
+    let isObject box    = box?Tag    .>=  !!!TypeTags.Object
+    let isFunction box  = box?Tag    .==  !!!TypeTags.Function
 
     let unboxNumber box = box?Number
     let unboxBool box = box?Bool

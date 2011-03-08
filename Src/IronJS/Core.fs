@@ -367,6 +367,9 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
     x.NewRegExp(pattern, opts, options.Contains("g"))
 
+  member x.NewDate(dateTime:DateTime) =
+    new DO(x, dateTime)
+
   member x.NewRegExp(pattern:string, options:RegexOptions, isGlobal:bool) =
     let regexp = new RegExpObject(x, pattern, options, isGlobal)
 
@@ -1828,6 +1831,7 @@ and TypeConverter() =
     Dlr.callStaticT<TypeConverter> "ToBoolean" [expr]
 
   (**)
+  
   static member ToPrimitive(b:bool, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(b)
   static member ToPrimitive(d:double, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(d)
   static member ToPrimitive(s:String, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(s)
@@ -1835,6 +1839,9 @@ and TypeConverter() =
   static member ToPrimitive(u:Undefined, _:DefaultValueHint) : BoxedValue = Undefined.Boxed
   static member ToPrimitive(c:System.Object, _:DefaultValueHint) : BoxedValue = 
     BoxedValue.Box (if c = null then null else c.ToString())
+
+  static member ToPrimitive(v:BoxedValue) : BoxedValue =
+    TypeConverter.ToPrimitive(v, DefaultValueHint.None)
 
   static member ToPrimitive(v:BoxedValue, hint:DefaultValueHint) : BoxedValue =
     match v.Tag with

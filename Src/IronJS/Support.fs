@@ -27,6 +27,7 @@ module Aliases =
 
   let anyNumber = NumberStyles.Any
   let invariantCulture = CultureInfo.InvariantCulture
+  let currentCulture = CultureInfo.CurrentCulture
 
   let NaN = Double.NaN
   let NegInf = Double.NegativeInfinity 

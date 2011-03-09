@@ -556,6 +556,10 @@ and [<AllowNullLiteral>] CommonObject =
     match func.Tag with
     | TypeTags.Function -> Some(func.Func.Call(x))
     | _ -> None
+
+  //
+  member x.CallMember (name:string) : BV =
+    x.Get(name).Func.Call(x)
         
   //----------------------------------------------------------------------------
   // These methods are the core Put/Get/Has/Delete methods for property access

@@ -172,6 +172,10 @@ module Date =
     let private getUTCSeconds (f:FO) (o:CO) = (toUTCTime o).Second |> double |> BV.Box
     let private getMilliseconds (f:FO) (o:CO) = (toLocalTime o).Millisecond |> double |> BV.Box
     let private getUTCMilliseconds (f:FO) (o:CO) = (toUTCTime o).Millisecond |> double |> BV.Box
+
+    let private getTimezoneOffset (f:FO) (o:CO) =
+      let o = o.CastTo<DO>()
+      (-TimeZone.CurrentTimeZone.GetUtcOffset(DateTime.Now).TotalMinutes) |> BV.Box
     
     let create (env:Environment) objPrototype =
       let prototype = env.NewDate(invalidDate)
@@ -207,3 +211,4 @@ module Date =
       proto?getUTCSeconds <- (JsFunc(getUTCSeconds) |> create)
       proto?getMilliseconds <- (JsFunc(getMilliseconds) |> create)
       proto?getUTCMilliseconds <- (JsFunc(getUTCMilliseconds) |> create)
+      proto?getTimezoneOffset <- (JsFunc(getTimezoneOffset) |> create)

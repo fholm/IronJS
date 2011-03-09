@@ -1012,6 +1012,9 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   new (env:Env, ticks:double) = 
     DateObject(env, DateObject.TicksToDateTime(ticks))
 
+  member x.HasValidDate =
+    x.Date <> DateTime.MinValue
+
   static member TicksToDateTime(ticks:int64) : DateTime =
     new DateTime(ticks * ticks + offset, DateTimeKind.Utc)
     

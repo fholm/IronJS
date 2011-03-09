@@ -141,10 +141,23 @@ module Date =
     env.Constructors <- {env.Constructors with Date=ctor}
 
   module Prototype =
+    
+    open IronJS.ExtOperators
 
-    let private toString (f:FO) (o:CO) =
-      let o = o.CastTo<DO>()
-      o.Date.ToLocalTime().ToString(Formats.full, ic) |> BV.Box
+    let private toStringGeneric (o:CO) (format:string) culture =
+      o.CastTo<DO>().Date.ToLocalTime().ToString(Formats.full, culture) |> BV.Box
+
+    let private toString (f:FO) (o:CO) = toStringGeneric o Formats.full ic
+    let private toDateString (f:FO) (o:CO) = toStringGeneric o Formats.date ic
+    let private toTimeString (f:FO) (o:CO) = toStringGeneric o Formats.time ic
+    let private toLocaleString (f:FO) (o:CO) = toStringGeneric o Formats.full cc
+    let private toLocaleDateString (f:FO) (o:CO) = toStringGeneric o Formats.date cc
+    let private toLocaleTimeString (f:FO) (o:CO) = toStringGeneric o Formats.time cc
+    let private valueOf (f:FO) (o:CO) =
+      o.CastTo<DO>().Date 
+      |> DateObject.DateTimeToTicks 
+      |> float 
+      |> BV.Box
     
     let create (env:Environment) objPrototype =
       let prototype = env.NewDate(invalidDate)
@@ -153,9 +166,13 @@ module Date =
 
     let setup (env:Environment) =
       let proto = env.Prototypes.Date
-
+      let create = Utils.createHostFunction env
       proto.Put("constructor", env.Constructors.Date)
 
-      let toString = JsFunc(toString)
-      let toString = toString |> Utils.createHostFunction env
-      proto.Put("toString", toString)
+      proto?toString <- (JsFunc(toString) |> create)
+      proto?valueOf <- (JsFunc(valueOf) |> create)
+      proto?toDateString <- (JsFunc(toDateString) |> create)
+      proto?toTimeString <- (JsFunc(toTimeString) |> create)
+      proto?toLocaleString <- (JsFunc(toLocaleString) |> create)
+      proto?toLocaleDateString <- (JsFunc(toLocaleDateString) |> create)
+      proto?toLocaleTimeString <- (JsFunc(toLocaleTimeString) |> create)

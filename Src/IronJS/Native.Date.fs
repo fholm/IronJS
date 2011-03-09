@@ -23,8 +23,8 @@ module Date =
   let private ic = invariantCulture :> IFormatProvider
   let private cc = currentCulture:> IFormatProvider
 
-  let private utcZeroDate() = 
-    new DateTime(0L, DateTimeKind.Utc)
+  let private utcZeroDate() = new DT(0L, DateTimeKind.Utc)
+  let private localZeroDate() = new DT(0L, DateTimeKind.Local)
 
   let private invalidDate = 
     DateTime.MinValue
@@ -71,7 +71,7 @@ module Date =
           f.Env.NewDate(value |> DateObject.TicksToDateTime)
 
       | _ ->
-        let mutable date = utcZeroDate()
+        let mutable date = localZeroDate()
 
         //Year and Month
         let mutable year = args.[0].ToInt32() - 1

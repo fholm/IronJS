@@ -370,7 +370,7 @@ type Operators =
   static member or' (l:BoxedValue, r:BoxedValue) =
     if TypeConverter.ToBoolean l then l else r
 
-module ExtOperators =
+module FSharpOperators =
   
   let (?<-) (a:'a when 'a :> CO) (b:string) (c:obj) = 
     let methodInfo = typeof<CO>.GetMethod("Put", [|typeof<string>; c.GetType()|])

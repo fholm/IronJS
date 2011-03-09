@@ -10,7 +10,7 @@ open IronJS.DescriptorAttrs
 
 module Date =
 
-  open IronJS.ExtOperators
+  open IronJS.FSharpOperators
 
   module private Formats = 
     let full = "ddd, dd MMM yyyy HH':'mm':'ss 'GMT'zzz"
@@ -135,7 +135,7 @@ module Date =
 
   module Prototype =
     
-    open IronJS.ExtOperators
+    open IronJS.FSharpOperators
 
     let private toStringGeneric (o:CO) (format:string) culture =
       o.CastTo<DO>().Date.ToLocalTime().ToString(Formats.full, culture) |> BV.Box

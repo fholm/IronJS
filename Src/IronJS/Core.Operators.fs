@@ -369,9 +369,3 @@ type Operators =
   static member or' (l, r) = Dlr.callStaticT<Operators> "or'" [l; r]
   static member or' (l:BoxedValue, r:BoxedValue) =
     if TypeConverter.ToBoolean l then l else r
-
-module FSharpOperators =
-  
-  let (?<-) (a:'a when 'a :> CO) (b:string) (c:obj) = 
-    let methodInfo = typeof<CO>.GetMethod("Put", [|typeof<string>; c.GetType()|])
-    methodInfo.Invoke(a, [|b; c|]) |> ignore

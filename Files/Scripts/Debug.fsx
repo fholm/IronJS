@@ -9,6 +9,7 @@
 open System
 open System.Reflection
 open IronJS
+open IronJS.FSharpOperators
 open FSKit
 open FSKit.Bit
 
@@ -20,4 +21,4 @@ let ctx = Hosting.Context.Create()
 let print = new Action<string>(System.Console.WriteLine) :> Delegate
 let printFunc = IronJS.Native.Utils.createHostFunction ctx.Environment print
 ctx.PutGlobal("print", printFunc)
-ctx.Execute("print('lol')");
+ctx.Execute("print('lol')")

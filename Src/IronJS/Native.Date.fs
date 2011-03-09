@@ -6,6 +6,7 @@ open System.Globalization
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.ExtensionMethods
+open IronJS.DescriptorAttrs
 
 module Date =
 
@@ -15,13 +16,18 @@ module Date =
     let date = "ddd, dd MMM yyyy"
     let time = "HH':'mm':'ss 'GMT'zzz"
 
+  type private DT = DateTime
+    
+  let private ic = invariantCulture :> IFormatProvider
+  let private cc = currentCulture:> IFormatProvider
+
   let private utcZeroDate() = 
     new DateTime(0L, DateTimeKind.Utc)
 
   let private invalidDate = 
     DateTime.MinValue
 
-  let private parseDate input culture (result:DateTime byref) : bool =   
+  let private parseDate input culture (result:DT byref) : bool =   
     let none = DateTimeStyles.None 
 
     if DateTime.TryParse(input, culture, none, &result) |> not then
@@ -45,7 +51,7 @@ module Date =
   let private constructor' (f:FO) (o:CO) (args:BV array) =
     let date = 
       match args.Length with
-      | 0 -> f.Env.NewDate(DateTime.Now.ToUniversalTime())
+      | 0 -> f.Env.NewDate(DT.Now.ToUniversalTime())
       | 1 -> 
         let value = args.[0].ToPrimitive()
 
@@ -53,16 +59,13 @@ module Date =
         | TypeTags.String ->
           let value = string value.String
           let mutable date = utcZeroDate()
-          
-          let ic = invariantCulture :> IFormatProvider
-          let cc = currentCulture:> IFormatProvider
 
           if parseDate value ic &date || parseDate value cc &date 
             then f.Env.NewDate(date)
             else f.Env.NewDate(utcZeroDate())
 
         | _ -> 
-          let value = value |> TypeConverter.ToNumber
+          let value = value.ToNumber()
           f.Env.NewDate(value |> DateObject.TicksToDateTime)
 
       | _ ->
@@ -83,5 +86,55 @@ module Date =
         f.Env.NewDate(date)
 
     match o with
-    | null -> date.CallMember("toString")
-    | _ -> date |> BV.Box
+    | null -> date |> BV.Box
+    | _ -> date.CallMember("toString")
+
+  let private parseGeneric input culture =
+    let mutable date = utcZeroDate()
+    if parseDate input culture &date 
+      then DateObject.DateTimeToTicks(date) |> float
+      else NaN
+
+  let private parse (f:FO) (o:CO) input = 
+    parseGeneric input ic |> BV.Box
+
+  let private parseLocal (f:FO) (o:CO) input = 
+    parseGeneric input cc |> BV.Box
+
+  let private utc (f:FO) (o:CO) (args:BV array) =
+    let mutable failed = false
+
+    for i = 0 to args.Length-1 do
+      let a = args.[i]
+      let n = a.Number
+      if a.IsUndefined then failed <- true
+      if a.IsNumber && Double.IsNaN n then failed <- true
+      if a.IsNumber && Double.IsInfinity n then failed <- true
+
+    if failed then NaN |> BV.Box
+    else
+      let date = (constructor' f null args).Object :?> DO
+      let ticks = date.Date |> DateObject.DateTimeToTicks |> float 
+      let offset = TimeZone.CurrentTimeZone.GetUtcOffset(DT.Now).TotalMilliseconds
+      ticks + offset |> BV.Box
+
+  let setupConstructor (env:Environment) =
+    let ctor = new JsFunc<BV array>(constructor')
+    let ctor = Utils.createHostFunction env ctor
+
+    ctor.ConstructorMode <- ConstructorModes.Host
+
+    let parse = new JsFunc<string>(parse)
+    let parse = parse |> Utils.createHostFunction env
+    ctor.Put("parse", parse, Immutable) 
+
+    let parseLocal = new JsFunc<string>(parseLocal)
+    let parseLocal = parseLocal |> Utils.createHostFunction env
+    ctor.Put("parseLocal", parseLocal, Immutable) 
+
+    let utc = new JsFunc<BV array>(utc)
+    let utc = utc |> Utils.createHostFunction env
+    ctor.Put("UTC", utc, Immutable) 
+
+    env.Globals.Put("Date", ctor)
+    env.Constructors <- {env.Constructors with Date=ctor}

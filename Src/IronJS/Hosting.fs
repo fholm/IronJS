@@ -80,6 +80,8 @@ module Hosting =
     env |> Native.Array.setupConstructor
     env |> Native.Array.setupPrototype
 
+    env |> Native.Date.setupConstructor
+
     //env |> Native.RegExp.setupConstructor
     //env |> Native.RegExp.setupPrototype
         

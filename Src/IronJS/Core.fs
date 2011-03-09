@@ -463,7 +463,7 @@ and [<AllowNullLiteral>] CommonObject =
   //
   abstract GetLength : unit -> uint32
   default x.GetLength() =
-    x.Get("length") |> TypeConverter.ToUInt32
+    x.Get("length") |> TC.ToUInt32
 
   //
   member x.CastTo<'a when 'a :> CO>() =
@@ -713,17 +713,17 @@ and [<AllowNullLiteral>] CommonObject =
     let mutable i = 0u
     if CoreUtils.TryConvertToIndex(index, &i) 
       then x.Put(i, value)
-      else x.Put(TypeConverter.ToString(index), value)
+      else x.Put(TC.ToString(index), value)
 
   member x.Put(index:bool, value:BoxedValue) : unit =
-    x.Put(TypeConverter.ToString(index), value)
+    x.Put(TC.ToString(index), value)
 
   member x.Put(index:double, value:BoxedValue) : unit = 
     let mutable parsed = 0u
 
     if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
-      else x.Put(TypeConverter.ToString(index), value)
+      else x.Put(TC.ToString(index), value)
 
   member x.Put(index:Object, value:BoxedValue) : unit =
     let index = TypeConverter.ToString(index)
@@ -733,11 +733,11 @@ and [<AllowNullLiteral>] CommonObject =
       then x.Put(parsed, value)
       else x.Put(index, value)
 
-  member x.Put(index:Undefined, value:BoxedValue) : unit = 
+  member x.Put(index:Undefined, value:BV) : unit = 
     x.Put("undefined", value)
 
-  member x.Put(index:CommonObject, value:BoxedValue) : unit = 
-    let index = TypeConverter.ToString(index)
+  member x.Put(index:CO, value:BV) : unit = 
+    let index = TC.ToString(index)
     let mutable parsed = 0u
     
     if CoreUtils.TryConvertToIndex(index, &parsed) 
@@ -753,14 +753,14 @@ and [<AllowNullLiteral>] CommonObject =
       else x.Put(TypeConverter.ToString(index), value)
       
   member x.Put(index:bool, value:double) =
-    x.Put(TypeConverter.ToString(index), value)
+    x.Put(TC.ToString(index), value)
     
   member x.Put(index:double, value:double) : unit = 
     let mutable parsed = 0u
 
     if CoreUtils.TryConvertToIndex(index, &parsed) 
       then x.Put(parsed, value)
-      else x.Put(TypeConverter.ToString(index), value)
+      else x.Put(TC.ToString(index), value)
 
   member x.Put(index:Object, value:double) : unit =
     let index = TypeConverter.ToString(index)
@@ -774,7 +774,7 @@ and [<AllowNullLiteral>] CommonObject =
     x.Put("undefined", value)
 
   member x.Put(index:CommonObject, value:double) : unit = 
-    let index = TypeConverter.ToString(index)
+    let index = TC.ToString(index)
     let mutable parsed = 0u
     
     if CoreUtils.TryConvertToIndex(index, &parsed) 
@@ -1764,18 +1764,19 @@ and CoreUtils() =
 (*
 //
 *)
+and TC = TypeConverter
 and TypeConverter() =
 
   (**)
-  static member ToBoxedValue(v:BoxedValue) = v
-  static member ToBoxedValue(d:double) = BoxedValue.Box(d)
-  static member ToBoxedValue(b:bool) = BoxedValue.Box(b)
-  static member ToBoxedValue(s:string) = BoxedValue.Box(s)
-  static member ToBoxedValue(o:CO) = BoxedValue.Box(o)
-  static member ToBoxedValue(f:FO) = BoxedValue.Box(f)
-  static member ToBoxedValue(c:Object) = BoxedValue.Box(c)
+  static member ToBoxedValue(v:BV) = v
+  static member ToBoxedValue(d:double) = BV.Box(d)
+  static member ToBoxedValue(b:bool) = BV.Box(b)
+  static member ToBoxedValue(s:string) = BV.Box(s)
+  static member ToBoxedValue(o:CO) = BV.Box(o)
+  static member ToBoxedValue(f:FO) = BV.Box(f)
+  static member ToBoxedValue(c:Object) = BV.Box(c)
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToBoxedValue" [expr]
+    Dlr.callStaticT<TC> "ToBoxedValue" [expr]
     
   (**)
   static member ToClrObject(d:double) : Object = box d
@@ -1784,7 +1785,7 @@ and TypeConverter() =
   static member ToClrObject(o:CO) : Object = box o
   static member ToClrObject(f:FO) : Object = box f
   static member ToClrObject(c:Object) : Object = c
-  static member ToClrObject(v:BoxedValue) : Object =
+  static member ToClrObject(v:BV) : Object =
     match v.Tag with
     | TypeTags.Undefined -> null
     | TypeTags.Bool -> box v.Bool
@@ -1795,16 +1796,16 @@ and TypeConverter() =
     | _ -> box v.Number
 
   static member ToClrObject(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToClrObject" [expr]
+    Dlr.callStaticT<TC> "ToClrObject" [expr]
 
   (**)
-  static member ToObject(env:Environment, o:CommonObject) : CommonObject = o
-  static member ToObject(env:Environment, f:FunctionObject) : CommonObject = f :> CommonObject
-  static member ToObject(env:Environment, u:Undefined) : CommonObject = env.RaiseTypeError()
-  static member ToObject(env:Environment, s:string) : CommonObject = env.NewString(s)
-  static member ToObject(env:Environment, n:double) : CommonObject = env.NewNumber(n)
-  static member ToObject(env:Environment, b:bool) : CommonObject = env.NewBoolean(b)
-  static member ToObject(env:Environment, v:BoxedValue) : CommonObject =
+  static member ToObject(env:Environment, o:CO) : CO = o
+  static member ToObject(env:Environment, f:FO) : CO = f :> CommonObject
+  static member ToObject(env:Environment, u:Undefined) : CO = env.RaiseTypeError()
+  static member ToObject(env:Environment, s:string) : CO = env.NewString(s)
+  static member ToObject(env:Environment, n:double) : CO = env.NewNumber(n)
+  static member ToObject(env:Environment, b:bool) : CO = env.NewBoolean(b)
+  static member ToObject(env:Environment, v:BV) : CO =
     match v.Tag with
     | TypeTags.Object 
     | TypeTags.Function -> v.Object
@@ -1815,7 +1816,7 @@ and TypeConverter() =
     | _ -> env.NewNumber(v.Number)
 
   static member ToObject(env:Dlr.Expr, expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToObject" [env; expr]
+    Dlr.callStaticT<TC> "ToObject" [env; expr]
 
   (**)
   static member ToBoolean(b:bool) : bool = b
@@ -1823,89 +1824,89 @@ and TypeConverter() =
   static member ToBoolean(c:Object) : bool = if c = null then false else true
   static member ToBoolean(s:String) : bool = s.Length > 0
   static member ToBoolean(u:Undefined) : bool = false
-  static member ToBoolean(o:CommonObject) : bool = true
-  static member ToBoolean(v:BoxedValue) : bool =
+  static member ToBoolean(o:CO) : bool = true
+  static member ToBoolean(v:BV) : bool =
     match v.Tag with
     | TypeTags.Bool -> v.Bool
-    | TypeTags.String -> TypeConverter.ToBoolean(v.String)
+    | TypeTags.String -> TC.ToBoolean(v.String)
     | TypeTags.Undefined -> false
-    | TypeTags.Clr -> TypeConverter.ToBoolean(v.Clr)
+    | TypeTags.Clr -> TC.ToBoolean(v.Clr)
     | TypeTags.Object
     | TypeTags.Function -> true
-    | _ -> TypeConverter.ToBoolean(v.Number)
+    | _ -> TC.ToBoolean(v.Number)
 
   static member ToBoolean(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToBoolean" [expr]
+    Dlr.callStaticT<TC> "ToBoolean" [expr]
 
   (**)
   
-  static member ToPrimitive(b:bool, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(b)
-  static member ToPrimitive(d:double, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(d)
-  static member ToPrimitive(s:String, _:DefaultValueHint) : BoxedValue = BoxedValue.Box(s)
-  static member ToPrimitive(o:CommonObject, hint:DefaultValueHint) : BoxedValue = o.DefaultValue(hint)
-  static member ToPrimitive(u:Undefined, _:DefaultValueHint) : BoxedValue = Undefined.Boxed
-  static member ToPrimitive(c:System.Object, _:DefaultValueHint) : BoxedValue = 
+  static member ToPrimitive(b:bool, _:DefaultValueHint) : BV = BV.Box(b)
+  static member ToPrimitive(d:double, _:DefaultValueHint) : BV = BV.Box(d)
+  static member ToPrimitive(s:String, _:DefaultValueHint) : BV = BV.Box(s)
+  static member ToPrimitive(o:CO, hint:DefaultValueHint) : BV = o.DefaultValue(hint)
+  static member ToPrimitive(u:Undefined, _:DefaultValueHint) : BV = Undefined.Boxed
+  static member ToPrimitive(c:obj, _:DefaultValueHint) : BV = 
     BoxedValue.Box (if c = null then null else c.ToString())
 
-  static member ToPrimitive(v:BoxedValue) : BoxedValue =
-    TypeConverter.ToPrimitive(v, DefaultValueHint.None)
+  static member ToPrimitive(v:BV) : BV =
+    TC.ToPrimitive(v, DefaultValueHint.None)
 
-  static member ToPrimitive(v:BoxedValue, hint:DefaultValueHint) : BoxedValue =
+  static member ToPrimitive(v:BV, hint:DefaultValueHint) : BV =
     match v.Tag with
-    | TypeTags.Clr -> TypeConverter.ToPrimitive(v.Clr, hint)
+    | TypeTags.Clr -> TC.ToPrimitive(v.Clr, hint)
     | TypeTags.Object 
     | TypeTags.Function -> v.Object.DefaultValue(hint)
     | _ -> v
 
   static member ToPrimitive(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToPrimitive" [expr]
+    Dlr.callStaticT<TC> "ToPrimitive" [expr]
     
   (**)
   static member ToString(b:bool) : string = if b then "true" else "false"
   static member ToString(s:string) : string = s
   static member ToString(u:Undefined) : string = "undefined"
-  static member ToString(c:Object) : string = 
+  static member ToString(c:obj) : string = 
     if FSKit.Utils.isNull c then "null" else c.ToString()
 
   static member ToString(d:double) : string = 
     if System.Double.IsInfinity d then "Infinity" else d.ToString()
 
-  static member ToString(o:CommonObject) : string = 
+  static member ToString(o:CO) : string = 
     if o :? StringObject 
       then (o :?> ValueObject).Value.Value.String
-      else o.DefaultValue(DefaultValueHint.String) |> TypeConverter.ToString
+      else o.DefaultValue(DefaultValueHint.String) |> TC.ToString
 
-  static member ToString(v:BoxedValue) : string =
+  static member ToString(v:BV) : string =
     match v.Tag with
-    | TypeTags.Bool -> TypeConverter.ToString(v.Bool)
+    | TypeTags.Bool -> TC.ToString(v.Bool)
     | TypeTags.String -> v.String
-    | TypeTags.Clr -> TypeConverter.ToString(v.Clr)
+    | TypeTags.Clr -> TC.ToString(v.Clr)
     | TypeTags.Undefined -> "undefined"
     | TypeTags.Object 
-    | TypeTags.Function -> TypeConverter.ToString(v.Object)
-    | _ -> TypeConverter.ToString(v.Number)
+    | TypeTags.Function -> TC.ToString(v.Object)
+    | _ -> TC.ToString(v.Number)
 
   static member ToString(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToString" [expr]
+    Dlr.callStaticT<TC> "ToString" [expr]
   
   (**)
   static member ToNumber(b:bool) : double = if b then 1.0 else 0.0
-  static member ToNumber(c:Object) : double = if c = null then 0.0 else 1.0
+  static member ToNumber(c:obj) : double = if c = null then 0.0 else 1.0
   static member ToNumber(u:Undefined) : double = NaN
-  static member ToNumber(v:BoxedValue) : double =
+  static member ToNumber(v:BV) : double =
     match v.Tag with
-    | TypeTags.Bool -> TypeConverter.ToNumber(v.Bool)
-    | TypeTags.String -> TypeConverter.ToNumber(v.String)
-    | TypeTags.Clr -> TypeConverter.ToNumber(v.Clr)
+    | TypeTags.Bool -> TC.ToNumber(v.Bool)
+    | TypeTags.String -> TC.ToNumber(v.String)
+    | TypeTags.Clr -> TC.ToNumber(v.Clr)
     | TypeTags.Undefined -> NaN
     | TypeTags.Object 
-    | TypeTags.Function -> TypeConverter.ToNumber(v.Object)
+    | TypeTags.Function -> TC.ToNumber(v.Object)
     | _ -> v.Number
 
-  static member ToNumber(o:CommonObject) : double = 
+  static member ToNumber(o:CO) : double = 
     if o :? NumberObject 
       then (o :?> ValueObject).Value.Value.Number
-      else o.DefaultValue(DefaultValueHint.Number) |> TypeConverter.ToNumber 
+      else o.DefaultValue(DefaultValueHint.Number) |> TC.ToNumber 
 
   static member ToNumber(s:String) : double =
     let mutable d = 0.0
@@ -1921,41 +1922,35 @@ and TypeConverter() =
         else d
 
   static member ToNumber(expr:Dlr.Expr) : Dlr.Expr = 
-    Dlr.callStaticT<TypeConverter> "ToNumber" [expr]
+    Dlr.callStaticT<TC> "ToNumber" [expr]
 
   (**)
   static member ToInt32(d:double) : int32 = d |> uint32 |> int
-  static member ToInt32(b:BoxedValue) : int32 =
-    b |> TypeConverter.ToNumber |> TypeConverter.ToInt32
+  static member ToInt32(b:BV) : int32 = b |> TC.ToNumber |> TC.ToInt32
 
   (**)
   static member ToUInt32(d:double) : uint32 = d |> uint32 
-  static member ToUInt32(b:BoxedValue) : uint32 =
-    b |> TypeConverter.ToNumber |> TypeConverter.ToUInt32
+  static member ToUInt32(b:BV) : uint32 = b |> TC.ToNumber |> TC.ToUInt32
 
   (**)
   static member ToUInt16(d:double) : uint16 = d |> uint32 |> uint16
-  static member ToUInt16(b:BoxedValue) : uint16 =
-    b |> TypeConverter.ToNumber |> TypeConverter.ToUInt16
+  static member ToUInt16(b:BV) : uint16 = b |> TC.ToNumber |> TC.ToUInt16
 
   (**)
-  static member ToInteger(d:double) : int32 = 
-    if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
-
-  static member ToInteger(b:BoxedValue) : int32 =
-    b |> TypeConverter.ToNumber |> TypeConverter.ToInteger
+  static member ToInteger(d:double) : int32 = if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
+  static member ToInteger(b:BoxedValue) : int32 = b |> TC.ToNumber |> TC.ToInteger
     
   (**)
-  static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:System.Type) =
+  static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
     elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
     else 
-      if   t = typeof<double> then TypeConverter.ToNumber expr
-      elif t = typeof<string> then TypeConverter.ToString expr
-      elif t = typeof<bool> then TypeConverter.ToBoolean expr
-      elif t = typeof<BoxedValue> then TypeConverter.ToBoxedValue expr
-      elif t = typeof<CommonObject> then TypeConverter.ToObject(env, expr)
-      elif t = typeof<System.Object> then TypeConverter.ToClrObject expr
+      if   t = typeof<double> then TC.ToNumber expr
+      elif t = typeof<string> then TC.ToString expr
+      elif t = typeof<bool> then TC.ToBoolean expr
+      elif t = typeof<BV> then TC.ToBoxedValue expr
+      elif t = typeof<CO> then TC.ToObject(env, expr)
+      elif t = typeof<obj> then TC.ToClrObject expr
       else Support.Errors.noConversion expr.Type t
     
 (**)
@@ -1972,40 +1967,40 @@ and Maps = {
 
 (**)
 and Prototypes = {
-  Object : CommonObject
-  Array : CommonObject
-  Function : FunctionObject
-  String : CommonObject
-  Number : CommonObject
-  Boolean : CommonObject
-  Date : CommonObject
-  RegExp : CommonObject
-  Error: CommonObject
-  EvalError : CommonObject
-  RangeError : CommonObject
-  ReferenceError : CommonObject
-  SyntaxError : CommonObject
-  TypeError : CommonObject
-  URIError : CommonObject
+  Object : CO
+  Array : CO
+  Function : FO
+  String : CO
+  Number : CO
+  Boolean : CO
+  Date : CO
+  RegExp : CO
+  Error: CO
+  EvalError : CO
+  RangeError : CO
+  ReferenceError : CO
+  SyntaxError : CO
+  TypeError : CO
+  URIError : CO
 }
 
 (**)
 and Constructors = {
-  Object : FunctionObject
-  Array : FunctionObject
-  Function : FunctionObject
-  String : FunctionObject
-  Number : FunctionObject
-  Boolean : FunctionObject
-  Date : FunctionObject
-  RegExp : FunctionObject
-  Error : FunctionObject
-  EvalError : FunctionObject
-  RangeError : FunctionObject
-  ReferenceError : FunctionObject
-  SyntaxError : FunctionObject
-  TypeError : FunctionObject
-  URIError : FunctionObject
+  Object : FO
+  Array : FO
+  Function : FO
+  String : FO
+  Number : FO
+  Boolean : FO
+  Date : FO
+  RegExp : FO
+  Error : FO
+  EvalError : FO
+  RangeError : FO
+  ReferenceError : FO
+  SyntaxError : FO
+  TypeError : FO
+  URIError : FO
 }
 
 (**)
@@ -2013,6 +2008,9 @@ and Scope = BoxedValue array
 and DynamicScope = (int * CommonObject) list
 and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
 
+(*
+//
+*)
 and JsFunc = Func<FO,CO,BV>
 and JsFunc<'a> = Func<FO,CO,'a,BV>
 and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>

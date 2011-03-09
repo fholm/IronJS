@@ -118,11 +118,12 @@ module Date =
       let offset = TimeZone.CurrentTimeZone.GetUtcOffset(DT.Now).TotalMilliseconds
       ticks + offset |> BV.Box
 
-  let setupConstructor (env:Environment) =
+  let setup (env:Environment) =
     let ctor = new JsFunc<BV array>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
+    ctor.Put("prototype", env.Prototypes.Date)
 
     let parse = new JsFunc<string>(parse)
     let parse = parse |> Utils.createHostFunction env
@@ -138,3 +139,23 @@ module Date =
 
     env.Globals.Put("Date", ctor)
     env.Constructors <- {env.Constructors with Date=ctor}
+
+  module Prototype =
+
+    let private toString (f:FO) (o:CO) =
+      let o = o.CastTo<DO>()
+      o.Date.ToLocalTime().ToString(Formats.full, ic) |> BV.Box
+    
+    let create (env:Environment) objPrototype =
+      let prototype = env.NewDate(invalidDate)
+      prototype.Prototype <- objPrototype
+      prototype
+
+    let setup (env:Environment) =
+      let proto = env.Prototypes.Date
+
+      proto.Put("constructor", env.Constructors.Date)
+
+      let toString = JsFunc(toString)
+      let toString = toString |> Utils.createHostFunction env
+      proto.Put("toString", toString)

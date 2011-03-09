@@ -3,13 +3,9 @@
         <title></title>
         <script type="text/javascript">
             (function () {
-                var x = ["foo", "bar"];
-                alert(x[0]);
-                alert(x["0"]);
-                x["0.0"] = 2;
-                for (a in x) {
-                    alert(a);
-                }
+                var d = new Date(2010, 1, 1, 10);
+                alert(d.getTime());
+                alert(d.toString());
             } ());
         </script>
     </head>

@@ -10,6 +10,8 @@ open IronJS.DescriptorAttrs
 
 module Date =
 
+  open IronJS.ExtOperators
+
   module private Formats = 
     let full = "ddd, dd MMM yyyy HH':'mm':'ss 'GMT'zzz"
     //let utc = "ddd, dd MMM yyyy HH':'mm':'ss 'UTC'"
@@ -60,8 +62,8 @@ module Date =
           let value = string value.String
           let mutable date = utcZeroDate()
 
-          if parseDate value ic &date || parseDate value cc &date 
-            then f.Env.NewDate(date)
+          if parseDate value cc &date || parseDate value ic &date 
+            then f.Env.NewDate(date.ToLocalTime())
             else f.Env.NewDate(utcZeroDate())
 
         | _ -> 
@@ -119,25 +121,16 @@ module Date =
       ticks + offset |> BV.Box
 
   let setup (env:Environment) =
-    let ctor = new JsFunc<BV array>(constructor')
-    let ctor = Utils.createHostFunction env ctor
+    let create a = Utils.createHostFunction env a
+    let ctor = new JsFunc<BV array>(constructor') |> create
 
     ctor.ConstructorMode <- ConstructorModes.Host
-    ctor.Put("prototype", env.Prototypes.Date)
+    ctor?prototype <- env.Prototypes.Date
+    ctor?parse <- (JsFunc<string>(parse) |> create)
+    ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)
+    ctor?UTC <- (JsFunc<BV array>(utc) |> create)
 
-    let parse = new JsFunc<string>(parse)
-    let parse = parse |> Utils.createHostFunction env
-    ctor.Put("parse", parse, Immutable) 
-
-    let parseLocal = new JsFunc<string>(parseLocal)
-    let parseLocal = parseLocal |> Utils.createHostFunction env
-    ctor.Put("parseLocal", parseLocal, Immutable) 
-
-    let utc = new JsFunc<BV array>(utc)
-    let utc = utc |> Utils.createHostFunction env
-    ctor.Put("UTC", utc, Immutable) 
-
-    env.Globals.Put("Date", ctor)
+    env.Globals?Date <- ctor
     env.Constructors <- {env.Constructors with Date=ctor}
 
   module Prototype =
@@ -154,10 +147,31 @@ module Date =
     let private toLocaleDateString (f:FO) (o:CO) = toStringGeneric o Formats.date cc
     let private toLocaleTimeString (f:FO) (o:CO) = toStringGeneric o Formats.time cc
     let private valueOf (f:FO) (o:CO) =
-      o.CastTo<DO>().Date 
+      o.CastTo<DO>().Date
       |> DateObject.DateTimeToTicks 
       |> float 
       |> BV.Box
+
+    let private toLocalTime (o:CO) = o.CastTo<DO>().Date.ToLocalTime()
+    let private toUTCTime (o:CO) = o.CastTo<DO>().Date.ToUniversalTime()
+    
+    let private getTime (f:FO) (o:CO) = valueOf f o
+    let private getFullYear (f:FO) (o:CO) = (toLocalTime o).Year |> double |> BV.Box
+    let private getUTCFullYear (f:FO) (o:CO) = (toUTCTime o).Year |> double |> BV.Box
+    let private getMonth (f:FO) (o:CO) = (toLocalTime o).Month-1 |> double |> BV.Box
+    let private getUTCMonth (f:FO) (o:CO) = (toUTCTime o).Month-1 |> double |> BV.Box
+    let private getDate (f:FO) (o:CO) = (toLocalTime o).Day |> double |> BV.Box
+    let private getUTCDate (f:FO) (o:CO) = (toUTCTime o).Day |> double |> BV.Box
+    let private getDay (f:FO) (o:CO) = (toLocalTime o).DayOfWeek |> double |> BV.Box
+    let private getUTCDay (f:FO) (o:CO) = (toUTCTime o).DayOfWeek |> double |> BV.Box
+    let private getHours (f:FO) (o:CO) = (toLocalTime o).Hour |> double |> BV.Box
+    let private getUTCHours (f:FO) (o:CO) = (toUTCTime o).Hour |> double |> BV.Box
+    let private getMinutes (f:FO) (o:CO) = (toLocalTime o).Minute |> double |> BV.Box
+    let private getUTCMinutes (f:FO) (o:CO) = (toUTCTime o).Minute |> double |> BV.Box
+    let private getSeconds (f:FO) (o:CO) = (toLocalTime o).Second |> double |> BV.Box
+    let private getUTCSeconds (f:FO) (o:CO) = (toUTCTime o).Second |> double |> BV.Box
+    let private getMilliseconds (f:FO) (o:CO) = (toLocalTime o).Millisecond |> double |> BV.Box
+    let private getUTCMilliseconds (f:FO) (o:CO) = (toUTCTime o).Millisecond |> double |> BV.Box
     
     let create (env:Environment) objPrototype =
       let prototype = env.NewDate(invalidDate)
@@ -167,12 +181,29 @@ module Date =
     let setup (env:Environment) =
       let proto = env.Prototypes.Date
       let create = Utils.createHostFunction env
-      proto.Put("constructor", env.Constructors.Date)
 
-      proto?toString <- (JsFunc(toString) |> create)
+      proto?constructor <- env.Constructors.Date
       proto?valueOf <- (JsFunc(valueOf) |> create)
+      proto?toString <- (JsFunc(toString) |> create)
       proto?toDateString <- (JsFunc(toDateString) |> create)
       proto?toTimeString <- (JsFunc(toTimeString) |> create)
       proto?toLocaleString <- (JsFunc(toLocaleString) |> create)
       proto?toLocaleDateString <- (JsFunc(toLocaleDateString) |> create)
       proto?toLocaleTimeString <- (JsFunc(toLocaleTimeString) |> create)
+      proto?getTime <- (JsFunc(getTime) |> create)
+      proto?getFullYear <- (JsFunc(getFullYear) |> create)
+      proto?getUTCFullYear <- (JsFunc(getUTCFullYear) |> create)
+      proto?getMonth <- (JsFunc(getMonth) |> create)
+      proto?getUTCMonth <- (JsFunc(getUTCMonth) |> create)
+      proto?getDate <- (JsFunc(getDate) |> create)
+      proto?getUTCDate <- (JsFunc(getUTCDate) |> create)
+      proto?getDay <- (JsFunc(getDay) |> create)
+      proto?getUTCDay <- (JsFunc(getUTCDay) |> create)
+      proto?getHours <- (JsFunc(getHours) |> create)
+      proto?getUTCHours <- (JsFunc(getUTCHours) |> create)
+      proto?getMinutes <- (JsFunc(getMinutes) |> create)
+      proto?getUTCMinutes <- (JsFunc(getUTCMinutes) |> create)
+      proto?getSeconds <- (JsFunc(getSeconds) |> create)
+      proto?getUTCSeconds <- (JsFunc(getUTCSeconds) |> create)
+      proto?getMilliseconds <- (JsFunc(getMilliseconds) |> create)
+      proto?getUTCMilliseconds <- (JsFunc(getUTCMilliseconds) |> create)

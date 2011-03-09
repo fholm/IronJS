@@ -372,4 +372,6 @@ type Operators =
 
 module ExtOperators =
   
-  let (?<-) (a:'a when 'a :> CO) (b:string) (c:FO) = a.Put(b, c)
+  let (?<-) (a:'a when 'a :> CO) (b:string) (c:obj) = 
+    let methodInfo = typeof<CO>.GetMethod("Put", [|typeof<string>; c.GetType()|])
+    methodInfo.Invoke(a, [|b; c|]) |> ignore

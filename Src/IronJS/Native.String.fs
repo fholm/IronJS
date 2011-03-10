@@ -27,12 +27,12 @@ open IronJS.DescriptorAttrs
 //  15.5.4.17 String.prototype.toLocaleLowerCase ( )
 //  15.5.4.18 String.prototype.toUpperCase ( )
 //  15.5.4.19 String.prototype.toLocaleUpperCase ( )
-//
-//  NOT DONE:
+//  15.5.4.12 String.prototype.search (regexp) 
+//  15.5.4.14 String.prototype.split (separator, limit) 
 //  15.5.4.10 String.prototype.match (regexp)
+//  
+//  NOT DONE:
 //  15.5.4.11 String.prototype.replace (searchValue, replaceValue) - REGEXP/FUNCTION MISSING
-//  15.5.4.12 String.prototype.search (regexp) - REGEXP MISSING
-//  15.5.4.14 String.prototype.split (separator, limit) - REGEXP MISSING
 *)
 
 module String =

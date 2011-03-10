@@ -108,6 +108,7 @@ module TaggedBools =
 //  A dynamic value tagged with it's type
 *)
 type BV = BoxedValue
+and Args = BV array
 and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
 

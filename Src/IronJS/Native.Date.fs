@@ -53,18 +53,18 @@ module Date =
   let private constructor' (f:FO) (o:CO) (args:BV array) =
     let date = 
       match args.Length with
-      | 0 -> f.Env.NewDate(DT.Now.ToUniversalTime())
+      | 0 -> f.Env.NewDate(DT.Now.ToLocalTime())
       | 1 -> 
         let value = args.[0].ToPrimitive()
 
         match value.Tag with
         | TypeTags.String ->
           let value = string value.String
-          let mutable date = utcZeroDate()
+          let mutable date = localZeroDate()
 
           if parseDate value cc &date || parseDate value ic &date 
             then f.Env.NewDate(date.ToLocalTime())
-            else f.Env.NewDate(utcZeroDate())
+            else f.Env.NewDate(localZeroDate())
 
         | _ -> 
           let value = value.ToNumber()
@@ -135,6 +135,20 @@ module Date =
 
   module Prototype =
     
+    module private DT =
+    
+      let setYear (value:double) (d:DT) = 
+        let d = new DateTime(int value, d.Month, d.Day, d.Hour, d.Minute, d.Second, DateTimeKind.Local)
+        d.AddMilliseconds(d.Millisecond |> double)
+
+      let setMonth (value:double) (d:DT) = d.AddMonths(-d.Month).AddMonths((int value)+1)
+      let setDate (value:double) (d:DT) = d.AddDays(-(d.Day |> double)).AddDays(value)
+      let setHours (value:double) (d:DT) = d.AddHours(-(d.Hour |> double)).AddHours(value)
+      let setMinutes (value:double) (d:DT) = d.AddMinutes(-(d.Minute |> double)).AddMinutes(value)
+      let setSeconds (value:double) (d:DT) = d.AddSeconds(-(d.Second |> double)).AddSeconds(value)
+      let setMilliseconds (value:double) (d:DT) = 
+        d.AddMilliseconds(-(d.Millisecond |> double)).AddMilliseconds(value)
+
     open IronJS.FSharpOperators
 
     let private toStringGeneric (o:CO) (format:string) culture =
@@ -181,7 +195,37 @@ module Date =
       let o = o.CastTo<DO>()
       o.Date <- value |> DateObject.TicksToDateTime
       o |> BV.Box
-    
+
+    let private setTimeGeneric extract update cont (f:FO) (o:CO) (args:Args) =
+      if args.Length > 0 then
+        let value = args.[0] |> TC.ToNumber
+        let date:DT = o |> extract
+        o.CastTo<DO>().Date <- date |> update value
+        match cont with
+        | None -> o
+        | Some cont -> cont f o (Dlr.ArrayUtils.RemoveFirst args)
+
+      else
+        o
+
+    type private Set = FO -> CO -> Args -> CO
+    type private SetFunc = Func<FO, CO, Args, CO>
+
+    let private setMilliseconds = setTimeGeneric toLocalTime DT.setMilliseconds None
+    let private setUTCMilliseconds = setTimeGeneric toUTCTime DT.setMilliseconds None
+    let private setSeconds = setTimeGeneric toLocalTime DT.setSeconds (Some setMilliseconds)
+    let private setUTCSeconds = setTimeGeneric toUTCTime DT.setSeconds (Some setUTCMilliseconds)
+    let private setMinutes = setTimeGeneric toLocalTime DT.setMinutes (Some setSeconds)
+    let private setUTCMinutes = setTimeGeneric toUTCTime DT.setMinutes (Some setUTCSeconds)
+    let private setHours = setTimeGeneric toLocalTime DT.setHours (Some setMinutes)
+    let private setUTCHours = setTimeGeneric toUTCTime DT.setHours (Some setUTCMinutes)
+    let private setDate = setTimeGeneric toLocalTime DT.setDate (Some setHours)
+    let private setUTCDate = setTimeGeneric toUTCTime DT.setDate (Some setUTCHours)
+    let private setMonth = setTimeGeneric toLocalTime DT.setMonth (Some setDate)
+    let private setUTCMonth = setTimeGeneric toUTCTime DT.setMonth (Some setUTCDate)
+    let private setFullYear:Set = setTimeGeneric toLocalTime DT.setYear (Some setMonth)
+    let private setUTCFullYear:Set = setTimeGeneric toUTCTime DT.setYear (Some setUTCMonth)
+
     let create (env:Environment) objPrototype =
       let prototype = env.NewDate(invalidDate)
       prototype.Prototype <- objPrototype
@@ -218,3 +262,18 @@ module Date =
       proto?getUTCMilliseconds <- (JsFunc(getUTCMilliseconds) |> create)
       proto?getTimezoneOffset <- (JsFunc(getTimezoneOffset) |> create)
       proto?setTime <- (JsFunc<double>(setTime) |> create)
+
+      proto?setMilliseconds <- (SetFunc(setMilliseconds) |> create) 
+      proto?setUTCMilliseconds <- (SetFunc(setUTCMilliseconds) |> create)
+      proto?setSeconds <- (SetFunc(setSeconds) |> create)
+      proto?setUTCSeconds <- (SetFunc(setUTCSeconds) |> create)
+      proto?setMinutes <- (SetFunc(setMinutes) |> create)
+      proto?setUTCMinutes <- (SetFunc(setUTCMinutes) |> create)
+      proto?setHours <- (SetFunc(setHours) |> create)
+      proto?setUTCHours <- (SetFunc(setUTCHours) |> create)
+      proto?setDate <- (SetFunc(setDate) |> create)
+      proto?setUTCDate <- (SetFunc(setUTCDate) |> create)
+      proto?setMonth <- (SetFunc(setMonth) |> create)
+      proto?setUTCMonth <- (SetFunc(setUTCMonth) |> create)
+      proto?setFullYear <- (SetFunc(setFullYear) |> create)
+      proto?setUTCFullYear <- (SetFunc(setUTCFullYear) |> create)

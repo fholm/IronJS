@@ -197,7 +197,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box.Tag <- tag
       box
 
-    static member Box(value:Undefined) =
+    static member Box(value:Undef) =
       Undefined.Boxed
 
     static member FieldOfTag tag =
@@ -727,7 +727,7 @@ and [<AllowNullLiteral>] CommonObject =
       else x.Put(TC.ToString(index), value)
 
   member x.Put(index:Object, value:BV) : unit =
-    let index = TypeConverter.ToString(index)
+    let index = TC.ToString(index)
     let mutable parsed = 0u
     
     if TC.TryToIndex(index, &parsed) 
@@ -751,7 +751,7 @@ and [<AllowNullLiteral>] CommonObject =
     let mutable i = 0u
     if TC.TryToIndex(index, &i) 
       then x.Put(i, value)
-      else x.Put(TypeConverter.ToString(index), value)
+      else x.Put(TC.ToString(index), value)
       
   member x.Put(index:bool, value:double) =
     x.Put(TC.ToString(index), value)
@@ -764,7 +764,7 @@ and [<AllowNullLiteral>] CommonObject =
       else x.Put(TC.ToString(index), value)
 
   member x.Put(index:Object, value:double) : unit =
-    let index = TypeConverter.ToString(index)
+    let index = TC.ToString(index)
     let mutable parsed = 0u
     
     if TC.TryToIndex(index, &parsed) 
@@ -824,34 +824,34 @@ and [<AllowNullLiteral>] CommonObject =
   // or uint32 and forwards the call to the correct .Get method
   //----------------------------------------------------------------------------
 
-  member x.Get(index:BoxedValue) : BoxedValue =
+  member x.Get(index:BV) : BV =
     let mutable i = 0u
     if TC.TryToIndex(index, &i) 
       then x.Get(i)
-      else x.Get(TypeConverter.ToString(index))
+      else x.Get(TC.ToString(index))
 
-  member x.Get(index:bool) : BoxedValue =
-    x.Get(TypeConverter.ToString(index))
+  member x.Get(index:bool) : BV =
+    x.Get(TC.ToString(index))
 
-  member x.Get(index:double) : BoxedValue = 
+  member x.Get(index:double) : BV = 
     let mutable parsed = 0u
 
     if TC.TryToIndex(index, &parsed) 
       then x.Get(parsed)
-      else x.Get(TypeConverter.ToString(index))
+      else x.Get(TC.ToString(index))
 
-  member x.Get(index:Object) : BoxedValue =
-    let index = TypeConverter.ToString(index)
+  member x.Get(index:obj) : BV =
+    let index = TC.ToString(index)
     let mutable parsed = 0u
     
     if TC.TryToIndex(index, &parsed) 
       then x.Get(parsed)
       else x.Get(index)
       
-  member x.Get(index:Undefined) : BoxedValue = 
+  member x.Get(index:Undef) : BV = 
     x.Get("undefined")
     
-  member x.Get(index:CommonObject) : BoxedValue = 
+  member x.Get(index:CO) : BV = 
     let index = TC.ToString(index)
     let mutable parsed = 0u
     
@@ -1119,17 +1119,17 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 
   override x.Put(name:String, value:BoxedValue) =
     if name = "length"
-      then x.UpdateLength(value |> TypeConverter.ToNumber)
+      then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value)
 
   override x.Put (name:String, value:double) =
     if name = "length" 
-      then x.UpdateLength(value |> TypeConverter.ToNumber)
+      then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value)
 
   override x.Put (name:String, value:Object, tag:uint32) =
     if name = "length" 
-      then x.UpdateLength(value |> TypeConverter.ToNumber)
+      then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value, tag)
 
   override x.Put(index:uint32, value:BoxedValue) =
@@ -1722,7 +1722,7 @@ and [<AllowNullLiteral>] DynamicSchema =
 //
 *)
 and UserError(value:BoxedValue, line:int, column:int) =
-  inherit IronJS.Support.Error("UserError: " + TypeConverter.ToString(value))
+  inherit IronJS.Support.Error("UserError: " + TC.ToString(value))
   member x.Value = value
   member x.Line = line
   member x.Column = column
@@ -1733,7 +1733,7 @@ and UserError(value:BoxedValue, line:int, column:int) =
 and CoreUtils() =
 
   static member JsBox (o:obj) =
-    if o :? BoxedValue then 
+    if o :? BV then 
       unbox o
 
     elif o |> FSKit.Utils.isNull then 
@@ -1763,7 +1763,7 @@ and TypeConverter() =
   static member ToBoxedValue(s:string) = BV.Box(s)
   static member ToBoxedValue(o:CO) = BV.Box(o)
   static member ToBoxedValue(f:FO) = BV.Box(f)
-  static member ToBoxedValue(c:Object) = BV.Box(c)
+  static member ToBoxedValue(c:obj) = BV.Box(c)
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToBoxedValue" [expr]
     
@@ -1773,7 +1773,7 @@ and TypeConverter() =
   static member ToClrObject(s:string) : Object = box s
   static member ToClrObject(o:CO) : Object = box o
   static member ToClrObject(f:FO) : Object = box f
-  static member ToClrObject(c:Object) : Object = c
+  static member ToClrObject(c:obj) : Object = c
   static member ToClrObject(v:BV) : Object =
     match v.Tag with
     | TypeTags.Undefined -> null
@@ -1790,7 +1790,7 @@ and TypeConverter() =
   (**)
   static member ToObject(env:Environment, o:CO) : CO = o
   static member ToObject(env:Environment, f:FO) : CO = f :> CommonObject
-  static member ToObject(env:Environment, u:Undefined) : CO = env.RaiseTypeError()
+  static member ToObject(env:Environment, u:Undef) : CO = env.RaiseTypeError()
   static member ToObject(env:Environment, s:string) : CO = env.NewString(s)
   static member ToObject(env:Environment, n:double) : CO = env.NewNumber(n)
   static member ToObject(env:Environment, b:bool) : CO = env.NewBoolean(b)
@@ -1810,9 +1810,9 @@ and TypeConverter() =
   (**)
   static member ToBoolean(b:bool) : bool = b
   static member ToBoolean(d:double) : bool = d > 0.0 || d < 0.0
-  static member ToBoolean(c:Object) : bool = if c = null then false else true
-  static member ToBoolean(s:String) : bool = s.Length > 0
-  static member ToBoolean(u:Undefined) : bool = false
+  static member ToBoolean(c:obj) : bool = if c = null then false else true
+  static member ToBoolean(s:string) : bool = s.Length > 0
+  static member ToBoolean(u:Undef) : bool = false
   static member ToBoolean(o:CO) : bool = true
   static member ToBoolean(v:BV) : bool =
     match v.Tag with
@@ -1831,9 +1831,9 @@ and TypeConverter() =
   
   static member ToPrimitive(b:bool, _:DefaultValueHint) : BV = BV.Box(b)
   static member ToPrimitive(d:double, _:DefaultValueHint) : BV = BV.Box(d)
-  static member ToPrimitive(s:String, _:DefaultValueHint) : BV = BV.Box(s)
+  static member ToPrimitive(s:string, _:DefaultValueHint) : BV = BV.Box(s)
   static member ToPrimitive(o:CO, hint:DefaultValueHint) : BV = o.DefaultValue(hint)
-  static member ToPrimitive(u:Undefined, _:DefaultValueHint) : BV = Undefined.Boxed
+  static member ToPrimitive(u:Undef, _:DefaultValueHint) : BV = Undefined.Boxed
   static member ToPrimitive(c:obj, _:DefaultValueHint) : BV = 
     BoxedValue.Box (if c = null then null else c.ToString())
 
@@ -1853,7 +1853,7 @@ and TypeConverter() =
   (**)
   static member ToString(b:bool) : string = if b then "true" else "false"
   static member ToString(s:string) : string = s
-  static member ToString(u:Undefined) : string = "undefined"
+  static member ToString(u:Undef) : string = "undefined"
   static member ToString(c:obj) : string = 
     if FSKit.Utils.isNull c then "null" else c.ToString()
 
@@ -1881,7 +1881,7 @@ and TypeConverter() =
   (**)
   static member ToNumber(b:bool) : double = if b then 1.0 else 0.0
   static member ToNumber(c:obj) : double = if c = null then 0.0 else 1.0
-  static member ToNumber(u:Undefined) : double = NaN
+  static member ToNumber(u:Undef) : double = NaN
   static member ToNumber(v:BV) : double =
     match v.Tag with
     | TypeTags.Bool -> TC.ToNumber(v.Bool)
@@ -1897,7 +1897,7 @@ and TypeConverter() =
       then (o :?> ValueObject).Value.Value.Number
       else o.DefaultValue(DefaultValueHint.Number) |> TC.ToNumber 
 
-  static member ToNumber(s:String) : double =
+  static member ToNumber(s:string) : double =
     let mutable d = 0.0
     if Double.TryParse(s, anyNumber, invariantCulture, &d) 
       then d 
@@ -1927,7 +1927,7 @@ and TypeConverter() =
 
   (**)
   static member ToInteger(d:double) : int32 = if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
-  static member ToInteger(b:BoxedValue) : int32 = b |> TC.ToNumber |> TC.ToInteger
+  static member ToInteger(b:BV) : int32 = b |> TC.ToNumber |> TC.ToInteger
 
   
   (*
@@ -2008,13 +2008,15 @@ and Constructors = {
   URIError : FO
 }
 
-(**)
-and Scope = BoxedValue array
-and DynamicScope = (int * CommonObject) list
-and FunctionCompiler = FunctionObject -> System.Type -> System.Delegate
+(*
+//  
+*)
+and Scope = BV array
+and DynamicScope = (int * CO) list
+and FunctionCompiler = FO -> Type -> Delegate
 
 (*
-//
+//  
 *)
 and JsFunc = Func<FO,CO,BV>
 and JsFunc<'a> = Func<FO,CO,'a,BV>

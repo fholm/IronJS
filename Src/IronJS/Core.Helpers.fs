@@ -23,12 +23,12 @@ module ExtensionMethods =
 
   type BoxedValue with
   
-    member x.ToNumber() = x |> TypeConverter.ToNumber
-    member x.ToInteger() = x |> TypeConverter.ToInteger
-    member x.ToInt32() = x |> TypeConverter.ToInt32
-    member x.ToUInt16() = x |> TypeConverter.ToUInt16
-    member x.ToUInt32() = x |> TypeConverter.ToUInt32
-    member x.ToPrimitive() = x |> TypeConverter.ToPrimitive
+    member x.ToNumber() = x |> TC.ToNumber
+    member x.ToInteger() = x |> TC.ToInteger
+    member x.ToInt32() = x |> TC.ToInt32
+    member x.ToUInt16() = x |> TC.ToUInt16
+    member x.ToUInt32() = x |> TC.ToUInt32
+    member x.ToPrimitive() = x |> TC.ToPrimitive
 
 (*
 // Function + cache that creates delegates for IronJS functions, delegates

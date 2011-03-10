@@ -59,27 +59,27 @@ type Operators =
   // !
   static member not (o) = Dlr.callStaticT<Operators> "not" [o]
   static member not (o:BoxedValue) =
-    not (TypeConverter.ToBoolean o)
+    not (TC.ToBoolean o)
     
   //----------------------------------------------------------------------------
   // ~
   static member bitCmpl (o) = Dlr.callStaticT<Operators> "bitCmpl" [o]
   static member bitCmpl (o:BoxedValue) =
-    let o = TypeConverter.ToNumber o
-    let o = TypeConverter.ToInt32 o
+    let o = TC.ToNumber o
+    let o = TC.ToInt32 o
     ~~~ o |> double
       
   //----------------------------------------------------------------------------
   // + (unary)
   static member plus (l, r) = Dlr.callStaticT<Operators> "plus" [l; r]
   static member plus (o:BoxedValue) =
-    o |> TypeConverter.ToNumber |> BV.Box
+    o |> TC.ToNumber |> BV.Box
     
   //----------------------------------------------------------------------------
   // - (unary)
   static member minus (l, r) = Dlr.callStaticT<Operators> "minus" [l; r]
   static member minus (o:BoxedValue) =
-    BV.Box ((TypeConverter.ToNumber o) * -1.0)
+    BV.Box ((TC.ToNumber o) * -1.0)
 
   //----------------------------------------------------------------------------
   // Binary
@@ -97,7 +97,7 @@ type Operators =
       r.Object.Has(index)
 
     else
-      let name = TypeConverter.ToString(l)
+      let name = TC.ToString(l)
       r.Object.Has(name)
     
   //----------------------------------------------------------------------------
@@ -121,7 +121,7 @@ type Operators =
       then l.Number < r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String < r.String
-        else TypeConverter.ToNumber l < TypeConverter.ToNumber r
+        else TC.ToNumber l < TC.ToNumber r
         
   //----------------------------------------------------------------------------
   // <=
@@ -131,7 +131,7 @@ type Operators =
       then l.Number <= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String <= r.String
-        else TypeConverter.ToNumber l <= TypeConverter.ToNumber r
+        else TC.ToNumber l <= TC.ToNumber r
         
   //----------------------------------------------------------------------------
   // >
@@ -141,7 +141,7 @@ type Operators =
       then l.Number > r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String > r.String
-        else TypeConverter.ToNumber l > TypeConverter.ToNumber r
+        else TC.ToNumber l > TC.ToNumber r
         
   //----------------------------------------------------------------------------
   // >=
@@ -151,7 +151,7 @@ type Operators =
       then l.Number >= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String >= r.String
-        else TypeConverter.ToNumber l >= TypeConverter.ToNumber r
+        else TC.ToNumber l >= TC.ToNumber r
         
   //----------------------------------------------------------------------------
   // ==
@@ -180,28 +180,28 @@ type Operators =
         && l.Tag = TypeTags.Undefined then true
 
       elif l.IsNumber && r.Tag = TypeTags.String then
-        l.Number = TypeConverter.ToNumber r.String
+        l.Number = TC.ToNumber r.String
         
       elif r.Tag = TypeTags.String && r.IsNumber then
-        TypeConverter.ToNumber l.String = r.Number
+        TC.ToNumber l.String = r.Number
 
       elif l.Tag = TypeTags.Bool then
-        let mutable l = BV.Box(TypeConverter.ToNumber l)
+        let mutable l = BV.Box(TC.ToNumber l)
         Operators.eq(l, r)
 
       elif r.Tag = TypeTags.Bool then
-        let mutable r = BV.Box(TypeConverter.ToNumber r)
+        let mutable r = BV.Box(TC.ToNumber r)
         Operators.eq(l, r)
 
       elif r.Tag >= TypeTags.Object then
         match l.Tag with
         | TypeTags.String -> 
-          let r = TypeConverter.ToPrimitive(r.Object, DefaultValueHint.None)
+          let r = TC.ToPrimitive(r.Object, DefaultValueHint.None)
           Operators.eq(l, r)
 
         | _ -> 
           if l.IsNumber then
-            let r = TypeConverter.ToPrimitive(r.Object, DefaultValueHint.None)
+            let r = TC.ToPrimitive(r.Object, DefaultValueHint.None)
             Operators.eq(l, r)
           else
             false
@@ -209,12 +209,12 @@ type Operators =
       elif l.Tag >= TypeTags.Object then
         match r.Tag with
         | TypeTags.String -> 
-          let l = TypeConverter.ToPrimitive(l.Object, DefaultValueHint.None)
+          let l = TC.ToPrimitive(l.Object, DefaultValueHint.None)
           Operators.eq(l, r)
 
         | _ -> 
           if r.IsNumber then
-            let l = TypeConverter.ToPrimitive(l.Object, DefaultValueHint.None)
+            let l = TC.ToPrimitive(l.Object, DefaultValueHint.None)
             Operators.eq(l, r)
           else
             false
@@ -261,10 +261,10 @@ type Operators =
       BV.Box (l.Number + r.Number)
 
     elif l.Tag = TypeTags.String || r.Tag = TypeTags.String then
-      BV.Box (TypeConverter.ToString(l) + TypeConverter.ToString(r))
+      BV.Box (TC.ToString(l) + TC.ToString(r))
 
     else
-      BV.Box (TypeConverter.ToNumber(l) + TypeConverter.ToNumber(r))
+      BV.Box (TC.ToNumber(l) + TC.ToNumber(r))
       
   //----------------------------------------------------------------------------
   // -
@@ -272,7 +272,7 @@ type Operators =
   static member sub (l:BoxedValue, r:BoxedValue) =
     if l.IsNumber && r.IsNumber
       then BV.Box (l.Number - r.Number)
-      else BV.Box (TypeConverter.ToNumber l - TypeConverter.ToNumber r)
+      else BV.Box (TC.ToNumber l - TC.ToNumber r)
       
   //----------------------------------------------------------------------------
   // /
@@ -280,7 +280,7 @@ type Operators =
   static member div (l:BoxedValue, r:BoxedValue) =
     if l.IsNumber && r.IsNumber
       then BV.Box (l.Number / r.Number)
-      else BV.Box (TypeConverter.ToNumber l / TypeConverter.ToNumber r)
+      else BV.Box (TC.ToNumber l / TC.ToNumber r)
       
   //----------------------------------------------------------------------------
   // *
@@ -288,7 +288,7 @@ type Operators =
   static member mul (l:BoxedValue, r:BoxedValue) =
     if l.IsNumber && r.IsNumber
       then BV.Box (l.Number * r.Number)
-      else BV.Box (TypeConverter.ToNumber l * TypeConverter.ToNumber r)
+      else BV.Box (TC.ToNumber l * TC.ToNumber r)
       
   //----------------------------------------------------------------------------
   // %
@@ -296,76 +296,76 @@ type Operators =
   static member mod' (l:BoxedValue, r:BoxedValue) =
     if l.IsNumber && r.IsNumber
       then BV.Box (l.Number % r.Number)
-      else BV.Box (TypeConverter.ToNumber l % TypeConverter.ToNumber r)
+      else BV.Box (TC.ToNumber l % TC.ToNumber r)
     
   //----------------------------------------------------------------------------
   // &
   static member bitAnd (l, r) = Dlr.callStaticT<Operators> "bitAnd" [l; r]
   static member bitAnd (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToInt32 l
-    let r = TypeConverter.ToInt32 r
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToInt32 l
+    let r = TC.ToInt32 r
     (l &&& r) |> double
     
   //----------------------------------------------------------------------------
   // |
   static member bitOr (l, r) = Dlr.callStaticT<Operators> "bitOr" [l; r]
   static member bitOr (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToInt32 l
-    let r = TypeConverter.ToInt32 r
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToInt32 l
+    let r = TC.ToInt32 r
     (l ||| r) |> double
     
   //----------------------------------------------------------------------------
   // ^
   static member bitXOr (l, r) = Dlr.callStaticT<Operators> "bitXOr" [l; r]
   static member bitXOr (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToInt32 l
-    let r = TypeConverter.ToInt32 r
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToInt32 l
+    let r = TC.ToInt32 r
     (l ^^^ r) |> double
     
   //----------------------------------------------------------------------------
   // <<
   static member bitLhs (l, r) = Dlr.callStaticT<Operators> "bitLhs" [l; r]
   static member bitLhs (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToInt32 l
-    let r = TypeConverter.ToUInt32 r &&& 0x1Fu
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToInt32 l
+    let r = TC.ToUInt32 r &&& 0x1Fu
     (l <<< int r) |> double
     
   //----------------------------------------------------------------------------
   // >>
   static member bitRhs (l, r) = Dlr.callStaticT<Operators> "bitRhs" [l; r]
   static member bitRhs (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToInt32 l
-    let r = TypeConverter.ToUInt32 r &&& 0x1Fu
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToInt32 l
+    let r = TC.ToUInt32 r &&& 0x1Fu
     (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // >>>
   static member bitURhs (l, r) = Dlr.callStaticT<Operators> "bitURhs" [l; r]
   static member bitURhs (l:BoxedValue, r:BoxedValue) =
-    let l = TypeConverter.ToNumber l
-    let r = TypeConverter.ToNumber r
-    let l = TypeConverter.ToUInt32 l
-    let r = TypeConverter.ToUInt32 r &&& 0x1Fu
+    let l = TC.ToNumber l
+    let r = TC.ToNumber r
+    let l = TC.ToUInt32 l
+    let r = TC.ToUInt32 r &&& 0x1Fu
     (l >>> int r) |> double
     
   //----------------------------------------------------------------------------
   // &&
   static member and' (l, r) = Dlr.callStaticT<Operators> "and'" [l; r]
   static member and' (l:BoxedValue, r:BoxedValue) =
-    if not (TypeConverter.ToBoolean l) then l else r
+    if not (TC.ToBoolean l) then l else r
     
   //----------------------------------------------------------------------------
   // ||
   static member or' (l, r) = Dlr.callStaticT<Operators> "or'" [l; r]
   static member or' (l:BoxedValue, r:BoxedValue) =
-    if TypeConverter.ToBoolean l then l else r
+    if TC.ToBoolean l then l else r

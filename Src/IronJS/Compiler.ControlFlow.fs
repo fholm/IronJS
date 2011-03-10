@@ -10,7 +10,7 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
-    let test = TypeConverter.ToBoolean (ctx.Compile test)
+    let test = TC.ToBoolean (ctx.Compile test)
     let ifTrue = ctx.Compile ifTrue
     let ifFalse = ctx.Compile ifFalse
     Dlr.ternary test ifTrue ifFalse
@@ -18,7 +18,7 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 12.5 if
   let if' (ctx:Ctx) test ifTrue ifFalse =
-    let test = TypeConverter.ToBoolean (ctx.Compile test)
+    let test = TC.ToBoolean (ctx.Compile test)
     let ifTrue = Dlr.castVoid (ctx.Compile ifTrue)
     match ifFalse with
     | None -> Dlr.if' test ifTrue

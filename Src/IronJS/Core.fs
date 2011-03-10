@@ -376,7 +376,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     regexp.Put("global", isGlobal, DescriptorAttrs.Immutable)
     regexp.Put("ignoreCase", regexp.IgnoreCase, DescriptorAttrs.Immutable)
     regexp.Put("multiline", regexp.MultiLine, DescriptorAttrs.Immutable)
-    regexp.Put("lastIndex", 0, DescriptorAttrs.DontDelete ||| DescriptorAttrs.DontEnum)
+    regexp.Put("lastIndex", 0.0, DescriptorAttrs.DontDelete ||| DescriptorAttrs.DontEnum)
 
     regexp :> CO
 

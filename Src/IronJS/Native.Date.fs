@@ -1,5 +1,9 @@
 ﻿namespace IronJS.Native
 
+// Removes the warning for using 
+// "constructor" as an identifier
+#nowarn "46"
+
 open System
 open System.Globalization
 
@@ -50,7 +54,7 @@ module Date =
       else true
     else true
   
-  let private constructor' (f:FO) (o:CO) (args:BV array) =
+  let private constructor' (f:FO) (o:CO) (args:Args) =
     let date = 
       match args.Length with
       | 0 -> f.Env.NewDate(DT.Now.ToLocalTime())
@@ -103,7 +107,7 @@ module Date =
   let private parseLocal (f:FO) (o:CO) input = 
     parseGeneric input cc |> BV.Box
 
-  let private utc (f:FO) (o:CO) (args:BV array) =
+  let private utc (f:FO) (o:CO) (args:Args) =
     let mutable failed = false
 
     for i = 0 to args.Length-1 do
@@ -122,13 +126,13 @@ module Date =
 
   let setup (env:Environment) =
     let create a = Utils.createHostFunction env a
-    let ctor = new JsFunc<BV array>(constructor') |> create
+    let ctor = new JsFunc<Args>(constructor') |> create
 
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor?prototype <- env.Prototypes.Date
     ctor?parse <- (JsFunc<string>(parse) |> create)
     ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)
-    ctor?UTC <- (JsFunc<BV array>(utc) |> create)
+    ctor?UTC <- (JsFunc<Args>(utc) |> create)
 
     env.Globals?Date <- ctor
     env.Constructors <- {env.Constructors with Date=ctor}
@@ -262,7 +266,6 @@ module Date =
       proto?getUTCMilliseconds <- (JsFunc(getUTCMilliseconds) |> create)
       proto?getTimezoneOffset <- (JsFunc(getTimezoneOffset) |> create)
       proto?setTime <- (JsFunc<double>(setTime) |> create)
-
       proto?setMilliseconds <- (SetFunc(setMilliseconds) |> create) 
       proto?setUTCMilliseconds <- (SetFunc(setUTCMilliseconds) |> create)
       proto?setSeconds <- (SetFunc(setSeconds) |> create)

@@ -125,6 +125,31 @@ module String =
   let internal match' (f:FO) (this:CO) (regexp:BV) =
     let regexp = regexp |> toRegExp f.Env
     RegExp.exec f regexp (this |> TC.ToString)
+
+  let private replacePattern =
+    new Regex(@"\$\$|\$&|\$`|\$'|\$\d{1,2}", RegexOptions.Compiled)
+
+  let private evaluateReplacement (matched:string) (before:string) (after:string) (replacement:string) (groups:GroupCollection) =
+    if replacement.Contains("$") then
+      
+      replacePattern.Replace(replacement, MatchEvaluator(fun m ->
+        match m.Value with
+        | "$$" -> "$"
+        | "$&" -> matched
+        | "$`" -> before
+        | "$'" -> after
+        | _ ->
+          match m.Value.Substring 1 |> int with
+          | 0 -> m.Value
+          | subPatternIndex  -> 
+            if subPatternIndex < groups.Count && groups <> null
+              then groups.[subPatternIndex].Value
+              else "$" + string subPatternIndex
+      ))
+
+    else
+      replacement
+
     
   //----------------------------------------------------------------------------
   let internal replace (this:CO) (search:BV) (replace:BV) =
@@ -156,11 +181,22 @@ module String =
           let this = this.Env.Globals
           Utils.invoke replace.Func this args |> TC.ToString
         
+        //Run regex on our input, using matchEval for replacement
         search.RegExp.Replace(value, MatchEvaluator(matchEval), count, lastIndex)
 
       //replace(regex, string)
       else
-        ""
+        let replace = replace |> TC.ToString
+
+        let matchEval (m:Match) =
+          if not search.Global then
+            search.Put("lastIndex", m.Index + 1 |> double)
+
+          let before = value.Substring(0, m.Index)
+          let after = value.Substring(Math.Min(value.Length - 1, m.Index + m.Length))
+          evaluateReplacement m.Value before after replace m.Groups
+
+        search.RegExp.Replace(value, MatchEvaluator(matchEval), count, lastIndex)
       
     //replace(string, _)
     else
@@ -173,20 +209,14 @@ module String =
         if replace.IsFunction then 
           let replace = replace.Func.Call(this.Env.Globals, search, index, value) |> TC.ToString
           value.Substring(0, index) + replace + value.Substring(index + search.Length)
-        
+
         //replace(string, string)
         else
+          let before = value.Substring(0, index)
+          let after = value.Substring(index + value.Length)
           let replace = replace |> TC.ToString
-          let startIndex = value.IndexOf search
-          if startIndex = -1 then value
-          else
-            let endIndex = startIndex + search.Length
-            let bufferSize = value.Length + (replace.Length - search.Length)
-            let buffer = new Text.StringBuilder(bufferSize);
-            buffer.Append(value, 0, startIndex) |> ignore
-            buffer.Append(replace) |> ignore
-            buffer.Append(value, endIndex, value.Length - endIndex) |> ignore
-            buffer.ToString()
+          let replace = evaluateReplacement search before after replace null
+          before + replace + after
 
       else
         value

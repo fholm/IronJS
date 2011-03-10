@@ -1,4 +1,4 @@
-### Changelog for 0.1.95 ###
+### Changelog for 0.2.0-beta1 ###
 
 * Major API refactoring moving all Module/Functions located in Api.fs 
   to their appropiate classes in Core.fs instead

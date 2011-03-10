@@ -71,6 +71,9 @@ module Core =
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
     | Ast.Throw tree -> Exception.throw ctx tree
 
+    | Ast.Regex(regex, flags) ->
+      Dlr.call ctx.Env "NewRegExp" [!!!regex; !!!flags]
+
     | _ -> failwithf "Failed to compile %A" ast
       
   //----------------------------------------------------------------------------

@@ -114,9 +114,13 @@ module String =
     String.Compare(value, that) |> double
     
   //----------------------------------------------------------------------------
-  let internal match' (this:CommonObject) (regexp:CommonObject) =
-    failwith "Not implemented"
-    false
+  let internal match' (f:FO) (this:CO) (regexp:BV) =
+    let regexp =
+      match regexp.Tag with
+      | TypeTags.String -> f.Env.NewRegExp(regexp.String) :?> RO
+      | _ -> regexp.Object.CastTo<RO>()
+
+    RegExp.exec f regexp (this |> TC.ToString)
     
   //----------------------------------------------------------------------------
   let internal replace (this:CommonObject) (search:BoxedValue) (replace:BoxedValue) =
@@ -304,7 +308,7 @@ module String =
     let localeCompare = Utils.createHostFunction env localeCompare
     proto.Put("localeCompare", localeCompare, DontEnum)
 
-    let match' = new Func<CommonObject, CommonObject, bool>(match')
+    let match' = JsFunc<BV>(match')
     let match' = Utils.createHostFunction env match'
     proto.Put("match", match', DontEnum)
 

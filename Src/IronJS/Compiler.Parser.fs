@@ -230,19 +230,7 @@ module Parsers =
         let lastIndex = text.LastIndexOf '/'
         let pattern = text.Substring(1, lastIndex-1)
         let modifiers = text.Substring(lastIndex+1, text.Length-lastIndex-1)
-
-        let getModifiers (modifiers:string) = 
-          let rec getModifiers modifiers =
-            match modifiers with
-            |    []   -> []
-            | 'i'::xs -> RegexFlag.CaseInsensitive :: getModifiers xs
-            | 'g'::xs -> RegexFlag.Global :: getModifiers xs
-            | 'm'::xs -> RegexFlag.MultiLine :: getModifiers xs
-            |  c ::xs -> Support.Errors.invalidRegexModifier c
-
-          getModifiers (modifiers.ToCharArray() |> List.ofArray)
-
-        Regex(pattern, modifiers |> getModifiers)
+        Regex(pattern, modifiers)
           
       // (x)
       | ES3Parser.PAREXPR

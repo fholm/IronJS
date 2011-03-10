@@ -66,12 +66,6 @@ module Ast =
   type LookupMode
     = Static
     | Dynamic
-      
-  (**)
-  type RegexFlag
-    = Global (* /g *)
-    | CaseInsensitive (* /i *)
-    | MultiLine (* /m *)
     
   (**)
   type Tree
@@ -92,7 +86,7 @@ module Ast =
     | Assign of Tree * Tree
     | In of Tree * Tree
     | InstanceOf of Tree * Tree
-    | Regex of string * RegexFlag list
+    | Regex of string * string
 
     // Object
     | Object of Tree list

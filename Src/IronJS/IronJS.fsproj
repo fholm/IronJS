@@ -114,9 +114,9 @@
     <Compile Include="Native.Object.fs" />
     <Compile Include="Native.Function.fs" />
     <Compile Include="Native.Array.fs" />
+    <Compile Include="Native.RegExp.fs" />
     <Compile Include="Native.String.fs" />
     <Compile Include="Native.Number.fs" />
-    <Compile Include="Native.RegExp.fs" />
     <Compile Include="Native.Date.fs" />
     <Compile Include="Native.Boolean.fs" />
     <Compile Include="Native.Error.fs" />

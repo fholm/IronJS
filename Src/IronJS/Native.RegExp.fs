@@ -31,14 +31,13 @@ module RegExp =
 
     !result |> BV.Box
 
-  let private exec (f:FO) (this:CO) (input:string) : BV =
+  let internal exec (f:FO) (this:CO) (input:string) : BV =
     let ro = this.CastTo<RO>()
     let matches = ro.RegExp.Matches(input)
     match matches.Count with
     | 0 -> BoxedConstants.Null
     | _ ->
       if ro.Global then
-        
         let a = f.Env.NewArray(matches.Count |> uint32)
         for i = 0 to (matches.Count-1) do
           a.Put(uint32 i, matches.[i].Value)
@@ -46,7 +45,6 @@ module RegExp =
         a |> BV.Box
 
       else
-
         let groups = matches.[0].Groups
         let a = f.Env.NewArray(groups.Count |> uint32)
         for i = 0 to (groups.Count-1) do

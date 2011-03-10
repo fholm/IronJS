@@ -183,43 +183,32 @@ module String =
     if end' <= start then "" else value.Substring(start, end' - start)
     
   //----------------------------------------------------------------------------
-  let internal split (f:FunctionObject) (this:CommonObject) (sep:BoxedValue) (limit:BoxedValue) =
-    let value = this |> TypeConverter.ToString
+  let internal split (f:FO) (this:CO) (separator:BV) (limit:BV) =
+    let value = this |> TC.ToString
+    
+    let limit =
+      if limit.IsUndefined
+        then Int32.MaxValue 
+        else limit |> TC.ToInt32
 
-    if sep.IsRegExp then
-      failwith "Not implemented"
-
-    else
-      let separator =
-        if sep.IsUndefined
-          then "" else sep |> TypeConverter.ToString
-
-      let limit =
-        if limit.IsUndefined
-          then UInt32.MaxValue else limit |> TypeConverter.ToUInt32
-          
-      if separator |> String.IsNullOrEmpty then
-        let length = Math.Min(uint32 value.Length, limit)
-        let array = f.Env.NewArray(length) :?> ArrayObject
-        for i = 0 to value.Length-1 do
-          if uint32 i < limit then
-            let descr = &array.Dense.[i]
-            descr.Value.Clr <- string value.[i]
-            descr.Value.Tag <- TypeTags.String
-            descr.HasValue <- true
-        array :> CommonObject
+    let parts = 
+      if separator.IsRegExp then
+        let separator = separator.Object.CastTo<RO>()
+        separator.RegExp.Split(value, limit)
 
       else
-        let parts = value.Split([|separator|], StringSplitOptions.None)
-        let length = Math.Min(uint32 parts.Length, limit)
-        let array = f.Env.NewArray(length) :?> ArrayObject
-        for i = 0 to parts.Length-1 do
-          if uint32 i < limit then
-            let descr = &array.Dense.[i]
-            descr.Value.Clr <- parts.[i]
-            descr.Value.Tag <- TypeTags.String
-            descr.HasValue <- true
-        array :> CommonObject
+        let separator =
+          if separator.IsUndefined
+            then "" 
+            else separator |> TC.ToString
+
+        value.Split([|separator|], limit, StringSplitOptions.None)
+
+    let array = f.Env.NewArray(parts.Length |> uint32)
+    for i = 0 to parts.Length-1 do
+      array.Put(uint32 i, parts.[i])
+
+    array
         
   //----------------------------------------------------------------------------
   let internal substring (this:CommonObject) (start:double) (end':double) =

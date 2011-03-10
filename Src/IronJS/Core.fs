@@ -136,7 +136,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool
     member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
     member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
-    member x.IsRegExp = x.IsObject && x.Object :? RegExpObject
+    member x.IsRegExp = x.IsObject && x.Object :? RO
     member x.IsNull = x.IsClr && x.Clr |> FSKit.Utils.isNull
 
     member x.IsPrimitive =
@@ -159,41 +159,41 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.Unbox<'a>() = x.ClrBoxed :?> 'a
 
     static member Box(value:CO) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Clr <- value
       box.Tag <- TypeTags.Object
       box
 
     static member Box(value:FO) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Clr <- value
       box.Tag <- TypeTags.Function
       box
 
     static member Box(value:string) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Clr <- value
       box.Tag <- TypeTags.String
       box
 
     static member Box(value:double) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Number <- value
       box
 
     static member Box(value:bool) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Number <- TaggedBools.ToTagged value
       box
 
     static member Box(value:obj) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Clr <- value
       box.Tag <- TypeTags.Clr
       box
 
     static member Box(value:obj, tag:uint32) =
-      let mutable box = BoxedValue()
+      let mutable box = BV()
       box.Clr <- value
       box.Tag <- tag
       box

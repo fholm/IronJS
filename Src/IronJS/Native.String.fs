@@ -125,23 +125,33 @@ module String =
     
   //----------------------------------------------------------------------------
   let internal replace (this:CO) (search:BV) (replace:BV) =
-    let value = this |> TypeConverter.ToString
+    let value = this |> TC.ToString
 
-    //replace(regex, *)
-    if search.Tag >= TypeTags.Object then 
+    //replace(regex, _)
+    if search.IsRegExp then 
+      let search = search |> toRegExp this.Env
+
+      //replace(regex, function)
+      if replace.IsFunction then
+        ()
+        
+      //replace(regex, string)
+      else
+        ()
+
       failwith "Not implemented"
       
-    //replace(string, *)
+    //replace(string, _)
     else
-      let search = search |> TypeConverter.ToString
+      let search = search |> TC.ToString
       
-      if replace.Tag >= TypeTags.Function then 
-        //replace(string, function)
+      //replace(string, function)
+      if replace.IsFunction then 
         failwith "Not implemented"
-
+        
+      //replace(string, string)
       else
-        //replace(string, string)
-        let replace = replace |> TypeConverter.ToString
+        let replace = replace |> TC.ToString
         let startIndex = value.IndexOf search
         if startIndex = -1 then value
         else

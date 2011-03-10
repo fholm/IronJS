@@ -9,13 +9,13 @@ open IronJS.DescriptorAttrs
 // 15.4
 module Array =
 
-  type private Sort = Func<FunctionObject, CommonObject, BoxedValue, BoxedValue, BoxedValue>
+  type private Sort = Func<FO, CO, BV, BV, BV>
 
   //----------------------------------------------------------------------------
-  let internal constructor' (f:FunctionObject) (_:CommonObject) (args:BoxedValue array) =
+  let internal constructor' (f:FO) (_:CO) (args:Args) =
     if args.Length = 1 then
-      let number = TypeConverter.ToNumber args.[0]
-      let size = TypeConverter.ToUInt32 number
+      let number = TC.ToNumber args.[0]
+      let size = TC.ToUInt32 number
       f.Env.NewArray(size)
 
     else
@@ -28,12 +28,12 @@ module Array =
       array
       
   //----------------------------------------------------------------------------
-  let internal join (f:FunctionObject) (this:CommonObject) (separator:BoxedValue) =
+  let internal join (f:FO) (this:CO) (separator:BV) =
   
     let separator =
       if separator.IsUndefined
         then "," 
-        else separator |> TypeConverter.ToString
+        else separator |> TC.ToString
 
     let mutable array = null
     if this.TryCastTo<AO>(&array) then

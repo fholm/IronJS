@@ -13,12 +13,10 @@ open IronJS.FSharpOperators
 open FSKit
 open FSKit.Bit
 
-IronJS.Support.Debug.registerConsolePrinter()
-
 let ctx = Hosting.Context.Create()
+ctx.Execute @"foo = function(a, b) { return a + b; }"
 
-//Example of using createHostFunctionDynamic
-let print = new Action<string>(System.Console.WriteLine) :> Delegate
-let printFunc = IronJS.Native.Utils.createHostFunction ctx.Environment print
-ctx.PutGlobal("print", printFunc)
-ctx.Execute("print('lol')")
+let globals = ctx.Environment.Globals
+let foo = globals.Get<FO>("foo")
+let invoke = Native.Utils.invokeDynamic
+let result = invoke foo globals [|BV.Box 1.0; BV.Box 2.0|]

@@ -18,7 +18,7 @@ open IronJS
 
 module Function =
 
-  let private constructor' (f:FunctionObject) (_:CommonObject) (args:BoxedValue array) : FunctionObject =
+  let private constructor' (f:FO) (_:CO) (args:Args) : FO =
       let args, body = 
         if args.Length = 0 then "", ""
         else 
@@ -36,16 +36,16 @@ module Function =
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
       (compiled.DynamicInvoke(f, f.Env.Globals) |> CoreUtils.ClrBox) :?> FunctionObject
 
-  let private prototype (f:FunctionObject) _ =
+  let private prototype (f:FO) _ =
     Undefined.Boxed
     
-  let toString (toString:FunctionObject) (o:CommonObject) =
+  let toString (toString:FO) (o:CO) =
     let f = o.CastTo<FO>()
     match f.Env.FunctionSourceStrings.TryGetValue f.FunctionId with
     | true, value -> value
     | _ -> "function() { [native code] }"
       
-  let apply (apply:FunctionObject) (func:CommonObject) (this:CommonObject) (args:CommonObject) : BoxedValue =
+  let apply (apply:FO) (func:CO) (this:CO) (args:CO) : BV =
     let f = func.CastTo<FO>()
     let args = args.CastTo<AO>()
     let getIndex i = args.Get(uint32 i)
@@ -61,15 +61,15 @@ module Function =
     let compiled = f.Compiler f type'
     compiled.DynamicInvoke(args) |> CoreUtils.JsBox
  
-  let call (_:FunctionObject) (func:CommonObject) (this:CommonObject) (args:obj array) : BoxedValue =
+  let call (_:FO) (func:CO) (this:CO) (args:ClrArgs) : BV =
     let f = func.CastTo<FO>()
     let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
     let type' = DelegateCache.getDelegate argTypes
     let args = Array.append [|func :> obj; this :> obj|] args
     (f.Compiler f type').DynamicInvoke args |> CoreUtils.JsBox
 
-  let setupConstructor (env:Environment) =
-    let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, FunctionObject>(constructor')
+  let setupConstructor (env:Env) =
+    let ctor = new Func<FO, CO, Args, FO>(constructor')
     let ctor = Utils.createHostFunction env ctor
       
     ctor.Prototype <- env.Prototypes.Function
@@ -79,24 +79,24 @@ module Function =
     env.Globals.Put("Function", ctor)
     env.Constructors <- {env.Constructors with Function = ctor}
     
-  let createPrototype (env:Environment) ownPrototype =
-    let prototype = new Func<FunctionObject, CommonObject, BoxedValue>(prototype)
+  let createPrototype (env:Env) ownPrototype =
+    let prototype = new Func<FO, CO, BV>(prototype)
     let prototype = Utils.createHostFunction env prototype
     prototype.Prototype <- ownPrototype
     prototype
       
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let attrs = DescriptorAttrs.DontEnum
 
-    let call = new Func<FunctionObject, CommonObject, CommonObject, obj array, BoxedValue>(call)
+    let call = new Func<FO, CO, CO, ClrArgs, BV>(call)
     let call = Utils.createHostFunction env call
     env.Prototypes.Function.Put("call", call, attrs)
 
-    let apply = new Func<FunctionObject, CommonObject, CommonObject, CommonObject, BoxedValue>(apply)
+    let apply = new Func<FO, CO, CO, CO, BV>(apply)
     let apply = Utils.createHostFunction env apply
     env.Prototypes.Function.Put("apply", apply, attrs)
     
-    let toString = new Func<FunctionObject, CommonObject, string>(toString)
+    let toString = new Func<FO, CO, string>(toString)
     let toString = Utils.createHostFunction env toString
     env.Prototypes.Function.Put("toString", toString, attrs)
 

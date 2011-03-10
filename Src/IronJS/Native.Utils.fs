@@ -44,3 +44,22 @@ module Utils =
       env.AddCompiler(h, Compiler.HostFunction.compile<'a>)
       h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
       h :> FunctionObject
+
+  (*
+  //  This function is horribly slow, but it's the only way
+  //  that IronJS currently supports invoking methods with 
+  //  an unknown (at compile time) amount of arguments
+  *)
+  let invokeDynamic (f:FO) (t:CO) (args:Args) =
+    let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
+    let internalArgs = argTypes |> DelegateCache.addInternalArgs 
+    let delegate' = internalArgs |> DelegateCache.getDelegate
+    let genericMethod = typeof<FO>.GetMethod("CompileAs")
+    let compileAs = genericMethod.MakeGenericMethod([|delegate'|])
+    let compiledFunc = compileAs.Invoke(f, [||]) :?> Delegate
+    let args = [|for arg in args -> arg :> obj|]
+    let args = Dlr.ArrayUtils.Insert(t :> obj, args)
+    let args = Dlr.ArrayUtils.Insert(f :> obj, args)
+    compiledFunc.DynamicInvoke(args) |> CoreUtils.JsBox
+
+

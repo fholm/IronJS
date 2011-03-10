@@ -108,22 +108,23 @@ module String =
     index |> double
       
   //----------------------------------------------------------------------------
-  let internal localeCompare (this:CommonObject) (that:CommonObject) =
+  let internal localeCompare (this:CO) (that:CO) =
     let value = this |> TypeConverter.ToString
     let that = this |> TypeConverter.ToString
     String.Compare(value, that) |> double
     
   //----------------------------------------------------------------------------
+  let private toRegExp (env:Env) (regexp:BV) =
+    match regexp.Tag with
+    | TypeTags.String -> env.NewRegExp(regexp.String) :?> RO
+    | _ -> regexp.Object.CastTo<RO>()
+    
   let internal match' (f:FO) (this:CO) (regexp:BV) =
-    let regexp =
-      match regexp.Tag with
-      | TypeTags.String -> f.Env.NewRegExp(regexp.String) :?> RO
-      | _ -> regexp.Object.CastTo<RO>()
-
+    let regexp = regexp |> toRegExp f.Env
     RegExp.exec f regexp (this |> TC.ToString)
     
   //----------------------------------------------------------------------------
-  let internal replace (this:CommonObject) (search:BoxedValue) (replace:BoxedValue) =
+  let internal replace (this:CO) (search:BV) (replace:BV) =
     let value = this |> TypeConverter.ToString
 
     //replace(regex, *)
@@ -153,12 +154,16 @@ module String =
           buffer.ToString()
           
   //----------------------------------------------------------------------------
-  let internal search (this:CommonObject) (search:BoxedValue) =
+  let internal search (this:CO) (search:BoxedValue) =
     let value = this |> TypeConverter.ToString
 
     //search(regex)
     if search.Tag >= TypeTags.Object then 
-      failwith "Not implemented"
+      let regexp = search |> toRegExp this.Env
+      let m = regexp.RegExp.Match(value)
+      if m |> FSKit.Utils.notNull && m.Success 
+        then m.Index |> double
+        else 0.0
       
     //search(string)
     else

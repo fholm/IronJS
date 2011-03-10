@@ -138,8 +138,8 @@ module Date =
     module private DT =
     
       let setYear (value:double) (d:DT) = 
-        let d = new DateTime(int value, d.Month, d.Day, d.Hour, d.Minute, d.Second)
-        d.AddMilliseconds(d.Millisecond |> double).ToLocalTime()
+        let d = new DateTime(int value, d.Month, d.Day, d.Hour, d.Minute, d.Second, DateTimeKind.Local)
+        d.AddMilliseconds(d.Millisecond |> double)
 
       let setMonth (value:double) (d:DT) = d.AddMonths(-d.Month).AddMonths((int value)+1)
       let setDate (value:double) (d:DT) = d.AddDays(-(d.Day |> double)).AddDays(value)

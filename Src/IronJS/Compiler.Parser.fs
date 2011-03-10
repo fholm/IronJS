@@ -65,7 +65,7 @@ module Parsers =
         let type' = child tok 0 
 
         match type'.Type with
-        | ES3Parser.FORSTEP ->
+        | ES3Parser.FORSTEP -> 
           let init = ctx.Translate (child type' 0)
           let test = ctx.Translate (child type' 1)
           let incr = ctx.Translate (child type' 2)

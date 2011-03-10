@@ -426,7 +426,10 @@ module Ast =
       | Finally body -> Finally (f body)
       | Throw tree -> Throw (f tree)
       | Try(body, catch, finally') -> 
-        Try(f body, [for x in catch -> f x], finally' |> Option.map f)
+        let body = f body
+        let catch = [for x in catch -> f x]
+        let finally' = finally' |> Option.map f
+        Try(body, catch, finally')
 
       // Others
       | Block trees -> Block [for t in trees -> f t]
@@ -585,12 +588,13 @@ module Ast =
           Catch(name, ScopeChain.incrLocalAnd sc name resolve body)
 
         | Eval source -> 
-          
+
           let closures =
             !sc 
               |> Seq.map (fun scope ->
                 scope.Locals
                   |> Map.toSeq 
+                  |> Seq.filter (fun (_, local) -> local.Active >= 0)
                   |> Seq.map (
                     fun (name, local) ->
                       name, Local.index local, 
@@ -653,12 +657,8 @@ module Ast =
 
     //--------------------------------------------------------------------------
     let applyDefault tree levels =
-      let analyzers = [
-        stripVarStatements
-        markClosedOverVars
-        calculateScopeLevels levels
-        resolveClosures
-        hoistFunctions
-      ]
-
-      List.fold (fun t f -> f t) tree analyzers
+      tree  |> stripVarStatements 
+            |> markClosedOverVars
+            |> calculateScopeLevels levels
+            |> resolveClosures
+            |> hoistFunctions

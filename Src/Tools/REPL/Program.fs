@@ -10,26 +10,26 @@ module Main =
   let main () =
     
     let ctx = Hosting.Context.Create()
-
-    (ctx.ExecuteT<string> @"
-      var obj = {a:0, b:1, c:2, d:3, e:4, f:5};
-      var result = '';
-
-      for (var x in obj) {
-        result += x;
+    ctx.Execute @"
+      function compareSource()
+      {
+        try
+        {
+          eval(expect);
+          try
+          {
+      
+          }
+          catch(ex1)
+          {
+      
+          }
+        }
+        catch(ex)
+        {
+        }
       }
-
-      for(var x in Object.prototype) {
-        result += x;
-      }
-
-      var arr = [10, 20, 30, 40, 50];
-      for(var x in arr) {
-        result += x;
-      }
-
-      result;
-    ")
+      "
 
     (*
     let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())

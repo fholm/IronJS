@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestRun id="55c89698-95a3-44ef-a213-9654a7dc70db" name="Fredrik@GAMER 2011-03-10 18:32:07" runUser="Gamer\Fredrik" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <TestSettings name="Local" id="7930b77e-25ff-465e-8288-0e8e8af9662a">
+    <Description>These are default test settings for a local test run.</Description>
+    <Deployment enabled="false" runDeploymentRoot="Fredrik_GAMER 2011-03-10 18_32_07">
+      <DeploymentItem filename="E:\Projects\IronJS\Src\FSKit\Src\bin\Debug\FSKit.dll" />
+      <DeploymentItem filename="E:\Projects\IronJS\Src\IronJS\bin\Debug\IronJS.dll" />
+    </Deployment>
+    <Execution>
+      <TestTypeSpecific />
+      <AgentRule name="Execution Agents">
+      </AgentRule>
+    </Execution>
+  </TestSettings>
+  <Times creation="2011-03-10T18:32:07.0311328+01:00" queuing="2011-03-10T18:32:07.6991710+01:00" start="2011-03-10T18:32:07.8301785+01:00" finish="2011-03-10T18:32:09.4522713+01:00" />
+  <ResultSummary outcome="Failed">
+    <Counters total="2" executed="2" error="0" failed="2" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" passed="0" completed="0" inProgress="0" pending="0" />
+  </ResultSummary>
+  <TestDefinitions>
+    <UnitTest name="TestMethod2" storage="e:\projects\ironjs\src\tests\bin\debug\tests.dll" id="7b4430ee-5d6d-3361-da01-6363277e932b">
+      <Execution id="b01ed464-2f2f-46b8-bfbf-667916fc46de" />
+      <TestMethod codeBase="E:/Projects/IronJS/Src/Tests/bin/Debug/Tests.DLL" adapterTypeName="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestAdapter, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.Adapter, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" className="Tests.MozillaECMA3, Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" name="TestMethod2" />
+    </UnitTest>
+    <UnitTest name="TestMethod1" storage="e:\projects\ironjs\src\tests\bin\debug\tests.dll" id="5ef744d1-ffa4-989b-e424-c92879ebfadf">
+      <Execution id="a01828d6-edd3-468f-acf4-0722715d66a2" />
+      <TestMethod codeBase="E:/Projects/IronJS/Src/Tests/bin/Debug/Tests.DLL" adapterTypeName="Microsoft.VisualStudio.TestTools.TestTypes.Unit.UnitTestAdapter, Microsoft.VisualStudio.QualityTools.Tips.UnitTest.Adapter, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" className="Tests.MozillaECMA3, Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" name="TestMethod1" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <TestEntries>
+    <TestEntry testId="5ef744d1-ffa4-989b-e424-c92879ebfadf" executionId="a01828d6-edd3-468f-acf4-0722715d66a2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7b4430ee-5d6d-3361-da01-6363277e932b" executionId="b01ed464-2f2f-46b8-bfbf-667916fc46de" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <Results>
+    <UnitTestResult executionId="a01828d6-edd3-468f-acf4-0722715d66a2" testId="5ef744d1-ffa4-989b-e424-c92879ebfadf" testName="TestMethod1" computerName="GAMER" duration="00:00:00.5453083" startTime="2011-03-10T18:32:07.9551857+01:00" endTime="2011-03-10T18:32:09.3472653+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a01828d6-edd3-468f-acf4-0722715d66a2">
+      <Output>
+        <ErrorInfo>
+          <Message>Initialization method Tests.MozillaECMA3.Init threw exception. System.IndexOutOfRangeException: System.IndexOutOfRangeException: Index was outside the bounds of the array..</Message>
+          <StackTrace>    at IronJS.Ast.Utils.Local.activeIndex(Local local) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 227
+   at IronJS.Ast.Utils.Local.index(Local local) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 232
+   at IronJS.Ast.Analyzers.closures@595-5.Invoke(Tuple`2 tupledArg) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 596
+   at Microsoft.FSharp.Collections.IEnumerator.map@109.DoMoveNext(b&amp; )
+   at Microsoft.FSharp.Collections.IEnumerator.MapEnumerator`1.System-Collections-IEnumerator-MoveNext()
+   at Microsoft.FSharp.Core.CompilerServices.RuntimeHelpers.takeInner@644[T,TResult](ConcatEnumerator`2 x, Unit unitVar0)
+   at Microsoft.FSharp.Collections.SeqModule.Iterate[T](FSharpFunc`2 action, IEnumerable`1 source)
+   at Microsoft.FSharp.Collections.SeqModule.GroupBy@1239.Invoke(Unit unitVar0)
+   at Microsoft.FSharp.Collections.SeqModule.mkDelayedSeq@808.Invoke(Unit unitVar0)
+   at Microsoft.FSharp.Collections.SeqModule.revamp@880.Invoke(Unit unitVar0)
+   at Microsoft.FSharp.Collections.SeqModule.revamp@880.Invoke(Unit unitVar0)
+   at Microsoft.FSharp.Collections.MapTreeModule.ofSeq[TKey,T](IComparer`1 comparer, IEnumerable`1 c)
+   at Microsoft.FSharp.Collections.FSharpMap`2.Create(IEnumerable`1 ie)
+   at Microsoft.FSharp.Collections.MapModule.OfSeq[TKey,T](IEnumerable`1 elements)
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 589
+   at IronJS.Ast.Utils.walkAst@432-7.GenerateNext(IEnumerable`1&amp; next) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.MoveNextImpl()
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.System-Collections-IEnumerator-MoveNext()
+   at Microsoft.FSharp.Collections.SeqModule.ToList[T](IEnumerable`1 source)
+   at IronJS.Ast.Utils.walkAst(FSharpFunc`2 f, Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 630
+   at IronJS.Ast.Utils.walkAst(FSharpFunc`2 f, Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 429
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 630
+   at IronJS.Ast.Utils.walkAst@432-7.GenerateNext(IEnumerable`1&amp; next) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.MoveNextImpl()
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.System-Collections-IEnumerator-MoveNext()
+   at Microsoft.FSharp.Collections.SeqModule.ToList[T](IEnumerable`1 source)
+   at IronJS.Ast.Utils.walkAst(FSharpFunc`2 f, Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 630
+   at IronJS.Ast.Utils.ScopeChain.pushAnd[a,b,c](FSharpRef`1 sc, a s, FSharpFunc`2 f, b t) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 363
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 581
+   at IronJS.Ast.Utils.walkAst@432-7.GenerateNext(IEnumerable`1&amp; next) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.MoveNextImpl()
+   at Microsoft.FSharp.Core.CompilerServices.GeneratedSequenceBase`1.System-Collections-IEnumerator-MoveNext()
+   at Microsoft.FSharp.Collections.SeqModule.ToList[T](IEnumerable`1 source)
+   at IronJS.Ast.Utils.walkAst(FSharpFunc`2 f, Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 432
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 630
+   at IronJS.Ast.Utils.ScopeChain.pushAnd[a,b,c](FSharpRef`1 sc, a s, FSharpFunc`2 f, b t) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 363
+   at IronJS.Ast.Analyzers.resolve@579.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 581
+   at IronJS.Ast.Analyzers.resolveClosures(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 578
+   at IronJS.Ast.Analyzers.analyzers@660-3.Invoke(Tree tree) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 660
+   at IronJS.Ast.Analyzers.applyDefault@664.Invoke(Tree t, FSharpFunc`2 f) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 664
+   at Microsoft.FSharp.Collections.ListModule.loop@144-20[T,TState](FSharpFunc`3 f, TState s, FSharpList`1 xs)
+   at Microsoft.FSharp.Collections.ListModule.Fold[T,TState](FSharpFunc`2 folder, TState state, FSharpList`1 list)
+   at IronJS.Ast.Analyzers.applyDefault(Tree tree, FSharpOption`1 levels) in E:\Projects\IronJS\Src\IronJS\Compiler.Ast.fs:line 664
+   at IronJS.Hosting.Context.CompileFile(String fileName) in E:\Projects\IronJS\Src\IronJS\Hosting.fs:line 116
+   at IronJS.Hosting.Context.ExecuteFile(String fileName) in E:\Projects\IronJS\Src\IronJS\Hosting.fs:line 137
+   at Tests.MozillaECMA3.Init() in E:\Projects\IronJS\Src\Tests\MozillaECMA3.cs:line 16
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b01ed464-2f2f-46b8-bfbf-667916fc46de" testId="7b4430ee-5d6d-3361-da01-6363277e932b" testName="TestMethod2" computerName="GAMER" duration="00:00:00.0188517" startTime="2011-03-10T18:32:09.3522656+01:00" endTime="2011-03-10T18:32:09.3782671+01:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b01ed464-2f2f-46b8-bfbf-667916fc46de">
+      <Output>
+        <ErrorInfo>
+          <Message>Initialization method Tests.MozillaECMA3.Init threw exception. System.IO.DirectoryNotFoundException: System.IO.DirectoryNotFoundException: Could not find a part of the path 'E:\Projects\Tests'..</Message>
+          <StackTrace>    at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.Directory.SetCurrentDirectory(String path)
+   at Tests.MozillaECMA3.Init() in E:\Projects\IronJS\Src\Tests\MozillaECMA3.cs:line 14
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+</TestRun>

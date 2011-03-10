@@ -14,9 +14,32 @@ open FSKit
 open FSKit.Bit
 
 let ctx = Hosting.Context.Create()
-ctx.Execute @"foo = function(a, b) { return a + b; }"
 
-let globals = ctx.Environment.Globals
-let foo = globals.Get<FO>("foo")
-let invoke = Native.Utils.invokeDynamic
-let result = invoke foo globals [|BV.Box 1.0; BV.Box 2.0|]
+let printDelegate = new Action<string>(System.Console.WriteLine)
+let printFunction = printDelegate |> Native.Utils.createHostFunction ctx.Environment
+ctx.PutGlobal("print", printDelegate)
+
+ctx.Execute @"
+function compareSource()
+{
+  try
+  {
+    try
+    {
+      throw 'hello world!';
+    }
+    catch(ex1)
+    {
+      print(ex1);
+      throw ex1;
+    }
+  }
+  catch(ex)
+  {
+    print(ex);
+    throw ex;
+  }
+}
+
+compareSource();
+"

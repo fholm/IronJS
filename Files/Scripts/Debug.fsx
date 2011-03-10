@@ -13,32 +13,10 @@ open IronJS.FSharpOperators
 open FSKit
 open FSKit.Bit
 
+IO.Directory.SetCurrentDirectory(@"E:\Projects\IronJS\Src\Tests")
+
 let ctx = Hosting.Context.Create()
-
-let printDelegate = new Action<string>(System.Console.WriteLine)
-let printFunction = printDelegate |> Native.Utils.createHostFunction ctx.Environment
-ctx.PutGlobal("print", printFunction)
-
-ctx.Execute @"
-function compareSource()
-{
-  try
-  {
-    try
-    {
-      throw 'hello world!';
-    }
-    catch(ex1)
-    {
-      print(ex1);
-      throw ex1;
-    }
-  }
-  catch(ex)
-  {
-    print(ex);
-  }
-}
-
-compareSource();
-"
+ctx.SetupPrintFunction()
+ctx.ExecuteFile @"MozillaECMA3-shell.js" |> ignore
+ctx.ExecuteFile @"ecma_3\Operators\shell.js" |> ignore
+ctx.ExecuteFile @"ecma_3\Operators\order-01.js" |> ignore

@@ -154,5 +154,10 @@ module Hosting =
     member x.GetGlobalT<'a>(name:string) =
       env.Globals.Get(name).Unbox<'a>()
 
+    member x.SetupPrintFunction() =
+      let printDelegate = new Action<string>(Console.WriteLine)
+      let printFunction = printDelegate |> Native.Utils.createHostFunction x.Environment
+      x.PutGlobal("print", printFunction)
+
     static member Create() =
       new Context(createEnvironment())

@@ -55,8 +55,8 @@ function test()
 
   var a = [];
 
-  // expect = 'RangeError: invalid array length';
-  expect = 'invalid array length'; // JINT
+  //expect = 'RangeError: invalid array length';
+  expect = 'Error: invalid array length'; // IronJS
   
   actual = '';
   try

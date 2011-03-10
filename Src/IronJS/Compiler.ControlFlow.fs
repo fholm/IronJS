@@ -13,6 +13,12 @@ module ControlFlow =
     let test = TC.ToBoolean (ctx.Compile test)
     let ifTrue = ctx.Compile ifTrue
     let ifFalse = ctx.Compile ifFalse
+
+    let ifTrue, ifFalse =
+      if ifTrue.Type <> ifFalse.Type 
+        then Utils.box ifTrue, Utils.box ifFalse
+        else ifTrue, ifFalse
+
     Dlr.ternary test ifTrue ifFalse
 
   //----------------------------------------------------------------------------

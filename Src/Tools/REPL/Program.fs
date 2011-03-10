@@ -9,8 +9,12 @@ module Main =
 
   let main () =
     
+    IO.Directory.SetCurrentDirectory(@"..\..\..\..\Tests");
+
     let ctx = Hosting.Context.Create()
-    ctx.ExecuteFile(@"..\..\..\Tests\MozillaECMA3-shell.js");
+    ctx.SetupPrintFunction()
+    ctx.ExecuteFile @"MozillaECMA3-shell.js" |> ignore
+    ctx.ExecuteFile @"ecma_3\Array\15.5.4.8-01.js" |> ignore
 
     (*
     let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())

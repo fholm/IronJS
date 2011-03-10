@@ -74,6 +74,9 @@ module Ast =
     | Number of double
     | Boolean of bool
     | DlrExpr of Dlr.Expr
+    #if DEBUG
+    | Line of string * int
+    #endif
     | This
     | Pass
     | Null
@@ -379,6 +382,9 @@ module Ast =
       | Break _
       | DlrExpr _
       | Continue _
+      #if DEBUG
+      | Line _
+      #endif
       | Regex(_, _)
       | Type _
       | Pass

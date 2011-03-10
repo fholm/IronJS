@@ -920,7 +920,7 @@ and [<AllowNullLiteral>] CommonObject =
       if current |> FSKit.Utils.notNull then
         let length =
           if current :? AO then
-            let array = current :?> ArrayObject
+            let array = current :?> AO
             if length < array.Length then array.Length else length
 
           else 
@@ -1067,7 +1067,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 
   member x.UpdateLength(number:double) =
     if number < 0.0 then
-      x.Env.RaiseRangeError()
+      x.Env.RaiseRangeError("invalid array length")
 
     let length = number |> uint32
 

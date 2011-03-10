@@ -163,8 +163,14 @@ module Object =
         tmp .= ctx.Env.CallMember("NewArray", [!!!length])
 
         (List.mapi (fun i value ->
+          let value = 
+            match value with
+            | Ast.Pass -> Ast.Undefined
+            | value -> value
+
           let value = ctx.Compile value
           let index = !!!(uint32 i)
+
           tmp |> Index.put index value
         ) indexes) |> blockSimple
 
@@ -181,7 +187,7 @@ module Object =
         let value = ctx.Compile expr
         tmp |> Property.put !!!name value
 
-      | _ -> failwith "Que?"
+      | _ -> failwithf "Que? %A" assign
 
     Dlr.blockTmpT<CO> (fun tmp -> 
       let initExprs = List.map (setProperty tmp) properties

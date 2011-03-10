@@ -19,3 +19,4 @@ Build/**/*
 *.tlog
 *.manifest
 *.config
+*.trx

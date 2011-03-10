@@ -10,26 +10,7 @@ module Main =
   let main () =
     
     let ctx = Hosting.Context.Create()
-    ctx.Execute @"
-      function compareSource()
-      {
-        try
-        {
-          eval(expect);
-          try
-          {
-      
-          }
-          catch(ex1)
-          {
-      
-          }
-        }
-        catch(ex)
-        {
-        }
-      }
-      "
+    ctx.ExecuteFile(@"..\..\..\Tests\MozillaECMA3-shell.js");
 
     (*
     let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())

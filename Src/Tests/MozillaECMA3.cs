@@ -9,12 +9,14 @@ namespace Tests {
   public class MozillaECMA3 {
     IronJS.Hosting.Context ctx;
 
+    static MozillaECMA3() {
+      System.IO.Directory.SetCurrentDirectory(@"..\..\..\Tests");
+    }
+
     [TestInitialize]
     public void Init() {
-      System.IO.Directory.SetCurrentDirectory(@"..\..\..\Tests");
       ctx = IronJS.Hosting.Context.Create();
       ctx.ExecuteFile("MozillaECMA3-shell.js");
-      return;
     }
 
     [TestMethod]

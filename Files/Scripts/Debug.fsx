@@ -17,7 +17,7 @@ let ctx = Hosting.Context.Create()
 
 let printDelegate = new Action<string>(System.Console.WriteLine)
 let printFunction = printDelegate |> Native.Utils.createHostFunction ctx.Environment
-ctx.PutGlobal("print", printDelegate)
+ctx.PutGlobal("print", printFunction)
 
 ctx.Execute @"
 function compareSource()
@@ -37,7 +37,6 @@ function compareSource()
   catch(ex)
   {
     print(ex);
-    throw ex;
   }
 }
 

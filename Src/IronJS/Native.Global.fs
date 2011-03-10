@@ -6,25 +6,6 @@ open IronJS.Compiler
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript Global object, its functions and values.
-// 
-//  DONE:
-//  15.1.1.1 NaN 
-//  15.1.1.2 Infinity
-//  15.1.1.3 undefined
-//  15.1.2.1 eval (x)
-//  15.1.2.2 parseInt (string , radix)
-//  15.1.2.3 parseFloat (string)
-//  15.1.2.4 isNaN (number)
-//  15.1.2.5 isFinite (number)
-//  15.1.3.1 decodeURI (encodedURI)
-//  15.1.3.2 decodeURIComponent (encodedURIComponent)
-//  15.1.3.3 encodeURI (uri)
-//  15.1.3.4 encodeURIComponent (uriComponent)
-//  15.1.5.1 Math, found in Native.Math.fs
-*)
-
 module Global =
 
   let eval (target:Compiler.EvalTarget) =
@@ -44,7 +25,7 @@ module Global =
           Environment = target.Function.Env
         }
 
-      CoreUtils.JsBox (
+      BoxingUtils.JsBox (
         compiled.DynamicInvoke(
           target.Function,
           target.This,

@@ -103,7 +103,7 @@ type DynamicScopeHelpers() =
       let func = func.Func
       let internalArgs = [|func :> obj; this :> obj|]
       let compiled = func.CompileAs<'a>()
-      compiled.DynamicInvoke(Array.append internalArgs args) |> CoreUtils.JsBox
+      compiled.DynamicInvoke(Array.append internalArgs args) |> BoxingUtils.JsBox
 
     else
       Support.Errors.runtime "Can only call javascript functions inside with-blocks"

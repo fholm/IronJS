@@ -132,7 +132,7 @@ module Hosting =
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.InvokeCompiled(compiled:Delegate) =
-      compiled.DynamicInvoke(globalFunc, env.Globals) |> CoreUtils.ClrBox
+      compiled.DynamicInvoke(globalFunc, env.Globals) |> BoxingUtils.ClrBox
 
     member x.ExecuteFile fileName = x.InvokeCompiled (x.CompileFile fileName)
     member x.ExecuteFileT<'a> fileName = x.ExecuteFile fileName :?> 'a
@@ -146,7 +146,7 @@ module Hosting =
       x.EvalInFunc source :?> 'a
 
     member x.PutGlobal(name:string, value:obj) =
-      env.Globals.Put(name, CoreUtils.JsBox value)
+      env.Globals.Put(name, BoxingUtils.JsBox value)
 
     member x.GetGlobal(name:string) =
       env.Globals.Get(name)

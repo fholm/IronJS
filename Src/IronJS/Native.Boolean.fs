@@ -4,18 +4,6 @@ open System
 open IronJS
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript Boolean object, its prototype, functions and properties.
-//
-//  DONE:
-//  15.6.1.1 Boolean (value) 
-//  15.6.2.1 new Boolean (value) 
-//  15.6.3.1 Boolean.prototype 
-//  15.6.4.1 Boolean.prototype.constructor 
-//  15.6.4.2 Boolean.prototype.toString ( ) 
-//  15.6.4.3 Boolean.prototype.valueOf ( ) 
-*)
-
 module Boolean =
 
   let private constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =

@@ -7,37 +7,6 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript String objects functions and properties.
-//
-//  DONE:
-//  15.5.1.1 String ( [ value ] )
-//  15.5.2.1 new String ( [ value ] )
-//  15.5.3.1 String.prototype
-//  15.5.3.2 String.fromCharCode ( [ char0 [ , char1 [ , … ] ] ] )
-//  15.5.4.1 String.prototype.constructor
-//  15.5.4.2 String.prototype.toString ( )
-//  15.5.4.3 String.prototype.valueOf ( )
-//  15.5.4.4 String.prototype.charAt (pos)
-//  15.5.4.5 String.prototype.charCodeAt (pos)
-//  15.5.4.6 String.prototype.concat ( [ string1 [ , string2 [ , … ] ] ] )
-//  15.5.4.7 String.prototype.indexOf (searchString, position)
-//  15.5.4.8 String.prototype.lastIndexOf (searchString, position)
-//  15.5.4.9 String.prototype.localeCompare (that)
-//  15.5.4.13 String.prototype.slice (start, end)
-//  15.5.4.15 String.prototype.substring (start, end)
-//  15.5.4.16 String.prototype.toLowerCase ( )
-//  15.5.4.17 String.prototype.toLocaleLowerCase ( )
-//  15.5.4.18 String.prototype.toUpperCase ( )
-//  15.5.4.19 String.prototype.toLocaleUpperCase ( )
-//  15.5.4.12 String.prototype.search (regexp) 
-//  15.5.4.14 String.prototype.split (separator, limit) 
-//  15.5.4.10 String.prototype.match (regexp)
-//  
-//  NOT DONE:
-//  15.5.4.11 String.prototype.replace (searchValue, replaceValue) - REGEXP/FUNCTION MISSING
-*)
-
 module String =
 
   //----------------------------------------------------------------------------
@@ -182,7 +151,7 @@ module String =
           Utils.invoke replace.Func this args |> TC.ToString
         
         //Run regex on our input, using matchEval for replacement
-        search.RegExp.Replace(value, MatchEvaluator(matchEval), count, lastIndex)
+        search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)
 
       //replace(regex, string)
       else
@@ -196,14 +165,14 @@ module String =
           let after = value.Substring(Math.Min(value.Length - 1, m.Index + m.Length))
           evaluateReplacement m.Value before after replace m.Groups
 
-        search.RegExp.Replace(value, MatchEvaluator(matchEval), count, lastIndex)
+        search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)
       
     //replace(string, _)
     else
       let search = search |> TC.ToString
       let index = value.IndexOf search
 
-      if index <> -1 then
+      if index > -1 then
       
         //replace(string, function)
         if replace.IsFunction then 

@@ -60,6 +60,6 @@ module Utils =
     let args = [|for arg in args -> arg :> obj|]
     let args = Dlr.ArrayUtils.Insert(t :> obj, args)
     let args = Dlr.ArrayUtils.Insert(f :> obj, args)
-    compiledFunc.DynamicInvoke(args) |> CoreUtils.JsBox
+    compiledFunc.DynamicInvoke(args) |> BoxingUtils.JsBox
 
 

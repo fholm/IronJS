@@ -5,27 +5,6 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript Number object, its prototype, functions and properties.
-//
-//  DONE:
-//  15.7.1.1 Number ( [ value ] )
-//  15.7.2.1 new Number ( [ value ] )
-//  15.7.3.1 Number.prototype
-//  15.7.3.2 Number.MAX_VALUE
-//  15.7.3.3 Number.MIN_VALUE
-//  15.7.3.4 Number.NaN
-//  15.7.3.5 Number.NEGATIVE_INFINITY
-//  15.7.3.6 Number.POSITIVE_INFINITY
-//  15.7.4.1 Number.prototype.constructor
-//  15.7.4.2 Number.prototype.toString (radix)
-//  15.7.4.3 Number.prototype.toLocaleString()
-//  15.7.4.4 Number.prototype.valueOf ( )
-//  15.7.4.5 Number.prototype.toFixed (fractionDigits)
-//  15.7.4.6 Number.prototype.toExponential (fractionDigits)
-//  15.7.4.7 Number.prototype.toPrecision (precision)
-*)
-
 module Number =
 
   //----------------------------------------------------------------------------

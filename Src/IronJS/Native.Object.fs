@@ -4,22 +4,6 @@ open System
 open IronJS
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript Object object, its prototype, functions and properties.
-//
-//  DONE:
-//  15.2.1.1 Object ( [ value ] ) 
-//  15.2.2.1 new Object ( [ value ] ) 
-//  15.2.3.1 Object.prototype 
-//  15.2.4.1 Object.prototype.constructor 
-//  15.2.4.2 Object.prototype.toString ( ) 
-//  15.2.4.3 Object.prototype.toLocaleString ( ) 
-//  15.2.4.4 Object.prototype.valueOf ( ) 
-//  15.2.4.5 Object.prototype.hasOwnProperty (V) 
-//  15.2.4.6 Object.prototype.isPrototypeOf (V) 
-//  15.2.4.7 Object.prototype.propertyIsEnumerable (V) 
-*)
-
 module Object =
 
   let internal constructor' (f:FunctionObject) (this:CommonObject) (value:BoxedValue) =

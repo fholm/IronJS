@@ -1733,7 +1733,7 @@ and UserError(value:BoxedValue, line:int, column:int) =
 (*
 //  
 *)
-and CoreUtils() =
+and BoxingUtils() =
 
   static member JsBox (o:obj) =
     if o :? BV then 

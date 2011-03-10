@@ -5,38 +5,6 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
-(*
-//  This module implements the javascript Math object, its functions and properties.
-//
-//  DONE:
-//  15.8.1.1 E
-//  15.8.1.2 LN10 
-//  15.8.1.3 LN2 
-//  15.8.1.4 LOG2E 
-//  15.8.1.5 LOG10E 
-//  15.8.1.6 PI 
-//  15.8.1.7 SQRT1_2 
-//  15.8.1.8 SQRT2 
-//  15.8.2.1 abs (x) 
-//  15.8.2.2 acos (x) 
-//  15.8.2.3 asin (x) 
-//  15.8.2.4 atan (x) 
-//  15.8.2.5 atan2 (y, x) 
-//  15.8.2.6 ceil (x) 
-//  15.8.2.7 cos (x) 
-//  15.8.2.8 exp (x) 
-//  15.8.2.9 floor (x)
-//  15.8.2.10 log (x)
-//  15.8.2.11 max ( [ value1 [ , value2 [ , … ] ] ] )
-//  15.8.2.12 min ( [ value1 [ , value2 [ , … ] ] ] )
-//  15.8.2.13 pow (x, y)
-//  15.8.2.14 random ( )
-//  15.8.2.15 round (x) 
-//  15.8.2.16 sin (x) 
-//  15.8.2.17 sqrt (x) 
-//  15.8.2.18 tan (x) 
-*)
-
 module Math =
 
   let private random (random:FunctionObject) (_:CommonObject) =

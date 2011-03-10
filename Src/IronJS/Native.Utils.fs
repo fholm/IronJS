@@ -50,7 +50,7 @@ module Utils =
   //  that IronJS currently supports invoking methods with 
   //  an unknown (at compile time) amount of arguments
   *)
-  let invokeDynamic (f:FO) (t:CO) (args:Args) =
+  let invoke (f:FO) (t:CO) (args:Args) =
     let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
     let internalArgs = argTypes |> DelegateCache.addInternalArgs 
     let delegate' = internalArgs |> DelegateCache.getDelegate

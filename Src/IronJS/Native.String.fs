@@ -1,7 +1,10 @@
 ﻿namespace IronJS.Native
 
 open System
+open System.Text.RegularExpressions
+
 open IronJS
+open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
 
 (*
@@ -130,38 +133,63 @@ module String =
     //replace(regex, _)
     if search.IsRegExp then 
       let search = search |> toRegExp this.Env
+      let count = if search.Global then Int32.MaxValue else 1
+      let lastIndex = search.Get("lastIndex") |> TC.ToInt32
+      let lastIndex = if search.Global then 0 else Math.Max(0, lastIndex-1)
+      if search.Global then search.Put("lastIndex", 0.0)
 
       //replace(regex, function)
       if replace.IsFunction then
-        ()
+
+        let matchEval (m:Match) =
+          if not search.Global then
+            search.Put("lastIndex", m.Index + 1 |> double)
+
+          let params' = MutableList<BV>()
+
+          for g in m.Groups do
+            if g.Success 
+              then params'.Add(g.Value |> BV.Box)
+              else params'.Add(Undefined.Boxed)
+
+          let args = params'.ToArray()
+          let this = this.Env.Globals
+          Utils.invoke replace.Func this args |> TC.ToString
         
+        search.RegExp.Replace(value, MatchEvaluator(matchEval), count, lastIndex)
+
       //replace(regex, string)
       else
-        ()
-
-      failwith "Not implemented"
+        ""
       
     //replace(string, _)
     else
       let search = search |> TC.ToString
+      let index = value.IndexOf search
+
+      if index <> -1 then
       
-      //replace(string, function)
-      if replace.IsFunction then 
-        failwith "Not implemented"
+        //replace(string, function)
+        if replace.IsFunction then 
+          let replace = replace.Func.Call(this.Env.Globals, search, index, value) |> TC.ToString
+          value.Substring(0, index) + replace + value.Substring(index + search.Length)
         
-      //replace(string, string)
-      else
-        let replace = replace |> TC.ToString
-        let startIndex = value.IndexOf search
-        if startIndex = -1 then value
+        //replace(string, string)
         else
-          let endIndex = startIndex + search.Length
-          let bufferSize = value.Length + (replace.Length - search.Length)
-          let buffer = new Text.StringBuilder(bufferSize);
-          buffer.Append(value, 0, startIndex) |> ignore
-          buffer.Append(replace) |> ignore
-          buffer.Append(value, endIndex, value.Length - endIndex) |> ignore
-          buffer.ToString()
+          let replace = replace |> TC.ToString
+          let startIndex = value.IndexOf search
+          if startIndex = -1 then value
+          else
+            let endIndex = startIndex + search.Length
+            let bufferSize = value.Length + (replace.Length - search.Length)
+            let buffer = new Text.StringBuilder(bufferSize);
+            buffer.Append(value, 0, startIndex) |> ignore
+            buffer.Append(replace) |> ignore
+            buffer.Append(value, endIndex, value.Length - endIndex) |> ignore
+            buffer.ToString()
+
+      else
+        value
           
   //----------------------------------------------------------------------------
   let internal search (this:CO) (search:BoxedValue) =

@@ -16,7 +16,12 @@ open FSKit.Bit
 IO.Directory.SetCurrentDirectory(@"E:\Projects\IronJS\Src\Tests")
 
 let ctx = Hosting.Context.Create()
-ctx.SetupPrintFunction()
-ctx.ExecuteFile @"MozillaECMA3-shell.js" |> ignore
-ctx.ExecuteFile @"ecma_3\Operators\shell.js" |> ignore
-ctx.ExecuteFile @"ecma_3\Operators\order-01.js" |> ignore
+ctx.SetupPrintFunction("ERROR")
+ctx.SetupPrintFunction("$ERROR")
+
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A1_T1.js" |> ignore
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A1_T2.js" |> ignore
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T1.js" |> ignore
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T2.js" |> ignore
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T1.js" |> ignore
+ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T2.js" |> ignore

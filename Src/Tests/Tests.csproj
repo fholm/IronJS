@@ -45,8 +45,10 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MozillaECMA3.cs" />
+    <Compile Include="Sputnik_Conformance_08_Types.cs" />
+    <Compile Include="Sputnik.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sputnik_Conformance_09_Type_Conversion.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ecma_3\Array\15.4.4.11-01.js" />
@@ -304,7 +306,6 @@
     <Content Include="ecma_3\Unicode\uc-003.js" />
     <Content Include="ecma_3\Unicode\uc-004.js" />
     <Content Include="ecma_3\Unicode\uc-005.js" />
-    <Content Include="MozillaECMA3-shell.js" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSKit\Src\FSKit.fsproj">
@@ -318,6 +319,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ecma_3\GetSet\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Sputnik_Generate.fsx" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

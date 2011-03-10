@@ -3,12 +3,11 @@
 open IronJS
 open System
 
-type ExposeClassAttribute() = 
-  inherit Attribute()
+module Attributes = 
 
-type ExposeMemberAttribute(asName:string) = 
-  inherit Attribute()
-  member x.AsName = asName
+  type HiddenMethod() = inherit Attribute()
+  type HiddenProperty() = inherit Attribute()
+  type HiddenField() = inherit Attribute()
 
 module Aliases = 
   

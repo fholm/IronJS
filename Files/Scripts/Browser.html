@@ -2,13 +2,16 @@
     <head>
         <title></title>
         <script type="text/javascript">
-            (function () {
-                var d = new Date(2010, 1);
-                d.setMonth(3)
-                d.setDate(3)
-                d.setFullYear(1998)
-                alert(d.toString());
-            } ());
+    (function () {
+        //This:
+        var asyncResult = async($.get("someStuff.json"));
+        document.write(asyncResult);
+
+        //Gets de-sugared into this, at compile time (automatically by IronJS):
+        $.get("someStuff.json", function (asyncResult) {
+            document.write(asyncResult);
+        });
+    } ());
         </script>
     </head>
     <body></body>

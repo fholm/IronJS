@@ -213,20 +213,19 @@ module Date =
         o
 
     type private Set = FO -> CO -> Args -> CO
-    type private SetFunc = Func<FO, CO, Args, CO>
 
-    let private setMilliseconds = setTimeGeneric toLocalTime DT.setMilliseconds None
-    let private setUTCMilliseconds = setTimeGeneric toUTCTime DT.setMilliseconds None
-    let private setSeconds = setTimeGeneric toLocalTime DT.setSeconds (Some setMilliseconds)
-    let private setUTCSeconds = setTimeGeneric toUTCTime DT.setSeconds (Some setUTCMilliseconds)
-    let private setMinutes = setTimeGeneric toLocalTime DT.setMinutes (Some setSeconds)
-    let private setUTCMinutes = setTimeGeneric toUTCTime DT.setMinutes (Some setUTCSeconds)
-    let private setHours = setTimeGeneric toLocalTime DT.setHours (Some setMinutes)
-    let private setUTCHours = setTimeGeneric toUTCTime DT.setHours (Some setUTCMinutes)
-    let private setDate = setTimeGeneric toLocalTime DT.setDate (Some setHours)
-    let private setUTCDate = setTimeGeneric toUTCTime DT.setDate (Some setUTCHours)
-    let private setMonth = setTimeGeneric toLocalTime DT.setMonth (Some setDate)
-    let private setUTCMonth = setTimeGeneric toUTCTime DT.setMonth (Some setUTCDate)
+    let private setMilliseconds:Set = setTimeGeneric toLocalTime DT.setMilliseconds None
+    let private setUTCMilliseconds:Set = setTimeGeneric toUTCTime DT.setMilliseconds None
+    let private setSeconds:Set = setTimeGeneric toLocalTime DT.setSeconds (Some setMilliseconds)
+    let private setUTCSeconds:Set = setTimeGeneric toUTCTime DT.setSeconds (Some setUTCMilliseconds)
+    let private setMinutes:Set = setTimeGeneric toLocalTime DT.setMinutes (Some setSeconds)
+    let private setUTCMinutes:Set = setTimeGeneric toUTCTime DT.setMinutes (Some setUTCSeconds)
+    let private setHours:Set = setTimeGeneric toLocalTime DT.setHours (Some setMinutes)
+    let private setUTCHours:Set = setTimeGeneric toUTCTime DT.setHours (Some setUTCMinutes)
+    let private setDate:Set = setTimeGeneric toLocalTime DT.setDate (Some setHours)
+    let private setUTCDate:Set = setTimeGeneric toUTCTime DT.setDate (Some setUTCHours)
+    let private setMonth:Set = setTimeGeneric toLocalTime DT.setMonth (Some setDate)
+    let private setUTCMonth:Set = setTimeGeneric toUTCTime DT.setMonth (Some setUTCDate)
     let private setFullYear:Set = setTimeGeneric toLocalTime DT.setYear (Some setMonth)
     let private setUTCFullYear:Set = setTimeGeneric toUTCTime DT.setYear (Some setUTCMonth)
 
@@ -234,6 +233,8 @@ module Date =
       let prototype = env.NewDate(invalidDate)
       prototype.Prototype <- objPrototype
       prototype
+
+    type private SetFunc = Func<FO, CO, Args, CO>
 
     let setup (env:Environment) =
       let proto = env.Prototypes.Date

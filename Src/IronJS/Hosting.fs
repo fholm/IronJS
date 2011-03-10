@@ -48,7 +48,7 @@ module Hosting =
       Number = Native.Number.createPrototype env objectPrototype
       Boolean = Native.Boolean.createPrototype env objectPrototype
       Date = Native.Date.Prototype.create env objectPrototype
-      RegExp = null //Native.RegExp.createPrototype env objectPrototype
+      RegExp = Native.RegExp.createPrototype env objectPrototype
       Error = errorPrototype
 
       EvalError = Native.Error.createPrototype env errorPrototype
@@ -83,8 +83,8 @@ module Hosting =
     env |> Native.Date.setup
     env |> Native.Date.Prototype.setup
 
-    //env |> Native.RegExp.setupConstructor
-    //env |> Native.RegExp.setupPrototype
+    env |> Native.RegExp.setupConstructor
+    env |> Native.RegExp.setupPrototype
         
     //Error Objects
     env |> Native.Error.setupConstructor

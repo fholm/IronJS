@@ -312,7 +312,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     if x.HasCompiler id |> not then 
       x.Compilers.Add(id, compiler)
 
-  member x.AddCompiler(f:FunctionObject, compiler:FunctionCompiler) =
+  member x.AddCompiler(f:FO, compiler:FunctionCompiler) =
     if x.HasCompiler f.FunctionId |> not then
       f.Compiler <- compiler
       x.Compilers.Add(f.FunctionId, f.Compiler)
@@ -369,19 +369,19 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
     x.NewRegExp(pattern, opts, options.Contains("g"))
 
-  member x.NewDate(dateTime:DateTime) =
-    new DO(x, dateTime)
-
   member x.NewRegExp(pattern:string, options:RegexOptions, isGlobal:bool) =
-    let regexp = new RegExpObject(x, pattern, options, isGlobal)
+    let regexp = new RO(x, pattern, options, isGlobal)
 
     regexp.Put("source", pattern, DescriptorAttrs.Immutable)
     regexp.Put("global", isGlobal, DescriptorAttrs.Immutable)
     regexp.Put("ignoreCase", regexp.IgnoreCase, DescriptorAttrs.Immutable)
     regexp.Put("multiline", regexp.MultiLine, DescriptorAttrs.Immutable)
-    regexp.Put("lastindex", 0, DescriptorAttrs.DontDelete ||| DescriptorAttrs.DontEnum)
+    regexp.Put("lastIndex", 0, DescriptorAttrs.DontDelete ||| DescriptorAttrs.DontEnum)
 
     regexp :> CO
+
+  member x.NewDate(dateTime:DateTime) =
+    new DO(x, dateTime)
 
   member x.NewPrototype() =
     let map = x.Maps.Prototype
@@ -391,7 +391,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
   member x.NewFunction (id, args, closureScope, dynamicScope) =
     let proto = x.NewPrototype()
-    let func = FunctionObject(x, id, closureScope, dynamicScope)
+    let func = FO(x, id, closureScope, dynamicScope)
 
     proto.Put("constructor", func)
     func.ConstructorMode <- ConstructorModes.User
@@ -655,10 +655,12 @@ and [<AllowNullLiteral>] CommonObject =
         | _ -> x.Env.RaiseTypeError()
 
     | _ ->
-      match x.TryCallMember("toString") with
+      let a = x.TryCallMember("toString")
+      match a with
       | Some v when v.IsPrimitive -> v
       | _ -> 
-        match x.TryCallMember("valueOf") with
+        let b = x.TryCallMember("valueOf")
+        match b with
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
 
@@ -961,7 +963,7 @@ and [<AllowNullLiteral>][<AbstractClass>] ValueObject =
     inherit CommonObject(env, map, prototype)
   }
 
-  static member GetValue(o:CommonObject) =
+  static member GetValue(o:CO) =
     if not(o :? ValueObject) then
       o.Env.RaiseTypeError()
 
@@ -1417,14 +1419,14 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = List.empty
   }
 
-  member x.InstancePrototype : CommonObject =
+  member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")
     match prototype.Tag with
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
     | _ -> x.Env.Prototypes.Object
 
-  member x.HasInstance(cobj:CommonObject) : bool =
+  member x.HasInstance(cobj:CO) : bool =
     let prototype = x.Get("prototype")
 
     if prototype.IsObject |> not then
@@ -1437,27 +1439,27 @@ and [<AllowNullLiteral>] FunctionObject =
   member x.CompileAs<'a when 'a :> Delegate>() =
     (x.Compiler x typeof<'a>) :?> 'a
 
-  member x.Call(this) : BoxedValue =
+  member x.Call(this) : BV =
     let func = x.CompileAs<JsFunc>()
     func.Invoke(x, this)
 
-  member x.Call(this,a:'a) : BoxedValue =
+  member x.Call(this,a:'a) : BV =
     let func = x.CompileAs<JsFunc<'a>>()
     func.Invoke(x, this, a)
 
-  member x.Call(this,a:'a,b:'b) =
+  member x.Call(this,a:'a,b:'b) : BV  =
     let func = x.CompileAs<JsFunc<'a,'b>>()
     func.Invoke(x, this, a, b)
 
-  member x.Call(this,a:'a,b:'b,c:'c) =
+  member x.Call(this,a:'a,b:'b,c:'c) : BV  =
     let func = x.CompileAs<JsFunc<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
-  member x.Call(this,a:'a,b:'b,c:'c,d:'d) =
+  member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
     let func = x.CompileAs<JsFunc<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
-  member x.Construct (this:CommonObject) =
+  member x.Construct (this:CO) =
     let func = x.CompileAs<JsFunc>()
 
     match x.ConstructorMode with
@@ -1470,7 +1472,7 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CommonObject, a:'a) =
+  member x.Construct (this:CO, a:'a) =
     let func = x.CompileAs<JsFunc<'a>>()
 
     match x.ConstructorMode with
@@ -1483,7 +1485,7 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CommonObject, a:'a, b:'b) =
+  member x.Construct (this:CO, a:'a, b:'b) =
     let func = x.CompileAs<JsFunc<'a, 'b>>()
 
     match x.ConstructorMode with
@@ -1496,7 +1498,7 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CommonObject, a:'a, b:'b, c:'c) =
+  member x.Construct (this:CO, a:'a, b:'b, c:'c) =
     let func = x.CompileAs<JsFunc<'a, 'b, 'c>>()
 
     match x.ConstructorMode with
@@ -1509,7 +1511,7 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CommonObject, a:'a, b:'b, c:'c, d:'d) =
+  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d) =
     let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd>>()
 
     match x.ConstructorMode with
@@ -2012,6 +2014,7 @@ and Constructors = {
 (*
 //  
 *)
+and ClrArgs = obj array
 and Scope = BV array
 and DynamicScope = (int * CO) list
 and FunctionCompiler = FO -> Type -> Delegate
@@ -2024,3 +2027,4 @@ and JsFunc<'a> = Func<FO,CO,'a,BV>
 and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>
 and JsFunc<'a,'b,'c> = Func<FO,CO,'a,'b,'c,BV>
 and JsFunc<'a,'b,'c,'d> = Func<FO,CO,'a,'b,'c,'d,BV>
+and JsArgsFunc = JsFunc<Args>

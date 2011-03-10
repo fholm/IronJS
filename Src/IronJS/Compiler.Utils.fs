@@ -8,7 +8,7 @@ open IronJS.Dlr.Operators
 module Utils =
     
   let (|IsBox|IsRef|IsVal|) (expr:Dlr.Expr) =
-    if expr.Type = typeof<BoxedValue>
+    if expr.Type = typeof<BV>
       then IsBox
       elif Dlr.Utils.isT<double> expr || Dlr.Utils.isT<bool> expr
         then IsVal
@@ -75,7 +75,7 @@ module Utils =
   let box value = 
     if isBoxed value then value
     else
-      Dlr.blockTmpT<IronJS.BoxedValue> (fun tmp ->
+      Dlr.blockTmpT<BV> (fun tmp ->
         [
           (Box.setTagOf tmp value)
           (Box.setValue tmp value)
@@ -131,8 +131,8 @@ module Utils =
   let compileIndex (ctx:Ctx) indexAst =
     let mutable index = 0u
     match indexAst with
-    | Ast.Number n when CoreUtils.TryConvertToIndex(n, &index) -> !!!index
-    | Ast.String s when CoreUtils.TryConvertToIndex(s, &index) -> !!!index
+    | Ast.Number n when TC.TryToIndex(n, &index) -> !!!index
+    | Ast.String s when TC.TryToIndex(s, &index) -> !!!index
     | _ -> ctx.Compile indexAst
     
   //----------------------------------------------------------------------------
@@ -145,7 +145,7 @@ module Utils =
     | TypeTags.String
     | TypeTags.Undefined
     | TypeTags.Number -> 
-      let expr = TypeConverter.ToObject(ctx.Env, expr)
+      let expr = TC.ToObject(ctx.Env, expr)
       tempBlock expr (fun expr -> [ifObj expr])
 
     | TypeTags.Box -> 
@@ -157,7 +157,7 @@ module Utils =
             (Dlr.ternary
               (Box.isClr expr)
               (ifClr (Box.unboxClr expr))
-              (ifObj (TypeConverter.ToObject(ctx.Env, expr))))
+              (ifObj (TC.ToObject(ctx.Env, expr))))
         ])
 
     | tag -> failwithf "Invalid TypeTag '%i'" tag

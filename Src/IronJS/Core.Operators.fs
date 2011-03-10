@@ -93,7 +93,7 @@ type Operators =
       env.RaiseTypeError("Right operand is not a object")
 
     let mutable index = 0u
-    if CoreUtils.TryConvertToIndex(l, &index) then
+    if TC.TryToIndex(l, &index) then
       r.Object.Has(index)
 
     else

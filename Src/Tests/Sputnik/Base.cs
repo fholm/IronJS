@@ -20,11 +20,19 @@ namespace Tests.Sputnik {
       System.IO.Directory.SetCurrentDirectory(baseDir + "\\" + subDir);
     }
 
+    static string header = "\r\n#################################################################\r\n";
+
     protected IronJS.Hosting.Context Ctx {
       get {
         var ctx = IronJS.Hosting.Context.Create();
         var error = new Action<string>(Error);
         var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, error);
+        var astPrinter = new Action<string>(s => Console.WriteLine(header + "AST:\r\n\r\n" + s.Replace("\n", "\r\n")));
+        var exprPrinter = new Action<string>(s => Console.WriteLine(header + "EXPR:\r\n\r\n" + s));
+
+         IronJS.Support.Debug.registerAstPrinter(astPrinter);
+        IronJS.Support.Debug.registerExprPrinter(exprPrinter);
+
         ctx.PutGlobal("ERROR", errorFunc);
         ctx.PutGlobal("$ERROR", errorFunc);
         return ctx;
@@ -32,12 +40,14 @@ namespace Tests.Sputnik {
     }
 
     protected void RunFile(string file) {
+      Console.WriteLine(System.IO.Directory.GetCurrentDirectory() + "\\" + file);
+      Console.WriteLine(header + "JAVASCRIPT:\r\n\r\n" + System.IO.File.ReadAllText(file));
       var _ = Ctx.ExecuteFile(file);
     }
 
     protected void RunFile_ExpectException(string file) {
       try {
-        var _ = Ctx.ExecuteFile(file);
+        RunFile(file);
         Assert.Fail("Expected exception from file " + file);
       } catch {
 

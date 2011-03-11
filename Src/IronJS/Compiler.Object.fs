@@ -126,7 +126,7 @@ module Object =
       | IsRef -> putRef expr index value
 
     //
-    let get (index:Dlr.Expr) expr = 
+    let get expr index = 
       tempBlockT<CO> expr (fun tmp -> 
         [tmp.CallMember("Get", [index])]
       )
@@ -151,7 +151,7 @@ module Object =
     let object' = object' |> ctx.Compile
 
     ensureObject ctx object'
-      (Index.get index)
+      (fun x -> Index.get x index)
       (fun x -> Constants.Boxed.undefined)
 
   // 11.1.4 array initialiser
@@ -185,6 +185,7 @@ module Object =
       match assign with
       | Ast.Assign(Ast.String name, expr) -> 
         let value = ctx.Compile expr
+        let name = name.Trim('"')
         tmp |> Property.put !!!name value
 
       | _ -> failwithf "Que? %A" assign

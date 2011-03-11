@@ -109,11 +109,11 @@ module Scope =
         (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
           [
             (Dlr.assign arguments 
-              (Dlr.newArgsT<ArgumentsObject> [
-                  ctx.Env;
-                  Dlr.const' linkMap;
-                  ctx.LocalScope;
-                  ctx.ClosureScope]))
+              (Dlr.callStaticT<ArgumentsObject> "New" [
+                ctx.Env;
+                Dlr.const' linkMap;
+                ctx.LocalScope;
+                ctx.ClosureScope]))
             (Object.Property.put 
               (Dlr.castT<CommonObject> arguments) 
               (Dlr.const' "callee")

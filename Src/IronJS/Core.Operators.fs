@@ -48,7 +48,7 @@ type Operators =
 
   //----------------------------------------------------------------------------
   // typeof
-  static member typeOf (o:BoxedValue) = 
+  static member typeOf (o:BV) = 
     if o.IsNumber then "number"
     elif o.IsNull then "object"
     else TypeTags.Names.[o.Tag]
@@ -64,7 +64,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // ~
   static member bitCmpl (o) = Dlr.callStaticT<Operators> "bitCmpl" [o]
-  static member bitCmpl (o:BoxedValue) =
+  static member bitCmpl (o:BV) =
     let o = TC.ToNumber o
     let o = TC.ToInt32 o
     ~~~ o |> double
@@ -72,13 +72,13 @@ type Operators =
   //----------------------------------------------------------------------------
   // + (unary)
   static member plus (l, r) = Dlr.callStaticT<Operators> "plus" [l; r]
-  static member plus (o:BoxedValue) =
+  static member plus (o:BV) =
     o |> TC.ToNumber |> BV.Box
     
   //----------------------------------------------------------------------------
   // - (unary)
   static member minus (l, r) = Dlr.callStaticT<Operators> "minus" [l; r]
-  static member minus (o:BoxedValue) =
+  static member minus (o:BV) =
     BV.Box ((TC.ToNumber o) * -1.0)
 
   //----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // in
   static member in' (env, l,r) = Dlr.callStaticT<Operators> "in'" [env; l; r]
-  static member in' (env:Environment, l:BoxedValue, r:BoxedValue) = 
+  static member in' (env:Env, l:BV, r:BV) = 
     if not r.IsObject then
       env.RaiseTypeError("Right operand is not a object")
 
@@ -105,7 +105,7 @@ type Operators =
   static member instanceOf (env, l,r) = 
     Dlr.callStaticT<Operators> "instanceOf" [env; l; r]
 
-  static member instanceOf(env:Environment, l:BoxedValue, r:BoxedValue) =
+  static member instanceOf(env:Env, l:BV, r:BV) =
     if r.IsFunction |> not then
       env.RaiseTypeError("Right operand is not a function")
 
@@ -116,17 +116,22 @@ type Operators =
   //----------------------------------------------------------------------------
   // <
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
-  static member lt (l:BoxedValue, r:BoxedValue) =
+  static member lt (l:BV, r:BV) =
     if l.IsNumber && r.IsNumber
       then l.Number < r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String < r.String
-        else TC.ToNumber l < TC.ToNumber r
+        else 
+          let l = TC.ToPrimitive(l, DefaultValueHint.Number)
+          let r = TC.ToPrimitive(r, DefaultValueHint.Number)
+          if l.IsString && r.IsString
+            then l.String < r.String
+            else TC.ToNumber l < TC.ToNumber r
         
   //----------------------------------------------------------------------------
   // <=
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
-  static member ltEq (l:BoxedValue, r:BoxedValue) =
+  static member ltEq (l:BV, r:BV) =
     if l.IsNumber && r.IsNumber
       then l.Number <= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
@@ -136,7 +141,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // >
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
-  static member gt (l:BoxedValue, r:BoxedValue) =
+  static member gt (l:BV, r:BV) =
     if l.IsNumber && r.IsNumber
       then l.Number > r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
@@ -146,7 +151,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // >=
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
-  static member gtEq (l:BoxedValue, r:BoxedValue) =
+  static member gtEq (l:BV, r:BV) =
     if l.IsNumber && r.IsNumber
       then l.Number >= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
@@ -156,7 +161,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // ==
   static member eq (l, r) = Dlr.callStaticT<Operators> "eq" [l; r]
-  static member eq (l:BoxedValue, r:BoxedValue) = 
+  static member eq (l:BV, r:BV) = 
     if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 
@@ -179,10 +184,10 @@ type Operators =
         && r.Clr = null 
         && l.Tag = TypeTags.Undefined then true
 
-      elif l.IsNumber && r.Tag = TypeTags.String then
+      elif l.IsNumber && r.IsString then
         l.Number = TC.ToNumber r.String
         
-      elif r.Tag = TypeTags.String && r.IsNumber then
+      elif l.IsString && r.IsNumber then
         TC.ToNumber l.String = r.Number
 
       elif l.Tag = TypeTags.Bool then
@@ -260,11 +265,15 @@ type Operators =
     if l.IsNumber && r.IsNumber then
       BV.Box (l.Number + r.Number)
 
-    elif l.Tag = TypeTags.String || r.Tag = TypeTags.String then
-      BV.Box (TC.ToString(l) + TC.ToString(r))
+    elif l.Tag = TypeTags.String && r.Tag = TypeTags.String then
+      BV.Box (TC.ToString l + TC.ToString r)
 
     else
-      BV.Box (TC.ToNumber(l) + TC.ToNumber(r))
+      let l = l |> TC.ToPrimitive
+      let r = r |> TC.ToPrimitive
+      if l.IsString || r.IsString 
+        then (TC.ToString l + TC.ToString r) |> BV.Box
+        else (TC.ToNumber l + TC.ToNumber r) |> BV.Box
       
   //----------------------------------------------------------------------------
   // -

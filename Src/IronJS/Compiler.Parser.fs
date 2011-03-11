@@ -146,6 +146,10 @@ module Parsers =
           let n = System.Convert.ToInt64(text tok, 8)
           Tree.Number(double n)
 
+        // new x
+        | ES3Parser.NEW ->
+          New(ctx.Translate (child tok 0),[])
+
         // x(y)
         | ES3Parser.CALL -> 
           let child0 = child tok 0
@@ -438,7 +442,7 @@ module Parsers =
           | _ -> 
             Support.Errors.noParserForToken tok
 
-      #if DEBUG
+      #if _DEBUG
 
       let wrap ast =
         Ast.Block([Ast.Line(ctx.File, tok.Line); ast])

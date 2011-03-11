@@ -45,13 +45,17 @@ namespace Tests.Sputnik {
       var _ = Ctx.ExecuteFile(file);
     }
 
-    protected void RunFile_ExpectException(string file) {
+    protected void RunFile_ExpectException<T>(string file) where T : Exception {
       try {
         RunFile(file);
         Assert.Fail("Expected exception from file " + file);
-      } catch {
+      } catch(T) {
 
       }
+    }
+
+    protected void RunFile_ExpectException(string file) {
+      RunFile_ExpectException<Exception>(file);
     }
   }
 }

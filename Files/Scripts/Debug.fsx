@@ -16,12 +16,21 @@ open FSKit.Bit
 IO.Directory.SetCurrentDirectory(@"E:\Projects\IronJS\Src\Tests")
 
 let ctx = Hosting.Context.Create()
-ctx.SetupPrintFunction("ERROR")
-ctx.SetupPrintFunction("$ERROR")
+IronJS.Support.Debug.registerConsolePrinter()
 
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A1_T1.js" |> ignore
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A1_T2.js" |> ignore
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T1.js" |> ignore
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T2.js" |> ignore
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T1.js" |> ignore
-ctx.ExecuteFile @"sputnik\Conformance\08_Types\8.1_The_Undefined_Type\S8.1_A2_T2.js" |> ignore
+ctx.Execute @"var foo = {}"
+ctx.Execute @"delete foo;"
+
+foo.Get(6u).Clr
+foo.Get("6").Clr
+
+let prototype = foo.Get<CO> "prototype"
+
+ctx.Execute @"Foo.prototype = {}"
+let prototype2 = foo.Get<CO> "prototype"
+
+let isSame = 
+  Object.ReferenceEquals(prototype, prototype2)
+
+foo.InstancePrototype
+

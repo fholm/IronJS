@@ -10,14 +10,18 @@ open IronJS.DescriptorAttrs
 module String =
 
   //----------------------------------------------------------------------------
-  let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
-    let value = TypeConverter.ToString value
+  let internal constructor' (ctor:FO) (this:CO) (value:BV) =
+    let value = 
+      match value.Tag with
+      | TypeTags.Undefined -> ""
+      | _ -> TC.ToString value
+
     match this with
     | null -> ctor.Env.NewString(value) |> BV.Box
     | _ -> value |> BV.Box
     
   //----------------------------------------------------------------------------
-  let internal fromCharCode (args:BoxedValue array) =
+  let internal fromCharCode (args:Args) =
     let buffer = Text.StringBuilder(args.Length)
 
     for i = 0 to args.Length-1 do
@@ -26,42 +30,42 @@ module String =
     buffer.ToString()
 
   //----------------------------------------------------------------------------
-  let internal toString (func:FunctionObject) (this:CommonObject) =
+  let internal toString (func:FO) (this:CO) =
     this.CheckType<SO>()
     this |> ValueObject.GetValue
     
   //----------------------------------------------------------------------------
-  let internal valueOf (func:FunctionObject) (this:CommonObject) = 
+  let internal valueOf (func:FO) (this:CO) = 
     toString func this
     
   //----------------------------------------------------------------------------
-  let internal charAt (this:CommonObject) (pos:double) =
+  let internal charAt (this:CO) (pos:double) =
     let value = TypeConverter.ToString this
     let index = TypeConverter.ToInt32 pos
     if index < 0 || index >= value.Length then "" else value.[index] |> string
 
   //----------------------------------------------------------------------------
-  let internal charCodeAt (this:CommonObject) (pos:double) =
+  let internal charCodeAt (this:CO) (pos:double) =
     let value = TypeConverter.ToString this
     let index = TypeConverter.ToInt32 pos
     if index < 0 || index >= value.Length then nan else value.[index] |> double
     
   //----------------------------------------------------------------------------
-  let internal concat (this:CommonObject) (args:BoxedValue array) =
+  let internal concat (this:CO) (args:Args) =
     let buffer = new Text.StringBuilder(TypeConverter.ToString this)
     let toString (x:BoxedValue) = buffer.Append(TypeConverter.ToString x)
     args |> Array.iter (toString >> ignore)
     buffer.ToString()
     
   //----------------------------------------------------------------------------
-  let internal indexOf (this:CommonObject) (subString:string) (index:double) =
+  let internal indexOf (this:CO) (subString:string) (index:double) =
     let value = this |> TypeConverter.ToString
     let index = index |> TypeConverter.ToInt32
     let index = Math.Min(Math.Max(index, 0), value.Length);
     value.IndexOf(subString, index, StringComparison.Ordinal) |> double
     
   //----------------------------------------------------------------------------
-  let internal lastIndexOf (this:CommonObject) (subString:string) (index:double) =
+  let internal lastIndexOf (this:CO) (subString:string) (index:double) =
     let value = this |> TypeConverter.ToString
 
     let index = 

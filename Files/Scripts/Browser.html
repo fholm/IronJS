@@ -2,16 +2,18 @@
     <head>
         <title></title>
         <script type="text/javascript">
-    (function () {
-        //This:
-        var asyncResult = async($.get("someStuff.json"));
-        document.write(asyncResult);
 
-        //Gets de-sugared into this, at compile time (automatically by IronJS):
-        $.get("someStuff.json", function (asyncResult) {
-            document.write(asyncResult);
-        });
-    } ());
+
+    (function () {
+        $ERROR = alert;
+        var object = { valueOf: function () { return "-2" }, toString: function () { return -2 } };
+        alert(+object);
+        alert(+("-1"))
+        if (object < "-1") {
+            $ERROR('#2: var object = {valueOf: function() {return "-2"}, toString: function() {return -2}}; object < "-1"');
+        }
+    })();
+
         </script>
     </head>
     <body></body>

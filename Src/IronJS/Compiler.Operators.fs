@@ -49,7 +49,7 @@ module Unary =
       deleteProperty ctx ctx.Globals name
 
     else
-      Dlr.false'
+      !!!false
 
   let delete (ctx:Ctx) tree =
     match tree with

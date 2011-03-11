@@ -6,8 +6,8 @@ namespace Tests.Sputnik {
     public void Init() { SetSputnikDir(@"Conformance\08_Types\8.7_The_Reference_Type"); }
     [TestMethod] public void S8_7_1_A1_js() { RunFile(@"S8.7.1_A1.js"); }
     [TestMethod] public void S8_7_1_A2_js() { RunFile(@"S8.7.1_A2.js"); }
-    [TestMethod] public void S8_7_2_A1_T1_js() { RunFile(@"S8.7.2_A1_T1.js"); }
-    [TestMethod] public void S8_7_2_A1_T2_js() { RunFile(@"S8.7.2_A1_T2.js"); }
+    [TestMethod] public void S8_7_2_A1_T1_js() { RunFile_ExpectException(@"S8.7.2_A1_T1.js"); }
+    [TestMethod] public void S8_7_2_A1_T2_js() { RunFile_ExpectException(@"S8.7.2_A1_T2.js"); }
     [TestMethod] public void S8_7_2_A2_js() { RunFile(@"S8.7.2_A2.js"); }
     [TestMethod] public void S8_7_2_A3_js() { RunFile(@"S8.7.2_A3.js"); }
     [TestMethod] public void S8_7_A1_js() { RunFile(@"S8.7_A1.js"); }

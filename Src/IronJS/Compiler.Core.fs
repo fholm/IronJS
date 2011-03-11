@@ -133,7 +133,31 @@ module Core =
     //Extract scope and ast from top level ast node
     let scope, ast =
       match target.Ast with
-      | Ast.Function(_, scope, ast) -> scope, ast
+      | Ast.Function(_, scope, ast) -> 
+      
+        let scope =
+          match target.Delegate with
+          | None -> scope
+          | Some delegate' ->
+            let argLength = 
+              delegate' |> FSKit.Reflection.getDelegateArgTypes
+                        |> Seq.skip 2 
+                        |> Seq.skip scope.ParamCount
+                        |> Seq.toArray
+                        |> Array.length
+                        |> (+) (-1)
+            
+            let mutable scope = scope
+            for i = 0 to argLength do
+              let name = "arg_" + string scope.ParamCount
+              let paramIndex = Some scope.ParamCount
+              scope <- scope |> Ast.Utils.Scope.addLocal name paramIndex
+
+            scope
+
+        scope, ast
+        
+
       | _ -> failwith "Top AST node must be Tree.Function"
 
     //Context

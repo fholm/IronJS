@@ -25,12 +25,22 @@ module Global =
           Environment = target.Function.Env
         }
 
+      let localScope =
+        if target.LocalScope = null 
+          then Array.empty<BV> 
+          else target.LocalScope
+
+      let closureScope =
+        if target.ClosureScope = null 
+          then Array.empty<BV> 
+          else target.ClosureScope
+
       BoxingUtils.JsBox (
         compiled.DynamicInvoke(
           target.Function,
           target.This,
-          target.LocalScope,
-          target.ClosureScope,
+          localScope,
+          closureScope,
           target.DynamicScope))
 
     | _ -> target.Target
@@ -42,10 +52,10 @@ module Global =
     BV.Box(TypeConverter.ToNumber str)
 
   let isNaN (number:double) = 
-    number = Double.NaN |> BV.Box
+    number <> number |> BV.Box
 
   let isFinite (number:double) =
-      if    number = Double.NaN               then false
+      if    number <> number                  then false
       elif  number = Double.PositiveInfinity  then false
       elif  number = Double.NegativeInfinity  then false
                                               else true

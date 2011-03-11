@@ -6,7 +6,7 @@ open IronJS.DescriptorAttrs
 
 module Object =
 
-  let internal constructor' (f:FunctionObject) (this:CommonObject) (value:BoxedValue) =
+  let internal constructor' (f:FO) (this:CO) (value:BV) =
     match value.Tag with
     | TypeTags.Undefined -> f.Env.NewObject()
     | TypeTags.Clr -> f.Env.NewObject()
@@ -16,21 +16,27 @@ module Object =
   let internal toLocaleString = toString
   let internal valueOf (o:CO) = o
 
-  let internal hasOwnProperty (o:CommonObject) (name:string) =
+  let internal hasOwnProperty (o:CO) (name:string) =
     let mutable index = 0
     if o.PropertySchema.IndexMap.TryGetValue(name, &index) 
       then o.Properties.[index].HasValue
       else false
 
-  let internal isPrototypeOf (o:CommonObject) (v:CommonObject) = v.Prototype = o
-  let internal propertyIsEnumerable (o:CommonObject) (name:string) =
+  let rec internal isPrototypeOf (o:CO) (v:CO) = 
+    if v |> FSKit.Utils.isNull
+      then false
+      elif Object.ReferenceEquals(o, v.Prototype) 
+        then true
+        else isPrototypeOf o v.Prototype
+
+  let internal propertyIsEnumerable (o:CO) (name:string) =
     let descriptor = o.Find(name)
     descriptor.HasValue && descriptor.IsEnumerable
       
-  let createPrototype (env:Environment) =
+  let createPrototype (env:Env) =
     CO(env, env.Maps.Base, null)
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let dontEnum = DescriptorAttrs.DontEnum
 
     let toString = new Func<CommonObject, string>(toString)

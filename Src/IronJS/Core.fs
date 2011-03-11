@@ -395,7 +395,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
 
     proto.Put("constructor", func)
     func.ConstructorMode <- ConstructorModes.User
-    func.Put("prototype", proto, DescriptorAttrs.Immutable)
+    func.Put("prototype", proto, DescriptorAttrs.DontDelete)
     func.Put("length", double args, DescriptorAttrs.DontDelete)
 
     func
@@ -426,6 +426,19 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.RaiseReferenceError() = x.RaiseReferenceError("")
   member x.RaiseReferenceError(message) = x.RaiseError(x.Prototypes.ReferenceError, message)
 
+
+#if DEBUG
+and DebugUtils() =
+  
+  static let mutable id = 0L
+
+  static member DebugId = 
+    id <- id + 1L
+    id
+
+
+#endif
+
 (*
 //  
 *)
@@ -436,12 +449,18 @@ and [<AllowNullLiteral>] CommonObject =
   val mutable Prototype : CommonObject
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
+  #if DEBUG
+  val mutable DebugId : int64
+  #endif
   
   new (env, map, prototype) = {
     Env = env
     Prototype = prototype
     PropertySchema = map
     Properties = Array.zeroCreate (map.IndexMap.Count)
+    #if DEBUG
+    DebugId = DebugUtils.DebugId
+    #endif
   }
 
   new (env) = {
@@ -449,10 +468,22 @@ and [<AllowNullLiteral>] CommonObject =
     Prototype = null
     PropertySchema = null
     Properties = null
+    #if DEBUG
+    DebugId = DebugUtils.DebugId
+    #endif
   }
 
   abstract ClassName : string with get
   default x.ClassName = "Object"
+
+  #if DEBUG
+  member x.ClassType = x.GetType().Name
+  member x.Members = 
+    let dict = new MutableDict<string, obj>()
+    for kvp in x.PropertySchema.IndexMap do
+      dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
+    dict
+  #endif
 
   //
   member x.HasPrototype = 
@@ -669,7 +700,9 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(name:String, value:obj) : unit = x.Put(name, value, TypeTags.Clr)
   member x.Put(name:String, value:String) : unit = x.Put(name, value, TypeTags.String)
   member x.Put(name:String, value:Undefined) : unit = x.Put(name, value, TypeTags.Undefined)
-  member x.Put(name:String, value:CO) : unit = x.Put(name, value, TypeTags.Object)
+  member x.Put(name:String, value:CO) : unit = 
+    x.Put(name, value, TypeTags.Object)
+
   member x.Put(name:String, value:FO) : unit = x.Put(name, value, TypeTags.Function)
 
   member x.Put(index:uint32, value:bool) : unit = x.Put(index, value |> TaggedBools.ToTagged)
@@ -750,7 +783,7 @@ and [<AllowNullLiteral>] CommonObject =
       
   //----------------------------------------------------------------------------
   // Put methods for setting indexes to doubles
-  member x.Put(index:BoxedValue, value:double) =
+  member x.Put(index:BV, value:double) =
     let mutable i = 0u
     if TC.TryToIndex(index, &i) 
       then x.Put(i, value)
@@ -766,7 +799,7 @@ and [<AllowNullLiteral>] CommonObject =
       then x.Put(parsed, value)
       else x.Put(TC.ToString(index), value)
 
-  member x.Put(index:Object, value:double) : unit =
+  member x.Put(index:obj, value:double) : unit =
     let index = TC.ToString(index)
     let mutable parsed = 0u
     
@@ -912,6 +945,46 @@ and [<AllowNullLiteral>] CommonObject =
     if TC.TryToIndex(index, &parsed) 
       then x.Has(parsed)
       else x.Has(index)
+  //----------------------------------------------------------------------------
+  // Overloaded .Has methods that convert their argument into either a string 
+  // (property) or uint32 (index) and fowards the call to the correct .Has
+  //----------------------------------------------------------------------------
+
+  member x.Delete(index:BV) : bool =
+    let mutable i = 0u
+
+    if TC.TryToIndex(index, &i) 
+      then x.Delete(i)
+      else x.Delete(TC.ToString(index))
+
+  member x.Delete(index:bool) : bool =
+    x.Delete(TC.ToString(index))
+
+  member x.Delete(index:double) : bool = 
+    let mutable parsed = 0u
+
+    if TC.TryToIndex(index, &parsed) 
+      then x.Delete(parsed)
+      else x.Delete(TC.ToString(index))
+
+  member x.Delete(index:obj) : bool =
+    let index = TC.ToString index
+    let mutable parsed = 0u
+    
+    if TC.TryToIndex(index, &parsed) 
+      then x.Delete(parsed)
+      else x.Delete(index)
+      
+  member x.Delete(index:Undefined) : bool = 
+    x.Has("undefined")
+    
+  member x.Delete(index:CO) : bool = 
+    let index = TC.ToString(index)
+    let mutable parsed = 0u
+    
+    if TC.TryToIndex(index, &parsed) 
+      then x.Delete(parsed)
+      else x.Delete(index)
       
   //
   abstract CollectProperties : unit -> uint32 * MutableSet<String>
@@ -1065,6 +1138,21 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
   member x.IsDense = 
     sparse |> FSKit.Utils.isNull
 
+  #if DEBUG
+  member x.ArrayValues =
+    let dict = new MutableDict<uint32, obj>()
+    if x.IsDense then
+      for i = 0 to (x.Dense.Length-1) do
+        if x.Dense.[i].HasValue then
+          dict.Add(uint32 i, x.Dense.[i].Value.ClrBoxed)
+
+    else
+      for kvp in x.Sparse do
+        dict.Add(kvp.Key, kvp.Value.ClrBoxed)
+
+    dict
+  #endif
+
   member x.UpdateLength(number:double) =
     if number < 0.0 then
       x.Env.RaiseRangeError("invalid array length")
@@ -1120,22 +1208,22 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
   override x.GetLength() =
     x.Length
 
-  override x.Put(name:String, value:BoxedValue) =
+  override x.Put(name:string, value:BV) =
     if name = "length"
       then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value)
 
-  override x.Put (name:String, value:double) =
+  override x.Put (name:string, value:double) =
     if name = "length" 
       then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value)
 
-  override x.Put (name:String, value:Object, tag:uint32) =
+  override x.Put (name:string, value:obj, tag:uint32) =
     if name = "length" 
       then x.UpdateLength(value |> TC.ToNumber)
       else base.Put(name, value, tag)
 
-  override x.Put(index:uint32, value:BoxedValue) =
+  override x.Put(index:uint32, value:BV) =
     if index > Array.DenseMaxIndex then x.ConvertToSparse()
 
     if x.IsDense then
@@ -1267,10 +1355,10 @@ and ArgLink = byte * int
 and [<AllowNullLiteral>] ArgumentsObject =
   inherit ArrayObject
   
-  val mutable Locals : BoxedValue array
-  val mutable ClosedOver : BoxedValue array
+  val mutable Locals : Scope
+  val mutable ClosedOver : Scope
 
-  val mutable LinkMap : (byte * int) array
+  val mutable LinkMap : ArgLink array
   val mutable LinkIntact : bool
     
   //----------------------------------------------------------------------------
@@ -1293,13 +1381,14 @@ and [<AllowNullLiteral>] ArgumentsObject =
       
   //----------------------------------------------------------------------------
   member x.CopyLinkedValues() : unit =
-    for sourceArray, index in x.LinkMap do
+    for i = 0 to (x.LinkMap.Length-1) do
+      let sourceArray, index = x.LinkMap.[i]
       match sourceArray with
       | ArgumentsLinkArray.Locals -> 
-        x.Put(uint32 index, x.Locals.[index])
+        base.Put(uint32 i, x.Locals.[index])
 
       | ArgumentsLinkArray.ClosedOver -> 
-        x.Put(uint32 index, x.ClosedOver.[index])
+        base.Put(uint32 i, x.ClosedOver.[index])
 
       | _ -> failwith "Que?"
 
@@ -1347,8 +1436,12 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> x.Locals.[index]
-      | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index]
+      | ArgumentsLinkArray.Locals, index -> 
+        x.Locals.[index]
+         
+      | ArgumentsLinkArray.ClosedOver, index -> 
+        x.ClosedOver.[index]
+
       | _ -> failwith "Que?"
 
     else
@@ -1459,6 +1552,14 @@ and [<AllowNullLiteral>] FunctionObject =
     let func = x.CompileAs<JsFunc<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
+  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e) : BV  =
+    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e>>()
+    func.Invoke(x, this, a, b, c, d, e)
+
+  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e,f:'f) : BV  =
+    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e, 'f>>()
+    func.Invoke(x, this, a, b, c, d, e, f)
+
   member x.Construct (this:CO) =
     let func = x.CompileAs<JsFunc>()
 
@@ -1520,6 +1621,32 @@ and [<AllowNullLiteral>] FunctionObject =
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
       func.Invoke(x, o, a, b, c, d) |> ignore
+      BoxedValue.Box(o)
+
+    | _ -> x.Env.RaiseTypeError()
+
+  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e) =
+    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e>>()
+
+    match x.ConstructorMode with
+    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e)
+    | ConstructorModes.User -> 
+      let o = x.Env.NewObject()
+      o.Prototype <- x.InstancePrototype
+      func.Invoke(x, o, a, b, c, d, e) |> ignore
+      BoxedValue.Box(o)
+
+    | _ -> x.Env.RaiseTypeError()
+
+  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e, f:'f) =
+    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e, 'f>>()
+
+    match x.ConstructorMode with
+    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e, f)
+    | ConstructorModes.User -> 
+      let o = x.Env.NewObject()
+      o.Prototype <- x.InstancePrototype
+      func.Invoke(x, o, a, b, c, d, e, f) |> ignore
       BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
@@ -1600,7 +1727,7 @@ and [<AllowNullLiteral>] NumberObject =
 (*
 //  
 *)
-and BO = NumberObject
+and BO = BooleanObject
 and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
 
@@ -1725,7 +1852,7 @@ and [<AllowNullLiteral>] DynamicSchema =
 //
 *)
 and UserError(value:BoxedValue, line:int, column:int) =
-  inherit IronJS.Support.Error("UserError: " + TC.ToString(value))
+  inherit IronJS.Support.Error(value |> TC.ToString)
   member x.Value = value
   member x.Line = line
   member x.Column = column
@@ -1902,9 +2029,11 @@ and TypeConverter() =
 
   static member ToNumber(s:string) : double =
     let mutable d = 0.0
-    if Double.TryParse(s, anyNumber, invariantCulture, &d) 
+    if Double.TryParse(s, anyNumber, invariantCulture, &d) && s.Contains(",") |> not
       then d 
-      else NaN
+      elif s.Length = 0
+        then 0.0
+        else NaN
 
   static member ToNumber(d:double) : double = 
     if d = TaggedBools.True 
@@ -2027,4 +2156,6 @@ and JsFunc<'a> = Func<FO,CO,'a,BV>
 and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>
 and JsFunc<'a,'b,'c> = Func<FO,CO,'a,'b,'c,BV>
 and JsFunc<'a,'b,'c,'d> = Func<FO,CO,'a,'b,'c,'d,BV>
+and JsFunc<'a,'b,'c,'d,'e> = Func<FO,CO,'a,'b,'c,'d,'e,BV>
+and JsFunc<'a,'b,'c,'d,'e,'f> = Func<FO,CO,'a,'b,'c,'d,'e,'f,BV>
 and JsArgsFunc = JsFunc<Args>

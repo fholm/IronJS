@@ -9,10 +9,16 @@ module Number =
 
   //----------------------------------------------------------------------------
   let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
-    let value = TypeConverter.ToNumber value
     match this with
-    | null -> ctor.Env.NewNumber(value) |> BV.Box
-    | _ -> value |> BV.Box
+    | null -> 
+      let value = 
+        match value.Tag with
+        | TypeTags.Undefined -> 0.0
+        | _ -> value |> TC.ToNumber
+
+      ctor.Env.NewNumber(value) |> BV.Box
+
+    | _ -> value |> TC.ToNumber |> BV.Box
     
   //----------------------------------------------------------------------------
   let private nanToString number =
@@ -125,10 +131,10 @@ module Number =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Number, Immutable) 
     ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) 
-    ctor.Put("MIN_VALUE", Double.MinValue, Immutable) 
+    ctor.Put("MIN_VALUE", Double.Epsilon, Immutable) 
     ctor.Put("NaN", Double.NaN, Immutable) 
-    ctor.Put("NEGATIVE_INFINITY", PosInf, Immutable) 
-    ctor.Put("POSITIVE_INFINITY", NegInf, Immutable) 
+    ctor.Put("NEGATIVE_INFINITY", NegInf, Immutable) 
+    ctor.Put("POSITIVE_INFINITY", PosInf, Immutable) 
 
     env.Globals.Put("Number", ctor)
     env.Constructors <- {env.Constructors with Number=ctor}

@@ -83,6 +83,18 @@ module Utils =
         ] |> Seq.ofList
       )
 
+  let unbox type' (expr:Dlr.Expr) =
+    if isBoxed expr then 
+      let bf = type' |> TypeTag.OfType |> BV.FieldOfTag
+      Dlr.field (Dlr.Ext.unwrap expr) bf
+
+    elif expr.Type |> FSKit.Utils.isType type' 
+      then expr
+
+    else 
+      failwithf "Can't unbox expression of type %A to %A" expr.Type type'
+        
+
   let tempBlock (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
     if value |> Dlr.Ext.isStatic then
       Dlr.blockSimple (body value)
@@ -97,9 +109,13 @@ module Utils =
     if value.Type = typeof<'a> then
       tempBlock value body
 
-    else
-      let value = value |> Dlr.cast typeof<'a>
+    elif value |> isBoxed then
+      let value2 = unbox typeof<'a> value
       tempBlock value body
+
+    else
+      let value2 = value |> Dlr.cast typeof<'a>
+      tempBlock value2 body
 
   //----------------------------------------------------------------------------
   let assign (lexpr:Dlr.Expr) rexpr = 

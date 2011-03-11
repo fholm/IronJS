@@ -1,7 +1,7 @@
 ﻿open System
 
-let startPath = @"C:\Users\fredrikhm\Personal\IronJS\Src\Tests\sputnik"
-let outputPath = IO.Directory.GetParent(startPath).FullName
+let startPath = @"C:\Users\fredrikhm\Personal\IronJS\Src\Tests\Sputnik\js"
+let outputPath = IO.Directory.GetParent(startPath).FullName + "\\Tests"
 
 let sanitize (txt:string) =
   txt.Replace(".", "_").Replace("\\", "_")
@@ -12,20 +12,20 @@ let getClassAndPathName (path:string) =
   let rec buildName (className, pathName) parts = 
     match parts with
     | []
-    | "sputnik"::_ -> (className, pathName)
+    | "js"::_ -> (className, pathName)
     | directory::parts ->
       let className = (sanitize directory) + "_" + className
       let pathName = directory + "\\" + pathName
       buildName (className, pathName) parts
 
   let className, pathName = buildName ("", "") parts
-  "Sputnik_" + className.Trim('_'), pathName.Trim('\\')
+  className.Trim('_'), pathName.Trim('\\')
 
 let makeClass = 
   sprintf @"using Microsoft.VisualStudio.TestTools.UnitTesting;
-namespace Tests {
+namespace Tests.Sputnik {
   [TestClass]
-  public class %s : SputnikTest {
+  public class %s : BaseTest {
     [TestInitialize]
     public void Init() { SetSputnikDir(%s); }
 %s

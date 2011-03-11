@@ -1,0 +1,45 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Tests.Sputnik {
+  [TestClass]
+  public class Conformance_15_Native_ECMA_Script_Objects_15_10_RegExp_Objects_15_10_6_Properties_of_the_RegExp_Prototype_Object_15_10_6_3_RegExp_prototype_test : BaseTest {
+    [TestInitialize]
+    public void Init() { SetSputnikDir(@"Conformance\15_Native_ECMA_Script_Objects\15.10_RegExp_Objects\15.10.6_Properties_of_the_RegExp_Prototype_Object\15.10.6.3_RegExp.prototype.test"); }
+    [TestMethod] public void S15_10_6_3_A10_js() { RunFile(@"S15.10.6.3_A10.js"); }
+    [TestMethod] public void S15_10_6_3_A11_js() { RunFile(@"S15.10.6.3_A11.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T1_js() { RunFile(@"S15.10.6.3_A1_T1.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T10_js() { RunFile(@"S15.10.6.3_A1_T10.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T11_js() { RunFile(@"S15.10.6.3_A1_T11.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T12_js() { RunFile(@"S15.10.6.3_A1_T12.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T13_js() { RunFile(@"S15.10.6.3_A1_T13.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T14_js() { RunFile(@"S15.10.6.3_A1_T14.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T15_js() { RunFile(@"S15.10.6.3_A1_T15.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T16_js() { RunFile(@"S15.10.6.3_A1_T16.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T17_js() { RunFile(@"S15.10.6.3_A1_T17.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T18_js() { RunFile(@"S15.10.6.3_A1_T18.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T19_js() { RunFile(@"S15.10.6.3_A1_T19.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T2_js() { RunFile(@"S15.10.6.3_A1_T2.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T20_js() { RunFile(@"S15.10.6.3_A1_T20.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T21_js() { RunFile(@"S15.10.6.3_A1_T21.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T3_js() { RunFile(@"S15.10.6.3_A1_T3.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T4_js() { RunFile(@"S15.10.6.3_A1_T4.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T5_js() { RunFile(@"S15.10.6.3_A1_T5.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T6_js() { RunFile(@"S15.10.6.3_A1_T6.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T7_js() { RunFile(@"S15.10.6.3_A1_T7.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T8_js() { RunFile(@"S15.10.6.3_A1_T8.js"); }
+    [TestMethod] public void S15_10_6_3_A1_T9_js() { RunFile(@"S15.10.6.3_A1_T9.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T1_js() { RunFile(@"S15.10.6.3_A2_T1.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T10_js() { RunFile(@"S15.10.6.3_A2_T10.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T2_js() { RunFile(@"S15.10.6.3_A2_T2.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T3_js() { RunFile(@"S15.10.6.3_A2_T3.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T4_js() { RunFile(@"S15.10.6.3_A2_T4.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T5_js() { RunFile(@"S15.10.6.3_A2_T5.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T6_js() { RunFile(@"S15.10.6.3_A2_T6.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T7_js() { RunFile(@"S15.10.6.3_A2_T7.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T8_js() { RunFile(@"S15.10.6.3_A2_T8.js"); }
+    [TestMethod] public void S15_10_6_3_A2_T9_js() { RunFile(@"S15.10.6.3_A2_T9.js"); }
+    [TestMethod] public void S15_10_6_3_A6_js() { RunFile(@"S15.10.6.3_A6.js"); }
+    [TestMethod] public void S15_10_6_3_A7_js() { RunFile(@"S15.10.6.3_A7.js"); }
+    [TestMethod] public void S15_10_6_3_A8_js() { RunFile(@"S15.10.6.3_A8.js"); }
+    [TestMethod] public void S15_10_6_3_A9_js() { RunFile(@"S15.10.6.3_A9.js"); }
+  }
+}

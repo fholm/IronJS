@@ -46,11 +46,15 @@ namespace Tests.Sputnik {
     }
 
     protected void RunFile_ExpectException<T>(string file) where T : Exception {
+      var thrown = false;
       try {
         RunFile(file);
-        Assert.Fail("Expected exception from file " + file);
-      } catch(T) {
-
+      } catch (T) {
+        thrown = true;
+      } finally {
+        if (!thrown) {
+          Assert.Fail("Expected exception from file " + file);
+        }
       }
     }
 

@@ -1,30 +1,57 @@
 ﻿open System
 
-let path = @"E:\Projects\IronJS\Src\Tests\sputnik\Conformance\09_Type_Conversion\9.9_ToObject"
+let startPath = @"C:\Users\fredrikhm\Personal\IronJS\Src\Tests\sputnik"
+let outputPath = IO.Directory.GetParent(startPath).FullName
 
-let testPath =
-  let parts = path.Split('\\')
-  let path = parts.[parts.Length-3] + "\\" + parts.[parts.Length-2] + "\\" + parts.[parts.Length-1]
-
-  if Char.IsNumber(path.[0]) 
-    then parts.[parts.Length-4] + "\\" + path
-    else path 
-  
 let sanitize (txt:string) =
   txt.Replace(".", "_").Replace("\\", "_")
 
-let testHeader = sanitize testPath
+let getClassAndPathName (path:string) =
+  let parts = path.Split('\\') |> Array.toList |> List.rev
 
-for file in IO.Directory.GetFiles(path) do
-  let parts = file.Split('\\');
-  let fileName = parts.[parts.Length-1]
+  let rec buildName (className, pathName) parts = 
+    match parts with
+    | []
+    | "sputnik"::_ -> (className, pathName)
+    | directory::parts ->
+      let className = (sanitize directory) + "_" + className
+      let pathName = directory + "\\" + pathName
+      buildName (className, pathName) parts
 
-  let test = 
-    "[TestMethod]\n" +
-    "public void "+ testHeader + "_" + (sanitize fileName)+"() {\n" + 
-    "Test(@\""+testPath+"\", () => {" +
-    "RunFile(\""+fileName+"\");" +
-    "});\n" +
-    "}\n"
+  let className, pathName = buildName ("", "") parts
+  "Sputnik_" + className.Trim('_'), pathName.Trim('\\')
 
-  printfn "%s" test
+let makeClass = 
+  sprintf @"using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace Tests {
+  [TestClass]
+  public class %s : SputnikTest {
+    [TestInitialize]
+    public void Init() { SetSputnikDir(%s); }
+%s
+  }
+}"
+
+let makeTest = 
+  sprintf "    [TestMethod] public void %s() { RunFile(@\"%s\"); }"
+
+let fileName (filePath:string) = 
+  let parts = filePath.Split('\\')
+  parts.[parts.Length-1]
+
+let rec buildTests path =
+  
+  let files = IO.Directory.GetFiles(path)
+  let files = files |> Array.filter (fun s -> s.EndsWith(".js"))
+  let files = files |> Array.map fileName
+  if files.Length > 0 then
+    let className, pathName = path |> getClassAndPathName
+    let tests = [for file in files -> makeTest (sanitize file) file]
+    let tests = tests |> String.concat "\n"
+    let tests = makeClass className ("@\"" + pathName + "\"") tests
+    IO.File.WriteAllText(outputPath + "\\" + className + ".cs", tests)
+
+  for dir in IO.Directory.GetDirectories(path) do
+    buildTests dir
+
+startPath |> buildTests

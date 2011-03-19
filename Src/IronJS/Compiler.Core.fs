@@ -20,12 +20,6 @@ module Core =
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
     | Ast.DlrExpr expr -> expr
-    #if DEBUG
-    | Ast.Line (file, line) ->
-      let line = Dlr.call !!!line "ToString" []
-      let concat = Dlr.callStaticT<String> "Concat" [!!!file; !!!": "; line]
-      Dlr.callStaticT<Console> "WriteLine" [concat]
-    #endif
 
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
@@ -58,20 +52,16 @@ module Core =
 
     //Control Flow
     | Ast.Switch(value, cases) -> ControlFlow.switch ctx value cases
-    | Ast.While(label, test, body) -> ControlFlow.while' ctx label test body
-    | Ast.DoWhile(label, body, test) -> ControlFlow.doWhile' ctx label body test
     | Ast.Break label -> ControlFlow.break' ctx label
     | Ast.Continue label -> ControlFlow.continue' ctx label
     | Ast.Label(label, ast) -> ControlFlow.label ctx label ast
     | Ast.IfElse(test, true', false') -> ControlFlow.if' ctx test true' false'
-    | Ast.Ternary(test, true', false') -> 
-      ControlFlow.ternary ctx test true' false'
-
-    | Ast.For(label, init, test, incr, body) -> 
-      ControlFlow.for' ctx label init test incr body
-
-    | Ast.ForIn(label, name, init, body) ->
-      ControlFlow.forIn ctx label name init body
+    | Ast.Ternary(test, true', false') -> ControlFlow.ternary ctx test true' false'
+      
+    | Ast.While(label, test, body) -> ControlFlow.while' ctx label test body
+    | Ast.DoWhile(label, body, test) -> ControlFlow.doWhile' ctx label body test
+    | Ast.For(label, init, test, incr, body) -> ControlFlow.for' ctx label init test incr body
+    | Ast.ForIn(label, name, init, body) -> ControlFlow.forIn ctx label name init body
 
     //Exceptions
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
@@ -79,6 +69,13 @@ module Core =
 
     | Ast.Regex(regex, flags) ->
       Dlr.call ctx.Env "NewRegExp" [!!!regex; !!!flags]
+
+    #if DEBUG
+    | Ast.Line (file, line) ->
+      let line = Dlr.call !!!line "ToString" []
+      let concat = Dlr.callStaticT<String> "Concat" [!!!file; !!!": "; line]
+      Dlr.callStaticT<Console> "WriteLine" [concat]
+    #endif
 
     | _ -> failwithf "Failed to compile %A" ast
       
@@ -175,8 +172,8 @@ module Core =
       BreakLabels = Map.empty
       ContinueLabels = Map.empty
 
-      Function = Dlr.paramT<FunctionObject> "~function"
-      This = Dlr.paramT<CommonObject> "~this"
+      Function = Dlr.paramT<FO> "~function"
+      This = Dlr.paramT<CO> "~this"
       LocalScope = Dlr.paramT<Scope> "~localScope"
       ClosureScope = Dlr.paramT<Scope> "~closureScope"
       DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"

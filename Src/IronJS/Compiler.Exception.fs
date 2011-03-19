@@ -13,7 +13,7 @@ module Exception =
       
   //--------------------------------------------------------------------------
   // 12.14 the try statement
-  let private catch (ctx:Ctx) catch =
+  let private compileCatch (ctx:Ctx) catch =
     match catch with
     | Ast.Catch(name, ast) ->
       let exnParam = Dlr.paramT<UserError> "error"
@@ -30,9 +30,13 @@ module Exception =
   let private finally' (ctx:Ctx) ast =
     Dlr.castVoid (ctx.Compile ast)
 
-  let try' (ctx:Ctx) body catches final =
+  let try' (ctx:Ctx) body catch final =
     let body = ctx.Compile body |> Dlr.castVoid
-    let catches = seq{for x in catches -> catch ctx x}
+    let catch = 
+      match catch with
+      | None -> []
+      | Some(tree) -> [compileCatch ctx tree]
+
     match Option.map (finally' ctx) final with
-    | None -> Dlr.tryCatch body catches
-    | Some finally' -> Dlr.tryCatchFinally body catches finally'
+    | None -> Dlr.tryCatch body catch
+    | Some finally' -> Dlr.tryCatchFinally body catch finally'

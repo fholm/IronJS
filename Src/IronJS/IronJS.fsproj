@@ -95,9 +95,8 @@
     <Compile Include="Core.fs" />
     <Compile Include="Core.Operators.fs" />
     <Compile Include="Core.Helpers.fs" />
-    <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Ast.fs" />
-    <Compile Include="Compiler.ParserCore.fs" />
+    <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Parser.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Utils.fs" />

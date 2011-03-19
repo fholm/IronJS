@@ -7,75 +7,69 @@ open System.Globalization
 
 module Ast =  
 
-  (**)
   type BinaryOp 
-    = Add = 1 // x + y
-    | Sub = 2 // x - y
-    | Div = 3 // x / y
-    | Mul = 4 // x * y
-    | Mod = 5 // x % y
+    = Add = 1
+    | Sub = 2
+    | Div = 3
+    | Mul = 4
+    | Mod = 5
 
-    | And = 25 // x && y
-    | Or = 26 // x || y
+    | And = 25
+    | Or = 26 
 
-    | BitAnd = 50 // x & y
-    | BitOr = 51 // x | y
-    | BitXor = 53 // x ^ y
-    | BitShiftLeft = 54 // x << y
-    | BitShiftRight = 55 // x >> y
-    | BitUShiftRight = 56 // x >>> y
+    | BitAnd = 50 
+    | BitOr = 51 
+    | BitXor = 53 
+    | BitShiftLeft = 54 
+    | BitShiftRight = 55 
+    | BitUShiftRight = 56 
 
-    | Eq = 100 // x == y
-    | NotEq = 101 // x != y
-    | Same = 102 // x === y
-    | NotSame = 103 // x !== y
-    | Lt = 104 // x < y
-    | LtEq = 105 // x <= y
-    | Gt = 106 // x > y
-    | GtEq = 107 // x >= y
+    | Eq = 100 
+    | NotEq = 101
+    | Same = 102
+    | NotSame = 103 
+    | Lt = 104
+    | LtEq = 105
+    | Gt = 106
+    | GtEq = 107
+    | In = 109
+    | InstanceOf = 109
       
-  (**)
   type UnaryOp 
-    = Inc // ++x
-    | Dec // --x
-    | PostInc // x++
-    | PostDec // x--
-    | Plus // +x
-    | Minus // -x
-    
-    | Not // !x
-    | BitCmpl // ~x
+    = Inc
+    | Dec
+    | PostInc
+    | PostDec
 
-    | Void // void x
-    | Delete // delete x.y
-    | TypeOf // typeof x
+    | Plus
+    | Minus 
     
-  (**)
+    | Not
+    | BitCmpl
+
+    | Void
+    | Delete 
+    | TypeOf
+    
   type ScopeType
     = GlobalScope
     | FunctionScope
     
-  (**)
   type EvalMode
     = Clean
     | Contains
     | Effected
     
-  (**)
   type LookupMode
     = Static
     | Dynamic
     
-  (**)
   type Tree
     // Simple
     = String of string
     | Number of double
     | Boolean of bool
     | DlrExpr of Dlr.Expr
-    #if DEBUG
-    | Line of string * int
-    #endif
     | This
     | Pass
     | Null
@@ -91,7 +85,7 @@ module Ast =
     | Regex of string * string
 
     // Object
-    | Object of Tree list
+    | Object of (string * Tree) list
     | Array of Tree list
     | With of Tree * Tree
     | Property of Tree * string
@@ -118,22 +112,23 @@ module Ast =
     | Comma of Tree * Tree
 
     // Exception
-    | Try of Tree * Tree list * Tree option
+    | Try of Tree * Tree option * Tree option
     | Catch of string * Tree
-    | Finally of Tree
     | Throw of Tree
 
     //
     | Var of Tree
     | Identifier of string
     | Block of Tree list
-    | Type of uint32
+    
+    #if DEBUG
+    | Line of string * int
+    #endif
 
   and Cases 
     = Case of Tree * Tree
     | Default of Tree
 
-  (**)
   and Local = {
     Name: string
     Active: int
@@ -145,7 +140,6 @@ module Ast =
       Indexes = [|index|]
     }
   
-  (**)
   and LocalIndex = {
     Index: int
     ParamIndex: int option
@@ -157,7 +151,6 @@ module Ast =
       IsClosedOver = false
     }
     
-  (**)
   and Closure = {
     Name: string
     Index: int
@@ -171,7 +164,6 @@ module Ast =
       GlobalLevel = globalLevel
     }
     
-  (**)
   and Scope = {
     Id : uint64
 
@@ -211,7 +203,6 @@ module Ast =
       ClosedOverCount = 0
     }
 
-  (**)
   type VariableOption 
     = Global
     | Local of Local
@@ -388,7 +379,6 @@ module Ast =
       | Line _
       #endif
       | Regex(_, _)
-      | Type _
       | Pass
       | Null
       | This
@@ -402,7 +392,7 @@ module Ast =
     
       // Objects
       | Array indexes -> Array [for t in indexes -> f t]
-      | Object properties -> Object [for t in properties -> f t]
+      | Object properties -> Object [for name, value in properties -> (name, f value)]
       | Property(object', name) -> Property(f object', name)
       | Index(object', index) -> Index(f object', f index)
       | With(object', body) -> With(f object', f body)
@@ -438,12 +428,16 @@ module Ast =
         For(label, f init, f test, f incr, f body)
 
       // Exceptions
-      | Catch(name, tree) -> Catch (name, f tree)
-      | Finally body -> Finally (f body)
       | Throw tree -> Throw (f tree)
+      | Catch(identifier, tree) -> Catch(identifier, f tree)
       | Try(body, catch, finally') -> 
         let body = f body
-        let catch = [for x in catch -> f x]
+
+        let catch = 
+          match catch with
+          | Some(catch) -> Some(f catch)
+          | _ -> catch
+          
         let finally' = finally' |> Option.map f
         Try(body, catch, finally')
 
@@ -456,7 +450,6 @@ module Ast =
 
     open Utils
 
-    (**)
     let stripVarStatements tree =
       let sc = ref List.empty<Scope>
 
@@ -477,9 +470,9 @@ module Ast =
         | Var(Assign(Identifier name, value)) -> 
           addVar name; Var(Assign(Identifier name, analyze value))
 
-        | Catch(name, body) ->
+        | Catch(name, block) ->
           ScopeChain.modifyCurrent (Scope.addLocal name None) sc
-          Catch(name, analyze body)
+          Catch(name, block)
 
         | Identifier "arguments" ->
           addVar "arguments"

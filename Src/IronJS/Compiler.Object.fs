@@ -7,14 +7,8 @@ open IronJS.Dlr
 open IronJS.Dlr.Operators
 open IronJS.Dlr.ExtensionMethods
 
-(*
-//
-*)
 module Object =
-  
-  (*  
-  //
-  *)
+
   module Property = 
 
     //
@@ -66,9 +60,6 @@ module Object =
         [call tmp "Delete" [name]]
       )
    
-  (*  
-  //
-  *)
   module Index =
   
     //
@@ -101,7 +92,7 @@ module Object =
           let args = [index; Utils.normalizeVal value]
           [Dlr.call tmp "Put" args; value]
         )
-         
+        
       else
         putConvert expr index value None
 
@@ -169,7 +160,7 @@ module Object =
             | value -> value
 
           let value = ctx.Compile value
-          let index = !!!(uint32 i)
+          let index = !!!(i |> uint32)
 
           tmp |> Index.put index value
         ) indexes) |> blockSimple
@@ -181,16 +172,11 @@ module Object =
   let literalObject (ctx:Ctx) properties =
     let newExpr = ctx.Env.CallMember("NewObject")
 
-    let setProperty tmp assign =
-      match assign with
-      | Ast.Assign(Ast.String name, expr) -> 
-        let value = ctx.Compile expr
-        let name = name.Trim('"')
-        tmp |> Property.put !!!name value
-
-      | _ -> failwithf "Que? %A" assign
+    let setProperty tmp (name:string, value) =
+      let value = ctx.Compile value
+      tmp |> Property.put !!!name value
 
     Dlr.blockTmpT<CO> (fun tmp -> 
-      let initExprs = List.map (setProperty tmp) properties
+      let initExprs = properties |> List.map (setProperty tmp)
       (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList
     )

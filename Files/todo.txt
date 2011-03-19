@@ -1,7 +1,9 @@
-﻿* Support for defining variables in eval
+﻿Internal todo-list
+
+* Support for defining variables in eval
 * Implement missing functionality in Array object
 * Implement Dynamic Language Runtime bindings for CLR objects
+* Unify the error handling to one exception heriarchy
 * Make all internal methods respect DontDelete, ReadOnly and DontEnum
 * Remove the current limitation of max four arguments for function calls
 * Adding unit tests for the whole ECMA-262 (3rd edition) spec
-* Replace the generated ANTLR parser with a pure F# implementation

@@ -2,6 +2,7 @@
 
 * Major API refactoring moving all Module/Functions located in Api.fs to their appropiate classes in Core.fs instead
 * Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
+* Removed the dependancy of Microsoft.Dynamic.dll for CLR4 projects
 * Implemented the Date object
 * Implemented the RegExp object
 * Implemented missing functionality on String.prototype (match, split, search, replace)
@@ -11,4 +12,6 @@
 * Implemented dynamic invoke operators for calling IronJS functions with an unknown amount of arguments
 * Renamed ObjectClass to "Schema" and split out the dynamic functionallity into it's own DynamicSchema class
 * Replaced the FunctionCompiler class with an F# function with the signature IronJS.FunctionObject -> System.Type -> #Delegate
-* A lot of smaller improvements to code stability, readability and ECMA3 conformance.
+* A lot of smaller improvements to code stability, readability and ECMA3 conformance
+* Added debug constructs in big parts of the codebase that only gets compiled when the DEBUG flag is set
+* Refactored several constructors in the IronJS.Ast.Tree union to be more obvious

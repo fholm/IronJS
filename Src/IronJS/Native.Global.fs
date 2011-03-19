@@ -12,7 +12,7 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String ->
 
-      let ast = Parsers.Ecma3.parse target.Function.Env target.Target.String "EVAL"
+      let ast = target.Function.Env |> Parser.parse target.Target.String
       let scope = {Ast.Scope.New with Closures=target.Closures}
       let tree = Ast.Function(None, scope, ast)
       let levels = Some(target.GlobalLevel, target.ClosureLevel)

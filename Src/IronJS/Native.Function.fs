@@ -17,8 +17,8 @@ module Function =
             |> String.concat ", "
           args, body
 
-      let func = sprintf "(function(){ return function(%s){%s}; })();" args body
-      let tree = Parsers.Ecma3.parseGlobalSource f.Env func
+      let source = sprintf "(function(){ return function(%s){%s}; })();" args body
+      let tree = source |> Compiler.Parser.parseGlobalSource f.Env
       let analyzed = Ast.Analyzers.applyDefault tree None
       let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
       (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject

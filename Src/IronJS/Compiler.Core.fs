@@ -20,10 +20,12 @@ module Core =
     | Ast.Number n -> Dlr.constant n
     | Ast.Boolean b -> Dlr.constant b
     | Ast.DlrExpr expr -> expr
+    #if DEBUG
     | Ast.Line (file, line) ->
       let line = Dlr.call !!!line "ToString" []
       let concat = Dlr.callStaticT<String> "Concat" [!!!file; !!!": "; line]
       Dlr.callStaticT<Console> "WriteLine" [concat]
+    #endif
 
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast

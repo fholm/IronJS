@@ -22,7 +22,6 @@ module Aliases =
   type MutableSet<'a> = HashSet<'a>
   
   type ConcurrentMutableDict<'k, 'v> = ConcurrentDictionary<'k, 'v>
-  type AntlrToken = Antlr.Runtime.Tree.CommonTree
 
   let anyNumber = NumberStyles.Any
   let invariantCulture = CultureInfo.InvariantCulture
@@ -109,10 +108,6 @@ module Errors =
 
   let syntaxError line col =
     compiler (sprintf "Syntax Error at line %i after column %i" line col)
-
-  let noParserForToken (token:Aliases.AntlrToken) =
-    let name = Xebic.ES3.ES3Parser.tokenNames.[token.Type]
-    compiler (sprintf "No parser for token %s (%i)" name token.Type)
 
   let emptyChildrenList () =
     compiler "No children exists for node"

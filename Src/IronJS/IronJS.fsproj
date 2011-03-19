@@ -46,7 +46,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile />
+    <DocumentationFile>bin\Debug\IronJS.XML</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -95,7 +95,9 @@
     <Compile Include="Core.fs" />
     <Compile Include="Core.Operators.fs" />
     <Compile Include="Core.Helpers.fs" />
+    <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Ast.fs" />
+    <Compile Include="Compiler.ParserCore.fs" />
     <Compile Include="Compiler.Parser.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Utils.fs" />
@@ -130,8 +132,6 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\FSKit\Src\FSKit.fsproj">
       <Name>FSKit</Name>
       <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>

@@ -8,31 +8,19 @@ module Main =
   open IronJS.Compiler.Core
 
   let main () =
-    
-    let ctx = Hosting.Context.Create()
-    ctx.Execute @"var foo = {}" |> ignore
-    ctx.Execute @"delete foo;" |> ignore
+    #if DEBUG
+    #else
+    System.Threading.Thread.CurrentThread.Priority <- System.Threading.ThreadPriority.Highest
+    #endif
 
-    (*
-    let console = Seq.initInfinite (fun _ -> printf ">>> "; Console.ReadLine())
-    
-    let isDone = ref false
-    let runAndPrint cmd = 
-      cmd |> ctx.Execute
-          |> IronJS.Utils.box
-          |> TypeConverter2.ToString
-          |> printfn "%s"
+    let ctx = IronJS.Hosting.Context.Create()
+    let src = IO.File.ReadAllText(@"jquery.js");
+    src |> IronJS.Compiler.Parser.parseGlobalSource ctx.Environment |> ignore
 
-      !isDone
-    
-    let exit = new Action(fun () -> isDone := true)
-    let exit = IronJS.Native.Utils.createHostFunction ctx.Environment exit
-    ctx.Environment.Globals.Put("exit", exit);
+    FSKit.Perf.time "IronJS" (fun () ->
+      src |> IronJS.Compiler.Parser.parseGlobalSource ctx.Environment |> ignore
+    )
 
-    printfn "IronJS v%s" IronJS.Version.String
-    printfn "Call exit() to quit"
-
-    console |> Seq.find runAndPrint |> ignore
-    *)
+    Console.ReadLine() |> ignore
 
   main() |> ignore

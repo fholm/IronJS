@@ -3,7 +3,6 @@
 open IronJS
 open IronJS.Support.Aliases
 
-open Antlr.Runtime
 open System.Globalization
 
 module Ast =  
@@ -118,6 +117,10 @@ module Ast =
     | Switch of Tree * Tree list
     | Case of Tree list * Tree
     | Default of Tree
+    | Comma of Tree * Tree
+
+    // New switch tree
+    | Switch2 of Tree * Cases list
 
     // Exception
     | Try of Tree * Tree list * Tree option
@@ -130,6 +133,10 @@ module Ast =
     | Identifier of string
     | Block of Tree list
     | Type of uint32
+
+  and Cases 
+    = NewCase of Tree * Tree
+    | NewDefault of Tree
 
   (**)
   and Local = {
@@ -622,7 +629,7 @@ module Ast =
 
         | Identifier name ->
 
-          match !sc|> List.tail|> List.tryPick (Scope.tryGetVariable name) with
+          match !sc |> List.tail |> List.tryPick (Scope.tryGetVariable name) with
           | Some(scope, Local local) ->
             let cl = scope.ClosureLevel
             let gl = scope.GlobalLevel

@@ -112,7 +112,7 @@ module Hosting =
     member x.GlobalFunc = globalFunc
 
     member x.CompileFile fileName =
-      let tree = Parsers.Ecma3.parseGlobalFile env fileName
+      let tree = fileName |> Compiler.Parser.parseGlobalFile x.Environment  
       let analyzed = Ast.Analyzers.applyDefault tree None
 
       #if DEBUG
@@ -122,7 +122,7 @@ module Hosting =
       Compiler.Core.compileAsGlobal env analyzed
 
     member x.CompileSource source =
-      let tree = Parsers.Ecma3.parseGlobalSource env source
+      let tree = source |> Compiler.Parser.parseGlobalSource x.Environment
       let analyzed = Ast.Analyzers.applyDefault tree None
 
       #if DEBUG

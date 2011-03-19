@@ -1352,26 +1352,21 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 //  
 *)
 and ArgLink = byte * int
-and [<AllowNullLiteral>] ArgumentsObject =
-  inherit ArrayObject
+and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array, locals, closedOver) as x =
+  inherit ArrayObject(env, linkMap.Length |> uint32)
   
-  val mutable Locals : Scope
-  val mutable ClosedOver : Scope
+  
+  [<DefaultValue>] val mutable Locals : Scope
+  [<DefaultValue>] val mutable ClosedOver : Scope
+  [<DefaultValue>] val mutable LinkMap : ArgLink array
+  [<DefaultValue>] val mutable LinkIntact : bool
 
-  val mutable LinkMap : ArgLink array
-  val mutable LinkIntact : bool
+  do
+    x.Locals <- locals
+    x.ClosedOver <- closedOver
+    x.LinkMap <- linkMap
+    x.LinkIntact <- true
     
-  //----------------------------------------------------------------------------
-  private new (env:Environment, linkMap:ArgLink array, locals, closedOver) = { 
-    inherit ArrayObject(env, linkMap.Length |> uint32)
-
-    Locals = locals
-    ClosedOver = closedOver
-
-    LinkMap = linkMap
-    LinkIntact = true
-  }
-
   //----------------------------------------------------------------------------
   static member New(env, linkMap, locals, closedOver) : ArgumentsObject =
     let x = new ArgumentsObject(env, linkMap, locals, closedOver)
@@ -1392,7 +1387,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
       | _ -> failwith "Que?"
 
-  override x.Put(index:uint32, value:BoxedValue) =
+  override x.Put(index:uint32, value:BoxedValue) : unit =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length then
@@ -1403,7 +1398,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
     base.Put(index, value)
 
-  override x.Put(index:uint32, value:double) =
+  override x.Put(index:uint32, value:double) : unit =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length then
@@ -1414,7 +1409,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
     base.Put(index, value)
 
-  override x.Put(index:uint32, value:Object, tag:uint32) =
+  override x.Put(index:uint32, value:Object, tag:uint32) : unit =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length then
@@ -1431,7 +1426,7 @@ and [<AllowNullLiteral>] ArgumentsObject =
 
     base.Put(index, value, tag)
 
-  override x.Get(index:uint32) =
+  override x.Get(index:uint32) : BV =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length then
@@ -1447,14 +1442,14 @@ and [<AllowNullLiteral>] ArgumentsObject =
     else
       base.Get(index)
 
-  override x.Has(index:uint32) =
+  override x.Has(index:uint32) : bool =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length 
       then true
       else base.Has(index)
 
-  override x.Delete(index:uint32) =
+  override x.Delete(index:uint32) : bool =
     let ii = int index
 
     if x.LinkIntact && ii < x.LinkMap.Length then

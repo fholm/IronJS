@@ -123,9 +123,6 @@
     <Compile Include="Hosting.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Antlr3.Runtime">
-      <HintPath>..\..\Lib\Antlr3.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Dynamic">
       <HintPath>..\..\Lib\CLR4\Microsoft.Dynamic.dll</HintPath>
     </Reference>
@@ -133,9 +130,6 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Xebic.ES3">
-      <HintPath>..\..\Lib\CLR4\Xebic.ES3.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FSKit\Src\FSKit.fsproj">

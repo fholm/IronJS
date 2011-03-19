@@ -472,7 +472,7 @@ module Ast =
 
         | Catch(name, block) ->
           ScopeChain.modifyCurrent (Scope.addLocal name None) sc
-          Catch(name, block)
+          Catch(name, analyze block)
 
         | Identifier "arguments" ->
           addVar "arguments"

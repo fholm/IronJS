@@ -568,7 +568,7 @@ module Parser =
         p |> consume
         p |> expect S.Colon
 
-        let case = Cases.NewDefault(p |> parseCaseBody [])
+        let case = Cases.Default(p |> parseCaseBody [])
         p |> parseCases (case :: acc)
 
       | S.Case ->
@@ -578,7 +578,7 @@ module Parser =
         let test = p |> anyExpression
         p |> expect S.Colon 
 
-        let case = Cases.NewCase(test, p |> parseCaseBody [])
+        let case = Cases.Case(test, p |> parseCaseBody [])
         p |> parseCases (case :: acc)
 
       | _ ->
@@ -596,7 +596,7 @@ module Parser =
     p |> expect S.LeftBrace
 
     // Parse all cases
-    Tree.Switch2(valueExpr, p |> parseCases [])
+    Tree.Switch(valueExpr, p |> parseCases [])
 
   /// Implements: 12.5 The if Statement
   let rec if' _ p =

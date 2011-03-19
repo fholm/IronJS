@@ -114,13 +114,8 @@ module Ast =
     | Continue of string option
     | IfElse of Tree * Tree * Tree option
     | Ternary of Tree * Tree * Tree
-    | Switch of Tree * Tree list
-    | Case of Tree list * Tree
-    | Default of Tree
+    | Switch of Tree * Cases list
     | Comma of Tree * Tree
-
-    // New switch tree
-    | Switch2 of Tree * Cases list
 
     // Exception
     | Try of Tree * Tree list * Tree option
@@ -135,8 +130,8 @@ module Ast =
     | Type of uint32
 
   and Cases 
-    = NewCase of Tree * Tree
-    | NewDefault of Tree
+    = Case of Tree * Tree
+    | Default of Tree
 
   (**)
   and Local = {
@@ -423,9 +418,17 @@ module Ast =
     
       // Control Flow
       | Label(label, tree) -> Label(label, f tree)
-      | Switch(test, cases) -> Switch(f test, [for c in cases -> f c])
-      | Case(tests, body) -> Case([for t in tests -> f t], f body)
-      | Default body -> Default (f body)
+      | Switch(test, cases) -> 
+        Switch(f test, 
+          [
+            for c in cases -> 
+              match c with
+              | Case(test, body) -> Case(f test, f body)
+              | Default(body) -> Default(f body)
+          ]
+        )
+
+
       | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, ifFalse |> Option.map f)
       | Ternary(test, ifTrue, ifFalse) -> Ternary(f test, f ifTrue, f ifFalse)
       | While(label, test, body) -> While(label, f test, f body)
@@ -445,6 +448,7 @@ module Ast =
         Try(body, catch, finally')
 
       // Others
+      | Comma(left, right) -> Comma(f left, f right)
       | Block trees -> Block [for t in trees -> f t]
       | Var tree -> Var (f tree)
 

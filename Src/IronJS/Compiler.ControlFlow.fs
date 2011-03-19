@@ -151,31 +151,8 @@ module ControlFlow =
 
   //----------------------------------------------------------------------------
   // 12.11 switch
-  let private switchCase (ctx:Ctx) value case =
-    match case with
-    | Ast.Case(tests, body) -> 
-      let tests = 
-        Dlr.orChain [
-          for t in tests -> 
-            let t = ctx.Compile t
-            Binary.compileExpr Ast.BinaryOp.Eq t value]
-
-      Dlr.if' tests (ctx.Compile body)
-
-    | Ast.Default body -> ctx.Compile body
-    | _ -> Support.Errors.invalidCaseNodeType()
-    
   let switch (ctx:Ctx) value cases =
-    let value = ctx.Compile value
-    let break' = Dlr.labelBreak()
-    let ctx = ctx.AddDefaultLabel break'
-
-    Dlr.blockTmp value.Type (fun tmpValue ->
-      [
-        Dlr.assign tmpValue value
-        Dlr.blockSimple [for case in cases -> switchCase ctx tmpValue case]
-        Dlr.labelExprVoid break'
-      ] |> Seq.ofList)
+    failwith "not implemented"
 
   //----------------------------------------------------------------------------
   // 12.12 labelled statements

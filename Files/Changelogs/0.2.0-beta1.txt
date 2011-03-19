@@ -1,11 +1,12 @@
 ### Changelog for 0.2.0-beta1 ###
 
 * Major API refactoring moving all Module/Functions located in Api.fs to their appropiate classes in Core.fs instead
+* Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
 * Implemented the Date object
 * Implemented the RegExp object
 * Implemented missing functionality on String.prototype (match, split, search, replace)
 * Implemented F# operators ? and ?<- for setting/getting properties on CommonObject instances
-* Implemented DLR expression operators for all common binary operators
+* Implemented operators for all common binary DLR expressions
 * Cleaned up and removed a lot of old/redundant code
 * Implemented dynamic invoke operators for calling IronJS functions with an unknown amount of arguments
 * Renamed ObjectClass to "Schema" and split out the dynamic functionallity into it's own DynamicSchema class

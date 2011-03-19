@@ -33,7 +33,7 @@ module Dlr =
   type IMetaObjProvider = IDynamicMetaObjectProvider
 
   //Defaults
-  let void' = AstUtils.Empty() :> Et
+  let void' = Et.Default(typeof<System.Void>) :> Et
   let default' typ = Et.Default(typ) :> Et
   let defaultT<'a> = default' typeof<'a>
   let null' = defaultT<System.Object>
@@ -309,20 +309,29 @@ module Dlr =
   let ifElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
   let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
 
+  let loop_ test incr body break' (continue':Label) =
+    let test = ifElse test void' (Et.Break break')
+    let continue' = Et.Label(continue') :> Et
+
+    Et.Loop(
+      (Et.Block [test; body; continue'; incr]),
+      break'
+    ) :> Et
+
   let for' init test incr body break' continue' = 
     blockSimple [
       (init)
-      (AstUtils.Loop(test, incr, body, void', break', continue'))]
+      (loop_ test incr body break' continue')]
 
   let while' test body break' continue' = 
-    AstUtils.Loop(test, void', body, void', break', continue') :> Expr
+    loop_ test void' body break' continue'
 
   let doWhile test body breakLbl continueLbl =
     let body = blockSimple [body; ifElse test void' (break' breakLbl)]
     Expr.Loop(body, breakLbl, continueLbl) :> Expr
 
   let loop break' continue' test body =
-    AstUtils.Loop(test, null, body, null, break', continue')
+    loop_ test void' body break' continue'
 
   let sub left right = Et.Subtract(left, right) :> Et
   let subChk left right = Et.SubtractChecked(left, right) :> Et

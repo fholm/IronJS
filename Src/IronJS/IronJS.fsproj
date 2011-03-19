@@ -125,9 +125,6 @@
     <Compile Include="Hosting.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Dynamic">
-      <HintPath>..\..\Lib\CLR4\Microsoft.Dynamic.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />

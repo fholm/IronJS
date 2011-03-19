@@ -17,17 +17,23 @@ module Dlr =
   type ExprType = ExpressionType
   type Br = BindingRestrictions
 
-  type AstUtils = Microsoft.Scripting.Ast.Utils
-  type DynamicUtils = Microsoft.Scripting.Utils.DynamicUtils
-  type ArrayUtils= Microsoft.Scripting.Utils.ArrayUtils
-  type ContractUtils = Microsoft.Scripting.Utils.ContractUtils
-  type TypeUtils = Microsoft.Scripting.Utils.TypeUtils
-  type MathUtils = Microsoft.Scripting.Utils.MathUtils
-  type EnumUtils = Microsoft.Scripting.Utils.EnumUtils
-  type ReflectionUtils = Microsoft.Scripting.Utils.ReflectionUtils
-  type StringUtils = Microsoft.Scripting.Utils.StringUtils
-  type CollectionUtils = Microsoft.Scripting.Utils.CollectionUtils
-  type ExceptionUtils = Microsoft.Scripting.Utils.ExceptionUtils
+  module ArrayUtils =
+    
+    let RemoveLast (a:'a array) =
+      let newArray = Array.zeroCreate<'a> (a.Length-1)
+      System.Array.Copy(a, newArray, newArray.Length)
+      newArray
+
+    let RemoveFirst (a:'a array) =
+      let newArray = Array.zeroCreate<'a> (a.Length-1)
+      System.Array.Copy(a, 1, newArray, 0, newArray.Length)
+      newArray
+
+    let Insert (v:'a) (a:'a array) =
+      let newArray = Array.zeroCreate<'a> (a.Length+1)
+      System.Array.Copy(a, 0, newArray, 1, a.Length)
+      newArray.[0] <- v
+      newArray
 
   type MetaObj = DynamicMetaObject
   type IMetaObjProvider = IDynamicMetaObjectProvider

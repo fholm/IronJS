@@ -13,8 +13,10 @@ open IronJS.Compiler
 open IronJS.Compiler.Lexer
 
 module Parser =
+  #if ONEPASS
   type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
   type private List<'a> = System.Collections.Generic.List<'a>
+  #endif
 
   type State = {
     Env : Env
@@ -40,8 +42,6 @@ module Parser =
 
     #if ONEPASS
     ScopeChain : Scope ref list ref
-    MissingClosures : Dict<string, List<Scope ref>>
-    ContainedScopes : Dict<uint64, List<Scope ref>>
     #endif
   } 
     #if DEBUG
@@ -151,8 +151,6 @@ module Parser =
 
     #if ONEPASS
     ScopeChain = ref []
-    MissingClosures = null
-    ContainedScopes = null
     #endif
   }
   
@@ -1069,25 +1067,6 @@ module Parser =
     // Build the current scope
     let scope = p |> buildScope
 
-    // Add a contained scopes lists for the just constructed scope
-    p.ContainedScopes.[scope.Value.Id] <- new List<Scope ref>()
-
-    // Add the current scope to it's parent
-    // scopes contained scopes list, this is
-    // used for resolving closures to variables
-    // that are defined after a function itself
-    // 
-    // In the below example, foo should return
-    // the value of bar ("hello world") even
-    // though it's defined before bar
-    //
-    // var foo = function () { print(bar); };
-    // var bar = "hello world!";
-    // foo();
-
-    for s in !(p |> schain) do
-      p.ContainedScopes.[s.Value.Id].Add(scope)
-
     // Parse the body within it's enclosing scope chain
     p |> schain |> AnalyzersFastUtils.ScopeChain.push scope
     let body = p |> block
@@ -1285,12 +1264,6 @@ module Parser =
   let parse (source:string) (env:Env) =
     let lexer = source |> Lexer.create
     let globalScope = ref {Ast.Scope.NewGlobal with GlobalLevel = 0}
-    
-    let containedScopes = 
-      let dict = new Dict<uint64, List<Scope ref>>()
-      dict.Add(globalScope.Value.Id, new List<Scope ref>())
-      dict
-      
     let globalAst = 
       {parserDefinition with 
         Env = env
@@ -1300,10 +1273,7 @@ module Parser =
 
         #if ONEPASS
         ScopeChain = ref [globalScope]
-        ContainedScopes = containedScopes
-        MissingClosures = new Dict<string, List<Scope ref>>()
         #endif
-
       } |> statementList |> Tree.Block
 
     Tree.FunctionFast(None, globalScope, globalAst)

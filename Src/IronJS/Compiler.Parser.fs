@@ -14,7 +14,6 @@ open IronJS.Compiler.Lexer
 
 module Parser =
 
-  module S = Symbol
 
   type State = {
     Env : Env
@@ -24,7 +23,7 @@ module Parser =
 
     // It's just so much faster
     // to use mutable values 
-    // then creating a new T
+    // then creating a new State
     // object for each token consumed
     mutable Token : Token
     mutable EndExpression : bool
@@ -41,7 +40,7 @@ module Parser =
     #if DEBUG
     with
     member x.TokenName = 
-      let s, _, _, _ = x.Token in s |> S.getName
+      let s, _, _, _ = x.Token in s |> Symbol.getName
 
     member x.TokenValue = 
       let _, v, _, _ = x.Token in v
@@ -52,6 +51,9 @@ module Parser =
     member x.TokenColumn = 
       let _, _, _, c = x.Token in c
     #endif
+
+  type P = State
+  module S = Symbol
 
   (*
     Creates a string error snippet 
@@ -145,8 +147,6 @@ module Parser =
   let nud (s:int) funct p = p.Null.[s] <- funct; p
   let led (s:int) funct p = p.Left.[s] <- funct; p
   let bpw (s:int) power p = p.BindingPower.[s] <- power; p
-
-  type P = State
 
   let inline symbol (s:int, _, _, _) = s
   let inline value (_, v:string, _, _) = v

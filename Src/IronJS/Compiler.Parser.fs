@@ -13,7 +13,8 @@ open IronJS.Compiler
 open IronJS.Compiler.Lexer
 
 module Parser =
-
+  type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
+  type private List<'a> = System.Collections.Generic.List<'a>
 
   type State = {
     Env : Env
@@ -36,6 +37,12 @@ module Parser =
     Null : (Token -> State -> Tree) array
     Stmt : (Token -> State -> Tree) array
     Left : (Token -> Tree -> State -> Tree) array
+
+    #if ONEPASS
+    ScopeChain : Scope ref list ref
+    MissingClosures : Dict<string, List<Scope ref>>
+    ContainedScopes : Dict<uint64, List<Scope ref>>
+    #endif
   } 
     #if DEBUG
     with
@@ -141,6 +148,12 @@ module Parser =
     Null = Array.zeroCreate<Token -> State -> Tree> 150
     Stmt = Array.zeroCreate<Token -> State -> Tree> 150
     Left = Array.zeroCreate<Token -> Tree -> State -> Tree> 150
+
+    #if ONEPASS
+    ScopeChain = ref []
+    MissingClosures = null
+    ContainedScopes = null
+    #endif
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -192,6 +205,12 @@ module Parser =
   /// Util function for converting
   /// a string to an octal value
   let toOctal (s:string) = Convert.ToInt32(s, 8)
+  
+  ///
+  let schain (p:P) = p.ScopeChain
+
+  ///
+  let cscope (p:P) = p |> schain |> Ast.AnalyzersFastUtils.ScopeChain.top
 
   /// The current tokens symbol
   let csymbol (p:P) = p.Token |> symbol
@@ -599,8 +618,12 @@ module Parser =
     | S.Catch -> 
       p |> consume
       p |> expect S.LeftParenthesis
+
       let name = p |> consumeIdentifier
+      p |> cscope |> AnalyzersFastUtils.Scope.addCatchLocal name
+
       p |> expect S.RightParenthesis
+
       let catch = Some(Catch(name, p |> block))
 
       match p |> csymbol with
@@ -1011,7 +1034,11 @@ module Parser =
       p |> expect S.LeftParenthesis
 
       // Create a new scope object
-      let scope = ref {Scope.New with Id = p.Env.NextFunctionId()}
+      let scope =
+        ref {Scope.New with 
+              Id = p.Env.NextFunctionId()
+              GlobalLevel = (!p.ScopeChain).Length
+            }
 
       // Consume tokens untill we reach a right parenthesis
       while p |> csymbol <> S.RightParenthesis do
@@ -1032,15 +1059,48 @@ module Parser =
     let name = 
       match p.Token with
       | S.Identifier, name, _, _ -> 
+        p |> cscope |> AnalyzersFastUtils.Scope.addLocal name None
         p |> consume
         Some name
 
-      | _ -> None
+      | _ ->
+        None
 
+    // Build the current scope
     let scope = p |> buildScope
-    let body = p |> block
 
-    Tree.FunctionFast(name, scope, body)
+    // Add a contained scopes lists for the just constructed scope
+    p.ContainedScopes.[scope.Value.Id] <- new List<Scope ref>()
+
+    // Add the current scope to it's parent
+    // scopes contained scopes list, this is
+    // used for resolving closures to variables
+    // that are defined after a function itself
+    // 
+    // In the below example, foo should return
+    // the value of bar ("hello world") even
+    // though it's defined before bar
+    //
+    // var foo = function () { print(bar); };
+    // var bar = "hello world!";
+    // foo();
+
+    for s in !(p |> schain) do
+      p.ContainedScopes.[s.Value.Id].Add(scope)
+
+    // Parse the body within it's enclosing scope chain
+    p |> schain |> AnalyzersFastUtils.ScopeChain.push scope
+    let body = p |> block
+    p |> schain |> AnalyzersFastUtils.ScopeChain.pop
+
+    match name with
+    | Some name -> 
+      let func = Tree.FunctionFast(Some name, scope, body)
+      p |> cscope |> AnalyzersFastUtils.Scope.addFunction func
+      Tree.Identifier name
+
+    | _ -> 
+      Tree.FunctionFast(None, scope, body)
 
   /// Implements: 12.2 Variable statement
   let var _ p =
@@ -1049,7 +1109,23 @@ module Parser =
     p |> consume
 
     let rec parseVariables (p:P) =
-      let expr = p |> expression S.Comma 0 |> Tree.Var
+      let name = p |> consumeIdentifier 
+      let identifier = Tree.Identifier name
+
+      p 
+      |> schain
+      |> Ast.AnalyzersFastUtils.ScopeChain.top
+      |> Ast.AnalyzersFastUtils.Scope.addLocal name None
+
+      let expr = 
+        match p |> csymbol with
+        | S.Assign -> 
+          p |> consume
+          let value = p |> expression S.Comma 0 
+          Tree.Assign(identifier, value) |> Tree.Var
+
+        | _ -> 
+          identifier |> Tree.Var
 
       match p |> csymbol with
       | S.Comma ->
@@ -1065,16 +1141,23 @@ module Parser =
 
     // Parse all defined variables in this var statement
     p |> parseVariables |> Tree.Block
+
+  /// Implements: 
+  let identifier t (p:P) =
+    let name = p |> consumeIdentifier
+
+    if name = "arguments" then
+      p |> cscope |> AnalyzersFastUtils.Scope.addLocal name None
+      p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
+
+    name |> Tree.Identifier  
    
   let private parserDefinition =
     create position prettyPrint
 
     (*
-    // Value Expressions
+    // Value Symbols
     *)
-
-    |> nullStmt S.Semicolon
-    |> nullStmt S.LineTerminator
 
     |> simple S.Comment Tree.Pass
     |> simple S.Null Tree.Null
@@ -1094,9 +1177,10 @@ module Parser =
     |> nud S.LeftBracket arrayLiteral
     |> nud S.LeftBrace objectLiteral
     |> nud S.Function function'
+    |> nud S.Identifier identifier
     
     (*
-    // Operator Expressions
+    // Operator Symbols
     *)
 
     // Unary operators
@@ -1177,8 +1261,11 @@ module Parser =
     |> led S.LeftParenthesis call'
 
     (*
-    // Statements
+    // Statement Symbols
     *)
+
+    |> nullStmt S.Semicolon
+    |> nullStmt S.LineTerminator
 
     |> smd S.Var var
     |> smd S.For for'
@@ -1197,13 +1284,29 @@ module Parser =
   /// abstract syntax tree
   let parse (source:string) (env:Env) =
     let lexer = source |> Lexer.create
+    let globalScope = ref {Ast.Scope.NewGlobal with GlobalLevel = 0}
+    
+    let containedScopes = 
+      let dict = new Dict<uint64, List<Scope ref>>()
+      dict.Add(globalScope.Value.Id, new List<Scope ref>())
+      dict
+      
+    let globalAst = 
+      {parserDefinition with 
+        Env = env
+        Source = (Some source)
+        Tokenizer = lexer
+        Token = lexer()
 
-    {parserDefinition with 
-      Env = env
-      Source = (Some source)
-      Tokenizer = lexer
-      Token = lexer()
-    } |> statementList |> Tree.Block
+        #if ONEPASS
+        ScopeChain = ref [globalScope]
+        ContainedScopes = containedScopes
+        MissingClosures = new Dict<string, List<Scope ref>>()
+        #endif
+
+      } |> statementList |> Tree.Block
+
+    Tree.FunctionFast(None, globalScope, globalAst)
 
   let parseFile env path = 
     env |> parse (path |> System.IO.File.ReadAllText)

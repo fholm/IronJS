@@ -167,7 +167,6 @@ module Ast =
     LocalCount: int
     ParamCount: int
     ClosedOverCount: int
-
   } with
     static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
     static member New = {
@@ -184,6 +183,7 @@ module Ast =
       Locals = Map.empty
       Closures = Map.empty
       Functions = Map.empty
+
       LocalCount = 0
       ParamCount = 0
       ClosedOverCount = 0
@@ -553,7 +553,7 @@ module Ast =
       let isNotParameter local = local |> isParameter |> not
 
       let decreaseActive local = 
-        if local.Active > 0
+        if local.Active > -1
           then {local with Active = local.Active-1}
           else Support.Errors.variableIndexOutOfRange()
 
@@ -570,7 +570,9 @@ module Ast =
       // Type short hand for scopes
       type private S = Scope ref
 
+      let id (s:S) = (!s).Id
       let locals (s:S) = (!s).Locals
+      let closures (s:S) = (!s).Closures
       let localCount (s:S) = (!s).LocalCount
       let paramCount (s:S) = (!s).ParamCount
       let closedOverCount (s:S) = (!s).ClosedOverCount
@@ -580,25 +582,44 @@ module Ast =
       let setContainsArguments (s:S) = 
         s := {!s with ContainsArguments=true}
 
+      let hasLocal (name:string) (s:S) = 
+        (!s).Locals |> Map.containsKey name
+
+      let tryGetLocal (name:string) (s:S) = 
+        (!s).Locals |> Map.tryFind name 
+
+      let replaceLocal (local:Local) (s:S) =
+        s := {!s with Locals = s |> locals |> Map.add local.Name local}
+
+      let hasClosure name (s:S) = 
+        s |> closures |> Map.containsKey name
+
+      let tryGetClosure name (s:S) = 
+        s |> closures|> Map.tryFind name
+
+      let addClosure (closure:Closure) (s:S) =
+        s := {!s with Closures = s |> closures |> Map.add closure.Name closure}
+
       /// Adds a new variable to the scope
       let addLocal name paramIndex (s:S) =
-        match s |> locals |> Map.tryFind name with
-        | None ->
-          let index = LocalIndex.New (s |> localCount) paramIndex
-          let local = Local.New name index
+        if s |> isFunction then
+          match s |> locals |> Map.tryFind name with
+          | None ->
+            let index = LocalIndex.New (s |> localCount) paramIndex
+            let local = Local.New name index
 
-          let paramCount = 
-            match paramIndex with
-            | None -> s |> paramCount
-            | Some index -> index + 1
+            let paramCount = 
+              match paramIndex with
+              | None -> s |> paramCount
+              | Some index -> index + 1
           
-          s := 
-            {!s with
-              LocalCount = index.Index + 1
-              ParamCount = paramCount
-              Locals = s |> locals |> Map.add name local}
+            s := 
+              {!s with
+                LocalCount = index.Index + 1
+                ParamCount = paramCount
+                Locals = s |> locals |> Map.add name local}
 
-        | _ -> ()
+          | _ -> ()
 
       /// Adds a parameter variable to the scope
       let addParameter name (s:S) =
@@ -607,7 +628,12 @@ module Ast =
       /// Adds a catch variable to the scope
       let addCatchLocal name (s:S) = 
         match s |> locals |> Map.tryFind name with
-        | None -> s |> addLocal name None
+        | None -> 
+          s |> addLocal name None
+          let local = s |> locals |> Map.find name 
+          let local = local |> Local.decreaseActive
+          s |> replaceLocal local
+
         | Some local ->
           let index = LocalIndex.New (s |> localCount) None
           let local = local |> Local.addIndex index
@@ -616,15 +642,6 @@ module Ast =
             {!s with 
               LocalCount = index.Index + 1
               Locals = s |> locals |> Map.add name local}
-
-      let hasLocal (name:string) (s:S) = 
-        (!s).Locals |> Map.containsKey name
-
-      let tryGetLocal (name:string) (s:S) = 
-        (!s).Locals |> Map.tryFind name 
-
-      let replaceLocal (local:Local) (s:S) =
-        s := {!s with Locals = (!s).Locals |> Map.add local.Name local}
 
       let increaseLocalIndex name (s:S) =
         match s |> tryGetLocal name with
@@ -670,6 +687,17 @@ module Ast =
 
           | _ -> 
             ()
+
+      let addFunction (ast:Tree) (s:S) =
+        match ast with
+        | FunctionFast(Some name, _, _) ->
+          s := 
+            {!s with 
+              Functions = (!s).Functions |> Map.add name ast
+            }
+
+        | _ ->
+          failwith "AST is not a named function"
 
     module ScopeChain = 
 
@@ -719,8 +747,9 @@ module Ast =
             sc |> addLocal "arguments"
             sc |> ScopeChain.top |> Scope.setContainsArguments
 
-        | Catch(name, _) ->
+        | Catch(name, body) ->
           sc |> ScopeChain.top |> Scope.addCatchLocal name
+          body |> findVariables
 
         | _ ->
           ast |> Utils.traverseAst findVariables
@@ -939,7 +968,7 @@ module Ast =
           Eval source
 
         | Identifier name ->
-
+          
           match !sc |> List.tail |> List.tryPick (Scope.tryGetVariable name) with
           | Some(scope, Local local) ->
             let cl = scope.ClosureLevel

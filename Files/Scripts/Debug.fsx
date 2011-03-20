@@ -6,27 +6,29 @@
 open System
 open IronJS
 
+IO.Directory.SetCurrentDirectory(@"E:\Projects\IronJS\Src\Tools\REPL")
+
 let ctx = Hosting.Context.Create()
-let ast = 
-  IronJS.Compiler.Parser.parse "
-    
-    function foo(a, b) {
-      var z;
+//let jquery = IO.File.ReadAllText(@"jquery.js")
+let source = @"
+  function foo(a, b) {
+    var y = 3;
 
-      try {
-        
-      } catch(z) {
-        function bar() {
-          return z + b;
-        }
-      }
+    function bar(c, d) {
+      var z = y;
+      return a + b + c;
     }
+  }
+"
+let ast = IronJS.Compiler.Parser.parse source ctx.Environment
 
-  " ctx.Environment
+let test () =
+  let ast = IronJS.Compiler.Parser.parse source ctx.Environment
+  let global' = Ast.Tree.FunctionFast(None, ref Ast.Scope.NewGlobal, ast)
 
-let global' = Ast.Tree.FunctionFast(None, ref Ast.Scope.NewGlobal, ast)
+  IronJS.Ast.AnalyzersFast.findVariables global'
+  IronJS.Ast.AnalyzersFast.findClosedOverLocals global'
 
-IronJS.Ast.AnalyzersFast.findVariables global'
-IronJS.Ast.AnalyzersFast.findClosedOverLocals global'
+  ()
 
-let result = global'
+//test ()

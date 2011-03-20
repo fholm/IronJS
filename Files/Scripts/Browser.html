@@ -4,15 +4,13 @@
         <script type="text/javascript">
 
 
-    (function () {
-        $ERROR = alert;
-        var object = { valueOf: function () { return "-2" }, toString: function () { return -2 } };
-        alert(+object);
-        alert(+("-1"))
-        if (object < "-1") {
-            $ERROR('#2: var object = {valueOf: function() {return "-2"}, toString: function() {return -2}}; object < "-1"');
-        }
-    })();
+            (function () {
+
+                var foo = function () { print(bar); };
+                var bar = "hello world!";
+                foo();
+
+            })();
 
         </script>
     </head>

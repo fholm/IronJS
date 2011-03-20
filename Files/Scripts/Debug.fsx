@@ -7,9 +7,26 @@ open System
 open IronJS
 
 let ctx = Hosting.Context.Create()
+let ast = 
+  IronJS.Compiler.Parser.parse "
+    
+    function foo(a, b) {
+      var z;
 
-IronJS.Compiler.Parser.parse "
-  
-  var z = 1, y;
+      try {
+        
+      } catch(z) {
+        function bar() {
+          return z + b;
+        }
+      }
+    }
 
-" ctx.Environment
+  " ctx.Environment
+
+let global' = Ast.Tree.FunctionFast(None, ref Ast.Scope.NewGlobal, ast)
+
+IronJS.Ast.AnalyzersFast.findVariables global'
+IronJS.Ast.AnalyzersFast.findClosedOverLocals global'
+
+let result = global'

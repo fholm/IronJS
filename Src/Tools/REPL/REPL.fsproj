@@ -91,14 +91,13 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="Program.fs" />
+    <Content Include="jquery.js" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
       <Name>FSKit</Name>
       <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>

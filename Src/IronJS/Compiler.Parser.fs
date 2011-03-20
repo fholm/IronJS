@@ -1011,16 +1011,12 @@ module Parser =
       p |> expect S.LeftParenthesis
 
       // Create a new scope object
-      let mutable scope = 
-        {Scope.New with Id = p.Env.NextFunctionId()}
+      let scope = ref {Scope.New with Id = p.Env.NextFunctionId()}
 
       // Consume tokens untill we reach a right parenthesis
       while p |> csymbol <> S.RightParenthesis do
         let name = p |> consumeIdentifier
-        let index = Some scope.ParamCount
-
-        scope <- 
-          scope |> Utils.Scope.addLocal name index
+        scope |> Ast.AnalyzersFastUtils.Scope.addParameter name
 
         match p |> csymbol with
         | S.Comma -> p |> consume
@@ -1044,7 +1040,7 @@ module Parser =
     let scope = p |> buildScope
     let body = p |> block
 
-    Tree.Function(name, scope, body)
+    Tree.FunctionFast(name, scope, body)
 
   /// Implements: 12.2 Variable statement
   let var _ p =

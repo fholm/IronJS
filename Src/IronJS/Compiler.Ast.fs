@@ -528,39 +528,237 @@ module Ast =
 
   module AnalyzersFastUtils =
     
+    module Local =
+      
+      //
+      module Index =
+
+        let isParam index = index.ParamIndex |> Option.isSome
+        let isNotParam index = index |> isParam |> not
+
+      //
+      let private activeIndex (local:Local) =
+        if local.Active >= local.Indexes.Length || local.Active < 0 then 
+          Support.Errors.variableIndexOutOfRange()
+
+        local.Indexes.[local.Active]
+
+      let addIndex index local =
+        {local with Indexes = local.Indexes |> FSKit.Array.appendOne index}
+
+
+      let index local = (local |> activeIndex).Index
+      let isClosedOver local = (local |> activeIndex).IsClosedOver
+      let isParameter local = local |> activeIndex |> Index.isParam
+      let isNotParameter local = local |> isParameter |> not
+
+      let decreaseActive local = 
+        if local.Active > 0
+          then {local with Active = local.Active-1}
+          else Support.Errors.variableIndexOutOfRange()
+
+      let increaseActive local = 
+        if local.Active+1 < local.Indexes.Length
+          then {local with Active = local.Active+1} 
+          else Support.Errors.variableIndexOutOfRange()
+
+      let updateActive index (local:Local) =
+        local.Indexes.[local.Active] <- index
+
     module Scope =
       
       // Type short hand for scopes
       type private S = Scope ref
 
+      let locals (s:S) = (!s).Locals
+      let localCount (s:S) = (!s).LocalCount
+      let paramCount (s:S) = (!s).ParamCount
+      let closedOverCount (s:S) = (!s).ClosedOverCount
       let isFunction (s:S) = (!s).ScopeType = FunctionScope
+      let isGlobal (s:S) = (!s).ScopeType = GlobalScope
+
+      let setContainsArguments (s:S) = 
+        s := {!s with ContainsArguments=true}
+
+      /// Adds a new variable to the scope
+      let addLocal name paramIndex (s:S) =
+        match s |> locals |> Map.tryFind name with
+        | None ->
+          let index = LocalIndex.New (s |> localCount) paramIndex
+          let local = Local.New name index
+
+          let paramCount = 
+            match paramIndex with
+            | None -> s |> paramCount
+            | Some index -> index + 1
+          
+          s := 
+            {!s with
+              LocalCount = index.Index + 1
+              ParamCount = paramCount
+              Locals = s |> locals |> Map.add name local}
+
+        | _ -> ()
+
+      /// Adds a parameter variable to the scope
+      let addParameter name (s:S) =
+        s |> addLocal name (s |> paramCount |> Some)
+
+      /// Adds a catch variable to the scope
+      let addCatchLocal name (s:S) = 
+        match s |> locals |> Map.tryFind name with
+        | None -> s |> addLocal name None
+        | Some local ->
+          let index = LocalIndex.New (s |> localCount) None
+          let local = local |> Local.addIndex index
+
+          s := 
+            {!s with 
+              LocalCount = index.Index + 1
+              Locals = s |> locals |> Map.add name local}
+
+      let hasLocal (name:string) (s:S) = 
+        (!s).Locals |> Map.containsKey name
+
+      let tryGetLocal (name:string) (s:S) = 
+        (!s).Locals |> Map.tryFind name 
+
+      let replaceLocal (local:Local) (s:S) =
+        s := {!s with Locals = (!s).Locals |> Map.add local.Name local}
+
+      let increaseLocalIndex name (s:S) =
+        match s |> tryGetLocal name with
+        | Some local -> s |> replaceLocal (local |> Local.increaseActive)
+        | _ -> failwithf "Missing local variables %s" name
+
+      let decreaseLocalIndex name (s:S) =
+        match s |> tryGetLocal name with
+        | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
+        | _ -> failwithf "Missing local variables %s" name
+
+      let closeOverLocal name (s:S) =
+
+        let decrementLocalIndexes topIndex (s:S) =
+        
+          let decreaseIndex (i:LocalIndex) =
+            if i.IsClosedOver || i.Index < topIndex
+              then i 
+              else {i with Index=i.Index-1}
+
+          let decreaseLocal _ (l:Local) =
+            {l with Indexes = l.Indexes |> Array.map decreaseIndex}
+
+          s := {!s with Locals = (!s).Locals |> Map.map decreaseLocal}
+
+        match s |> tryGetLocal name with
+        | None -> Support.Errors.missingVariable name
+        | Some (local:Local) ->
+          match local.Indexes.[local.Active] with
+          | active when active.IsClosedOver |> not ->
+            let localIndex = active.Index
+            let closedOverIndex = (s |> closedOverCount) + 1
+            let closedOver = {active with IsClosedOver=true; Index=closedOverIndex}
+
+            s := 
+              {!s with
+                ClosedOverCount = closedOverIndex
+                LocalCount = (s |> localCount) - 1
+              }
+
+            local |> Local.updateActive closedOver
+            s |> decrementLocalIndexes localIndex
+
+          | _ -> 
+            ()
 
     module ScopeChain = 
 
       // Type shorthand for scope chains
       type private C = Scope ref list ref
 
-      let current (c:C) = (!c).Head
+      let top (c:C) = (!c).Head
       let push s (c:C) = c := (s :: !c)
       let pop (c:C) = c := (!c).Tail
 
   module AnalyzersFast =
     
     open AnalyzersFastUtils
+    
+    let private addLocal name sc =
+      let scope = sc |> ScopeChain.top
+      if scope |> Scope.isFunction
+        then scope |> Scope.addLocal name None
 
-    let findVariablesFast (ast:Tree) =
+    let findVariables (ast:Tree) =
       let sc = ref List.empty<Scope ref>
 
       let rec findVariables (ast:Tree) =
         
-        match tree with
+        match ast with
         | FunctionFast(name, scope, body) ->
+
+          // If the function is named we should
+          // add it as a variable to the current scope
           match name with
-          | Some name ->
-             
+          | Some name -> 
+            sc |> addLocal name
+
           | _ -> ()
 
+          // Process the function body inside it's scope
+          sc |> ScopeChain.push scope
+          body |> findVariables
+          sc |> ScopeChain.pop
+          
+        | Var(Identifier name)
+        | Var(Assign(Identifier name, _)) ->
+          sc |> addLocal name
+
+        | Identifier "arguments" ->
+          if sc |> ScopeChain.top |> Scope.isFunction then
+            sc |> addLocal "arguments"
+            sc |> ScopeChain.top |> Scope.setContainsArguments
+
+        | Catch(name, _) ->
+          sc |> ScopeChain.top |> Scope.addCatchLocal name
+
+        | _ ->
+          ast |> Utils.traverseAst findVariables
+
       ast |> findVariables
+
+    let findClosedOverLocals (ast:Tree) =
+      let sc = ref List.empty<Scope ref>
+
+      let rec findClosedOver (ast:Tree) =
+        match ast with 
+        | FunctionFast(_, scope, body) ->
+          sc |> ScopeChain.push scope
+          body |> findClosedOver
+          sc |> ScopeChain.pop
+
+        | Catch(name, body) ->
+          sc |> ScopeChain.top |> Scope.increaseLocalIndex name
+          body |> findClosedOver
+          sc |> ScopeChain.top |> Scope.decreaseLocalIndex name
+
+        | Identifier name ->
+          match sc |> ScopeChain.top |> Scope.tryGetLocal name with
+          | Some _ -> () // This is a local variable in the current scope
+          | _ ->
+            match !sc |> List.tryFind (Scope.hasLocal name) with
+            | None -> () // Global variables
+            | Some s -> s |> Scope.closeOverLocal name
+
+        | Invoke(Identifier "eval", _::_) ->
+          for s in !sc do
+            for kvp in (s |> Scope.locals) do
+              s |> Scope.closeOverLocal kvp.Key
+
+        | _ ->
+          ast |> Utils.traverseAst findClosedOver
+
+      ast |> findClosedOver
 
   module Analyzers = 
 

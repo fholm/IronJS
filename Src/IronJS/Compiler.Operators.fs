@@ -125,7 +125,7 @@ module Binary =
   open IronJS.Ast
 
   //----------------------------------------------------------------------------
-  let compileExpr op (l:Dlr.Expr) r =
+  let compileExpr (ctx:Ctx) op (l:Dlr.Expr) r =
     match op with
     | BinaryOp.Add -> Operators.add(l, r)
     | BinaryOp.Sub -> Operators.sub(l, r)
@@ -152,25 +152,16 @@ module Binary =
     | BinaryOp.Gt -> Operators.gt(l, r)
     | BinaryOp.GtEq -> Operators.gtEq(l, r)
 
+    | BinaryOp.In -> Operators.in'(ctx.Env, l, r)
+    | BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l, r)
+
     | _ -> failwithf "Invalid BinaryOp %A" op
     
   //----------------------------------------------------------------------------
   let compile (ctx:Ctx) op left right =
     let l = ctx.Compile left |> Utils.box 
     let r = ctx.Compile right |> Utils.box
-    compileExpr op l r
-    
-  //----------------------------------------------------------------------------
-  let instanceOf (ctx:Context) left right =
-    let l = ctx.Compile left |> Utils.box 
-    let r = ctx.Compile right |> Utils.box
-    Operators.instanceOf(ctx.Env, l, r)
-    
-  //----------------------------------------------------------------------------
-  let in' (ctx:Context) left right =
-    let l = ctx.Compile left |> Utils.box 
-    let r = ctx.Compile right |> Utils.box
-    Operators.in'(ctx.Env, l, r)
+    compileExpr ctx op l r
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

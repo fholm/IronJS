@@ -32,8 +32,6 @@ module Core =
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
     | Ast.Unary(op, tree) -> compileUnary ctx op tree
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
-    | Ast.InstanceOf(left, right) -> Binary.instanceOf ctx left right
-    | Ast.In(left, right) -> Binary.in' ctx left right
 
     //Scopes
     | Ast.With(init, tree) -> Scope.with' ctx init tree

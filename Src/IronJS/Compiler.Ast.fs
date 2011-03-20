@@ -32,7 +32,7 @@ module Ast =
     | LtEq = 105
     | Gt = 106
     | GtEq = 107
-    | In = 109
+    | In = 108
     | InstanceOf = 109
       
   type UnaryOp 
@@ -80,8 +80,6 @@ module Ast =
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
     | Assign of Tree * Tree
-    | In of Tree * Tree
-    | InstanceOf of Tree * Tree
     | Regex of string * string
 
     // Object
@@ -367,6 +365,11 @@ module Ast =
     (**)
     let walkAst f tree = 
       match tree with
+      
+      #if DEBUG
+      | Line _
+      #endif
+
       // Simple
       | Identifier _
       | Boolean _
@@ -375,9 +378,6 @@ module Ast =
       | Break _
       | DlrExpr _
       | Continue _
-      #if DEBUG
-      | Line _
-      #endif
       | Regex(_, _)
       | Pass
       | Null
@@ -396,8 +396,6 @@ module Ast =
       | Property(object', name) -> Property(f object', name)
       | Index(object', index) -> Index(f object', f index)
       | With(object', body) -> With(f object', f body)
-      | In(property, object') -> In(f property,  object')
-      | InstanceOf(object', func) -> InstanceOf(f object', f func)
 
       //Functions
       | Function(name, scope, body) -> Function(name, scope, f body) 
@@ -417,7 +415,6 @@ module Ast =
               | Default(body) -> Default(f body)
           ]
         )
-
 
       | IfElse(test, ifTrue, ifFalse) -> IfElse(f test, f ifTrue, ifFalse |> Option.map f)
       | Ternary(test, ifTrue, ifFalse) -> Ternary(f test, f ifTrue, f ifFalse)

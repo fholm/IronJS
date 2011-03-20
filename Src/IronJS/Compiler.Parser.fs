@@ -14,35 +14,43 @@ open IronJS.Compiler.Lexer
 
 module Parser =
 
+  module S = Symbol
+
   type State = {
     Env : Env
     File : string option
     Source : string option
-    Tokenizer : unit -> Lexer.Token
+    Tokenizer : unit -> Token
 
     // It's just so much faster
     // to use mutable values 
     // then creating a new T
     // object for each token consumed
-    mutable Token : Lexer.Token
+    mutable Token : Token
     mutable EndExpression : bool
     mutable LineTerminatorPassed : bool
 
-    Position : Lexer.Token -> int * int
-    PrettyPrint : Lexer.Token -> string
+    Position : Token -> int * int
+    PrettyPrint : Token -> string
 
     BindingPower : int array
-    Null : (Lexer.Token -> State -> Ast.Tree) array
-    Stmt : (Lexer.Token -> State -> Ast.Tree) array
-    Left : (Lexer.Token -> Ast.Tree -> State -> Ast.Tree) array
+    Null : (Token -> State -> Tree) array
+    Stmt : (Token -> State -> Tree) array
+    Left : (Token -> Tree -> State -> Tree) array
   } 
     #if DEBUG
     with
-    member x.TokenName = let s, _, _, _ = x.Token in s |> Lexer.Symbol.getName
-    member x.TokenValue = let _, v, _, _ = x.Token in v
-    member x.TokenPosition = let _, _, l, c = x.Token in sprintf "Line: %i, Column: %i" l c
-    member x.TokenLine = let _, _, l, _ = x.Token in l
-    member x.TokenColumn = let _, _, _, c = x.Token in c
+    member x.TokenName = 
+      let s, _, _, _ = x.Token in s |> S.getName
+
+    member x.TokenValue = 
+      let _, v, _, _ = x.Token in v
+
+    member x.TokenLine = 
+      let _, _, l, _ = x.Token in l
+
+    member x.TokenColumn = 
+      let _, _, _, c = x.Token in c
     #endif
 
   (*
@@ -121,34 +129,30 @@ module Parser =
     EndExpression = false
     LineTerminatorPassed = false
 
-    Token = Unchecked.defaultof<Lexer.Token>
-    Tokenizer = Unchecked.defaultof<unit -> Lexer.Token>
+    Token = Unchecked.defaultof<Token>
+    Tokenizer = Unchecked.defaultof<unit -> Token>
     
     Position = position
     PrettyPrint = prettyPrint
     
     BindingPower = Array.zeroCreate<int> 150
-    Null = Array.zeroCreate<Lexer.Token -> State -> Ast.Tree> 150
-    Stmt = Array.zeroCreate<Lexer.Token -> State -> Ast.Tree> 150
-    Left = Array.zeroCreate<Lexer.Token -> Ast.Tree -> State -> Ast.Tree> 150
+    Null = Array.zeroCreate<Token -> State -> Tree> 150
+    Stmt = Array.zeroCreate<Token -> State -> Tree> 150
+    Left = Array.zeroCreate<Token -> Tree -> State -> Tree> 150
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
   let nud (s:int) funct p = p.Null.[s] <- funct; p
   let led (s:int) funct p = p.Left.[s] <- funct; p
   let bpw (s:int) power p = p.BindingPower.[s] <- power; p
-  
-  module S = Symbol
 
-  type Token = int * string * int * int
   type P = State
-  type T = Token
 
   let inline symbol (s:int, _, _, _) = s
   let inline value (_, v:string, _, _) = v
   let inline position (_, _, l:int, c:int) = l, c
 
-  let prettyPrint (t:T) = 
+  let prettyPrint (t:Token) = 
     match t with
     | symbol, null, _, _ -> sprintf "%s" (symbol |> S.getName)
     | symbol, value, _, _ -> sprintf "%s (%s)" (symbol |> S.getName) value
@@ -564,7 +568,7 @@ module Parser =
       match p |> anyExpression with
       // for(x in y)
       // for(x.z in y)
-      | Tree.In(target, expr) ->
+      | Tree.Binary(BinaryOp.In, target, expr) ->
         p |> expect S.RightParenthesis
         Tree.ForIn(None, target, expr, p |> block)
 
@@ -1042,26 +1046,6 @@ module Parser =
 
     Tree.Function(name, scope, body)
 
-  /// Implements: 11.8.6 The instanceof operator
-  let instanceof _ leftAst p = 
-    // Consume the instanceof token
-    p |> consume
-
-    let power = BindingPowers.Relational
-    let rightAst = p |> powerExpression power
-
-    Tree.InstanceOf(leftAst,  rightAst)
-
-  /// Implements: 11.8.7 The in operator
-  let in' _ leftAst p = 
-    // Consume the in token
-    p |> consume
-
-    let power = BindingPowers.Relational
-    let rightAst = p |> powerExpression power
-
-    Tree.In(leftAst,  rightAst)
-
   /// Implements: 12.2 Variable statement
   let var _ p =
   
@@ -1089,7 +1073,9 @@ module Parser =
   let private parserDefinition =
     create position prettyPrint
 
+    (*
     // Value Expressions
+    *)
 
     |> nullStmt S.Semicolon
     |> nullStmt S.LineTerminator
@@ -1112,8 +1098,10 @@ module Parser =
     |> nud S.LeftBracket arrayLiteral
     |> nud S.LeftBrace objectLiteral
     |> nud S.Function function'
-
+    
+    (*
     // Operator Expressions
+    *)
 
     // Unary operators
     |> unary BindingPowers.LogicalNot S.LogicalNot  UnaryOp.Not
@@ -1144,10 +1132,12 @@ module Parser =
     |> binary BindingPowers.BitwiseOr     S.BitwiseOr   BinaryOp.BitOr
 
     // Binary relational operators
-    |> binary BindingPowers.Relational S.LessThan BinaryOp.Lt
-    |> binary BindingPowers.Relational S.LessThanOrEqual BinaryOp.LtEq
-    |> binary BindingPowers.Relational S.GreaterThan BinaryOp.Gt
+    |> binary BindingPowers.Relational S.LessThan           BinaryOp.Lt
+    |> binary BindingPowers.Relational S.LessThanOrEqual    BinaryOp.LtEq
+    |> binary BindingPowers.Relational S.GreaterThan        BinaryOp.Gt
     |> binary BindingPowers.Relational S.GreaterThanOrEqual BinaryOp.GtEq
+    |> binary BindingPowers.Relational S.InstanceOf         BinaryOp.InstanceOf
+    |> binary BindingPowers.Relational S.In                 BinaryOp.In
 
     // Binary equality operators
     |> binary BindingPowers.Equality S.Equal          BinaryOp.Eq
@@ -1175,12 +1165,6 @@ module Parser =
     |> bpw S.Assign BindingPowers.Assignment
     |> led S.Assign simpleAssignment
 
-    |> bpw S.InstanceOf BindingPowers.Relational
-    |> led S.InstanceOf instanceof
-
-    |> bpw S.In BindingPowers.Relational
-    |> led S.In in'
-
     |> bpw S.Comma BindingPowers.Comma
     |> led S.Comma comma
 
@@ -1196,7 +1180,9 @@ module Parser =
     |> bpw S.LeftParenthesis BindingPowers.Call
     |> led S.LeftParenthesis call'
 
+    (*
     // Statements
+    *)
 
     |> smd S.Var var
     |> smd S.For for'

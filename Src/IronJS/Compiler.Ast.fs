@@ -65,7 +65,6 @@ module Ast =
     | Dynamic
     
   type Tree
-    // Simple
     = String of string
     | Number of double
     | Boolean of bool
@@ -74,29 +73,21 @@ module Ast =
     | Pass
     | Null
     | Undefined
-
-    // Operators
     | Convert of uint32 * Tree
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
     | Assign of Tree * Tree
     | Regex of string * string
-
-    // Object
     | Object of (string * Tree) list
     | Array of Tree list
     | With of Tree * Tree
     | Property of Tree * string
     | Index of Tree * Tree
-
-    // Function
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
     | Function of string option * Scope * Tree
     | Invoke of Tree * Tree list
-
-    // Control Flow
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
     | ForIn of string option * Tree * Tree * Tree
@@ -108,13 +99,9 @@ module Ast =
     | Ternary of Tree * Tree * Tree
     | Switch of Tree * Cases list
     | Comma of Tree * Tree
-
-    // Exception
     | Try of Tree * Tree option * Tree option
     | Catch of string * Tree
     | Throw of Tree
-
-    //
     | Var of Tree
     | Identifier of string
     | Block of Tree list
@@ -361,6 +348,98 @@ module Ast =
         let tree = f tree
         modifyCurrent (Scope.decrLocal name) sc
         tree
+
+    let traverseAst (f:Tree->unit) (ast:Tree) =
+      match ast with
+      | Identifier _
+      | Boolean _
+      | String _
+      | Number _
+      | Break _
+      | DlrExpr _
+      | Continue _
+      | Regex(_, _)
+      | Pass
+      | Null
+      | This
+      | Undefined -> ()
+       
+      | Throw t
+      | Return t
+      | Eval t 
+      | Var t
+      | Catch(_, t) 
+      | Property(t, _)
+      | Index(t, _)
+      | Unary(_, t)
+      | Label(_, t)
+      | Convert(_, t) 
+      | Function(_, _, t) -> f t
+      
+      | Comma(a, b)
+      | While(_, a, b)
+      | DoWhile(_, a, b)
+      | With(a, b)
+      | Binary(_, a, b)
+      | Assign(a, b) ->
+        f a
+        f b
+
+      | Invoke(t, xs) 
+      | New(t, xs) -> 
+        f t
+        for x in xs do f x
+
+      | Block xs
+      | Array xs -> 
+        for x in xs do f x
+
+      | ForIn(_, a, b, c)
+      | Ternary(a, b, c) -> 
+        f a 
+        f b 
+        f c
+
+      | Object xs -> 
+        for _, x in xs do f x
+
+      | Switch(t, xs) -> 
+        f t
+
+        for x in xs do
+          match x with
+          | Case(t, b) ->
+            f t
+            f b 
+
+          | Default(b) ->
+            f b
+            
+      | IfElse(a, b, c) -> 
+        f a
+        f b
+
+        match c with
+        | Some c -> f c
+        | None -> ()
+
+        
+      | For(_, a, b, c, d) ->
+        f a
+        f b
+        f c
+        f d
+ 
+      | Try(a, b, c) -> 
+        f a
+
+        match b with
+        | Some b -> f b
+        | _ -> ()
+
+        match c with
+        | Some c -> f c
+        | _ -> ()
 
     (**)
     let walkAst f tree = 

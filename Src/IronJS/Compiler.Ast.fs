@@ -87,6 +87,7 @@ module Ast =
     | New of Tree * Tree list
     | Return of Tree
     | Function of string option * Scope * Tree
+    | FunctionFast of string option * Scope ref * Tree
     | Invoke of Tree * Tree list
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
@@ -362,8 +363,9 @@ module Ast =
       | Pass
       | Null
       | This
-      | Undefined -> ()
-       
+      | Undefined -> 
+        ()
+
       | Throw t
       | Return t
       | Eval t 
@@ -374,7 +376,8 @@ module Ast =
       | Unary(_, t)
       | Label(_, t)
       | Convert(_, t) 
-      | Function(_, _, t) -> f t
+      | FunctionFast(_, _, t) -> 
+        f t
       
       | Comma(a, b)
       | While(_, a, b)
@@ -392,7 +395,8 @@ module Ast =
 
       | Block xs
       | Array xs -> 
-        for x in xs do f x
+        for x in xs do 
+          f x
 
       | ForIn(_, a, b, c)
       | Ternary(a, b, c) -> 
@@ -401,7 +405,8 @@ module Ast =
         f c
 
       | Object xs -> 
-        for _, x in xs do f x
+        for _, x in xs do
+          f x
 
       | Switch(t, xs) -> 
         f t
@@ -423,7 +428,6 @@ module Ast =
         | Some c -> f c
         | None -> ()
 
-        
       | For(_, a, b, c, d) ->
         f a
         f b
@@ -521,6 +525,42 @@ module Ast =
       | Comma(left, right) -> Comma(f left, f right)
       | Block trees -> Block [for t in trees -> f t]
       | Var tree -> Var (f tree)
+
+  module AnalyzersFastUtils =
+    
+    module Scope =
+      
+      // Type short hand for scopes
+      type private S = Scope ref
+
+      let isFunction (s:S) = (!s).ScopeType = FunctionScope
+
+    module ScopeChain = 
+
+      // Type shorthand for scope chains
+      type private C = Scope ref list ref
+
+      let current (c:C) = (!c).Head
+      let push s (c:C) = c := (s :: !c)
+      let pop (c:C) = c := (!c).Tail
+
+  module AnalyzersFast =
+    
+    open AnalyzersFastUtils
+
+    let findVariablesFast (ast:Tree) =
+      let sc = ref List.empty<Scope ref>
+
+      let rec findVariables (ast:Tree) =
+        
+        match tree with
+        | FunctionFast(name, scope, body) ->
+          match name with
+          | Some name ->
+             
+          | _ -> ()
+
+      ast |> findVariables
 
   module Analyzers = 
 

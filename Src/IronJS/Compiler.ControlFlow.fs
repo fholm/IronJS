@@ -154,7 +154,7 @@ module ControlFlow =
   let switch (ctx:Ctx) (value:Ast.Tree) (cases:Ast.Cases list) =
     let valueExpr = value |> ctx.Compile
     let valueVar = Dlr.paramT<BV> "~value"
-      
+
     let breakLabel = Dlr.labelBreak()
     let ctx = ctx.AddDefaultLabel breakLabel
     let defaultJump = ref (Dlr.jump breakLabel)
@@ -204,7 +204,7 @@ module ControlFlow =
       Dlr.block [] [for test, _ in compiledCases -> test]
 
       // Default jump, which could be either directly to
-      // break in the case of no default: case or to 
+      // break in the case of no default-case or to 
       // the default case body
       !defaultJump
 

@@ -44,10 +44,10 @@ namespace Tests.Sputnik {
     [TestMethod] public void S7_2_A4_4_T2_js() { RunFile(@"S7.2_A4.4_T2.js"); }
     [TestMethod] public void S7_2_A4_5_T1_js() { RunFile(@"S7.2_A4.5_T1.js"); }
     [TestMethod] public void S7_2_A4_5_T2_js() { RunFile(@"S7.2_A4.5_T2.js"); }
-    [TestMethod] public void S7_2_A5_T1_js() { RunFile(@"S7.2_A5_T1.js"); }
-    [TestMethod] public void S7_2_A5_T2_js() { RunFile(@"S7.2_A5_T2.js"); }
-    [TestMethod] public void S7_2_A5_T3_js() { RunFile(@"S7.2_A5_T3.js"); }
-    [TestMethod] public void S7_2_A5_T4_js() { RunFile(@"S7.2_A5_T4.js"); }
-    [TestMethod] public void S7_2_A5_T5_js() { RunFile(@"S7.2_A5_T5.js"); }
+    [TestMethod] public void S7_2_A5_T1_js() { RunFile_ExpectException(@"S7.2_A5_T1.js"); }
+    [TestMethod] public void S7_2_A5_T2_js() { RunFile_ExpectException(@"S7.2_A5_T2.js"); }
+    [TestMethod] public void S7_2_A5_T3_js() { RunFile_ExpectException(@"S7.2_A5_T3.js"); }
+    [TestMethod] public void S7_2_A5_T4_js() { RunFile_ExpectException(@"S7.2_A5_T4.js"); }
+    [TestMethod] public void S7_2_A5_T5_js() { RunFile_ExpectException(@"S7.2_A5_T5.js"); }
   }
 }

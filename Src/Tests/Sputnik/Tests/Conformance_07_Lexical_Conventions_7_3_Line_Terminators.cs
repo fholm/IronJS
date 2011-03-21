@@ -10,7 +10,7 @@ namespace Tests.Sputnik {
     [TestMethod] public void S7_3_A1_2_T2_js() { RunFile(@"S7.3_A1.2_T2.js"); }
     [TestMethod] public void S7_3_A1_3_js() { RunFile(@"S7.3_A1.3.js"); }
     [TestMethod] public void S7_3_A1_4_js() { RunFile(@"S7.3_A1.4.js"); }
-    [TestMethod] public void S7_3_A2_1_T1_js() { RunFile(@"S7.3_A2.1_T1.js"); }
+    [TestMethod] public void S7_3_A2_1_T1_js() { RunFile_ExpectException(@"S7.3_A2.1_T1.js"); }
     [TestMethod] public void S7_3_A2_1_T2_js() { RunFile(@"S7.3_A2.1_T2.js"); }
     [TestMethod] public void S7_3_A2_2_T1_js() { RunFile(@"S7.3_A2.2_T1.js"); }
     [TestMethod] public void S7_3_A2_2_T2_js() { RunFile(@"S7.3_A2.2_T2.js"); }

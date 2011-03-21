@@ -1,4 +1,4 @@
-﻿namespace IronJS
+﻿namespace IronJS.Compiler
 
 open IronJS
 open IronJS.Support.Aliases

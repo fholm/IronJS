@@ -8,8 +8,8 @@ open System
 open System.Globalization
 
 open IronJS
-open IronJS.Ast
 open IronJS.Compiler
+open IronJS.Compiler.Ast
 open IronJS.Compiler.Lexer
 
 module Parser =

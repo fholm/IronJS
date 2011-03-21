@@ -122,7 +122,7 @@ module Unary =
 
 module Binary = 
 
-  open IronJS.Ast
+  open IronJS.Compiler.Ast
 
   //----------------------------------------------------------------------------
   let compileExpr (ctx:Ctx) op (l:Dlr.Expr) r =

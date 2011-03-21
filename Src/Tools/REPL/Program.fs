@@ -8,22 +8,33 @@ module Main =
   open IronJS.Compiler.Core
 
   let main () =
-    #if DEBUG
-    #else
-    System.Threading.Thread.CurrentThread.Priority <- System.Threading.ThreadPriority.Highest
-    #endif
 
     let ctx = IronJS.Hosting.Context.Create()
-    let src = @"function test(arg) {
-    // Check and make sure that arg is not undefined
-	    if (typeof(arg) !== 'undefined') {
-        $ERROR('#1: Function argument that isn\'t provided has a value of undefined. Actual: ' + (typeof(arg)));
+
+    ctx.Execute @"
+      var a = 1;
+
+      switch(a) {
+        case 1:
+          print('1');
+      
+        case 2:
+          print('2');
+
+        default:
+          print('default');
+
+        case 3:
+          print('3');
+          break;
+
+        case 4:
+          print('4');
+          break;
       }
-    }
 
-    test();"
+    " |> ignore
 
-    ctx.Execute src |> ignore
     Console.ReadLine() |> ignore
 
   main() |> ignore

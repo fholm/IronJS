@@ -151,12 +151,76 @@ module ControlFlow =
 
   //----------------------------------------------------------------------------
   // 12.11 switch
-  let switch (ctx:Ctx) value cases =
-    failwith "not implemented"
+  let switch (ctx:Ctx) (value:Ast.Tree) (cases:Ast.Cases list) =
+    let valueExpr = value |> ctx.Compile
+    let valueVar = Dlr.paramT<BV> "~value"
+      
+    let breakLabel = Dlr.labelBreak()
+    let ctx = ctx.AddDefaultLabel breakLabel
+    let defaultJump = ref (Dlr.jump breakLabel)
+
+    let compiledCases =
+      cases |> List.mapi (fun i case ->
+        match case with
+        | Ast.Cases.Case(value, body) ->
+          let value = ctx.Compile value
+          let label = Dlr.labelVoid (sprintf "case-%i" i)
+          let test = 
+            (Dlr.if' 
+              (Operators.eq(valueVar, Utils.box value)) 
+              (Dlr.jump label)
+            )
+
+          let body = 
+            Dlr.block [] [
+              Dlr.labelExprVoid label
+              ctx.Compile body
+            ]
+
+          test, body
+
+        | Ast.Cases.Default(body) ->
+          let label = Dlr.labelVoid "default"
+
+          // Change the default jump target
+          // so we go to the default block
+          defaultJump := Dlr.jump label
+
+          let body =
+            Dlr.block [] [
+              Dlr.labelExprVoid label
+              ctx.Compile body
+            ]
+
+          Dlr.void', body
+      )
+
+    Dlr.block [valueVar] [
+      // Assign the value we're switching on
+      // so we only evaluate it once
+      Dlr.assign valueVar (Utils.box valueExpr)
+
+      // All the case tests
+      Dlr.block [] [for test, _ in compiledCases -> test]
+
+      // Default jump, which could be either directly to
+      // break in the case of no default: case or to 
+      // the default case body
+      !defaultJump
+
+      // All the case bodies, including default, in the
+      // order they were defined in the source code
+      Dlr.block [] [for _, body in compiledCases -> body]
+
+      // Break label, for handling both "break;" in the
+      // switch and default cases and if we have no default
+      // case and no matching case is found
+      Dlr.labelExprVoid breakLabel
+    ]
 
   //----------------------------------------------------------------------------
   // 12.12 labelled statements
   let label (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
     let ctx = ctx.AddLabel label target
-    Dlr.blockSimple [ctx.Compile tree; Dlr.labelExprVoid target]
+    Dlr.block [] [ctx.Compile tree; Dlr.labelExprVoid target]

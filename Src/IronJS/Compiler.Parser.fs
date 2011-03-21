@@ -30,6 +30,7 @@ module Parser =
     mutable Token : Token
     mutable EndExpression : bool
     mutable LineTerminatorPassed : bool
+    mutable WithStatementCount : int
 
     Position : Token -> int * int
     PrettyPrint : Token -> string
@@ -138,6 +139,7 @@ module Parser =
     Source = None
     EndExpression = false
     LineTerminatorPassed = false
+    WithStatementCount = 0
 
     Token = Unchecked.defaultof<Token>
     Tokenizer = Unchecked.defaultof<unit -> Token>
@@ -862,11 +864,13 @@ module Parser =
     let objectAst = p |> grouping p.Token
 
     // Read the body block
+    p.WithStatementCount <- p.WithStatementCount + 1
     let bodyAst = p |> block
+    p.WithStatementCount <- p.WithStatementCount - 1
 
     // Increase the with scope count on the current scope
-    p |> cscope |> AnalyzersFastUtils.Scope.increaseWithCount
-    p |> cscope |> AnalyzersFastUtils.Scope.setDynamicLookup
+    //p |> cscope |> AnalyzersFastUtils.Scope.increaseWithCount
+    //p |> cscope |> AnalyzersFastUtils.Scope.setDynamicLookup
 
     Tree.With(objectAst, bodyAst)
 

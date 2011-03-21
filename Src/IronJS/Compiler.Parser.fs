@@ -13,11 +13,9 @@ open IronJS.Compiler
 open IronJS.Compiler.Lexer
 
 module Parser =
-  #if ONEPASS
   type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
   type private List<'a> = System.Collections.Generic.List<'a>
   type private HashSet<'a> = System.Collections.Generic.HashSet<'a>
-  #endif
 
   type State = {
     Env : Env
@@ -41,13 +39,11 @@ module Parser =
     Stmt : (Token -> State -> Tree) array
     Left : (Token -> Tree -> State -> Tree) array
 
-    #if ONEPASS
     ScopeChain : Scope ref list ref
     ScopeMap : Dict<uint64, Scope ref>
     ScopeChildren : Dict<uint64, Scope ref List>
     ScopeParents : Dict<uint64, Scope ref list>
     ScopeClosures : Dict<uint64, string HashSet>
-    #endif
   } 
     #if DEBUG
     with
@@ -154,13 +150,11 @@ module Parser =
     Stmt = Array.zeroCreate<Token -> State -> Tree> 150
     Left = Array.zeroCreate<Token -> Tree -> State -> Tree> 150
 
-    #if ONEPASS
     ScopeChain = ref []
     ScopeChildren = null
     ScopeMap = null
     ScopeParents = null
     ScopeClosures = null
-    #endif
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -1304,8 +1298,6 @@ module Parser =
     |> smd S.Break break'
     |> smd S.Continue continue'
 
-  #if ONEPASS
-
   let private resolveClosures (p:P) =
     
     // Get the parent scopes of a scope id
@@ -1423,8 +1415,6 @@ module Parser =
         | _ ->
           failwith "Local variable missing?"
 
-  #endif
-
   /// Parses a source string into an
   /// abstract syntax tree
   let parse (source:string) (env:Env) =
@@ -1460,21 +1450,17 @@ module Parser =
         Tokenizer = lexer
         Token = lexer()
 
-        #if ONEPASS
         ScopeChain = ref [globalScope]
         ScopeMap = scopeMap
         ScopeChildren = scopeChildren
         ScopeParents = scopeParents
         ScopeClosures = scopeClosures
-        #endif
       }
 
     let globalAst = 
       parser |> statementList |> Tree.Block
     
-    #if ONEPASS
     parser |> resolveClosures
-    #endif
 
     Tree.FunctionFast(None, globalScope, globalAst), parser
     

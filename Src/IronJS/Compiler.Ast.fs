@@ -51,19 +51,31 @@ module Ast =
     | Delete = 9
     | TypeOf = 10
     
+  /// The two different types of scopes possible
   type ScopeType
     = GlobalScope = 0
     | FunctionScope = 1
     
+  /// The ways in a function can be effected by eval
+  /// 
+  /// Clean = No eval call that can effect this function detected
+  /// Contains = An eval call exists inside this function
+  /// Effected = An eval call exists in one of the scopes containing this function
   type EvalMode
     = Clean = 0
     | Contains = 1
     | Effected = 2
     
+  /// The two different types of lookup modes that a 
+  /// function that use, dynamic is used if a function 
+  /// contains either an eval call or a with statement
+  /// otherwise static is used (which is a lot faster)
   type LookupMode
     = Static = 0
     | Dynamic = 1
     
+  /// The AST tree type, contains all AST nodes
+  /// except Case and Default nodes for switch statements
   type Tree
     = String of string
     | Number of double
@@ -110,6 +122,7 @@ module Ast =
     | Line of string * int
     #endif
 
+  /// Switch statement cases
   and Cases 
     = Case of Tree * Tree
     | Default of Tree
@@ -243,6 +256,7 @@ module Ast =
       let localCount (s:S) = (!s).LocalCount
       let paramCount (s:S) = (!s).ParamCount
       let closedOverCount (s:S) = (!s).ClosedOverCount
+
       let isFunction (s:S) = (!s).ScopeType = ScopeType.FunctionScope
       let isGlobal (s:S) = (!s).ScopeType = ScopeType.GlobalScope
 
@@ -305,8 +319,7 @@ module Ast =
             {!s with 
               LocalCount = index.Index + 1
               Locals = s |> locals |> Map.add name local}
-
-
+      
       let increaseLocalIndex name (s:S) =
         match s |> tryGetLocal name with
         | Some local -> s |> replaceLocal (local |> Local.increaseActive)

@@ -8,5 +8,3 @@ open IronJS
 
 let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
-ctx.Execute @"var foo = {}"
-

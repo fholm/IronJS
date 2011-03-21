@@ -9,26 +9,53 @@ open IronJS
 IO.Directory.SetCurrentDirectory(@"E:\Projects\IronJS\Src\Tools\REPL")
 
 let ctx = Hosting.Context.Create()
-//let jquery = IO.File.ReadAllText(@"jquery.js")
-let source = @"
-  function foo(a, b) {
-    var y = 3;
-
-    function bar(c, d) {
-      var z = y;
-      return a + b + c;
-    }
-  }
-"
-let ast = IronJS.Compiler.Parser.parse source ctx.Environment
 
 let test () =
-  let ast = IronJS.Compiler.Parser.parse source ctx.Environment
-  let global' = Ast.Tree.FunctionFast(None, ref Ast.Scope.NewGlobal, ast)
 
-  IronJS.Ast.AnalyzersFast.findVariables global'
-  IronJS.Ast.AnalyzersFast.findClosedOverLocals global'
+  let source = @"
+    function foo(a, b) {
+      var y = 3;
 
-  ()
+      eval('lol');
 
-//test ()
+      function bar(c, d) {
+        var z = y;
+        return a + y + r;
+      }
+    }
+  "
+
+  //let source =
+    //IO.File.ReadAllText("jquery.js")
+
+  let ast, parser =
+    ctx.Environment |> IronJS.Compiler.Parser.parse source
+
+  ast
+  (*
+  printfn "Ast: %A" ast
+
+  printfn "\nScope Map:" 
+  for x in parser.ScopeMap do
+    printfn "%i: %A" x.Key [for kvp in x.Value.Value.Locals -> kvp.Key]
+
+  printfn "\nScope Children:"
+  for x in parser.ScopeChildren do
+    printfn "%i: %A" x.Key [for s in x.Value -> (!s).Id]
+      
+  printfn "\nScope Parents:"
+  for x in parser.ScopeParents do
+    printfn "%i: %A" x.Key [for s in x.Value -> (!s).Id]
+
+  printfn "\nScope Closures:"
+  for x in parser.ScopeClosures do
+    printfn "%i: %A" x.Key [for c in x.Value -> c]
+  *)
+
+let ast = test()
+
+ctx.Execute @"
+  function foo(a, b) { return a + b; }
+
+  foo(1, 2);
+"

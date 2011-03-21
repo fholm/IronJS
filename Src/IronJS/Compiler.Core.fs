@@ -46,7 +46,7 @@ module Core =
     | Ast.Invoke(func, args)  -> Function.invoke ctx func args
     | Ast.New(func, args) -> Function.new' ctx func args
     | Ast.Return tree -> Function.return' ctx tree
-    | Ast.Function(_, scope, _) -> Function.create ctx compile scope ast
+    | Ast.FunctionFast(_, scope, _) -> Function.create ctx compile scope ast
 
     //Control Flow
     | Ast.Switch(value, cases) -> ControlFlow.switch ctx value cases
@@ -130,8 +130,8 @@ module Core =
     //Extract scope and ast from top level ast node
     let scope, ast =
       match target.Ast with
-      | Ast.Function(_, scope, ast) -> 
-      
+      | Ast.FunctionFast(_, scope, ast) -> 
+        let scope = !scope
         let scope =
           match target.Delegate with
           | None -> scope
@@ -184,7 +184,7 @@ module Core =
     //Initialize hoisted function definitions
     let initializeFunction (_, func) =
       match func with
-      | Ast.Function(Some name, scope, body) ->
+      | Ast.FunctionFast(Some name, scope, body) ->
         let func = Function.create ctx compile scope func
         Identifier.setValue ctx name func
 

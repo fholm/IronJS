@@ -27,8 +27,10 @@ module Function =
     applyCompiler compiler target
     
   //----------------------------------------------------------------------------
-  let create ctx compiler (scope:Ast.Scope) ast =
+  let create ctx compiler (scope:Ast.Scope ref) ast =
     //Make sure a compiler exists for this function
+    let scope = !scope
+
     if ctx.Target.Environment.HasCompiler scope.Id |> not then
       let compiler = (makeCompiler ctx compiler ast)
       ctx.Target.Environment.AddCompiler(scope.Id, compiler)

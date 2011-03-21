@@ -112,24 +112,22 @@ module Hosting =
     member x.GlobalFunc = globalFunc
 
     member x.CompileFile fileName =
-      let tree = fileName |> Compiler.Parser.parseGlobalFile x.Environment  
-      let analyzed = Ast.Analyzers.applyDefault tree None
+      let ast = fileName |> Compiler.Parser.parseFile x.Environment  
 
       #if DEBUG
-      analyzed |> Support.Debug.printAst
+      ast |> Support.Debug.printAst
       #endif
 
-      Compiler.Core.compileAsGlobal env analyzed
+      Compiler.Core.compileAsGlobal env ast
 
     member x.CompileSource source =
-      let tree = source |> Compiler.Parser.parseGlobalSource x.Environment
-      let analyzed = Ast.Analyzers.applyDefault tree None
+      let ast = source |> Compiler.Parser.parseString x.Environment
 
       #if DEBUG
-      analyzed |> Support.Debug.printAst
+      ast |> Support.Debug.printAst
       #endif
 
-      Compiler.Core.compileAsGlobal env analyzed
+      Compiler.Core.compileAsGlobal env ast
 
     member x.InvokeCompiled(compiled:Delegate) =
       compiled.DynamicInvoke(globalFunc, env.Globals) |> BoxingUtils.ClrBox

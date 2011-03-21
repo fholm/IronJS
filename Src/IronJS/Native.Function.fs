@@ -18,9 +18,8 @@ module Function =
           args, body
 
       let source = sprintf "(function(){ return function(%s){%s}; })();" args body
-      let tree = source |> Compiler.Parser.parseGlobalSource f.Env
-      let analyzed = Ast.Analyzers.applyDefault tree None
-      let compiled = Compiler.Core.compileAsGlobal f.Env analyzed
+      let ast = source |> Compiler.Parser.parseString f.Env
+      let compiled = Compiler.Core.compileAsGlobal f.Env ast
       (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject
 
   let private prototype (f:FO) _ =

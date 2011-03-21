@@ -5,11 +5,18 @@
 
 
             (function () {
+                var x = "lol";
 
-                var foo = function () { print(bar); };
-                var bar = "hello world!";
-                foo();
+                try {
+                    throw "foo";
 
+                } catch (x) {
+                    function bar() {
+                        
+                    }
+
+                    eval("alert(x)");
+                }
             })();
 
         </script>

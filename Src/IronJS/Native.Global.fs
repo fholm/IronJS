@@ -12,14 +12,14 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String ->
 
-      let ast = target.Function.Env |> Parser.parse target.Target.String
-      let scope = {Ast.Scope.New with Closures=target.Closures}
-      let tree = Ast.Function(None, scope, ast)
+      let ast = target.Function.Env |> Parser.parse target.Target.String |> fst
+      let scope = ref {Ast.Scope.New with Closures=target.Closures}
+      let tree = Ast.FunctionFast(None, scope, ast)
       let levels = Some(target.GlobalLevel, target.ClosureLevel)
 
       let compiled = 
         Core.compile {
-          Ast = Ast.Analyzers.applyDefault tree levels
+          Ast = ast
           TargetMode = TargetMode.Eval
           Delegate = None
           Environment = target.Function.Env

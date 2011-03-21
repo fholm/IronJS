@@ -93,6 +93,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Support.Dlr.fs" />
     <Compile Include="Support.fs" />
+    <Compile Include="Error.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Core.Operators.fs" />
     <Compile Include="Core.Helpers.fs" />

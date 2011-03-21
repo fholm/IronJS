@@ -52,6 +52,23 @@ module Debug =
     print |> registerAstPrinter
     print |> registerExprPrinter
 
+module Exn =
+
+  /// Abstract base class of all IronJS exceptions
+  [<AbstractClass>]
+  type Error(msg) = 
+    inherit Exception(msg)
+
+  type CompilerError(msg, pos, source, path) = 
+    inherit Error(msg)
+    member x.Position : int * int = pos
+    member x.Source : string option = source
+    member x.Path : string option = path
+
+  type RuntimeError(msg) = 
+    inherit Error(msg)
+
+
 type Error(msg) = inherit Exception(msg)
 type CompilerError(msg) = inherit Error(msg)
 type RuntimeError(msg) = inherit Error(msg)
@@ -88,9 +105,6 @@ module Errors =
 
     compiler error
 
-  let invalidCaseNodeType () =
-    compiler "Switch case nodes must be either Ast.Case or Ast.Default"
-
   let emptyScopeChain () = 
     compiler "Empty scope chain"
 
@@ -100,12 +114,6 @@ module Errors =
   let variableIndexOutOfRange () = 
     compiler "Active index larger then indexes array length"
       
-  let shouldBeForToken () =
-    compiler "Token should be FORSTEP or FORITER"
-
-  let shouldBeDefaultOrCase () =
-    compiler "Should be CASE or DEFAULT"
-
   let syntaxError line col =
     compiler (sprintf "Syntax Error at line %i after column %i" line col)
 

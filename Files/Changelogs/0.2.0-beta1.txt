@@ -2,6 +2,7 @@
 
 * Major API refactoring moving all Module/Functions located in Api.fs to their appropiate classes in Core.fs instead
 * Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
+* Re-implemented the AST analyzer to make it single pass
 * Removed the dependancy of Microsoft.Dynamic.dll for CLR4 projects
 * Implemented the Date object
 * Implemented the RegExp object

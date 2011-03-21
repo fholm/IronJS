@@ -14,7 +14,7 @@ module Scope =
 
     let pushArgs = [
       ctx.DynamicScope; object'; 
-      Dlr.const' ctx.Scope.GlobalLevel]
+      Dlr.const' (!ctx.Scope).GlobalLevel]
 
     Dlr.blockSimple [
       (Dlr.callStaticT<DynamicScopeHelpers> "Push" pushArgs)
@@ -49,8 +49,8 @@ module Scope =
         |> Seq.map (fun (_, group) -> group.Indexes)
         |> Seq.concat
 
-    let params' = indexes |> Seq.filter Ast.Utils.Local.Index.isParam
-    let nonParams = indexes |> Seq.filter Ast.Utils.Local.Index.isNotParam
+    let params' = indexes |> Seq.filter Ast.AnalyzersFastUtils.Local.Index.isParameter
+    let nonParams = indexes |> Seq.filter Ast.AnalyzersFastUtils.Local.Index.isNotParameter
 
     initParams ctx params', initNonParams ctx nonParams
         
@@ -85,23 +85,24 @@ module Scope =
     Dlr.assign ctx.DynamicScope ctx.FunctionDynamicScope
         
   //--------------------------------------------------------------------------
-  let private initArguments (ctx:Ctx) (s:Ast.Scope) =
-    if not s.ContainsArguments then Dlr.void'
+  let private initArguments (ctx:Ctx) (s:Ast.Scope ref) =
+    if not (!s).ContainsArguments then Dlr.void'
     else 
-      match s |> Ast.Utils.Scope.getVariable "arguments" with
+      match s |> Ast.AnalyzersFastUtils.Scope.getVariable "arguments" with
       | Ast.VariableOption.Global 
       | Ast.VariableOption.Closure _ -> failwith "Que?"
       | Ast.VariableOption.Local local ->
         let linkMap = 
-          s.Locals 
+          (!s).Locals 
             |> Map.toSeq
-            |> Seq.filter (snd >> Ast.Utils.Local.isParam)
+            |> Seq.filter (snd >> Ast.AnalyzersFastUtils.Local.isParameter)
             |> Seq.map (fun (_, local) ->
                 let linkArray =
-                  if local |> Ast.Utils.Local.isClosedOver
+                  if local |> Ast.AnalyzersFastUtils.Local.isClosedOver
                     then ArgumentsLinkArray.ClosedOver
                     else ArgumentsLinkArray.Locals
-                linkArray, local |> Ast.Utils.Local.index
+
+                linkArray, local |> Ast.AnalyzersFastUtils.Local.index
               )
             |> Seq.sortBy (fun (_, i) -> i)
             |> Array.ofSeq
@@ -120,7 +121,7 @@ module Scope =
               (ctx.Function)
             )
             (Utils.assign 
-              (Dlr.indexInt ctx.LocalScope (local |> Ast.Utils.Local.index))
+              (Dlr.indexInt ctx.LocalScope (local |> Ast.AnalyzersFastUtils.Local.index))
               (arguments))
           ] |> Seq.ofList
         ))
@@ -142,20 +143,21 @@ module Scope =
 
   //----------------------------------------------------------------------------
   let init (ctx:Ctx) =
-    let scope = ctx.Scope
+    let scope = ctx.Scope |> Ast.AnalyzersFastUtils.Scope.clone
 
-    let localScopeInit = initLocalScope ctx scope.LocalCount
-    let closureScopeInit = initClosureScope ctx scope.ClosedOverCount
-    let dynamicScopeInit = initDynamicScope ctx scope.LookupMode
+    let localScopeInit = initLocalScope ctx (!scope).LocalCount
+    let closureScopeInit = initClosureScope ctx (!scope).ClosedOverCount
+    let dynamicScopeInit = initDynamicScope ctx (!scope).LookupMode
     let initArguments = initArguments ctx scope
 
     let locals = 
       demoteMissingParams
-        scope.Locals
-        scope.ParamCount
+        (!scope).Locals
+        (!scope).ParamCount
         ctx.Target.ParamCount
 
-    let ctx = {ctx with Scope = {ctx.Scope with Locals=locals}}
+    scope := {!scope with Locals=locals}
+    let ctx = {ctx with Scope = scope}
 
     let initParams, initNonParams = initLocals ctx locals 
     let initBlock = 

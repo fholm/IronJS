@@ -36,33 +36,33 @@ module Ast =
     | InstanceOf = 109
       
   type UnaryOp 
-    = Inc
-    | Dec
-    | PostInc
-    | PostDec
+    = Inc = 0
+    | Dec = 1
+    | PostInc = 2
+    | PostDec = 3
 
-    | Plus
-    | Minus 
+    | Plus = 4
+    | Minus = 5
     
-    | Not
-    | BitCmpl
+    | Not = 6
+    | BitCmpl = 7
 
-    | Void
-    | Delete 
-    | TypeOf
+    | Void = 8
+    | Delete = 9
+    | TypeOf = 10
     
   type ScopeType
-    = GlobalScope
-    | FunctionScope
+    = GlobalScope = 0
+    | FunctionScope = 1
     
   type EvalMode
-    = Clean
-    | Contains
-    | Effected
+    = Clean = 0
+    | Contains = 1
+    | Effected = 2
     
   type LookupMode
-    = Static
-    | Dynamic
+    = Static = 0
+    | Dynamic = 1
     
   type Tree
     = String of string
@@ -168,7 +168,7 @@ module Ast =
     ParamCount: int
     ClosedOverCount: int
   } with
-    static member NewGlobal = {Scope.New with ScopeType = GlobalScope}
+    static member NewGlobal = {Scope.New with ScopeType = ScopeType.GlobalScope}
     static member New = {
       Id = 0UL
 
@@ -176,7 +176,7 @@ module Ast =
       ClosureLevel = -1
       WithCount = 0
       
-      ScopeType = FunctionScope
+      ScopeType =  ScopeType.FunctionScope
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
       ContainsArguments = false
@@ -195,101 +195,15 @@ module Ast =
     | Local of Local
     | Closure of Closure
 
-  module Utils =
-
-    module Local =
-
-      module Index =
-        let isParam index = index.ParamIndex |> Option.isSome
-        let isNotParam index = index |> isParam |> not
-      
-      let private activeIndex (local:Local) =
-        if local.Active >= local.Indexes.Length then 
-          Support.Errors.variableIndexOutOfRange()
-
-        local.Indexes.[local.Active]
-
-      let internal addIndex index group =
-        {group with Indexes = group.Indexes |> FSKit.Array.appendOne index}
-
-      let index local = (local |> activeIndex).Index
-      let isClosedOver local = (local |> activeIndex).IsClosedOver
-      let isParam local = (local |> activeIndex) |> Index.isParam
-      let isNotParam local = local |> isParam |> not
-      let decrActive local = {local with Active = local.Active-1}
-      let incrActive local = 
-        if local.Active < local.Indexes.Length-1 
-          then {local with Active = local.Active+1} else local
-        
-    module Scope =
-
-      let hasLocal name (scope:Scope) = scope.Locals |> Map.containsKey name
-      let tryGetLocal name (scope:Scope) = scope.Locals |> Map.tryFind name 
-      let addLocal name paramIndex (scope:Scope) =
-        let index = LocalIndex.New scope.LocalCount paramIndex
-        let group = 
-          match Map.tryFind name scope.Locals with
-          | None -> Local.New name index
-          | Some group -> group |> Local.addIndex index
-
-        let currentIndex = scope.ParamCount - 1
-        {scope with 
-          LocalCount = index.Index + 1
-          ParamCount = (defaultArg paramIndex currentIndex) + 1
-          Locals = Map.add name group scope.Locals
-        }
-
-      let replaceLocal (local:Local) (scope:Scope) =
-        {scope with Locals = scope.Locals |> Map.add local.Name local}
-
-      let incrLocal name (scope:Scope) =
-        match scope |> tryGetLocal name with
-        | None -> failwith "Que?"
-        | Some local -> scope |> replaceLocal (local |> Local.incrActive)
-
-      let decrLocal name (scope:Scope) =
-        match scope |> tryGetLocal name with
-        | None -> failwith "Que?"
-        | Some local -> scope |> replaceLocal (local |> Local.decrActive)
-
-      let hasClosure name (scope:Scope) = scope.Closures |> Map.containsKey name
-      let getClosure name (scope:Scope) = scope.Closures |> Map.find name
-      let tryGetClosure name (scope:Scope) = scope.Closures |> Map.tryFind name
-      let addClosure closure (scope:Scope) =
-        {scope with Closures = scope.Closures |> Map.add closure.Name closure}
-
-      let hasVariable name (scope:Scope) =
-        (scope |> hasLocal name) || (scope |> hasClosure name)
-
-      let getVariable name (scope:Scope) =
-        match scope |> tryGetLocal name with
-        | Some var -> Local var
-        | _ ->
-          match scope |> tryGetClosure name with
-          | Some cls -> Closure cls
-          | _ -> Global
-
-      let tryGetVariable name (scope:Scope) =
-        match scope |> getVariable name with
-        | Global -> None
-        | x -> (scope, x) |> Some
-
-      let hasDynamicLookup (scope:Scope) = scope.LookupMode = LookupMode.Dynamic
-      let hasClosedOverLocals (scope:Scope) = scope.ClosedOverCount > 0
-      let isFunction (scope:Scope) = scope.ScopeType = FunctionScope
-      let isGlobal (scope:Scope) = scope.ScopeType = GlobalScope
-
   module AnalyzersFastUtils =
     
     module Local =
       
-      //
       module Index =
 
-        let isParam index = index.ParamIndex |> Option.isSome
-        let isNotParam index = index |> isParam |> not
+        let isParameter index = index.ParamIndex |> Option.isSome
+        let isNotParameter index = index |> isParameter |> not
 
-      //
       let private activeIndex (local:Local) =
         if local.Active >= local.Indexes.Length || local.Active < 0 then 
           Support.Errors.variableIndexOutOfRange()
@@ -299,11 +213,10 @@ module Ast =
       let addIndex index local =
         {local with Indexes = local.Indexes |> FSKit.Array.appendOne index}
 
-
       let index local = (local |> activeIndex).Index
       let isClosedOver local = (local |> activeIndex).IsClosedOver
-      let isParameter local = local |> activeIndex |> Index.isParam
-      let isNotParameter local = local |> isParameter |> not
+      let isParameter local = local |> activeIndex |> Index.isParameter
+      let isNotParameter local = local |> activeIndex |> Index.isNotParameter
 
       let decreaseActive local = 
         if local.Active > -1
@@ -330,38 +243,25 @@ module Ast =
       let localCount (s:S) = (!s).LocalCount
       let paramCount (s:S) = (!s).ParamCount
       let closedOverCount (s:S) = (!s).ClosedOverCount
-      let isFunction (s:S) = (!s).ScopeType = FunctionScope
-      let isGlobal (s:S) = (!s).ScopeType = GlobalScope
+      let isFunction (s:S) = (!s).ScopeType = ScopeType.FunctionScope
+      let isGlobal (s:S) = (!s).ScopeType = ScopeType.GlobalScope
 
-      let setContainsArguments (s:S) = 
-        s := {!s with ContainsArguments=true}
+      let setContainsArguments (s:S) = s := {!s with ContainsArguments=true}
+      let setContainsEval (s:S) = s := {!s with EvalMode=EvalMode.Contains}
+      let setDynamicLookup (s:S) = s := {!s with LookupMode=LookupMode.Dynamic}
+      let increaseWithCount (s:S) = s := {!s with WithCount=(!s).WithCount + 1}
+      let hasDynamicLookup (s:S) = (!s).LookupMode = LookupMode.Dynamic
+      let hasClosedOverLocals (s:S) = (!s).ClosedOverCount > 0
 
-      let setContainsEval (s:S) = 
-        s := {!s with EvalMode=EvalMode.Contains}
-
-      let setDynamicLookup (s:S) = 
-        s := {!s with LookupMode=LookupMode.Dynamic}
-
-      let increaseWithCount (s:S) = 
-        s := {!s with WithCount=(!s).WithCount + 1}
-
-      let hasLocal (name:string) (s:S) = 
-        (!s).Locals |> Map.containsKey name
-
-      let tryGetLocal (name:string) (s:S) = 
-        (!s).Locals |> Map.tryFind name 
-
-      let replaceLocal (local:Local) (s:S) =
-        s := {!s with Locals = s |> locals |> Map.add local.Name local}
-
-      let hasClosure name (s:S) = 
-        s |> closures |> Map.containsKey name
-
-      let tryGetClosure name (s:S) = 
-        s |> closures|> Map.tryFind name
-
+      let hasClosure name (s:S) = s |> closures |> Map.containsKey name
+      let tryGetClosure name (s:S) = s |> closures|> Map.tryFind name
       let addClosure (closure:Closure) (s:S) =
         s := {!s with Closures = s |> closures |> Map.add closure.Name closure}
+        
+      let hasLocal (name:string) (s:S) = (!s).Locals |> Map.containsKey name
+      let tryGetLocal (name:string) (s:S) = (!s).Locals |> Map.tryFind name 
+      let replaceLocal (local:Local) (s:S) =
+        s := {!s with Locals = s |> locals |> Map.add local.Name local}
 
       /// Adds a new variable to the scope
       let addLocal name paramIndex (s:S) =
@@ -406,6 +306,7 @@ module Ast =
               LocalCount = index.Index + 1
               Locals = s |> locals |> Map.add name local}
 
+
       let increaseLocalIndex name (s:S) =
         match s |> tryGetLocal name with
         | Some local -> s |> replaceLocal (local |> Local.increaseActive)
@@ -415,6 +316,15 @@ module Ast =
         match s |> tryGetLocal name with
         | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
         | _ -> failwithf "Missing local variables %s" name
+        
+      let hasVariable name (s:S) = (s |> hasLocal name) || (s |> hasClosure name)
+      let getVariable name (s:S) =
+        match s |> tryGetLocal name with
+        | Some var -> Local var
+        | _ ->
+          match s |> tryGetClosure name with
+          | Some cls -> Closure cls
+          | _ -> Global
 
       let closeOverLocal name (s:S) =
 
@@ -454,12 +364,9 @@ module Ast =
       let addFunction (ast:Tree) (s:S) =
         match ast with
         | FunctionFast(Some name, _, _) ->
-          s := 
-            {!s with 
-              Functions = (!s).Functions |> Map.add name ast
-            }
+          s := {!s with Functions = (!s).Functions |> Map.add name ast}
 
-        | _ ->
+        | _ -> 
           failwith "AST is not a named function"
 
     module ScopeChain = 

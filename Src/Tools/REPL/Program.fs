@@ -14,13 +14,16 @@ module Main =
     #endif
 
     let ctx = IronJS.Hosting.Context.Create()
-    let src = IO.File.ReadAllText(@"jquery.js");
-    src |> IronJS.Compiler.Parser.parseGlobalSource ctx.Environment |> ignore
+    let src = @"function test(arg) {
+    // Check and make sure that arg is not undefined
+	    if (typeof(arg) !== 'undefined') {
+        $ERROR('#1: Function argument that isn\'t provided has a value of undefined. Actual: ' + (typeof(arg)));
+      }
+    }
 
-    FSKit.Perf.time "IronJS" (fun () ->
-      src |> IronJS.Compiler.Parser.parseGlobalSource ctx.Environment |> ignore
-    )
+    test();"
 
+    ctx.Execute src |> ignore
     Console.ReadLine() |> ignore
 
   main() |> ignore

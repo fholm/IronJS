@@ -104,15 +104,15 @@ module Core =
 
       (Utils.assign
         (Dlr.field target "GlobalLevel") 
-        (Dlr.const' ctx.Scope.GlobalLevel))
+        (Dlr.const' (!ctx.Scope).GlobalLevel))
 
       (Utils.assign
         (Dlr.field target "ClosureLevel") 
-        (Dlr.const' ctx.Scope.ClosureLevel))
+        (Dlr.const' (!ctx.Scope).ClosureLevel))
 
       (Utils.assign
         (Dlr.field target "Closures") 
-        (Dlr.const' ctx.Scope.Closures))
+        (Dlr.const' (!ctx.Scope).Closures))
         
       (Utils.assign (Dlr.field target "Target") evalTarget)
       (Utils.assign (Dlr.field target "Function") ctx.Function)
@@ -131,29 +131,33 @@ module Core =
     let scope, ast =
       match target.Ast with
       | Ast.FunctionFast(_, scope, ast) -> 
-        let scope = !scope
-        let scope =
-          match target.Delegate with
-          | None -> scope
-          | Some delegate' ->
-            let argLength = 
-              delegate' |> FSKit.Reflection.getDelegateArgTypes
-                        |> Seq.skip 2 
-                        |> Seq.skip scope.ParamCount
-                        |> Seq.toArray
-                        |> Array.length
-                        |> (+) (-1)
-            
-            let mutable scope = scope
-            for i = 0 to argLength do
-              let name = "arg_" + string scope.ParamCount
-              let paramIndex = Some scope.ParamCount
-              scope <- scope |> Ast.Utils.Scope.addLocal name paramIndex
+        let scope = scope |> Ast.AnalyzersFastUtils.Scope.clone
 
-            scope
+        match target.Delegate with
+        | None -> ()
+        | Some delegate' ->
+          let argTypes = 
+            delegate' |> FSKit.Reflection.getDelegateArgTypes
+                      |> Seq.skip 2
+                      |> Seq.toArray
+
+          let skipCount =
+            if argTypes.Length > (!scope).ParamCount
+              then (!scope).ParamCount
+              else 0
+
+          let argLength = 
+            argTypes  |> Seq.skip skipCount
+                      |> Seq.toArray
+                      |> Array.length
+                      |> (+) (-1)
+            
+          for i = 0 to argLength do
+            let name = "~arg" + string (!scope).ParamCount
+            let paramIndex = Some (!scope).ParamCount
+            scope |> Ast.AnalyzersFastUtils.Scope.addLocal name paramIndex
 
         scope, ast
-        
 
       | _ -> failwith "Top AST node must be Tree.Function"
 
@@ -191,7 +195,7 @@ module Core =
       | _ -> failwith "Que?"
 
     let functionsInit =
-      scope.Functions
+      (!scope).Functions
       |> Map.toSeq
       |> Seq.map initializeFunction
       |> Dlr.blockSimple

@@ -53,7 +53,7 @@ type [<AllowNullLiteral>] EvalTarget() =
 type Context = {
   Compiler : Context -> Ast.Tree -> Dlr.Expr
   Target: Target
-  Scope: Ast.Scope
+  Scope: Ast.Scope ref
   ReturnLabel: Dlr.Label
   InsideWith: bool
 
@@ -78,7 +78,7 @@ type Context = {
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
 
   member x.DynamicLookup = 
-    Ast.Utils.Scope.hasDynamicLookup x.Scope || x.InsideWith
+    x.Scope |> Ast.AnalyzersFastUtils.Scope.hasDynamicLookup || x.InsideWith
 
   member x.AddDefaultLabel break' =
     {x with Break=Some break'}

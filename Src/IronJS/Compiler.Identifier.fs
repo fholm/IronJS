@@ -11,7 +11,7 @@ module Identifier =
     let rec walk expr n = 
       if n = 0 then expr else walk (Dlr.field (Dlr.index0 expr) "Scope") (n-1)
 
-    let n = closure.ClosureLevel - ctx.Scope.ClosureLevel
+    let n = closure.ClosureLevel - (!ctx.Scope).ClosureLevel
     Some(walk ctx.ClosureScope n, closure.Index, closure.GlobalLevel)
       
   //----------------------------------------------------------------------------
@@ -21,11 +21,11 @@ module Identifier =
       if index.IsClosedOver 
         then ctx.ClosureScope else ctx.LocalScope
 
-    Some(scopeExpr, index.Index, ctx.Scope.GlobalLevel)
+    Some(scopeExpr, index.Index, (!ctx.Scope).GlobalLevel)
     
   //----------------------------------------------------------------------------
   let private getExprIndexLevelType ctx name =
-    match ctx.Scope |> Ast.Utils.Scope.getVariable name with
+    match ctx.Scope |> Ast.AnalyzersFastUtils.Scope.getVariable name with
     | Ast.VariableOption.Global -> None
     | Ast.VariableOption.Local group -> localExprAndIndex ctx group
     | Ast.VariableOption.Closure closure -> closureExprAndIndex ctx closure
@@ -53,7 +53,7 @@ module Identifier =
     
   //----------------------------------------------------------------------------
   let isGlobal ctx name =
-    ctx.Scope |> Ast.Utils.Scope.hasVariable name
+    ctx.Scope |> Ast.AnalyzersFastUtils.Scope.hasVariable name
         
   //----------------------------------------------------------------------------
   let getValue (ctx:Ctx) name =

@@ -8,32 +8,36 @@ module Main =
   open IronJS.Compiler.Core
 
   let main () =
+    #if DEBUG
+    #else
+    System.Threading.Thread.CurrentThread.Priority <- System.Threading.ThreadPriority.Highest
+    #endif
 
     let ctx = IronJS.Hosting.Context.Create()
+    let src = @"function foo(a, b) {
+	      var c = 3;
 
-    ctx.Execute @"
-      var a = 1;
+	      function bar() {
+		      return a + b + c + d;
+	      }
 
-      switch(a) {
-        case 1:
-          print('1');
-      
-        case 2:
-          print('2');
+	      function zoo() {  
+		      if(true) {
+			      return false;
+		      } else {
+			      return true;
+		      }
+	      }
 
-        default:
-          print('default');
+	      return bar() + zoo();
+      }"
 
-        case 3:
-          print('3');
-          break;
+    let ast = src |> IronJS.Compiler.Parser.parseString ctx.Environment
 
-        case 4:
-          print('4');
-          break;
-      }
-
-    " |> ignore
+    FSKit.Perf.time "IronJS" (fun () ->
+      for i = 0 to 10000 do
+         src |> IronJS.Compiler.Parser.parseString ctx.Environment |> ignore
+    )
 
     Console.ReadLine() |> ignore
 

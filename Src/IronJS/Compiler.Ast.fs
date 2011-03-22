@@ -219,7 +219,7 @@ module Ast =
 
       let private activeIndex (local:Local) =
         if local.Active >= local.Indexes.Length || local.Active < 0 then 
-          Support.Errors.variableIndexOutOfRange()
+          Error.CompileError.Raise(Error.variableIndexOutOfRange)
 
         local.Indexes.[local.Active]
 
@@ -234,12 +234,12 @@ module Ast =
       let decreaseActive local = 
         if local.Active > -1
           then {local with Active = local.Active-1}
-          else Support.Errors.variableIndexOutOfRange()
+          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
 
       let increaseActive local = 
         if local.Active+1 < local.Indexes.Length
           then {local with Active = local.Active+1} 
-          else Support.Errors.variableIndexOutOfRange()
+          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
 
       let updateActive index (local:Local) =
         local.Indexes.[local.Active] <- index
@@ -354,7 +354,9 @@ module Ast =
           s := {!s with Locals = (!s).Locals |> Map.map decreaseLocal}
 
         match s |> tryGetLocal name with
-        | None -> Support.Errors.missingVariable name
+        | None -> 
+          Error.CompileError.Raise(Error.missingVariable name)
+
         | Some (local:Local) ->
           match local.Indexes.[local.Active] with
           | active when active.IsClosedOver |> not ->

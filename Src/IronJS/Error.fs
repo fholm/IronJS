@@ -57,7 +57,7 @@ module Error =
 
   /// Partially applied sprintError function
   /// that prints the default 3 lines above and
-  /// 0 lines after for IronJS.
+  /// 0 lines after for IronJS
   let sprintError = 
     SourceCodePrinter.sprintError (3, 0)
 
@@ -104,7 +104,6 @@ module Error =
 
   let notImplemented() = raise <| NotImplementedException()
   let shouldNotHappen() = RuntimeError.Raise("Should not happen")
-
   let invalidTypeTag (tag:uint32) = sprintf "Invalid type tag '%i'" tag
   let missingVariable = sprintf "Missing variable '%s'"
   let astMustBeNamedFunction = "The AST top-node must be a named function"
@@ -114,6 +113,11 @@ module Error =
   let newlineIn = sprintf "Unexpected line terminator in %s"
   let unexpectedEnd = "Unexpected end of source input"
   let unrecognizedInput = sprintf "Unrecognized input '%c'"
-  let cantCallClrFunctionsInWith = 
-    "Can't call CLR functions or methods within dynamic with-blocks"
+  let cantCallClrFunctionsInWith = "Can't call CLR functions or methods within dynamic with-blocks"
+  let variableIndexOutOfRange = "Variable active index is out of range"
+  let missingContinue = "No continue target available"
+  let missingBreak = "No break target available"
+  let missingLabel = sprintf "No label named '%s' available"
+  let missingNoConversion (a:Type) (b:Type) =
+    sprintf "No conversion from %s to type %s exists" a.Name b.Name
 

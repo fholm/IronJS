@@ -11,7 +11,7 @@ namespace Tests.Sputnik {
     [TestMethod] public void S8_4_A13_T1_js() { RunFile(@"S8.4_A13_T1.js"); }
     [TestMethod] public void S8_4_A13_T2_js() { RunFile_ExpectException(@"S8.4_A13_T2.js"); }
     [TestMethod] public void S8_4_A13_T3_js() { RunFile(@"S8.4_A13_T3.js"); }
-    [TestMethod] public void S8_4_A14_T1_js() { RunFile_ExpectException<IronJS.Support.CompilerError>(@"S8.4_A14_T1.js"); }
+    [TestMethod] public void S8_4_A14_T1_js() { RunFile_ExpectException(@"S8.4_A14_T1.js"); }
     [TestMethod] public void S8_4_A14_T2_js() { RunFile_ExpectException(@"S8.4_A14_T2.js"); }
     [TestMethod] public void S8_4_A14_T3_js() { RunFile(@"S8.4_A14_T3.js"); }
     [TestMethod] public void S8_4_A2_js() { RunFile(@"S8.4_A2.js"); }

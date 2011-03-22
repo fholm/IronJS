@@ -210,7 +210,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       | TypeTags.Object     -> BoxFields.Object   
       | TypeTags.Function   -> BoxFields.Function 
       | TypeTags.Clr        -> BoxFields.Clr
-      | _ -> Support.Errors.invalidTypeTag tag
+      | _ -> Error.CompileError.Raise(Error.invalidTypeTag tag)
 
   end
 
@@ -1850,7 +1850,7 @@ and [<AllowNullLiteral>] DynamicSchema =
 //
 *)
 and UserError(value:BoxedValue, line:int, column:int) =
-  inherit IronJS.Support.Error(value |> TC.ToString)
+  inherit IronJS.Error.Error(value |> TC.ToString)
   member x.Value = value
   member x.Line = line
   member x.Column = column
@@ -2074,7 +2074,7 @@ and TypeConverter() =
     if    value.IsNumber  then TC.TryToIndex(value.Number, &index)
     elif  value.IsString  then TC.TryToIndex(value.String, &index)
                           else false
-    
+
   (**)
   static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
@@ -2086,7 +2086,7 @@ and TypeConverter() =
       elif t = typeof<BV> then TC.ToBoxedValue expr
       elif t = typeof<CO> then TC.ToObject(env, expr)
       elif t = typeof<obj> then TC.ToClrObject expr
-      else Support.Errors.noConversion expr.Type t
+      else Error.CompileError.Raise(Error.missingNoConversion expr.Type t)
     
 (**)
 and Maps = {

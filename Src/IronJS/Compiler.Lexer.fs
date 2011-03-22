@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Compiler
 module Lexer =
   
+  open IronJS
   open System
   open System.Globalization
   open System.Collections.Generic
@@ -352,6 +353,7 @@ module Lexer =
     
     [<NoComparison>]
     type T = 
+      val mutable File : string
       val mutable Source : string
       val mutable Index : int
       
@@ -365,6 +367,7 @@ module Lexer =
       val mutable Buffer : Text.StringBuilder
 
       new (source) = {
+        File = "<unknown>"
         Source = source
         Index = 0
         
@@ -377,6 +380,12 @@ module Lexer =
         Previous = Symbol.StartOfInput
         Buffer = Text.StringBuilder(1024)
       }
+
+    let error (t:T) (msg:string) =
+      Error.CompileError.Raise(msg, (t.Line, t.Column), t.Source, t.File)
+
+    let errorStored (t:T) (msg:string)  =
+      Error.CompileError.Raise(msg, (t.StoredLine, t.StoredColumn), t.Source, t.File)
 
     let create (input:string) = T(input)
 
@@ -457,7 +466,7 @@ module Lexer =
       | '?' -> Symbol.Condition
       | ':' -> Symbol.Colon
       | '~' -> Symbol.BitwiseNot
-      | _ -> failwithf "Invalid simple punctuation %c" c
+      | _ -> Error.invalidSimplePunctuation c |> error s
 
     s |> outputSymbol symbol
 
@@ -613,10 +622,10 @@ module Lexer =
     // Used by readAsciiEscape and readUnicodeEscape
     let inline readHexDigit (s:Input.T) =
       s |> advance
-      let first = s |> current
-      if first |> isHex 
-        then first
-        else failwith "Invalid HEX"
+      let c = s |> current
+      if c |> isHex 
+        then c
+        else Error.invalidHexDigit c |> error s
 
     let readUnicodeEscape (s:Input.T) =
       let buffer = Text.StringBuilder(4)
@@ -699,7 +708,7 @@ module Lexer =
 
         //Line terminators are not allowed
         | c when c |> isLineTerminator -> 
-          failwith "Unexpected newline in literal string"
+          Error.newlineIn "string literal" |> error s
 
         //Any other character
         | c -> 
@@ -707,7 +716,7 @@ module Lexer =
           s |> stringLiteral
 
       else
-        failwith "Unexpected end of source in string"
+        Error.unexpectedEnd |> error s
 
     s |> stringLiteral
 
@@ -727,7 +736,7 @@ module Lexer =
         c <- s |> current 
 
       | _ when c |> isLineTerminator  ->
-        failwith "Unexpected line terminator in regexp literal"
+        Error.newlineIn "regexp literal"  |> error s
 
       | _ -> 
         match c with
@@ -857,7 +866,9 @@ module Lexer =
 
               | 'x' -> s |> hexLiteral
               | c when c |> isOctal -> s |> octalLiteral
-              | c when c |> isNonOctalDigit -> failwith "Invalid octal number"
+              | c when c |> isNonOctalDigit -> 
+                Error.invalidOctalDigit c |> error s
+
               | _ -> s |> numberZero
 
             else
@@ -881,7 +892,7 @@ module Lexer =
             else s |> outputSymbol LT
 
         | c -> 
-          failwithf "Unrecognized input: %c" c
+          Error.unrecognizedInput c |> error s
 
       else
         s |> endOfInput

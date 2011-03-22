@@ -55,6 +55,12 @@ module Error =
 
       !result
 
+  /// Partially applied sprintError function
+  /// that prints the default 3 lines above and
+  /// 0 lines after for IronJS.
+  let sprintError = 
+    SourceCodePrinter.sprintError (3, 0)
+
   /// Base class of all IronJS exceptions
   [<AbstractClass>]
   type Error(msg) = 
@@ -66,19 +72,24 @@ module Error =
     inherit Error(msg)
 
     member x.Position = match pos with Some pos -> pos | _ -> 0, 0 
-    member x.SourceCode = match source with Some source -> source | _ -> "" 
-    member x.Path = match path with Some path -> path | _ -> ""
+    member x.SourceCode = match source with Some source -> source | _ -> "<unknown>" 
+    member x.Path = match path with Some path -> path | _ -> "<unknown>"
 
     static member Raise(msg) = 
       raise(CompileError(msg, None, None, None))
 
     static member Raise(msg, pos) = 
+      let msg = sprintf "%s\nOn line %i, column %i" msg (fst pos) (snd pos)
       raise(CompileError(msg, Some pos, None, None))
 
     static member Raise(msg, pos, source) = 
+      let source = source |> sprintError pos
+      let msg = sprintf "%s\nOn line %i, column %i\n%s" msg (fst pos) (snd pos) source
       raise(CompileError(msg, Some pos, Some source, None))
 
     static member Raise(msg, pos, source, path) = 
+      let source = source |> sprintError pos
+      let msg = sprintf "%s\nOn line %i, column %i in %s\n%s" msg (fst pos) (snd pos) path source
       raise(CompileError(msg, Some pos, Some source, Some path))
 
   /// Represents an error raised during runtime
@@ -88,6 +99,21 @@ module Error =
     static member Raise(msg) = 
       raise(RuntimeError(msg))
   
+  // This is the full list of error messages
+  // that can be thrown from IronJS
+
   let notImplemented() = raise <| NotImplementedException()
-  let invalidTypeTag (tag:uint32) = sprintf "Invalid type tag %i" tag
+  let shouldNotHappen() = RuntimeError.Raise("Should not happen")
+
+  let invalidTypeTag (tag:uint32) = sprintf "Invalid type tag '%i'" tag
   let missingVariable = sprintf "Missing variable '%s'"
+  let astMustBeNamedFunction = "The AST top-node must be a named function"
+  let invalidSimplePunctuation = sprintf "Invalid punctuation '%c'"
+  let invalidHexDigit = sprintf "Invalid hex digit '%c'"
+  let invalidOctalDigit = sprintf "Invalid octal digit '%c'"
+  let newlineIn = sprintf "Unexpected line terminator in %s"
+  let unexpectedEnd = "Unexpected end of source input"
+  let unrecognizedInput = sprintf "Unrecognized input '%c'"
+  let cantCallClrFunctionsInWith = 
+    "Can't call CLR functions or methods within dynamic with-blocks"
+

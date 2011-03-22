@@ -19,8 +19,8 @@ module Parser =
 
   type State = {
     Env : Env
-    File : string option
-    Source : string option
+    File : string
+    Source : string
     Tokenizer : unit -> Token
 
     // It's just so much faster
@@ -64,79 +64,19 @@ module Parser =
   type P = State
   module S = Symbol
 
-  (*
-    Creates a string error snippet 
-    that points out the exact source position
-    where the error occured, for example:
-  
-    4: if(x == y) {
-    5:   print'x equals y');
-    ----------^
-  *)
-  let private errorSource pos source =
-    
-    let splitLines (text:string) = 
-      let text = text.Replace("\r\n", "\n").Replace("\r", "\n")
-      System.Text.RegularExpressions.Regex.Split(text, "\n")
-
-    let lineNum (input:int) n = 
-      (input.ToString()).PadLeft(n, '0')
-
-    let stringRepeat n input =
-      if System.String.IsNullOrEmpty input then input
-      else
-        let result = new System.Text.StringBuilder(input.Length * n)
-        result.Insert(0, input, n).ToString()
-
-    match source with
-    | None -> ""
-    | Some(source:string) -> 
-      let source = source |> splitLines 
-      let result = ref ""
-      let line, column = pos
-
-      if line <= source.Length && line > 1 then
-        let nr = line.ToString()
-        let nrl = nr.Length
-
-        //previous line
-        let pline = line - 1
-        if pline >= 1 then 
-          let num = lineNum pline nrl
-          result := num+": "+source.[pline-1]+"\n"
-
-        //current line
-        let text = source.[line-1]
-        if column <= text.Length then
-          let arrow = "-" |> stringRepeat (nrl + column + 1)
-          result := !result+nr+": "+text+"\n"+arrow+"^\n"
-
-      !result
-
-  let exn msg = 
-    Support.CompilerError(msg) |> raise
-
-  let exnLine pos msg = 
-    let line = sprintf "Error on line: %i col: %i\n" (fst pos) (snd pos)
-    Support.CompilerError(line + msg) |> raise
-
-  let exnSource token parser message =
-    let pos = token |> parser.Position
-    let source = parser.Source |> errorSource pos 
-    (source + message) |> exnLine pos
-
   let unexpectedEnd () = 
-    "Unexpected end of input" |> exn
+    Error.CompileError.Raise(Error.unexpectedEnd)
 
   let unexpectedToken parser =
     let type' = parser.Token |> parser.PrettyPrint
-    let unexpected = sprintf "Unexpected: %s"  type'
-    exnSource parser.Token parser unexpected
+    let pos = parser.Token |> parser.Position 
+    let msg = sprintf "Unexpected: %s"  type'
+    Error.CompileError.Raise(msg, pos, parser.Source, parser.File)
 
   let create position prettyPrint = {
     Env = null
-    File = None
-    Source = None
+    File = ""
+    Source = ""
     EndExpression = false
     LineTerminatorPassed = false
     WithStatementCount = 0
@@ -1417,7 +1357,7 @@ module Parser =
           s |> AnalyzersFastUtils.Scope.addClosure closure
 
         | _ ->
-          failwith "Local variable missing?"
+          Error.RuntimeError.Raise(Error.missingVariable name)
 
   /// Parses a source string into an
   /// abstract syntax tree
@@ -1450,7 +1390,8 @@ module Parser =
     let parser = 
       {parserDefinition with 
         Env = env
-        Source = (Some source)
+        File = "<unknown>"
+        Source = source
         Tokenizer = lexer
         Token = lexer()
 

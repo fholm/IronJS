@@ -106,7 +106,7 @@ type DynamicScopeHelpers() =
       compiled.DynamicInvoke(Array.append internalArgs args) |> BoxingUtils.JsBox
 
     else
-      Support.Errors.runtime "Can only call javascript functions inside with-blocks"
+      Error.RuntimeError.Raise(Error.cantCallClrFunctionsInWith)
       
   static member Delete (dc:DynamicScope, g:CommonObject, name:string) =
     match findObject name dc -1 with

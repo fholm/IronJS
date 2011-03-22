@@ -1385,7 +1385,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
       | ArgumentsLinkArray.ClosedOver -> 
         base.Put(uint32 i, x.ClosedOver.[index])
 
-      | _ -> failwith "Que?"
+      | _ -> 
+        Error.shouldNotHappen()
 
   override x.Put(index:uint32, value:BoxedValue) : unit =
     let ii = int index
@@ -1394,7 +1395,7 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
       match x.LinkMap.[ii] with
       | ArgumentsLinkArray.Locals, index -> x.Locals.[index] <- value
       | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index] <- value
-      | _ -> failwith "Que?"
+      | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
 
@@ -1405,7 +1406,7 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
       match x.LinkMap.[ii] with
       | ArgumentsLinkArray.Locals, index -> x.Locals.[index].Number <- value
       | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index].Number <- value
-      | _ -> failwith "Que?"
+      | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
 
@@ -1422,7 +1423,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
         x.ClosedOver.[index].Clr <- value
         x.ClosedOver.[index].Tag <- tag
 
-      | _ -> failwith "Que?"
+      | _ -> 
+        Error.shouldNotHappen()
 
     base.Put(index, value, tag)
 
@@ -1437,7 +1439,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
       | ArgumentsLinkArray.ClosedOver, index -> 
         x.ClosedOver.[index]
 
-      | _ -> failwith "Que?"
+      | _ -> 
+        Error.shouldNotHappen()
 
     else
       base.Get(index)

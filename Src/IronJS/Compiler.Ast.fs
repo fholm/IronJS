@@ -323,12 +323,12 @@ module Ast =
       let increaseLocalIndex name (s:S) =
         match s |> tryGetLocal name with
         | Some local -> s |> replaceLocal (local |> Local.increaseActive)
-        | _ -> failwithf "Missing local variables %s" name
+        | _ -> Error.CompileError.Raise(Error.missingVariable name)
 
       let decreaseLocalIndex name (s:S) =
         match s |> tryGetLocal name with
         | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
-        | _ -> failwithf "Missing local variables %s" name
+        | _ -> Error.CompileError.Raise(Error.missingVariable name)
         
       let hasVariable name (s:S) = (s |> hasLocal name) || (s |> hasClosure name)
       let getVariable name (s:S) =
@@ -380,7 +380,7 @@ module Ast =
           s := {!s with Functions = (!s).Functions |> Map.add name ast}
 
         | _ -> 
-          failwith "AST is not a named function"
+          Error.CompileError.Raise(Error.astMustBeNamedFunction)
 
     module ScopeChain = 
 

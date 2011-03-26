@@ -1768,6 +1768,8 @@ and SO = StringObject
 and [<AllowNullLiteral>] StringObject(env:Env) =
   inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
 
+  override x.ClassName = "String"
+
   override x.Get(i:uint32) =
     let i = int i
     let s = x.Value.Value.String
@@ -1791,6 +1793,8 @@ and [<AllowNullLiteral>] StringObject(env:Env) =
 and NO = NumberObject
 and [<AllowNullLiteral>] NumberObject =
   inherit ValueObject
+  
+  override x.ClassName = "Number"
 
   new (env:Env) = {
     inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
@@ -1803,6 +1807,8 @@ and BO = BooleanObject
 and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
 
+  override x.ClassName = "Boolean"
+
   new (env:Env) = {
     inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean)
   }
@@ -1814,6 +1820,8 @@ and MO = MathObject
 and [<AllowNullLiteral>] MathObject =
   inherit CO
 
+  override x.ClassName = "Math"
+
   new (env:Env) = {
     inherit CO(env, env.Maps.Base, env.Prototypes.Object)
   }
@@ -1824,6 +1832,8 @@ and [<AllowNullLiteral>] MathObject =
 and EO = ErrorObject
 and [<AllowNullLiteral>] ErrorObject =
   inherit CO
+
+  override x.ClassName = "Error"
 
   new (env:Env) = {
     inherit CO(env, env.Maps.Base, env.Prototypes.Error)

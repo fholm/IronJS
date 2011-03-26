@@ -406,7 +406,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     proto.Put("constructor", func, DescriptorAttrs.DontEnum)
     func.ConstructorMode <- ConstructorModes.User
     func.Put("prototype", proto, DescriptorAttrs.DontDelete)
-    func.Put("length", double args, DescriptorAttrs.DontDelete)
+    func.Put("length", double args, DescriptorAttrs.Immutable)
 
     func
 

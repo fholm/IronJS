@@ -12,8 +12,8 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String ->
       
-      let compiled =
-        try 
+      let compiled = 
+        Utils.trapSyntaxError target.Function.Env (fun () ->
           let ast =
             target.Function.Env 
             |> Parser.parse target.Target.String 
@@ -29,15 +29,7 @@ module Global =
             Delegate = None
             Environment = target.Function.Env
           }
-
-        with
-        | :? Error.CompileError as x ->
-          target.Function.Env.RaiseSyntaxError(x.Message)
-
-        | :? System.Reflection.TargetInvocationException as x ->
-          if x.InnerException :? Error.CompileError
-            then target.Function.Env.RaiseSyntaxError(x.InnerException.Message)
-            else raise x
+        )
 
       let localScope =
         if target.LocalScope = null 

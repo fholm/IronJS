@@ -62,4 +62,26 @@ module Utils =
     let args = Dlr.ArrayUtils.Insert(f :> obj, args)
     compiledFunc.DynamicInvoke(args) |> BoxingUtils.JsBox
 
+  ///
+  let internal trapSyntaxError (env:Env) (f:unit -> 'a) =
+      try 
+        f()
 
+      with
+      | :? IronJS.UserError as x ->
+        raise x
+
+      | :? Error.CompileError as x ->
+        env.RaiseSyntaxError(x.Message)
+
+      | :? System.Reflection.TargetInvocationException as exn ->
+        let mutable x = exn :> Exception
+
+        while x.InnerException <> null do
+          x <- x.InnerException
+
+        if x :? Error.CompileError
+          then env.RaiseSyntaxError(x.InnerException.Message)
+          elif x :? UserError 
+            then raise x
+            else raise exn

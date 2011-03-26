@@ -35,7 +35,7 @@ module ControlFlow =
   let private loopLabels () =
     Dlr.labelBreak(), Dlr.labelContinue()
 
-  let doWhile' (ctx:Ctx) label body test =
+  let doWhile' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
     let test = TypeConverter.ToBoolean (ctx.Compile test)
     let body = (ctx.AddLoopLabels label break' continue').Compile body
@@ -159,6 +159,7 @@ module ControlFlow =
     let breakLabel = Dlr.labelBreak()
     let ctx = ctx.AddDefaultLabel breakLabel
     let defaultJump = ref (Dlr.jump breakLabel)
+    let defaultFound = ref false
 
     let compiledCases =
       cases |> List.mapi (fun i case ->
@@ -168,7 +169,7 @@ module ControlFlow =
           let label = Dlr.labelVoid (sprintf "case-%i" i)
           let test = 
             (Dlr.if' 
-              (Operators.eq(valueVar, Utils.box value)) 
+              (Operators.same(valueVar, Utils.box value)) 
               (Dlr.jump label)
             )
 
@@ -181,6 +182,11 @@ module ControlFlow =
           test, body
 
         | Ast.Cases.Default(body) ->
+          if !defaultFound then
+            failwith "Only one default case allowed"
+
+          defaultFound := true
+
           let label = Dlr.labelVoid "default"
 
           // Change the default jump target

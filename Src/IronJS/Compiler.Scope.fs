@@ -1,7 +1,10 @@
 ﻿namespace IronJS.Compiler
 
+open System
+
 open IronJS
 open IronJS.Compiler
+open IronJS.Dlr.Operators
 
 //------------------------------------------------------------------------------
 module Scope =
@@ -9,17 +12,32 @@ module Scope =
   //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
-    let object' = Utils.Box.unboxObject (ctx.Compile init)
+    let object' = Dlr.callStaticT<TC> "ToObject" [ctx.Env; ctx.Compile init]
     let tree = {ctx with InsideWith=true}.Compile tree
 
     let pushArgs = [
       ctx.DynamicScope; object'; 
       Dlr.const' (!ctx.Scope).GlobalLevel]
 
+    let exn = Dlr.paramT<Reflection.TargetInvocationException> "~exn"
+
     Dlr.blockSimple [
       (Dlr.callStaticT<DynamicScopeHelpers> "Push" pushArgs)
-      (tree)
-      (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.DynamicScope])
+      (Dlr.tryCatchFinally
+        (Dlr.block [] [
+          (tree)
+          (Dlr.void')
+        ])
+        [
+          Dlr.catchVar exn (
+            Dlr.block [] [
+              Dlr.throwValue (Dlr.field exn "InnerException")
+              Dlr.void'
+            ]
+          )
+        ]
+        (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.DynamicScope])
+      )
     ]
     
   //--------------------------------------------------------------------------
@@ -86,6 +104,7 @@ module Scope =
         
   //--------------------------------------------------------------------------
   let private initArguments (ctx:Ctx) (s:Ast.Scope ref) =
+    
     if not (!s).ContainsArguments then Dlr.void'
     else 
       match s |> Ast.AnalyzersFastUtils.Scope.getVariable "arguments" with
@@ -105,6 +124,7 @@ module Scope =
                 linkArray, local |> Ast.AnalyzersFastUtils.Local.index
               )
             |> Seq.sortBy (fun (_, i) -> i)
+            |> Seq.take ctx.Target.ParamCount
             |> Array.ofSeq
 
         (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
@@ -114,12 +134,8 @@ module Scope =
                 ctx.Env;
                 Dlr.const' linkMap;
                 ctx.LocalScope;
-                ctx.ClosureScope]))
-            (Object.Property.put 
-              (Dlr.castT<CommonObject> arguments) 
-              (Dlr.const' "callee")
-              (ctx.Function)
-            )
+                ctx.ClosureScope;
+                ctx.Function]))
             (Utils.assign 
               (Dlr.indexInt ctx.LocalScope (local |> Ast.AnalyzersFastUtils.Local.index))
               (arguments))
@@ -140,11 +156,25 @@ module Scope =
       locals |> Map.map (fun _ group ->
         let indexes = group.Indexes
         {group with Indexes = indexes |> Array.map (demoteParam supplied)})
+        
+  //--------------------------------------------------------------------------
+  let private initGlobalScope (ctx:Ctx) =
+    (!ctx.Scope).Globals 
+      |> Set.toSeq
+      |> Seq.map (fun name ->
+        [
+          Object.Property.put !!!name Utils.Constants.undefined ctx.Globals
+          ctx.Globals |> Object.Property.attr !!!name DescriptorAttrs.DontDelete
+        ]
+      )
+      |> Seq.concat
+      |> Dlr.block []
 
   //----------------------------------------------------------------------------
   let init (ctx:Ctx) =
     let scope = ctx.Scope |> Ast.AnalyzersFastUtils.Scope.clone
 
+    let globalScopeInit = initGlobalScope ctx
     let localScopeInit = initLocalScope ctx (!scope).LocalCount
     let closureScopeInit = initClosureScope ctx (!scope).ClosedOverCount
     let dynamicScopeInit = initDynamicScope ctx (!scope).LookupMode
@@ -162,11 +192,19 @@ module Scope =
     let initParams, initNonParams = initLocals ctx locals 
     let initBlock = 
       Seq.concat [
+        [globalScopeInit]
         [localScopeInit]
         [closureScopeInit]
         [dynamicScopeInit]
-        initParams |> List.ofSeq
         initNonParams |> List.ofSeq
+        [
+          (
+            match (!ctx.Scope).SelfReference with
+            | None -> Dlr.void'
+            | Some name -> Identifier.setValue ctx name (ctx.Function)
+          )
+        ]
+        initParams |> List.ofSeq
         [initArguments]
       ] |> Dlr.blockSimple
 

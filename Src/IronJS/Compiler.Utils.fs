@@ -179,7 +179,7 @@ module Utils =
     | tag -> failwithf "Invalid TypeTag '%i'" tag
 
   //----------------------------------------------------------------------------
-  let ensureFunction (expr:Dlr.Expr) ifFunc ifClr =
+  let ensureFunction (ctx:Ctx) (expr:Dlr.Expr) ifFunc ifClr =
     match expr.Type |> TypeTag.OfType with
     | TypeTags.Function -> tempBlock expr (fun expr -> [ifFunc expr])
     | TypeTags.Clr -> tempBlock expr (fun expr -> [ifClr expr])
@@ -187,7 +187,9 @@ module Utils =
     | TypeTags.Bool
     | TypeTags.String
     | TypeTags.Undefined
-    | TypeTags.Number -> Constants.Boxed.undefined
+    | TypeTags.Number -> 
+      Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+
     | TypeTags.Box -> 
       tempBlock expr (fun expr ->
         [
@@ -197,7 +199,8 @@ module Utils =
             (Dlr.ternary
               (Box.isClr expr)
               (ifClr (Box.unboxClr expr))
-              (Constants.Boxed.undefined))
+              (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV> ] [])
+            )
         ])
 
     | tag -> failwithf "Invalid TypeTag '%i'" tag

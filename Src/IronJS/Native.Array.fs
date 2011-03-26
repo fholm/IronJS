@@ -423,7 +423,7 @@ module Array =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Array, Immutable)
 
-    env.Globals.Put("Array", ctor)
+    env.Globals.Put("Array", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Array = ctor}
     
   //----------------------------------------------------------------------------

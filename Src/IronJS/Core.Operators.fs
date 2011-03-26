@@ -121,12 +121,12 @@ type Operators =
       then l.Number < r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String < r.String
-        else 
-          let l = TC.ToPrimitive(l, DefaultValueHint.Number)
-          let r = TC.ToPrimitive(r, DefaultValueHint.Number)
-          if l.IsString && r.IsString
-            then l.String < r.String
-            else TC.ToNumber l < TC.ToNumber r
+        else
+          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+          if l'.IsString && r'.IsString
+            then l'.String < r'.String
+            else TC.ToNumber l' < TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // <=
@@ -136,7 +136,12 @@ type Operators =
       then l.Number <= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String <= r.String
-        else TC.ToNumber l <= TC.ToNumber r
+        else
+          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+          if l'.IsString && r'.IsString
+            then l'.String <= r'.String
+            else TC.ToNumber l' <= TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // >
@@ -146,7 +151,12 @@ type Operators =
       then l.Number > r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String > r.String
-        else TC.ToNumber l > TC.ToNumber r
+        else
+          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+          if l'.IsString && r'.IsString
+            then l'.String > r'.String
+            else TC.ToNumber l' > TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // >=
@@ -156,7 +166,12 @@ type Operators =
       then l.Number >= r.Number
       elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
         then l.String >= r.String
-        else TC.ToNumber l >= TC.ToNumber r
+        else
+          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+          if l'.IsString && r'.IsString
+            then l'.String >= r'.String
+            else TC.ToNumber l' >= TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // ==
@@ -269,11 +284,11 @@ type Operators =
       BV.Box (TC.ToString l + TC.ToString r)
 
     else
-      let l = l |> TC.ToPrimitive
-      let r = r |> TC.ToPrimitive
-      if l.IsString || r.IsString 
-        then (TC.ToString l + TC.ToString r) |> BV.Box
-        else (TC.ToNumber l + TC.ToNumber r) |> BV.Box
+      let l' = l |> TC.ToPrimitive
+      let r' = r |> TC.ToPrimitive
+      if l'.IsString || r'.IsString 
+        then (TC.ToString l' + TC.ToString r') |> BV.Box
+        else (TC.ToNumber l' + TC.ToNumber r') |> BV.Box
       
   //----------------------------------------------------------------------------
   // -
@@ -372,9 +387,20 @@ type Operators =
   static member and' (l, r) = Dlr.callStaticT<Operators> "and'" [l; r]
   static member and' (l:BoxedValue, r:BoxedValue) =
     if not (TC.ToBoolean l) then l else r
+
+  // I seriously hate parts of the ECMA spec.
+  static member and' (l:BoxedValue, r:string, g:CO) =
+    if TC.ToBoolean l 
+      then GlobalScopeHelper.GetGlobal(g, r)
+      else l
     
   //----------------------------------------------------------------------------
   // ||
   static member or' (l, r) = Dlr.callStaticT<Operators> "or'" [l; r]
   static member or' (l:BoxedValue, r:BoxedValue) =
     if TC.ToBoolean l then l else r
+
+  static member or' (l:BoxedValue, r:string, g:CO) =
+    if TC.ToBoolean l
+      then l 
+      else GlobalScopeHelper.GetGlobal(g, r)

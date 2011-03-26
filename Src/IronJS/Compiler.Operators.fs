@@ -10,6 +10,7 @@ module Unary =
   // 11.3
   let postIncDec (ctx:Ctx) (ast:Ast.Tree) op =
     let expr = ctx.Compile ast
+
     let incrementExpr = 
       ctx.Compile(
         Ast.Assign(ast, 
@@ -18,7 +19,10 @@ module Unary =
             Ast.Number 1.0)))
 
     Dlr.blockTmp expr.Type (fun tmp ->
-     [Dlr.assign tmp expr; incrementExpr; tmp :> Dlr.Expr] |> Seq.ofList)
+     [
+      Dlr.assign tmp expr; incrementExpr
+      TC.ToNumber(tmp :> Dlr.Expr) //HACK
+     ] |> Seq.ofList)
 
   //----------------------------------------------------------------------------
   // 11.3.1
@@ -45,6 +49,9 @@ module Unary =
       let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
       Dlr.callStaticT<DynamicScopeHelpers> "Delete" args
 
+    elif name = "arguments" && ctx.Scope |> Ast.AnalyzersFastUtils.Scope.isFunction then
+      !!!false
+
     elif Identifier.isGlobal ctx name then
       deleteProperty ctx ctx.Globals name
 
@@ -65,7 +72,10 @@ module Unary =
       let object' = ctx.Compile object'
       deleteProperty ctx object' name
 
-    | _ -> failwith "Que?"
+    | Ast.This ->
+      !!!false
+
+    | _ -> !!!true
 
   //----------------------------------------------------------------------------
   // 11.4.2
@@ -74,8 +84,28 @@ module Unary =
         
   //----------------------------------------------------------------------------
   // 11.4.3
-  let typeOf (expr:Dlr.Expr) = 
-    Operators.typeOf (expr |> Utils.box)
+  let typeOf (ctx:Ctx) (ast:Ast.Tree) = 
+    match ast with
+    | Ast.Identifier name ->
+
+      let expr =
+
+        if name |> Identifier.isGlobal ctx then 
+          
+          // We have to use the proper 
+          // .Get method of the global object
+          // here to make sure we don't throw
+          // a reference exception when a non
+          // defined variable is accessed
+          Object.Property.get !!!name ctx.Globals
+
+        else 
+          ast |> ctx.Compile
+
+      expr |> Utils.box |> Operators.typeOf
+      
+    | _ ->
+      ast |> ctx.Compile |> Utils.box |> Operators.typeOf
       
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
@@ -160,8 +190,31 @@ module Binary =
   //----------------------------------------------------------------------------
   let compile (ctx:Ctx) op left right =
     let l = ctx.Compile left |> Utils.box 
-    let r = ctx.Compile right |> Utils.box
-    compileExpr ctx op l r
+
+    match op with
+    | BinaryOp.And ->
+
+      match right with
+      | Identifier name when Identifier.isGlobal ctx name  -> 
+        Dlr.callStaticT<Operators> "and'" [l; !!!name; ctx.Globals]
+
+      | _ -> 
+        let r = right |> ctx.Compile
+        compileExpr ctx op l (r |> Utils.box)
+
+    | BinaryOp.Or ->
+      
+      match right with
+      | Identifier name when Identifier.isGlobal ctx name  -> 
+        Dlr.callStaticT<Operators> "or'" [l; !!!name; ctx.Globals]
+
+      | _ -> 
+        let r = right |> ctx.Compile
+        compileExpr ctx op l (r |> Utils.box)
+
+    | _ ->
+      let r = ctx.Compile right |> Utils.box
+      compileExpr ctx op l r
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =

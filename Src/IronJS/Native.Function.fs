@@ -62,7 +62,7 @@ module Function =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)
 
-    env.Globals.Put("Function", ctor)
+    env.Globals.Put("Function", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Function = ctor}
     
   let createPrototype (env:Env) ownPrototype =

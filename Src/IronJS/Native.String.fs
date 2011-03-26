@@ -10,11 +10,11 @@ open IronJS.DescriptorAttrs
 module String =
 
   //----------------------------------------------------------------------------
-  let internal constructor' (ctor:FO) (this:CO) (value:BV) =
+  let internal constructor' (ctor:FO) (this:CO) (args:Args) =
     let value = 
-      match value.Tag with
-      | TypeTags.Undefined -> ""
-      | _ -> TC.ToString value
+      match args.Length with
+      | 0 -> ""
+      | _ -> args.[0] |> TC.ToString
 
     match this with
     | null -> ctor.Env.NewString(value) |> BV.Box
@@ -264,22 +264,22 @@ module String =
     if end' <= 0 then "" else value.Substring(start, end')
     
   //----------------------------------------------------------------------------
-  let internal toLowerCase (this:CommonObject) =
+  let internal toLowerCase (this:CO) =
     let value = this |> TypeConverter.ToString
     value.ToLowerInvariant()
     
   //----------------------------------------------------------------------------
-  let internal toLocaleLowerCase (this:CommonObject) =
+  let internal toLocaleLowerCase (this:CO) =
     let value = this |> TypeConverter.ToString
     value.ToLower()
     
   //----------------------------------------------------------------------------
-  let internal toUpperCase (this:CommonObject) =
+  let internal toUpperCase (this:CO) =
     let value = this |> TypeConverter.ToString
     value.ToUpperInvariant()
     
   //----------------------------------------------------------------------------
-  let internal toLocaleUpperCase (this:CommonObject) =
+  let internal toLocaleUpperCase (this:CO) =
     let value = this |> TypeConverter.ToString
     value.ToUpper()
         
@@ -292,7 +292,7 @@ module String =
     
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
-    let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
+    let ctor = new Func<FO, CO, Args, BV>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
     let fromCharCode = new Func<BoxedValue array, string>(fromCharCode)
@@ -302,7 +302,7 @@ module String =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.String, Immutable)
 
-    env.Globals.Put("String", ctor)
+    env.Globals.Put("String", ctor, DontEnum)
     env.Constructors <- {env.Constructors with String=ctor}
     
   //----------------------------------------------------------------------------

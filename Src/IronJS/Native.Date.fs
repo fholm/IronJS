@@ -134,7 +134,7 @@ module Date =
     ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)
     ctor?UTC <- (JsFunc<Args>(utc) |> create)
 
-    env.Globals?Date <- ctor
+    env.Globals.Put("Date", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Date=ctor}
 
   module Prototype =
@@ -164,6 +164,8 @@ module Date =
     let private toLocaleString (f:FO) (o:CO) = toStringGeneric o Formats.full cc
     let private toLocaleDateString (f:FO) (o:CO) = toStringGeneric o Formats.date cc
     let private toLocaleTimeString (f:FO) (o:CO) = toStringGeneric o Formats.time cc
+    let private toUTCString = toString
+
     let private valueOf (f:FO) (o:CO) =
       o.CastTo<DO>().Date
       |> DateObject.DateTimeToTicks 
@@ -281,3 +283,4 @@ module Date =
       proto?setUTCMonth <- (SetFunc(setUTCMonth) |> create)
       proto?setFullYear <- (SetFunc(setFullYear) |> create)
       proto?setUTCFullYear <- (SetFunc(setUTCFullYear) |> create)
+      proto?toUTCString <- (JsFunc(toUTCString) |> create)

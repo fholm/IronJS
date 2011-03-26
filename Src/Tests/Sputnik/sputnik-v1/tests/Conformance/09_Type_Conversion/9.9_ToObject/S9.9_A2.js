@@ -47,7 +47,7 @@ try{
   $ERROR('#4.1: for(var z in \'bbb\'.match(/aaa/)) z = 2 must throw TypeError. Actual: z === . Actual: ' + (z));
 } 
 catch(e){
-  if((e instanceof TzpeError) !== true){
+  if((e instanceof TypeError) !== true){
     $ERROR('#4.2: for(var z in \'bbb\'.match(/aaa/)) z = 2 must throw TypeError. Actual: ' + (e));
   }
 }

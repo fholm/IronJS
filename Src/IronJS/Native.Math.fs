@@ -31,7 +31,7 @@ module Math =
     math.Put("SQRT1_2", 0.7071067811865476, Immutable)
     math.Put("SQRT2", 1.4142135623730951, Immutable)
 
-    env.Globals.Put("Math", math)
+    env.Globals.Put("Math", math, DontEnum)
 
     let abs = new Func<double, double>(Math.Abs)
     let abs = Utils.createHostFunction env abs
@@ -43,7 +43,7 @@ module Math =
 
     let asin = new Func<double, double>(Math.Asin)
     let asin = Utils.createHostFunction env asin
-    math.Put("acos", asin, DontEnum)
+    math.Put("asin", asin, DontEnum)
 
     let atan = new Func<double, double>(Math.Atan)
     let atan = Utils.createHostFunction env atan

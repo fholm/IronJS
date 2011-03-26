@@ -24,7 +24,7 @@ if (Number(dynaString("+", "0")) !== Number("0")) {
 
 // CHECK#3
 if (Number(dynaString("+Infi", "nity")) !== Number("Infinity")) {
-  $ERROR('#3: Number("+Infin"+"ity") === Number("Infinity")');
+  $ERROR('#3: Number("+Infin"+"ity") === Number("Infinity") == ' + Number(dynaString("+Infi", "nity")));
 }
 
 // CHECK#4

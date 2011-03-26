@@ -1,5 +1,7 @@
 Src/TestResults/**/*
 Build/**/*
+last-test
+*.log
 *.dia~
 *.dia
 *.user

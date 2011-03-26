@@ -2,11 +2,18 @@
     <head>
         <title></title>
         <script type="text/javascript">
+            $ERROR = alert;
 
             (function () {
-                        
-            })();
+                LABEL_DO_LOOP: do {
+                    alert("lol");
+                    LABEL_IN: x = 2;
+                    continue;
+                    LABEL_IN_2: var y = 2;
 
+                    function IN_DO_FUNC() { }
+                } while (0);
+            })();
         </script>
     </head>
     <body></body>

@@ -71,5 +71,5 @@ module Object =
     ctor.Put("prototype", env.Prototypes.Object, Immutable)
 
     env.Prototypes.Object.Put("constructor", ctor, DontEnum)
-    env.Globals.Put("Object", ctor)
+    env.Globals.Put("Object", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Object = ctor}

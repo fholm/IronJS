@@ -14,23 +14,29 @@ module Object =
     //
     let putBox expr name value =
       tempBlockT<CO> expr (fun tmp -> 
-        let args = [name; value]
-        [call tmp "Put" args; value]
+        [tempBlock value (fun valueTmp ->
+          let args = [name; valueTmp]
+          [call tmp "Put" args; valueTmp]
+        )]
       )
     
     //
     let putRef expr name (value:Dlr.Expr) =
       tempBlockT<CO> expr (fun tmp -> 
-        let tag = value.Type |> TypeTag.OfType |> Dlr.const'
-        let args = [name; value; tag]
-        [call tmp "Put" args; value]
+        [tempBlock value (fun valueTmp ->
+          let tag = valueTmp.Type |> TypeTag.OfType |> Dlr.const'
+          let args = [name; valueTmp; tag]
+          [call tmp "Put" args; valueTmp]
+        )]
       )
     
     //
     let putVal expr name (value:Dlr.Expr) =
       tempBlockT<CO> expr (fun tmp -> 
-        let args = [name; Utils.normalizeVal value]
-        [call tmp "Put" args; value]
+        [tempBlock value (fun valueTmp ->
+          let args = [name; Utils.normalizeVal valueTmp]
+          [call tmp "Put" args; valueTmp]
+        )]
       )
 
     //
@@ -50,14 +56,20 @@ module Object =
   
     //
     let get name expr = 
-      tempBlockT<CommonObject> expr (fun tmp -> 
+      tempBlockT<CO> expr (fun tmp -> 
         [call tmp "Get" [name]]
       )
 
     //
     let delete expr name = 
-      tempBlockT<CommonObject> expr (fun tmp -> 
+      tempBlockT<CO> expr (fun tmp -> 
         [call tmp "Delete" [name]]
+      )
+
+    //
+    let attr name (attr:uint16) cobj =
+      tempBlockT<CO> cobj (fun tmp -> 
+        [call tmp "SetAttrs" [name; !!!attr]]
       )
    
   module Index =
@@ -143,7 +155,13 @@ module Object =
 
     ensureObject ctx object'
       (fun x -> Index.get x index)
-      (fun x -> Constants.Boxed.undefined)
+      (fun x -> 
+        (Dlr.ternary 
+          (Dlr.callStaticT<Object> "ReferenceEquals" [Dlr.castT<obj> x; Dlr.null'])
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [])
+          (Utils.Constants.Boxed.undefined)
+        )
+      )
 
   // 11.1.4 array initialiser
   let literalArray (ctx:Ctx) (indexes:Ast.Tree list) = 

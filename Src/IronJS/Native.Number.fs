@@ -8,16 +8,14 @@ open IronJS.DescriptorAttrs
 module Number =
 
   //----------------------------------------------------------------------------
-  let internal constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
+  let internal constructor' (ctor:FO) (this:CO) (args:Args) =
+    let value =
+      match args.Length with
+      | 0 -> 0.0
+      | _ -> args.[0] |> TC.ToNumber
+
     match this with
-    | null -> 
-      let value = 
-        match value.Tag with
-        | TypeTags.Undefined -> 0.0
-        | _ -> value |> TC.ToNumber
-
-      ctor.Env.NewNumber(value) |> BV.Box
-
+    | null -> ctor.Env.NewNumber(value) |> BV.Box
     | _ -> value |> TC.ToNumber |> BV.Box
     
   //----------------------------------------------------------------------------
@@ -125,7 +123,7 @@ module Number =
     
   //----------------------------------------------------------------------------
   let setupConstructor (env:Environment) =
-    let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
+    let ctor = new Func<FO, CO, Args, BoxedValue>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
     ctor.ConstructorMode <- ConstructorModes.Host
@@ -136,7 +134,7 @@ module Number =
     ctor.Put("NEGATIVE_INFINITY", NegInf, Immutable) 
     ctor.Put("POSITIVE_INFINITY", PosInf, Immutable) 
 
-    env.Globals.Put("Number", ctor)
+    env.Globals.Put("Number", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Number=ctor}
     
   //----------------------------------------------------------------------------

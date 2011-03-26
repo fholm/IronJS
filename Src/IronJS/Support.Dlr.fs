@@ -283,6 +283,9 @@ module Dlr =
 
   let throwT<'a> (args:Expr seq) = throw typeof<'a> args
 
+  let throwValue expr =
+    Et.Throw(expr) :> Expr
+
   let catch (typ:System.Type) body = Et.Catch(typ, body)
   let catchT<'a> = catch typeof<'a>
   let catchVar (var:EtParam) body = Et.Catch(var, body)
@@ -403,6 +406,12 @@ module Dlr =
   let isDefault ex = eq ex (default' ex.Type)
   let isNull = isDefault
   let isNotNull = notDefault
+
+  let isNull_Real (expr:Expr) =
+    callStaticT<obj> "ReferenceEquals" [castT<obj> expr; defaultT<obj>]
+
+  let isNotNull_Real (expr:Expr) =
+    expr |> isNull_Real |> not
 
   let assignDefault ex = assign ex (default' ex.Type)
   let assignNull = assignDefault

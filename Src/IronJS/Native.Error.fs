@@ -8,7 +8,7 @@ module Error =
 
   module internal Utils = 
 
-    let private constructor' proto (f:FunctionObject) (_:CommonObject) (message:BoxedValue) =
+    let private constructor' proto (f:FO) (_:CO) (message:BV) =
       let error = f.Env.NewError()
 
       if message.Tag <> TypeTags.Undefined then
@@ -18,7 +18,7 @@ module Error =
       error.Prototype <- proto
       error :> CO
 
-    let setupConstructor (env:Environment) (name:string) (proto:CommonObject) update =
+    let setupConstructor (env:Env) (name:string) (proto:CO) update =
       let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor' proto)
       let ctor = Utils.createHostFunction env ctor
       
@@ -26,10 +26,10 @@ module Error =
       ctor.ConstructorMode <- ConstructorModes.Host
       ctor.Put("prototype", proto, Immutable)
 
-      env.Globals.Put(name, ctor)
+      env.Globals.Put(name, ctor, DontEnum)
       env.Constructors <- update env.Constructors ctor
 
-    let setupPrototype (n:string) (ctor:FunctionObject) (proto:CommonObject) =
+    let setupPrototype (n:string) (ctor:FO) (proto:CO) =
       proto.Put("name", n, DontEnum)
       proto.Put("constructor", ctor, DontEnum)
       proto.Put("message", "", DontEnum)

@@ -45,13 +45,15 @@ module Function =
     Dlr.call ctx.Env "NewFunction" funcArgs
 
   //----------------------------------------------------------------------------
-  let invokeFunction this' args func =
-    Utils.ensureFunction func
+  let invokeFunction ctx this' args func =
+    Utils.ensureFunction ctx func
       (fun func -> 
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = this' :: args
         Dlr.callGeneric func "Call" argTypes args)
-      (fun _ -> Utils.Constants.Boxed.undefined)
+      (fun _ -> 
+        Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+      )
 
   //----------------------------------------------------------------------------
   let invokeIdentifierDynamic (ctx:Ctx) name args =
@@ -67,24 +69,36 @@ module Function =
   let invokeIdentifier (ctx:Ctx) name args =
     if ctx.DynamicLookup 
       then invokeIdentifierDynamic ctx name args
-      else name |> Identifier.getValue ctx |> invokeFunction ctx.Globals args
+      else name |> Identifier.getValue ctx |> invokeFunction ctx ctx.Globals args
       
   //----------------------------------------------------------------------------
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
-      (fun x -> x |> Object.Property.get !!!name |> invokeFunction x args)
-      (fun x -> Utils.Constants.Boxed.undefined))
+      (fun x -> x |> Object.Property.get !!!name |> invokeFunction ctx x args)
+      (fun x -> 
+        (Dlr.ternary
+          (Dlr.isNull_Real x)
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [])
+          (Utils.Constants.Boxed.undefined)
+        )
+      ))
 
   //----------------------------------------------------------------------------
   let invokeIndex (ctx:Ctx) object' index args =
     (Utils.ensureObject ctx object'
-      (fun x -> Object.Index.get x index |> invokeFunction x args)
-      (fun x -> Utils.Constants.Boxed.undefined))
+      (fun x -> Object.Index.get x index |> invokeFunction ctx x args)
+      (fun x -> 
+        (Dlr.ternary
+          (Dlr.isNull_Real x)
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [])
+          (Utils.Constants.Boxed.undefined)
+        )
+      ))
     
   //----------------------------------------------------------------------------
   let createTempVars args =
     List.foldBack (fun a (temps, args:Dlr.Expr list, ass) -> 
-          
+
       if Dlr.Ext.isStatic a then (temps, a :: args, ass)
       else
         let tmp = Dlr.param (Dlr.tmpName()) a.Type
@@ -92,19 +106,24 @@ module Function =
         (tmp :: temps, tmp :> Dlr.Expr :: args, assign :: ass)
 
     ) args ([], [], [])
-    
+
   //----------------------------------------------------------------------------
   // 11.2.2 the new operator
   let new' (ctx:Ctx) func args =
     let args = [for a in args -> ctx.Compile a]
     let func = ctx.Compile func
 
-    Utils.ensureFunction func
+    Utils.ensureFunction ctx func
+      
       (fun f ->
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
         let args = ctx.Globals :: args
-        Dlr.callGeneric f "Construct" argTypes args)
-      (fun _ -> Utils.Constants.Boxed.undefined)
+        Dlr.callGeneric f "Construct" argTypes args
+      )
+
+      (fun _ -> 
+        Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+      )
       
   //----------------------------------------------------------------------------
   // 11.2.3 function calls
@@ -130,7 +149,7 @@ module Function =
         invokeIndex ctx object' index args
 
       //(function(){ ... })();
-      | _ -> tree |> ctx.Compile |> invokeFunction ctx.Globals args
+      | _ -> tree |> ctx.Compile |> invokeFunction ctx ctx.Globals args
 
     Dlr.block temps (assigns @ [invokeExpr])
     

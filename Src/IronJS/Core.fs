@@ -290,6 +290,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   let compilers = new MutableDict<uint64, FunctionCompiler>()
   let functionStrings = new MutableDict<uint64, string>()
   let null' = BV.Box(null, TypeTags.Clr)
+  let compiledCaches = new MutableDict<uint64, CompiledCache>()
 
   [<DefaultValue>] val mutable Return : BV
   [<DefaultValue>] val mutable Globals : CO
@@ -316,6 +317,15 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     if x.HasCompiler f.FunctionId |> not then
       f.Compiler <- compiler
       x.Compilers.Add(f.FunctionId, f.Compiler)
+
+  member x.GetCompilerCache(id:uint64) =
+    let mutable cache = Unchecked.defaultof<CompiledCache>
+
+    if compiledCaches.TryGetValue(id, &cache) |> not then
+      cache <- new CompiledCache()
+      compiledCaches.[id] <- cache
+
+    cache
 
   member x.NewObject() =
     let map = x.Maps.Base
@@ -386,14 +396,14 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewPrototype() =
     let map = x.Maps.Prototype
     let proto = x.Prototypes.Object
-    let prototype = CommonObject(x, map, proto)
+    let prototype = CO(x, map, proto)
     prototype
 
   member x.NewFunction (id, args, closureScope, dynamicScope) =
     let proto = x.NewPrototype()
     let func = FO(x, id, closureScope, dynamicScope)
 
-    proto.Put("constructor", func)
+    proto.Put("constructor", func, DescriptorAttrs.DontEnum)
     func.ConstructorMode <- ConstructorModes.User
     func.Put("prototype", proto, DescriptorAttrs.DontDelete)
     func.Put("length", double args, DescriptorAttrs.DontDelete)
@@ -446,7 +456,7 @@ and CO = CommonObject
 and [<AllowNullLiteral>] CommonObject = 
 
   val Env : Environment
-  val mutable Prototype : CommonObject
+  val mutable Prototype : CO
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
   #if DEBUG
@@ -663,7 +673,7 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Get : uint32 -> BV
   default x.Get(index:uint32) =
-    x.Get(index.ToString())
+    x.Get(string index)
 
   abstract Has : uint32 -> bool
   default x.Has(index:uint32) =
@@ -871,7 +881,6 @@ and [<AllowNullLiteral>] CommonObject =
 
   member x.Get(index:double) : BV = 
     let mutable parsed = 0u
-
     if TC.TryToIndex(index, &parsed) 
       then x.Get(parsed)
       else x.Get(TC.ToString(index))
@@ -897,12 +906,12 @@ and [<AllowNullLiteral>] CommonObject =
 
   // Convenience method for getting a property
   // that you already know is strongly typed
-  member x.Get<'a>(name:String) = 
+  member x.GetT<'a>(name:String) = 
     x.Get(name).Unbox<'a>()
 
   // Convenience method for getting an index
   // that you already know is strongly typed
-  member x.Get<'a>(index:uint32) = 
+  member x.GetT<'a>(index:uint32) = 
     x.Get(index).Unbox<'a>()
 
   //----------------------------------------------------------------------------
@@ -989,7 +998,7 @@ and [<AllowNullLiteral>] CommonObject =
   //
   abstract CollectProperties : unit -> uint32 * MutableSet<String>
   default x.CollectProperties() =
-    let rec collectProperties length (set:MutableSet<String>) (current:CommonObject) =
+    let rec collectProperties length (set:MutableSet<String>) (current:CO) =
       if current |> FSKit.Utils.notNull then
         let length =
           if current :? AO then
@@ -1000,7 +1009,7 @@ and [<AllowNullLiteral>] CommonObject =
             length
 
         for pair in current.PropertySchema.IndexMap do
-          let descriptor = current.Properties.[pair.Value]
+          let descriptor = &current.Properties.[pair.Value]
           if descriptor.HasValue && descriptor.IsEnumerable
             then pair.Key |> set.Add |> ignore
 
@@ -1177,6 +1186,12 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 
     base.Put("length", double length)
 
+  /// Called from .Put methods to maybe update
+  /// length if it turns out we set a property
+  /// that is at or bigger then current length
+  member x.MaybeUpdateLength (length:uint32) =
+    if length > x.Length then x.UpdateLength(length)
+
   member x.ConvertToSparse() =
     if x.IsDense then
       x.Sparse <- new MutableSorted<uint32, BoxedValue>()
@@ -1224,7 +1239,8 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
       else base.Put(name, value, tag)
 
   override x.Put(index:uint32, value:BV) =
-    if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then 
+      x.ConvertToSparse()
 
     if x.IsDense then
       if index > 255u && index/2u > x.Length then
@@ -1243,10 +1259,11 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
     else
       x.Sparse.[index] <- value
 
-    x.UpdateLength(index + 1u)
+    x.MaybeUpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:double) =
-    if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then 
+      x.ConvertToSparse()
 
     if x.IsDense then
       if index > 255u && index/2u > x.Length then
@@ -1262,10 +1279,11 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
     else
       x.Sparse.[index] <- BoxedValue.Box value
 
-    x.UpdateLength(index + 1u)
+    x.MaybeUpdateLength(index + 1u)
 
   override x.Put(index:uint32, value:Object, tag:uint32) =
-    if index > Array.DenseMaxIndex then x.ConvertToSparse()
+    if index > Array.DenseMaxIndex then 
+      x.ConvertToSparse()
 
     if x.IsDense then
       if index > 255u && index/2u > x.Length then
@@ -1282,7 +1300,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
     else
       x.Sparse.[index] <- BoxedValue.Box(value, tag)
 
-    x.UpdateLength(index + 1u)
+    x.MaybeUpdateLength(index + 1u)
 
   override x.Get(index:uint32) =
     let array = x.Find(index)
@@ -1352,9 +1370,8 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 //  
 *)
 and ArgLink = byte * int
-and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array, locals, closedOver) as x =
-  inherit ArrayObject(env, linkMap.Length |> uint32)
-  
+and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals, closedOver) as x =
+  inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
   
   [<DefaultValue>] val mutable Locals : Scope
   [<DefaultValue>] val mutable ClosedOver : Scope
@@ -1366,12 +1383,15 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
     x.ClosedOver <- closedOver
     x.LinkMap <- linkMap
     x.LinkIntact <- true
+    x.Prototype <- x.Env.Prototypes.Object
     
   //----------------------------------------------------------------------------
-  static member New(env, linkMap, locals, closedOver) : ArgumentsObject =
+  static member New(env, linkMap, locals, closedOver, callee:FO) : ArgumentsObject =
     let x = new ArgumentsObject(env, linkMap, locals, closedOver)
-    x.Put("length", double x.LinkMap.Length)
     x.CopyLinkedValues()
+    x.Put("constructor", env.Constructors.Object)
+    x.Put("length", linkMap.Length |> double, DescriptorAttrs.DontEnum)
+    x.Put("callee", callee, DescriptorAttrs.DontEnum)
     x
       
   //----------------------------------------------------------------------------
@@ -1467,12 +1487,14 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Environment, linkMap:ArgLink array,
 //
 *)
 and FO = FunctionObject
+and CompiledCache = MutableDict<Type, Delegate>
 and [<AllowNullLiteral>] FunctionObject =
   inherit CommonObject
 
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : uint64
   val mutable ConstructorMode : byte
+  val mutable CompilerCache : CompiledCache
 
   val mutable ClosureScope : Scope
   val mutable DynamicScope : DynamicScope
@@ -1481,6 +1503,7 @@ and [<AllowNullLiteral>] FunctionObject =
     inherit CommonObject(env, env.Maps.Function, env.Prototypes.Function)
 
     Compiler = env.Compilers.[funcId]
+    CompilerCache = env.GetCompilerCache(funcId)
     FunctionId = funcId
     ConstructorMode = ConstructorModes.User
 
@@ -1488,21 +1511,25 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = dynamicScope
   }
 
-  new (env:Environment, propertyMap) = {
-    inherit CommonObject(env, propertyMap, env.Prototypes.Function)
+  new (env:Environment, propertyMap) as x = 
+    {
+      inherit CommonObject(env, propertyMap, env.Prototypes.Function)
 
-    Compiler = fun _ _ -> null
-    FunctionId = env.NextFunctionId()
-    ConstructorMode = 0uy
+      Compiler = fun _ _ -> null
+      CompilerCache = null
+      FunctionId = env.NextFunctionId()
+      ConstructorMode = 0uy
 
-    ClosureScope = null
-    DynamicScope = List.empty
-  }
+      ClosureScope = null
+      DynamicScope = List.empty
+    } then
+      x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
 
   new (env:Environment) = {
     inherit CommonObject(env)
 
     Compiler = fun _ _ -> null
+    CompilerCache = env.GetCompilerCache(0UL)
     FunctionId = 0UL
     ConstructorMode = 0uy
 
@@ -1517,18 +1544,29 @@ and [<AllowNullLiteral>] FunctionObject =
     | TypeTags.Object -> prototype.Object
     | _ -> x.Env.Prototypes.Object
 
-  member x.HasInstance(cobj:CO) : bool =
-    let prototype = x.Get("prototype")
+  member x.HasInstance(v:CO) : bool =
+    let o = x.Get("prototype")
 
-    if prototype.IsObject |> not then
+    if o.IsObject |> not then
       x.Env.RaiseTypeError("prototype property is not an object")
+      
+    let mutable found = false
+    let mutable v = if v <> null then v.Prototype else null
 
-    if cobj = null || cobj.Prototype = null
-      then false 
-      else Object.ReferenceEquals(prototype.Object, cobj.Prototype)
+    while not found && FSKit.Utils.notNull v do
+      found <- Object.ReferenceEquals(o.Object, v)
+      v <- v.Prototype
+
+    found
 
   member x.CompileAs<'a when 'a :> Delegate>() =
-    (x.Compiler x typeof<'a>) :?> 'a
+    let mutable compiled = Unchecked.defaultof<Delegate>
+
+    if x.CompilerCache.TryGetValue(typeof<'a>, &compiled) |> not then
+      compiled <- (x.Compiler x typeof<'a>)
+      x.CompilerCache.[typeof<'a>] <- compiled
+
+    compiled :?> 'a
 
   member x.Call(this) : BV =
     let func = x.CompileAs<JsFunc>()
@@ -1566,8 +1604,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o) 
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1579,8 +1620,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1592,8 +1636,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a, b) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a, b)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1605,8 +1652,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a, b, c) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a, b, c)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1618,8 +1668,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a, b, c, d) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a, b, c, d)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1631,8 +1684,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a, b, c, d, e) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a, b, c, d, e)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1644,8 +1700,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | ConstructorModes.User -> 
       let o = x.Env.NewObject()
       o.Prototype <- x.InstancePrototype
-      func.Invoke(x, o, a, b, c, d, e, f) |> ignore
-      BoxedValue.Box(o)
+      let r = func.Invoke(x, o, a, b, c, d, e, f)
+      match r.Tag with
+      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> BoxedValue.Box(o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1704,12 +1763,25 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 //  
 *)
 and SO = StringObject
-and [<AllowNullLiteral>] StringObject =
-  inherit ValueObject
+and [<AllowNullLiteral>] StringObject(env:Env) =
+  inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
 
-  new (env:Env) = {
-    inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
-  }
+  override x.Get(i:uint32) =
+    let i = int i
+    let s = x.Value.Value.String
+
+    if x.Value.HasValue && i < s.Length 
+      then s.[i].ToString() |> BV.Box
+      else Undefined.Boxed
+
+  override x.Get(s:string) =
+    let mutable i = 0
+    if Int32.TryParse(s, &i) then 
+      if i >= 0
+        then x.Get(uint32 i)
+        else Undefined.Boxed
+    else
+      base.Get(s)
 
 (*
 //  
@@ -1738,10 +1810,10 @@ and [<AllowNullLiteral>] BooleanObject =
 *)
 and MO = MathObject
 and [<AllowNullLiteral>] MathObject =
-  inherit CommonObject
+  inherit CO
 
   new (env:Env) = {
-    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
+    inherit CO(env, env.Maps.Base, env.Prototypes.Object)
   }
 
 (*
@@ -1749,10 +1821,10 @@ and [<AllowNullLiteral>] MathObject =
 *)
 and EO = ErrorObject
 and [<AllowNullLiteral>] ErrorObject =
-  inherit CommonObject
+  inherit CO
 
   new (env:Env) = {
-    inherit CommonObject(env, env.Maps.Base, env.Prototypes.Error)
+    inherit CO(env, env.Maps.Base, env.Prototypes.Error)
   }
     
 (*
@@ -1884,6 +1956,9 @@ and BoxingUtils() =
 and TC = TypeConverter
 and TypeConverter() =
 
+  static let scientificSmallNegative = 
+    Text.RegularExpressions.Regex("E-0*([1-6])$", RegexOptions.Compiled)
+
   (**)
   static member ToBoxedValue(v:BV) = v
   static member ToBoxedValue(d:double) = BV.Box(d)
@@ -1891,6 +1966,7 @@ and TypeConverter() =
   static member ToBoxedValue(s:string) = BV.Box(s)
   static member ToBoxedValue(o:CO) = BV.Box(o)
   static member ToBoxedValue(f:FO) = BV.Box(f)
+  static member ToBoxedValue(u:Undef) = BV.Box(u)
   static member ToBoxedValue(c:obj) = BV.Box(c)
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToBoxedValue" [expr]
@@ -1917,8 +1993,9 @@ and TypeConverter() =
 
   (**)
   static member ToObject(env:Environment, o:CO) : CO = o
-  static member ToObject(env:Environment, f:FO) : CO = f :> CommonObject
+  static member ToObject(env:Environment, f:FO) : CO = f :> CO
   static member ToObject(env:Environment, u:Undef) : CO = env.RaiseTypeError()
+  static member ToObject(env:Environment, o:obj) : CO = env.RaiseTypeError()
   static member ToObject(env:Environment, s:string) : CO = env.NewString(s)
   static member ToObject(env:Environment, n:double) : CO = env.NewNumber(n)
   static member ToObject(env:Environment, b:bool) : CO = env.NewBoolean(b)
@@ -1938,9 +2015,13 @@ and TypeConverter() =
   (**)
   static member ToBoolean(b:bool) : bool = b
   static member ToBoolean(d:double) : bool = d > 0.0 || d < 0.0
-  static member ToBoolean(c:obj) : bool = if c = null then false else true
+  static member ToBoolean(c:obj) : bool = 
+    if c = null then false else true
+
   static member ToBoolean(s:string) : bool = s.Length > 0
-  static member ToBoolean(u:Undef) : bool = false
+  static member ToBoolean(u:Undef) : bool = 
+    false
+
   static member ToBoolean(o:CO) : bool = true
   static member ToBoolean(v:BV) : bool =
     match v.Tag with
@@ -1963,7 +2044,9 @@ and TypeConverter() =
   static member ToPrimitive(o:CO, hint:DefaultValueHint) : BV = o.DefaultValue(hint)
   static member ToPrimitive(u:Undef, _:DefaultValueHint) : BV = Undefined.Boxed
   static member ToPrimitive(c:obj, _:DefaultValueHint) : BV = 
-    BoxedValue.Box (if c = null then null else c.ToString())
+    if c = null 
+      then Unchecked.defaultof<obj> |> BV.Box
+      else c.ToString() |> BV.Box
 
   static member ToPrimitive(v:BV) : BV =
     TC.ToPrimitive(v, DefaultValueHint.None)
@@ -1986,7 +2069,34 @@ and TypeConverter() =
     if FSKit.Utils.isNull c then "null" else c.ToString()
 
   static member ToString(d:double) : string = 
-    if System.Double.IsInfinity d then "Infinity" else d.ToString()
+    if Double.IsInfinity d then 
+      if Double.IsNegativeInfinity d 
+        then "-Infinity" 
+        else "Infinity"
+
+    elif Double.IsNaN d then
+      "NaN"
+
+    else 
+      // This is incredibly hacky but 
+      // it's late and I'm tired. It 
+      // fixes the differences between
+      // how .NET and JavaScript represents
+      // scientific notation, really should
+      // write a proper number formatter class
+
+      // Deals with E-01 to E-06
+      if (d >= 0.000001 && d > 0.0 && d < 1.0) || (d > -0.000001 |> not && d < 0.0 && d > -1.0) then
+        d.ToString("0.###########################################################", invariantCulture)
+
+      // Deals with E+01 to E-14
+      elif (d >= 1.0 && d < 1000000000000000.0) || (d > -1000000000000000.0 && d <= -1.0) then
+        d |> string
+
+      // Deals with <= E-07 and >= E+15
+      else
+        (d |> string).Replace("E", "e").Replace("e-0", "e-")
+
 
   static member ToString(o:CO) : string = 
     if o :? StringObject 
@@ -2027,11 +2137,38 @@ and TypeConverter() =
 
   static member ToNumber(s:string) : double =
     let mutable d = 0.0
-    if Double.TryParse(s, anyNumber, invariantCulture, &d) && s.Contains(",") |> not
-      then d 
-      elif s.Length = 0
-        then 0.0
+
+    if s = null then
+      0.0
+
+    elif Double.TryParse(s, anyNumber, invariantCulture, &d) && s.Contains(",") |> not then 
+      if d = 0.0 
+        then (if s.[0] = '-' then -0.0 else 0.0)
+        else d
+
+    elif s.Length = 0 then 
+      0.0
+      
+    elif s.Length > 1 && s.[0] = '0' && (s.[1] = 'x' || s.[1] = 'X') then
+      let mutable i = 0
+
+      if System.Int32.TryParse(s.Substring(2), NumberStyles.HexNumber, invariantCulture, &i) 
+        then i |> double
         else NaN
+
+    else
+      try
+        System.Convert.ToInt32(s, 8) |> double
+
+      with
+        | _ -> 
+        let mutable bi = Unchecked.defaultof<bigint>
+
+        if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
+          then PosInf
+        elif s.Trim() = "+Infinity"
+          then PosInf
+          else NaN
 
   static member ToNumber(d:double) : double = 
     if d = TaggedBools.True 

@@ -68,7 +68,7 @@ module RegExp =
     ctor.ConstructorMode <- ConstructorModes.Host
 
     env.Constructors <- {env.Constructors with RegExp=ctor}
-    env.Globals?RegExp <- ctor
+    env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
 
   let internal setupPrototype (env:Environment) =
     let create func = func |> Utils.createHostFunction env

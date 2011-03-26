@@ -8,6 +8,7 @@ open System
 open System.Globalization
 
 open IronJS
+open IronJS.Support.Aliases
 open IronJS.Compiler
 open IronJS.Compiler.Ast
 open IronJS.Compiler.Lexer
@@ -31,6 +32,7 @@ module Parser =
     mutable EndExpression : bool
     mutable LineTerminatorPassed : bool
     mutable WithStatementCount : int
+    mutable BlockLevel : int
 
     Position : Token -> int * int
     PrettyPrint : Token -> string
@@ -80,6 +82,7 @@ module Parser =
     EndExpression = false
     LineTerminatorPassed = false
     WithStatementCount = 0
+    BlockLevel = 0
 
     Token = Unchecked.defaultof<Token>
     Tokenizer = Unchecked.defaultof<unit -> Token>
@@ -148,6 +151,16 @@ module Parser =
   /// Util function for converting
   /// a string to an octal value
   let toOctal (s:string) = Convert.ToInt32(s, 8)
+
+  let invalidNumber = sprintf "Invalid number '%s'"
+  let parseNumber (s:string) =
+    let mutable d = 0.0
+    let mutable bi = Unchecked.defaultof<Numerics.BigInteger>
+    if Double.TryParse(s, anyNumber, invariantCulture, &d) 
+      then d
+      elif Numerics.BigInteger.TryParse(s, anyNumber, invariantCulture, &bi) 
+        then Double.PositiveInfinity
+        else s |> invalidNumber |> Error.CompileError.Raise
   
   ///
   let schain (p:P) = p.ScopeChain
@@ -269,17 +282,20 @@ module Parser =
   /// or end of input or it's an identifier
   /// followed by a colon (a label) followed
   /// by another non-expression statement
-  let expressionStatement (p:P) =
+  let rec expressionStatement (p:P) =
     let expr = p |> anyExpression
 
     match expr with
     // identifier followed by a colon is a label
     | Identifier name when p |> csymbol = S.Colon ->
       p |> consume
-      let stmt = p |> cstmt
-      if stmt |> FSKit.Utils.notNull 
-        then Tree.Label(name, p |> stmt p.Token)
-        else p |> unexpectedToken
+
+      match p |> statement with
+      | Tree.For(_, a, b, c, d) -> Tree.For(Some name, a, b, c, d)
+      | Tree.ForIn(_, a, b, c) -> Tree.ForIn(Some name, a, b, c)
+      | Tree.While(_, a, b) -> Tree.While(Some name, a, b)
+      | Tree.DoWhile(_, a, b)-> Tree.DoWhile(Some name, a, b)
+      | stmt -> Tree.Label(name, stmt)
 
     // Normal expression, expect end of statement
     | _ ->
@@ -290,7 +306,7 @@ module Parser =
   /// Parses a statement, which is either
   /// a token that has a statement function
   /// or an expression statement
-  let statement (p:P) =
+  and statement (p:P) =
     let stmt = p |> cstmt
     if stmt |> FSKit.Utils.notNull 
       then p |> stmt p.Token
@@ -500,7 +516,10 @@ module Parser =
         p |> consume
         let expr = p |> anyExpression
         p |> expect S.RightParenthesis
-        Tree.ForIn(None, name |> Tree.Identifier |> Tree.Var, expr, p |> block)
+
+        let body = p |> block
+
+        Tree.ForIn(None, name |> Tree.Identifier |> Tree.Var, expr, body)
 
       // for(var x = 0, ...)
       | S.Assign ->
@@ -535,7 +554,8 @@ module Parser =
       // for(x.z in y)
       | Tree.Binary(BinaryOp.In, target, expr) ->
         p |> expect S.RightParenthesis
-        Tree.ForIn(None, target, expr, p |> block)
+        let body = p |> block
+        Tree.ForIn(None, target, expr, body)
 
       // for(...; ...)
       | init -> 
@@ -689,6 +709,8 @@ module Parser =
 
   /// Implements: 12.5 The if Statement
   let rec if' _ p =
+    p.BlockLevel <- p.BlockLevel + 1
+
     // Consume the if token
     p |> consume
 
@@ -707,15 +729,18 @@ module Parser =
       // We have to look at the next token again
       // to see if we have an else if or a normal
       // else block
-      match p |> csymbol with
-      | S.If -> 
-        Tree.IfElse(testAst, bodyAst, Some(if' p.Token p))
-
-      | _ -> 
-        Tree.IfElse(testAst, bodyAst, Some(p |> block))
+      let stmt =
+        match p |> csymbol with
+        | S.If -> Tree.IfElse(testAst, bodyAst, Some(if' p.Token p))
+        | _ -> Tree.IfElse(testAst, bodyAst, Some(p |> block))
+        
+      p.BlockLevel <- p.BlockLevel - 1
+      stmt
 
     // If it's not an else, insert an an empty branch
-    | _ -> Tree.IfElse(testAst, bodyAst, None)
+    | _ -> 
+      p.BlockLevel <- p.BlockLevel - 1
+      Tree.IfElse(testAst, bodyAst, None)
 
   /// Implements: 11.13.1 Simple Assignment ( = )
   let simpleAssignment _ leftAst p =
@@ -773,7 +798,7 @@ module Parser =
 
     // Read the next grouped expression
     let testAst = p |> grouping p.Token
-
+    
     // Read the body block
     let bodyAst = p |> block
 
@@ -874,7 +899,7 @@ module Parser =
     // in that case de-construct it
     // and return that instead of the call
     match functionAst with
-    | Tree.New(constructorExpr, _) -> 
+    | Tree.New(constructorExpr, []) -> 
       Tree.New(constructorExpr, argAsts)
 
     // Eval call
@@ -952,6 +977,7 @@ module Parser =
     // from either a string or an identifier
     let propertyName (p:P) =
       match p.Token with
+      | Symbol.Number, name, _, _
       | Symbol.Identifier, name, _, _  
       | Symbol.String, name, _, _ -> 
         p |> consume
@@ -983,8 +1009,16 @@ module Parser =
 
   /// Implements: 11.2.5 Function Expressions
   /// Implements: 13 Function Definition
-  let function' _ p =
+  let private functionDefinitionNotAllowed =
+    "function definition not allowed inside conditional statements or blocks"
+
+  let function' isDefinition _ p =
     
+    // Function definitions are not allowed
+    // within if statements
+    if isDefinition && p.BlockLevel > 0 then
+      functionDefinitionNotAllowed |> Error.CompileError.Raise
+
     // Consume the function keyword token
     p |> consume
 
@@ -1005,7 +1039,12 @@ module Parser =
         scope |> Ast.AnalyzersFastUtils.Scope.addParameter name
 
         match p |> csymbol with
-        | S.Comma -> p |> consume
+        | S.Comma -> 
+          p |> consume
+
+          if p |> csymbol = S.RightParenthesis then
+            p |> unexpectedToken 
+
         | S.RightParenthesis -> ()
         | _ -> p |> unexpectedToken
 
@@ -1018,7 +1057,10 @@ module Parser =
     let name = 
       match p.Token with
       | S.Identifier, name, _, _ -> 
-        p |> cscope |> AnalyzersFastUtils.Scope.addLocal name None
+
+        if isDefinition then
+          p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
+
         p |> consume
         Some name
 
@@ -1028,6 +1070,9 @@ module Parser =
     // Build the current scope
     let scope = p |> buildScope
     let scopeId = (!scope).Id
+
+    if p.WithStatementCount > 0 then
+      scope |> AnalyzersFastUtils.Scope.setDynamicLookup
 
     // Add the newly created scope to
     // the scope map, so we can get it
@@ -1049,17 +1094,29 @@ module Parser =
 
     // Parse the body within it's enclosing scope chain
     p |> schain |> AnalyzersFastUtils.ScopeChain.push scope
+    
+    let prevBlockLevel = p.BlockLevel
+    p.BlockLevel <- 0
     let body = p |> block
+    p.BlockLevel <- prevBlockLevel
+
     p |> schain |> AnalyzersFastUtils.ScopeChain.pop
 
     match name with
-    | Some name -> 
+    | Some name when isDefinition -> 
       let func = Tree.FunctionFast(Some name, scope, body)
       p |> cscope |> AnalyzersFastUtils.Scope.addFunction func
-      Tree.Identifier name
+      Tree.Pass
 
-    | _ -> 
+    | Some name -> 
+      scope |> AnalyzersFastUtils.Scope.setSelfReference name
+      scope |> AnalyzersFastUtils.Scope.addFunctionLocal name
+
       Tree.FunctionFast(None, scope, body)
+
+    | None ->
+      Tree.FunctionFast(None, scope, body)
+      
 
   /// Implements: 12.2 Variable statement
   let var _ p =
@@ -1070,11 +1127,8 @@ module Parser =
     let rec parseVariables (p:P) =
       let name = p |> consumeIdentifier 
       let identifier = Tree.Identifier name
-
-      p 
-      |> schain
-      |> Ast.AnalyzersFastUtils.ScopeChain.top
-      |> Ast.AnalyzersFastUtils.Scope.addLocal name None
+      
+      p |> cscope |> Ast.AnalyzersFastUtils.Scope.addFunctionLocal name
 
       let expr = 
         match p |> csymbol with
@@ -1091,11 +1145,10 @@ module Parser =
         p |> consume
         expr :: (p |> parseVariables)
 
-      | S.Semicolon | S.EndOfInput ->
-        p |> consume
+      | _ when p |> tryEndStatement ->
         [expr]
 
-      | _ ->
+      | _ -> 
         p |> unexpectedToken
 
     // Parse all defined variables in this var statement
@@ -1105,14 +1158,23 @@ module Parser =
   let identifier t (p:P) =
     let name = p |> consumeIdentifier
 
-    if name = "arguments" then
-      p |> cscope |> AnalyzersFastUtils.Scope.addLocal name None
+                             // This check allows the use of "arguments" as a function parameter
+                             // without creating the ActivationObject.arguments object
+    if name = "arguments" && p |> cscope |> AnalyzersFastUtils.Scope.hasLocal "arguments" |> not then
+      p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
       p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
 
     if p |> cscope |> AnalyzersFastUtils.Scope.hasLocal name |> not
       then p.ScopeClosures.[p |> cscopeId].Add(name) |> ignore
 
     Tree.Identifier(name)
+
+  /// Implements: 
+  let codeBlock _ (p:P) =
+    p.BlockLevel <- p.BlockLevel + 1
+    let block = p |> block 
+    p.BlockLevel <- p.BlockLevel - 1
+    block
    
   let internal parserDefinition =
     create position prettyPrint
@@ -1128,7 +1190,7 @@ module Parser =
     |> simple S.This Tree.This
     |> simplef S.String (value >> Tree.String)
     |> simplef S.Identifier (value >> Tree.Identifier)
-    |> simplef S.Number (value >> double >> Tree.Number)
+    |> simplef S.Number (value >> parseNumber >> Tree.Number)
     |> simplef S.HexLiteral (value >> int >> double >> Tree.Number)
     |> simplef S.OctalLiteral (value >> toOctal >> double >> Tree.Number)
     |> simplef S.Identifier (value >> Tree.Identifier)
@@ -1138,7 +1200,7 @@ module Parser =
     |> nud S.New new'
     |> nud S.LeftBracket arrayLiteral
     |> nud S.LeftBrace objectLiteral
-    |> nud S.Function function'
+    |> nud S.Function (function' false)
     |> nud S.Identifier identifier
     
     (*
@@ -1229,6 +1291,7 @@ module Parser =
     |> nullStmt S.Semicolon
     |> nullStmt S.LineTerminator
 
+    |> smd S.LeftBrace codeBlock
     |> smd S.Var var
     |> smd S.For for'
     |> smd S.If if'
@@ -1241,6 +1304,7 @@ module Parser =
     |> smd S.Throw throw
     |> smd S.Break break'
     |> smd S.Continue continue'
+    |> smd S.Function (function' true)
 
   let private resolveClosures (p:P) =
     
@@ -1264,7 +1328,7 @@ module Parser =
 
         let lookupMode =
           match (!s).LookupMode with
-          | LookupMode.Dynamic 
+          | LookupMode.Dynamic -> LookupMode.Dynamic
           | _ when withCount > 0 -> LookupMode.Dynamic
           | _ ->
             match p.ScopeParents.[id] with

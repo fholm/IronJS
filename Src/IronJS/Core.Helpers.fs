@@ -14,7 +14,7 @@ module FSharpOperators =
     methodInfo.Invoke(a, [|b; c|]) |> ignore
 
   let (?) (a:'a when 'a :> CO) (name:string) : 'b =
-    a.Get<'b>(name) 
+    a.GetT<'b>(name) 
 
 (*
 //
@@ -60,7 +60,19 @@ module DelegateCache =
           else createDelegate' types
 
     createDelegate' types
-        
+
+/// Helper functions for the global scope
+type GlobalScopeHelper() =
+  
+  static member GetGlobal(globals:CO, name:string) =
+    let descriptor = globals.Find(name)
+    if descriptor.HasValue 
+      then descriptor.Value
+      else globals.Env.RaiseReferenceError(sprintf "%s is not defined" name)
+
+  static member GetGlobalNice(globals:CO, name:string) =
+    globals.Get(name)
+
 (*
 //
 *)
@@ -83,17 +95,17 @@ type DynamicScopeHelpers() =
     | Some o -> name |> o.Get |> Some
     | _ -> None
     
-  static member Get (name:string, dc, stop, g:CommonObject, s:Scope, i) =
+  static member Get (name:string, dc, stop, g:CO, s:Scope, i) =
     match findObject name dc stop with
     | Some o -> o.Get name
     | _ -> if s = null then g.Get name else s.[i]
     
-  static member Set (name:string, v:BoxedValue, dc, stop, g:CommonObject, s:Scope, i) =
+  static member Set (name:string, v:BoxedValue, dc, stop, g:CO, s:Scope, i) =
     match findObject name dc stop with
     | Some o -> o.Put(name, v)
     | _ -> if s = null then g.Put(name, v) else s.[i] <- v
     
-  static member Call<'a when 'a :> System.Delegate> (name:string, args, dc, stop, g, s:Scope, i) =
+  static member Call<'a when 'a :> Delegate> (name:string, args, dc, stop, g, s:Scope, i) =
     let this, func = 
       match findObject name dc stop with
       | Some o -> o, o.Get(name)
@@ -108,7 +120,7 @@ type DynamicScopeHelpers() =
     else
       Error.RuntimeError.Raise(Error.cantCallClrFunctionsInWith)
       
-  static member Delete (dc:DynamicScope, g:CommonObject, name:string) =
+  static member Delete (dc:DynamicScope, g:CO, name:string) =
     match findObject name dc -1 with
     | Some o -> o.Delete(name)
     | _ -> g.Delete(name)

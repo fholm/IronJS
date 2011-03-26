@@ -23,7 +23,12 @@ try {
 //////////////////////////////////////////////////////////////////////////////
 //CHECK#2
 try {
-	if(function __func(){throw "FunctionExpression";}) (function(){throw "TrueBranch"})(); else (function(){"MissBranch"})();
+	if(function __func(){throw "FunctionExpression";}) {
+		(function(){throw "TrueBranch"})();
+
+	} else {
+		(function(){"MissBranch"})();
+	}
 } catch (e) {
 	if (e !== "TrueBranch") {
 		$ERROR('#2: Exception ==="TrueBranch". Actual:  Exception ==='+ e);

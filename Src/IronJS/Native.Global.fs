@@ -11,8 +11,17 @@ module Global =
   let eval (target:Compiler.EvalTarget) =
     match target.Target.Tag with
     | TypeTags.String ->
+      
+      let ast =
+        try 
+          target.Function.Env 
+          |> Parser.parse target.Target.String 
+          |> fst
 
-      let ast = target.Function.Env |> Parser.parse target.Target.String |> fst
+        with
+        | :? Error.CompileError as x ->
+          target.Function.Env.RaiseSyntaxError(x.Message)
+
       let scope = ref {Ast.Scope.New with Closures=target.Closures}
       let tree = Ast.FunctionFast(None, scope, ast)
       let levels = Some(target.GlobalLevel, target.ClosureLevel)
@@ -35,30 +44,35 @@ module Global =
           then Array.empty<BV> 
           else target.ClosureScope
 
-      BoxingUtils.JsBox (
+      let result =
+        
         compiled.DynamicInvoke(
           target.Function,
           target.This,
           localScope,
           closureScope,
-          target.DynamicScope))
+          target.DynamicScope)
+
+      if FSKit.Utils.isNull result
+        then Undef.Boxed
+        else result |> BoxingUtils.JsBox
 
     | _ -> target.Target
 
   let parseInt (str:string) = 
-    BV.Box(double (System.Int32.Parse(str)))
+    str |> Int32.Parse |> double |> BV.Box
 
   let parseFloat (str:string) = 
-    BV.Box(TypeConverter.ToNumber str)
+    str |> TC.ToNumber |> BV.Box
 
   let isNaN (number:double) = 
     number <> number |> BV.Box
 
-  let isFinite (number:double) =
-      if    number <> number                  then false
-      elif  number = Double.PositiveInfinity  then false
-      elif  number = Double.NegativeInfinity  then false
-                                              else true
+  let isFinite (n:double) =
+      if    n <> n      then false
+      elif  n = PosInf  then false
+      elif  n = NegInf  then false
+                        else true
 
   // These two arrays are copied from the Jint sources
   let private reservedEncoded = 

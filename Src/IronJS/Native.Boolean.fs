@@ -32,7 +32,7 @@ module Boolean =
     ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
 
-    env.Globals.Put("Boolean", ctor)
+    env.Globals.Put("Boolean", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Boolean=ctor}
 
   let setupPrototype (env:Environment) =

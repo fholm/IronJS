@@ -26,7 +26,9 @@ module Core =
     | Ast.Identifier name -> Identifier.getValue ctx name
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
     | Ast.Eval tree -> compileEval ctx tree
+    | Ast.Comma(left, right) -> Dlr.block [] [ctx.Compile left; ctx.Compile right;]
     | Ast.Var ast -> compileAst ctx ast
+
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
@@ -81,7 +83,7 @@ module Core =
   and private compileUnary ctx op ast =
     match op with
     | Ast.UnaryOp.Delete -> Unary.delete ctx ast
-    | Ast.UnaryOp.TypeOf -> Unary.typeOf (compileAst ctx ast)
+    | Ast.UnaryOp.TypeOf -> Unary.typeOf ctx ast
     | Ast.UnaryOp.Void -> Unary.void' ctx ast
     | Ast.UnaryOp.Inc -> Unary.increment ctx ast
     | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
@@ -121,7 +123,7 @@ module Core =
       (Utils.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
       (Utils.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
 
-      eval |> Function.invokeFunction ctx.This [target]
+      eval |> Function.invokeFunction ctx ctx.This [target]
     ]
 
   //----------------------------------------------------------------------------
@@ -150,9 +152,8 @@ module Core =
             argTypes  |> Seq.skip skipCount
                       |> Seq.toArray
                       |> Array.length
-                      |> (+) (-1)
-            
-          for i = 0 to argLength do
+
+          for i = 0 to (argLength - 1) do
             let name = "~arg" + string (!scope).ParamCount
             let paramIndex = Some (!scope).ParamCount
             scope |> Ast.AnalyzersFastUtils.Scope.addLocal name paramIndex
@@ -190,7 +191,16 @@ module Core =
       match func with
       | Ast.FunctionFast(Some name, scope, body) ->
         let func = Function.create ctx compile scope func
-        Identifier.setValue ctx name func
+        let setFunc = Identifier.setValue ctx name func
+
+        if ctx.Scope |> Ast.AnalyzersFastUtils.Scope.isGlobal then
+          Dlr.block [] [
+            setFunc
+            Dlr.call ctx.Globals "SetAttrs" [!!!name; !!!DescriptorAttrs.DontDelete]
+          ]
+
+        else
+          setFunc
 
       | _ -> failwith "Que?"
 
@@ -203,7 +213,13 @@ module Core =
     //Return expression
     let returnExpr = 
       if ctx.Target.IsFunction 
-        then [Dlr.labelExprVoid ctx.ReturnLabel; ctx.EnvReturnBox]
+        then [
+            Utils.assign ctx.EnvReturnBox Utils.Constants.Boxed.undefined;
+            Dlr.returnVoid ctx.ReturnLabel;
+            Dlr.labelExprVoid ctx.ReturnLabel; 
+            ctx.EnvReturnBox;
+          ]
+
         else []
 
     //Local internal variables

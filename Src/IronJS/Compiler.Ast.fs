@@ -173,10 +173,13 @@ module Ast =
     EvalMode: EvalMode
     LookupMode: LookupMode
     ContainsArguments: bool
-    
+    SelfReference : string option
+
+    Globals: Set<string>
     Locals: Map<string, Local>
     Closures: Map<string, Closure>
     Functions: Map<string, Tree>
+
     LocalCount: int
     ParamCount: int
     ClosedOverCount: int
@@ -193,7 +196,9 @@ module Ast =
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
       ContainsArguments = false
+      SelfReference = None
       
+      Globals = Set.empty
       Locals = Map.empty
       Closures = Map.empty
       Functions = Map.empty
@@ -263,6 +268,7 @@ module Ast =
       let setContainsArguments (s:S) = s := {!s with ContainsArguments=true}
       let setContainsEval (s:S) = s := {!s with EvalMode=EvalMode.Contains}
       let setDynamicLookup (s:S) = s := {!s with LookupMode=LookupMode.Dynamic}
+      let setSelfReference n (s:S) = s := {!s with SelfReference=Some n}
       let increaseWithCount (s:S) = s := {!s with WithCount=(!s).WithCount + 1}
       let hasDynamicLookup (s:S) = (!s).LookupMode = LookupMode.Dynamic
       let hasClosedOverLocals (s:S) = (!s).ClosedOverCount > 0
@@ -272,34 +278,51 @@ module Ast =
       let addClosure (closure:Closure) (s:S) =
         s := {!s with Closures = s |> closures |> Map.add closure.Name closure}
         
-      let hasLocal (name:string) (s:S) = (!s).Locals |> Map.containsKey name
-      let tryGetLocal (name:string) (s:S) = (!s).Locals |> Map.tryFind name 
+      let hasLocal (name:string) (s:S) = s |> locals |> Map.containsKey name
+      let tryGetLocal (name:string) (s:S) = s |> locals |> Map.tryFind name 
       let replaceLocal (local:Local) (s:S) =
         s := {!s with Locals = s |> locals |> Map.add local.Name local}
 
       /// Adds a new variable to the scope
       let addLocal name paramIndex (s:S) =
-        if s |> isFunction then
-          match s |> locals |> Map.tryFind name with
-          | None ->
-            let index = LocalIndex.New (s |> localCount) paramIndex
-            let local = Local.New name index
+        match s |> locals |> Map.tryFind name with
+        | None ->
+          let index = LocalIndex.New (s |> localCount) paramIndex
+          let local = Local.New name index
 
-            let paramCount = 
-              match paramIndex with
-              | None -> s |> paramCount
-              | Some index -> index + 1
+          let paramCount = 
+            match paramIndex with
+            | None -> s |> paramCount
+            | Some index -> index + 1
           
-            s := 
-              {!s with
-                LocalCount = index.Index + 1
-                ParamCount = paramCount
-                Locals = s |> locals |> Map.add name local}
+          s := 
+            {!s with
+              LocalCount = index.Index + 1
+              ParamCount = paramCount
+              Locals = s |> locals |> Map.add name local}
 
-          | _ -> ()
+        | _ -> ()
+
+      /// Adds a local variable to a function scope
+      let addFunctionLocal name (s:S) =
+        if s |> isFunction then 
+          s |> addLocal name None 
+
+        elif s |> isGlobal then
+          s := {!s with Globals = (!s).Globals.Add name}
 
       /// Adds a parameter variable to the scope
       let addParameter name (s:S) =
+        match s |> locals |> Map.tryFind name with
+        | Some local -> 
+          let map1 = (!s).Locals.Remove name
+          let newName = sprintf "~dup%i" (local.Indexes.[0].ParamIndex |> Option.get)
+          let map2 = map1 |> Map.add newName local
+
+          s := {!s with Locals = map2}
+
+        | _ -> ()
+
         s |> addLocal name (s |> paramCount |> Some)
 
       /// Adds a catch variable to the scope
@@ -330,7 +353,9 @@ module Ast =
         | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
         | _ -> Error.CompileError.Raise(Error.missingVariable name)
         
-      let hasVariable name (s:S) = (s |> hasLocal name) || (s |> hasClosure name)
+      let hasVariable name (s:S) = 
+        (s |> hasLocal name) || (s |> hasClosure name)
+
       let getVariable name (s:S) =
         match s |> tryGetLocal name with
         | Some var -> Local var

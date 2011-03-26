@@ -314,14 +314,11 @@ module Ast =
       /// Adds a parameter variable to the scope
       let addParameter name (s:S) =
         match s |> locals |> Map.tryFind name with
+        | None -> ()
         | Some local -> 
-          let map1 = (!s).Locals.Remove name
-          let newName = sprintf "~dup%i" (local.Indexes.[0].ParamIndex |> Option.get)
-          let map2 = map1 |> Map.add newName local
-
-          s := {!s with Locals = map2}
-
-        | _ -> ()
+          let map = s |> locals |> Map.remove name
+          let name = sprintf "~%s" name
+          s := {!s with Locals = map |> Map.add name local}
 
         s |> addLocal name (s |> paramCount |> Some)
 

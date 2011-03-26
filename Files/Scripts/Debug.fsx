@@ -11,7 +11,13 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
-let src = @"typeof RegExp" 
+let src = @"
+
+do {  
+  continue;
+} while(false);
+
+" 
 
 let runResult = ctx.Execute src
 let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment |> fst

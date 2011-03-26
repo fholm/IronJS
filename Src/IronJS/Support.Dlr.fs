@@ -335,9 +335,16 @@ module Dlr =
   let while' test body break' continue' = 
     loop_ test void' body break' continue'
 
-  let doWhile test body breakLbl continueLbl =
-    let body = blockSimple [body; ifElse test void' (break' breakLbl)]
-    Expr.Loop(body, breakLbl, continueLbl) :> Expr
+  let doWhile test body breakLabel continueLabel =
+    let restartLabel = labelVoid "~restart"
+
+    block [] [
+      labelExprVoid restartLabel
+      body
+      labelExprVoid continueLabel
+      if' test (jump restartLabel)
+      labelExprVoid breakLabel
+    ]
 
   let loop break' continue' test body =
     loop_ test void' body break' continue'

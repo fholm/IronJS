@@ -1537,6 +1537,8 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = List.empty
   }
 
+  override x.ClassName = "Function"
+
   member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")
     match prototype.Tag with

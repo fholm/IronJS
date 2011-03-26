@@ -52,12 +52,28 @@ module Function =
     let args = 
       if args <> null then
         
-        let args = args.CastTo<AO>()
-        let getIndex i = args.Get(uint32 i)
+        if args :? AO then
+        
+          let args = args.CastTo<AO>()
+          let getIndex i = args.Get(uint32 i)
 
-        Seq.init (int args.Length) getIndex
-        |> Seq.cast<obj>
-        |> Array.ofSeq
+          Seq.init (int args.Length) getIndex
+          |> Seq.cast<obj>
+          |> Array.ofSeq
+          
+        elif args :? ArgumentsObject then
+          
+          let args = args.CastTo<ArgumentsObject>()
+          let getIndex i = args.Get(uint32 i)
+          let length = args.GetT<double>("length") |> int32
+
+          Seq.init length getIndex
+          |> Seq.cast<obj>
+          |> Array.ofSeq
+
+        else
+          apply.Env.RaiseTypeError()
+
 
       else
         Array.zeroCreate 0

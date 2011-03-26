@@ -47,6 +47,7 @@ module Parser =
     ScopeChildren : Dict<uint64, Scope ref List>
     ScopeParents : Dict<uint64, Scope ref list>
     ScopeClosures : Dict<uint64, string HashSet>
+    ScopeLocals : Dict<uint64, string HashSet>
   } 
     #if DEBUG
     with
@@ -100,6 +101,7 @@ module Parser =
     ScopeMap = null
     ScopeParents = null
     ScopeClosures = null
+    ScopeLocals = null
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -1074,6 +1076,9 @@ module Parser =
     if p.WithStatementCount > 0 then
       scope |> AnalyzersFastUtils.Scope.setDynamicLookup
 
+    // 
+    p.ScopeLocals.Add(scopeId, new HashSet<string>());
+
     // Add the newly created scope to
     // the scope map, so we can get it
     // by it's id later on
@@ -1127,8 +1132,11 @@ module Parser =
     let rec parseVariables (p:P) =
       let name = p |> consumeIdentifier 
       let identifier = Tree.Identifier name
-      
-      p |> cscope |> Ast.AnalyzersFastUtils.Scope.addFunctionLocal name
+
+      if p.ScopeLocals.[p |> cscopeId].Contains(name) |> not then
+        p.ScopeLocals.[p |> cscopeId].Add(name)
+        p |> cscope |> Ast.AnalyzersFastUtils.Scope.addFunctionLocal name
+        p |> cscope |> Ast.NewVars.createDefinedLocal name |> ignore
 
       let expr = 
         match p |> csymbol with
@@ -1464,6 +1472,7 @@ module Parser =
         ScopeChildren = scopeChildren
         ScopeParents = scopeParents
         ScopeClosures = scopeClosures
+        ScopeLocals = new Dict<uint64, string HashSet>()
       }
 
     let globalAst = 

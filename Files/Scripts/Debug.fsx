@@ -12,12 +12,12 @@ let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
 let src = @"
-
-do {  
-  continue;
-} while(false);
-
+  (function (a, b, c, d, a) {
+    var x;
+    var y;
+    var z;
+    var z;
+  });
 " 
 
-let runResult = ctx.Execute src
 let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment |> fst

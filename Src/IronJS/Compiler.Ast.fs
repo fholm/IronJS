@@ -180,6 +180,9 @@ module Ast =
     Closures: Map<string, Closure>
     Functions: Map<string, Tree>
 
+    Variables : VariableMap
+    ActiveVariables : ActiveVariableMap
+
     LocalCount: int
     ParamCount: int
     ClosedOverCount: int
@@ -203,15 +206,122 @@ module Ast =
       Closures = Map.empty
       Functions = Map.empty
 
+      Variables = Map.empty
+      ActiveVariables = Map.empty
+
       LocalCount = 0
       ParamCount = 0
       ClosedOverCount = 0
     }
 
-  type VariableOption 
+  and VariableOption 
     = Global
     | Local of Local
     | Closure of Closure
+
+  (*
+  - Closure
+
+  - Global
+
+    Type:
+    - Implicit
+    - Explicit
+
+  - Local
+    
+    State:
+    - Shared
+    - Private
+
+    Type:
+    - Parameter
+    - Exception
+    - Defined
+  *)
+
+  and private Name = string
+  and private StorageIndex = int
+  and private GlobalLevel = int
+  and private ClosureLevel = int
+  and private ParameterIndex = int
+
+  and [<NoComparison; NoEquality>] LocalType
+    = Parameter of ParameterIndex
+    | Exception
+    | Defined
+
+  and LocalState
+    = Private = 0 // A private variable that isn't shared with other scopes
+    | Shared  = 1 // A variable that is closed over by other scopes
+
+  and [<NoComparison; NoEquality>] NewVariable
+    = Closure of Name * StorageIndex * GlobalLevel * ClosureLevel 
+    | Local   of Name * StorageIndex * LocalType * LocalState
+    | Global  of Name
+
+  and VariableId        = int32
+  and VariableMap       = Map<VariableId, NewVariable>
+  and ActiveVariableMap = Map<Name, NewVariable>
+
+  module NewVars =
+    
+    // Type short hand for scopes
+    type private S = Scope ref
+
+    ///
+    let variables (s:S) = 
+      (!s).Variables
+
+    ///
+    let variableCount (s:S) =
+      (s |> variables).Count
+
+    ///
+    let increaseParameterCount (s:S) =
+      s := {!s with ParamCount = (!s).ParamCount + 1}
+
+    ///
+    let parameterCount (s:S) =
+      (!s).ParamCount
+
+    ///
+    let addVariable variable (s:S) =
+      let variableId = s |> variableCount
+
+      s := 
+        {!s with 
+          Variables = s |> variables |> Map.add variableId variable
+        }
+
+      variableId
+
+    ///
+    let createLocal name local (s:S) = 
+      let storageIndex = s |> variableCount
+      s |> addVariable (Local(name, storageIndex, local, LocalState.Private))
+
+    ///
+    let createParameterLocal name (s:S) =
+      let parameterIndex = s |> parameterCount
+
+      s |> increaseParameterCount
+      s |> createLocal name (Parameter parameterIndex)
+
+    ///
+    let createExceptionLocal name (s:S) =
+      s |> createLocal name LocalType.Exception
+
+    ///
+    let createDefinedLocal name (s:S) =
+      s |> createLocal name LocalType.Defined
+
+    ///
+    let isParameter (variable:NewVariable) =
+      match variable with
+      | NewVariable.Local(_, _, LocalType.Parameter _, _) -> true
+      | _ -> false
+
 
   module AnalyzersFastUtils =
     
@@ -305,11 +415,10 @@ module Ast =
 
       /// Adds a local variable to a function scope
       let addFunctionLocal name (s:S) =
-        if s |> isFunction then 
-          s |> addLocal name None 
-
-        elif s |> isGlobal then
-          s := {!s with Globals = (!s).Globals.Add name}
+        if s |> isFunction 
+          then s |> addLocal name None 
+          elif s |> isGlobal 
+            then s := {!s with Globals = (!s).Globals.Add name}
 
       /// Adds a parameter variable to the scope
       let addParameter name (s:S) =
@@ -355,11 +464,11 @@ module Ast =
 
       let getVariable name (s:S) =
         match s |> tryGetLocal name with
-        | Some var -> Local var
+        | Some var -> VariableOption.Local var
         | _ ->
           match s |> tryGetClosure name with
-          | Some cls -> Closure cls
-          | _ -> Global
+          | Some cls -> VariableOption.Closure cls
+          | _ -> VariableOption.Global
 
       let closeOverLocal name (s:S) =
 

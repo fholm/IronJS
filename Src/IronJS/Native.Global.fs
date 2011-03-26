@@ -12,27 +12,32 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String ->
       
-      let ast =
+      let compiled =
         try 
-          target.Function.Env 
-          |> Parser.parse target.Target.String 
-          |> fst
+          let ast =
+            target.Function.Env 
+            |> Parser.parse target.Target.String 
+            |> fst
+
+          let scope = ref {Ast.Scope.New with Closures=target.Closures}
+          let tree = Ast.FunctionFast(None, scope, ast)
+          let levels = Some(target.GlobalLevel, target.ClosureLevel)
+          
+          Core.compile {
+            Ast = ast
+            TargetMode = TargetMode.Eval
+            Delegate = None
+            Environment = target.Function.Env
+          }
 
         with
         | :? Error.CompileError as x ->
           target.Function.Env.RaiseSyntaxError(x.Message)
 
-      let scope = ref {Ast.Scope.New with Closures=target.Closures}
-      let tree = Ast.FunctionFast(None, scope, ast)
-      let levels = Some(target.GlobalLevel, target.ClosureLevel)
-
-      let compiled = 
-        Core.compile {
-          Ast = ast
-          TargetMode = TargetMode.Eval
-          Delegate = None
-          Environment = target.Function.Env
-        }
+        | :? System.Reflection.TargetInvocationException as x ->
+          if x.InnerException :? Error.CompileError
+            then target.Function.Env.RaiseSyntaxError(x.InnerException.Message)
+            else raise x
 
       let localScope =
         if target.LocalScope = null 

@@ -14,7 +14,7 @@ module Scope =
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
     let object' = Dlr.callStaticT<TC> "ToObject" [ctx.Env; ctx.Compile init]
-    let tree = {ctx with InsideWith=true}.Compile tree
+    let tree = {ctx with InsideWith = true}.Compile tree
 
     let pushArgs = [
       ctx.DynamicScope; object'; 
@@ -41,47 +41,47 @@ module Scope =
       )
     ]
         
-  //--------------------------------------------------------------------------
-  (*
-  let private initArguments (ctx:Ctx) (s:Ast.Scope ref) =
-    
+  let initArguments (ctx:Ctx) =
+    let s = ctx.Scope
+
     if s |> Ast.NewVars.hasArgumentsObject |> not then Dlr.void'
-    else 
-      match s |> Ast.AnalyzersFastUtils.Scope.getVariable "arguments" with
-      | Ast.VariableOption.Global 
-      | Ast.VariableOption.Closure _ -> failwith "Que?"
-      | Ast.VariableOption.Local local ->
-        let linkMap = 
-          (!s).Locals 
-            |> Map.toSeq
-            |> Seq.filter (snd >> Ast.AnalyzersFastUtils.Local.isParameter)
-            |> Seq.map (fun (_, local) ->
-                let linkArray =
-                  if local |> Ast.AnalyzersFastUtils.Local.isClosedOver
-                    then ArgumentsLinkArray.ClosedOver
-                    else ArgumentsLinkArray.Locals
+    else
+      match s |> Ast.NewVars.variables |> Map.tryFind "arguments" with
+      | None -> failwith "Arguments variable missing"
+      | Some var ->
+        match var with
+        | Ast.Shared(_, _, _) -> failwith "Arguments object can't be shared"
+        | Ast.Private(storageIndex) ->
+          
+          let linkMap =
+            s $ Ast.NewVars.parameterNames
+              $ List.map (fun name ->
+                  match s |> Ast.NewVars.variables |> Map.find name with
+                  | Ast.Shared(storageIndex, _, _) ->
+                    ArgumentsLinkArray.ClosedOver, storageIndex
 
-                linkArray, local |> Ast.AnalyzersFastUtils.Local.index
-              )
-            |> Seq.sortBy (fun (_, i) -> i)
-            |> Seq.take ctx.Target.ParamCount
-            |> Array.ofSeq
+                  | Ast.Private(storageIndex) ->
+                    ArgumentsLinkArray.Locals, storageIndex
+                )
+              $ List.sortBy (fun (_, i) -> i)
+              $ Seq.take ctx.Target.ParamCount
+              $ Array.ofSeq
+          
+          (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
+            [
+              (Dlr.assign arguments 
+                (Dlr.callStaticT<ArgumentsObject> "New" [
+                  ctx.Env;
+                  Dlr.const' linkMap;
+                  ctx.LocalScope;
+                  ctx.ClosureScope;
+                  ctx.Function]))
 
-        (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
-          [
-            (Dlr.assign arguments 
-              (Dlr.callStaticT<ArgumentsObject> "New" [
-                ctx.Env;
-                Dlr.const' linkMap;
-                ctx.LocalScope;
-                ctx.ClosureScope;
-                ctx.Function]))
-            (Utils.assign 
-              (Dlr.indexInt ctx.LocalScope (local |> Ast.AnalyzersFastUtils.Local.index))
-              (arguments))
-          ] |> Seq.ofList
-        ))
-  *)
+              (Utils.assign 
+                (Dlr.indexInt ctx.LocalScope storageIndex)
+                (arguments))
+            ] |> Seq.ofList
+          ))
         
   ///
   let private initGlobalScope (ctx:Ctx) =
@@ -123,10 +123,12 @@ module Scope =
 
   ///
   let private initVariables (ctx:Ctx) =
+    let parameterCount = ctx.Target.ParamCount
     let parameterMap = 
       ctx.Scope 
       |> Ast.NewVars.parameterNames 
       |> List.mapi (fun i n -> n, i)
+      |> List.filter (fun (_, i) -> i < parameterCount)
       |> Map.ofList
 
     let parameters, defined =
@@ -194,7 +196,7 @@ module Scope =
     let sharedScopeInit = ctx $ initSharedScope
     let dynamicScopeInit = ctx $ initDynamicScope
     let variablesInit = ctx $ initVariables
-    //let argumentsInit = ctx $ initArguments
+    let argumentsInit = ctx $ initArguments
 
     let initBlock = 
       Dlr.block [] [
@@ -203,7 +205,7 @@ module Scope =
         sharedScopeInit
         dynamicScopeInit
         variablesInit
-        //argumentsInit
+        argumentsInit
       ]
 
     initBlock, ctx

@@ -13,22 +13,10 @@ ctx.SetupPrintFunction()
 
 let src = @"
   function foo(a, b) {
-    var fs = [];
-
-    for(var i = 0; i < 2; ++i) {
-      try {
-        throw ('lol' + i);
-      } catch(exn) {
-        fs[i] = function() { print(exn); }
-      }
-    }
-
-    for(var i = 0; i < 2; ++i) {
-      fs[i]();
-    }
+    return arguments.length;
   }
 
-  foo(2, 2);
+  foo(2);
 " 
 
 src |> ctx.Execute

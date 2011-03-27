@@ -17,14 +17,11 @@ module Main =
 
     let src = @"
       function foo(a, b) {
-        try {
-          throw 'lol'
-        } catch(exn) {
-          return exn;
-        }
+        return arguments.length;
       }
 
-      foo(2, 2);" 
+      foo(2, 2, 3);
+    " 
 
     src |> ctx.Execute |> ignore
 

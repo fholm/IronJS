@@ -157,6 +157,7 @@ module Core =
 
           for i = 0 to (argLength - 1) do
             let name = "~arg" + string (!scope).ParameterNames.Length
+            scope |> Ast.NewVars.addParameterName name
             scope |> Ast.NewVars.createPrivateVariable name
 
         scope, ast

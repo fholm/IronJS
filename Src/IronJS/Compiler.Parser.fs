@@ -1241,7 +1241,8 @@ module Parser =
 
         match (!p.FunctionData).Scope with
         | Catch _ -> ()
-        | Function s -> s|> NewVars.setContainsArguments
+        | Function s -> 
+          s|> NewVars.setContainsArguments
 
         name |> (!p.FunctionData).AddVariable
 

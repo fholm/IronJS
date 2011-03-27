@@ -291,6 +291,10 @@ module Ast =
       s := {!s with PrivateCount = (!s).PrivateCount + 1}
 
     ///
+    let addParameterName name (s:S) =
+      s := {!s with ParameterNames = (s |> parameterNames) @ [name]}
+
+    ///
     let addFunction (ast:Tree) (s:S) =
       match ast with
       | FunctionFast(Some name, _, _) ->

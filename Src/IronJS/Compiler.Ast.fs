@@ -179,13 +179,23 @@ module Ast =
     Locals: Map<string, Local>
     Closures: Map<string, Closure>
     Functions: Map<string, Tree>
-
+    
+    ParameterNames : Set<string>
     Variables : VariableMap
-    ActiveVariables : ActiveVariableMap
+    CatchScopes : Map<int, CatchScope ref>
 
     LocalCount: int
     ParamCount: int
     ClosedOverCount: int
+
+    //Future Counters:
+    //
+    //VariableCount
+    //ParameterCount
+    //DefinedCount
+    //PrivateCount
+    //SharedCount
+    //ClosureCount
   } with
     static member NewGlobal = {Scope.New with ScopeType = ScopeType.GlobalScope}
     static member New = {
@@ -206,13 +216,25 @@ module Ast =
       Closures = Map.empty
       Functions = Map.empty
 
+      ParameterNames = Set.empty
       Variables = Map.empty
-      ActiveVariables = Map.empty
+      CatchScopes = Map.empty
 
       LocalCount = 0
       ParamCount = 0
       ClosedOverCount = 0
     }
+
+  and CatchScope = {
+    GlobalLevel : int
+    ClosureLevel : int
+  }
+
+  and FunctionScope = Scope
+
+  and ScopeOption
+    = Catch of CatchScope ref
+    | Function of FunctionScope ref
 
   and VariableOption 
     = Global
@@ -245,10 +267,14 @@ module Ast =
   and private GlobalLevel = int
   and private ClosureLevel = int
   and private ParameterIndex = int
+  and private CouldBeException = bool
+
+  and ClosureState
+    = Function = 0  // A variable that is defined in a function
+    | Catch = 1     // A variable that is defined in a catch block
 
   and [<NoComparison; NoEquality>] LocalType
     = Parameter of ParameterIndex
-    | Exception
     | Defined
 
   and LocalState
@@ -256,18 +282,25 @@ module Ast =
     | Shared  = 1 // A variable that is closed over by other scopes
 
   and [<NoComparison; NoEquality>] NewVariable
-    = Closure of Name * StorageIndex * GlobalLevel * ClosureLevel 
-    | Local   of Name * StorageIndex * LocalType * LocalState
-    | Global  of Name
+    = Shared  of StorageIndex * GlobalLevel * ClosureLevel * ClosureState
+    | Private of StorageIndex * LocalType   * LocalState
+    | Global
 
-  and VariableId        = int32
-  and VariableMap       = Map<VariableId, NewVariable>
-  and ActiveVariableMap = Map<Name, NewVariable>
+  and VariableId  = int32
+  and VariableMap = Map<Name, NewVariable>
 
   module NewVars =
     
     // Type short hand for scopes
     type private S = Scope ref
+
+    ///
+    (*
+    let isParameter (variable:NewVariable) =
+      match variable with
+      | NewVariable.Local(_, Parameter _, _) -> true
+      | _ -> false
+    *)
 
     ///
     let variables (s:S) = 
@@ -278,50 +311,38 @@ module Ast =
       (s |> variables).Count
 
     ///
-    let increaseParameterCount (s:S) =
-      s := {!s with ParamCount = (!s).ParamCount + 1}
-
+    //let increaseParameterCount (s:S) =
+    //  s := {!s with ParamCount = (!s).ParamCount + 1}
+    (*
     ///
     let parameterCount (s:S) =
-      (!s).ParamCount
+      (s |> variables |> Map.partition (fun _ v -> isParameter v) |> fst).Count
+      //(!s).ParamCount
 
     ///
-    let addVariable variable (s:S) =
-      let variableId = s |> variableCount
-
+    let private addVariable name variable (s:S) =
       s := 
         {!s with 
-          Variables = s |> variables |> Map.add variableId variable
+          Variables = 
+            s |> variables |> Map.add name variable
         }
 
-      variableId
-
     ///
-    let createLocal name local (s:S) = 
+    let private createLocalVariable name local (s:S) = 
       let storageIndex = s |> variableCount
-      s |> addVariable (Local(name, storageIndex, local, LocalState.Private))
+      let local = Local(storageIndex, local, LocalState.Private)
+      s |> addVariable name local
 
     ///
-    let createParameterLocal name (s:S) =
+    let createParameterVariable name (s:S) =
       let parameterIndex = s |> parameterCount
-
-      s |> increaseParameterCount
-      s |> createLocal name (Parameter parameterIndex)
+      s |> createLocalVariable name (Parameter parameterIndex)
 
     ///
-    let createExceptionLocal name (s:S) =
-      s |> createLocal name LocalType.Exception
-
-    ///
-    let createDefinedLocal name (s:S) =
-      s |> createLocal name LocalType.Defined
-
-    ///
-    let isParameter (variable:NewVariable) =
-      match variable with
-      | NewVariable.Local(_, _, LocalType.Parameter _, _) -> true
-      | _ -> false
-
+    let createDefinedVariable name (s:S) =
+      if s |> variables |> Map.containsKey name |> not then
+        s |> createLocalVariable name Defined
+    *)
 
   module AnalyzersFastUtils =
     

@@ -14,9 +14,42 @@ open IronJS.Compiler.Ast
 open IronJS.Compiler.Lexer
 
 module Parser =
+
   type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
   type private List<'a> = System.Collections.Generic.List<'a>
   type private HashSet<'a> = System.Collections.Generic.HashSet<'a>
+  type private Stack<'a> = System.Collections.Generic.Stack<'a>
+
+  type ScopeData = {
+    Id : uint64
+    Scope : ScopeOption
+    Parent : ScopeData option
+    Children : ScopeData list ref
+    Variables : string Set ref
+    Parameters : string list ref
+    Missing : string Set ref
+  } with
+    static member New id scope parent = {
+      Id = id
+      Scope = scope
+      Parent = parent
+      Children = ref List.empty
+      Variables = ref Set.empty
+      Parameters = ref List.empty
+      Missing = ref Set.empty
+    }
+
+    member x.AddChild c = 
+      x.Children := c :: !x.Children
+
+    member x.AddVariable v = 
+      x.Variables := !x.Variables |> Set.add v
+
+    member x.AddParameter p = 
+      x.Parameters := p :: !x.Parameters
+
+    member x.AddMissing n = 
+      x.Missing := !x.Missing |> Set.add n
 
   type State = {
     Env : Env
@@ -48,6 +81,10 @@ module Parser =
     ScopeParents : Dict<uint64, Scope ref list>
     ScopeClosures : Dict<uint64, string HashSet>
     ScopeLocals : Dict<uint64, string HashSet>
+    ExceptionVariables : Stack<string>
+
+    ScopeData : Map<uint64, ScopeData> ref
+    CurrentScopeData : ScopeData option ref
   } 
     #if DEBUG
     with
@@ -102,6 +139,10 @@ module Parser =
     ScopeParents = null
     ScopeClosures = null
     ScopeLocals = null
+    ExceptionVariables = null
+
+    ScopeData = ref Map.empty
+    CurrentScopeData = ref None
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -585,14 +626,16 @@ module Parser =
     // try ... catch ... ?
     | S.Catch -> 
       p |> consume
+
       p |> expect S.LeftParenthesis
-
       let name = p |> consumeIdentifier
-      p |> cscope |> AnalyzersFastUtils.Scope.addCatchLocal name
-
       p |> expect S.RightParenthesis
 
-      let catch = Some(Catch(name, p |> block))
+      p.ExceptionVariables.Push(name)
+      let body = p |> block
+      p.ExceptionVariables.Pop() |> ignore
+
+      let catch = Some(Catch(name, body))
 
       match p |> csymbol with
       // try ... catch ... finally
@@ -1028,17 +1071,24 @@ module Parser =
       // Expect and consume the opening parenthesis
       p |> expect S.LeftParenthesis
 
+      let id = p.Env.NextFunctionId()
+
       // Create a new scope object
       let scope =
         ref {Scope.New with 
-              Id = p.Env.NextFunctionId()
+              Id = id
               GlobalLevel = (!p.ScopeChain).Length
             }
+
+      let scopeData = 
+        ScopeData.New id (Ast.ScopeOption.Function(scope)) !p.CurrentScopeData
 
       // Consume tokens untill we reach a right parenthesis
       while p |> csymbol <> S.RightParenthesis do
         let name = p |> consumeIdentifier
+
         scope |> Ast.AnalyzersFastUtils.Scope.addParameter name
+        name  |> scopeData.AddParameter
 
         match p |> csymbol with
         | S.Comma -> 
@@ -1054,13 +1104,17 @@ module Parser =
       p |> expect S.RightParenthesis
 
       // Return scope
-      scope
+      scope, scopeData
 
     let name = 
       match p.Token with
       | S.Identifier, name, _, _ -> 
 
         if isDefinition then
+          match !p.CurrentScopeData with
+          | None -> ()
+          | Some scopeData -> scopeData.AddVariable name
+
           p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
 
         p |> consume
@@ -1070,7 +1124,7 @@ module Parser =
         None
 
     // Build the current scope
-    let scope = p |> buildScope
+    let scope, scopeData = p |> buildScope
     let scopeId = (!scope).Id
 
     if p.WithStatementCount > 0 then
@@ -1102,7 +1156,13 @@ module Parser =
     
     let prevBlockLevel = p.BlockLevel
     p.BlockLevel <- 0
+
+    let parentScopeData = !p.CurrentScopeData
+    p.CurrentScopeData := Some scopeData
+
     let body = p |> block
+
+    p.CurrentScopeData := parentScopeData
     p.BlockLevel <- prevBlockLevel
 
     p |> schain |> AnalyzersFastUtils.ScopeChain.pop
@@ -1134,9 +1194,7 @@ module Parser =
       let identifier = Tree.Identifier name
 
       if p.ScopeLocals.[p |> cscopeId].Contains(name) |> not then
-        p.ScopeLocals.[p |> cscopeId].Add(name)
-        p |> cscope |> Ast.AnalyzersFastUtils.Scope.addFunctionLocal name
-        p |> cscope |> Ast.NewVars.createDefinedLocal name |> ignore
+        p.ScopeLocals.[p |> cscopeId].Add(name) |> ignore
 
       let expr = 
         match p |> csymbol with
@@ -1172,8 +1230,8 @@ module Parser =
       p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
       p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
 
-    if p |> cscope |> AnalyzersFastUtils.Scope.hasLocal name |> not
-      then p.ScopeClosures.[p |> cscopeId].Add(name) |> ignore
+    if p |> cscope |> AnalyzersFastUtils.Scope.hasLocal name |> not then 
+      p.ScopeClosures.[p |> cscopeId].Add(name) |> ignore
 
     Tree.Identifier(name)
 

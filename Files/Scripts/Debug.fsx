@@ -1,7 +1,7 @@
 #light
 #time
-#r @"../../Src/FSKit/Src/bin/Debug/FSKit.dll"
-#r @"../../Src/IronJS/bin/Debug/IronJS.dll"
+#r @"../../Src/FSKit/Src/bin/Release/FSKit.dll"
+#r @"../../Src/IronJS/bin/Release/IronJS.dll"
 
 open System
 open IronJS
@@ -12,11 +12,25 @@ let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
 let src = @"
-  (function (a, b, c, d, a) {
+  (function (a, b, a) {
     var x;
-    var y;
     var z;
-    var z;
+
+    try {
+
+    } catch (exn) {
+      try {
+        
+      } catch(exn2) {
+        
+      }
+    }
+
+    try {
+      
+    } catch (exn) {
+      
+    }
   });
 " 
 

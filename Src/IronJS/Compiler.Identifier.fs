@@ -14,7 +14,7 @@ module Identifier =
 
     let n = closure.ClosureLevel - (!ctx.Scope).ClosureLevel
     Some(walk ctx.ClosureScope n, closure.Index, closure.GlobalLevel)
-      
+
   ///
   let private localExprAndIndex (ctx:Ctx) (group:Ast.Local) =
     let index = group.Indexes.[group.Active]

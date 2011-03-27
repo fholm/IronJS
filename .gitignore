@@ -14,7 +14,8 @@ last-test
 *.exe
 *.txt
 *.cache
-*.cs
+*.g.cs
+*.g.i.cs
 *.force
 *.baml
 *.resources

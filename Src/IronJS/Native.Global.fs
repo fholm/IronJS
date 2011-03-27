@@ -19,7 +19,7 @@ module Global =
             |> Parser.parse target.Target.String 
             |> fst
 
-          let scope = ref {Ast.Scope.New with Closures=target.Closures}
+          let scope = ref {Ast.Scope.New with Variables=target.Closures}
           let tree = Ast.FunctionFast(None, scope, ast)
           let levels = Some(target.GlobalLevel, target.ClosureLevel)
           

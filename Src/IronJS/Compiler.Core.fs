@@ -112,9 +112,11 @@ module Core =
         (Dlr.field target "ClosureLevel") 
         (Dlr.const' (!ctx.Scope).ClosureLevel))
 
+      (*
       (Utils.assign
         (Dlr.field target "Closures") 
         (Dlr.const' (!ctx.Scope).Closures))
+      *)
         
       (Utils.assign (Dlr.field target "Target") evalTarget)
       (Utils.assign (Dlr.field target "Function") ctx.Function)
@@ -133,7 +135,7 @@ module Core =
     let scope, ast =
       match target.Ast with
       | Ast.FunctionFast(_, scope, ast) -> 
-        let scope = scope |> Ast.AnalyzersFastUtils.Scope.clone
+        let scope = ref !scope
 
         match target.Delegate with
         | None -> ()
@@ -144,8 +146,8 @@ module Core =
                       |> Seq.toArray
 
           let skipCount =
-            if argTypes.Length > (!scope).ParamCount
-              then (!scope).ParamCount
+            if argTypes.Length > (!scope).ParameterNames.Length
+              then (!scope).ParameterNames.Length
               else 0
 
           let argLength = 
@@ -154,13 +156,12 @@ module Core =
                       |> Array.length
 
           for i = 0 to (argLength - 1) do
-            let name = "~arg" + string (!scope).ParamCount
-            let paramIndex = Some (!scope).ParamCount
-            scope |> Ast.AnalyzersFastUtils.Scope.addLocal name paramIndex
+            let name = "~arg" + string (!scope).ParameterNames.Length
+            scope |> Ast.NewVars.createPrivateVariable name
 
         scope, ast
 
-      | _ -> failwith "Top AST node must be Tree.Function"
+      | _ -> failwith "Top AST node must be Tree.FastFunction"
 
     //Context
     let ctx = {
@@ -175,11 +176,14 @@ module Core =
       BreakLabels = Map.empty
       ContinueLabels = Map.empty
 
+      ActiveVariables = (!scope).Variables
+
       Function = Dlr.paramT<FO> "~function"
       This = Dlr.paramT<CO> "~this"
-      LocalScope = Dlr.paramT<Scope> "~localScope"
-      ClosureScope = Dlr.paramT<Scope> "~closureScope"
-      DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"
+      LocalScope = Dlr.paramT<Scope> "~private"
+      ClosureScope = Dlr.paramT<Scope> "~shared"
+      DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
+
       Parameters = target.ParamTypes |> Seq.mapi Dlr.paramI |> Seq.toArray
     }
 
@@ -193,7 +197,7 @@ module Core =
         let func = Function.create ctx compile scope func
         let setFunc = Identifier.setValue ctx name func
 
-        if ctx.Scope |> Ast.AnalyzersFastUtils.Scope.isGlobal then
+        if ctx.Scope |> Ast.NewVars.isGlobal then
           Dlr.block [] [
             setFunc
             Dlr.call ctx.Globals "SetAttrs" [!!!name; !!!DescriptorAttrs.DontDelete]

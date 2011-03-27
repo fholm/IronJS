@@ -101,6 +101,7 @@
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Parser.fs" />
+    <Compile Include="Compiler.Analyzer.fs" />
     <Compile Include="Compiler.Context.fs" />
     <Compile Include="Compiler.Utils.fs" />
     <Compile Include="Compiler.HostFunction.fs" />

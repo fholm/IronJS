@@ -105,7 +105,7 @@ module Scope =
   //--------------------------------------------------------------------------
   let private initArguments (ctx:Ctx) (s:Ast.Scope ref) =
     
-    if not (!s).ContainsArguments then Dlr.void'
+    if s |> Ast.NewVars.hasArgumentsObject |> not then Dlr.void'
     else 
       match s |> Ast.AnalyzersFastUtils.Scope.getVariable "arguments" with
       | Ast.VariableOption.Global 
@@ -163,7 +163,7 @@ module Scope =
       |> Set.toSeq
       |> Seq.map (fun name ->
         [
-          Object.Property.put !!!name Utils.Constants.undefined ctx.Globals
+          ctx.Globals |> Object.Property.put !!!name Utils.Constants.undefined 
           ctx.Globals |> Object.Property.attr !!!name DescriptorAttrs.DontDelete
         ]
       )

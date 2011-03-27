@@ -49,7 +49,7 @@ module Unary =
       let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
       Dlr.callStaticT<DynamicScopeHelpers> "Delete" args
 
-    elif name = "arguments" && ctx.Scope |> Ast.AnalyzersFastUtils.Scope.isFunction then
+    elif name = "arguments" && ctx.Scope |> Ast.NewVars.isFunction then
       !!!false
 
     elif Identifier.isGlobal ctx name then

@@ -126,48 +126,15 @@ module Ast =
   and Cases 
     = Case of Tree * Tree
     | Default of Tree
-
-  and Local = {
-    Name: string
-    Active: int
-    Indexes: LocalIndex array
-  } with
-    static member New name index = {
-      Name = name
-      Active = 0
-      Indexes = [|index|]
-    }
-  
-  and LocalIndex = {
-    Index: int
-    ParamIndex: int option
-    IsClosedOver: bool
-  } with
-    static member New index paramIndex = {
-      Index = index
-      ParamIndex = paramIndex
-      IsClosedOver = false
-    }
-    
-  and Closure = {
-    Name: string
-    Index: int
-    ClosureLevel: int
-    GlobalLevel: int
-  } with
-    static member New name index closureLevel globalLevel = {
-      Name  = name
-      Index = index
-      ClosureLevel = closureLevel
-      GlobalLevel = globalLevel
-    }
     
   and Scope = {
     Id : uint64
 
     GlobalLevel: int
     ClosureLevel: int
+
     WithCount: int
+    SharedCount : int
     
     ScopeType: ScopeType
     EvalMode: EvalMode
@@ -175,63 +142,47 @@ module Ast =
     ContainsArguments: bool
     SelfReference : string option
 
-    Globals: Set<string>
-    Locals: Map<string, Local>
-    Closures: Map<string, Closure>
     Functions: Map<string, Tree>
-    
-    ParameterNames : Set<string>
     Variables : VariableMap
-    CatchScopes : Map<int, CatchScope ref>
+    CatchScopes : CatchScope ref list
+    ParameterNames : string list
+    Globals : string Set
 
-    LocalCount: int
-    ParamCount: int
-    ClosedOverCount: int
-
-    //Future Counters:
-    //
-    //VariableCount
-    //ParameterCount
-    //DefinedCount
-    //PrivateCount
-    //SharedCount
-    //ClosureCount
   } with
     static member NewGlobal = {Scope.New with ScopeType = ScopeType.GlobalScope}
     static member New = {
       Id = 0UL
 
-      GlobalLevel = -1
+      GlobalLevel = 0
       ClosureLevel = -1
+
       WithCount = 0
+      SharedCount = 0
       
-      ScopeType =  ScopeType.FunctionScope
+      ScopeType = ScopeType.FunctionScope
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
       ContainsArguments = false
       SelfReference = None
-      
-      Globals = Set.empty
-      Locals = Map.empty
-      Closures = Map.empty
+
       Functions = Map.empty
-
-      ParameterNames = Set.empty
       Variables = Map.empty
-      CatchScopes = Map.empty
-
-      LocalCount = 0
-      ParamCount = 0
-      ClosedOverCount = 0
+      CatchScopes = List.empty
+      ParameterNames = List.empty
+      Globals = Set.empty
     }
 
   and CatchScope = {
+    Name : string
     GlobalLevel : int
     ClosureLevel : int
+    ChildScopes : CatchScope ref list
   } with 
-    static member New globalLevel closureLevel = ref {
+    static member New name globalLevel closureLevel = ref {
+      Name = name
       GlobalLevel = globalLevel
       ClosureLevel = closureLevel
+      ChildScopes = List.empty
     }
 
   and FunctionScope = Scope
@@ -240,71 +191,58 @@ module Ast =
     = Catch of CatchScope ref
     | Function of FunctionScope ref
 
-  and VariableOption 
-    = Global
-    | Local of Local
-    | Closure of Closure
-
-  (*
-  - Closure
-
-  - Global
-
-    Type:
-    - Implicit
-    - Explicit
-
-  - Local
-    
-    State:
-    - Shared
-    - Private
-
-    Type:
-    - Parameter
-    - Exception
-    - Defined
-  *)
-
-  and private Name = string
-  and private StorageIndex = int
-  and private GlobalLevel = int
-  and private ClosureLevel = int
-  and private ParameterIndex = int
-  and private CouldBeException = bool
-
-  and ClosureState
-    = Function = 0  // A variable that is defined in a function
-    | Catch = 1     // A variable that is defined in a catch block
-
-  and [<NoComparison; NoEquality>] LocalType
-    = Parameter of ParameterIndex
-    | Defined
-
-  and LocalState
-    = Private = 0 // A private variable that isn't shared with other scopes
-    | Shared  = 1 // A variable that is closed over by other scopes
-
   and [<NoComparison; NoEquality>] NewVariable
-    = Shared  of StorageIndex * GlobalLevel * ClosureLevel * ClosureState
-    | Private of StorageIndex * LocalType   * LocalState
-    | Global
+    = Shared  of int * int * int
+    | Private of int
 
-  and VariableId  = int32
-  and VariableMap = Map<Name, NewVariable>
+  and VariableMap = Map<string, NewVariable>
 
   module NewVars =
     
     // Type short hand for scopes
-    type private S = Scope ref
+    type private S = FunctionScope ref
 
     ///
-    (*
-    let isParameter (variable:NewVariable) =
-      match variable with
-      | NewVariable.Local(_, Parameter _, _) -> true
-      | _ -> false
-    *)
+    let clone (s:S) = ref !s
+
+    ///
+    let id (s:S) = (!s).Id
+    
+    ///
+    let isFunction (s:S) = 
+      (!s).ScopeType = ScopeType.FunctionScope
+
+    ///
+    let isGlobal (s:S) = 
+      (!s).ScopeType = ScopeType.GlobalScope
+
+    ///
+    let setContainsArguments (s:S) = 
+      s := {!s with ContainsArguments = true}
+
+    ///
+    let setContainsEval (s:S) = 
+      s := {!s with EvalMode = EvalMode.Contains}
+
+    ///
+    let setDynamicLookup (s:S) = 
+      s := {!s with LookupMode = LookupMode.Dynamic}
+
+    ///
+    let setSelfReference n (s:S) = 
+      s := {!s with SelfReference = Some n}
+
+    ///
+    let increaseWithCount (s:S) = 
+      s := {!s with WithCount = (!s).WithCount + 1}
+
+    ///
+    let hasDynamicLookup (s:S) = 
+      (!s).LookupMode = LookupMode.Dynamic
+
+    ///
+    let hasArgumentsObject (s:S) = 
+      (!s).ContainsArguments
 
     ///
     let variables (s:S) = 
@@ -315,13 +253,18 @@ module Ast =
       (s |> variables).Count
 
     ///
-    //let increaseParameterCount (s:S) =
-    //  s := {!s with ParamCount = (!s).ParamCount + 1}
-    (*
+    let increaseSharedCount (s:S) =
+      s := {!s with SharedCount = (!s).SharedCount + 1}
+      (!s).SharedCount
+
     ///
-    let parameterCount (s:S) =
-      (s |> variables |> Map.partition (fun _ v -> isParameter v) |> fst).Count
-      //(!s).ParamCount
+    let addFunction (ast:Tree) (s:S) =
+      match ast with
+      | FunctionFast(Some name, _, _) ->
+        s := {!s with Functions = (!s).Functions |> Map.add name ast}
+
+      | _ -> 
+        Error.CompileError.Raise(Error.astMustBeNamedFunction)
 
     ///
     let private addVariable name variable (s:S) =
@@ -332,22 +275,39 @@ module Ast =
         }
 
     ///
-    let private createLocalVariable name local (s:S) = 
-      let storageIndex = s |> variableCount
-      let local = Local(storageIndex, local, LocalState.Private)
+    let createPrivateVariable name (s:S) = 
+      let local = Private(s |> variableCount)
       s |> addVariable name local
 
     ///
-    let createParameterVariable name (s:S) =
-      let parameterIndex = s |> parameterCount
-      s |> createLocalVariable name (Parameter parameterIndex)
+    let createSharedVariable name (storageIndex:int) (globalLevel:int) (s:S) =
+      let variables = 
+        s |> variables 
+          |> Map.add name (Shared(storageIndex, globalLevel, -1))
+
+      s := {!s with Variables = variables}
+      storageIndex, globalLevel
 
     ///
-    let createDefinedVariable name (s:S) =
-      if s |> variables |> Map.containsKey name |> not then
-        s |> createLocalVariable name Defined
-    *)
+    let promotePrivateToShared name (s:S) =
+      let reduceIndex index _ var =
+        match var with
+        | Private i when i > index -> Private(i - 1)
+        | _ -> var
 
+      match s |> variables |> Map.find name with
+      | Shared(_, _, _) -> failwith "Que?"
+      | Private privateIndex ->
+        let sharedIndex = s |> increaseSharedCount
+        let variables = 
+          s |> variables 
+            |> Map.remove name
+            |> Map.map (reduceIndex privateIndex)
+
+        s := {!s with Variables = variables}
+        s |> createSharedVariable name sharedIndex (!s).GlobalLevel
+
+  (*
   module AnalyzersFastUtils =
     
     module Local =
@@ -389,16 +349,11 @@ module Ast =
       // Type short hand for scopes
       type private S = Scope ref
 
-      let clone (s:S) = ref !s
-      let id (s:S) = (!s).Id
       let locals (s:S) = (!s).Locals
       let closures (s:S) = (!s).Closures
       let localCount (s:S) = (!s).LocalCount
       let paramCount (s:S) = (!s).ParamCount
       let closedOverCount (s:S) = (!s).ClosedOverCount
-
-      let isFunction (s:S) = (!s).ScopeType = ScopeType.FunctionScope
-      let isGlobal (s:S) = (!s).ScopeType = ScopeType.GlobalScope
 
       let setContainsArguments (s:S) = s := {!s with ContainsArguments=true}
       let setContainsEval (s:S) = s := {!s with EvalMode=EvalMode.Contains}
@@ -548,3 +503,4 @@ module Ast =
       let top (c:C) = (!c).Head
       let push s (c:C) = c := (s :: !c)
       let pop (c:C) = c := (!c).Tail
+    *)

@@ -12,26 +12,37 @@ let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
 let src = @"
-  (function f (a, b, a) {
-    var x;
-    var z;
+  var z = 1;
+  (function f1 (a1, b1, a1) {
+    var x1;
+    var z1;
 
     try {
 
-    } catch (exn) {
+    } catch (exn1) {
       try {
-        
+        var d1;
+
       } catch(exn2) {
-        
+        var f2 = function(a2) {
+          return function() { return exn2 * a2 * a1 * b1;};
+        }
       }
     }
 
     try {
       
-    } catch (exn) {
+    } catch (exn1) {
       
     }
+
+    return function() {
+      return f2(b1);
+    };
+
   });
 " 
 
-let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment |> snd
+let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment
+parseResult |> snd |> IronJS.Compiler.Analyzer.analyzeScopeChain 
+let ast = parseResult |> fst

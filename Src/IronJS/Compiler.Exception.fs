@@ -17,9 +17,7 @@ module Exception =
     match catch with
     | Ast.Catch(name, ast) ->
       let exnParam = Dlr.paramT<UserError> "error"
-
-      let s = ctx.Scope |> Ast.AnalyzersFastUtils.Scope.clone
-      s |> Ast.AnalyzersFastUtils.Scope.increaseLocalIndex name
+      let s = ctx.Scope |> Ast.NewVars.clone
 
       let ctx = {ctx with Scope=s}
 

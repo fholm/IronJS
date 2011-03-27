@@ -175,6 +175,7 @@ module Core =
       Continue = None
       BreakLabels = Map.empty
       ContinueLabels = Map.empty
+      ClosureLevel = scope |> Ast.NewVars.closureLevel
 
       ActiveVariables = (!scope).Variables
 

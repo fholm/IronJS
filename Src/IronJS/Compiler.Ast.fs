@@ -51,29 +51,6 @@ module Ast =
     | Delete = 9
     | TypeOf = 10
     
-  /// The two different types of scopes possible
-  type ScopeType
-    = GlobalScope = 0
-    | FunctionScope = 1
-    
-  /// The ways in a function can be effected by eval
-  /// 
-  /// Clean = No eval call that can effect this function detected
-  /// Contains = An eval call exists inside this function
-  /// Effected = An eval call exists in one of the scopes containing this function
-  type EvalMode
-    = Clean = 0
-    | Contains = 1
-    | Effected = 2
-    
-  /// The two different types of lookup modes that a 
-  /// function that use, dynamic is used if a function 
-  /// contains either an eval call or a with statement
-  /// otherwise static is used (which is a lot faster)
-  type LookupMode
-    = Static = 0
-    | Dynamic = 1
-    
   /// The AST tree type, contains all AST nodes
   /// except Case and Default nodes for switch statements
   type Tree
@@ -98,7 +75,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | FunctionFast of string option * Scope ref * Tree
+    | FunctionFast of string option * FunctionScope ref * Tree
     | Invoke of Tree * Tree list
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
@@ -127,6 +104,30 @@ module Ast =
     = Case of Tree * Tree
     | Default of Tree
     
+  /// The two different types of scopes possible
+  and ScopeType
+    = GlobalScope = 0
+    | FunctionScope = 1
+    
+  /// The ways in a function can be effected by eval
+  /// 
+  /// Clean = No eval call that can effect this function detected
+  /// Contains = An eval call exists inside this function
+  /// Effected = An eval call exists in one of the scopes containing this function
+  and EvalMode
+    = Clean = 0
+    | Contains = 1
+    | Effected = 2
+    
+  /// The two different types of lookup modes that a 
+  /// function that use, dynamic is used if a function 
+  /// contains either an eval call or a with statement
+  /// otherwise static is used (which is a lot faster)
+  and LookupMode
+    = Static = 0
+    | Dynamic = 1
+    
+  /// Represents a function scope
   and Scope = {
     Id : uint64
 
@@ -135,6 +136,7 @@ module Ast =
 
     WithCount: int
     SharedCount : int
+    PrivateCount : int
     
     ScopeType: ScopeType
     EvalMode: EvalMode
@@ -158,6 +160,7 @@ module Ast =
 
       WithCount = 0
       SharedCount = 0
+      PrivateCount = 0
       
       ScopeType = ScopeType.FunctionScope
       EvalMode = EvalMode.Clean
@@ -172,6 +175,7 @@ module Ast =
       Globals = Set.empty
     }
 
+  /// Represents a catch scope
   and CatchScope = {
     Name : string
     GlobalLevel : int
@@ -217,6 +221,14 @@ module Ast =
       (!s).ScopeType = ScopeType.GlobalScope
 
     ///
+    let globalLevel (s:S) =
+      (!s).GlobalLevel
+      
+    ///
+    let closureLevel (s:S) =
+      (!s).ClosureLevel
+
+    ///
     let setContainsArguments (s:S) = 
       s := {!s with ContainsArguments = true}
 
@@ -249,11 +261,28 @@ module Ast =
       (!s).Variables
 
     ///
+    let hasVariable name (s:S) = 
+      s |> variables |> Map.containsKey name
+
+    ///
     let variableCount (s:S) =
       (s |> variables).Count
 
     ///
+    let parameterNames (s:S) =
+      (!s).ParameterNames
+
+    ///
+    let privateCount (s:S) = 
+      (!s).PrivateCount
+
+    ///
+    let sharedCount (s:S) = 
+      (!s).SharedCount
+
+    ///
     let increaseSharedCount (s:S) =
+      s := {!s with PrivateCount = (!s).PrivateCount - 1}
       s := {!s with SharedCount = (!s).SharedCount + 1}
       (!s).SharedCount
 
@@ -309,40 +338,6 @@ module Ast =
 
   (*
   module AnalyzersFastUtils =
-    
-    module Local =
-      
-      module Index =
-
-        let isParameter index = index.ParamIndex |> Option.isSome
-        let isNotParameter index = index |> isParameter |> not
-
-      let private activeIndex (local:Local) =
-        if local.Active >= local.Indexes.Length || local.Active < 0 then 
-          Error.CompileError.Raise(Error.variableIndexOutOfRange)
-
-        local.Indexes.[local.Active]
-
-      let addIndex index local =
-        {local with Indexes = local.Indexes |> FSKit.Array.appendOne index}
-
-      let index local = (local |> activeIndex).Index
-      let isClosedOver local = (local |> activeIndex).IsClosedOver
-      let isParameter local = local |> activeIndex |> Index.isParameter
-      let isNotParameter local = local |> activeIndex |> Index.isNotParameter
-
-      let decreaseActive local = 
-        if local.Active > -1
-          then {local with Active = local.Active-1}
-          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
-
-      let increaseActive local = 
-        if local.Active+1 < local.Indexes.Length
-          then {local with Active = local.Active+1} 
-          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
-
-      let updateActive index (local:Local) =
-        local.Indexes.[local.Active] <- index
 
     module Scope =
       
@@ -372,72 +367,6 @@ module Ast =
       let tryGetLocal (name:string) (s:S) = s |> locals |> Map.tryFind name 
       let replaceLocal (local:Local) (s:S) =
         s := {!s with Locals = s |> locals |> Map.add local.Name local}
-
-      /// Adds a new variable to the scope
-      let addLocal name paramIndex (s:S) =
-        match s |> locals |> Map.tryFind name with
-        | None ->
-          let index = LocalIndex.New (s |> localCount) paramIndex
-          let local = Local.New name index
-
-          let paramCount = 
-            match paramIndex with
-            | None -> s |> paramCount
-            | Some index -> index + 1
-          
-          s := 
-            {!s with
-              LocalCount = index.Index + 1
-              ParamCount = paramCount
-              Locals = s |> locals |> Map.add name local}
-
-        | _ -> ()
-
-      /// Adds a local variable to a function scope
-      let addFunctionLocal name (s:S) =
-        if s |> isFunction 
-          then s |> addLocal name None 
-          elif s |> isGlobal 
-            then s := {!s with Globals = (!s).Globals.Add name}
-
-      /// Adds a parameter variable to the scope
-      let addParameter name (s:S) =
-        match s |> locals |> Map.tryFind name with
-        | None -> ()
-        | Some local -> 
-          let map = s |> locals |> Map.remove name
-          let name = sprintf "~%s" name
-          s := {!s with Locals = map |> Map.add name local}
-
-        s |> addLocal name (s |> paramCount |> Some)
-
-      /// Adds a catch variable to the scope
-      let addCatchLocal name (s:S) = 
-        match s |> locals |> Map.tryFind name with
-        | None -> 
-          s |> addLocal name None
-          let local = s |> locals |> Map.find name 
-          let local = local |> Local.decreaseActive
-          s |> replaceLocal local
-
-        | Some local ->
-          let index = LocalIndex.New (s |> localCount) None
-          let local = local |> Local.addIndex index
-
-          s := 
-            {!s with 
-              LocalCount = index.Index + 1
-              Locals = s |> locals |> Map.add name local}
-      
-      let increaseLocalIndex name (s:S) =
-        match s |> tryGetLocal name with
-        | Some local -> s |> replaceLocal (local |> Local.increaseActive)
-        | _ -> Error.CompileError.Raise(Error.missingVariable name)
-
-      let decreaseLocalIndex name (s:S) =
-        match s |> tryGetLocal name with
-        | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
-        | _ -> Error.CompileError.Raise(Error.missingVariable name)
         
       let hasVariable name (s:S) = 
         (s |> hasLocal name) || (s |> hasClosure name)
@@ -486,21 +415,4 @@ module Ast =
 
           | _ -> 
             ()
-
-      let addFunction (ast:Tree) (s:S) =
-        match ast with
-        | FunctionFast(Some name, _, _) ->
-          s := {!s with Functions = (!s).Functions |> Map.add name ast}
-
-        | _ -> 
-          Error.CompileError.Raise(Error.astMustBeNamedFunction)
-
-    module ScopeChain = 
-
-      // Type shorthand for scope chains
-      type private C = Scope ref list ref
-
-      let top (c:C) = (!c).Head
-      let push s (c:C) = c := (s :: !c)
-      let pop (c:C) = c := (!c).Tail
     *)

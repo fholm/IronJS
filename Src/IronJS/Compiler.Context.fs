@@ -62,6 +62,7 @@ type Context = {
   LocalScope: Dlr.Expr
   ClosureScope: Dlr.Expr
   DynamicScope: Dlr.Expr
+  ClosureLevel: int
 
   ActiveVariables: Map<string, Ast.NewVariable>
 

@@ -51,6 +51,9 @@ module Parser =
     member x.AddMissing n = 
       x.Missing := !x.Missing |> Set.add n
 
+    member x.HasVariable v =
+      (!x.Variables) |> Set.contains v
+
   type State = {
     Env : Env
     File : string
@@ -82,9 +85,10 @@ module Parser =
     ScopeClosures : Dict<uint64, string HashSet>
     ScopeLocals : Dict<uint64, string HashSet>
     ExceptionVariables : Stack<string>
-
-    ScopeDataMap : Map<uint64, ScopeData> ref
+    
     ScopeData : ScopeData ref
+    ScopeDataMap : Map<uint64, ScopeData> ref
+    FunctionScopeData : ScopeData ref
   } 
     #if DEBUG
     with
@@ -140,9 +144,10 @@ module Parser =
     ScopeClosures = null
     ScopeLocals = null
     ExceptionVariables = null
-
-    ScopeDataMap = ref Map.empty
+    
     ScopeData = ref Unchecked.defaultof<ScopeData>
+    ScopeDataMap = ref Map.empty
+    FunctionScopeData = ref Unchecked.defaultof<ScopeData>
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -631,7 +636,18 @@ module Parser =
       let name = p |> consumeIdentifier
       p |> expect S.RightParenthesis
 
+      let parentData = !p.ScopeData
+      let id = p.Env.NextFunctionId()
+      let catchScope = CatchScope.New 0 0 |> ScopeOption.Catch
+      let scopeData = ScopeData.New id catchScope (Some parentData)
+
+      scopeData.AddVariable name
+      parentData.AddChild scopeData
+
+      p.ScopeData := scopeData
       let body = p |> block
+      p.ScopeData := parentData
+
       let catch = Some(Tree.Catch(name, body))
 
       match p |> csymbol with
@@ -1086,14 +1102,15 @@ module Parser =
       while p |> csymbol <> S.RightParenthesis do
         let name = p |> consumeIdentifier
 
-        scope |> Ast.AnalyzersFastUtils.Scope.addParameter name
-        name  |> scopeData.AddParameter
+        // Add the parameter and a variable name
+        name |> scopeData.AddParameter
+        name |> scopeData.AddVariable
 
         match p |> csymbol with
         | S.Comma -> 
           p |> consume
 
-          if p |> csymbol = S.RightParenthesis then
+          if p |> csymbol <> S.Identifier then
             p |> unexpectedToken 
 
         | S.RightParenthesis -> ()
@@ -1111,7 +1128,6 @@ module Parser =
 
         if isDefinition then
           (!p.ScopeData).AddVariable name
-          p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
 
         p |> consume
         Some name
@@ -1150,15 +1166,25 @@ module Parser =
     // Parse the body within it's enclosing scope chain
     p |> schain |> AnalyzersFastUtils.ScopeChain.push scope
     
+    // Store the previous block level, function and scope data
     let prevBlockLevel = p.BlockLevel
+    let parentFunction = !p.FunctionScopeData
+    let parentScopeData = !p.ScopeData
+
+    // Add the new scopeData to the current scope
+    parentScopeData.AddChild scopeData
+
+    // Set function and scope data to the new scope
+    p.ScopeData := scopeData
+    p.FunctionScopeData := scopeData
     p.BlockLevel <- 0
 
-    let parentScopeData = !p.ScopeData
-    p.ScopeData := scopeData
-
+    // Parse the block
     let body = p |> block
 
+    // Reset 
     p.ScopeData := parentScopeData
+    p.FunctionScopeData := parentFunction
     p.BlockLevel <- prevBlockLevel
 
     p |> schain |> AnalyzersFastUtils.ScopeChain.pop
@@ -1171,7 +1197,7 @@ module Parser =
 
     | Some name -> 
       scope |> AnalyzersFastUtils.Scope.setSelfReference name
-      scope |> AnalyzersFastUtils.Scope.addFunctionLocal name
+      scopeData.AddVariable name 
 
       Tree.FunctionFast(None, scope, body)
 
@@ -1189,10 +1215,7 @@ module Parser =
       let name = p |> consumeIdentifier 
       let identifier = Tree.Identifier name
 
-      if p.ScopeLocals.[p |> cscopeId].Contains(name) |> not then
-        p.ScopeLocals.[p |> cscopeId].Add(name) |> ignore
-
-      (!p.ScopeData).AddVariable name
+      (!p.FunctionScopeData).AddVariable name
 
       let expr = 
         match p |> csymbol with
@@ -1222,14 +1245,13 @@ module Parser =
   let identifier t (p:P) =
     let name = p |> consumeIdentifier
 
-                             // This check allows the use of "arguments" as a function parameter
-                             // without creating the ActivationObject.arguments object
-    if name = "arguments" && p |> cscope |> AnalyzersFastUtils.Scope.hasLocal "arguments" |> not then
-      p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
-      p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
+    if name |> (!p.FunctionScopeData).HasVariable |> not then
+      if name = "arguments" then
+        p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
+        name |> (!p.FunctionScopeData).AddVariable
 
-    if p |> cscope |> AnalyzersFastUtils.Scope.hasLocal name |> not then 
-      p.ScopeClosures.[p |> cscopeId].Add(name) |> ignore
+      else
+        name |> (!p.FunctionScopeData).AddMissing
 
     Tree.Identifier(name)
 
@@ -1515,6 +1537,9 @@ module Parser =
       dict.Add(0UL, new HashSet<string>())
       dict
 
+    let globalScopeData =
+      ScopeData.New 0UL (Function globalScope) None
+
     let parser = 
       {parserDefinition with 
         Env = env
@@ -1530,8 +1555,9 @@ module Parser =
         ScopeClosures = scopeClosures
         ScopeLocals = new Dict<uint64, string HashSet>()
 
-        ScopeData = ref <| ScopeData.New 0UL (Function globalScope) None
+        ScopeData = ref globalScopeData
         ScopeDataMap = ref Map.empty
+        FunctionScopeData = ref globalScopeData
       }
 
     let globalAst = 
@@ -1539,7 +1565,7 @@ module Parser =
     
     parser |> resolveClosures
 
-    Tree.FunctionFast(None, globalScope, globalAst), parser
+    Tree.FunctionFast(None, globalScope, globalAst), globalScopeData
     
   let parseString env string = 
     env |> parse string |> fst

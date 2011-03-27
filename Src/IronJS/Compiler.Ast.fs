@@ -228,7 +228,11 @@ module Ast =
   and CatchScope = {
     GlobalLevel : int
     ClosureLevel : int
-  }
+  } with 
+    static member New globalLevel closureLevel = ref {
+      GlobalLevel = globalLevel
+      ClosureLevel = closureLevel
+    }
 
   and FunctionScope = Scope
 

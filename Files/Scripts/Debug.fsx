@@ -12,7 +12,7 @@ let ctx = Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
 let src = @"
-  (function (a, b, a) {
+  (function f (a, b, a) {
     var x;
     var z;
 

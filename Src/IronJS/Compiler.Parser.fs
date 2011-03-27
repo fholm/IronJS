@@ -83,8 +83,8 @@ module Parser =
     ScopeLocals : Dict<uint64, string HashSet>
     ExceptionVariables : Stack<string>
 
-    ScopeData : Map<uint64, ScopeData> ref
-    CurrentScopeData : ScopeData option ref
+    ScopeDataMap : Map<uint64, ScopeData> ref
+    ScopeData : ScopeData ref
   } 
     #if DEBUG
     with
@@ -141,8 +141,8 @@ module Parser =
     ScopeLocals = null
     ExceptionVariables = null
 
-    ScopeData = ref Map.empty
-    CurrentScopeData = ref None
+    ScopeDataMap = ref Map.empty
+    ScopeData = ref Unchecked.defaultof<ScopeData>
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -631,11 +631,8 @@ module Parser =
       let name = p |> consumeIdentifier
       p |> expect S.RightParenthesis
 
-      p.ExceptionVariables.Push(name)
       let body = p |> block
-      p.ExceptionVariables.Pop() |> ignore
-
-      let catch = Some(Catch(name, body))
+      let catch = Some(Tree.Catch(name, body))
 
       match p |> csymbol with
       // try ... catch ... finally
@@ -1081,7 +1078,9 @@ module Parser =
             }
 
       let scopeData = 
-        ScopeData.New id (Ast.ScopeOption.Function(scope)) !p.CurrentScopeData
+        let parent = Some !p.ScopeData
+        let scope = ScopeOption.Function scope
+        ScopeData.New id scope parent
 
       // Consume tokens untill we reach a right parenthesis
       while p |> csymbol <> S.RightParenthesis do
@@ -1111,10 +1110,7 @@ module Parser =
       | S.Identifier, name, _, _ -> 
 
         if isDefinition then
-          match !p.CurrentScopeData with
-          | None -> ()
-          | Some scopeData -> scopeData.AddVariable name
-
+          (!p.ScopeData).AddVariable name
           p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
 
         p |> consume
@@ -1157,12 +1153,12 @@ module Parser =
     let prevBlockLevel = p.BlockLevel
     p.BlockLevel <- 0
 
-    let parentScopeData = !p.CurrentScopeData
-    p.CurrentScopeData := Some scopeData
+    let parentScopeData = !p.ScopeData
+    p.ScopeData := scopeData
 
     let body = p |> block
 
-    p.CurrentScopeData := parentScopeData
+    p.ScopeData := parentScopeData
     p.BlockLevel <- prevBlockLevel
 
     p |> schain |> AnalyzersFastUtils.ScopeChain.pop
@@ -1195,6 +1191,8 @@ module Parser =
 
       if p.ScopeLocals.[p |> cscopeId].Contains(name) |> not then
         p.ScopeLocals.[p |> cscopeId].Add(name) |> ignore
+
+      (!p.ScopeData).AddVariable name
 
       let expr = 
         match p |> csymbol with
@@ -1531,6 +1529,9 @@ module Parser =
         ScopeParents = scopeParents
         ScopeClosures = scopeClosures
         ScopeLocals = new Dict<uint64, string HashSet>()
+
+        ScopeData = ref <| ScopeData.New 0UL (Function globalScope) None
+        ScopeDataMap = ref Map.empty
       }
 
     let globalAst = 

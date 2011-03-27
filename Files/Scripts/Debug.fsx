@@ -1,7 +1,7 @@
 #light
 #time
-#r @"../../Src/FSKit/Src/bin/Release/FSKit.dll"
-#r @"../../Src/IronJS/bin/Release/IronJS.dll"
+#r @"../../Src/FSKit/Src/bin/Debug/FSKit.dll"
+#r @"../../Src/IronJS/bin/Debug/IronJS.dll"
 
 open System
 open IronJS
@@ -34,4 +34,4 @@ let src = @"
   });
 " 
 
-let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment |> fst
+let parseResult = IronJS.Compiler.Parser.parse src ctx.Environment |> snd

@@ -27,8 +27,10 @@ module Core =
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
     | Ast.Eval tree -> compileEval ctx tree
     | Ast.Comma(left, right) -> Dlr.block [] [ctx.Compile left; ctx.Compile right;]
-    | Ast.Var ast -> compileAst ctx ast
-
+    | Ast.Var ast ->
+      match ast with
+      | Ast.Identifier name -> Dlr.void'
+      | ast -> compileAst ctx ast
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree

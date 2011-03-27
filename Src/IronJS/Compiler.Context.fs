@@ -65,6 +65,7 @@ type Context = {
   ClosureLevel: int
 
   ActiveVariables: Map<string, Ast.NewVariable>
+  ActiveCatchScopes: Ast.CatchScope ref list ref
 
   Break: Dlr.Label option
   Continue: Dlr.Label option

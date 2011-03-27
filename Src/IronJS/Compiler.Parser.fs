@@ -42,6 +42,16 @@ module Parser =
     member x.AddChild c = 
       x.Children := c :: !x.Children
 
+      match c.Scope with
+      | Ast.ScopeOption.Function _ -> ()
+      | Ast.ScopeOption.Catch c ->
+        match x.Scope with
+        | Ast.ScopeOption.Function s -> 
+          s := {!s with CatchScopes = (!s).CatchScopes @ [c]}
+
+        | Ast.ScopeOption.Catch s ->
+          s := {!s with CatchScopes = (!s).CatchScopes @ [c]}
+
     member x.AddVariable v = 
       x.Variables := !x.Variables |> Set.add v
 
@@ -1404,8 +1414,8 @@ module Parser =
     Tree.FunctionFast(None, scope, ast), scopeData
     
   let parseString env string = 
-    env |> parse string |> fst
+    env |> parse string
 
   let parseFile env path = 
     let source = path |> IO.File.ReadAllText
-    env |> parse source |> fst
+    env |> parse source

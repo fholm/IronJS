@@ -146,7 +146,7 @@ module Core =
                       |> Seq.toArray
 
           let skipCount =
-            if argTypes.Length > (!scope).ParameterNames.Length
+            if argTypes.Length >= (!scope).ParameterNames.Length
               then (!scope).ParameterNames.Length
               else 0
 
@@ -163,6 +163,9 @@ module Core =
 
       | _ -> failwith "Top AST node must be Tree.FastFunction"
 
+    //We have to clone the refs
+    //to all 
+
     //Context
     let ctx = {
       Compiler = compileAst
@@ -178,6 +181,7 @@ module Core =
       ClosureLevel = scope |> Ast.NewVars.closureLevel
 
       ActiveVariables = (!scope).Variables
+      ActiveCatchScopes = ref (!scope).CatchScopes
 
       Function = Dlr.paramT<FO> "~function"
       This = Dlr.paramT<CO> "~this"

@@ -180,13 +180,13 @@ module Ast =
     Name : string
     GlobalLevel : int
     ClosureLevel : int
-    ChildScopes : CatchScope ref list
+    CatchScopes : CatchScope ref list
   } with 
     static member New name globalLevel closureLevel = ref {
       Name = name
       GlobalLevel = globalLevel
       ClosureLevel = closureLevel
-      ChildScopes = List.empty
+      CatchScopes = List.empty
     }
 
   and FunctionScope = Scope
@@ -207,7 +207,7 @@ module Ast =
     type private S = FunctionScope ref
 
     ///
-    let clone (s:S) = ref !s
+    let clone s = ref !s
 
     ///
     let id (s:S) = (!s).Id
@@ -287,6 +287,10 @@ module Ast =
       (!s).SharedCount
 
     ///
+    let increasePrivateCount (s:S) =
+      s := {!s with PrivateCount = (!s).PrivateCount + 1}
+
+    ///
     let addFunction (ast:Tree) (s:S) =
       match ast with
       | FunctionFast(Some name, _, _) ->
@@ -306,6 +310,7 @@ module Ast =
     ///
     let createPrivateVariable name (s:S) = 
       let local = Private(s |> variableCount)
+      s |> increasePrivateCount
       s |> addVariable name local
 
     ///

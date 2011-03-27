@@ -86,15 +86,16 @@ module Scope =
   ///
   let private initGlobalScope (ctx:Ctx) =
     (!ctx.Scope).Globals 
-      |> Set.toSeq
-      |> Seq.map (fun name ->
+      $ Set.toSeq
+      $ Seq.map (fun name ->
         [
-          ctx.Globals |> Object.Property.put !!!name Utils.Constants.undefined 
-          ctx.Globals |> Object.Property.attr !!!name DescriptorAttrs.DontDelete
+          ctx.Globals $ Object.Property.put !!!name Utils.Constants.undefined 
+          ctx.Globals $ Object.Property.attr !!!name DescriptorAttrs.DontDelete
         ]
       )
-      |> Seq.concat
-      |> Dlr.block []
+
+      $ Seq.concat
+      $ Dlr.block []
 
   /// Initializes the private scope storage
   let private initPrivateScope (ctx:Ctx) =
@@ -189,8 +190,8 @@ module Scope =
     let ctx = {ctx with Scope = scope}
 
     let globalScopeInit = ctx $ initGlobalScope
-    let localScopeInit = ctx $ initPrivateScope
-    let closureScopeInit = ctx $ initSharedScope
+    let privateScopeInit = ctx $ initPrivateScope
+    let sharedScopeInit = ctx $ initSharedScope
     let dynamicScopeInit = ctx $ initDynamicScope
     let variablesInit = ctx $ initVariables
     //let argumentsInit = ctx $ initArguments
@@ -198,8 +199,8 @@ module Scope =
     let initBlock = 
       Dlr.block [] [
         globalScopeInit
-        localScopeInit
-        closureScopeInit
+        privateScopeInit
+        sharedScopeInit
         dynamicScopeInit
         variablesInit
         //argumentsInit

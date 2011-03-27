@@ -26,7 +26,9 @@ module Function =
             funcArgs, body
 
         let source = sprintf "(function(){ return function(%s){%s}; })();" args body
-        let ast = source |> Compiler.Parser.parseString f.Env
+        let ast, scopeData = source |> Compiler.Parser.parseString f.Env
+        scopeData |> Compiler.Analyzer.analyzeScopeChain
+
         let compiled = Compiler.Core.compileAsGlobal f.Env ast
         (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject
       )

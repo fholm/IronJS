@@ -17,6 +17,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using System.Xml.Linq;
+using System.Xml;
 
 namespace IronJS.Tests.Sputnik
 {
@@ -59,6 +61,8 @@ namespace IronJS.Tests.Sputnik
             };
             rootTestGroup.TestGroups = GenerateTestsList(rootTestGroup, testsPath, testsPath);
             this.TestGroups = new[] { rootTestGroup };
+
+            this.LoadResults();
 
             IronJS.Support.Debug.registerExprPrinter(ExprPrinter);
         }
@@ -108,6 +112,59 @@ namespace IronJS.Tests.Sputnik
             }
         }
 
+        private void LoadResults()
+        {
+            XDocument doc;
+            try
+            {
+                doc = XDocument.Load("tests.xml");
+            }
+            catch (IOException)
+            {
+                return;
+            }
+            catch (XmlException)
+            {
+                return;
+            }
+
+            var root = doc.Element("Tests");
+            if (root == null)
+            {
+                return;
+            }
+
+            var tests = (from e in root.Elements("Test")
+                         select new
+                         {
+                             Path = (string)e.Attribute("Path"),
+                             Status = (Status)Enum.Parse(typeof(Status), (string)e.Attribute("Status"), true),
+                             Selected = (bool)e.Attribute("Selected")
+                         }).ToDictionary(e => e.Path);
+
+            foreach (var test in GatherTests(g => true))
+            {
+                var key = test.TestCase.RelativePath;
+                if (tests.ContainsKey(key))
+                {
+                    var info = tests[key];
+                    test.Status = info.Status;
+                    test.Selected = info.Selected;
+                }
+            }
+        }
+
+        private void SaveResults()
+        {
+            var doc = new XElement("Tests",
+                          from t in GatherTests(g => true)
+                          select new XElement("Test",
+                              new XAttribute("Path", t.TestCase.RelativePath),
+                              new XAttribute("Status", t.Status.ToString()),
+                              new XAttribute("Selected", t.Selected)));
+            doc.Save("tests.xml");
+        }
+
         private static string GetExecutableDirectory()
         {
             return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
@@ -126,28 +183,33 @@ namespace IronJS.Tests.Sputnik
             Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(PrntExpr), expr);
         }
 
+        private IList<TestGroup> GatherTests(Func<TestGroup, bool> hierarchicalCriteria)
+        {
+            Func<TestGroup, IList<TestGroup>> gatherTests = null;
+            gatherTests = rootGroup =>
+            {
+                if (rootGroup.TestCase != null)
+                {
+                    return new[] { rootGroup };
+                }
+
+                var groups = new List<TestGroup>();
+                foreach (var group in rootGroup.TestGroups.Where(hierarchicalCriteria))
+                {
+                    groups.AddRange(gatherTests(group));
+                }
+
+                return groups;
+            };
+
+            return gatherTests(this.rootTestGroup);
+        }
+
         private void Run_Click(object sender, RoutedEventArgs e)
         {
             if (!this.worker.IsBusy)
             {
-                Func<TestGroup, IList<TestGroup>> gatherTests = null;
-                gatherTests = rootGroup =>
-                {
-                    if (rootGroup.TestCase != null)
-                    {
-                        return new[] { rootGroup };
-                    }
-
-                    var groups = new List<TestGroup>();
-                    foreach (var group in rootGroup.TestGroups.Where(g => g.Selected != false))
-                    {
-                        groups.AddRange(gatherTests(group));
-                    }
-
-                    return groups;
-                };
-
-                StartTests(gatherTests(this.rootTestGroup));
+                StartTests(GatherTests(g => g.Selected != false));
             }
         }
 
@@ -165,11 +227,13 @@ namespace IronJS.Tests.Sputnik
             this.FailedTests.Items.Clear();
             this.ExprTree.Text = string.Empty;
             this.progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
+            SaveResults();
             this.worker.RunWorkerAsync(tests);
         }
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            SaveResults();
             this.RunButton.IsEnabled = true;
             this.RunSingle.IsEnabled = true;
             this.StopButton.IsEnabled = false;
@@ -325,6 +389,11 @@ namespace IronJS.Tests.Sputnik
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)
         {
             this.showExprTrees = ((CheckBox)sender).IsChecked ?? false;
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            SaveResults();
         }
     }
 }

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:convert="clr-namespace:IronJS.Tests.Sputnik.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Title="IronJS - Sputnik Conformance Tests" Height="449" Width="860">
+        Title="IronJS - Sputnik Conformance Tests" Height="449" Width="860" Closing="Window_Closing">
     <Window.Resources>
         <convert:StatusImageConverter x:Key="StatusImage" />
     </Window.Resources>

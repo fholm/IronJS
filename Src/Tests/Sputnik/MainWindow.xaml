@@ -16,13 +16,37 @@
         <Grid Grid.Row="0" Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="22" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="24" />
+                <RowDefinition Height="0" x:Name="ExpressionTreeRow" />
             </Grid.RowDefinitions>
             <TreeView Margin="4" Grid.Row="0" Grid.Column="0" x:Name="TestsView" ItemsSource="{Binding TestGroups}">
+                <TreeView.Resources>
+                    <ContextMenu x:Key="Menu" >
+                        <MenuItem Header="Select All" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Deselect All" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <Separator Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Select Failed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Select Passed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Select Unknown" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Deselect Failed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Deselect Passed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Header="Deselect Unknown" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Visibility="{Binding Path=PlacementTarget.Tag.ShowTestCaseMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" Click="OpenItem_Click">
+                            <MenuItem.Header>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="Open {0} Source">
+                                            <Binding Path="PlacementTarget.Tag.Name" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </MenuItem.Header>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.Resources>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding TestGroups}">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" ContextMenu="{StaticResource Menu}" Tag="{Binding}">
                             <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Margin="1" />
                             <Image Source="{Binding Status, Converter={StaticResource StatusImage}}" />
                             <TextBlock Text="{Binding Name}" Margin="1"></TextBlock>
@@ -30,7 +54,7 @@
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
-            <CheckBox Margin="4" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="Show Expression Trees" FontWeight="Bold" x:Name="ShowExprTrees" Checked="ShowExprTrees_Checked" />
+            <CheckBox Margin="4" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="Show Expression Trees" FontWeight="Bold" x:Name="ShowExprTrees" Checked="ShowExprTrees_Checked" Unchecked="ShowExprTrees_Checked" />
             <ScrollViewer Margin="4" Grid.Row="2" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <TextBlock x:Name="ExprTree" Text=""  />
             </ScrollViewer>

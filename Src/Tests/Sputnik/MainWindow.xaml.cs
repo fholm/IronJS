@@ -64,7 +64,7 @@ namespace IronJS.Tests.Sputnik
 
             this.LoadResults();
 
-            IronJS.Support.Debug.registerExprPrinter(ExprPrinter);
+            IronJS.Support.Debug.registerExprPrinter(this.ExprPrinter);
         }
 
         private IList<TestGroup> GenerateTestsList(TestGroup root, string basePath, string path)
@@ -77,7 +77,7 @@ namespace IronJS.Tests.Sputnik
                 {
                     Name = Path.GetFileName(dir),
                 };
-                group.TestGroups = GenerateTestsList(group, basePath, dir);
+                group.TestGroups = this.GenerateTestsList(group, basePath, dir);
                 groups.Add(group);
             }
 
@@ -142,7 +142,7 @@ namespace IronJS.Tests.Sputnik
                              Selected = (bool)e.Attribute("Selected")
                          }).ToDictionary(e => e.Path);
 
-            foreach (var test in GatherTests(g => true))
+            foreach (var test in this.GatherTests(g => true))
             {
                 var key = test.TestCase.RelativePath;
                 if (tests.ContainsKey(key))
@@ -157,7 +157,7 @@ namespace IronJS.Tests.Sputnik
         private void SaveResults()
         {
             var doc = new XElement("Tests",
-                          from t in GatherTests(g => true)
+                          from t in this.GatherTests(g => true)
                           select new XElement("Test",
                               new XAttribute("Path", t.TestCase.RelativePath),
                               new XAttribute("Status", t.Status.ToString()),
@@ -180,7 +180,7 @@ namespace IronJS.Tests.Sputnik
 
         void ExprPrinter(string expr)
         {
-            Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(PrntExpr), expr);
+            Dispatcher.Invoke(DispatcherPriority.Normal, (Action<string>)this.PrntExpr, expr);
         }
 
         private IList<TestGroup> GatherTests(Func<TestGroup, bool> hierarchicalCriteria)
@@ -362,7 +362,7 @@ namespace IronJS.Tests.Sputnik
                         regression = true;
                     }
 
-                    AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"), regression);
+                    this.AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"), regression);
                 }
 
                 this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed, improved, regressed));
@@ -402,12 +402,32 @@ namespace IronJS.Tests.Sputnik
 
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)
         {
-            this.showExprTrees = ((CheckBox)sender).IsChecked ?? false;
+            var isChecked = ((CheckBox)sender).IsChecked;
+
+            this.showExprTrees = isChecked ?? false;
+
+            this.ExpressionTreeRow.Height = isChecked ?? false
+                ? new GridLength(1, GridUnitType.Star)
+                : new GridLength(0, GridUnitType.Pixel);
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             SaveResults();
+        }
+
+        private static TestGroup FindRoutedTestGroup(RoutedEventArgs e)
+        {
+            var menuItem = e.Source as MenuItem;
+            var menu = menuItem.Parent as ContextMenu;
+            var element = menu.PlacementTarget as FrameworkElement;
+            return element.Tag as TestGroup;
+        }
+
+        private void OpenItem_Click(object sender, RoutedEventArgs e)
+        {
+            var testGroup = FindRoutedTestGroup(e);
+            LaunchFile(testGroup.TestCase.FullPath);
         }
     }
 }

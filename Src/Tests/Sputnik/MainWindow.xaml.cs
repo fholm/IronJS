@@ -304,7 +304,7 @@ namespace IronJS.Tests.Sputnik
 
         void UpdateCurrentTest(TestCase test)
         {
-            Dispatcher.Invoke(new Action(() => currentTest.Text = test == null ? string.Empty : test.TestName));
+            Dispatcher.Invoke(new Action(() => this.CurrentTest.Content = (test == null ? string.Empty : test.TestName)));
         }
 
         private void RunTests(object sender, DoWorkEventArgs args)

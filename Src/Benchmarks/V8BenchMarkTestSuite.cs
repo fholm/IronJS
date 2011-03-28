@@ -1,0 +1,66 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+
+namespace Benchmarks
+{
+    public class V8BenchMarkTestSuite : TestSuite
+    {
+        public V8BenchMarkTestSuite(string basePath)
+            : base(Path.Combine(basePath, "v8"))
+        {
+        }
+
+        public override string SuiteName
+        {
+            get { return "V8 Benchmark Suite - version 6"; }
+        }
+
+        public override IEnumerable<string> EnumerateTests()
+        {
+            return base.EnumerateTests()
+                .Where(path => Path.GetFileName(path) != "base.js")
+                .Where(path => Path.GetFileName(path) != "run.js");
+        }
+
+        protected override IronJS.Hosting.Context CreateContext()
+        {
+            var ctx = base.CreateContext();
+            ctx.ExecuteFile(Path.Combine(this.BasePath, "base.js"));
+            return ctx;
+        }
+
+        protected override string ExecuteTest(IronJS.Hosting.Context ctx, string test)
+        {
+            var testError = base.ExecuteTest(ctx, test);
+            if (!string.IsNullOrEmpty(testError))
+            {
+                return testError;
+            }
+
+            var errors = string.Empty;
+            var success = true;
+            Action<string, string> printResult = (name, result) => Console.WriteLine(name + ": " + result);
+            Action<string, string> printError = (name, error) => { success = false; errors += name + ": " + error + "\r\n"; };
+            Action<string> printScore = (score) => Console.WriteLine("Score: " + score);
+            ctx.PutGlobal("PrintResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, printResult));
+            ctx.PutGlobal("PrintError", IronJS.Native.Utils.createHostFunction(ctx.Environment, printError));
+            ctx.PutGlobal("PrintScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, printScore));
+
+            try
+            {
+                ctx.Execute(@"BenchmarkSuite.RunSuites({ NotifyResult: PrintResult,
+                                                         NotifyError: PrintError,
+                                                         NotifyScore: PrintScore });");
+            }
+            catch (Exception ex)
+            {
+                return "Exception: " + ex.GetBaseException().Message;
+            }
+
+            return errors;
+        }
+    }
+}

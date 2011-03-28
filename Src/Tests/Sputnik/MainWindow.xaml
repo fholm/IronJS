@@ -1,8 +1,12 @@
 ﻿<Window x:Class="IronJS.Tests.Sputnik.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:convert="clr-namespace:IronJS.Tests.Sputnik.Converters"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         Title="IronJS - Sputnik Conformance Tests" Height="449" Width="860">
+    <Window.Resources>
+        <convert:StatusImageConverter x:Key="StatusImage" />
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="468" />
@@ -20,6 +24,7 @@
                     <HierarchicalDataTemplate ItemsSource="{Binding TestGroups}">
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Margin="1" />
+                            <Image Source="{Binding Status, Converter={StaticResource StatusImage}}" />
                             <TextBlock Text="{Binding Name}" Margin="1"></TextBlock>
                         </StackPanel>
                     </HierarchicalDataTemplate>

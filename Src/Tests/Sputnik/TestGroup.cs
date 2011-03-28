@@ -8,10 +8,9 @@ namespace IronJS.Tests.Sputnik
 {
     public enum Status
     {
-        Passed = 1,
-        Skipped = 2,
-        Unknown = 3,
-        Failed = 4,
+        Unknown = 0,
+        Passed,
+        Failed,
     }
 
     public class TestGroup : INotifyPropertyChanged
@@ -21,6 +20,7 @@ namespace IronJS.Tests.Sputnik
         public event PropertyChangedEventHandler PropertyChanged;
 
         private bool? selected;
+        private Status status;
 
         public TestGroup(TestGroup root, Sputnik.TestCase testCase)
         {
@@ -51,7 +51,23 @@ namespace IronJS.Tests.Sputnik
             }
         }
 
-        public Status Status { get; set; }
+        public Status Status
+        {
+            get
+            {
+                return this.status;
+            }
+
+            set
+            {
+                this.status = value;
+                NotifyStatusChanged();
+                if (this.root != null)
+                {
+                    this.root.UpdateStatus();
+                }
+            }
+        }
 
         public TestCase TestCase { get; set; }
 
@@ -61,6 +77,15 @@ namespace IronJS.Tests.Sputnik
             if (e != null)
             {
                 e(this, new PropertyChangedEventArgs("Selected"));
+            }
+        }
+
+        private void NotifyStatusChanged()
+        {
+            var e = this.PropertyChanged;
+            if (e != null)
+            {
+                e(this, new PropertyChangedEventArgs("Status"));
             }
         }
 
@@ -105,6 +130,40 @@ namespace IronJS.Tests.Sputnik
             }
 
             return true;
+        }
+
+        private void UpdateStatus()
+        {
+            var newStatus = this.DetermineStatus();
+            if (newStatus != this.status)
+            {
+                this.status = newStatus;
+                this.NotifyStatusChanged();
+                if (this.root != null)
+                {
+                    this.root.UpdateStatus();
+                }
+            }
+        }
+
+        private Status DetermineStatus()
+        {
+            if (this.TestGroups == null || this.TestGroups.Count == 0)
+            {
+                return this.status;
+            }
+
+            if (this.TestGroups.All(g => g.Status == Sputnik.Status.Passed))
+            {
+                return Sputnik.Status.Passed;
+            }
+
+            if (this.TestGroups.Where(g => g.Status == Sputnik.Status.Failed).Any())
+            {
+                return Sputnik.Status.Failed;
+            }
+
+            return Sputnik.Status.Unknown;
         }
 
         private void SetSelected(bool? value)

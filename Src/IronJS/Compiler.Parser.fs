@@ -1076,7 +1076,7 @@ module Parser =
       Tree.FunctionFast(None, scope, body)
 
   /// Implements: 12.2 Variable statement
-  let var _ p =
+  let var inForStatement _ p =
   
     // Consume the var token
     p |> consume
@@ -1102,19 +1102,44 @@ module Parser =
         p |> consume
         expr :: (p |> parseVariables)
 
-      | _ when p |> tryEndStatement ->
-        [expr]
+      //Special condition if we're 
+      //inside of a for statement
+      | S.Semicolon
+      | S.In when inForStatement -> [expr]
 
-      | _ -> 
-        p |> unexpectedToken
+      // Normal (non-for) var statement
+      | _ when p |> tryEndStatement -> [expr]
+      | _ -> p |> unexpectedToken
 
     // Parse all defined variables in this var statement
     p |> parseVariables |> Tree.Block
     
   /// Implements: 12.6.3 The for Statement
   /// Implements: 12.6.4 The for-in Statement
-  let for2 _ (p:P) =
+  let for' _ (p:P) =
   
+    let parseTestAndIncr (p:P) =
+      let test =
+        match p |> csymbol with
+        | S.Semicolon -> Ast.Boolean true
+        | _ ->  p |> anyExpression
+
+      p |> expect S.Semicolon
+
+      let incr =
+        match p |> csymbol with
+        | S.RightParenthesis -> Ast.Pass
+        | _ -> p |> anyExpression
+
+      p |> expect S.RightParenthesis
+
+      test, incr
+
+    let parseForIn target (p:P) =
+      let from = p |> anyExpression
+      p |> expect S.RightParenthesis
+      Ast.ForIn(None, target, from, p |> block)
+
     // Consume for token
     p |> consume
 
@@ -1123,134 +1148,41 @@ module Parser =
 
     match p |> csymbol with
     | S.Var ->
-      ()
-
-    | _ ->
-      let expr = p |> stopExpression S.In
-      ()
-
-    Ast.Pass
-
-  /// Implements: 12.6.3 The for Statement
-  /// Implements: 12.6.4 The for-in Statement
-  let for' _ (p:P) =
-    // TODO: It works, but it's a complete mess
-
-    // Consume for token
-    p |> consume
-
-    // Expect and consume a left parenthesis
-    p |> expect S.LeftParenthesis
-
-    let rec parseVars f (p:P) =
-      let expr = p |> anyExpression |> f
+      let vars = p |> var true p.Token
 
       match p |> csymbol with
-      | S.Comma -> 
+      | S.In ->
         p |> consume
-        expr :: (p |> parseVars f)
+
+        match vars with
+        | Ast.Block([Ast.Var(Ast.Identifier name)]) ->
+          p |> parseForIn (Ast.Identifier name)
+
+        | _ ->
+          Error.CompileError.Raise("")
 
       | S.Semicolon ->
         p |> consume
-        [expr]
+        let test, incr = p |> parseTestAndIncr
+        Ast.For(None, vars, test, incr, p |> block)
 
       | _ ->
         p |> unexpectedToken
 
-    let parseForIter init (p:P) =
-      let test = 
-        match p |> csymbol with
-        | S.Semicolon -> 
-          p |> consume
-          Tree.Boolean true
-
-        | _ ->
-          let test = p |> anyExpression
-          p |> expect S.Semicolon
-          test
-
-      let incr =
-        match p |> csymbol with
-        | S.RightParenthesis ->
-          p |> consume
-          Tree.Pass
-
-        | _ ->
-          let incr = p |> anyExpression
-          p |> expect S.RightParenthesis
-          incr
-
-      Tree.For(None, init, test, incr, p |> block)
-
-    match p |> csymbol with
-    // for(var ...
-    | S.Var -> 
-      
-      p |> consume
-
-      let name = 
-        p |> consumeIdentifier
-
+    | _ ->
+      let vars = p |> stopExpression S.In
       match p |> csymbol with
-      // for(var x in y) 
       | S.In ->
         p |> consume
-        let expr = p |> anyExpression
-        p |> expect S.RightParenthesis
-
-        let body = p |> block
-
-        Tree.ForIn(None, name |> Tree.Identifier |> Tree.Var, expr, body)
-
-      // for(var x = 0, ...)
-      | S.Assign ->
+        p |> parseForIn vars
+        
+      | S.Semicolon ->
         p |> consume
-        let expr = p |> anyExpression
-        let init = Tree.Var(Tree.Assign(Tree.Identifier name, expr))
+        let test, incr = p |> parseTestAndIncr
+        Ast.For(None, vars, test, incr, p |> block)
 
-        match p |> csymbol with
-        | S.Comma ->
-          p |> consume
-          p |> parseForIter (init :: (p|> parseVars Tree.Var) |> Tree.Block)
-
-        | S.Semicolon ->
-          p |> consume
-          p |> parseForIter init
-
-        | _ ->
-          p |> unexpectedToken
-
-      | _ -> 
+      | _ ->
         p |> unexpectedToken
-
-    // for(; ...
-    | S.Semicolon ->
-      p |> consume
-      p |> parseForIter Tree.Pass
-
-    // for(...
-    | _ ->
-      match p |> anyExpression with
-      // for(x in y)
-      // for(x.z in y)
-      | Tree.Binary(BinaryOp.In, target, expr) ->
-        p |> expect S.RightParenthesis
-        let body = p |> block
-        Tree.ForIn(None, target, expr, body)
-
-      // for(...; ...)
-      | init -> 
-        match p |> csymbol with
-        | S.Comma ->
-          p |> consume
-          p |> parseForIter (init :: (p|> parseVars (fun ast -> ast)) |> Tree.Block)
-
-        | S.Semicolon ->
-          p |> consume
-          p |> parseForIter init
-
-        | _ ->
-          p |> unexpectedToken
 
   /// Implements: 
   let identifier t (p:P) =
@@ -1394,8 +1326,8 @@ module Parser =
     |> nullStmt S.LineTerminator
 
     |> smd S.LeftBrace codeBlock
-    |> smd S.Var var
-    |> smd S.For for2
+    |> smd S.Var (var false)
+    |> smd S.For for'
     |> smd S.If if'
     |> smd S.Switch switch
     |> smd S.While while'

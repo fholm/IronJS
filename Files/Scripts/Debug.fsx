@@ -8,9 +8,11 @@ open IronJS
 
 IronJS.Support.Debug.registerConsolePrinter()
 
-let ctx = Hosting.Context.Create()
+let ctx = IronJS.Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
-let src = @"" 
+let src = @""
+
+IronJS.Compiler.Parser.parse src ctx.Environment
 
 src |> ctx.Execute

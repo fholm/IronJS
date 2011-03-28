@@ -15,11 +15,9 @@ module Main =
     ctx.SetupPrintFunction()
 
     let src = @"
-      function foo(a, b) {
-        return arguments.length;
+      for(i = 0; i < 1; ++i) {
+        
       }
-
-      foo(2, 2, 3);
     " 
 
     src |> ctx.Execute |> ignore

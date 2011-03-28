@@ -185,6 +185,11 @@ namespace IronJS.Tests.Sputnik
 
         private IList<TestGroup> GatherTests(Func<TestGroup, bool> hierarchicalCriteria)
         {
+            return this.GatherTests(this.rootTestGroup, hierarchicalCriteria);
+        }
+
+        private IList<TestGroup> GatherTests(TestGroup rootTestGroup, Func<TestGroup, bool> hierarchicalCriteria)
+        {
             Func<TestGroup, IList<TestGroup>> gatherTests = null;
             gatherTests = rootGroup =>
             {
@@ -202,7 +207,7 @@ namespace IronJS.Tests.Sputnik
                 return groups;
             };
 
-            return gatherTests(this.rootTestGroup);
+            return gatherTests(rootTestGroup);
         }
 
         private void Run_Click(object sender, RoutedEventArgs e)
@@ -428,6 +433,58 @@ namespace IronJS.Tests.Sputnik
         {
             var testGroup = FindRoutedTestGroup(e);
             LaunchFile(testGroup.TestCase.FullPath);
+        }
+
+        private void PerformSelection(RoutedEventArgs e, bool select, Predicate<TestGroup> filter)
+        {
+            var testGroup = FindRoutedTestGroup(e);
+            foreach (var test in GatherTests(testGroup, tg => true))
+            {
+                if (filter(test))
+                {
+                    test.Selected = select;
+                }
+            }
+        }
+
+        private void DeselectUnknown_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Unknown);
+        }
+
+        private void DeselectPassed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Passed);
+        }
+
+        private void DeselectFailed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Failed);
+        }
+
+        private void DeselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => true);
+        }
+
+        private void SelectUnknown_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Unknown);
+        }
+
+        private void SelectPassed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Passed);
+        }
+
+        private void SelectFailed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Failed);
+        }
+
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => true);
         }
     }
 }

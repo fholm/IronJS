@@ -17,3 +17,4 @@
 * Added debug constructs in big parts of the codebase that only gets compiled when the DEBUG flag is set
 * Refactored several constructors in the IronJS.Ast.Tree union to be more obvious
 * Unified error handling, so it all passes through IronJS.Error and its members
+* Re-implemented variable handling allowing for faster and easier compilation

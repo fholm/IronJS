@@ -39,7 +39,7 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable Target : BoxedValue
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int
-  [<DefaultValue>] val mutable Closures : Map<string, Ast.Closure>
+  [<DefaultValue>] val mutable Closures : Map<string, Ast.NewVariable>
   [<DefaultValue>] val mutable Function : FunctionObject
   [<DefaultValue>] val mutable This : CommonObject
   [<DefaultValue>] val mutable EvalScope : CommonObject
@@ -62,6 +62,10 @@ type Context = {
   LocalScope: Dlr.Expr
   ClosureScope: Dlr.Expr
   DynamicScope: Dlr.Expr
+  ClosureLevel: int
+
+  ActiveVariables: Map<string, Ast.NewVariable>
+  ActiveCatchScopes: Ast.CatchScope ref list ref
 
   Break: Dlr.Label option
   Continue: Dlr.Label option
@@ -78,7 +82,7 @@ type Context = {
   member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
 
   member x.DynamicLookup = 
-    x.Scope |> Ast.AnalyzersFastUtils.Scope.hasDynamicLookup || x.InsideWith
+    x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
 
   member x.AddDefaultLabel break' =
     {x with Break=Some break'}

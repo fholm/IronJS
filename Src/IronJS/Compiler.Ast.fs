@@ -51,29 +51,6 @@ module Ast =
     | Delete = 9
     | TypeOf = 10
     
-  /// The two different types of scopes possible
-  type ScopeType
-    = GlobalScope = 0
-    | FunctionScope = 1
-    
-  /// The ways in a function can be effected by eval
-  /// 
-  /// Clean = No eval call that can effect this function detected
-  /// Contains = An eval call exists inside this function
-  /// Effected = An eval call exists in one of the scopes containing this function
-  type EvalMode
-    = Clean = 0
-    | Contains = 1
-    | Effected = 2
-    
-  /// The two different types of lookup modes that a 
-  /// function that use, dynamic is used if a function 
-  /// contains either an eval call or a with statement
-  /// otherwise static is used (which is a lot faster)
-  type LookupMode
-    = Static = 0
-    | Dynamic = 1
-    
   /// The AST tree type, contains all AST nodes
   /// except Case and Default nodes for switch statements
   type Tree
@@ -98,7 +75,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | FunctionFast of string option * Scope ref * Tree
+    | FunctionFast of string option * FunctionScope ref * Tree
     | Invoke of Tree * Tree list
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
@@ -126,48 +103,40 @@ module Ast =
   and Cases 
     = Case of Tree * Tree
     | Default of Tree
-
-  and Local = {
-    Name: string
-    Active: int
-    Indexes: LocalIndex array
-  } with
-    static member New name index = {
-      Name = name
-      Active = 0
-      Indexes = [|index|]
-    }
-  
-  and LocalIndex = {
-    Index: int
-    ParamIndex: int option
-    IsClosedOver: bool
-  } with
-    static member New index paramIndex = {
-      Index = index
-      ParamIndex = paramIndex
-      IsClosedOver = false
-    }
     
-  and Closure = {
-    Name: string
-    Index: int
-    ClosureLevel: int
-    GlobalLevel: int
-  } with
-    static member New name index closureLevel globalLevel = {
-      Name  = name
-      Index = index
-      ClosureLevel = closureLevel
-      GlobalLevel = globalLevel
-    }
+  /// The two different types of scopes possible
+  and ScopeType
+    = GlobalScope = 0
+    | FunctionScope = 1
     
+  /// The ways in a function can be effected by eval
+  /// 
+  /// Clean = No eval call that can effect this function detected
+  /// Contains = An eval call exists inside this function
+  /// Effected = An eval call exists in one of the scopes containing this function
+  and EvalMode
+    = Clean = 0
+    | Contains = 1
+    | Effected = 2
+    
+  /// The two different types of lookup modes that a 
+  /// function that use, dynamic is used if a function 
+  /// contains either an eval call or a with statement
+  /// otherwise static is used (which is a lot faster)
+  and LookupMode
+    = Static = 0
+    | Dynamic = 1
+    
+  /// Represents a function scope
   and Scope = {
     Id : uint64
 
     GlobalLevel: int
     ClosureLevel: int
+
     WithCount: int
+    SharedCount : int
+    PrivateCount : int
     
     ScopeType: ScopeType
     EvalMode: EvalMode
@@ -175,95 +144,220 @@ module Ast =
     ContainsArguments: bool
     SelfReference : string option
 
-    Globals: Set<string>
-    Locals: Map<string, Local>
-    Closures: Map<string, Closure>
     Functions: Map<string, Tree>
+    Variables : VariableMap
+    CatchScopes : CatchScope ref list
+    ParameterNames : string list
+    Globals : string Set
 
-    LocalCount: int
-    ParamCount: int
-    ClosedOverCount: int
   } with
     static member NewGlobal = {Scope.New with ScopeType = ScopeType.GlobalScope}
     static member New = {
       Id = 0UL
 
-      GlobalLevel = -1
+      GlobalLevel = 0
       ClosureLevel = -1
+
       WithCount = 0
+      SharedCount = 0
+      PrivateCount = 0
       
-      ScopeType =  ScopeType.FunctionScope
+      ScopeType = ScopeType.FunctionScope
       EvalMode = EvalMode.Clean
       LookupMode = LookupMode.Static
       ContainsArguments = false
       SelfReference = None
-      
-      Globals = Set.empty
-      Locals = Map.empty
-      Closures = Map.empty
-      Functions = Map.empty
 
-      LocalCount = 0
-      ParamCount = 0
-      ClosedOverCount = 0
+      Functions = Map.empty
+      Variables = Map.empty
+      CatchScopes = List.empty
+      ParameterNames = List.empty
+      Globals = Set.empty
     }
 
-  type VariableOption 
-    = Global
-    | Local of Local
-    | Closure of Closure
+  /// Represents a catch scope
+  and CatchScope = {
+    Name : string
+    GlobalLevel : int
+    ClosureLevel : int
+    CatchScopes : CatchScope ref list
+  } with 
+    static member New name globalLevel closureLevel = ref {
+      Name = name
+      GlobalLevel = globalLevel
+      ClosureLevel = closureLevel
+      CatchScopes = List.empty
+    }
 
-  module AnalyzersFastUtils =
+  and FunctionScope = Scope
+
+  and ScopeOption
+    = Catch of CatchScope ref
+    | Function of FunctionScope ref
+
+  and [<NoComparison; NoEquality>] NewVariable
+    = Shared  of int * int * int
+    | Private of int
+
+  and VariableMap = Map<string, NewVariable>
+
+  module NewVars =
     
-    module Local =
+    // Type short hand for scopes
+    type private S = FunctionScope ref
+
+    ///
+    let clone s = ref !s
+
+    ///
+    let id (s:S) = (!s).Id
+    
+    ///
+    let isFunction (s:S) = 
+      (!s).ScopeType = ScopeType.FunctionScope
+
+    ///
+    let isGlobal (s:S) = 
+      (!s).ScopeType = ScopeType.GlobalScope
+
+    ///
+    let globalLevel (s:S) =
+      (!s).GlobalLevel
       
-      module Index =
+    ///
+    let closureLevel (s:S) =
+      (!s).ClosureLevel
 
-        let isParameter index = index.ParamIndex |> Option.isSome
-        let isNotParameter index = index |> isParameter |> not
+    ///
+    let setContainsArguments (s:S) = 
+      s := {!s with ContainsArguments = true}
 
-      let private activeIndex (local:Local) =
-        if local.Active >= local.Indexes.Length || local.Active < 0 then 
-          Error.CompileError.Raise(Error.variableIndexOutOfRange)
+    ///
+    let setContainsEval (s:S) = 
+      s := {!s with EvalMode = EvalMode.Contains}
 
-        local.Indexes.[local.Active]
+    ///
+    let setDynamicLookup (s:S) = 
+      s := {!s with LookupMode = LookupMode.Dynamic}
 
-      let addIndex index local =
-        {local with Indexes = local.Indexes |> FSKit.Array.appendOne index}
+    ///
+    let setSelfReference n (s:S) = 
+      s := {!s with SelfReference = Some n}
 
-      let index local = (local |> activeIndex).Index
-      let isClosedOver local = (local |> activeIndex).IsClosedOver
-      let isParameter local = local |> activeIndex |> Index.isParameter
-      let isNotParameter local = local |> activeIndex |> Index.isNotParameter
+    ///
+    let increaseWithCount (s:S) = 
+      s := {!s with WithCount = (!s).WithCount + 1}
 
-      let decreaseActive local = 
-        if local.Active > -1
-          then {local with Active = local.Active-1}
-          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
+    ///
+    let hasDynamicLookup (s:S) = 
+      (!s).LookupMode = LookupMode.Dynamic
 
-      let increaseActive local = 
-        if local.Active+1 < local.Indexes.Length
-          then {local with Active = local.Active+1} 
-          else Error.CompileError.Raise(Error.variableIndexOutOfRange)
+    ///
+    let hasArgumentsObject (s:S) = 
+      (!s).ContainsArguments
 
-      let updateActive index (local:Local) =
-        local.Indexes.[local.Active] <- index
+    ///
+    let variables (s:S) = 
+      (!s).Variables
+
+    ///
+    let hasVariable name (s:S) = 
+      s |> variables |> Map.containsKey name
+
+    ///
+    let variableCount (s:S) =
+      (s |> variables).Count
+
+    ///
+    let parameterNames (s:S) =
+      (!s).ParameterNames
+
+    ///
+    let privateCount (s:S) = 
+      (!s).PrivateCount
+
+    ///
+    let sharedCount (s:S) = 
+      (!s).SharedCount
+
+    ///
+    let increaseSharedCount (s:S) =
+      s := {!s with PrivateCount = (!s).PrivateCount - 1}
+      s := {!s with SharedCount = (!s).SharedCount + 1}
+      (!s).SharedCount
+
+    ///
+    let increasePrivateCount (s:S) =
+      s := {!s with PrivateCount = (!s).PrivateCount + 1}
+
+    ///
+    let addParameterName name (s:S) =
+      s := {!s with ParameterNames = (s |> parameterNames) @ [name]}
+
+    ///
+    let addFunction (ast:Tree) (s:S) =
+      match ast with
+      | FunctionFast(Some name, _, _) ->
+        s := {!s with Functions = (!s).Functions |> Map.add name ast}
+
+      | _ -> 
+        Error.CompileError.Raise(Error.astMustBeNamedFunction)
+
+    ///
+    let private addVariable name variable (s:S) =
+      s := 
+        {!s with 
+          Variables = 
+            s |> variables |> Map.add name variable
+        }
+
+    ///
+    let createPrivateVariable name (s:S) = 
+      let local = Private(s |> variableCount)
+      s |> increasePrivateCount
+      s |> addVariable name local
+
+    ///
+    let createSharedVariable name (storageIndex:int) (globalLevel:int) (s:S) =
+      let variables = 
+        s |> variables 
+          |> Map.add name (Shared(storageIndex, globalLevel, -1))
+
+      s := {!s with Variables = variables}
+      storageIndex, globalLevel
+
+    ///
+    let promotePrivateToShared name (s:S) =
+      let reduceIndex index _ var =
+        match var with
+        | Private i when i > index -> Private(i - 1)
+        | _ -> var
+
+      match s |> variables |> Map.find name with
+      | Shared(_, _, _) -> failwith "Que?"
+      | Private privateIndex ->
+        let sharedIndex = s |> increaseSharedCount
+        let variables = 
+          s |> variables 
+            |> Map.remove name
+            |> Map.map (reduceIndex privateIndex)
+
+        s := {!s with Variables = variables}
+        s |> createSharedVariable name sharedIndex (!s).GlobalLevel
+
+  (*
+  module AnalyzersFastUtils =
 
     module Scope =
       
       // Type short hand for scopes
       type private S = Scope ref
 
-      let clone (s:S) = ref !s
-      let id (s:S) = (!s).Id
       let locals (s:S) = (!s).Locals
       let closures (s:S) = (!s).Closures
       let localCount (s:S) = (!s).LocalCount
       let paramCount (s:S) = (!s).ParamCount
       let closedOverCount (s:S) = (!s).ClosedOverCount
-
-      let isFunction (s:S) = (!s).ScopeType = ScopeType.FunctionScope
-      let isGlobal (s:S) = (!s).ScopeType = ScopeType.GlobalScope
 
       let setContainsArguments (s:S) = s := {!s with ContainsArguments=true}
       let setContainsEval (s:S) = s := {!s with EvalMode=EvalMode.Contains}
@@ -282,84 +376,17 @@ module Ast =
       let tryGetLocal (name:string) (s:S) = s |> locals |> Map.tryFind name 
       let replaceLocal (local:Local) (s:S) =
         s := {!s with Locals = s |> locals |> Map.add local.Name local}
-
-      /// Adds a new variable to the scope
-      let addLocal name paramIndex (s:S) =
-        match s |> locals |> Map.tryFind name with
-        | None ->
-          let index = LocalIndex.New (s |> localCount) paramIndex
-          let local = Local.New name index
-
-          let paramCount = 
-            match paramIndex with
-            | None -> s |> paramCount
-            | Some index -> index + 1
-          
-          s := 
-            {!s with
-              LocalCount = index.Index + 1
-              ParamCount = paramCount
-              Locals = s |> locals |> Map.add name local}
-
-        | _ -> ()
-
-      /// Adds a local variable to a function scope
-      let addFunctionLocal name (s:S) =
-        if s |> isFunction then 
-          s |> addLocal name None 
-
-        elif s |> isGlobal then
-          s := {!s with Globals = (!s).Globals.Add name}
-
-      /// Adds a parameter variable to the scope
-      let addParameter name (s:S) =
-        match s |> locals |> Map.tryFind name with
-        | None -> ()
-        | Some local -> 
-          let map = s |> locals |> Map.remove name
-          let name = sprintf "~%s" name
-          s := {!s with Locals = map |> Map.add name local}
-
-        s |> addLocal name (s |> paramCount |> Some)
-
-      /// Adds a catch variable to the scope
-      let addCatchLocal name (s:S) = 
-        match s |> locals |> Map.tryFind name with
-        | None -> 
-          s |> addLocal name None
-          let local = s |> locals |> Map.find name 
-          let local = local |> Local.decreaseActive
-          s |> replaceLocal local
-
-        | Some local ->
-          let index = LocalIndex.New (s |> localCount) None
-          let local = local |> Local.addIndex index
-
-          s := 
-            {!s with 
-              LocalCount = index.Index + 1
-              Locals = s |> locals |> Map.add name local}
-      
-      let increaseLocalIndex name (s:S) =
-        match s |> tryGetLocal name with
-        | Some local -> s |> replaceLocal (local |> Local.increaseActive)
-        | _ -> Error.CompileError.Raise(Error.missingVariable name)
-
-      let decreaseLocalIndex name (s:S) =
-        match s |> tryGetLocal name with
-        | Some local -> s |> replaceLocal (local |> Local.decreaseActive)
-        | _ -> Error.CompileError.Raise(Error.missingVariable name)
         
       let hasVariable name (s:S) = 
         (s |> hasLocal name) || (s |> hasClosure name)
 
       let getVariable name (s:S) =
         match s |> tryGetLocal name with
-        | Some var -> Local var
+        | Some var -> VariableOption.Local var
         | _ ->
           match s |> tryGetClosure name with
-          | Some cls -> Closure cls
-          | _ -> Global
+          | Some cls -> VariableOption.Closure cls
+          | _ -> VariableOption.Global
 
       let closeOverLocal name (s:S) =
 
@@ -397,20 +424,4 @@ module Ast =
 
           | _ -> 
             ()
-
-      let addFunction (ast:Tree) (s:S) =
-        match ast with
-        | FunctionFast(Some name, _, _) ->
-          s := {!s with Functions = (!s).Functions |> Map.add name ast}
-
-        | _ -> 
-          Error.CompileError.Raise(Error.astMustBeNamedFunction)
-
-    module ScopeChain = 
-
-      // Type shorthand for scope chains
-      type private C = Scope ref list ref
-
-      let top (c:C) = (!c).Head
-      let push s (c:C) = c := (s :: !c)
-      let pop (c:C) = c := (!c).Tail
+    *)

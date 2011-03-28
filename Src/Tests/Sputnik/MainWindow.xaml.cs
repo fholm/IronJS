@@ -26,7 +26,7 @@ namespace IronJS.Tests.Sputnik
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private BackgroundWorker worker = new BackgroundWorker();
-        private string _libPath;
+        private string libPath;
         private volatile bool showExprTrees;
 
         private IList<TestGroup> testGroups;
@@ -52,7 +52,7 @@ namespace IronJS.Tests.Sputnik
             this.worker.WorkerSupportsCancellation = true;
 
             var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName, "sputnik-v1");
-            this._libPath = Path.Combine(rootPath, "lib");
+            this.libPath = Path.Combine(rootPath, "lib");
             var testsPath = Path.Combine(rootPath, "tests");
 
             this.rootTestGroup = new TestGroup(null, null)
@@ -207,9 +207,16 @@ namespace IronJS.Tests.Sputnik
 
         private void Run_Click(object sender, RoutedEventArgs e)
         {
-            if (!this.worker.IsBusy)
+            StartTests(GatherTests(g => g.Selected != false));
+        }
+
+        private void RunSingle_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = this.FailedTests.SelectedItem as FailedTest;
+
+            if (selected != null)
             {
-                StartTests(GatherTests(g => g.Selected != false));
+                StartTests(new[] { selected.TestGroup });
             }
         }
 
@@ -226,7 +233,7 @@ namespace IronJS.Tests.Sputnik
             this.StopButton.IsEnabled = true;
             this.FailedTests.Items.Clear();
             this.ExprTree.Text = string.Empty;
-            this.progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
+            this.ProgressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
             SaveResults();
             this.worker.RunWorkerAsync(tests);
         }
@@ -241,22 +248,24 @@ namespace IronJS.Tests.Sputnik
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            var state = e.UserState as Tuple<int, int, int>;
+            var state = e.UserState as Tuple<int, int, int, int, int>;
             var total = state.Item1;
             var passed = state.Item2;
             var failed = state.Item3;
+            var improved = state.Item4;
+            var regressed = state.Item5;
 
             if (failed > 0)
             {
-                progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x00, 0x52));
+                this.ProgressBar.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x00, 0x52));
             }
 
-            progressBar.Maximum = total;
-            progressBar.Value = (passed + failed);
-            progressText.Content = (passed + failed) + "/" + total;
+            this.ProgressBar.Maximum = total;
+            this.ProgressBar.Value = (passed + failed);
+            this.ProgressText.Content = (passed + failed) + "/" + total;
 
-            passedLabel.Content = "Passed: " + passed; // +" (" + prevPassed + ")";
-            failedLabel.Content = "Failed: " + failed; // +" (" + prevFailed + ")";
+            this.PassedLabel.Content = "Passed: " + passed + " (" + improved + " improved)";
+            this.FailedLabel.Content = "Failed: " + failed + " (" + regressed + " regressed)";
         }
 
         private static void LaunchFile(string path)
@@ -278,7 +287,7 @@ namespace IronJS.Tests.Sputnik
             return ctx;
         }
 
-        private void AddFailed(TestGroup test, string error)
+        private void AddFailed(TestGroup test, string error, bool regression)
         {
             var testCase = test.TestCase;
 
@@ -289,6 +298,7 @@ namespace IronJS.Tests.Sputnik
                 Assertion = testCase.Assertion,
                 Exception = error,
                 TestGroup = test,
+                Regression = regression,
             })));
         }
 
@@ -304,8 +314,10 @@ namespace IronJS.Tests.Sputnik
 
             int passed = 0;
             int failed = 0;
+            int improved = 0;
+            int regressed = 0;
 
-            this.worker.ReportProgress(0, Tuple.Create(testCount, passed, failed));
+            this.worker.ReportProgress(0, Tuple.Create(testCount, passed, failed, improved, regressed));
 
             for (int i = 0; i < testCount; i++)
             {
@@ -327,25 +339,37 @@ namespace IronJS.Tests.Sputnik
                     pass = testCase.Negative ^ resultingError == null;
                 }
 
-                // TODO: Check for regression.
+                var previous = test.Status;
 
                 if (pass)
                 {
                     test.Status = Status.Passed;
                     passed++;
+                    if (previous == Status.Failed)
+                    {
+                        improved++;
+                    }
                 }
                 else
                 {
+                    bool regression = false;
+
                     test.Status = Status.Failed;
                     failed++;
-                    AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"));
+                    if (previous == Status.Passed)
+                    {
+                        regressed++;
+                        regression = true;
+                    }
+
+                    AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"), regression);
                 }
 
-                this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed));
+                this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed, improved, regressed));
             }
 
             this.UpdateCurrentTest(null);
-            this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed));
+            this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed, improved, regressed));
         }
 
         private static string RunTest(TestCase testCase)
@@ -373,16 +397,6 @@ namespace IronJS.Tests.Sputnik
             if (selected != null)
             {
                 LaunchFile(selected.Path);
-            }
-        }
-
-        private void RunSingle_Click(object sender, RoutedEventArgs e)
-        {
-            var selected = this.FailedTests.SelectedItem as FailedTest;
-
-            if (selected != null)
-            {
-                StartTests(new[] { selected.TestGroup });
             }
         }
 

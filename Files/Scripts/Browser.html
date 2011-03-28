@@ -3,10 +3,22 @@
         <title></title>
         <script type="text/javascript">
             $ERROR = alert;
-
             (function () {
+                var fs = [];
+
+                for(var i = 0; i < 2; ++i) {
+                    try {
+                        throw i;
+                    } catch(x) {
+                        fs[i] = function () { alert(x); }
+                    }
+                }
                 
+                for(var i = 0; i < 2; ++i) {
+                    fs[i]();
+                }
             })();
+
         </script>
     </head>
     <body></body>

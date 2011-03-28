@@ -14,9 +14,64 @@ open IronJS.Compiler.Ast
 open IronJS.Compiler.Lexer
 
 module Parser =
-  type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
-  type private List<'a> = System.Collections.Generic.List<'a>
-  type private HashSet<'a> = System.Collections.Generic.HashSet<'a>
+
+  type ScopeData = {
+    Id : uint64
+    Scope : ScopeOption
+    Parent : ScopeData option
+    Children : ScopeData list ref
+    Variables : string Set ref
+    Parameters : string list ref
+    Missing : string Set ref
+  } with
+    static member New id scope parent = {
+      Id = id
+      Scope = scope
+      Parent = parent
+      Children = ref List.empty
+      Variables = ref Set.empty
+      Parameters = ref List.empty
+      Missing = ref Set.empty
+    }
+
+    member x.AddChild c = 
+      x.Children := c :: !x.Children
+
+      match c.Scope with
+      | Ast.ScopeOption.Function _ -> ()
+      | Ast.ScopeOption.Catch c ->
+        match x.Scope with
+        | Ast.ScopeOption.Function s -> 
+          s := {!s with CatchScopes = (!s).CatchScopes @ [c]}
+
+        | Ast.ScopeOption.Catch s ->
+          s := {!s with CatchScopes = (!s).CatchScopes @ [c]}
+
+    member x.AddVariable v = 
+      x.Variables := !x.Variables |> Set.add v
+
+    member x.AddParameter p = 
+      let replaceVariable index parameter var =
+        if parameter = var 
+          then sprintf "%s~%i" var index
+          else var
+
+      if x.HasVariable p then
+        let findIndex v = p = v
+        let index = !x.Parameters |> List.findIndex findIndex
+        let replace = replaceVariable index p
+
+        x.Variables := !x.Variables |> Set.map replace
+        x.Parameters := !x.Parameters |> List.map replace
+      
+      x.Parameters := !x.Parameters @ [p]
+      x.Variables := !x.Variables |> Set.add p
+
+    member x.AddMissing n = 
+      x.Missing := !x.Missing |> Set.add n
+
+    member x.HasVariable v =
+      (!x.Variables) |> Set.contains v
 
   type State = {
     Env : Env
@@ -41,12 +96,9 @@ module Parser =
     Null : (Token -> State -> Tree) array
     Stmt : (Token -> State -> Tree) array
     Left : (Token -> Tree -> State -> Tree) array
-
-    ScopeChain : Scope ref list ref
-    ScopeMap : Dict<uint64, Scope ref>
-    ScopeChildren : Dict<uint64, Scope ref List>
-    ScopeParents : Dict<uint64, Scope ref list>
-    ScopeClosures : Dict<uint64, string HashSet>
+    
+    ScopeData : ScopeData ref
+    FunctionData : ScopeData ref
   } 
     #if DEBUG
     with
@@ -94,12 +146,9 @@ module Parser =
     Null = Array.zeroCreate<Token -> State -> Tree> 150
     Stmt = Array.zeroCreate<Token -> State -> Tree> 150
     Left = Array.zeroCreate<Token -> Tree -> State -> Tree> 150
-
-    ScopeChain = ref []
-    ScopeChildren = null
-    ScopeMap = null
-    ScopeParents = null
-    ScopeClosures = null
+    
+    ScopeData = ref Unchecked.defaultof<ScopeData>
+    FunctionData = ref Unchecked.defaultof<ScopeData>
   }
   
   let smd (s:int) funct p = p.Stmt.[s] <- funct; p
@@ -161,15 +210,6 @@ module Parser =
       elif Numerics.BigInteger.TryParse(s, anyNumber, invariantCulture, &bi) 
         then Double.PositiveInfinity
         else s |> invalidNumber |> Error.CompileError.Raise
-  
-  ///
-  let schain (p:P) = p.ScopeChain
-
-  ///
-  let cscope (p:P) = p |> schain |> Ast.AnalyzersFastUtils.ScopeChain.top
-  
-  ///
-  let cscopeId (p:P) = p |> cscope |> Ast.AnalyzersFastUtils.Scope.id
 
   /// The current tokens symbol
   let csymbol (p:P) = p.Token |> symbol
@@ -583,14 +623,30 @@ module Parser =
     // try ... catch ... ?
     | S.Catch -> 
       p |> consume
+
       p |> expect S.LeftParenthesis
-
       let name = p |> consumeIdentifier
-      p |> cscope |> AnalyzersFastUtils.Scope.addCatchLocal name
-
       p |> expect S.RightParenthesis
 
-      let catch = Some(Catch(name, p |> block))
+      let parentData = !p.ScopeData
+
+      let globalLevel =
+        match parentData.Scope with
+        | Catch s -> (!s).GlobalLevel + 1
+        | Function s -> (!s).GlobalLevel + 1
+
+      let id = p.Env.NextFunctionId()
+      let catchScope = CatchScope.New name globalLevel -1 |> ScopeOption.Catch
+      let scopeData = ScopeData.New id catchScope (Some parentData)
+
+      scopeData.AddVariable name
+      parentData.AddChild scopeData
+
+      p.ScopeData := scopeData
+      let catchBody = p |> block
+      p.ScopeData := parentData
+
+      let catch = Some(Tree.Catch(name, catchBody))
 
       match p |> csymbol with
       // try ... catch ... finally
@@ -904,7 +960,12 @@ module Parser =
 
     // Eval call
     | Identifier "eval" -> 
-      p |> cscope |> AnalyzersFastUtils.Scope.setContainsEval
+      
+      match (!p.FunctionData).Scope with
+      | Catch _ -> ()
+      | Function scope -> 
+        scope |> NewVars.setContainsEval
+
       Tree.Eval(argAsts |> List.head)
 
     // Normal function call
@@ -1012,10 +1073,11 @@ module Parser =
   let private functionDefinitionNotAllowed =
     "function definition not allowed inside conditional statements or blocks"
 
+  /// Implements: 
   let function' isDefinition _ p =
     
-    // Function definitions are not allowed
-    // within if statements
+    // Function definitions are not 
+    // allowed within if statements
     if isDefinition && p.BlockLevel > 0 then
       functionDefinitionNotAllowed |> Error.CompileError.Raise
 
@@ -1026,23 +1088,36 @@ module Parser =
       // Expect and consume the opening parenthesis
       p |> expect S.LeftParenthesis
 
+      let id = p.Env.NextFunctionId()
+      let parent = !p.ScopeData
+
       // Create a new scope object
       let scope =
         ref {Scope.New with 
-              Id = p.Env.NextFunctionId()
-              GlobalLevel = (!p.ScopeChain).Length
+              Id = id
+              GlobalLevel = 
+                match parent.Scope with
+                | Catch(s) -> (!s).GlobalLevel + 1
+                | Function s -> (!s).GlobalLevel + 1
             }
+
+      let scopeData = 
+        let parent = Some parent
+        let scope = ScopeOption.Function scope
+        ScopeData.New id scope parent
 
       // Consume tokens untill we reach a right parenthesis
       while p |> csymbol <> S.RightParenthesis do
         let name = p |> consumeIdentifier
-        scope |> Ast.AnalyzersFastUtils.Scope.addParameter name
+
+        // Add the parameter 
+        name |> scopeData.AddParameter
 
         match p |> csymbol with
         | S.Comma -> 
           p |> consume
 
-          if p |> csymbol = S.RightParenthesis then
+          if p |> csymbol <> S.Identifier then
             p |> unexpectedToken 
 
         | S.RightParenthesis -> ()
@@ -1052,14 +1127,14 @@ module Parser =
       p |> expect S.RightParenthesis
 
       // Return scope
-      scope
+      scope, scopeData
 
     let name = 
       match p.Token with
       | S.Identifier, name, _, _ -> 
 
         if isDefinition then
-          p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
+          (!p.ScopeData).AddVariable name
 
         p |> consume
         Some name
@@ -1068,49 +1143,47 @@ module Parser =
         None
 
     // Build the current scope
-    let scope = p |> buildScope
+    let scope, scopeData = p |> buildScope
     let scopeId = (!scope).Id
 
     if p.WithStatementCount > 0 then
-      scope |> AnalyzersFastUtils.Scope.setDynamicLookup
-
-    // Add the newly created scope to
-    // the scope map, so we can get it
-    // by it's id later on
-    p.ScopeMap.Add(scopeId, scope)
-
-    // Add the new scope as a child
-    // to the current scope
-    p.ScopeChildren.[p |> cscopeId].Add(scope)
-
-    // Add the current scope chain as parents
-    // to the newly created scope object
-    p.ScopeParents.Add(scopeId, !(p |> schain))
-
-    // Setup the closures and child lists for
-    // the newly created scope object
-    p.ScopeClosures.Add(scopeId, new HashSet<string>())
-    p.ScopeChildren.Add(scopeId, new List<Scope ref>())
-
-    // Parse the body within it's enclosing scope chain
-    p |> schain |> AnalyzersFastUtils.ScopeChain.push scope
+      scope |> NewVars.setDynamicLookup
     
+    // Store the previous block level, function and scope data
     let prevBlockLevel = p.BlockLevel
-    p.BlockLevel <- 0
-    let body = p |> block
-    p.BlockLevel <- prevBlockLevel
+    let parentFunction = !p.FunctionData
+    let parentScopeData = !p.ScopeData
 
-    p |> schain |> AnalyzersFastUtils.ScopeChain.pop
+    // Add the new scopeData to the current scope
+    parentScopeData.AddChild scopeData
+
+    // Set function and scope data to the new scope
+    p.ScopeData := scopeData
+    p.FunctionData := scopeData
+    p.BlockLevel <- 0
+
+    // Parse the block
+    let body = p |> block
+
+    // Reset 
+    p.ScopeData := parentScopeData
+    p.FunctionData := parentFunction
+    p.BlockLevel <- prevBlockLevel
 
     match name with
     | Some name when isDefinition -> 
       let func = Tree.FunctionFast(Some name, scope, body)
-      p |> cscope |> AnalyzersFastUtils.Scope.addFunction func
+
+      match (!p.FunctionData).Scope with
+      | Catch _ -> ()
+      | Function s -> 
+        s |> NewVars.addFunction func
+
       Tree.Pass
 
     | Some name -> 
-      scope |> AnalyzersFastUtils.Scope.setSelfReference name
-      scope |> AnalyzersFastUtils.Scope.addFunctionLocal name
+      scope |> NewVars.setSelfReference name
+      scopeData.AddVariable name 
 
       Tree.FunctionFast(None, scope, body)
 
@@ -1127,8 +1200,8 @@ module Parser =
     let rec parseVariables (p:P) =
       let name = p |> consumeIdentifier 
       let identifier = Tree.Identifier name
-      
-      p |> cscope |> Ast.AnalyzersFastUtils.Scope.addFunctionLocal name
+
+      (!p.FunctionData).AddVariable name
 
       let expr = 
         match p |> csymbol with
@@ -1158,14 +1231,18 @@ module Parser =
   let identifier t (p:P) =
     let name = p |> consumeIdentifier
 
-                             // This check allows the use of "arguments" as a function parameter
-                             // without creating the ActivationObject.arguments object
-    if name = "arguments" && p |> cscope |> AnalyzersFastUtils.Scope.hasLocal "arguments" |> not then
-      p |> cscope |> AnalyzersFastUtils.Scope.addFunctionLocal name
-      p |> cscope |> AnalyzersFastUtils.Scope.setContainsArguments
+    if name |> (!p.FunctionData).HasVariable |> not then
+      if name = "arguments" then
 
-    if p |> cscope |> AnalyzersFastUtils.Scope.hasLocal name |> not
-      then p.ScopeClosures.[p |> cscopeId].Add(name) |> ignore
+        match (!p.FunctionData).Scope with
+        | Catch _ -> ()
+        | Function s -> 
+          s|> NewVars.setContainsArguments
+
+        name |> (!p.FunctionData).AddVariable
+
+      else
+        name |> (!p.FunctionData).AddMissing
 
     Tree.Identifier(name)
 
@@ -1306,150 +1383,16 @@ module Parser =
     |> smd S.Continue continue'
     |> smd S.Function (function' true)
 
-  let private resolveClosures (p:P) =
-    
-    // Get the parent scopes of a scope id
-    let getParentScopes id (p:P) = p.ScopeParents.[id]
-
-    // Get a scope by id
-    let getScope id (p:P) = p.ScopeMap.[id]
-    
-    // Calculates the closure level of all scopes
-    let calculateScopeProperties (p:P) =
-
-      let rec calculateScopeLevels (s:Scope ref) (closureLevel:int) (withCount:int) (p:P) =
-        let id = (!s).Id
-        let withCount = withCount + (!s).WithCount
-
-        let closureLevel =
-          if (!s).ClosedOverCount > 0 
-            then closureLevel + 1 
-            else closureLevel
-
-        let lookupMode =
-          match (!s).LookupMode with
-          | LookupMode.Dynamic -> LookupMode.Dynamic
-          | _ when withCount > 0 -> LookupMode.Dynamic
-          | _ ->
-            match p.ScopeParents.[id] with
-            | [] -> LookupMode.Static
-            | x::_ -> (!x).LookupMode
-
-        let evalMode =
-          match (!s).EvalMode with
-          | EvalMode.Clean ->
-
-            match p.ScopeParents.[id] with
-            | [] -> EvalMode.Clean
-            | x::_ ->
-              match (!x).EvalMode with
-              | EvalMode.Clean -> EvalMode.Clean
-              | _ -> EvalMode.Effected
-
-          | mode -> mode
-
-        s := 
-          {!s with 
-            ClosureLevel = closureLevel
-            LookupMode = lookupMode
-            EvalMode = evalMode
-          }
-          
-        for childScope in p.ScopeChildren.[id] do
-          p |> calculateScopeLevels childScope closureLevel withCount
-
-      p |> calculateScopeLevels p.ScopeMap.[0UL] -1 0
-    
-    // Closes over a local variable, if found, in a list of scopes
-    let closeOverLocal (closures:List<Scope ref * string>) (name:string) (parents:Scope ref list) =
-
-      match parents |> List.tryFind (AnalyzersFastUtils.Scope.hasLocal name) with
-      | Some s -> 
-
-        // Store the found scope + variable name 
-        // in the closures list so we can quickly
-        // go back and find them again 
-        closures.Add(s, name)
-
-        // Modify the found scope so the local variable
-        // we found is properly closed over
-        s |> AnalyzersFastUtils.Scope.closeOverLocal name
-
-      | _ -> ()
-
-    // Here we store all closures that have been
-    // resolved to a specific scope. They are 
-    // stored here so we don't have to traverse
-    // the whole scope chain again when we have
-    // calculated the proper scope levels
-    let scopeClosures = 
-      new List<uint64 * List<Scope ref * string>>()
-      
-    // First, mark all closed over variables so we can 
-    // calculate the scope levels before we go back
-    // and resolve all closures
-    for kvp in p.ScopeClosures do
-      let id = kvp.Key
-      let closures = kvp.Value
-
-      if closures.Count > 0 then
-        let resolvedClosures = new List<Scope ref * string>()
-        let parents = p |> getParentScopes id
-
-        for name in closures do 
-          parents |> closeOverLocal resolvedClosures name
-
-        scopeClosures.Add(id, resolvedClosures)
-
-    // Calculate scope properties:
-    // * Closure level
-    // * Looup Mode
-    // * EvalMode 
-    p |> calculateScopeProperties
-
-    // Finally, resolve all closures
-    for id, closures in scopeClosures do
-      let s = p |> getScope id
-
-      for scope, name in closures do
-        match scope |> AnalyzersFastUtils.Scope.tryGetLocal name with
-        | Some local ->
-          let cl = (!scope).ClosureLevel
-          let gl = (!scope).GlobalLevel
-          let index = local |> AnalyzersFastUtils.Local.index
-          let closure = Closure.New name index cl gl
-          s |> AnalyzersFastUtils.Scope.addClosure closure
-
-        | _ ->
-          Error.RuntimeError.Raise(Error.missingVariable name)
-
-  /// Parses a source string into an
-  /// abstract syntax tree
+  /// Parses a source string into 
+  /// an abstract syntax tree
   let parse (source:string) (env:Env) =
     let lexer = source |> Lexer.create
 
-    let globalScope = 
+    let scope = 
       ref {Ast.Scope.NewGlobal with GlobalLevel = 0}
 
-    let scopeChildren = 
-      let dict = new Dict<uint64, Scope ref List>()
-      dict.Add(0UL, new List<Scope ref>())
-      dict
-
-    let scopeMap =
-      let dict = new Dict<uint64, Scope ref>()
-      dict.Add(0UL, globalScope)
-      dict
-
-    let scopeParents =
-      let dict = new Dict<uint64, Scope ref list>()
-      dict.Add(0UL, [])
-      dict
-
-    let scopeClosures =
-      let dict = new Dict<uint64, string HashSet>()
-      dict.Add(0UL, new HashSet<string>())
-      dict
+    let scopeData =
+      ScopeData.New 0UL (Function scope) None
 
     let parser = 
       {parserDefinition with 
@@ -1459,23 +1402,16 @@ module Parser =
         Tokenizer = lexer
         Token = lexer()
 
-        ScopeChain = ref [globalScope]
-        ScopeMap = scopeMap
-        ScopeChildren = scopeChildren
-        ScopeParents = scopeParents
-        ScopeClosures = scopeClosures
+        ScopeData = ref scopeData
+        FunctionData = ref scopeData
       }
 
-    let globalAst = 
-      parser |> statementList |> Tree.Block
-    
-    parser |> resolveClosures
-
-    Tree.FunctionFast(None, globalScope, globalAst), parser
+    let ast = parser |> statementList |> Tree.Block
+    Tree.FunctionFast(None, scope, ast), scopeData
     
   let parseString env string = 
-    env |> parse string |> fst
+    env |> parse string
 
   let parseFile env path = 
     let source = path |> IO.File.ReadAllText
-    env |> parse source |> fst
+    env |> parse source

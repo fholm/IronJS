@@ -27,8 +27,10 @@ module Core =
     | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
     | Ast.Eval tree -> compileEval ctx tree
     | Ast.Comma(left, right) -> Dlr.block [] [ctx.Compile left; ctx.Compile right;]
-    | Ast.Var ast -> compileAst ctx ast
-
+    | Ast.Var ast ->
+      match ast with
+      | Ast.Identifier name -> Dlr.void'
+      | ast -> compileAst ctx ast
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
@@ -112,9 +114,11 @@ module Core =
         (Dlr.field target "ClosureLevel") 
         (Dlr.const' (!ctx.Scope).ClosureLevel))
 
+      (*
       (Utils.assign
         (Dlr.field target "Closures") 
         (Dlr.const' (!ctx.Scope).Closures))
+      *)
         
       (Utils.assign (Dlr.field target "Target") evalTarget)
       (Utils.assign (Dlr.field target "Function") ctx.Function)
@@ -133,7 +137,7 @@ module Core =
     let scope, ast =
       match target.Ast with
       | Ast.FunctionFast(_, scope, ast) -> 
-        let scope = scope |> Ast.AnalyzersFastUtils.Scope.clone
+        let scope = ref !scope
 
         match target.Delegate with
         | None -> ()
@@ -144,8 +148,8 @@ module Core =
                       |> Seq.toArray
 
           let skipCount =
-            if argTypes.Length > (!scope).ParamCount
-              then (!scope).ParamCount
+            if argTypes.Length >= (!scope).ParameterNames.Length
+              then (!scope).ParameterNames.Length
               else 0
 
           let argLength = 
@@ -154,13 +158,16 @@ module Core =
                       |> Array.length
 
           for i = 0 to (argLength - 1) do
-            let name = "~arg" + string (!scope).ParamCount
-            let paramIndex = Some (!scope).ParamCount
-            scope |> Ast.AnalyzersFastUtils.Scope.addLocal name paramIndex
+            let name = "~arg" + string (!scope).ParameterNames.Length
+            scope |> Ast.NewVars.addParameterName name
+            scope |> Ast.NewVars.createPrivateVariable name
 
         scope, ast
 
-      | _ -> failwith "Top AST node must be Tree.Function"
+      | _ -> failwith "Top AST node must be Tree.FastFunction"
+
+    //We have to clone the refs
+    //to all 
 
     //Context
     let ctx = {
@@ -174,12 +181,17 @@ module Core =
       Continue = None
       BreakLabels = Map.empty
       ContinueLabels = Map.empty
+      ClosureLevel = scope |> Ast.NewVars.closureLevel
+
+      ActiveVariables = (!scope).Variables
+      ActiveCatchScopes = ref (!scope).CatchScopes
 
       Function = Dlr.paramT<FO> "~function"
       This = Dlr.paramT<CO> "~this"
-      LocalScope = Dlr.paramT<Scope> "~localScope"
-      ClosureScope = Dlr.paramT<Scope> "~closureScope"
-      DynamicScope = Dlr.paramT<DynamicScope> "~dynamicScope"
+      LocalScope = Dlr.paramT<Scope> "~private"
+      ClosureScope = Dlr.paramT<Scope> "~shared"
+      DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
+
       Parameters = target.ParamTypes |> Seq.mapi Dlr.paramI |> Seq.toArray
     }
 
@@ -193,7 +205,7 @@ module Core =
         let func = Function.create ctx compile scope func
         let setFunc = Identifier.setValue ctx name func
 
-        if ctx.Scope |> Ast.AnalyzersFastUtils.Scope.isGlobal then
+        if ctx.Scope |> Ast.NewVars.isGlobal then
           Dlr.block [] [
             setFunc
             Dlr.call ctx.Globals "SetAttrs" [!!!name; !!!DescriptorAttrs.DontDelete]

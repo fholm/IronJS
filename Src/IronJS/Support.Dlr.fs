@@ -259,8 +259,7 @@ module Dlr =
     Expr.MakeIndex(expr, item, [const' index]) :> Expr
 
   let index target (exprs:Et seq) = Et.ArrayAccess(target, exprs) :> Expr
-  let indexInts target indexes = 
-    index target (indexes |> Seq.map (fun (x:int) -> const' x))
+  let indexInts target indexes = index target (indexes |> Seq.map (fun (x:int) -> const' x))
   let indexInt target index = indexInts target [index]
   let index0 target = index target [const' 0]
   let index1 target = index target [const' 1]
@@ -596,6 +595,8 @@ module Dlr =
 
     // Dot operator for binding field access
     let (.->) a b = propertyOrField a b
+
+    let (.@) a (b:int) = index a [const' b]
 
     // Binary operators, starts with .
     let (.=) a b = assign a b

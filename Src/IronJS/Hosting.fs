@@ -112,7 +112,8 @@ module Hosting =
     member x.GlobalFunc = globalFunc
 
     member x.CompileFile fileName =
-      let ast = fileName |> Compiler.Parser.parseFile x.Environment  
+      let ast, scopeData = fileName |> Compiler.Parser.parseFile x.Environment  
+      scopeData |> Compiler.Analyzer.analyzeScopeChain
 
       #if DEBUG
       ast |> Support.Debug.printAst
@@ -121,7 +122,8 @@ module Hosting =
       Compiler.Core.compileAsGlobal env ast
 
     member x.CompileSource source =
-      let ast = source |> Compiler.Parser.parseString x.Environment
+      let ast, scopeData = source |> Compiler.Parser.parseString x.Environment
+      scopeData |> Compiler.Analyzer.analyzeScopeChain
 
       #if DEBUG
       ast |> Support.Debug.printAst

@@ -14,40 +14,16 @@ module Main =
     let ctx = Hosting.Context.Create()
     ctx.SetupPrintFunction()
 
+
     let src = @"
-      this.p1 = 1;
-      var result = 'result';
-      var value = 'value';
-      var myObj = {p1: 'a', 
-                   value: 'myObj_value',
-                   valueOf : function(){return 'obj_valueOf';}
+      function foo(a, b) {
+        return arguments.length;
       }
 
-      try {
-        var f = function(){
-          throw value;
-          p1 = 'x1';
-        }
-        with(myObj){
-          f();
-        }
-      } catch(e){
-        result = e;
-      }
+      foo(2, 2, 3);
+    " 
 
-      if(!(p1 === 1)){
-        $ERROR('#1: p1 === 1. Actual:  p1 ==='+ p1  );
-      }
+    src |> ctx.Execute |> ignore
 
-      if(!(myObj.p1 === 'a')){
-        $ERROR('#2: myObj.p1 === a. Actual:  myObj.p1 ==='+ myObj.p1  );
-      }
-
-      if(!(result === 'value')){
-        $ERROR('#3: result === value. Actual:  result ==='+ result  );
-      }
-    "
-
-    ctx.Execute src |> ignore
 
   main() |> ignore

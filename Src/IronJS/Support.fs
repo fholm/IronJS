@@ -3,6 +3,9 @@
 open IronJS
 open System
 
+module CustomOperators =
+  let inline ($) a b = b a
+
 module Attributes = 
 
   type HiddenMethod() = inherit Attribute()

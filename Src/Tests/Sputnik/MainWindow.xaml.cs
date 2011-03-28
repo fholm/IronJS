@@ -1,9 +1,13 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -12,327 +16,315 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Threading;
 using System.Windows.Threading;
-using System.Diagnostics;
 
-namespace IronJS.Tests.Sputnik {
+namespace IronJS.Tests.Sputnik
+{
 
-  public partial class MainWindow : Window {
-    TreeViewItem _testsRoot;
+    public partial class MainWindow : Window, INotifyPropertyChanged
+    {
+        private BackgroundWorker worker = new BackgroundWorker();
+        private string _libPath;
+        private volatile bool showExprTrees;
 
-    string _rootPath;
-    string _testsPath;
-    string _libPath;
-    string _selectedPath;
+        private IList<TestGroup> testGroups;
+        private TestGroup rootTestGroup;
+        private HashSet<string> skipTests = new HashSet<string>();
 
-    HashSet<string> _skiptests =
-      new HashSet<string>();
+        public event PropertyChangedEventHandler PropertyChanged;
 
-    int prevPassed;
-    int prevFailed;
+        public MainWindow()
+        {
+            InitializeComponent();
 
-    List<string> _testFiles = new List<string>();
+            this.skipTests.Add("S8.6_D1.2.js");
+            this.skipTests.Add("S8.6_D1.3.js");
+            this.skipTests.Add("S8.6_D1.4.js");
+            this.skipTests.Add("S8.8_D1.3.js");
+            this.skipTests.Add("S13.2_D1.2.js");
 
-    public MainWindow() {
-      InitializeComponent();
+            this.worker.DoWork += this.RunTests;
+            this.worker.ProgressChanged += this.Worker_ProgressChanged;
+            this.worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
+            this.worker.WorkerReportsProgress = true;
+            this.worker.WorkerSupportsCancellation = true;
 
-      _rootPath = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName + @"\sputnik-v1";
-      _testsPath = _rootPath + @"\tests";
-      _libPath = _rootPath + @"\lib";
+            var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName, "sputnik-v1");
+            this._libPath = Path.Combine(rootPath, "lib");
+            var testsPath = Path.Combine(rootPath, "tests");
 
-      _testsRoot = new TreeViewItem();
-      _testsRoot.Header = "Sputnik v1";
+            this.rootTestGroup = new TestGroup(null, null)
+            {
+                Name = "Sputnik v1"
+            };
+            rootTestGroup.TestGroups = GenerateTestsList(rootTestGroup, testsPath, testsPath);
+            this.TestGroups = new[] { rootTestGroup };
 
-      this.Closing += MainWindow_Closing;
-
-      _addSubTestGroups(_testsRoot, _testsPath);
-
-      Tests.SelectedItemChanged += _testsSelectionChanged;
-      Tests.Items.Add(_testsRoot);
-
-      WindowState = System.Windows.WindowState.Maximized;
-
-      failedTests.SelectionChanged += failedTests_SelectionChanged;
-
-      if (File.Exists("last-test.log")) {
-        selectedTestPath.Text = _selectedPath = File.ReadAllText("last-test.log");
-      }
-
-      if (File.Exists("prev-result.log")) {
-        var x = File.ReadAllText("prev-result.log").Split(',');
-        prevPassed = Int32.Parse(x[0]);
-        prevFailed = Int32.Parse(x[1]);
-      }
-
-      IronJS.Support.Debug.registerExprPrinter(ExprPrinter);
-
-      _skiptests.Add("S8.6_D1.2.js");
-      _skiptests.Add("S8.6_D1.3.js");
-      _skiptests.Add("S8.6_D1.4.js");
-      _skiptests.Add("S8.8_D1.3.js");
-      _skiptests.Add("S13.2_D1.2.js");
-    }
-
-    void prntExpr(string expr) {
-      if (showExprTreesChk.IsChecked ?? false) {
-        exprTree.Text += expr;
-      }
-    }
-
-    void ExprPrinter(string expr) {
-      Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(prntExpr), expr);
-    }
-
-    Thread thread;
-
-    void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e) {
-      _stop = true;
-      if (thread != null) {
-        thread.Abort();
-      }
-    }
-
-    string _openPath;
-    void failedTests_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-      var test = (sender as ListView).SelectedItem as FailedTest;
-      if (test != null) {
-        _openPath = test.Path;
-      }
-    }
-
-    void _testsSelectionChanged(object s, RoutedPropertyChangedEventArgs<object> e) {
-      selectedTestPath.Text = _selectedPath = _getPath(((TreeView)s).SelectedItem as TreeViewItem);
-      try {
-        File.WriteAllText("last-test.log", _selectedPath);
-
-      } catch {
-
-      }
-    }
-
-    void _collectTestFiles(string path) {
-      foreach (var file in Directory.GetFiles(path)) {
-        if (file.EndsWith(".js")) {
-          _testFiles.Add(file);
-        }
-      }
-
-      foreach (var dir in Directory.GetDirectories(path)) {
-        _collectTestFiles(dir);
-      }
-    }
-
-    void _updateProgress(int num, int passed, int failed) {
-      progressText.Content = num + "/" + _testFiles.Count;
-      progressBar.Value = num;
-      progressBar.Maximum = _testFiles.Count;
-
-      passedLabel.Content = "Passed: " + passed + " (" + prevPassed + ")";
-      failedLabel.Content = "Failed: " + failed + " (" + prevFailed + ")";
-    }
-
-    bool _debug;
-    void run_Click(object sender, RoutedEventArgs e) {
-      if (_stop) {
-        _testFiles.Clear();
-        _collectTestFiles(_testsPath + "\\" + _selectedPath);
-        doRunTests();
-      }
-    }
-
-    void doRunTests() {
-      if (_stop) {
-        failedTests.Items.Clear();
-        _updateProgress(0, 0, 0);
-        _debug = debugBox.IsChecked ?? false;
-        ThreadStart testThread = runTests;
-        thread = new Thread(testThread);
-        thread.Start();
-      
-      }
-    }
-
-    void _addFailedTest(FailedTest test) {
-      failedTests.Items.Add(test);
-    }
-
-    void openFile() {
-      var info = new ProcessStartInfo("C:\\Windows\\notepad.exe", _openPath);
-      Process.Start(info);
-    }
-
-    void Error(string error) {
-      throw new Exception(error);
-    }
-
-    IronJS.Hosting.Context _createContext() {
-      var ctx = IronJS.Hosting.Context.Create();
-      var error = new Action<string>(Error);
-      var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, error);
-      var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>((_) => { }));
-      ctx.PutGlobal("$FAIL", errorFunc);
-      ctx.PutGlobal("ERROR", errorFunc);
-      ctx.PutGlobal("$ERROR", errorFunc);
-      ctx.PutGlobal("$PRINT", printFunc);
-      return ctx;
-    }
-
-    string _getAssertion(string testData) {
-      var match = Regex.Match(testData, @"@assertion:(.*)");
-      if (match.Success) {
-        return match.Groups[1].Value.Trim();
-
-      } else {
-        return "<missing assertion>";
-      }
-    }
-
-    string _exTrace(Exception ex) {
-      if (ex == null) {
-        return "";
-      }
-
-      return "\r\n" + ex.Message + ": \r\n" + ex.StackTrace + (_exTrace(ex.InnerException));
-    }
-
-    void _failed(string data, string path, string ex) {
-      Dispatcher.Invoke(DispatcherPriority.Normal, new Action<FailedTest>(_addFailedTest), new FailedTest {
-        Name = _getLastPathName(path),
-        Path = path,
-        Assertion = _getAssertion(data),
-        Exception = ex ?? "<missing message>"
-      });
-    }
-
-    void _updateProgress_Thread(int testsRun, int passed, int failed) {
-      Dispatcher.Invoke(DispatcherPriority.Normal, new Action<int, int, int>(_updateProgress), testsRun, passed, failed);
-    }
-
-    void _updateCurrentTest(string test) {
-      currentTest.Text = _getLastPathName(test);
-      _openPath = test;
-    }
-
-    void _updateCurrentTest_Thread(string test) {
-      Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(_updateCurrentTest), test);
-    }
-
-    void ClearExpr() {
-      exprTree.Text = "";
-    }
-
-    bool _stop = true;
-    void runTests() {
-      _stop = false;
-
-      int testsRun = 0;
-      int passed = 0;
-      int failed = 0;
-
-      foreach (var file in _testFiles) {
-        if (_stop)
-          break;
-
-        if (file == null)
-          continue;
-
-        if (_skiptests.Contains(_getLastPathName(file))) {
-          ++failed;
-          _updateProgress_Thread(++testsRun, passed, failed);
-          continue;
+            IronJS.Support.Debug.registerExprPrinter(ExprPrinter);
         }
 
-        Dispatcher.Invoke(DispatcherPriority.Normal, new Action(ClearExpr));
+        private IList<TestGroup> GenerateTestsList(TestGroup root, string basePath, string path)
+        {
+            var groups = new List<TestGroup>();
 
-        var ctx = _createContext();
-        var test = File.ReadAllText(file);
-        var shouldFail = test.Contains("@negative");
-
-        _updateCurrentTest_Thread(file);
-
-        if (shouldFail) {
-          try {
-            ctx.Execute(test);
-            ++failed;
-            _failed(test, file, "Should Fail");
-          } catch (Exception) {
-            ++passed;
-          }
-
-        } else {
-          if (_debug) {
-            ctx.Execute(test);
-            ++passed;
-
-          } else {
-            try {
-              ctx.Execute(test);
-              ++passed;
-            } catch(Exception ex) {
-              ++failed;
-              _failed(test, file, _exTrace(ex).Trim());
+            foreach (var dir in Directory.GetDirectories(path))
+            {
+                var group = new TestGroup(root, null)
+                {
+                    Name = Path.GetFileName(dir),
+                };
+                group.TestGroups = GenerateTestsList(group, basePath, dir);
+                groups.Add(group);
             }
-          }
+
+            foreach (var file in Directory.GetFiles(path, "*.js"))
+            {
+                var testCase = new TestCase(basePath, file);
+                var group = new TestGroup(root, testCase)
+                {
+                    Name = testCase.TestName,
+                };
+                groups.Add(group);
+            }
+
+            return groups;
         }
 
-        _updateProgress_Thread(++testsRun, passed, failed);
-      }
+        public IList<TestGroup> TestGroups
+        {
+            get
+            {
+                return this.testGroups;
+            }
 
-      _stop = true;
-      prevPassed = passed;
-      prevFailed = failed;
-
-      File.WriteAllText("prev-result.log", prevPassed + "," + prevFailed);
-    }
-
-    string _getLastPathName(string path) {
-      return path.Substring(path.LastIndexOf('\\') + 1);
-    }
-
-    string _getPath(TreeViewItem item) {
-      var path = "";
-
-      while (item != _testsRoot) {
-        path = "\\" + (item.Header as string) + path;
-
-        if (item.Parent is TreeView) {
-          break;
+            private set
+            {
+                this.testGroups = value;
+                var e = this.PropertyChanged;
+                if (e != null)
+                {
+                    this.PropertyChanged(this, new PropertyChangedEventArgs("TestGroups"));
+                }
+            }
         }
 
-        item = (TreeViewItem)item.Parent;
-      }
+        private static string GetExecutableDirectory()
+        {
+            return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+        }
 
-      return path.Trim('\\');
+        void PrntExpr(string expr)
+        {
+            if (this.showExprTrees)
+            {
+                this.ExprTree.Text += expr;
+            }
+        }
+
+        void ExprPrinter(string expr)
+        {
+            Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(PrntExpr), expr);
+        }
+
+        private void Run_Click(object sender, RoutedEventArgs e)
+        {
+            if (!this.worker.IsBusy)
+            {
+                Func<TestGroup, IList<TestGroup>> gatherTests = null;
+                gatherTests = rootGroup =>
+                {
+                    if (rootGroup.TestCase != null)
+                    {
+                        return new[] { rootGroup };
+                    }
+
+                    var groups = new List<TestGroup>();
+                    foreach (var group in rootGroup.TestGroups.Where(g => g.Selected != false))
+                    {
+                        groups.AddRange(gatherTests(group));
+                    }
+
+                    return groups;
+                };
+
+                StartTests(gatherTests(this.rootTestGroup));
+            }
+        }
+
+        private void Stop_Click(object sender, RoutedEventArgs e)
+        {
+            this.StopButton.IsEnabled = false;
+            this.worker.CancelAsync();
+        }
+
+        private void StartTests(IList<TestGroup> tests)
+        {
+            this.RunButton.IsEnabled = false;
+            this.RunSingle.IsEnabled = false;
+            this.StopButton.IsEnabled = true;
+            this.FailedTests.Items.Clear();
+            this.ExprTree.Text = string.Empty;
+            this.progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
+            this.worker.RunWorkerAsync(tests);
+        }
+
+        private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.RunButton.IsEnabled = true;
+            this.RunSingle.IsEnabled = true;
+            this.StopButton.IsEnabled = false;
+        }
+
+        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            var state = e.UserState as Tuple<int, int, int>;
+            var total = state.Item1;
+            var passed = state.Item2;
+            var failed = state.Item3;
+
+            if (failed > 0)
+            {
+                progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x00, 0x52));
+            }
+
+            progressBar.Maximum = total;
+            progressBar.Value = (passed + failed);
+            progressText.Content = (passed + failed) + "/" + total;
+
+            passedLabel.Content = "Passed: " + passed; // +" (" + prevPassed + ")";
+            failedLabel.Content = "Failed: " + failed; // +" (" + prevFailed + ")";
+        }
+
+        private static void LaunchFile(string path)
+        {
+            var info = new ProcessStartInfo("C:\\Windows\\notepad.exe", "\"" + path + "\"");
+            Process.Start(info);
+        }
+
+        private static IronJS.Hosting.Context CreateContext(Action<string> errorAction)
+        {
+            var ctx = IronJS.Hosting.Context.Create();
+            var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, errorAction);
+            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>(error => { throw new Exception(error); }));
+            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>((_) => { }));
+            ctx.PutGlobal("$FAIL", failFunc);
+            ctx.PutGlobal("ERROR", errorFunc);
+            ctx.PutGlobal("$ERROR", errorFunc);
+            ctx.PutGlobal("$PRINT", printFunc);
+            return ctx;
+        }
+
+        private void AddFailed(TestGroup test, string error)
+        {
+            var testCase = test.TestCase;
+
+            Dispatcher.Invoke(new Action(() => this.FailedTests.Items.Add(new FailedTest
+            {
+                Name = testCase.TestName,
+                Path = testCase.FullPath,
+                Assertion = testCase.Assertion,
+                Exception = error,
+                TestGroup = test,
+            })));
+        }
+
+        void UpdateCurrentTest(TestCase test)
+        {
+            Dispatcher.Invoke(new Action(() => currentTest.Text = test == null ? string.Empty : test.TestName));
+        }
+
+        private void RunTests(object sender, DoWorkEventArgs args)
+        {
+            var tests = args.Argument as IList<TestGroup>;
+            var testCount = tests.Count;
+
+            int passed = 0;
+            int failed = 0;
+
+            this.worker.ReportProgress(0, Tuple.Create(testCount, passed, failed));
+
+            for (int i = 0; i < testCount; i++)
+            {
+                var test = tests[i];
+                var testCase = test.TestCase;
+
+                if (this.worker.CancellationPending)
+                {
+                    break;
+                }
+
+                this.UpdateCurrentTest(testCase);
+
+                bool pass = false;
+                string resultingError = null;
+                if (!this.skipTests.Contains(testCase.TestName))
+                {
+                    resultingError = RunTest(testCase);
+                    pass = testCase.Negative ^ resultingError == null;
+                }
+
+                // TODO: Check for regression.
+
+                if (pass)
+                {
+                    test.Status = Status.Passed;
+                    passed++;
+                }
+                else
+                {
+                    test.Status = Status.Failed;
+                    failed++;
+                    AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"));
+                }
+
+                this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed));
+            }
+
+            this.UpdateCurrentTest(null);
+            this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed));
+        }
+
+        private static string RunTest(TestCase testCase)
+        {
+            var errorText = new StringBuilder();
+            var ctx = CreateContext(e => errorText.AppendLine(e));
+
+            try
+            {
+                ctx.ExecuteFile(testCase.FullPath);
+            }
+            catch (Exception ex)
+            {
+                errorText.AppendLine("Exception: " + ex.GetBaseException().Message);
+            }
+
+            var error = errorText.ToString();
+            return string.IsNullOrEmpty(error) ? null : error;
+        }
+
+        private void Launch_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = this.FailedTests.SelectedItem as FailedTest;
+
+            if (selected != null)
+            {
+                LaunchFile(selected.Path);
+            }
+        }
+
+        private void RunSingle_Click(object sender, RoutedEventArgs e)
+        {
+            var selected = this.FailedTests.SelectedItem as FailedTest;
+
+            if (selected != null)
+            {
+                StartTests(new[] { selected.TestGroup });
+            }
+        }
+
+        private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)
+        {
+            this.showExprTrees = ((CheckBox)sender).IsChecked ?? false;
+        }
     }
-
-    void _addSubTestGroups(TreeViewItem root, string path) {
-      foreach (var dir in Directory.GetDirectories(path)) {
-        var item = new TreeViewItem();
-        item.Header = _getLastPathName(dir);
-        _addSubTestGroups(item, dir);
-        root.Items.Add(item);
-      }
-    }
-
-    private void button2_Click(object sender, RoutedEventArgs e) {
-      openFile();
-    }
-
-    private void button3_Click(object sender, RoutedEventArgs e) {
-      _testFiles.Clear();
-      _testFiles.Add(_openPath);
-      doRunTests();
-    }
-
-  }
-
-  public class FailedTest {
-    public string Name { get; set; }
-    public string Path { get; set; }
-    public string Error { get; set; }
-    public string Assertion { get; set; }
-    public string Exception { get; set; }
-  }
 }

@@ -1101,6 +1101,27 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   member x.HasValidDate =
     x.Date <> DateTime.MinValue
 
+  override x.DefaultValue(hint:DefaultValueHint) =
+    match hint with
+    | DefaultValueHint.Number ->
+      match x.TryCallMember("valueOf") with
+      | Some v when v.IsPrimitive -> v
+      | _ -> 
+        match x.TryCallMember("toString") with
+        | Some v when v.IsPrimitive -> v
+        | _ -> x.Env.RaiseTypeError()
+
+    | DefaultValueHint.None 
+    | _ ->
+      let a = x.TryCallMember("toString")
+      match a with
+      | Some v when v.IsPrimitive -> v
+      | _ -> 
+        let b = x.TryCallMember("valueOf")
+        match b with
+        | Some v when v.IsPrimitive -> v
+        | _ -> x.Env.RaiseTypeError()
+
   static member TicksToDateTime(ticks:int64) : DateTime =
     new DateTime(ticks * ticks + offset, DateTimeKind.Utc)
     

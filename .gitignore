@@ -1,5 +1,7 @@
 Src/TestResults/**/*
 Build/**/*
+bin/
+obj/
 last-test
 *.log
 *.dia~
@@ -14,7 +16,6 @@ last-test
 *.exe
 *.txt
 *.cache
-*.cs
 *.force
 *.baml
 *.resources

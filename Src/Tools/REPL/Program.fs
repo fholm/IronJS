@@ -14,7 +14,6 @@ module Main =
     let ctx = Hosting.Context.Create()
     ctx.SetupPrintFunction()
 
-
     let src = @"
       function foo(a, b) {
         return arguments.length;

@@ -15,11 +15,6 @@ open IronJS.Compiler.Lexer
 
 module Parser =
 
-  type private Dict<'k, 'v> = System.Collections.Generic.Dictionary<'k, 'v>
-  type private List<'a> = System.Collections.Generic.List<'a>
-  type private HashSet<'a> = System.Collections.Generic.HashSet<'a>
-  type private Stack<'a> = System.Collections.Generic.Stack<'a>
-
   type ScopeData = {
     Id : uint64
     Scope : ScopeOption
@@ -1388,8 +1383,8 @@ module Parser =
     |> smd S.Continue continue'
     |> smd S.Function (function' true)
 
-  /// Parses a source string into an
-  /// abstract syntax tree
+  /// Parses a source string into 
+  /// an abstract syntax tree
   let parse (source:string) (env:Env) =
     let lexer = source |> Lexer.create
 

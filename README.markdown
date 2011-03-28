@@ -18,6 +18,8 @@ What you need to use IronJS
 * $ cd IronJS\Src
 * $ git clone git://github.com/fholm/FSKit.git
 
-## Contributing
+## Contributors
+
+* John Gietzen
 
 If you're interested in contributing to IronJS, fork it here on github and send me a pull request with your contributions.

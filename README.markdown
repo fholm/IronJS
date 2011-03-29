@@ -15,8 +15,6 @@ What you need to use IronJS
 ## Getting the source (Including FSKit)
 
 * $ git clone git://github.com/fholm/IronJS.git IronJS
-* $ cd IronJS\Src
-* $ git clone git://github.com/fholm/FSKit.git
 
 ## Contributors
 

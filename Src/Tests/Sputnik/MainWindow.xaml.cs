@@ -272,9 +272,9 @@ namespace IronJS.Tests.Sputnik
             Process.Start(info);
         }
 
-        private static IronJS.Hosting.Context CreateContext(string libPath, Action<string> errorAction)
+        private static IronJS.Hosting.CSharp.Context CreateContext(string libPath, Action<string> errorAction)
         {
-            var ctx = IronJS.Hosting.Context.Create();
+            var ctx = new IronJS.Hosting.CSharp.Context();
 
             Action<string> failAction = error => { throw new Exception(error); };
             Action<string> printAction = message => Debug.WriteLine(message);
@@ -285,11 +285,11 @@ namespace IronJS.Tests.Sputnik
             var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, printAction);
             var includeFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, includeAction);
 
-            ctx.PutGlobal("$FAIL", failFunc);
-            ctx.PutGlobal("ERROR", errorFunc);
-            ctx.PutGlobal("$ERROR", errorFunc);
-            ctx.PutGlobal("$PRINT", printFunc);
-            ctx.PutGlobal("$INCLUDE", includeFunc);
+            ctx.SetGlobal("$FAIL", failFunc);
+            ctx.SetGlobal("ERROR", errorFunc);
+            ctx.SetGlobal("$ERROR", errorFunc);
+            ctx.SetGlobal("$PRINT", printFunc);
+            ctx.SetGlobal("$INCLUDE", includeFunc);
             return ctx;
         }
 

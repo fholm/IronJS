@@ -6,6 +6,7 @@ module Main =
   open IronJS
   open IronJS.Compiler
   open IronJS.Compiler.Core
+  open IronJS.Hosting.FSharp
 
   let printReplHeader () =
     let header = sprintf @"IronJS REPL, version: %s" Version.String 
@@ -52,18 +53,20 @@ module Main =
     let exitCalled = ref false
 
     // Create the IronJS context
-    let ctx = Hosting.Context.Create()
-    ctx.SetupPrintFunction()
+    let ctx = createContext()
+    ctx |> Utils.createPrintFunction
 
     // The exit function 
     let exit () = 
       exitCalled := true
 
+    // Create the javascript function wrapper
+    let exitFunc = 
+      new Action(exit) |> Native.Utils.createHostFunction (ctx |> env)
+
+
     // Expose the exit function to user code
-    ctx.PutGlobal("exit", 
-      new Action(exit) 
-      |> Native.Utils.createHostFunction ctx.Environment
-    )
+    ctx |> setGlobal "exit" exitFunc
 
     // Print the REPL header
     printReplHeader()
@@ -72,10 +75,10 @@ module Main =
     // over the infinite sequence produced from
     // consoleInput, until exit is set to true
     consoleInput() |> Seq.find (fun source ->
-      let output = source |> ctx.Execute
+      let output = ctx |> execute source
 
       if !exitCalled |> not then
-        output |> BV.Box |> TC.ToString |> printfn "%s"
+        output |> BoxingUtils.JsBox |> TC.ToString |> printfn "%s"
 
       !exitCalled
     )

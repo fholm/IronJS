@@ -1,11 +1,11 @@
-﻿namespace IronJS
+﻿namespace IronJS.Hosting
 
 open System
 open IronJS
 
-module Hosting =
-
-  let createEnvironment () =
+module internal Environment =
+  
+  let create () =
     let env = Environment()
 
     env.Prototypes <- {
@@ -24,7 +24,8 @@ module Hosting =
       SyntaxError = null; TypeError = null; URIError  = null
     }
     
-    let baseMap = env |> Schema.CreateBaseSchema 
+    let baseMap = 
+      env |> Schema.CreateBaseSchema 
 
     env.Maps <- {
       Base = baseMap
@@ -104,63 +105,134 @@ module Hosting =
 
     env
 
-  type Context(env:Environment) =
+///
+module FSharp =
+
+  ///
+  type T = {
+    Env: Env
+    GlobalFunc: FO
+  }
+
+  ///
+  let createContext () =
+    let env = Environment.create()
+
+    {
+      Env = env
+      GlobalFunc = FO(env)
+    }
+
+  ///
+  let env (t:T) = t.Env
+
+  ///
+  let globals (t:T) = (t |> env).Globals
+
+  ///
+  let setGlobal (name:string) (value:obj) (t:T) =
+    (t |> globals).Put(name, value |> BoxingUtils.JsBox)
+
+  ///
+  let getGlobal (name:string) (t:T) =
+    (t |> globals).Get(name)
+
+  ///
+  let getGlobalAs<'a> (name:string) (t:T) =
+    (t |> globals).GetT<'a>(name)
+
+  ///
+  let internal run (compiled:Delegate) (t:T) =
+    compiled.DynamicInvoke(t.GlobalFunc, t |> globals)
+
+  ///
+  let internal compile source (t:T) =
+    let ast, scopeData = 
+      source |> Compiler.Parser.parseString (t |> env)
+
+    scopeData |> Compiler.Analyzer.analyzeScopeChain
+
+    #if DEBUG
+    ast |> Support.Debug.printAst
+    #endif
+
+    // Compile the global code and return it
+    ast |> Compiler.Core.compileAsGlobal (t |> env)
+
+  ///
+  let internal compileFile file (t:T) =
+    t |> compile (file |> IO.File.ReadAllText)
+
+  /// 
+  let execute source (t:T) =
+    t |> run (t |> compile source)
+
+  ///
+  let executeAs<'a> source (t:T) =
+    t |> execute source :?> 'a
+
+  ///
+  let executeFile path (t:T) =
+    t |> run (t |> compileFile path)
+
+  ///
+  let executeFileAs<'a> path (t:T) =
+    t |> executeFile path :?> 'a
+
+  module Utils =
+
+    ///
+    let createPrintFunction (t:T) =
+      let print = new Action<string>(Console.WriteLine)
+      let print = print |> Native.Utils.createHostFunction (t |> env)
+      t |> setGlobal "print" print
+
+
+///
+module CSharp =
+  
+  ///  
+  type Context() =
     
-    let globalFunc = FunctionObject env
+    let context = 
+      FSharp.createContext()
 
-    member x.Environment = env
-    member x.GlobalFunc = globalFunc
+    ///
+    member x.Environment = 
+      context |> FSharp.env
 
-    member x.CompileFile fileName =
-      let ast, scopeData = fileName |> Compiler.Parser.parseFile x.Environment  
-      scopeData |> Compiler.Analyzer.analyzeScopeChain
+    ///
+    member x.Globals = 
+      context |> FSharp.globals
 
-      #if DEBUG
-      ast |> Support.Debug.printAst
-      #endif
+    ///
+    member x.SetGlobal(name, value) = 
+      context |> FSharp.setGlobal name value
 
-      Compiler.Core.compileAsGlobal env ast
+    ///
+    member x.GetGlobal(name) =
+      context |> FSharp.getGlobal name
 
-    member x.CompileSource source =
-      let ast, scopeData = source |> Compiler.Parser.parseString x.Environment
-      scopeData |> Compiler.Analyzer.analyzeScopeChain
+    ///
+    member x.GetGlobalAs<'a>(name) =
+      context |> FSharp.getGlobalAs<'a> name
 
-      #if DEBUG
-      ast |> Support.Debug.printAst
-      #endif
+    ///
+    member x.Execute(source) =
+      context |> FSharp.execute source
 
-      Compiler.Core.compileAsGlobal env ast
+    ///
+    member x.Execute<'a>(source) =
+      context |> FSharp.executeAs<'a> source
 
-    member x.InvokeCompiled(compiled:Delegate) =
-      compiled.DynamicInvoke(globalFunc, env.Globals) |> BoxingUtils.ClrBox
+    ///
+    member x.ExecuteFile(path) =
+      context |> FSharp.executeFile path
 
-    member x.ExecuteFile fileName = x.InvokeCompiled (x.CompileFile fileName)
-    member x.ExecuteFileT<'a> fileName = x.ExecuteFile fileName :?> 'a
-    member x.Execute source = x.InvokeCompiled (x.CompileSource source)
-    member x.ExecuteT<'a> source = x.Execute source :?> 'a
-    
-    member x.EvalInFunc source = 
-      x.Execute (sprintf "(function(){ %s })();" source)
+    ///
+    member x.ExecuteFile<'a>(path) =
+      context |> FSharp.executeFileAs<'a> path
 
-    member x.EvalInFuncT<'a> source = 
-      x.EvalInFunc source :?> 'a
-
-    member x.PutGlobal(name:string, value:obj) =
-      env.Globals.Put(name, BoxingUtils.JsBox value)
-
-    member x.GetGlobal(name:string) =
-      env.Globals.Get(name)
-
-    member x.GetGlobalT<'a>(name:string) =
-      env.Globals.Get(name).Unbox<'a>()
-
-    member x.SetupPrintFunction (name:string) =
-      let printDelegate = new Action<string>(Console.WriteLine)
-      let printFunction = printDelegate |> Native.Utils.createHostFunction x.Environment
-      x.PutGlobal(name, printFunction)
-
-    member x.SetupPrintFunction() =
-      x.SetupPrintFunction("print")
-
-    static member Create() =
-      new Context(createEnvironment())
+    ///
+    member x.CreatePrintFunction() =
+      context |> FSharp.Utils.createPrintFunction

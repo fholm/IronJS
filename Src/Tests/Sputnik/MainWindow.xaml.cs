@@ -220,16 +220,6 @@ namespace IronJS.Tests.Sputnik
             StartTests(GatherTests(g => g.Selected != false));
         }
 
-        private void RunSingle_Click(object sender, RoutedEventArgs e)
-        {
-            //var selected = this.FailedTests.SelectedItem as FailedTest;
-
-            //if (selected != null)
-            //{
-            //    StartTests(new[] { selected.TestGroup });
-            //}
-        }
-
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
             this.StopButton.IsEnabled = false;
@@ -282,16 +272,24 @@ namespace IronJS.Tests.Sputnik
             Process.Start(info);
         }
 
-        private static IronJS.Hosting.Context CreateContext(Action<string> errorAction)
+        private static IronJS.Hosting.Context CreateContext(string libPath, Action<string> errorAction)
         {
             var ctx = IronJS.Hosting.Context.Create();
+
+            Action<string> failAction = error => { throw new Exception(error); };
+            Action<string> printAction = message => Debug.WriteLine(message);
+            Action<string> includeAction = file => ctx.ExecuteFile(Path.Combine(libPath, file));
+
             var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, errorAction);
-            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>(error => { throw new Exception(error); }));
-            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>((_) => { }));
+            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, failAction);
+            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, printAction);
+            var includeFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, includeAction);
+
             ctx.PutGlobal("$FAIL", failFunc);
             ctx.PutGlobal("ERROR", errorFunc);
             ctx.PutGlobal("$ERROR", errorFunc);
             ctx.PutGlobal("$PRINT", printFunc);
+            ctx.PutGlobal("$INCLUDE", includeFunc);
             return ctx;
         }
 
@@ -343,7 +341,7 @@ namespace IronJS.Tests.Sputnik
                 string resultingError = null;
                 if (!this.skipTests.Contains(testCase.TestName))
                 {
-                    resultingError = RunTest(testCase);
+                    resultingError = RunTest(this.libPath, testCase);
                     pass = testCase.Negative ^ resultingError == null;
                 }
 
@@ -380,10 +378,10 @@ namespace IronJS.Tests.Sputnik
             this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed, improved, regressed));
         }
 
-        private static string RunTest(TestCase testCase)
+        private static string RunTest(string libPath, TestCase testCase)
         {
             var errorText = new StringBuilder();
-            var ctx = CreateContext(e => errorText.AppendLine(e));
+            var ctx = CreateContext(libPath, e => errorText.AppendLine(e));
 
             try
             {
@@ -396,16 +394,6 @@ namespace IronJS.Tests.Sputnik
 
             var error = errorText.ToString();
             return string.IsNullOrEmpty(error) ? null : error;
-        }
-
-        private void Launch_Click(object sender, RoutedEventArgs e)
-        {
-            //var selected = this.FailedTests.SelectedItem as FailedTest;
-
-            //if (selected != null)
-            //{
-            //    LaunchFile(selected.Path);
-            //}
         }
 
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)

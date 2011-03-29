@@ -12,7 +12,6 @@ let ctx = IronJS.Hosting.Context.Create()
 ctx.SetupPrintFunction()
 
 let src = @""
-
 IronJS.Compiler.Parser.parse src ctx.Environment
 
 src |> ctx.Execute

@@ -1170,7 +1170,11 @@ module Parser =
         p |> unexpectedToken
 
     | _ ->
-      let vars = p |> stopExpression S.In
+      let vars = 
+        match p |> csymbol with
+        | S.Semicolon -> Tree.Pass
+        | _ -> p |> stopExpression S.In
+
       match p |> csymbol with
       | S.In ->
         p |> consume

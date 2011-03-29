@@ -15,7 +15,7 @@ module Main =
     ctx.SetupPrintFunction()
 
     let src = @"
-      for(i = 0; i < 1; ++i) {
+      for(; i < 1; ++i) {
         
       }
     " 

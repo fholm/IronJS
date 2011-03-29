@@ -7,8 +7,12 @@ module Main =
   open IronJS.Compiler
   open IronJS.Compiler.Core
 
-  let printReplInfo =
-    printfn "IronJS REPL, version: %s\n\nTo send input to the runtime end the statement \nwith ;; or send an extra blank line\n" Version.String 
+  let printReplHeader () =
+    let header = sprintf @"IronJS REPL, version: %s" Version.String 
+
+    header
+    + "\n\nTo send input to the runtime end the statement"
+    + "\nwith ;; or send an extra blank line\n\n" |> printf "%s"
 
   let main () =
 
@@ -61,12 +65,17 @@ module Main =
       |> Native.Utils.createHostFunction ctx.Environment
     )
 
+    // Print the REPL header
+    printReplHeader()
+
     // The console loop is a simple iteration 
     // over the infinite sequence produced from
     // consoleInput, until exit is set to true
     consoleInput() |> Seq.find (fun source ->
+      let output = source |> ctx.Execute
+
       if !exitCalled |> not then
-        source |> ctx.Execute |> BV.Box |> TC.ToString |> printfn "%s"
+        output |> BV.Box |> TC.ToString |> printfn "%s"
 
       !exitCalled
     )

@@ -30,13 +30,13 @@ module Math =
     
     math.Prototype <- env.Prototypes.Object
     math.Put("E", Math.E, Immutable)
-    math.Put("LN10", 2.302585092994046, Immutable)
-    math.Put("LN2", 0.6931471805599453, Immutable)
-    math.Put("LOG2E", 1.4426950408889634, Immutable)
-    math.Put("LOG10E", 0.4342944819032518, Immutable)
+    math.Put("LN10", Math.Log(10.0), Immutable)
+    math.Put("LN2", Math.Log(2.0), Immutable)
+    math.Put("LOG2E", 1.0 / Math.Log(2.0), Immutable)
+    math.Put("LOG10E", Math.Log10(Math.E), Immutable)
     math.Put("PI", Math.PI, Immutable)
-    math.Put("SQRT1_2", 0.7071067811865476, Immutable)
-    math.Put("SQRT2", 1.4142135623730951, Immutable)
+    math.Put("SQRT1_2", Math.Sqrt(0.5), Immutable)
+    math.Put("SQRT2", Math.Sqrt(2.0), Immutable)
 
     env.Globals.Put("Math", math, DontEnum)
 
@@ -56,7 +56,12 @@ module Math =
     let atan = Utils.createHostFunction env atan
     math.Put("atan", atan, DontEnum)
 
-    let inline atan2 a b = Math.Atan2(a, b)
+    let inline atan2 a b =
+      if Double.IsPositiveInfinity(a) && Double.IsPositiveInfinity(b) then Math.PI / 4.0
+      elif Double.IsPositiveInfinity(a) && Double.IsNegativeInfinity(b) then 3.0 * Math.PI / 4.0
+      elif Double.IsNegativeInfinity(a) && Double.IsPositiveInfinity(b) then -Math.PI / 4.0
+      elif Double.IsNegativeInfinity(a) && Double.IsNegativeInfinity(b) then -3.0 * Math.PI / 4.0
+      else Math.Atan2(a, b)
     let atan2 = new Func<double, double, double>(atan2)
     let atan2 = Utils.createHostFunction env atan2
     math.Put("atan2", atan2, DontEnum)

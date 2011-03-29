@@ -86,21 +86,21 @@ module Markers =
 
 module TaggedBools =
   let True = 
-    let bytes = FSKit.Bit.double2bytes 0.0
+    let bytes = FSharp.Bit.double2bytes 0.0
     bytes.[0] <- 0x1uy
     bytes.[4] <- 0x1uy
     bytes.[5] <- 0xFFuy
     bytes.[6] <- 0xFFuy
     bytes.[7] <- 0xFFuy
-    FSKit.Bit.bytes2double bytes
+    FSharp.Bit.bytes2double bytes
 
   let False = 
-    let bytes = FSKit.Bit.double2bytes 0.0
+    let bytes = FSharp.Bit.double2bytes 0.0
     bytes.[4] <- 0x1uy
     bytes.[5] <- 0xFFuy
     bytes.[6] <- 0xFFuy
     bytes.[7] <- 0xFFuy
-    FSKit.Bit.bytes2double bytes
+    FSharp.Bit.bytes2double bytes
 
   let ToTagged b = if b then True else False
 
@@ -137,7 +137,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
     member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
     member x.IsRegExp = x.IsObject && x.Object :? RO
-    member x.IsNull = x.IsClr && x.Clr |> FSKit.Utils.isNull
+    member x.IsNull = x.IsClr && x.Clr |> FSharp.Utils.isNull
 
     member x.IsPrimitive =
       if x.IsNumber then 
@@ -264,17 +264,17 @@ and [<AbstractClass>] BoxedConstants() =
 and [<AbstractClass>] TypeTag() =
 
   static member OfType (t:Type) =
-    if   t |> FSKit.Utils.isTypeT<bool>   then TypeTags.Bool
-    elif t |> FSKit.Utils.isTypeT<double> then TypeTags.Number
-    elif t |> FSKit.Utils.isTypeT<string> then TypeTags.String
-    elif t |> FSKit.Utils.isTypeT<Undef>  then TypeTags.Undefined
-    elif t |> FSKit.Utils.isTypeT<FO>     then TypeTags.Function
-    elif t |> FSKit.Utils.isTypeT<CO>     then TypeTags.Object
-    elif t |> FSKit.Utils.isTypeT<BV>     then TypeTags.Box
-                                          else TypeTags.Clr
+    if   t |> FSharp.Utils.isTypeT<bool>   then TypeTags.Bool
+    elif t |> FSharp.Utils.isTypeT<double> then TypeTags.Number
+    elif t |> FSharp.Utils.isTypeT<string> then TypeTags.String
+    elif t |> FSharp.Utils.isTypeT<Undef>  then TypeTags.Undefined
+    elif t |> FSharp.Utils.isTypeT<FO>     then TypeTags.Function
+    elif t |> FSharp.Utils.isTypeT<CO>     then TypeTags.Object
+    elif t |> FSharp.Utils.isTypeT<BV>     then TypeTags.Box
+                                           else TypeTags.Clr
 
   static member OfObject (o:obj) = 
-    if o |> FSKit.Utils.isNull 
+    if o |> FSharp.Utils.isNull 
       then TypeTags.Clr
       else o.GetType() |> TypeTag.OfType
 
@@ -304,8 +304,8 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
 
-  member x.NextFunctionId() = FSKit.Ref.incru64 currentFunctionId
-  member x.NextPropertyMapId() = FSKit.Ref.incru64 currentSchemaId
+  member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
+  member x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
 
   member x.HasCompiler id = x.Compilers.ContainsKey id
 
@@ -497,7 +497,7 @@ and [<AllowNullLiteral>] CommonObject =
 
   //
   member x.HasPrototype = 
-    x.Prototype |> FSKit.Utils.notNull
+    x.Prototype |> FSharp.Utils.notNull
 
   //
   member x.RequiredStorage = 
@@ -554,7 +554,7 @@ and [<AllowNullLiteral>] CommonObject =
     else
       
       let rec find (o:CO) name =
-        if FSKit.Utils.isNull o then Descriptor()
+        if FSharp.Utils.isNull o then Descriptor()
         else
           let mutable index = 0
           if o.PropertySchema.IndexMap.TryGetValue(name, &index) 
@@ -573,12 +573,12 @@ and [<AllowNullLiteral>] CommonObject =
       let mutable loop = true
       let mutable cobj = x.Prototype
 
-      while loop && (FSKit.Utils.isNull cobj |> not) do
+      while loop && (FSharp.Utils.isNull cobj |> not) do
         if cobj.PropertySchema.IndexMap.TryGetValue(name, &index) 
           then loop <- false
           else cobj <- cobj.Prototype
 
-      if FSKit.Utils.isNull cobj || cobj.Properties.[index].IsWritable then 
+      if FSharp.Utils.isNull cobj || cobj.Properties.[index].IsWritable then 
         index <- x.CreateIndex name
         true
 
@@ -999,7 +999,7 @@ and [<AllowNullLiteral>] CommonObject =
   abstract CollectProperties : unit -> uint32 * MutableSet<String>
   default x.CollectProperties() =
     let rec collectProperties length (set:MutableSet<String>) (current:CO) =
-      if current |> FSKit.Utils.notNull then
+      if current |> FSharp.Utils.notNull then
         let length =
           if current :? AO then
             let array = current :?> AO
@@ -1166,7 +1166,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
     and set(v) = sparse <- v
 
   member x.IsDense = 
-    sparse |> FSKit.Utils.isNull
+    sparse |> FSharp.Utils.isNull
 
   #if DEBUG
   member x.ArrayValues =
@@ -1325,19 +1325,19 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 
   override x.Get(index:uint32) =
     let array = x.Find(index)
-    if FSKit.Utils.isNull array
+    if FSharp.Utils.isNull array
       then Undefined.Boxed
       elif x.IsDense 
         then x.Dense.[int index].Value
         else x.Sparse.[index]
 
   override x.Has(index:uint32) =
-    x.Find(index) |> FSKit.Utils.notNull
+    x.Find(index) |> FSharp.Utils.notNull
 
   override x.Delete(index:uint32) =
     let holder = x.Find(index)
 
-    if FSKit.Utils.refEq x holder then
+    if FSharp.Utils.refEq x holder then
       
       if x.IsDense then
         let ii = int index
@@ -1576,7 +1576,7 @@ and [<AllowNullLiteral>] FunctionObject =
     let mutable found = false
     let mutable v = if v <> null then v.Prototype else null
 
-    while not found && FSKit.Utils.notNull v do
+    while not found && FSharp.Utils.notNull v do
       found <- Object.ReferenceEquals(o.Object, v)
       v <- v.Prototype
 
@@ -1751,8 +1751,8 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
       Delegate = delegate'
 
-      ArgTypes = FSKit.Reflection.getDelegateArgTypesT<'a>
-      ReturnType = FSKit.Reflection.getDelegateReturnTypeT<'a>
+      ArgTypes = FSharp.Reflection.getDelegateArgTypesT<'a>
+      ReturnType = FSharp.Reflection.getDelegateReturnTypeT<'a>
 
       ParamsMode = ParamsModes.NoParams
       MarshalMode = MarshalModes.Default
@@ -1969,7 +1969,7 @@ and BoxingUtils() =
     if o :? BV then 
       unbox o
 
-    elif o |> FSKit.Utils.isNull then 
+    elif o |> FSharp.Utils.isNull then 
       BoxedConstants.Null
 
     else
@@ -2099,7 +2099,7 @@ and TypeConverter() =
   static member ToString(s:string) : string = s
   static member ToString(u:Undef) : string = "undefined"
   static member ToString(c:obj) : string = 
-    if FSKit.Utils.isNull c then "null" else c.ToString()
+    if FSharp.Utils.isNull c then "null" else c.ToString()
 
   static member ToString(d:double) : string = 
     if Double.IsInfinity d then 

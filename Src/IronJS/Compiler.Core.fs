@@ -143,7 +143,7 @@ module Core =
         | None -> ()
         | Some delegate' ->
           let argTypes = 
-            delegate' |> FSKit.Reflection.getDelegateArgTypes
+            delegate' |> FSharp.Reflection.getDelegateArgTypes
                       |> Seq.skip 2
                       |> Seq.toArray
 

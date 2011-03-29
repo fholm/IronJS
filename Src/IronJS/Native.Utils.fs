@@ -36,7 +36,7 @@ module Utils =
     hostFunction
     
   let createHostFunction (env:Environment) (delegate':'a) =
-    if FSKit.Utils.isSameTypeT<'a, Delegate> then
+    if FSharp.Utils.isSameTypeT<'a, Delegate> then
       createHostFunctionDynamic env delegate'
 
     else

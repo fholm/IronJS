@@ -88,7 +88,7 @@ module Utils =
       let bf = type' |> TypeTag.OfType |> BV.FieldOfTag
       Dlr.field (Dlr.Ext.unwrap expr) bf
 
-    elif expr.Type |> FSKit.Utils.isType type' 
+    elif expr.Type |> FSharp.Utils.isType type' 
       then expr
 
     else 

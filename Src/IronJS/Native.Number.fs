@@ -29,7 +29,7 @@ module Number =
     this.CheckType<NO>()
     let number = (this |> ValueObject.GetValue).Number
 
-    if FSKit.Utils.isNaNOrInf number then nanToString number
+    if FSharp.Utils.isNaNOrInf number then nanToString number
     else
       match radix with
       | 0.0 | 10.0 -> TypeConverter.ToString(number)
@@ -59,7 +59,7 @@ module Number =
     let number = (this |> ValueObject.GetValue).Number
     let fractions = fractions |> TypeConverter.ToInt32
 
-    if number |> FSKit.Utils.isNaNOrInf then nanToString number
+    if number |> FSharp.Utils.isNaNOrInf then nanToString number
     else
       verifyFractions f.Env fractions
       number.ToString("f" + string fractions, invariantCulture)
@@ -74,7 +74,7 @@ module Number =
     if fractions.IsUndefined then 
       toString f this 10.0
 
-    elif number |> FSKit.Utils.isNaNOrInf then 
+    elif number |> FSharp.Utils.isNaNOrInf then 
       nanToString number
 
     else
@@ -97,7 +97,7 @@ module Number =
     if precision.IsUndefined then 
       toString f this 10.0
 
-    elif number |> FSKit.Utils.isNaNOrInf then 
+    elif number |> FSharp.Utils.isNaNOrInf then 
       nanToString number
 
     else

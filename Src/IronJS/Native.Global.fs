@@ -50,7 +50,7 @@ module Global =
           closureScope,
           target.DynamicScope)
 
-      if FSKit.Utils.isNull result
+      if FSharp.Utils.isNull result
         then Undef.Boxed
         else result |> BoxingUtils.JsBox
 

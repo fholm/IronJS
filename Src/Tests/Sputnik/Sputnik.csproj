@@ -177,10 +177,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
-      <Project>{15E5E5EE-B919-46B4-8B04-A323F6D01B66}</Project>
-      <Name>FSKit</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>

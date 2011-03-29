@@ -275,7 +275,7 @@ module Parser =
         if p |> csymbol <> stop && rbpw < (p |> cpower) then
 
           let led = p |> cleft
-          if led |> FSKit.Utils.notNull then
+          if led |> FSharp.Utils.notNull then
             p |> led p.Token left |> expression
 
           else
@@ -287,7 +287,7 @@ module Parser =
           left
           
     let nud = p |> cnull
-    if nud |> FSKit.Utils.notNull
+    if nud |> FSharp.Utils.notNull
       then p |> nud p.Token |> expression 
       else p |> unexpectedToken
 
@@ -349,7 +349,7 @@ module Parser =
   /// or an expression statement
   and statement (p:P) =
     let stmt = p |> cstmt
-    if stmt |> FSKit.Utils.notNull 
+    if stmt |> FSharp.Utils.notNull 
       then p |> stmt p.Token
       else p |> expressionStatement 
 

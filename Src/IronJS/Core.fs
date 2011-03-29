@@ -2171,37 +2171,37 @@ and TypeConverter() =
   static member ToNumber(s:string) : double =
     let mutable d = 0.0
 
-    if s = null then
+    if System.String.IsNullOrWhiteSpace(s) then
       0.0
-
-    elif Double.TryParse(s, anyNumber, invariantCulture, &d) && s.Contains(",") |> not then 
-      if d = 0.0 
-        then (if s.[0] = '-' then -0.0 else 0.0)
-        else d
-
-    elif s.Length = 0 then 
-      0.0
-      
-    elif s.Length > 1 && s.[0] = '0' && (s.[1] = 'x' || s.[1] = 'X') then
-      let mutable i = 0
-
-      if System.Int32.TryParse(s.Substring(2), NumberStyles.HexNumber, invariantCulture, &i) 
-        then i |> double
-        else NaN
 
     else
-      try
-        System.Convert.ToInt32(s, 8) |> double
+      let s = s.Trim()
 
-      with
-        | _ -> 
-        let mutable bi = Unchecked.defaultof<bigint>
+      if Double.TryParse(s, anyNumber, invariantCulture, &d) && s.Contains(",") |> not then 
+        if d = 0.0 
+          then (if s.[0] = '-' then -0.0 else 0.0)
+          else d
 
-        if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
-          then PosInf
-        elif s.Trim() = "+Infinity"
-          then PosInf
+      elif s.Length > 1 && s.[0] = '0' && (s.[1] = 'x' || s.[1] = 'X') then
+        let mutable i = 0
+
+        if System.Int32.TryParse(s.Substring(2), NumberStyles.HexNumber, invariantCulture, &i) 
+          then i |> double
           else NaN
+
+      else
+        try
+          System.Convert.ToInt32(s, 8) |> double
+
+        with
+          | _ -> 
+          let mutable bi = Unchecked.defaultof<bigint>
+
+          if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
+            then PosInf
+          elif s.Trim() = "+Infinity"
+            then PosInf
+            else NaN
 
   static member ToNumber(d:double) : double = 
     if d = TaggedBools.True 

@@ -1,5 +1,7 @@
 ﻿namespace IronJS.Compiler
 
+open System
+
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
@@ -77,25 +79,20 @@ module Exception =
 
     | _ -> failwith "Que?"
 
-  let try' (ctx:Ctx) body catch (finally':Ast.Tree option) =
+  let private finally' (ctx:Ctx) ast =
+    Dlr.castVoid (ctx.Compile ast)
+
+  let try' (ctx:Ctx) body catch final =
     let body = 
       ctx.Compile body |> Dlr.castVoid
 
-    let tryCatch = 
+    let catch = 
       match catch with
-      | None -> 
-        body
+      | None -> []
+      | Some(tree) -> [compileCatch ctx tree]
 
-      | Some tree -> 
-        let catch = [compileCatch ctx tree]
-        Dlr.tryCatch body catch
-
-    match finally' with
-    | None -> tryCatch
-    | Some finally' ->
-      let finally' = finally' |> ctx.Compile |> Dlr.castVoid
-      let caughtExn = Dlr.paramT<UserError> "~exn"
-      let catchBody = Dlr.block [] [finally'; Dlr.throwValue caughtExn]
-      let catchBlock = Dlr.catchVar caughtExn catchBody
-      let tryBlock = Dlr.block [] [tryCatch; finally']
-      Dlr.tryCatch tryBlock [catchBlock]
+    match final with
+    | None -> Dlr.tryCatch body catch
+    | Some final -> 
+      let finally' = final |> finally' ctx
+      Dlr.tryCatchFinally body catch finally'

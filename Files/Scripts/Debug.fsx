@@ -13,18 +13,6 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
-let src = @"
-  while(true) {
-    try { 
-        
-    } catch(exn) {
-        
-    } finally {
-      print('breaking');
-      break;
-    }
-  }
-"
+let src = @""
 
 ctx |> Ijs.execute src
-

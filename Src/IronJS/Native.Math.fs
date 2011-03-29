@@ -10,13 +10,20 @@ module Math =
   let private random (random:FunctionObject) (_:CommonObject) =
     random.Env.Random.NextDouble()
 
+  let private compNaN f a b =
+    if Double.IsNaN(a) then a
+    elif Double.IsNaN(b) then b
+    else f a b
+
   let private max (args:BoxedValue array) =
     let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
-    if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.max
+    let max = compNaN max
+    args |> Array.map toNumber |> Array.fold max NegInf
 
   let private min (args:BoxedValue array) =
     let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
-    if args.Length = 0 then PosInf else args |> Array.map toNumber |> Array.min
+    let min = compNaN min
+    args |> Array.map toNumber |> Array.fold min PosInf
 
   let setup (env:Environment) =
     let math = env.NewMath()

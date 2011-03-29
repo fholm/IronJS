@@ -89,7 +89,13 @@ module Math =
     let min = Utils.createHostFunction env min
     math.Put("min", min, DontEnum)
 
-    let inline pow a b = Math.Pow(a, b)
+    let inline pow a b =
+      if Double.IsNaN(b) then nan
+      elif b = 0.0 then 1.0
+      elif Double.IsNaN(a) && b <> 0.0 then nan
+      elif Math.Abs(a) = 1.0 && Double.IsPositiveInfinity(b) then nan
+      elif Math.Abs(a) = 1.0 && Double.IsNegativeInfinity(b) then nan
+      else Math.Pow(a, b)
     let pow = new Func<double, double, double>(pow)
     let pow = Utils.createHostFunction env pow
     math.Put("pow", pow, DontEnum)
@@ -98,7 +104,10 @@ module Math =
     let random = Utils.createHostFunction env random
     math.Put("random", random, DontEnum)
 
-    let round = new Func<double, double>(Math.Round)
+    let inline round a =
+      if a < 0.0 && a > -0.5 then Math.Round(a)
+      else Math.Floor(a + 0.5)
+    let round = new Func<double, double>(round)
     let round = Utils.createHostFunction env round
     math.Put("round", round, DontEnum)
     

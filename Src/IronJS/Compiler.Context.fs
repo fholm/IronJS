@@ -4,6 +4,114 @@ open System
 open IronJS
 open IronJS.Support.Aliases
 
+module NewContext =
+
+  ///
+  module Target = 
+    
+    /// There are three types of compilation
+    /// targets. Eval for code compiled through
+    /// the eval function, Global for code
+    /// that is compiled in the global scope
+    /// and Function for code inside function bodies
+    type Mode
+      = Eval
+      | Global
+      | Function
+
+    /// Record that represents a compilation target
+    /// which is a grouping of the following properties:
+    /// 
+    /// * Ast - The syntax tree to compile
+    /// * Mode - The target mode (eval, global or function)
+    /// * DelegateType - The target delegate signature we're targeting
+    /// * ParameterTypes - The parameter types of the delegate signature's invoke method
+    /// * Environment - The IronJS environment object we're compiling for
+    type T = {
+      Ast: Ast.Tree
+      Mode: Mode
+      DelegateType: Type option
+      ParameterTypes: Type array
+      Environment: Env
+    }
+
+    /// The amount of parameters for this target
+    let parameterCount (t:T) =
+      t.ParameterTypes.Length
+
+    /// Extracts the parameter types from a delegate
+    let private getParameterTypes delegateType =
+      match delegateType with
+      | None -> [||]
+      | Some delegateType -> 
+        delegateType
+        |> FSharp.Reflection.getDelegateArgTypes
+        |> Dlr.ArrayUtils.RemoveFirst
+        |> Dlr.ArrayUtils.RemoveFirst
+
+    /// Creates a new T record
+    let create ast mode delegateType env =
+      {
+        Ast = ast
+        Mode = mode
+        DelegateType = delegateType
+        ParameterTypes = delegateType |> getParameterTypes
+        Environment = env
+      }
+
+  ///
+  module Expressions =
+    
+    ///
+    type T = {
+      This: Dlr.Parameter
+      Function: Dlr.Parameter
+      PrivateScope: Dlr.Parameter
+      SharedScope: Dlr.Parameter
+      DynamicScope: Dlr.Parameter
+      Parameters: Dlr.Parameter array
+    }
+
+    ///
+    let thisAsExpr (t:T) = 
+      t.This :> Dlr.Expr
+
+    ///
+    let functionAsExpr (t:T) = 
+      t.Function :> Dlr.Expr
+
+  ///
+  module Labels = 
+
+    ///
+    type T = {
+      Return: Dlr.Label
+      Break: Dlr.Label option
+      Continue: Dlr.Label option
+      BreakLabels: Map<string, Dlr.Label>
+      ContinueLabels: Map<string, Dlr.Label>
+      LabelCompiler: (string -> Dlr.Expr) option
+    }
+
+  ///
+  type T = {
+    Target: Target.T
+    Labels: Labels.T
+    Expressions: Expressions.T
+
+    Compiler: T -> Ast.Tree -> Dlr.Expr
+    FunctionScope: Ast.FunctionScope ref
+    IsInsideWithStatement: bool
+
+    Variables: Map<string, Ast.NewVariable>
+    CatchScopes: Ast.CatchScope ref list ref
+  }
+
+  ///
+  let compile ast (t:T) =
+    ast |> t.Compiler t
+
+
 //------------------------------------------------------------------------------
 // Record representing a compilation target
 //------------------------------------------------------------------------------
@@ -40,9 +148,9 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int
   [<DefaultValue>] val mutable Closures : Map<string, Ast.NewVariable>
-  [<DefaultValue>] val mutable Function : FunctionObject
-  [<DefaultValue>] val mutable This : CommonObject
-  [<DefaultValue>] val mutable EvalScope : CommonObject
+  [<DefaultValue>] val mutable Function : FO
+  [<DefaultValue>] val mutable This : CO
+  [<DefaultValue>] val mutable EvalScope : CO
   [<DefaultValue>] val mutable LocalScope : Scope
   [<DefaultValue>] val mutable ClosureScope : Scope
   [<DefaultValue>] val mutable DynamicScope : DynamicScope
@@ -53,7 +161,7 @@ type [<AllowNullLiteral>] EvalTarget() =
 type Context = {
   Compiler : Context -> Ast.Tree -> Dlr.Expr
   Target: Target
-  Scope: Ast.Scope ref
+  Scope: Ast.FunctionScope ref
   ReturnLabel: Dlr.Label
   InsideWith: bool
 
@@ -84,20 +192,28 @@ type Context = {
   member x.DynamicLookup = 
     x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
 
-  member x.AddDefaultLabel break' =
-    {x with Break=Some break'}
+  member x.SetDefaultBreakLabel label =
+    {x with Break = Some label}
 
-  member x.AddLoopLabels label break' continue' =
-    let y = {x with Break=Some break'; Continue=Some continue'}
-    match label with
-    | None -> y 
-    | Some label -> 
-      {y with
-        BreakLabels = y.BreakLabels.Add(label, break')
-        ContinueLabels = y.ContinueLabels.Add(label, continue')
+  member x.AddNamedBreakLabel name label =
+    {x with BreakLabels = x.BreakLabels.Add(name, label)}
+
+  member x.AddLoopLabels name breakLabel continueLabel =
+    let x = 
+      {x with 
+        Break = Some breakLabel
+        Continue = Some continueLabel
       }
 
-  member x.AddLabel label break' =
-    {x with BreakLabels = x.BreakLabels.Add(label, break')}
+    match name with
+    | None -> x
+    | Some name -> 
+      {x with
+        BreakLabels = 
+          x.BreakLabels |> Map.add name breakLabel
+
+        ContinueLabels = 
+          x.ContinueLabels |> Map.add name continueLabel
+      }
 
 type Ctx = Context

@@ -157,7 +157,7 @@ module ControlFlow =
     let valueVar = Dlr.paramT<BV> "~value"
 
     let breakLabel = Dlr.labelBreak()
-    let ctx = ctx.AddDefaultLabel breakLabel
+    let ctx = ctx.SetDefaultBreakLabel breakLabel
     let defaultJump = ref (Dlr.jump breakLabel)
     let defaultFound = ref false
 
@@ -229,5 +229,5 @@ module ControlFlow =
   // 12.12 labelled statements
   let label (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
-    let ctx = ctx.AddLabel label target
+    let ctx = ctx.AddNamedBreakLabel label target
     Dlr.block [] [ctx.Compile tree; Dlr.labelExprVoid target]

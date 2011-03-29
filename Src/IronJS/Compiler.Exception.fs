@@ -8,13 +8,11 @@ open IronJS.Dlr.Operators
 
 module Exception =
 
-  //--------------------------------------------------------------------------
-  // 12.13 the throw statement
+  ///
   let throw (ctx:Ctx) expr =
     Dlr.throwT<UserError> [ctx.Compile expr |> Utils.box; !!!(-1); !!!(-1)]
       
-  //--------------------------------------------------------------------------
-  // 12.14 the try statement
+  ///
   let private compileCatch (ctx:Ctx) catch =
     match catch with
     | Ast.Catch(name, ast) ->
@@ -79,9 +77,11 @@ module Exception =
 
     | _ -> failwith "Que?"
 
+  ///
   let private finally' (ctx:Ctx) ast =
     Dlr.castVoid (ctx.Compile ast)
 
+  ///
   let try' (ctx:Ctx) body catch final =
     let body = 
       ctx.Compile body |> Dlr.castVoid

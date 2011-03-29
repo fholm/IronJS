@@ -12,6 +12,7 @@ module Dlr =
 
   type Expr = Expression
   type ExprParam = ParameterExpression
+  type Parameter = ParameterExpression
 
   type Label = LabelTarget
   type ExprType = ExpressionType

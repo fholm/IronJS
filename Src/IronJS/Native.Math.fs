@@ -16,7 +16,7 @@ module Math =
 
   let private min (args:BoxedValue array) =
     let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
-    if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.min
+    if args.Length = 0 then PosInf else args |> Array.map toNumber |> Array.min
 
   let setup (env:Environment) =
     let math = env.NewMath()

@@ -75,10 +75,17 @@ module Main =
     // over the infinite sequence produced from
     // consoleInput, until exit is set to true
     consoleInput() |> Seq.find (fun source ->
-      let output = ctx |> execute source
 
-      if !exitCalled |> not then
-        output |> BoxingUtils.JsBox |> TC.ToString |> printfn "%s"
+      try 
+        let output = ctx |> execute source
+
+        if !exitCalled |> not then
+          output |> BoxingUtils.JsBox |> TC.ToString |> printfn "%s"
+
+      with
+        | ex ->
+          ex.Message |> printfn "%s"
+
 
       !exitCalled
     )

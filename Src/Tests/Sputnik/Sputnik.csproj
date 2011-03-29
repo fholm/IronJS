@@ -133,6 +133,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\RegressionColorConverter.cs" />
     <Compile Include="Converters\StatusImageConverter.cs" />
     <Compile Include="FailedTest.cs" />
     <Compile Include="TestCase.cs" />

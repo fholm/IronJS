@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using System.Xml;
+using System.Collections.ObjectModel;
 
 namespace IronJS.Tests.Sputnik
 {
@@ -37,6 +38,8 @@ namespace IronJS.Tests.Sputnik
 
         public MainWindow()
         {
+            this.FailedTests = new ObservableCollection<FailedTest>();
+
             InitializeComponent();
 
             this.skipTests.Add("S8.6_D1.2.js");
@@ -111,6 +114,8 @@ namespace IronJS.Tests.Sputnik
                 }
             }
         }
+
+        public ObservableCollection<FailedTest> FailedTests { get; set; }
 
         private void LoadResults()
         {
@@ -217,12 +222,12 @@ namespace IronJS.Tests.Sputnik
 
         private void RunSingle_Click(object sender, RoutedEventArgs e)
         {
-            var selected = this.FailedTests.SelectedItem as FailedTest;
+            //var selected = this.FailedTests.SelectedItem as FailedTest;
 
-            if (selected != null)
-            {
-                StartTests(new[] { selected.TestGroup });
-            }
+            //if (selected != null)
+            //{
+            //    StartTests(new[] { selected.TestGroup });
+            //}
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
@@ -234,9 +239,8 @@ namespace IronJS.Tests.Sputnik
         private void StartTests(IList<TestGroup> tests)
         {
             this.RunButton.IsEnabled = false;
-            this.RunSingle.IsEnabled = false;
             this.StopButton.IsEnabled = true;
-            this.FailedTests.Items.Clear();
+            this.FailedTests.Clear();
             this.ExprTree.Text = string.Empty;
             this.ProgressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
             SaveResults();
@@ -247,7 +251,6 @@ namespace IronJS.Tests.Sputnik
         {
             SaveResults();
             this.RunButton.IsEnabled = true;
-            this.RunSingle.IsEnabled = true;
             this.StopButton.IsEnabled = false;
         }
 
@@ -296,7 +299,7 @@ namespace IronJS.Tests.Sputnik
         {
             var testCase = test.TestCase;
 
-            Dispatcher.Invoke(new Action(() => this.FailedTests.Items.Add(new FailedTest
+            Dispatcher.Invoke(new Action(() => this.FailedTests.Add(new FailedTest
             {
                 Name = testCase.TestName,
                 Path = testCase.FullPath,
@@ -388,7 +391,7 @@ namespace IronJS.Tests.Sputnik
             }
             catch (Exception ex)
             {
-                errorText.AppendLine("Exception: " + ex.GetBaseException().Message);
+                errorText.AppendLine("Exception: " + ex.ToString());
             }
 
             var error = errorText.ToString();
@@ -397,12 +400,12 @@ namespace IronJS.Tests.Sputnik
 
         private void Launch_Click(object sender, RoutedEventArgs e)
         {
-            var selected = this.FailedTests.SelectedItem as FailedTest;
+            //var selected = this.FailedTests.SelectedItem as FailedTest;
 
-            if (selected != null)
-            {
-                LaunchFile(selected.Path);
-            }
+            //if (selected != null)
+            //{
+            //    LaunchFile(selected.Path);
+            //}
         }
 
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)
@@ -421,23 +424,34 @@ namespace IronJS.Tests.Sputnik
             SaveResults();
         }
 
-        private static TestGroup FindRoutedTestGroup(RoutedEventArgs e)
+        private static object FindRoutedTestGroup(RoutedEventArgs e)
         {
             var menuItem = e.Source as MenuItem;
             var menu = menuItem.Parent as ContextMenu;
             var element = menu.PlacementTarget as FrameworkElement;
-            return element.Tag as TestGroup;
+            return element.Tag;
         }
 
         private void OpenItem_Click(object sender, RoutedEventArgs e)
         {
-            var testGroup = FindRoutedTestGroup(e);
-            LaunchFile(testGroup.TestCase.FullPath);
+            var test = FindRoutedTestGroup(e);
+
+            var testGroup = test as TestGroup;
+            if (testGroup != null)
+            {
+                LaunchFile(testGroup.TestCase.FullPath);
+            }
+
+            var failedTest = test as FailedTest;
+            if (failedTest != null)
+            {
+                LaunchFile(failedTest.Path);
+            }
         }
 
         private void PerformSelection(RoutedEventArgs e, bool select, Predicate<TestGroup> filter)
         {
-            var testGroup = FindRoutedTestGroup(e);
+            var testGroup = FindRoutedTestGroup(e) as TestGroup;
             foreach (var test in GatherTests(testGroup, tg => true))
             {
                 if (filter(test))

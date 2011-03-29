@@ -6,6 +6,7 @@
         Title="IronJS - Sputnik Conformance Tests" Height="449" Width="860" Closing="Window_Closing">
     <Window.Resources>
         <convert:StatusImageConverter x:Key="StatusImage" />
+        <convert:RegressionColorConverter x:Key="RegressionColor" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -100,7 +101,7 @@
                     </Button>
                     <Button x:Name="StopButton" Click="Stop_Click" MinWidth="64" Margin="4" Content="Stop" IsEnabled="False" />
                 </StackPanel>
-                <Grid>
+                <Grid Margin="4,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -108,8 +109,8 @@
                     <Label Grid.Column="0" Content="Progress" Padding="0,5" FontWeight="Bold" />
                     <Label Grid.Column="1" x:Name="CurrentTest" HorizontalContentAlignment="Right" />
                 </Grid>
-                <ProgressBar Height="40" x:Name="ProgressBar" />
-                <Grid>
+                <ProgressBar Margin="4,0" Height="40" x:Name="ProgressBar" />
+                <Grid Margin="4,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -120,36 +121,44 @@
                     </StackPanel>
                     <Label Grid.Column="1" x:Name="ProgressText" HorizontalContentAlignment="Right" Content="" />
                 </Grid>
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                    <Button x:Name="LaunchButton" Click="Launch_Click" MinWidth="64" Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="/IronJS.Tests.Sputnik;component/Images/code.gif" Margin="4,0" />
-                            <TextBlock Text="Open" Margin="0,0,4,0" />
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="RunSingle" Click="RunSingle_Click" MinWidth="64" Margin="4">
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="/IronJS.Tests.Sputnik;component/Images/run.gif" Margin="4,0" />
-                            <TextBlock Text="Run" Margin="0,0,4,0" />
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
             </StackPanel>
-            <ListView Margin="4" Grid.Row="1" x:Name="FailedTests" FontFamily="Consolas">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Width="150" Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Width="500" Header="Assertion" >
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate x:Name="col1Template">
-                                    <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding Path=Assertion}" />
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Width="1200" Header="Exception" DisplayMemberBinding="{Binding Exception}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <Border Grid.Row="1" Margin="4" BorderBrush="#FF828790" BorderThickness="1">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding FailedTests}">
+                        <ItemsControl.Resources>
+                            <ContextMenu x:Key="FailedTestContextMenu" >
+                                <MenuItem Click="OpenItem_Click">
+                                    <MenuItem.Icon>
+                                        <Image Source="/IronJS.Tests.Sputnik;component/Images/code.gif" />
+                                    </MenuItem.Icon>
+                                    <MenuItem.Header>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="Open {0} Source">
+                                                    <Binding Path="PlacementTarget.Tag.Name" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                            </ContextMenu>
+                        </ItemsControl.Resources>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Expander BorderBrush="#FF828790" BorderThickness="1" Padding="0" Margin="2" Tag="{Binding}" Background="{Binding Regression, Converter={StaticResource RegressionColor}}" ContextMenu="{StaticResource FailedTestContextMenu}">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="{Binding Name}" Margin="0,0,8,0" MinWidth="90" />
+                                            <Label Content="{Binding Assertion}" />
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Label Grid.Column="0" Content="{Binding Exception}" Background="LightGray" Margin="8" />
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
         </Grid>
     </Grid>
 </Window>

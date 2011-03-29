@@ -1,17 +1,20 @@
 #light
 #time
-#r @"../../Src/FSKit/Src/bin/Debug/FSKit.dll"
 #r @"../../Src/IronJS/bin/Debug/IronJS.dll"
 
 open System
 open IronJS
+open IronJS.Hosting.FSharp
+
+module Ijs = IronJS.Hosting.FSharp
 
 IronJS.Support.Debug.registerConsolePrinter()
 
-let ctx = IronJS.Hosting.Context.Create()
-ctx.SetupPrintFunction()
+let ctx = Ijs.createContext()
+ctx |> Ijs.Utils.createPrintFunction
 
-let src = @""
-IronJS.Compiler.Parser.parse src ctx.Environment
+let src = @"
+  
+"
 
-src |> ctx.Execute
+ctx |> Ijs.execute src

@@ -14,7 +14,7 @@ What you need to use IronJS
 
 ## Getting the source (Including FSKit)
 
-Run this from a terminal window (Linux/Unix) or in a "Git Bash Here" window using msysgit for Windows
+Make sure you have git installed and then run this command from a terminal window (Linux/Unix) or in a "Git Bash Here" window using msysgit for Windows
 
 * git clone git://github.com/fholm/IronJS.git IronJS
 

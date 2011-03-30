@@ -4,6 +4,7 @@
 * Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
 * Re-implemented the AST analyzer to make it single pass
 * Removed the dependancy of Microsoft.Dynamic.dll for CLR4 projects
+* Removed dependancy on FSKit 
 * Implemented the Date object
 * Implemented the RegExp object
 * Implemented missing functionality on String.prototype (match, split, search, replace)
@@ -18,3 +19,4 @@
 * Refactored several constructors in the IronJS.Ast.Tree union to be more obvious
 * Unified error handling, so it all passes through IronJS.Error and its members
 * Re-implemented variable handling allowing for faster and easier compilation
+* A new Sputnik test runner, courtesy of John Gietzen

@@ -6,23 +6,74 @@
         Title="IronJS - Sputnik Conformance Tests" Height="449" Width="860" Closing="Window_Closing">
     <Window.Resources>
         <convert:StatusImageConverter x:Key="StatusImage" />
+        <convert:RegressionColorConverter x:Key="RegressionColor" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="468" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-
         <Grid Grid.Row="0" Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="22" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="24" />
+                <RowDefinition Height="0" x:Name="ExpressionTreeRow" />
             </Grid.RowDefinitions>
             <TreeView Margin="4" Grid.Row="0" Grid.Column="0" x:Name="TestsView" ItemsSource="{Binding TestGroups}">
+                <TreeView.Resources>
+                    <ContextMenu x:Key="Menu" >
+                        <MenuItem Click="SelectAll_Click" Header="Select All" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Click="DeselectAll_Click" Header="Deselect All" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <Separator Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}" />
+                        <MenuItem Click="SelectFailed_Click" Header="Select Failed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/failed.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="SelectPassed_Click" Header="Select Passed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/passed.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="SelectUnknown_Click" Header="Select Unknown" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/unknown.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="DeselectFailed_Click" Header="Deselect Failed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/failed.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="DeselectPassed_Click" Header="Deselect Passed" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/passed.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="DeselectUnknown_Click" Header="Deselect Unknown" Visibility="{Binding Path=PlacementTarget.Tag.ShowChildrenMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/unknown.gif" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Click="OpenItem_Click" Visibility="{Binding Path=PlacementTarget.Tag.ShowTestCaseMenu, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}}">
+                            <MenuItem.Icon>
+                                <Image Source="/IronJS.Tests.Sputnik;component/Images/code.gif" />
+                            </MenuItem.Icon>
+                            <MenuItem.Header>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="Open {0} Source">
+                                            <Binding Path="PlacementTarget.Tag.Name" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </MenuItem.Header>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.Resources>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding TestGroups}">
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" ContextMenu="{StaticResource Menu}" Tag="{Binding}">
                             <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Margin="1" />
                             <Image Source="{Binding Status, Converter={StaticResource StatusImage}}" />
                             <TextBlock Text="{Binding Name}" Margin="1"></TextBlock>
@@ -30,45 +81,84 @@
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
-            <CheckBox Margin="4" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="Show Expression Trees" FontWeight="Bold" x:Name="ShowExprTrees" Checked="ShowExprTrees_Checked" />
+            <CheckBox Margin="4" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="Show Expression Trees" FontWeight="Bold" x:Name="ShowExprTrees" Checked="ShowExprTrees_Checked" Unchecked="ShowExprTrees_Checked" />
             <ScrollViewer Margin="4" Grid.Row="2" Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 <TextBlock x:Name="ExprTree" Text=""  />
             </ScrollViewer>
         </Grid>
-
         <Grid Grid.Row="0" Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="208" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Grid.Column="0">
-                <Button Content="Run" Click="Run_Click" Height="23" HorizontalAlignment="Left" Margin="6,6,0,0" Name="RunButton" VerticalAlignment="Top" Width="86" />
-                <Button Content="Stop" Click="Stop_Click" Height="23" HorizontalAlignment="Left" Margin="98,6,0,0" Name="StopButton" VerticalAlignment="Top" Width="86" IsEnabled="False" />
-                <ProgressBar Height="40" Margin="4,99,8,0" Name="progressBar" VerticalAlignment="Top" />
-                <Label Content="" HorizontalAlignment="Right" Margin="0,140,8,0" Name="progressText" VerticalAlignment="Top" Width="120" HorizontalContentAlignment="Right" />
-                <Label Content="Passed: " Padding="0,5" Name="passedLabel" Height="28" HorizontalAlignment="Left" Margin="5,140,0,0" VerticalAlignment="Top" Width="119" />
-                <Label Content="Failed: " Padding="0,5" Name="failedLabel" Height="28" HorizontalAlignment="Left" Margin="130,140,0,0" VerticalAlignment="Top" Width="100" />
-                <Label Content="Progress" Padding="0,5" FontWeight="Bold" Height="28" HorizontalAlignment="Left" Margin="5,73,0,0" VerticalAlignment="Top" Width="86" />
-                <Button Content="Open" Height="23" HorizontalAlignment="Left" Margin="5,181,0,0" VerticalAlignment="Top" Width="75" x:Name="Launch" Click="Launch_Click" />
-                <TextBox Height="23" BorderThickness="0" Margin="0,73,12,0" Focusable="False" Name="currentTest" VerticalAlignment="Top" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="120" />
-
-                <Button Content="Run" Height="23" HorizontalAlignment="Left" Margin="86,181,0,0" x:Name="RunSingle" VerticalAlignment="Top" Width="75" Click="RunSingle_Click" />
-            </Grid>
-            <ListView Margin="4" Grid.Row="1" Grid.Column="0" x:Name="FailedTests" FontFamily="Consolas">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Width="150" Header="Name" DisplayMemberBinding="{Binding Name}" />
-                        <GridViewColumn Width="500" Header="Assertion" >
-                            <GridViewColumn.CellTemplate>
-                                <DataTemplate x:Name="col1Template">
-                                    <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding Path=Assertion}" />
-                                </DataTemplate>
-                            </GridViewColumn.CellTemplate>
-                        </GridViewColumn>
-                        <GridViewColumn Width="1200" Header="Exception" DisplayMemberBinding="{Binding Exception}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
+            <StackPanel Grid.Row="0" Grid.Column="0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button x:Name="RunButton" Click="Run_Click" MinWidth="64" Margin="4">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/IronJS.Tests.Sputnik;component/Images/run.gif" Margin="4,0" />
+                            <TextBlock Text="Run" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="StopButton" Click="Stop_Click" MinWidth="64" Margin="4" Content="Stop" IsEnabled="False" />
+                </StackPanel>
+                <Grid Margin="4,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="Progress" Padding="0,5" FontWeight="Bold" />
+                    <Label Grid.Column="1" x:Name="CurrentTest" HorizontalContentAlignment="Right" />
+                </Grid>
+                <ProgressBar Margin="4,0" Height="40" x:Name="ProgressBar" />
+                <Grid Margin="4,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Label Content="Passed: 0" Margin="4,0" x:Name="PassedLabel" />
+                        <Label Content="Failed: 0" Margin="4,0" x:Name="FailedLabel" />
+                    </StackPanel>
+                    <Label Grid.Column="1" x:Name="ProgressText" HorizontalContentAlignment="Right" Content="" />
+                </Grid>
+            </StackPanel>
+            <Border Grid.Row="1" Margin="4" BorderBrush="#FF828790" BorderThickness="1">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding FailedTests}">
+                        <ItemsControl.Resources>
+                            <ContextMenu x:Key="FailedTestContextMenu" >
+                                <MenuItem Click="OpenItem_Click">
+                                    <MenuItem.Icon>
+                                        <Image Source="/IronJS.Tests.Sputnik;component/Images/code.gif" />
+                                    </MenuItem.Icon>
+                                    <MenuItem.Header>
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="Open {0} Source">
+                                                    <Binding Path="PlacementTarget.Tag.Name" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                            </ContextMenu>
+                        </ItemsControl.Resources>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Expander BorderBrush="#FF828790" BorderThickness="1" Padding="0" Margin="2" Tag="{Binding}" Background="{Binding Regression, Converter={StaticResource RegressionColor}}" ContextMenu="{StaticResource FailedTestContextMenu}">
+                                    <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="{Binding Name}" Margin="0,0,8,0" MinWidth="90" />
+                                            <Label Content="{Binding Assertion}" />
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <Label Grid.Column="0" Content="{Binding Exception}" Background="LightGray" Margin="8" />
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
         </Grid>
     </Grid>
 </Window>

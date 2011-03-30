@@ -133,6 +133,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\RegressionColorConverter.cs" />
     <Compile Include="Converters\StatusImageConverter.cs" />
     <Compile Include="FailedTest.cs" />
     <Compile Include="TestCase.cs" />
@@ -176,10 +177,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\FSKit\Src\FSKit.fsproj">
-      <Project>{15E5E5EE-B919-46B4-8B04-A323F6D01B66}</Project>
-      <Name>FSKit</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>
@@ -192,6 +189,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="IronJS.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\code.gif" />
+    <Resource Include="Images\run.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

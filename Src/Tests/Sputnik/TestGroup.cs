@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
+using System.Windows;
 
 namespace IronJS.Tests.Sputnik
 {
@@ -33,6 +34,26 @@ namespace IronJS.Tests.Sputnik
         public IList<TestGroup> TestGroups { get; set; }
 
         public string Name { get; set; }
+
+        public Visibility ShowChildrenMenu
+        {
+            get
+            {
+                return this.TestGroups != null && this.TestGroups.Count > 0
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
+        public Visibility ShowTestCaseMenu
+        {
+            get
+            {
+                return this.TestGroups != null && this.TestGroups.Count > 0
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+            }
+        }
 
         public bool? Selected
         {

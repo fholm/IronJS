@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using System.Xml;
+using System.Collections.ObjectModel;
 
 namespace IronJS.Tests.Sputnik
 {
@@ -26,7 +27,7 @@ namespace IronJS.Tests.Sputnik
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private BackgroundWorker worker = new BackgroundWorker();
-        private string _libPath;
+        private string libPath;
         private volatile bool showExprTrees;
 
         private IList<TestGroup> testGroups;
@@ -37,6 +38,8 @@ namespace IronJS.Tests.Sputnik
 
         public MainWindow()
         {
+            this.FailedTests = new ObservableCollection<FailedTest>();
+
             InitializeComponent();
 
             this.skipTests.Add("S8.6_D1.2.js");
@@ -52,7 +55,7 @@ namespace IronJS.Tests.Sputnik
             this.worker.WorkerSupportsCancellation = true;
 
             var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName, "sputnik-v1");
-            this._libPath = Path.Combine(rootPath, "lib");
+            this.libPath = Path.Combine(rootPath, "lib");
             var testsPath = Path.Combine(rootPath, "tests");
 
             this.rootTestGroup = new TestGroup(null, null)
@@ -64,7 +67,7 @@ namespace IronJS.Tests.Sputnik
 
             this.LoadResults();
 
-            IronJS.Support.Debug.registerExprPrinter(ExprPrinter);
+            IronJS.Support.Debug.registerExprPrinter(this.ExprPrinter);
         }
 
         private IList<TestGroup> GenerateTestsList(TestGroup root, string basePath, string path)
@@ -77,7 +80,7 @@ namespace IronJS.Tests.Sputnik
                 {
                     Name = Path.GetFileName(dir),
                 };
-                group.TestGroups = GenerateTestsList(group, basePath, dir);
+                group.TestGroups = this.GenerateTestsList(group, basePath, dir);
                 groups.Add(group);
             }
 
@@ -112,6 +115,8 @@ namespace IronJS.Tests.Sputnik
             }
         }
 
+        public ObservableCollection<FailedTest> FailedTests { get; set; }
+
         private void LoadResults()
         {
             XDocument doc;
@@ -142,7 +147,7 @@ namespace IronJS.Tests.Sputnik
                              Selected = (bool)e.Attribute("Selected")
                          }).ToDictionary(e => e.Path);
 
-            foreach (var test in GatherTests(g => true))
+            foreach (var test in this.GatherTests(g => true))
             {
                 var key = test.TestCase.RelativePath;
                 if (tests.ContainsKey(key))
@@ -157,7 +162,7 @@ namespace IronJS.Tests.Sputnik
         private void SaveResults()
         {
             var doc = new XElement("Tests",
-                          from t in GatherTests(g => true)
+                          from t in this.GatherTests(g => true)
                           select new XElement("Test",
                               new XAttribute("Path", t.TestCase.RelativePath),
                               new XAttribute("Status", t.Status.ToString()),
@@ -180,10 +185,15 @@ namespace IronJS.Tests.Sputnik
 
         void ExprPrinter(string expr)
         {
-            Dispatcher.Invoke(DispatcherPriority.Normal, new Action<string>(PrntExpr), expr);
+            Dispatcher.Invoke(DispatcherPriority.Normal, (Action<string>)this.PrntExpr, expr);
         }
 
         private IList<TestGroup> GatherTests(Func<TestGroup, bool> hierarchicalCriteria)
+        {
+            return this.GatherTests(this.rootTestGroup, hierarchicalCriteria);
+        }
+
+        private IList<TestGroup> GatherTests(TestGroup rootTestGroup, Func<TestGroup, bool> hierarchicalCriteria)
         {
             Func<TestGroup, IList<TestGroup>> gatherTests = null;
             gatherTests = rootGroup =>
@@ -202,15 +212,12 @@ namespace IronJS.Tests.Sputnik
                 return groups;
             };
 
-            return gatherTests(this.rootTestGroup);
+            return gatherTests(rootTestGroup);
         }
 
         private void Run_Click(object sender, RoutedEventArgs e)
         {
-            if (!this.worker.IsBusy)
-            {
-                StartTests(GatherTests(g => g.Selected != false));
-            }
+            StartTests(GatherTests(g => g.Selected != false));
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
@@ -222,11 +229,10 @@ namespace IronJS.Tests.Sputnik
         private void StartTests(IList<TestGroup> tests)
         {
             this.RunButton.IsEnabled = false;
-            this.RunSingle.IsEnabled = false;
             this.StopButton.IsEnabled = true;
-            this.FailedTests.Items.Clear();
+            this.FailedTests.Clear();
             this.ExprTree.Text = string.Empty;
-            this.progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
+            this.ProgressBar.Foreground = new SolidColorBrush(Color.FromRgb(0x01, 0xD3, 0x28));
             SaveResults();
             this.worker.RunWorkerAsync(tests);
         }
@@ -235,28 +241,29 @@ namespace IronJS.Tests.Sputnik
         {
             SaveResults();
             this.RunButton.IsEnabled = true;
-            this.RunSingle.IsEnabled = true;
             this.StopButton.IsEnabled = false;
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            var state = e.UserState as Tuple<int, int, int>;
+            var state = e.UserState as Tuple<int, int, int, int, int>;
             var total = state.Item1;
             var passed = state.Item2;
             var failed = state.Item3;
+            var improved = state.Item4;
+            var regressed = state.Item5;
 
             if (failed > 0)
             {
-                progressBar.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x00, 0x52));
+                this.ProgressBar.Foreground = new SolidColorBrush(Color.FromRgb(0xFF, 0x00, 0x52));
             }
 
-            progressBar.Maximum = total;
-            progressBar.Value = (passed + failed);
-            progressText.Content = (passed + failed) + "/" + total;
+            this.ProgressBar.Maximum = total;
+            this.ProgressBar.Value = (passed + failed);
+            this.ProgressText.Content = (passed + failed) + "/" + total;
 
-            passedLabel.Content = "Passed: " + passed; // +" (" + prevPassed + ")";
-            failedLabel.Content = "Failed: " + failed; // +" (" + prevFailed + ")";
+            this.PassedLabel.Content = "Passed: " + passed + " (" + improved + " improved)";
+            this.FailedLabel.Content = "Failed: " + failed + " (" + regressed + " regressed)";
         }
 
         private static void LaunchFile(string path)
@@ -265,36 +272,45 @@ namespace IronJS.Tests.Sputnik
             Process.Start(info);
         }
 
-        private static IronJS.Hosting.Context CreateContext(Action<string> errorAction)
+        private static IronJS.Hosting.CSharp.Context CreateContext(string libPath, Action<string> errorAction)
         {
-            var ctx = IronJS.Hosting.Context.Create();
+            var ctx = new IronJS.Hosting.CSharp.Context();
+
+            Action<string> failAction = error => { throw new Exception(error); };
+            Action<string> printAction = message => Debug.WriteLine(message);
+            Action<string> includeAction = file => ctx.ExecuteFile(Path.Combine(libPath, file));
+
             var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, errorAction);
-            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>(error => { throw new Exception(error); }));
-            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, new Action<string>((_) => { }));
-            ctx.PutGlobal("$FAIL", failFunc);
-            ctx.PutGlobal("ERROR", errorFunc);
-            ctx.PutGlobal("$ERROR", errorFunc);
-            ctx.PutGlobal("$PRINT", printFunc);
+            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, failAction);
+            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, printAction);
+            var includeFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, includeAction);
+
+            ctx.SetGlobal("$FAIL", failFunc);
+            ctx.SetGlobal("ERROR", errorFunc);
+            ctx.SetGlobal("$ERROR", errorFunc);
+            ctx.SetGlobal("$PRINT", printFunc);
+            ctx.SetGlobal("$INCLUDE", includeFunc);
             return ctx;
         }
 
-        private void AddFailed(TestGroup test, string error)
+        private void AddFailed(TestGroup test, string error, bool regression)
         {
             var testCase = test.TestCase;
 
-            Dispatcher.Invoke(new Action(() => this.FailedTests.Items.Add(new FailedTest
+            Dispatcher.Invoke(new Action(() => this.FailedTests.Add(new FailedTest
             {
                 Name = testCase.TestName,
                 Path = testCase.FullPath,
                 Assertion = testCase.Assertion,
                 Exception = error,
                 TestGroup = test,
+                Regression = regression,
             })));
         }
 
         void UpdateCurrentTest(TestCase test)
         {
-            Dispatcher.Invoke(new Action(() => currentTest.Text = test == null ? string.Empty : test.TestName));
+            Dispatcher.Invoke(new Action(() => this.CurrentTest.Content = (test == null ? string.Empty : test.TestName)));
         }
 
         private void RunTests(object sender, DoWorkEventArgs args)
@@ -304,8 +320,10 @@ namespace IronJS.Tests.Sputnik
 
             int passed = 0;
             int failed = 0;
+            int improved = 0;
+            int regressed = 0;
 
-            this.worker.ReportProgress(0, Tuple.Create(testCount, passed, failed));
+            this.worker.ReportProgress(0, Tuple.Create(testCount, passed, failed, improved, regressed));
 
             for (int i = 0; i < testCount; i++)
             {
@@ -323,35 +341,47 @@ namespace IronJS.Tests.Sputnik
                 string resultingError = null;
                 if (!this.skipTests.Contains(testCase.TestName))
                 {
-                    resultingError = RunTest(testCase);
+                    resultingError = RunTest(this.libPath, testCase);
                     pass = testCase.Negative ^ resultingError == null;
                 }
 
-                // TODO: Check for regression.
+                var previous = test.Status;
 
                 if (pass)
                 {
                     test.Status = Status.Passed;
                     passed++;
+                    if (previous == Status.Failed)
+                    {
+                        improved++;
+                    }
                 }
                 else
                 {
+                    bool regression = false;
+
                     test.Status = Status.Failed;
                     failed++;
-                    AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"));
+                    if (previous == Status.Passed)
+                    {
+                        regressed++;
+                        regression = true;
+                    }
+
+                    this.AddFailed(test, testCase.Negative ? "Expected Exception" : (resultingError ?? "<missing error message>"), regression);
                 }
 
-                this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed));
+                this.worker.ReportProgress((int)Math.Round(99.0 * i / testCount), Tuple.Create(testCount, passed, failed, improved, regressed));
             }
 
             this.UpdateCurrentTest(null);
-            this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed));
+            this.worker.ReportProgress(100, Tuple.Create(testCount, passed, failed, improved, regressed));
         }
 
-        private static string RunTest(TestCase testCase)
+        private static string RunTest(string libPath, TestCase testCase)
         {
             var errorText = new StringBuilder();
-            var ctx = CreateContext(e => errorText.AppendLine(e));
+            var ctx = CreateContext(libPath, e => errorText.AppendLine(e));
 
             try
             {
@@ -359,41 +389,104 @@ namespace IronJS.Tests.Sputnik
             }
             catch (Exception ex)
             {
-                errorText.AppendLine("Exception: " + ex.GetBaseException().Message);
+                errorText.AppendLine("Exception: " + ex.ToString());
             }
 
             var error = errorText.ToString();
             return string.IsNullOrEmpty(error) ? null : error;
         }
 
-        private void Launch_Click(object sender, RoutedEventArgs e)
-        {
-            var selected = this.FailedTests.SelectedItem as FailedTest;
-
-            if (selected != null)
-            {
-                LaunchFile(selected.Path);
-            }
-        }
-
-        private void RunSingle_Click(object sender, RoutedEventArgs e)
-        {
-            var selected = this.FailedTests.SelectedItem as FailedTest;
-
-            if (selected != null)
-            {
-                StartTests(new[] { selected.TestGroup });
-            }
-        }
-
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)
         {
-            this.showExprTrees = ((CheckBox)sender).IsChecked ?? false;
+            var isChecked = ((CheckBox)sender).IsChecked;
+
+            this.showExprTrees = isChecked ?? false;
+
+            this.ExpressionTreeRow.Height = isChecked ?? false
+                ? new GridLength(1, GridUnitType.Star)
+                : new GridLength(0, GridUnitType.Pixel);
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
             SaveResults();
+        }
+
+        private static object FindRoutedTestGroup(RoutedEventArgs e)
+        {
+            var menuItem = e.Source as MenuItem;
+            var menu = menuItem.Parent as ContextMenu;
+            var element = menu.PlacementTarget as FrameworkElement;
+            return element.Tag;
+        }
+
+        private void OpenItem_Click(object sender, RoutedEventArgs e)
+        {
+            var test = FindRoutedTestGroup(e);
+
+            var testGroup = test as TestGroup;
+            if (testGroup != null)
+            {
+                LaunchFile(testGroup.TestCase.FullPath);
+            }
+
+            var failedTest = test as FailedTest;
+            if (failedTest != null)
+            {
+                LaunchFile(failedTest.Path);
+            }
+        }
+
+        private void PerformSelection(RoutedEventArgs e, bool select, Predicate<TestGroup> filter)
+        {
+            var testGroup = FindRoutedTestGroup(e) as TestGroup;
+            foreach (var test in GatherTests(testGroup, tg => true))
+            {
+                if (filter(test))
+                {
+                    test.Selected = select;
+                }
+            }
+        }
+
+        private void DeselectUnknown_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Unknown);
+        }
+
+        private void DeselectPassed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Passed);
+        }
+
+        private void DeselectFailed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => tg.Status == Status.Failed);
+        }
+
+        private void DeselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, false, tg => true);
+        }
+
+        private void SelectUnknown_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Unknown);
+        }
+
+        private void SelectPassed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Passed);
+        }
+
+        private void SelectFailed_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => tg.Status == Status.Failed);
+        }
+
+        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSelection(e, true, tg => true);
         }
     }
 }

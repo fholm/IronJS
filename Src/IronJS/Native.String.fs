@@ -202,7 +202,7 @@ module String =
     if search.Tag >= TypeTags.Object then 
       let regexp = search |> toRegExp this.Env
       let m = regexp.RegExp.Match(value)
-      if m |> FSKit.Utils.notNull && m.Success 
+      if m |> FSharp.Utils.notNull && m.Success 
         then m.Index |> double
         else 0.0
       

@@ -24,7 +24,7 @@ type Target = {
     | Some delegate' -> 
       Dlr.ArrayUtils.RemoveFirst(
         Dlr.ArrayUtils.RemoveFirst(
-          FSKit.Reflection.getDelegateArgTypes delegate'))
+          FSharp.Reflection.getDelegateArgTypes delegate'))
 
   member x.ParamType i = x.ParamTypes.[i]
   member x.ParamCount = x.ParamTypes.Length

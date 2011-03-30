@@ -149,7 +149,7 @@ module Dlr =
     if Seq.length exprs = 0 
       then void' 
       elif Seq.length exprs = 1
-        then FSKit.Seq.first exprs
+        then FSharp.Seq.first exprs
         else Expr.Block(exprs) :> Expr
 
   let blockTmp type' (f:ExprParam -> Expr seq) =
@@ -172,26 +172,26 @@ module Dlr =
   let private exprTypes (args:Expr seq) = [|for a in args -> a.Type|]
 
   let call (expr:Expr) name (args:Expr seq) =
-    match FSKit.Reflection.getMethodArgs expr.Type name (exprTypes args) with
+    match FSharp.Reflection.getMethodArgs expr.Type name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callGeneric (expr:Expr) name typeArgs (args:Expr seq) =
     let exprTypes = (exprTypes args)
-    match FSKit.Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
+    match FSharp.Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
     | Some(method') -> Et.Call(expr, method', args) :> Expr
 
   let callStatic (type':System.Type) name (args:Expr seq) =
-    match FSKit.Reflection.getMethodArgs type' name (exprTypes args) with
+    match FSharp.Reflection.getMethodArgs type' name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
     | Some(method') -> Et.Call(null, method', args) :> Expr
 
   let callStaticT<'a> = callStatic typeof<'a>
 
   let callStaticGeneric (type':System.Type) name typeArgs (args:Expr seq) =
-    match FSKit.Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
+    match FSharp.Reflection.getMethodGeneric type' name typeArgs (exprTypes args) with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
 
@@ -227,7 +227,7 @@ module Dlr =
   let newGenericT<'a> = newGeneric typedefof<'a>
 
   let newArgs (typ:System.Type) (args:Et seq) = 
-    match FSKit.Reflection.getCtor typ [for arg in args -> arg.Type] with
+    match FSharp.Reflection.getCtor typ [for arg in args -> arg.Type] with
     | None -> failwith "No matching constructor found"
     | Some ctor -> Et.New(ctor, args) :> Expr
 
@@ -427,9 +427,9 @@ module Dlr =
     open System
 
     module Utils =
-      let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
+      let is type' (expr:Expr) = FSharp.Utils.isType type' expr.Type
       let isT<'a> (expr:Expr) = is typeof<'a> expr
-      let isVoid (expr:Expr) = FSKit.Utils.isVoid expr.Type
+      let isVoid (expr:Expr) = FSharp.Utils.isVoid expr.Type
 
     let toExpr (x:'a when 'a :> Expr) = x :> Expr
 
@@ -479,7 +479,7 @@ module Dlr =
         else blockSimple [expr; void']
 
     let call (name:string) (args:Expr seq) (expr:Expr) =
-      match FSKit.Reflection.getMethodArgs expr.Type name (exprTypes args) with
+      match FSharp.Reflection.getMethodArgs expr.Type name (exprTypes args) with
       | Some method' -> Expr.Call(expr, method', args) :> Expr
       | None -> failwith "No method found with matching name and arguments"
 
@@ -540,9 +540,9 @@ module Dlr =
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (expr |> debugView)
 
-    let is type' (expr:Expr) = FSKit.Utils.isType type' expr.Type
+    let is type' (expr:Expr) = FSharp.Utils.isType type' expr.Type
     let isT<'a> (expr:Expr) = is typeof<'a> expr
-    let isVoid (expr:Expr) = FSKit.Utils.isVoid expr.Type
+    let isVoid (expr:Expr) = FSharp.Utils.isVoid expr.Type
 
     //DEBUG
     let debug x =

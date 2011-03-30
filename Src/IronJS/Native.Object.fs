@@ -23,7 +23,7 @@ module Object =
       else false
 
   let rec internal isPrototypeOf (o:CO) (v:CO) = 
-    if v |> FSKit.Utils.isNull
+    if v |> FSharp.Utils.isNull
       then false
       elif Object.ReferenceEquals(o, v.Prototype) 
         then true

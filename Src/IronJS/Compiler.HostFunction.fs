@@ -17,7 +17,7 @@ module HostFunction =
     if i < args.Length 
       then TypeConverter.ConvertTo(env, args.[i], t)
       else
-        if FSKit.Utils.isTypeT<BoxedValue> t
+        if FSharp.Utils.isTypeT<BoxedValue> t
           then Constants.Boxed.undefined else Dlr.default' t
       
   let private marshalBoxParams (f:HostFunction<_>) args m =
@@ -36,13 +36,13 @@ module HostFunction =
   
   let private addEmptyParamsObject<'a> (args:Dlr.ExprParam array) =
     args |> Array.map (fun x -> x :> Dlr.Expr)
-         |> FSKit.Array.appendOne Dlr.newArrayEmptyT<'a> 
+         |> FSharp.Array.appendOne Dlr.newArrayEmptyT<'a> 
          |> Seq.ofArray
   
   let private compileDispatcher (target:DispatchTarget<'a>) = 
     let f = target.Function
 
-    let argTypes = FSKit.Reflection.getDelegateArgTypes target.Delegate
+    let argTypes = FSharp.Reflection.getDelegateArgTypes target.Delegate
     let args = argTypes |> Array.mapi createParam
     let passedArgs = args |> Seq.skip f.MarshalMode |> Array.ofSeq
 
@@ -68,9 +68,9 @@ module HostFunction =
 
     let invoke = target.Invoke func marshalled
     let body = 
-      if FSKit.Utils.isTypeT<BoxedValue> f.ReturnType 
+      if FSharp.Utils.isTypeT<BoxedValue> f.ReturnType 
         then invoke
-        elif FSKit.Utils.isVoid f.ReturnType 
+        elif FSharp.Utils.isVoid f.ReturnType 
           then Utils.voidAsUndefined invoke
           else Compiler.Utils.box invoke
             

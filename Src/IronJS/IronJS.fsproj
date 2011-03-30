@@ -92,7 +92,8 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Support.Dlr.fs" />
+    <Compile Include="FSharp.fs" />
+    <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
     <Compile Include="Core.fs" />
@@ -132,11 +133,6 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <ProjectReference Include="..\FSKit\Src\FSKit.fsproj">
-      <Name>FSKit</Name>
-      <Project>{15e5e5ee-b919-46b4-8b04-a323f6d01b66}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

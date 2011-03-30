@@ -7,59 +7,6 @@ open IronJS.Support.Aliases
 module NewContext =
 
   ///
-  module Target = 
-    
-    /// There are three types of compilation
-    /// targets. Eval for code compiled through
-    /// the eval function, Global for code
-    /// that is compiled in the global scope
-    /// and Function for code inside function bodies
-    type Mode
-      = Eval
-      | Global
-      | Function
-
-    /// Record that represents a compilation target
-    /// which is a grouping of the following properties:
-    /// 
-    /// * Ast - The syntax tree to compile
-    /// * Mode - The target mode (eval, global or function)
-    /// * DelegateType - The target delegate signature we're targeting
-    /// * ParameterTypes - The parameter types of the delegate signature's invoke method
-    /// * Environment - The IronJS environment object we're compiling for
-    type T = {
-      Ast: Ast.Tree
-      Mode: Mode
-      DelegateType: Type option
-      ParameterTypes: Type array
-      Environment: Env
-    }
-
-    /// The amount of parameters for this target
-    let parameterCount (t:T) =
-      t.ParameterTypes.Length
-
-    /// Extracts the parameter types from a delegate
-    let private getParameterTypes delegateType =
-      match delegateType with
-      | None -> [||]
-      | Some delegateType -> 
-        delegateType
-        |> FSharp.Reflection.getDelegateArgTypes
-        |> Dlr.ArrayUtils.RemoveFirst
-        |> Dlr.ArrayUtils.RemoveFirst
-
-    /// Creates a new T record
-    let create ast mode delegateType env =
-      {
-        Ast = ast
-        Mode = mode
-        DelegateType = delegateType
-        ParameterTypes = delegateType |> getParameterTypes
-        Environment = env
-      }
-
-  ///
   module Expressions =
     
     ///
@@ -95,7 +42,7 @@ module NewContext =
 
   ///
   type T = {
-    Target: Target.T
+    //Target: Target.T
     Labels: Labels.T
     Expressions: Expressions.T
 
@@ -112,33 +59,109 @@ module NewContext =
     t.Compiler t ast
 
 
-//------------------------------------------------------------------------------
-// Record representing a compilation target
-//------------------------------------------------------------------------------
-type TargetMode
-  = Eval
-  | Global
-  | Function
 
-type Target = {
-  Ast: Ast.Tree
-  TargetMode: TargetMode
-  Delegate: System.Type option
-  Environment: Environment
-} with
-  member x.ParamTypes = 
-    match x.Delegate with 
+///
+module Target = 
+    
+  /// There are three types of compilation
+  /// targets. Eval for code compiled through
+  /// the eval function, Global for code
+  /// that is compiled in the global scope
+  /// and Function for code inside function bodies
+  type Mode
+    = Eval
+    | Global
+    | Function
+
+  /// Record that represents a compilation target
+  /// which is a grouping of the following properties:
+  /// 
+  /// * Ast - The syntax tree to compile
+  /// * Mode - The target mode (eval, global or function)
+  /// * DelegateType - The target delegate signature we're targeting
+  /// * ParameterTypes - The parameter types of the delegate signature's invoke method
+  /// * Environment - The IronJS environment object we're compiling for
+  type T = {
+    Ast: Ast.Tree
+    Mode: Mode
+    DelegateType: Type option
+    ParameterTypes: Type array
+    Environment: Env
+  }
+
+  /// The amount of parameters for this target
+  let parameterCount (t:T) =
+    t.ParameterTypes.Length
+
+  /// Extracts the parameter types from a delegate
+  let getParameterTypes delegateType =
+    match delegateType with
     | None -> [||]
-    | Some delegate' -> 
-      Dlr.ArrayUtils.RemoveFirst(
-        Dlr.ArrayUtils.RemoveFirst(
-          FSharp.Reflection.getDelegateArgTypes delegate'))
+    | Some delegateType -> 
+      delegateType
+      |> FSharp.Reflection.getDelegateArgTypes
+      |> Dlr.ArrayUtils.RemoveFirst
+      |> Dlr.ArrayUtils.RemoveFirst
 
-  member x.ParamType i = x.ParamTypes.[i]
-  member x.ParamCount = x.ParamTypes.Length
-  member x.IsFunction = x.TargetMode = TargetMode.Function
-  member x.IsEval = x.TargetMode = TargetMode.Eval
-  member x.IsGlobal = x.TargetMode = TargetMode.Global
+  /// Creates a new T record
+  let create ast mode delegateType env =
+    {
+      Ast = ast
+      Mode = mode
+      DelegateType = delegateType
+      ParameterTypes = delegateType |> getParameterTypes
+      Environment = env
+    }
+    
+  /// Creates a new T record with Eval mode
+  let createEval ast env =
+    env |> create ast Mode.Eval None
+
+  /// Creates a new T record with Global mode
+  let createGlobal ast env =
+    env |> create ast Mode.Global None
+
+///
+module Labels = 
+
+  ///
+  type T = {
+    Return: Dlr.Label
+    Break: Dlr.Label option
+    Continue: Dlr.Label option
+    BreakLabels: Map<string, Dlr.Label>
+    ContinueLabels: Map<string, Dlr.Label>
+    LabelCompiler: (string -> Dlr.Expr) option
+  }
+
+  ///
+  let setDefaultBreak label (t:T) =
+    {t with Break = Some label}
+
+  ///
+  let addNamedBreak name label (t:T) =
+    let breakLabels = t.BreakLabels |> Map.add name label
+    {t with BreakLabels = breakLabels}
+
+  ///
+  let addLoopLabels name breakLabel continueLabel (t:T) =
+    let t = 
+      {t with 
+        Break = Some breakLabel
+        Continue = Some continueLabel
+      }
+
+    match name with
+    | None -> t
+    | Some name -> 
+      {t with
+        BreakLabels = 
+          t.BreakLabels |> Map.add name breakLabel
+
+        ContinueLabels = 
+          t.ContinueLabels |> Map.add name continueLabel
+      }
+    
 
 ///
 type [<AllowNullLiteral>] EvalTarget() = 
@@ -158,7 +181,7 @@ type [<AllowNullLiteral>] EvalTarget() =
 //------------------------------------------------------------------------------
 type Context = {
   Compiler : Context -> Ast.Tree -> Dlr.Expr
-  Target: Target
+  Target: Target.T
   Scope: Ast.FunctionScope ref
   ReturnLabel: Dlr.Label
   InsideWith: bool
@@ -168,16 +191,13 @@ type Context = {
   LocalScope: Dlr.Expr
   ClosureScope: Dlr.Expr
   DynamicScope: Dlr.Expr
+  Parameters: Dlr.ExprParam array
   ClosureLevel: int
 
   ActiveVariables: Map<string, Ast.NewVariable>
   ActiveCatchScopes: Ast.CatchScope ref list ref
 
-  Break: Dlr.Label option
-  Continue: Dlr.Label option
-  BreakLabels: Map<string, Dlr.Label>
-  ContinueLabels: Map<string, Dlr.Label>
-  Parameters: Dlr.ExprParam array
+  Labels: Labels.T
 } with
   member x.Compile tree = x.Compiler x tree
 
@@ -189,29 +209,5 @@ type Context = {
 
   member x.DynamicLookup = 
     x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
-
-  member x.SetDefaultBreakLabel label =
-    {x with Break = Some label}
-
-  member x.AddNamedBreakLabel name label =
-    {x with BreakLabels = x.BreakLabels.Add(name, label)}
-
-  member x.AddLoopLabels name breakLabel continueLabel =
-    let x = 
-      {x with 
-        Break = Some breakLabel
-        Continue = Some continueLabel
-      }
-
-    match name with
-    | None -> x
-    | Some name -> 
-      {x with
-        BreakLabels = 
-          x.BreakLabels |> Map.add name breakLabel
-
-        ContinueLabels = 
-          x.ContinueLabels |> Map.add name continueLabel
-      }
 
 type Ctx = Context

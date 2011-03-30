@@ -38,7 +38,11 @@ module ControlFlow =
   let doWhile' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
     let test = TypeConverter.ToBoolean (ctx.Compile test)
-    let body = (ctx.AddLoopLabels label break' continue').Compile body
+
+    let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
+    let ctx = {ctx with Labels = labels}
+
+    let body = ctx.Compile body
     Dlr.doWhile test body break' continue'
 
   //----------------------------------------------------------------------------
@@ -46,7 +50,11 @@ module ControlFlow =
   let while' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
     let test = TypeConverter.ToBoolean (ctx.Compile test)
-    let body = (ctx.AddLoopLabels label break' continue').Compile body
+
+    let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
+    let ctx = {ctx with Labels = labels}
+
+    let body = ctx.Compile body
     Dlr.while' test body break' continue'
 
   //----------------------------------------------------------------------------
@@ -56,7 +64,11 @@ module ControlFlow =
     let init = ctx.Compile init
     let test = ctx.Compile test
     let incr = ctx.Compile incr
-    let body = (ctx.AddLoopLabels label break' continue').Compile body
+
+    let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
+    let ctx = {ctx with Labels = labels}
+
+    let body = ctx.Compile body
     Dlr.for' init test incr body break' continue'
     
   //----------------------------------------------------------------------------
@@ -74,6 +86,9 @@ module ControlFlow =
 
     let indexCurrent = Dlr.paramT<uint32> "indexCurrent"
     let indexLength = Dlr.paramT<uint32> "indexLength"
+
+    let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
+    let ctx = {ctx with Labels = labels}
 
     let tempVars = 
       [ pair; 
@@ -110,7 +125,7 @@ module ControlFlow =
               (Binary.assign ctx target 
                 (Ast.DlrExpr (Dlr.castT<double> indexCurrent)))))
 
-          (body |> (ctx.AddLoopLabels label break' continue').Compile)
+          (body |> ctx.Compile)
 
           (Dlr.if' 
             (Dlr.eq propertyState Dlr.false')
@@ -126,12 +141,12 @@ module ControlFlow =
   let continue' (ctx:Ctx) (label:string option) =
     match label with
     | None -> 
-      match ctx.Continue with
+      match ctx.Labels.Continue with
       | Some label -> Dlr.continue' label
       | _ -> Error.CompileError.Raise(Error.missingContinue)
 
     | Some label ->
-      match ctx.ContinueLabels.TryFind label with
+      match ctx.Labels.ContinueLabels .TryFind label with
       | Some label -> Dlr.continue' label
       | _ -> Error.CompileError.Raise(Error.missingLabel label)
 
@@ -140,12 +155,12 @@ module ControlFlow =
   let break' (ctx:Ctx) (label:string option) =
     match label with
     | None -> 
-      match ctx.Break with
+      match ctx.Labels.Break with
       | Some label -> Dlr.break' label
       | _ -> Error.CompileError.Raise(Error.missingBreak)
 
     | Some label ->
-      match ctx.BreakLabels.TryFind label with
+      match ctx.Labels.BreakLabels .TryFind label with
       | Some label -> Dlr.continue' label
       | _ -> Error.CompileError.Raise(Error.missingLabel label)
 
@@ -157,7 +172,10 @@ module ControlFlow =
     let valueVar = Dlr.paramT<BV> "~value"
 
     let breakLabel = Dlr.labelBreak()
-    let ctx = ctx.SetDefaultBreakLabel breakLabel
+    
+    let labels = ctx.Labels |> Labels.setDefaultBreak breakLabel
+    let ctx = {ctx with Labels = labels}
+
     let defaultJump = ref (Dlr.jump breakLabel)
     let defaultFound = ref false
 
@@ -229,5 +247,8 @@ module ControlFlow =
   // 12.12 labelled statements
   let label (ctx:Ctx) label tree =
     let target = Dlr.labelVoid label
-    let ctx = ctx.AddNamedBreakLabel label target
+
+    let labels = ctx.Labels |> Labels.addNamedBreak label target
+    let ctx = {ctx with Labels = labels}
+
     Dlr.block [] [ctx.Compile tree; Dlr.labelExprVoid target]

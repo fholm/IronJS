@@ -146,7 +146,9 @@ module Object =
 
     ensureObject ctx object'
       (Property.get !!!name)
-      (fun x -> Constants.Boxed.undefined)
+      (fun x -> 
+        Constants.Boxed.undefined
+      )
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =

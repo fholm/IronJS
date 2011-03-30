@@ -64,7 +64,7 @@ module Scope =
                     ArgumentsLinkArray.Locals, storageIndex
                 )
               $ List.sortBy (fun (_, i) -> i)
-              $ Seq.take ctx.Target.ParamCount
+              $ Seq.take (ctx.Target $ Target.parameterCount)
               $ Array.ofSeq
           
           (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
@@ -99,16 +99,18 @@ module Scope =
 
   /// Initializes the private scope storage
   let private initPrivateScope (ctx:Ctx) =
-    if ctx.Target.IsEval then Dlr.void'
-    else
+    match ctx.Target.Mode with
+    | Target.Mode.Eval -> Dlr.void'
+    | _ ->
       match ctx.Scope $ Ast.NewVars.privateCount with
       | 0 -> Dlr.void'
       | n -> ctx.LocalScope .= Dlr.newArrayBoundsT<BV> !!!n
 
   /// Initializes the shared scope storage
   let private initSharedScope (ctx:Ctx) =
-    if ctx.Target.IsEval then Dlr.void'
-    else
+    match ctx.Target.Mode with
+    | Target.Mode.Eval -> Dlr.void'
+    | _ ->
       match ctx.Scope $ Ast.NewVars.sharedCount with
       | 0 -> Dlr.assign ctx.ClosureScope ctx.FunctionClosureScope
       | n -> 
@@ -123,7 +125,9 @@ module Scope =
 
   ///
   let private initVariables (ctx:Ctx) =
-    let parameterCount = ctx.Target.ParamCount
+    let parameterCount = 
+      ctx.Target |> Target.parameterCount
+
     let parameterMap = 
       ctx.Scope 
       |> Ast.NewVars.parameterNames 

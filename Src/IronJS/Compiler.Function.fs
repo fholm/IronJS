@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Compiler
 
 open System
+
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
@@ -10,21 +11,23 @@ module Function =
 
   let closureScope expr = Dlr.propertyOrField expr "ScopeChain"
   let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
-
-  //----------------------------------------------------------------------------
-  let applyCompiler (compiler:Target -> Delegate) target (_:FunctionObject) delegate' =
-    compiler {target with Delegate = Some delegate'}
   
   //----------------------------------------------------------------------------
-  let makeCompiler ctx compiler tree =
+  let createCompiler (compiler:Target.T -> Delegate) ast ctx =
     let target = {
-      Ast = tree
-      TargetMode = TargetMode.Function
-      Delegate = None
-      Environment = ctx.Target.Environment
+      Target.T.Ast = ast
+      Target.T.Mode = Target.Mode.Function
+      Target.T.DelegateType = None
+      Target.T.Environment = ctx.Target.Environment
+      Target.T.ParameterTypes = [||]
     }
-
-    applyCompiler compiler target
+    
+    fun (f:FO) delegateType ->
+      compiler {
+        target with 
+          DelegateType = Some delegateType
+          ParameterTypes = delegateType |> Some |> Target.getParameterTypes
+        }
     
   //----------------------------------------------------------------------------
   let create ctx compiler (scope:Ast.Scope ref) ast =
@@ -32,7 +35,7 @@ module Function =
     let scope = !scope
 
     if ctx.Target.Environment.HasCompiler scope.Id |> not then
-      let compiler = (makeCompiler ctx compiler ast)
+      let compiler = ctx |> createCompiler compiler ast
       ctx.Target.Environment.AddCompiler(scope.Id, compiler)
 
     let funcArgs = [

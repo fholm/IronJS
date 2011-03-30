@@ -130,8 +130,8 @@ module Core =
       eval |> Function.invokeFunction ctx ctx.This [target]
     ]
 
-  //----------------------------------------------------------------------------
-  and compile (target:Target) =
+  ///
+  and compile (target:Target.T) =
 
     //Extract scope and ast from top level ast node
     let scope, ast =
@@ -139,7 +139,7 @@ module Core =
       | Ast.FunctionFast(_, scope, ast) -> 
         let scope = ref !scope
 
-        match target.Delegate with
+        match target.DelegateType with
         | None -> ()
         | Some delegate' ->
           let argTypes = 
@@ -177,10 +177,16 @@ module Core =
       Scope = scope
       ReturnLabel = Dlr.labelVoid "~return"
 
-      Break = None
-      Continue = None
-      BreakLabels = Map.empty
-      ContinueLabels = Map.empty
+      Labels = 
+        {
+          Labels.T.Return = Dlr.labelVoid "~return"
+          Labels.T.Break = None
+          Labels.T.Continue = None
+          Labels.T.BreakLabels = Map.empty
+          Labels.T.ContinueLabels = Map.empty
+          Labels.T.LabelCompiler = None
+        }
+
       ClosureLevel = scope |> Ast.NewVars.closureLevel
 
       ActiveVariables = (!scope).Variables
@@ -192,11 +198,12 @@ module Core =
       ClosureScope = Dlr.paramT<Scope> "~shared"
       DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
 
-      Parameters = target.ParamTypes |> Seq.mapi Dlr.paramI |> Seq.toArray
+      Parameters = target.ParameterTypes |> Array.mapi Dlr.paramI
     }
 
     //Initialize scope
-    let scopeInit, ctx = Scope.init ctx
+    let scopeInit, ctx = 
+      Scope.init ctx
     
     //Initialize hoisted function definitions
     let initializeFunction (_, func) =
@@ -220,61 +227,107 @@ module Core =
       (!scope).Functions
       |> Map.toSeq
       |> Seq.map initializeFunction
-      |> Dlr.blockSimple
+      |> Dlr.block []
 
-    //Return expression
-    let returnExpr = 
-      if ctx.Target.IsFunction 
-        then [
-            Utils.assign ctx.EnvReturnBox Utils.Constants.Boxed.undefined;
-            Dlr.returnVoid ctx.ReturnLabel;
-            Dlr.labelExprVoid ctx.ReturnLabel; 
-            ctx.EnvReturnBox;
-          ]
+    // The internal variables is either none
+    // incase of eval (because they are passed in
+    // as parameters when the eval code is executed) 
+    // or it's the private, shared and dynamic scope objects
+    // which are created on function initialization
+    let internalVariables = 
+      match ctx.Target.Mode with
+      | Target.Mode.Eval -> [||]
+      | _ ->
+        [|
+          ctx.LocalScope :?> Dlr.Parameter
+          ctx.ClosureScope :?> Dlr.Parameter
+          ctx.DynamicScope :?> Dlr.Parameter
+        |]
 
-        else []
-
-    //Local internal variables
-    let locals = 
-      if ctx.Target.IsEval then Seq.empty
-      else
-        let locals = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope;]
-        locals |> Seq.cast<Dlr.ExprParam> 
-
-    //Main function body
+    // This is the main function body, which 
+    // includes initialization of the scope,
+    // functions in the scope and the function body
     let functionBody = 
-      let body = [scopeInit; functionsInit; ctx.Compile ast] @ returnExpr
-      Dlr.block locals body
+      Dlr.block internalVariables [|
+        scopeInit
+        functionsInit
+        ctx.Compile ast
+      |]
 
-    //Parameters
-    let commonParams = [ctx.Function; ctx.This] |> Seq.cast<Dlr.ExprParam>
-    let specificParams = 
-      if ctx.Target.IsEval then 
-        let evalParams = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope]
-        evalParams |> Seq.cast<Dlr.ExprParam>
+    // If the this is function code
+    // we have to append a couple 
+    // of expressions that deal with
+    // the (possible) return statement
+    let functionBody = 
+      match ctx.Target.Mode with
+      | Target.Mode.Function ->
+        [|
+          functionBody
+          Utils.assign ctx.EnvReturnBox Utils.Constants.Boxed.undefined
+          Dlr.returnVoid ctx.ReturnLabel
+          Dlr.labelExprVoid ctx.ReturnLabel
+          ctx.EnvReturnBox
+        |] |> Dlr.block []
 
-      else 
-        ctx.Parameters |> Seq.ofArray
+      | _ -> 
+        functionBody
 
-    let parameters = Seq.append commonParams specificParams
+    // The two internal parameters that
+    // always are present in every function
+    // compiled by the IronJS compiler
+    let internalParameters = 
+      [|
+        ctx.Function :?> Dlr.Parameter
+        ctx.This :?> Dlr.Parameter
+      |]
 
-    //Build lambda
-    let lambda = 
-      match target.Delegate with 
-      | Some d -> Dlr.lambda d parameters functionBody
-      | _ -> Dlr.lambdaAuto parameters functionBody
+    // External parameters is either the 
+    // parent scopes scope objects or 
+    // the parameters the function is called with
+    let externalParameters = 
+      match ctx.Target.Mode with
+      | Target.Mode.Eval ->
+        [| 
+          ctx.LocalScope :?> Dlr.Parameter
+          ctx.ClosureScope :?> Dlr.Parameter
+          ctx.DynamicScope :?> Dlr.Parameter
+        |]
+
+      | _ ->
+        ctx.Parameters
+
+    // Append the external parameters to the internal ones
+    // which forms the complete parameters we want to compile
+    // with, in case of target.DelegateType being present
+    // these have to match the parameter signature of the delegate
+    let allParameters =
+      Array.append internalParameters externalParameters
+
+    // Construct the lamda expression, if a DelegateType is
+    // present in the target object all of the parameters 
+    // and the return type of the constructed expression
+    // must match the lambda signature, if it's not we
+    // just .lambdaAuto which detects it automatically, but
+    // forces us to use .DynamicInvoke when calling it
+    let lambdaExpression = 
+      
+      match target.DelegateType with 
+      | Some delegateType -> 
+        Dlr.lambda delegateType allParameters functionBody
+
+      | _ -> 
+        Dlr.lambdaAuto allParameters functionBody
       
     #if DEBUG
-    lambda |> Support.Debug.printExpr
+    lambdaExpression 
+      |> Support.Debug.printExpr
     #endif
 
-    lambda.Compile()
+    // The last step is to compile the lambda expression
+    // which causes the DLR to generate the IL and return
+    // a compiled delegate which we can call .Invoke on
+    lambdaExpression.Compile()
       
-  let compileAsGlobal env tree =
-    compile {
-      TargetMode = TargetMode.Global
-      Ast = tree
-      Delegate = None
-      Environment = env
-    }
-
+  ///
+  let compileAsGlobal env ast =
+    env |> Target.create ast Target.Mode.Global None |> compile

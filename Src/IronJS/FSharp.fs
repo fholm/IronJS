@@ -53,8 +53,8 @@ module FSharp =
     ///
     let skip n (array:'a array) =
       if array.Length >= n then
-        let newArray = Array.zeroCreate<'a>(array.Length - 2)
-        System.Array.Copy(array, 2, newArray, 0, newArray.Length)
+        let newArray = Array.zeroCreate<'a>(array.Length - n)
+        System.Array.Copy(array, n, newArray, 0, newArray.Length)
         newArray
 
       else

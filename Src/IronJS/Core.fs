@@ -1959,17 +1959,25 @@ and UserError(value:BV, line:int, column:int) =
   member x.Line = line
   member x.Column = column
 
-/// Exception used to jump out of
+/// Exception used to break out of
 /// a finally block, which the CLR
-/// doesn't allow
-and FinallyJump(labelId:int) =
+/// doesn't allow.
+and FinallyBreakJump(labelId:int) =
   inherit Exception()
-
-/// Exception used to return out
-/// of a finally block, which the
-/// CLR doesn't allow
-and FinallyReturnJump(labelId, value:BV) =
-  inherit FinallyJump(labelId)
+  member x.LabelId = labelId
+  
+/// Exception used to continue out of
+/// a finally block, which the CLR
+/// doesn't allow.
+and FinallyContinueJump(labelId:int) =
+  inherit Exception()
+  member x.LabelId = labelId
+  
+/// Exception used to return out of
+/// a finally block, which the CLR
+/// doesn't allow.
+and FinallyReturnJump(value:BV) =
+  inherit Exception()
   member x.Value = value
 
 ///

@@ -14,9 +14,18 @@ let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
 let src = @"
-var x = '\n\
-\n\
-';
+function foo() {
+  while(true) {
+    try {
+    } finally {
+      print('breaking');
+      break;
+    }
+  } 
+  print('broken out of loop');
+}
+
+foo();
 "
 
 ctx |> Ijs.execute src

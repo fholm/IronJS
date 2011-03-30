@@ -5,12 +5,14 @@ open System
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
+open IronJS.Compiler.Context
+open IronJS.Support.CustomOperators
 
 module Exception =
 
   ///
   let throw (ctx:Ctx) expr =
-    Dlr.throwT<UserError> [ctx.Compile expr |> Utils.box; !!!(-1); !!!(-1)]
+    Dlr.throwT<UserError> [ctx.Compile expr $ Utils.box; !!!(-1); !!!(-1)]
       
   ///
   let private compileCatch (ctx:Ctx) catch =
@@ -40,7 +42,7 @@ module Exception =
           {ctx with 
             ClosureLevel = catch.ClosureLevel
             CatchScopes = ref catch.CatchScopes
-            Variables = ctx.Variables |> Map.add catch.Name sharedVariable
+            Variables = ctx.Variables $ Map.add catch.Name sharedVariable
           }
 
         let catchBlock =
@@ -60,7 +62,7 @@ module Exception =
                 Identifier.setValue ctx name (caughtExn .-> "Value")
 
                 // Compile the javascript catch block
-                ctx.Compile ast |> Dlr.castVoid
+                ctx $ compile ast $ Dlr.castVoid
               ]
 
             let restoreSharedScope =
@@ -70,7 +72,7 @@ module Exception =
                   Dlr.index0 ctx.Parameters.SharedScope .-> "Scope"
               ]
 
-            [Dlr.tryFinally catchBlock restoreSharedScope] |> Seq.ofList
+            [Dlr.tryFinally catchBlock restoreSharedScope] $ Seq.ofList
           )
           
         Dlr.catchVar caughtExn catchBlock
@@ -78,21 +80,102 @@ module Exception =
     | _ -> failwith "Que?"
 
   ///
-  let private finally' (ctx:Ctx) ast =
-    Dlr.castVoid (ctx.Compile ast)
+  let private returnCompiler expr =
+    Dlr.throwT<FinallyReturnJump> [Utils.box expr]
+
+  ///
+  let private jumpCompiler type' availableLabels usedLabels (name:string) (compareTo:Dlr.Label) =
+    match availableLabels $ Map.tryFind name with
+    | None -> None
+    | Some (index:int, label:Dlr.Label) ->
+      if FSharp.Utils.refEq label compareTo then 
+        usedLabels := !usedLabels $ Map.add index label
+        Dlr.throw type' [!!!index] $ Some
+
+      else 
+        None
+
+  ///
+  let private buildCatchJumpBlock type' usedLabels =
+    let jumpExn = Dlr.param "~jumpExn" type' 
+    let jumpLabelId = jumpExn .-> "LabelId"
+    let jumpList = 
+      [
+        for (id:int), label in !usedLabels $ Map.toList ->
+          Dlr.if' (jumpLabelId .== !!!id) (Dlr.jump label)
+      ] @ [Dlr.throwValue jumpExn] 
+
+    jumpList $ Dlr.block [] $ Dlr.catchVar jumpExn
+
+  ///
+  let private finally' tryBlock catchBlock finallyAst (ctx:Ctx) =
+    let getActiveLabels labels default' =
+      let labels = 
+        match default' with
+        | None -> labels
+        | Some label -> labels |> Map.add "~default" label
+
+      labels
+      |> Map.toList
+      |> List.mapi (fun i (name, label) -> name, (i, label))
+      |> Map.ofList
+
+    let activeBreakLabels = getActiveLabels ctx.Labels.BreakLabels ctx.Labels.Break
+    let activeContinueLabels = getActiveLabels ctx.Labels.ContinueLabels ctx.Labels.Continue
+
+    let usedBreakLabels = ref Map.empty
+    let usedContinueLables = ref Map.empty
+
+    let returnCompiler =
+      match ctx.Labels.ReturnCompiler with
+      | None -> Some returnCompiler
+      | returnCompiler -> returnCompiler
+
+    let breakCompilers =
+      let compiler = jumpCompiler typeof<FinallyBreakJump> activeBreakLabels usedBreakLabels
+      compiler :: ctx.Labels.BreakCompilers
+
+    let continueCompilers =
+      let compiler = jumpCompiler typeof<FinallyContinueJump> activeContinueLabels usedContinueLables
+      compiler :: ctx.Labels.ContinueCompilers
+
+    let finallyCtx =
+      let labels = 
+        {ctx.Labels with 
+          ReturnCompiler = returnCompiler
+          BreakCompilers = breakCompilers
+          ContinueCompilers = continueCompilers
+        }
+
+      {ctx with Labels = labels}
+
+    let finallyBlock = finallyCtx $ compile finallyAst $ Dlr.castVoid
+    let tryCatchFinally = Dlr.tryCatchFinally tryBlock catchBlock finallyBlock
+
+    let breakJumpBlock = buildCatchJumpBlock typeof<FinallyBreakJump> usedBreakLabels
+    let continueJumpBlock = buildCatchJumpBlock typeof<FinallyContinueJump> usedContinueLables
+
+    let jumpCatchBlocks =
+      match ctx.Labels.ReturnCompiler with
+      | Some _ -> [breakJumpBlock; continueJumpBlock]
+      | None ->
+        let returnExn = Dlr.paramT<FinallyReturnJump> "~returnExn"
+        let value = returnExn .-> "Value"
+        let returnExpr = Function.return' ctx (Ast.DlrExpr value)
+        [Dlr.catchVar returnExn returnExpr; breakJumpBlock; continueJumpBlock]
+
+    Dlr.tryCatch tryCatchFinally jumpCatchBlocks
 
   ///
   let try' (ctx:Ctx) body catch final =
-    let body = 
-      ctx.Compile body |> Dlr.castVoid
+    let tryBlock = 
+      ctx.Compile body $ Dlr.castVoid
 
-    let catch = 
+    let catchBlock = 
       match catch with
       | None -> []
       | Some(tree) -> [compileCatch ctx tree]
 
     match final with
-    | None -> Dlr.tryCatch body catch
-    | Some final -> 
-      let finally' = final |> finally' ctx
-      Dlr.tryCatchFinally body catch finally'
+    | None -> Dlr.tryCatch tryBlock catchBlock
+    | Some finallyAst -> ctx $ finally' tryBlock catchBlock finallyAst

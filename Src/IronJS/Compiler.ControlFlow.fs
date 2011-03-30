@@ -152,14 +152,37 @@ module ControlFlow =
       | Some label -> Dlr.continue' label
       | _ -> Error.CompileError.Raise(Error.missingLabel label)
 
+  ///
+  let compileLabel compilers name label =
+    
+    let rec compileLabel compilers prev =
+      match compilers with
+      | [] -> prev
+      | x::xs ->
+        match x name label with
+        | None -> prev
+        | some -> compileLabel xs some
+
+    compileLabel compilers None
+    
+    
   //----------------------------------------------------------------------------
   // 12.8 break
   let break' (ctx:Ctx) (label:string option) =
     match label with
     | None -> 
-      match ctx.Labels.Break with
-      | Some label -> Dlr.break' label
-      | _ -> Error.CompileError.Raise(Error.missingBreak)
+      
+      let label = 
+        match ctx.Labels.Break with
+        | Some label -> label
+        | _ -> Error.CompileError.Raise(Error.missingBreak)
+
+      match ctx.Labels.BreakCompilers with
+      | [] -> Dlr.break' label
+      | compilers ->
+        match compileLabel compilers "~default" label with
+        | None -> failwith "Failed to compile label"
+        | Some expr -> expr
 
     | Some label ->
       match ctx.Labels.BreakLabels .TryFind label with

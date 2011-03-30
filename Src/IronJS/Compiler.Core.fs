@@ -196,7 +196,9 @@ module Core =
 
           // Currently not used, indented for solving the 
           // finally + break/continue/return issue
-          Labels.T.LabelCompiler = None
+          Labels.T.BreakCompilers = List.empty
+          Labels.T.ContinueCompilers = List.empty
+          Labels.T.ReturnCompiler = None
         }
 
       Context.T.Parameters = 

@@ -83,7 +83,10 @@ module Labels =
     Continue: Dlr.Label option
     BreakLabels: Map<string, Dlr.Label>
     ContinueLabels: Map<string, Dlr.Label>
-    LabelCompiler: (string -> Dlr.Expr) option
+
+    BreakCompilers: (string -> Dlr.Label -> Dlr.Expr option) list
+    ContinueCompilers: (string -> Dlr.Label -> Dlr.Expr option) list
+    ReturnCompiler: (Dlr.Expr -> Dlr.Expr) option
   }
 
   ///

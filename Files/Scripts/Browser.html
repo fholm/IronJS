@@ -5,7 +5,19 @@
             $ERROR = alert;
 
             (function () {
-                
+                foo: while(true) {
+                    try {
+                        
+                    } finally {
+                        bar: while(false) {
+                            try {
+                                break foo;
+                            } finally {
+                                break bar;
+                            }
+                        }
+                    }
+                }
             })();
 
         </script>

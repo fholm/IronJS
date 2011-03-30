@@ -166,6 +166,11 @@ module Function =
   //----------------------------------------------------------------------------
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
-    Dlr.blockSimple [
-      (Utils.assign ctx.ReturnBox (ctx.Compile tree))
-      (Dlr.returnVoid ctx.Labels.Return)]
+    match ctx.Labels.ReturnCompiler with
+    | None ->
+      Dlr.blockSimple [
+        (Utils.assign ctx.ReturnBox (ctx.Compile tree))
+        (Dlr.returnVoid ctx.Labels.Return)]
+
+    | Some returnCompiler ->
+      tree |> ctx.Compile |> returnCompiler

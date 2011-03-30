@@ -5,6 +5,7 @@ open IronJS
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 open IronJS.Compiler
+open IronJS.Compiler.Context
 
 module ControlFlow =
 
@@ -12,8 +13,8 @@ module ControlFlow =
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
     let test = TC.ToBoolean (ctx $ Context.compile test)
-    let ifTrue = ctx $ Context.compile ifTrue
-    let ifFalse = ctx $ Context.compile ifFalse
+    let ifTrue = ctx $ compile ifTrue
+    let ifFalse = ctx $ compile ifFalse
 
     let ifTrue, ifFalse =
       if ifTrue.Type <> ifFalse.Type 
@@ -25,11 +26,11 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 12.5 if
   let if' (ctx:Ctx) test ifTrue ifFalse =
-    let test = TC.ToBoolean (ctx $ Context.compile test)
-    let ifTrue = Dlr.castVoid (ctx $ Context.compile ifTrue)
+    let test = TC.ToBoolean (ctx $ compile test)
+    let ifTrue = Dlr.castVoid (ctx $ compile ifTrue)
     match ifFalse with
     | None -> Dlr.if' test ifTrue
-    | Some ifFalse -> Dlr.ifElse test ifTrue (ctx $ Context.compile ifFalse)
+    | Some ifFalse -> Dlr.ifElse test ifTrue (ctx $ compile ifFalse)
 
   //----------------------------------------------------------------------------
   // 12.6.1 do-while
@@ -99,7 +100,7 @@ module ControlFlow =
     Dlr.block tempVars [
       (Dlr.assign pair 
         (Dlr.call 
-          (TypeConverter.ToObject(ctx.Env, object' |> ctx.Compile)) "CollectProperties" []))
+          (TypeConverter.ToObject(ctx.Env, ctx $ Context.compile object')) "CollectProperties" []))
 
       (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
       (Dlr.assign propertyState Dlr.true')
@@ -195,7 +196,7 @@ module ControlFlow =
           let body = 
             Dlr.block [] [
               Dlr.labelExprVoid label
-              ctx.Compile body
+              ctx $ Context.compile body
             ]
 
           test, body
@@ -215,7 +216,7 @@ module ControlFlow =
           let body =
             Dlr.block [] [
               Dlr.labelExprVoid label
-              ctx.Compile body
+              ctx $ compile body
             ]
 
           Dlr.void', body
@@ -252,4 +253,4 @@ module ControlFlow =
     let labels = ctx.Labels |> Labels.addNamedBreak label target
     let ctx = {ctx with Labels = labels}
 
-    Dlr.block [] [ctx.Compile tree; Dlr.labelExprVoid target]
+    Dlr.block [] [ctx $ compile tree; Dlr.labelExprVoid target]

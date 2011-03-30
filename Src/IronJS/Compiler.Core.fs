@@ -8,7 +8,7 @@ open IronJS.Dlr.Operators
 
 module Core =
 
-  ///
+  /// 
   let compileUnary ctx op ast =
     match op with
     | Ast.UnaryOp.Delete -> Unary.delete ctx ast
@@ -24,7 +24,7 @@ module Core =
     | Ast.UnaryOp.Minus -> Unary.minus ctx ast
     | _ -> failwithf "Invalid unary op %A" op
 
-  ///
+  /// 
   let compileEval (ctx:Ctx) evalTarget =
     let eval = Dlr.paramT<BoxedValue> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
@@ -58,7 +58,7 @@ module Core =
       eval |> Function.invokeFunction ctx ctx.Parameters.This [target]
     ]
 
-  //----------------------------------------------------------------------------
+  ///
   let rec compileAst (ctx:Ctx) ast =
     match ast with
     //Constants
@@ -128,9 +128,11 @@ module Core =
   ///
   and compile (target:Target.T) =
 
-    //Extract scope and ast from top level ast node
     let scope, ast =
       
+      // Extract scope and ast from top level ast node,
+      // which must be an Ast.FastFunction node
+
       match target.Ast with
       | Ast.FunctionFast(_, s, ast) -> 
 
@@ -142,7 +144,7 @@ module Core =
         | Some delegate' ->
           
           // Extract argument types, and skip the two first because
-          // they are the two internal Function and This objects
+          // they are the two internal Function and This parameters
           let argTypes = 
             delegate' |> FSharp.Reflection.getDelegateArgTypes
                       |> FSharp.Array.skip 2
@@ -175,7 +177,7 @@ module Core =
         failwith "Top AST node must be Tree.FastFunction"
 
     //Context
-    let ctx = {
+    let rec ctx = {
       Context.T.Target = target
       Context.T.Compiler = compileAst
       Context.T.InsideWith = false

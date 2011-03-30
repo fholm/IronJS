@@ -170,7 +170,7 @@ module Context =
     member x.Compile ast = x.Compiler x ast
 
   let inline compile (ast:Ast.Tree) (t:T) =
-    ast |> t.Compiler t
+    t.Compiler t ast
 
 type Ctx = Context.T
 

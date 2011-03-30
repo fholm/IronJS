@@ -13,6 +13,10 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
-let src = @""
+let src = @"
+var x = '\n\
+\n\
+';
+"
 
 ctx |> Ijs.execute src

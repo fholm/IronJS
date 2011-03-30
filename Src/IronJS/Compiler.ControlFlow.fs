@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 open IronJS.Compiler
 
 module ControlFlow =
@@ -10,9 +11,9 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
-    let test = TC.ToBoolean (ctx.Compile test)
-    let ifTrue = ctx.Compile ifTrue
-    let ifFalse = ctx.Compile ifFalse
+    let test = TC.ToBoolean (ctx $ Context.compile test)
+    let ifTrue = ctx $ Context.compile ifTrue
+    let ifFalse = ctx $ Context.compile ifFalse
 
     let ifTrue, ifFalse =
       if ifTrue.Type <> ifFalse.Type 
@@ -24,11 +25,11 @@ module ControlFlow =
   //----------------------------------------------------------------------------
   // 12.5 if
   let if' (ctx:Ctx) test ifTrue ifFalse =
-    let test = TC.ToBoolean (ctx.Compile test)
-    let ifTrue = Dlr.castVoid (ctx.Compile ifTrue)
+    let test = TC.ToBoolean (ctx $ Context.compile test)
+    let ifTrue = Dlr.castVoid (ctx $ Context.compile ifTrue)
     match ifFalse with
     | None -> Dlr.if' test ifTrue
-    | Some ifFalse -> Dlr.ifElse test ifTrue (ctx.Compile ifFalse)
+    | Some ifFalse -> Dlr.ifElse test ifTrue (ctx $ Context.compile ifFalse)
 
   //----------------------------------------------------------------------------
   // 12.6.1 do-while
@@ -37,38 +38,38 @@ module ControlFlow =
 
   let doWhile' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TypeConverter.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx $ Context.compile test)
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
 
-    let body = ctx.Compile body
+    let body = ctx $ Context.compile body
     Dlr.doWhile test body break' continue'
 
   //----------------------------------------------------------------------------
   // 12.6.2 while
   let while' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TypeConverter.ToBoolean (ctx.Compile test)
+    let test = TypeConverter.ToBoolean (ctx $ Context.compile test)
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
 
-    let body = ctx.Compile body
+    let body = ctx $ Context.compile body
     Dlr.while' test body break' continue'
 
   //----------------------------------------------------------------------------
   // 12.6.3 for
   let for' (ctx:Ctx) label init test incr body =
     let break', continue' = loopLabels()
-    let init = ctx.Compile init
-    let test = ctx.Compile test
-    let incr = ctx.Compile incr
+    let init = ctx $ Context.compile init
+    let test = ctx $ Context.compile test
+    let incr = ctx $ Context.compile incr
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
 
-    let body = ctx.Compile body
+    let body = ctx $ Context.compile body
     Dlr.for' init test incr body break' continue'
     
   //----------------------------------------------------------------------------

@@ -5,28 +5,6 @@ open IronJS
 open IronJS.Dlr.Operators
 open IronJS.Support.Aliases
 
-module NewContext =
-
-  ///
-  type T = {
-    //Target: Target.T
-    //Labels: Labels.T
-    //Expressions: Expressions.T
-
-    Compiler: T -> Ast.Tree -> Dlr.Expr
-    FunctionScope: Ast.FunctionScope ref
-    IsInsideWithStatement: bool
-
-    Variables: Map<string, Ast.NewVariable>
-    CatchScopes: Ast.CatchScope ref list ref
-  }
-
-  ///
-  let inline compile ast (t:T) =
-    t.Compiler t ast
-
-
-
 ///
 module Target = 
     
@@ -163,6 +141,33 @@ module Parameters =
     (t |> environment) .-> "Return"
 
 ///
+module Context = 
+  
+  type T = {
+    Compiler : T -> Ast.Tree -> Dlr.Expr
+    Scope: Ast.FunctionScope ref
+    InsideWith: bool
+    ClosureLevel: int
+
+    ActiveVariables: Map<string, Ast.NewVariable>
+    ActiveCatchScopes: Ast.CatchScope ref list ref
+  
+    Target: Target.T
+    Labels: Labels.T
+    Parameters: Parameters.T
+  } with
+    member x.Env = x.Parameters |> Parameters.environment
+    member x.Globals = x.Parameters |> Parameters.globals
+    member x.ReturnBox = x.Parameters |> Parameters.returnBox
+    member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
+    member x.Compile ast = x.Compiler x ast
+
+  let inline compile (ast:Ast.Tree) (t:T) =
+    ast |> t.Compiler t
+
+type Ctx = Context.T
+
+///
 type [<AllowNullLiteral>] EvalTarget() = 
   [<DefaultValue>] val mutable Target : BoxedValue
   [<DefaultValue>] val mutable GlobalLevel : int
@@ -174,27 +179,3 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable LocalScope : Scope
   [<DefaultValue>] val mutable ClosureScope : Scope
   [<DefaultValue>] val mutable DynamicScope : DynamicScope
-    
-//------------------------------------------------------------------------------
-// Record representing a compilation context
-//------------------------------------------------------------------------------
-type Context = {
-  Compiler : Context -> Ast.Tree -> Dlr.Expr
-  Scope: Ast.FunctionScope ref
-  InsideWith: bool
-  ClosureLevel: int
-  ActiveVariables: Map<string, Ast.NewVariable>
-  ActiveCatchScopes: Ast.CatchScope ref list ref
-  
-  Target: Target.T
-  Labels: Labels.T
-  Parameters: Parameters.T
-} with
-  member x.Env = x.Parameters.Function .-> "Env"
-  member x.Globals = x.Env .-> "Globals"
-  member x.ReturnBox = x.Env .-> "Return"
-
-  member x.Compile tree = x.Compiler x tree
-  member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
-
-type Ctx = Context

@@ -218,7 +218,7 @@ module Binary =
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =
-  let assign (ctx:Context) ltree rtree =
+  let assign (ctx:Ctx) ltree rtree =
     let value = ctx.Compile rtree
 
     match ltree with

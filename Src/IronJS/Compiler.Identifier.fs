@@ -57,7 +57,7 @@ module Identifier =
     Dlr.callStaticT<DynamicScopeHelpers> "Set" args
 
   ///
-  let isGlobal ctx name =
+  let isGlobal (ctx:Ctx) name =
     ctx.Scope |> Ast.NewVars.hasVariable name |> not
         
   /// 

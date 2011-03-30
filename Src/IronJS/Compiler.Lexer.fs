@@ -815,8 +815,15 @@ module Lexer =
           | '6' -> s |> readOctalEscape 6 |> buffer s
           | '7' -> s |> readOctalEscape 7 |> buffer s
 
+          //Escaped line terminator are not included in the string
+          | c when c |> isLineTerminator ->
+            // Handle escaped \r\n
+            if c = '\r' && s |> trypeek '\n'
+              then s |> advance
+            
           //Any other character
-          | c -> c |> buffer s
+          | c ->
+            c |> buffer s
 
           s |> stringLiteral
 

@@ -9,7 +9,7 @@ open IronJS.Dlr.Operators
 module Core =
 
   //----------------------------------------------------------------------------
-  let rec private compileAst (ctx:Context) ast =
+  let rec private compileAst (ctx:Ctx) ast =
     match ast with
     //Constants
     | Ast.Null -> Dlr.null'
@@ -97,7 +97,7 @@ module Core =
     | Ast.UnaryOp.Minus -> Unary.minus ctx ast
       
   //----------------------------------------------------------------------------
-  and compileEval (ctx:Context) evalTarget =
+  and compileEval (ctx:Ctx) evalTarget =
     let eval = Dlr.paramT<BoxedValue> "eval"
     let target = Dlr.paramT<EvalTarget> "target"
     let evalTarget = compileAst ctx evalTarget
@@ -171,15 +171,15 @@ module Core =
 
     //Context
     let ctx = {
-      Target = target
-      Compiler = compileAst
-      InsideWith = false
-      Scope = scope
-      ClosureLevel = scope |> Ast.NewVars.closureLevel
-      ActiveVariables = (!scope).Variables
-      ActiveCatchScopes = ref (!scope).CatchScopes
+      Context.T.Target = target
+      Context.T.Compiler = compileAst
+      Context.T.InsideWith = false
+      Context.T.Scope = scope
+      Context.T.ClosureLevel = scope |> Ast.NewVars.closureLevel
+      Context.T.ActiveVariables = (!scope).Variables
+      Context.T.ActiveCatchScopes = ref (!scope).CatchScopes
 
-      Labels = 
+      Context.T.Labels = 
         {
           Labels.T.Return = Dlr.labelVoid "~return"
           Labels.T.Break = None
@@ -189,7 +189,7 @@ module Core =
           Labels.T.LabelCompiler = None
         }
 
-      Parameters = 
+      Context.T.Parameters = 
         {
           Parameters.T.This = Dlr.paramT<CO> "~this"
           Parameters.T.Function = Dlr.paramT<FO> "~function"

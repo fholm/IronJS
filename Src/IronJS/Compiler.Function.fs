@@ -13,7 +13,7 @@ module Function =
   let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
   
   //----------------------------------------------------------------------------
-  let createCompiler (compiler:Target.T -> Delegate) ast ctx =
+  let createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
     let target = {
       Target.T.Ast = ast
       Target.T.Mode = Target.Mode.Function
@@ -33,7 +33,7 @@ module Function =
         }
     
   //----------------------------------------------------------------------------
-  let create ctx compiler (scope:Ast.Scope ref) ast =
+  let create (ctx:Ctx) compiler (scope:Ast.Scope ref) ast =
     //Make sure a compiler exists for this function
     let scope = !scope
 
@@ -52,7 +52,7 @@ module Function =
     Dlr.call env "NewFunction" funcArgs
 
   //----------------------------------------------------------------------------
-  let invokeFunction ctx this' args func =
+  let invokeFunction (ctx:Ctx) this' args func =
     Utils.ensureFunction ctx func
       (fun func -> 
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]

@@ -153,6 +153,7 @@ module Context =
   type T = {
     Compiler : T -> Ast.Tree -> Dlr.Expr
     Scope: Ast.FunctionScope ref
+
     InsideWith: bool
     ClosureLevel: int
 

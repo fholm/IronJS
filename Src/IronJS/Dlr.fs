@@ -485,10 +485,18 @@ module Dlr =
       | None -> failwith "No method found with matching name and arguments"
 
     let block (parameters:Parameter array) (expressions:Expr array) =
-      Et.Block(parameters, expressions) :> Expr
+      if expressions.Length = 0
+        then void' 
+        elif parameters.Length = 0 
+          then Et.Block(expressions) :> Expr
+          else Et.Block(parameters, expressions) :> Expr
 
     let blockOfSeq (parameters:ExprParam seq) (expressions:Expr seq) =
-      Et.Block(parameters, expressions) :> Expr
+      if Seq.length expressions = 0
+        then void' 
+        elif Seq.length parameters = 0 
+          then Et.Block(expressions) :> Expr
+          else Et.Block(parameters, expressions) :> Expr
 
     let blockTemp tempType (f:Parameter -> Expr array) =
       let tmp = param (tmpName()) tempType

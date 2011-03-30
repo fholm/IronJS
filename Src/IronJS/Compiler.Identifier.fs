@@ -58,8 +58,8 @@ module Identifier =
 
   ///
   let isGlobal (ctx:Ctx) name =
-    ctx.Scope |> Ast.NewVars.hasVariable name |> not
-        
+    ctx.Variables |> Map.containsKey name |> not
+
   /// 
   let getValue (ctx:Ctx) name =
     match ctx.DynamicLookup with

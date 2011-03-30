@@ -84,6 +84,7 @@ module Exception =
     Dlr.throwT<FinallyReturnJump> [Utils.box expr]
 
   ///
+  (*
   let private jumpCompiler type' availableLabels usedLabels (name:string) (compareTo:Dlr.Label) =
     match availableLabels $ Map.tryFind name with
     | None -> None
@@ -94,6 +95,7 @@ module Exception =
 
       else 
         None
+  *)
 
   ///
   let private buildCatchJumpBlock type' usedLabels =
@@ -128,15 +130,15 @@ module Exception =
 
     let returnCompiler =
       match ctx.Labels.ReturnCompiler with
-      | None -> Some returnCompiler
+      | None when ctx.Target.Mode = Target.Mode.Function -> Some returnCompiler
       | returnCompiler -> returnCompiler
 
     let breakCompilers =
-      let compiler = jumpCompiler typeof<FinallyBreakJump> activeBreakLabels usedBreakLabels
+      let compiler = activeBreakLabels, usedBreakLabels
       compiler :: ctx.Labels.BreakCompilers
 
     let continueCompilers =
-      let compiler = jumpCompiler typeof<FinallyContinueJump> activeContinueLabels usedContinueLables
+      let compiler = activeContinueLabels, usedContinueLables
       compiler :: ctx.Labels.ContinueCompilers
 
     let finallyCtx =
@@ -157,12 +159,13 @@ module Exception =
 
     let jumpCatchBlocks =
       match ctx.Labels.ReturnCompiler with
-      | Some _ -> [breakJumpBlock; continueJumpBlock]
-      | None ->
+      | None when ctx.Target.Mode = Target.Mode.Function ->
         let returnExn = Dlr.paramT<FinallyReturnJump> "~returnExn"
         let value = returnExn .-> "Value"
         let returnExpr = Function.return' ctx (Ast.DlrExpr value)
         [Dlr.catchVar returnExn returnExpr; breakJumpBlock; continueJumpBlock]
+
+      | _ -> [breakJumpBlock; continueJumpBlock]
 
     Dlr.tryCatch tryCatchFinally jumpCatchBlocks
 

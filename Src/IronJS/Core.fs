@@ -338,7 +338,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewArray() = x.NewArray(0u)
   member x.NewArray(size) =
     let array = AO(x, size)
-    array.Put("length", double size)
+    array.Put("length", double size, DescriptorAttrs.DontEnum)
     array :> CO
 
   member x.NewString() = x.NewString(String.Empty)

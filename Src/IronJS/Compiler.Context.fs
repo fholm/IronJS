@@ -76,6 +76,9 @@ module Target =
 ///
 module Labels = 
 
+  type LabelGroup =
+    Map<string, int * Dlr.Label> * Map<int, Dlr.Label> ref
+  
   ///
   type T = {
     Return: Dlr.Label
@@ -84,8 +87,8 @@ module Labels =
     BreakLabels: Map<string, Dlr.Label>
     ContinueLabels: Map<string, Dlr.Label>
 
-    BreakCompilers: (string -> Dlr.Label -> Dlr.Expr option) list
-    ContinueCompilers: (string -> Dlr.Label -> Dlr.Expr option) list
+    BreakCompilers: LabelGroup list
+    ContinueCompilers: LabelGroup list
     ReturnCompiler: (Dlr.Expr -> Dlr.Expr) option
   }
 

@@ -108,7 +108,7 @@ module ControlFlow =
 
       (Dlr.loop 
         (break')
-        (continue')
+        (Dlr.labelVoid "~dummyLabel")
         (Dlr.true')
         (Dlr.blockSimple [
           
@@ -129,6 +129,8 @@ module ControlFlow =
 
           (body |> ctx.Compile)
 
+          (Dlr.labelExprVoid continue')
+
           (Dlr.if' 
             (Dlr.eq propertyState Dlr.false')
             (Dlr.blockSimple [
@@ -138,56 +140,70 @@ module ControlFlow =
       )
     ]
 
-  //----------------------------------------------------------------------------
-  // 12.7 continue
-  let continue' (ctx:Ctx) (label:string option) =
-    match label with
-    | None -> 
-      match ctx.Labels.Continue with
-      | Some label -> Dlr.continue' label
-      | _ -> Error.CompileError.Raise(Error.missingContinue)
+  ///
+  let rec private locateLabelGroup name (groups:Labels.LabelGroup list) compareLabel =
+    match groups with
+    | [] -> None
+    | (available, used)::groups ->
+      match available |> Map.tryFind name with
+      | Some(id, label) when FSharp.Utils.refEq label compareLabel ->
+        
+        match locateLabelGroup name groups compareLabel with
+        | None ->
+          used := !used |> Map.add id label
+          Some id
 
-    | Some label ->
-      match ctx.Labels.ContinueLabels .TryFind label with
-      | Some label -> Dlr.continue' label
-      | _ -> Error.CompileError.Raise(Error.missingLabel label)
+        | some -> some
+
+      | _ -> None
 
   ///
-  let compileLabel compilers name label =
-    
-    let rec compileLabel compilers prev =
-      match compilers with
-      | [] -> prev
-      | x::xs ->
-        match x name label with
-        | None -> prev
-        | some -> compileLabel xs some
+  let private compileJump<'a> groups name label =
+    match groups with
+    | [] -> Dlr.jump label
+    | groups ->
+      match locateLabelGroup name groups label with
+      | None -> failwith "Failed to compile label"
+      | Some id -> Dlr.throwT<'a> [Dlr.const' id]
 
-    compileLabel compilers None
-    
+  /// 12.7 continue
+  let continue' (ctx:Ctx) (name:string option) =
+    match name with
+    | None -> 
+      match ctx.Labels.Continue with
+      | Some label -> 
+        let groups = ctx.Labels.ContinueCompilers
+        compileJump<FinallyContinueJump> groups "~default" label  
+
+      | _ -> Error.CompileError.Raise(Error.missingContinue)
+
+    | Some name ->
+      match ctx.Labels.ContinueLabels.TryFind name with
+      | Some label -> 
+        let groups = ctx.Labels.ContinueCompilers
+        compileJump<FinallyContinueJump> groups name label  
+
+      | _ -> Error.CompileError.Raise(Error.missingLabel name)
     
   //----------------------------------------------------------------------------
   // 12.8 break
-  let break' (ctx:Ctx) (label:string option) =
-    match label with
+  let break' (ctx:Ctx) (name:string option) =
+    match name with
     | None -> 
-      
-      let label = 
-        match ctx.Labels.Break with
-        | Some label -> label
-        | _ -> Error.CompileError.Raise(Error.missingBreak)
+      match ctx.Labels.Break with
+      | Some label -> 
+        let groups = ctx.Labels.BreakCompilers 
+        compileJump<FinallyBreakJump> groups "~default" label  
 
-      match ctx.Labels.BreakCompilers with
-      | [] -> Dlr.break' label
-      | compilers ->
-        match compileLabel compilers "~default" label with
-        | None -> failwith "Failed to compile label"
-        | Some expr -> expr
+      | _ -> Error.CompileError.Raise(Error.missingBreak)
 
-    | Some label ->
-      match ctx.Labels.BreakLabels .TryFind label with
-      | Some label -> Dlr.continue' label
-      | _ -> Error.CompileError.Raise(Error.missingLabel label)
+    | Some name ->
+      match ctx.Labels.BreakLabels.TryFind name with
+      | Some label -> 
+        let groups = ctx.Labels.BreakCompilers 
+        compileJump<FinallyBreakJump> groups name label  
+
+      | _ -> Error.CompileError.Raise(Error.missingLabel name)
 
 
   //----------------------------------------------------------------------------

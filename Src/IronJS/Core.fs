@@ -2101,35 +2101,26 @@ and TypeConverter() =
   static member ToString(c:obj) : string = 
     if FSharp.Utils.isNull c then "null" else c.ToString()
 
-  static member ToString(d:double) : string = 
-    if Double.IsInfinity d then 
-      if Double.IsNegativeInfinity d 
-        then "-Infinity" 
-        else "Infinity"
-
-    elif Double.IsNaN d then
-      "NaN"
-
-    else 
-      // This is incredibly hacky but 
-      // it's late and I'm tired. It 
-      // fixes the differences between
-      // how .NET and JavaScript represents
-      // scientific notation, really should
-      // write a proper number formatter class
-
-      // Deals with E-01 to E-06
-      if (d >= 0.000001 && d > 0.0 && d < 1.0) || (d > -0.000001 |> not && d < 0.0 && d > -1.0) then
-        d.ToString("0.###########################################################", invariantCulture)
-
-      // Deals with E+01 to E-14
-      elif (d >= 1.0 && d < 1000000000000000.0) || (d > -1000000000000000.0 && d <= -1.0) then
-        d |> string
-
-      // Deals with <= E-07 and >= E+15
+  static member ToString(m:double) : string = 
+    if Double.IsNaN m then "NaN"
+    elif m = 0.0 then "0"
+    else
+      let sign = if m < 0.0 then "-" else ""
+      let m = if m < 0.0 then -m else m
+      if Double.IsInfinity m then sign + "Infinity"
       else
-        (d |> string).Replace("E", "e").Replace("e-0", "e-")
-
+        let format = "0.00000000000000000e0"
+        let parts = m.ToString(format).Split('e')
+        let s = parts.[0].TrimEnd('0').Replace(".", "")
+        let k = s.Length
+        let n = System.Int32.Parse(parts.[1]) + 1
+        if k <= n && n <= 21 then sign + s + new string('0', n - k)
+        elif 0 < n && n <= 21 then sign + s.Substring(0, n) + "." + s.Substring(n)
+        elif -6 < n && n <= 0 then sign + "0." + new string('0', -n) + s
+        else
+          let exponent = "e" + System.String.Format("{0:+0;-0}", n - 1)
+          if k = 1 then sign + s + exponent
+          else sign + s.Substring(0, 1) + "." + s.Substring(1) + exponent
 
   static member ToString(o:CO) : string = 
     if o :? StringObject 
@@ -2199,7 +2190,7 @@ and TypeConverter() =
 
           if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
             then PosInf
-          elif s.Trim() = "+Infinity"
+          elif s = "+Infinity"
             then PosInf
             else NaN
 

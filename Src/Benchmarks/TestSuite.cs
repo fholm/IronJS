@@ -25,9 +25,9 @@
             return Directory.GetFiles(this.BasePath, "*.js", SearchOption.AllDirectories);
         }
 
-        protected virtual IronJS.Hosting.Context CreateContext()
+        protected virtual IronJS.Hosting.CSharp.Context CreateContext()
         {
-            return IronJS.Hosting.Context.Create();
+            return new IronJS.Hosting.CSharp.Context();
         }
 
         public void Run()
@@ -57,7 +57,7 @@
             Console.WriteLine();
         }
 
-        protected virtual string ExecuteTest(IronJS.Hosting.Context ctx, string test)
+        protected virtual string ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
             try
             {

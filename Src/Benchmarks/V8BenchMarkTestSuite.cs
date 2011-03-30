@@ -25,14 +25,14 @@ namespace Benchmarks
                 .Where(path => Path.GetFileName(path) != "run.js");
         }
 
-        protected override IronJS.Hosting.Context CreateContext()
+        protected override IronJS.Hosting.CSharp.Context CreateContext()
         {
             var ctx = base.CreateContext();
             ctx.ExecuteFile(Path.Combine(this.BasePath, "base.js"));
             return ctx;
         }
 
-        protected override string ExecuteTest(IronJS.Hosting.Context ctx, string test)
+        protected override string ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
             var testError = base.ExecuteTest(ctx, test);
             if (!string.IsNullOrEmpty(testError))
@@ -45,9 +45,9 @@ namespace Benchmarks
             Action<string, string> printResult = (name, result) => Console.WriteLine(name + ": " + result);
             Action<string, string> printError = (name, error) => { success = false; errors += name + ": " + error + "\r\n"; };
             Action<string> printScore = (score) => Console.WriteLine("Score: " + score);
-            ctx.PutGlobal("PrintResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, printResult));
-            ctx.PutGlobal("PrintError", IronJS.Native.Utils.createHostFunction(ctx.Environment, printError));
-            ctx.PutGlobal("PrintScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, printScore));
+            ctx.SetGlobal("PrintResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, printResult));
+            ctx.SetGlobal("PrintError", IronJS.Native.Utils.createHostFunction(ctx.Environment, printError));
+            ctx.SetGlobal("PrintScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, printScore));
 
             try
             {

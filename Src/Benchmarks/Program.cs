@@ -19,8 +19,8 @@ namespace Benchmarks
         {
             var basePath = new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName;
 
-            //TestSuite sunSpider = new SunSpiderTestSuite(basePath);
-            //sunSpider.Run();
+            TestSuite sunSpider = new SunSpiderTestSuite(basePath);
+            sunSpider.Run();
 
             TestSuite v8Benchmark = new V8BenchMarkTestSuite(basePath);
             v8Benchmark.Run();

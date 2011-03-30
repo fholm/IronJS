@@ -30,12 +30,44 @@
             return new IronJS.Hosting.CSharp.Context();
         }
 
+        protected void ColorPrint(ConsoleColor color, string value)
+        {
+            var prevColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.Write(value);
+            Console.ForegroundColor = prevColor;
+        }
+
+        protected void ColorPrintLine(ConsoleColor color, string value)
+        {
+            var prevColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(value);
+            Console.ForegroundColor = prevColor;
+        }
+
+        protected void ColorPrint(ConsoleColor color, object value)
+        {
+            var prevColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.Write(value);
+            Console.ForegroundColor = prevColor;
+        }
+
+        protected void ColorPrintLine(ConsoleColor color, object value)
+        {
+            var prevColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(value);
+            Console.ForegroundColor = prevColor;
+        }
+
         public void Run()
         {
             var tests = this.EnumerateTests().ToList();
 
-            Console.WriteLine(this.SuiteName);
-            Console.WriteLine("==================================");
+            ColorPrintLine(ConsoleColor.DarkCyan, this.SuiteName);
+            ColorPrintLine(ConsoleColor.DarkCyan, "==================================");
 
             foreach (var test in tests)
             {
@@ -43,14 +75,17 @@
 
                 var ctx = this.CreateContext();
 
+                var sw = Stopwatch.StartNew();
                 var error = this.ExecuteTest(ctx, test);
+                sw.Stop();
 
                 if (!string.IsNullOrEmpty(error))
                 {
-                    var prevColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(error);
-                    Console.ForegroundColor = prevColor;
+                    ColorPrintLine(ConsoleColor.Red, error);
+                }
+                else
+                {
+                    ColorPrintLine(ConsoleColor.Yellow, sw.ElapsedMilliseconds + "ms");
                 }
             }
 
@@ -61,11 +96,7 @@
         {
             try
             {
-                var sw = Stopwatch.StartNew();
                 ctx.ExecuteFile(test);
-                sw.Stop();
-
-                Console.WriteLine(sw.ElapsedMilliseconds + "ms");
             }
             catch (Exception ex)
             {

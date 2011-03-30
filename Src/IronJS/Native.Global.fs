@@ -5,6 +5,7 @@ open IronJS
 open IronJS.Compiler
 open IronJS.Support.Aliases
 open IronJS.DescriptorAttrs
+open System.Text.RegularExpressions
 
 module Global =
 
@@ -56,14 +57,68 @@ module Global =
 
     | _ -> target.Target
 
-  let parseInt (str:string) = 
-    str |> Int32.Parse |> double |> BV.Box
+  let private parseWithRadix (z:string, r:int) =
+    if r = 2 && z.Length <= 64 then Convert.ToUInt64(z, 2) |> bigint.op_Implicit
+    elif r = 8 && z.Length <= 21 then Convert.ToUInt64(z, 8) |> bigint.op_Implicit
+    elif r = 10 && z.Length <= 19 then Convert.ToUInt64(z, 10) |> bigint.op_Implicit
+    elif r = 16 && z.Length <= 16 then Convert.ToUInt64(z, 16) |> bigint.op_Implicit
+    else
+      let digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      let r = r |> bigint.op_Implicit
+      let accumulateDigit (value:bigint) (char:char) = (value * r) + (digits.IndexOf(char) |> bigint.op_Implicit)
+      z.ToCharArray() |> Array.fold accumulateDigit (bigint 0)
 
-  let parseFloat (str:string) =
-    let trimmedString = str.TrimStart()
-    let prefixMatch = System.Text.RegularExpressions.Regex.Match(trimmedString, @"^[-+]?(Infinity|([0-9]+\.[0-9]*|[0-9]*\.[0-9]+|[0-9]+)([eE][-+]?[0-9]+)?)")
+  // These steps are outlined in the ECMA-262, Section 15.1.2.2
+  let parseInt (str:BoxedValue) (radix:BoxedValue) =
+    // Step 1
+    let inputString = TC.ToString(str)
+    // Step 2
+    let mutable S = inputString.TrimStart()
+    // Step 3 & 4
+    let sign = if S.Length > 0 && S.[0] = '-' then -1 else 1
+    // Step 5
+    if S.Length > 0 && (S.[0] = '+' || S.[0] = '-') then S <- S.Substring(1)
+    // Step 6
+    let mutable R = TC.ToInt32(radix)
+    // Step 7
+    let mutable stripPrefix = true
+    // Step 8a
+    if R <> 0 && (R < 2 || R > 36) then nan |> BV.Box
+    else
+      // Step 8b
+      if R <> 0 && R <> 16 then stripPrefix <- false
+      // Step 9
+      if R = 0 then R <- 10
+      // Step 10
+      if stripPrefix && S.Length >= 2 && (S.StartsWith("0x") || S.StartsWith("0X")) then
+        R <- 16
+        S <- S.Substring(2)
+      // Step 11
+      let Z = Regex.Match(S.ToUpperInvariant(), "^[" + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".Substring(0, R) + "]*").Value
+      // Step 12
+      if Z.Length = 0 then nan |> BV.Box
+      else
+        // Step 13
+        let mathInt = parseWithRadix(Z, R)
+        // Step 14
+        let number = mathInt |> double
+        // Step 15
+        (float sign) * number |> BV.Box
+
+  // These steps are outlined in the ECMA-262, Section 15.1.2.3
+  let parseFloat (str:BoxedValue) =
+    // Step 1
+    let inputString = TC.ToString(str)
+    // Step 2
+    let trimmedString = inputString.TrimStart()
+    // Step 3
+    let prefixMatch = Regex.Match(trimmedString, @"^[-+]?(Infinity|([0-9]+\.[0-9]*|[0-9]*\.[0-9]+|[0-9]+)([eE][-+]?[0-9]+)?)")
     if prefixMatch.Success = false then nan |> BV.Box
-    else prefixMatch.Value |> TC.ToNumber |> BV.Box
+    else
+      // Step 4
+      let numberString = prefixMatch.Value
+      // Step 5
+      numberString |> TC.ToNumber |> BV.Box
 
   let isNaN (number:double) = 
     number <> number |> BV.Box
@@ -123,11 +178,11 @@ module Global =
     let eval = Utils.createHostFunction env eval
     env.Globals.Put("eval", eval, DontEnum)
 
-    let parseFloat = new Func<string, BoxedValue>(parseFloat)
+    let parseFloat = new Func<BoxedValue, BoxedValue>(parseFloat)
     let parseFloat = Utils.createHostFunction env parseFloat
     env.Globals.Put("parseFloat", parseFloat, DontEnum)
     
-    let parseInt = new Func<string, BoxedValue>(parseInt)
+    let parseInt = new Func<BoxedValue, BoxedValue, BoxedValue>(parseInt)
     let parseInt = Utils.createHostFunction env parseInt
     env.Globals.Put("parseInt", parseInt, DontEnum)
     

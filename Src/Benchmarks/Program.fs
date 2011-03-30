@@ -33,7 +33,6 @@ let main (args:string array) =
   // Create IronJS context
   let ctx = Ijs.createContext()
 
-  (*
   // Warmup
   test ctx
 
@@ -45,30 +44,5 @@ let main (args:string array) =
 
   printfn "Time: %i, Press [Enter] to exit" sw.ElapsedMilliseconds
   Console.ReadLine() |> ignore
-  *)
-  
-  ctx |> Ijs.Utils.createPrintFunction
-
-  let src = @"
-  function foo() {
-    while(true) {
-      try {
-      } finally {
-        while(true) {
-          try {
-          
-          } finally {
-            break;
-          }
-        }
-        break;
-      }
-    } 
-  }
-
-  foo();
-  "
-
-  ctx |> Ijs.execute src |> ignore
 
   0

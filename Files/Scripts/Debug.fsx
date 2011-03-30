@@ -13,27 +13,5 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
-let src = @"
-var x;
-var mycars = new Array();
-mycars[0] = 'Saab';
-mycars[1] = 'Volvo';
-mycars[2] = 'bmw';
-
-// CHECK#1
-var fin=0;
-var i=0;
-for (x in mycars){
-  try{
-    i+=1;
-    print(x);
-    continue;
-  }
-  catch(er1){}
-  finally{
-    fin=1;
-  }
-  fin=-1;
-}
-"
+let src = @""
 ctx |> Ijs.execute src

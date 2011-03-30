@@ -338,7 +338,7 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   member x.NewArray() = x.NewArray(0u)
   member x.NewArray(size) =
     let array = AO(x, size)
-    array.Put("length", double size)
+    array.Put("length", double size, DescriptorAttrs.DontEnum)
     array :> CO
 
   member x.NewString() = x.NewString(String.Empty)
@@ -445,8 +445,6 @@ and DebugUtils() =
   static member DebugId = 
     id <- id + 1L
     id
-
-
 #endif
 
 (*
@@ -1058,7 +1056,7 @@ and RO = RegExpObject
 and [<AllowNullLiteral>] RegExpObject = 
   inherit CommonObject
 
-  val RegExp : Regex
+  val mutable RegExp : Regex
   val Global : bool
 
   member x.IgnoreCase:bool =
@@ -1067,15 +1065,21 @@ and [<AllowNullLiteral>] RegExpObject =
   member x.MultiLine:bool =
     (x.RegExp.Options &&& RegexOptions.Multiline) = RegexOptions.Multiline
 
-  new (env, pattern, options, global') = {
-    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp) 
-    RegExp = new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
-    Global = global'
-  }
+  new (env, pattern, options, global') as this =
+    {
+      inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp)
+      RegExp = null
+      Global = global'
+    }
+    then
+    try
+      this.RegExp <- new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
+    with
+      | :? ArgumentException as e -> env.RaiseSyntaxError(e.Message)
 
   new (env, pattern) = 
     RegExpObject(env, pattern, RegexOptions.None, false)
-    
+
 (*
 //  
 *)
@@ -1951,18 +1955,38 @@ and [<AllowNullLiteral>] DynamicSchema =
     x.IndexMap.Add(name, index)
     x :> Schema
 
-(*
-//
-*)
-and UserError(value:BoxedValue, line:int, column:int) =
-  inherit IronJS.Error.Error(value |> TC.ToString)
+/// Exception that represent an exception
+/// thrown by javascript code, or an exception
+/// thrown from within the engine which is supposed
+/// to be catchable by user code.
+and UserError(value:BV, line:int, column:int) =
+  inherit IronJS.Error.Error("User Error")
   member x.Value = value
   member x.Line = line
   member x.Column = column
 
-(*
-//  
-*)
+/// Exception used to break out of
+/// a finally block, which the CLR
+/// doesn't allow.
+and FinallyBreakJump(labelId:int) =
+  inherit Exception()
+  member x.LabelId = labelId
+  
+/// Exception used to continue out of
+/// a finally block, which the CLR
+/// doesn't allow.
+and FinallyContinueJump(labelId:int) =
+  inherit Exception()
+  member x.LabelId = labelId
+  
+/// Exception used to return out of
+/// a finally block, which the CLR
+/// doesn't allow.
+and FinallyReturnJump(value:BV) =
+  inherit Exception()
+  member x.Value = value
+
+///
 and BoxingUtils() =
 
   static member JsBox (o:obj) =
@@ -1983,14 +2007,9 @@ and BoxingUtils() =
       then (o :?> BoxedValue).ClrBoxed 
       else o
 
-(*
-//
-*)
+///
 and TC = TypeConverter
 and TypeConverter() =
-
-  static let scientificSmallNegative = 
-    Text.RegularExpressions.Regex("E-0*([1-6])$", RegexOptions.Compiled)
 
   (**)
   static member ToBoxedValue(v:BV) = v
@@ -2025,21 +2044,32 @@ and TypeConverter() =
     Dlr.callStaticT<TC> "ToClrObject" [expr]
 
   (**)
-  static member ToObject(env:Environment, o:CO) : CO = o
-  static member ToObject(env:Environment, f:FO) : CO = f :> CO
-  static member ToObject(env:Environment, u:Undef) : CO = env.RaiseTypeError()
-  static member ToObject(env:Environment, o:obj) : CO = env.RaiseTypeError()
-  static member ToObject(env:Environment, s:string) : CO = env.NewString(s)
-  static member ToObject(env:Environment, n:double) : CO = env.NewNumber(n)
-  static member ToObject(env:Environment, b:bool) : CO = env.NewBoolean(b)
-  static member ToObject(env:Environment, v:BV) : CO =
+  static member ToObject(env:Env, o:CO) : CO = o
+  static member ToObject(env:Env, f:FO) : CO = f :> CO
+
+  ///
+  static member ToObject(env:Env, u:Undef) : CO = 
+    env.RaiseTypeError("Can't convert Undefined to Object")
+
+  ///
+  static member ToObject(env:Env, o:obj) : CO = 
+    env.RaiseTypeError("Can't convert Null or CLR to Object")
+
+  static member ToObject(env:Env, s:string) : CO = env.NewString(s)
+  static member ToObject(env:Env, n:double) : CO = env.NewNumber(n)
+  static member ToObject(env:Env, b:bool) : CO = env.NewBoolean(b)
+  static member ToObject(env:Env, v:BV) : CO =
     match v.Tag with
     | TypeTags.Object 
     | TypeTags.Function -> v.Object
-    | TypeTags.Undefined
-    | TypeTags.Clr -> env.RaiseTypeError()
+    
     | TypeTags.String -> env.NewString(v.String)
     | TypeTags.Bool -> env.NewBoolean(v.Bool)
+
+    | TypeTags.Undefined
+    | TypeTags.Clr -> 
+      env.RaiseTypeError("Can't convert Undefined, Null or CLR to Object")
+
     | _ -> env.NewNumber(v.Number)
 
   static member ToObject(env:Dlr.Expr, expr:Dlr.Expr) : Dlr.Expr = 

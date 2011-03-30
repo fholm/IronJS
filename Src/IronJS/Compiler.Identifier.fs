@@ -21,12 +21,16 @@ module Identifier =
       match variable with
       | Ast.Shared(storageIndex, globalLevel, closureLevel) ->
         let closureDifference = closureLevel - ctx.ClosureLevel
-        let expr = ctx.ClosureScope |> walkSharedChain closureDifference
+
+        let expr = 
+          ctx.Parameters.SharedScope 
+          |> walkSharedChain closureDifference
+
         Some(expr, storageIndex, globalLevel)
 
       | Ast.Private(storageIndex) ->
         let globalLevel = ctx.Scope |> Ast.NewVars.globalLevel
-        Some(ctx.LocalScope, storageIndex, globalLevel)
+        Some(ctx.Parameters.PrivateScope :> Dlr.Expr, storageIndex, globalLevel)
 
     | None ->
       None
@@ -40,14 +44,14 @@ module Identifier =
           
   ///
   let private getValueDynamic (ctx:Ctx) name =
-    let defaultArgs = [Dlr.const' name; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; ctx.Parameters.DynamicScope :> Dlr.Expr]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<DynamicScopeHelpers> "Get" args
           
   ///
   let private setValueDynamic (ctx:Ctx) name value =
-    let defaultArgs = [Dlr.const' name; Utils.box value; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; Utils.box value; ctx.Parameters.DynamicScope :> Dlr.Expr]
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<DynamicScopeHelpers> "Set" args

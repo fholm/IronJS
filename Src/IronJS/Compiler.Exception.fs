@@ -52,10 +52,10 @@ module Exception =
                 tmpScope .= Dlr.newArrayBoundsT<BV> !!!2
 
                 // Assign the top shared scope as the parent of the newly created
-                Dlr.index0 tmpScope .-> "Scope" .= ctx.ClosureScope
+                Dlr.index0 tmpScope .-> "Scope" .= ctx.Parameters.SharedScope
 
                 // Replace the old top shared scope with the new one
-                ctx.ClosureScope .= tmpScope
+                ctx.Parameters.SharedScope .= tmpScope
 
                 // Copy the javascript exception value into the variable
                 Identifier.setValue ctx name (caughtExn .-> "Value")
@@ -67,7 +67,8 @@ module Exception =
             let restoreSharedScope =
               Dlr.block [] [
                 // Restore the shared scope to the previous one
-                ctx.ClosureScope .= Dlr.index0 ctx.ClosureScope .-> "Scope"
+                ctx.Parameters.SharedScope .= 
+                  Dlr.index0 ctx.Parameters.SharedScope .-> "Scope"
               ]
 
             [Dlr.tryFinally catchBlock restoreSharedScope] |> Seq.ofList

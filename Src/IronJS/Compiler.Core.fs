@@ -14,7 +14,7 @@ module Core =
     //Constants
     | Ast.Null -> Dlr.null'
     | Ast.Pass -> Dlr.void'
-    | Ast.This -> ctx.This
+    | Ast.This -> ctx.Parameters.This :> Dlr.Expr
     | Ast.Undefined -> Utils.Constants.Boxed.undefined
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
@@ -103,7 +103,7 @@ module Core =
     let evalTarget = compileAst ctx evalTarget
     
     Dlr.block [eval; target] [
-      (Dlr.assign eval (ctx.Globals |> Object.Property.get !!!"eval"))
+      (Dlr.assign eval (ctx.Parameters |> Parameters.globals |> Object.Property.get !!!"eval"))
       (Dlr.assign target Dlr.newT<EvalTarget>)
 
       (Utils.assign
@@ -121,13 +121,13 @@ module Core =
       *)
         
       (Utils.assign (Dlr.field target "Target") evalTarget)
-      (Utils.assign (Dlr.field target "Function") ctx.Function)
-      (Utils.assign (Dlr.field target "This") ctx.This)
-      (Utils.assign (Dlr.field target "LocalScope") ctx.LocalScope)
-      (Utils.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
-      (Utils.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
+      (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
+      (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
+      (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
+      (Utils.assign (Dlr.field target "ClosureScope") ctx.Parameters.SharedScope)
+      (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
 
-      eval |> Function.invokeFunction ctx ctx.This [target]
+      eval |> Function.invokeFunction ctx ctx.Parameters.This [target]
     ]
 
   ///
@@ -171,11 +171,13 @@ module Core =
 
     //Context
     let ctx = {
-      Compiler = compileAst
       Target = target
+      Compiler = compileAst
       InsideWith = false
       Scope = scope
-      ReturnLabel = Dlr.labelVoid "~return"
+      ClosureLevel = scope |> Ast.NewVars.closureLevel
+      ActiveVariables = (!scope).Variables
+      ActiveCatchScopes = ref (!scope).CatchScopes
 
       Labels = 
         {
@@ -187,18 +189,15 @@ module Core =
           Labels.T.LabelCompiler = None
         }
 
-      ClosureLevel = scope |> Ast.NewVars.closureLevel
-
-      ActiveVariables = (!scope).Variables
-      ActiveCatchScopes = ref (!scope).CatchScopes
-
-      Function = Dlr.paramT<FO> "~function"
-      This = Dlr.paramT<CO> "~this"
-      LocalScope = Dlr.paramT<Scope> "~private"
-      ClosureScope = Dlr.paramT<Scope> "~shared"
-      DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
-
-      Parameters = target.ParameterTypes |> Array.mapi Dlr.paramI
+      Parameters = 
+        {
+          Parameters.T.This = Dlr.paramT<CO> "~this"
+          Parameters.T.Function = Dlr.paramT<FO> "~function"
+          Parameters.T.PrivateScope = Dlr.paramT<Scope> "~private"
+          Parameters.T.SharedScope = Dlr.paramT<Scope> "~shared"
+          Parameters.T.DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
+          Parameters.T.UserParameters = target.ParameterTypes |> Array.mapi Dlr.paramI
+        }
     }
 
     //Initialize scope
@@ -239,9 +238,9 @@ module Core =
       | Target.Mode.Eval -> [||]
       | _ ->
         [|
-          ctx.LocalScope :?> Dlr.Parameter
-          ctx.ClosureScope :?> Dlr.Parameter
-          ctx.DynamicScope :?> Dlr.Parameter
+          ctx.Parameters.PrivateScope
+          ctx.Parameters.SharedScope
+          ctx.Parameters.DynamicScope
         |]
 
     // This is the main function body, which 
@@ -263,10 +262,10 @@ module Core =
       | Target.Mode.Function ->
         [|
           functionBody
-          Utils.assign ctx.EnvReturnBox Utils.Constants.Boxed.undefined
-          Dlr.returnVoid ctx.ReturnLabel
-          Dlr.labelExprVoid ctx.ReturnLabel
-          ctx.EnvReturnBox
+          Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
+          Dlr.returnVoid ctx.Labels.Return
+          Dlr.labelExprVoid ctx.Labels.Return
+          ctx.ReturnBox
         |] |> Dlr.block []
 
       | _ -> 
@@ -277,8 +276,8 @@ module Core =
     // compiled by the IronJS compiler
     let internalParameters = 
       [|
-        ctx.Function :?> Dlr.Parameter
-        ctx.This :?> Dlr.Parameter
+        ctx.Parameters.Function
+        ctx.Parameters.This
       |]
 
     // External parameters is either the 
@@ -288,13 +287,13 @@ module Core =
       match ctx.Target.Mode with
       | Target.Mode.Eval ->
         [| 
-          ctx.LocalScope :?> Dlr.Parameter
-          ctx.ClosureScope :?> Dlr.Parameter
-          ctx.DynamicScope :?> Dlr.Parameter
+          ctx.Parameters.PrivateScope
+          ctx.Parameters.SharedScope
+          ctx.Parameters.DynamicScope
         |]
 
       | _ ->
-        ctx.Parameters
+        ctx.Parameters.UserParameters
 
     // Append the external parameters to the internal ones
     // which forms the complete parameters we want to compile

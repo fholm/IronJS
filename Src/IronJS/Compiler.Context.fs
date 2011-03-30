@@ -2,49 +2,16 @@
 
 open System
 open IronJS
+open IronJS.Dlr.Operators
 open IronJS.Support.Aliases
 
 module NewContext =
 
   ///
-  module Expressions =
-    
-    ///
-    type T = {
-      This: Dlr.Parameter
-      Function: Dlr.Parameter
-      PrivateScope: Dlr.Parameter
-      SharedScope: Dlr.Parameter
-      DynamicScope: Dlr.Parameter
-      Parameters: Dlr.Parameter array
-    }
-
-    ///
-    let thisAsExpr (t:T) = 
-      t.This :> Dlr.Expr
-
-    ///
-    let functionAsExpr (t:T) = 
-      t.Function :> Dlr.Expr
-
-  ///
-  module Labels = 
-
-    ///
-    type T = {
-      Return: Dlr.Label
-      Break: Dlr.Label option
-      Continue: Dlr.Label option
-      BreakLabels: Map<string, Dlr.Label>
-      ContinueLabels: Map<string, Dlr.Label>
-      LabelCompiler: (string -> Dlr.Expr) option
-    }
-
-  ///
   type T = {
     //Target: Target.T
-    Labels: Labels.T
-    Expressions: Expressions.T
+    //Labels: Labels.T
+    //Expressions: Expressions.T
 
     Compiler: T -> Ast.Tree -> Dlr.Expr
     FunctionScope: Ast.FunctionScope ref
@@ -161,7 +128,39 @@ module Labels =
         ContinueLabels = 
           t.ContinueLabels |> Map.add name continueLabel
       }
+
+///
+module Parameters =
     
+  ///
+  type T = {
+    This: Dlr.Parameter
+    Function: Dlr.Parameter
+    PrivateScope: Dlr.Parameter
+    SharedScope: Dlr.Parameter
+    DynamicScope: Dlr.Parameter
+    UserParameters: Dlr.Parameter array
+  }
+
+  ///
+  let thisAsExpr (t:T) = 
+    t.This :> Dlr.Expr
+
+  ///
+  let functionAsExpr (t:T) = 
+    t.Function :> Dlr.Expr
+
+  ///
+  let environment (t:T) =
+    t.Function .-> "Env"
+
+  ///
+  let globals (t:T) =
+    (t |> environment) .-> "Globals"
+
+  ///
+  let returnBox (t:T) =
+    (t |> environment) .-> "Return"
 
 ///
 type [<AllowNullLiteral>] EvalTarget() = 
@@ -181,33 +180,21 @@ type [<AllowNullLiteral>] EvalTarget() =
 //------------------------------------------------------------------------------
 type Context = {
   Compiler : Context -> Ast.Tree -> Dlr.Expr
-  Target: Target.T
   Scope: Ast.FunctionScope ref
-  ReturnLabel: Dlr.Label
   InsideWith: bool
-
-  This: Dlr.Expr
-  Function: Dlr.Expr
-  LocalScope: Dlr.Expr
-  ClosureScope: Dlr.Expr
-  DynamicScope: Dlr.Expr
-  Parameters: Dlr.ExprParam array
   ClosureLevel: int
-
   ActiveVariables: Map<string, Ast.NewVariable>
   ActiveCatchScopes: Ast.CatchScope ref list ref
-
+  
+  Target: Target.T
   Labels: Labels.T
+  Parameters: Parameters.T
 } with
+  member x.Env = x.Parameters.Function .-> "Env"
+  member x.Globals = x.Env .-> "Globals"
+  member x.ReturnBox = x.Env .-> "Return"
+
   member x.Compile tree = x.Compiler x tree
-
-  member x.Env = Dlr.field x.Function "Env"
-  member x.EnvReturnBox = Dlr.field x.Env "Return"
-  member x.FunctionDynamicScope = Dlr.field x.Function "DynamicScope"
-  member x.FunctionClosureScope = Dlr.field x.Function "ClosureScope"
-  member x.Globals = Dlr.Ext.static' (Dlr.field x.Env "Globals")
-
-  member x.DynamicLookup = 
-    x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
+  member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
 
 type Ctx = Context

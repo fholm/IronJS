@@ -22,6 +22,9 @@ module Function =
       Target.T.ParameterTypes = [||]
     }
     
+    // It's faster to return a non-partially applied function
+    // that can be invoked, instead of partially applying
+    // createCompiler which makes it impossible to use .InvokeFast
     fun (f:FO) delegateType ->
       compiler {
         target with 
@@ -41,11 +44,12 @@ module Function =
     let funcArgs = [
       (Dlr.const' scope.Id)
       (Dlr.const' scope.ParameterNames.Length)
-      (ctx.ClosureScope)
-      (ctx.DynamicScope)
+      (ctx.Parameters.SharedScope :> Dlr.Expr)
+      (ctx.Parameters.DynamicScope :> Dlr.Expr)
     ]
 
-    Dlr.call ctx.Env "NewFunction" funcArgs
+    let env = ctx.Parameters.Function .-> "Env"
+    Dlr.call env "NewFunction" funcArgs
 
   //----------------------------------------------------------------------------
   let invokeFunction ctx this' args func =
@@ -64,7 +68,7 @@ module Function =
     let typeArgs = DelegateCache.addInternalArgs [for a in args -> a.Type]
     let delegateType = DelegateCache.getDelegate typeArgs
     let dynamicArgs = Identifier.getDynamicArgs ctx name
-    let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; argsArray; ctx.Parameters.DynamicScope :> Dlr.Expr]
     
     Dlr.callStaticGenericT<DynamicScopeHelpers> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
     
@@ -160,5 +164,5 @@ module Function =
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
     Dlr.blockSimple [
-      (Utils.assign ctx.EnvReturnBox (ctx.Compile tree))
-      (Dlr.returnVoid ctx.ReturnLabel)]
+      (Utils.assign ctx.ReturnBox (ctx.Compile tree))
+      (Dlr.returnVoid ctx.Labels.Return)]

@@ -13,12 +13,14 @@ module Scope =
   //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
-    let object' = Dlr.callStaticT<TC> "ToObject" [ctx.Env; ctx.Compile init]
+    let object' = Dlr.callStaticT<TC> "ToObject" [ctx.Parameters.Function .-> "Env"; ctx.Compile init]
     let tree = {ctx with InsideWith = true}.Compile tree
 
     let pushArgs = [
-      ctx.DynamicScope; object'; 
-      Dlr.const' (!ctx.Scope).GlobalLevel]
+      ctx.Parameters.DynamicScope :> Dlr.Expr
+      object'
+      Dlr.const' (!ctx.Scope).GlobalLevel
+    ]
 
     let exn = Dlr.paramT<Reflection.TargetInvocationException> "~exn"
 
@@ -37,7 +39,7 @@ module Scope =
             ]
           )
         ]
-        (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.DynamicScope])
+        (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.Parameters.DynamicScope :> Dlr.Expr])
       )
     ]
         
@@ -71,14 +73,14 @@ module Scope =
             [
               (Dlr.assign arguments 
                 (Dlr.callStaticT<ArgumentsObject> "New" [
-                  ctx.Env;
+                  ctx.Parameters.Function .-> "Env";
                   Dlr.const' linkMap;
-                  ctx.LocalScope;
-                  ctx.ClosureScope;
-                  ctx.Function]))
+                  ctx.Parameters.PrivateScope;
+                  ctx.Parameters.SharedScope;
+                  ctx.Parameters.Function]))
 
               (Utils.assign 
-                (Dlr.indexInt ctx.LocalScope storageIndex)
+                (Dlr.indexInt ctx.Parameters.PrivateScope storageIndex)
                 (arguments))
             ] |> Seq.ofList
           ))
@@ -89,8 +91,13 @@ module Scope =
       $ Set.toSeq
       $ Seq.map (fun name ->
         [
-          ctx.Globals $ Object.Property.put !!!name Utils.Constants.undefined 
-          ctx.Globals $ Object.Property.attr !!!name DescriptorAttrs.DontDelete
+          ctx.Parameters 
+            $ Parameters.globals 
+            $ Object.Property.put !!!name Utils.Constants.undefined 
+
+          ctx.Parameters 
+            $ Parameters.globals
+            $ Object.Property.attr !!!name DescriptorAttrs.DontDelete
         ]
       )
 
@@ -104,24 +111,25 @@ module Scope =
     | _ ->
       match ctx.Scope $ Ast.NewVars.privateCount with
       | 0 -> Dlr.void'
-      | n -> ctx.LocalScope .= Dlr.newArrayBoundsT<BV> !!!n
+      | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
 
   /// Initializes the shared scope storage
   let private initSharedScope (ctx:Ctx) =
     match ctx.Target.Mode with
     | Target.Mode.Eval -> Dlr.void'
     | _ ->
+      let functionSharedScope = ctx.Parameters.Function .-> "ClosureScope"
       match ctx.Scope $ Ast.NewVars.sharedCount with
-      | 0 -> Dlr.assign ctx.ClosureScope ctx.FunctionClosureScope
+      | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
       | n -> 
         Dlr.block [] [
-          ctx.ClosureScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
-          Dlr.index0 ctx.ClosureScope .-> "Scope" .= ctx.FunctionClosureScope
+          ctx.Parameters.SharedScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
+          Dlr.index0 ctx.Parameters.SharedScope  .-> "Scope" .= functionSharedScope
         ]
           
   ///
   let private initDynamicScope (ctx:Ctx) =
-    Dlr.assign ctx.DynamicScope ctx.FunctionDynamicScope
+    Dlr.assign ctx.Parameters.DynamicScope (ctx.Parameters.Function .-> "DynamicScope")
 
   ///
   let private initVariables (ctx:Ctx) =
@@ -152,10 +160,10 @@ module Scope =
       let storage = 
         match var with
         | Ast.Shared(storageIndex, _, _) -> 
-          Dlr.indexInt ctx.ClosureScope storageIndex 
+          Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
 
         | Ast.Private(storageIndex) ->
-          Dlr.indexInt ctx.LocalScope storageIndex 
+          Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
 
       Utils.assign storage Utils.Constants.undefined
 
@@ -163,12 +171,12 @@ module Scope =
       let storage = 
         match var with
         | Ast.Shared(storageIndex, _, _) ->
-          Dlr.indexInt ctx.ClosureScope storageIndex 
+          Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
 
         | Ast.Private(storageIndex) ->
-          Dlr.indexInt ctx.LocalScope storageIndex 
+          Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
 
-      Utils.assign storage ctx.Parameters.[parameterMap.[name]]
+      Utils.assign storage ctx.Parameters.UserParameters.[parameterMap.[name]]
 
     let defined =
       defined 
@@ -186,7 +194,7 @@ module Scope =
     let selfReference =
       match (!ctx.Scope).SelfReference with
       | None -> Dlr.void'
-      | Some name -> Identifier.setValue ctx name (ctx.Function)
+      | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
 
     Dlr.block [] [defined; selfReference; parameters]
 

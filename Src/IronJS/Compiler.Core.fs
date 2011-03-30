@@ -8,8 +8,58 @@ open IronJS.Dlr.Operators
 
 module Core =
 
+  ///
+  let compileUnary ctx op ast =
+    match op with
+    | Ast.UnaryOp.Delete -> Unary.delete ctx ast
+    | Ast.UnaryOp.TypeOf -> Unary.typeOf ctx ast
+    | Ast.UnaryOp.Void -> Unary.void' ctx ast
+    | Ast.UnaryOp.Inc -> Unary.increment ctx ast
+    | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
+    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx ast
+    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx ast
+    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx ast
+    | Ast.UnaryOp.Not -> Unary.not ctx ast
+    | Ast.UnaryOp.Plus -> Unary.plus ctx ast
+    | Ast.UnaryOp.Minus -> Unary.minus ctx ast
+    | _ -> failwithf "Invalid unary op %A" op
+
+  ///
+  let compileEval (ctx:Ctx) evalTarget =
+    let eval = Dlr.paramT<BoxedValue> "eval"
+    let target = Dlr.paramT<EvalTarget> "target"
+    let evalTarget = ctx.Compile evalTarget
+    
+    Dlr.block [eval; target] [
+      (Dlr.assign eval (ctx.Parameters |> Parameters.globals |> Object.Property.get !!!"eval"))
+      (Dlr.assign target Dlr.newT<EvalTarget>)
+
+      (Utils.assign
+        (Dlr.field target "GlobalLevel") 
+        (Dlr.const' (!ctx.Scope).GlobalLevel))
+
+      (Utils.assign
+        (Dlr.field target "ClosureLevel") 
+        (Dlr.const' (!ctx.Scope).ClosureLevel))
+
+      (*
+      (Utils.assign
+        (Dlr.field target "Closures") 
+        (Dlr.const' (!ctx.Scope).Closures))
+      *)
+        
+      (Utils.assign (Dlr.field target "Target") evalTarget)
+      (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
+      (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
+      (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
+      (Utils.assign (Dlr.field target "ClosureScope") ctx.Parameters.SharedScope)
+      (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
+
+      eval |> Function.invokeFunction ctx ctx.Parameters.This [target]
+    ]
+
   //----------------------------------------------------------------------------
-  let rec private compileAst (ctx:Ctx) ast =
+  let rec compileAst (ctx:Ctx) ast =
     match ast with
     //Constants
     | Ast.Null -> Dlr.null'
@@ -24,13 +74,13 @@ module Core =
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
     | Ast.Identifier name -> Identifier.getValue ctx name
-    | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
+    | Ast.Block trees -> Dlr.blockSimple [for t in trees -> ctx.Compile t]
     | Ast.Eval tree -> compileEval ctx tree
     | Ast.Comma(left, right) -> Dlr.block [] [ctx.Compile left; ctx.Compile right;]
     | Ast.Var ast ->
       match ast with
       | Ast.Identifier name -> Dlr.void'
-      | ast -> compileAst ctx ast
+      | ast -> ctx.Compile ast
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
@@ -72,102 +122,57 @@ module Core =
     | Ast.Regex(regex, flags) ->
       Dlr.call ctx.Env "NewRegExp" [!!!regex; !!!flags]
 
-    #if DEBUG
-    | Ast.Line (file, line) ->
-      let line = Dlr.call !!!line "ToString" []
-      let concat = Dlr.callStaticT<String> "Concat" [!!!file; !!!": "; line]
-      Dlr.callStaticT<Console> "WriteLine" [concat]
-    #endif
-
-    | _ -> failwithf "Failed to compile %A" ast
-      
-  //----------------------------------------------------------------------------
-  and private compileUnary ctx op ast =
-    match op with
-    | Ast.UnaryOp.Delete -> Unary.delete ctx ast
-    | Ast.UnaryOp.TypeOf -> Unary.typeOf ctx ast
-    | Ast.UnaryOp.Void -> Unary.void' ctx ast
-    | Ast.UnaryOp.Inc -> Unary.increment ctx ast
-    | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
-    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx ast
-    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx ast
-    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx ast
-    | Ast.UnaryOp.Not -> Unary.not ctx ast
-    | Ast.UnaryOp.Plus -> Unary.plus ctx ast
-    | Ast.UnaryOp.Minus -> Unary.minus ctx ast
-      
-  //----------------------------------------------------------------------------
-  and compileEval (ctx:Ctx) evalTarget =
-    let eval = Dlr.paramT<BoxedValue> "eval"
-    let target = Dlr.paramT<EvalTarget> "target"
-    let evalTarget = compileAst ctx evalTarget
-    
-    Dlr.block [eval; target] [
-      (Dlr.assign eval (ctx.Parameters |> Parameters.globals |> Object.Property.get !!!"eval"))
-      (Dlr.assign target Dlr.newT<EvalTarget>)
-
-      (Utils.assign
-        (Dlr.field target "GlobalLevel") 
-        (Dlr.const' (!ctx.Scope).GlobalLevel))
-
-      (Utils.assign
-        (Dlr.field target "ClosureLevel") 
-        (Dlr.const' (!ctx.Scope).ClosureLevel))
-
-      (*
-      (Utils.assign
-        (Dlr.field target "Closures") 
-        (Dlr.const' (!ctx.Scope).Closures))
-      *)
-        
-      (Utils.assign (Dlr.field target "Target") evalTarget)
-      (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
-      (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
-      (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
-      (Utils.assign (Dlr.field target "ClosureScope") ctx.Parameters.SharedScope)
-      (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
-
-      eval |> Function.invokeFunction ctx ctx.Parameters.This [target]
-    ]
+    | _ -> 
+      failwithf "Failed to compile %A" ast
 
   ///
   and compile (target:Target.T) =
 
     //Extract scope and ast from top level ast node
     let scope, ast =
+      
       match target.Ast with
-      | Ast.FunctionFast(_, scope, ast) -> 
-        let scope = ref !scope
+      | Ast.FunctionFast(_, s, ast) -> 
+
+        // Clone the scope ref
+        let s = ref !s
 
         match target.DelegateType with
-        | None -> ()
+        | None -> s, ast
         | Some delegate' ->
+          
+          // Extract argument types, and skip the two first because
+          // they are the two internal Function and This objects
           let argTypes = 
             delegate' |> FSharp.Reflection.getDelegateArgTypes
-                      |> Seq.skip 2
-                      |> Seq.toArray
+                      |> FSharp.Array.skip 2
 
+          // Skip count is the amount of types in argTypes that we should
+          // remove, because they already have parameters defined by user code
           let skipCount =
-            if argTypes.Length >= (!scope).ParameterNames.Length
-              then (!scope).ParameterNames.Length
-              else 0
+            let parameterCount = s |> Ast.NewVars.parameterCount
+            if argTypes.Length >= parameterCount then parameterCount else 0
 
-          let argLength = 
-            argTypes  |> Seq.skip skipCount
-                      |> Seq.toArray
-                      |> Array.length
+          // Extra args is the amount of extra arguments
+          // we need to add to the scope so we can accept
+          // as many parameters as required by the delegate type
+          let extraArgsCount = 
+            argTypes |> FSharp.Array.skip skipCount
+                     |> Array.length
 
-          for i = 0 to (argLength - 1) do
-            let name = "~arg" + string (!scope).ParameterNames.Length
-            scope |> Ast.NewVars.addParameterName name
-            scope |> Ast.NewVars.createPrivateVariable name
+          // Add any extra args, and since F# for loops
+          // are <= max we need to reduce extraArgsCount with 1
+          for i = 0 to (extraArgsCount - 1) do
+            let parameterCount = s |> Ast.NewVars.parameterCount
+            let name = sprintf "~arg%i" parameterCount
+            s |> Ast.NewVars.addParameterName name
+            s |> Ast.NewVars.createPrivateVariable name
 
-        scope, ast
+          // Return the scope and AST
+          s, ast
 
-      | _ -> failwith "Top AST node must be Tree.FastFunction"
-
-    //We have to clone the refs
-    //to all 
+      | _ -> 
+        failwith "Top AST node must be Tree.FastFunction"
 
     //Context
     let ctx = {
@@ -176,8 +181,8 @@ module Core =
       Context.T.InsideWith = false
       Context.T.Scope = scope
       Context.T.ClosureLevel = scope |> Ast.NewVars.closureLevel
-      Context.T.ActiveVariables = (!scope).Variables
-      Context.T.ActiveCatchScopes = ref (!scope).CatchScopes
+      Context.T.Variables = (!scope).Variables
+      Context.T.CatchScopes = ref (!scope).CatchScopes
 
       Context.T.Labels = 
         {
@@ -186,6 +191,9 @@ module Core =
           Labels.T.Continue = None
           Labels.T.BreakLabels = Map.empty
           Labels.T.ContinueLabels = Map.empty
+
+          // Currently not used, indented for solving the 
+          // finally + break/continue/return issue
           Labels.T.LabelCompiler = None
         }
 

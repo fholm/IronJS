@@ -16,7 +16,7 @@ module Identifier =
         let expr = Dlr.index0 expr .-> "Scope"
         expr |> walkSharedChain (n-1)
 
-    match ctx.ActiveVariables |> Map.tryFind name with
+    match ctx.Variables |> Map.tryFind name with
     | Some variable ->
       match variable with
       | Ast.Shared(storageIndex, globalLevel, closureLevel) ->

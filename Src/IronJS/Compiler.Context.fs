@@ -32,6 +32,10 @@ module Target =
     DelegateType: Type option
     ParameterTypes: Type array
     Environment: Env
+
+    // Currently not used, intended the top
+    // match clause in Core.compile
+    Scope: Ast.FunctionScope ref
   }
 
   /// The amount of parameters for this target
@@ -56,6 +60,9 @@ module Target =
       DelegateType = delegateType
       ParameterTypes = delegateType |> getParameterTypes
       Environment = env
+
+      // Currently not used
+      Scope = Unchecked.defaultof<Ast.FunctionScope ref>
     }
     
   /// Creates a new T record with Eval mode
@@ -149,8 +156,8 @@ module Context =
     InsideWith: bool
     ClosureLevel: int
 
-    ActiveVariables: Map<string, Ast.NewVariable>
-    ActiveCatchScopes: Ast.CatchScope ref list ref
+    Variables: Map<string, Ast.NewVariable>
+    CatchScopes: Ast.CatchScope ref list ref
   
     Target: Target.T
     Labels: Labels.T

@@ -20,6 +20,9 @@ module Function =
       Target.T.DelegateType = None
       Target.T.Environment = ctx.Target.Environment
       Target.T.ParameterTypes = [||]
+
+      // Currently not used
+      Target.T.Scope = Unchecked.defaultof<Ast.FunctionScope ref>
     }
     
     // It's faster to return a non-partially applied function

@@ -211,6 +211,21 @@ module Parser =
         then Double.PositiveInfinity
         else s |> invalidNumber |> Error.CompileError.Raise
 
+  ///
+  let hexToNumber (s:string) =
+    let s =
+      if s.StartsWith("0x") 
+        then s.Substring(2)
+        else s
+
+    let mutable i = 0
+    let mutable bi = Unchecked.defaultof<bigint>
+    if Int32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
+      then i |> double
+      elif bigint.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
+        then bi |> double
+        else failwith "Invalid integer format"
+
   /// The current tokens symbol
   let csymbol (p:P) = p.Token |> symbol
 
@@ -1213,20 +1228,6 @@ module Parser =
     let block = p |> block 
     p.BlockLevel <- p.BlockLevel - 1
     block
-
-  let hexToNumber (s:string) =
-    let s =
-      if s.StartsWith("0x") 
-        then s.Substring(2)
-        else s
-
-    let mutable i = 0
-    let mutable bi = Unchecked.defaultof<bigint>
-    if Int32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
-      then i |> double
-      elif bigint.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
-        then bi |> double
-        else failwith "Invalid integer format"
    
   let internal parserDefinition =
     create position prettyPrint

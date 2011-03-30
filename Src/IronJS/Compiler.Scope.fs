@@ -13,7 +13,8 @@ module Scope =
   //----------------------------------------------------------------------------
   // 12.10 the with statement
   let with' (ctx:Ctx) init tree =
-    let object' = Dlr.callStaticT<TC> "ToObject" [ctx.Parameters.Function .-> "Env"; ctx.Compile init]
+    let args = [ctx.Parameters.Function .-> "Env"; ctx.Compile init]
+    let object' = Dlr.callStaticT<TC> "ToObject" args
     let tree = {ctx with InsideWith = true}.Compile tree
 
     let pushArgs = [
@@ -183,20 +184,20 @@ module Scope =
       |> Map.toSeq
       |> Seq.filter fromThisScope
       |> Seq.map initDefined
-      |> Dlr.block []
+      |> Dlr.Fast.blockOfSeq []
 
     let parameters =
       parameters
       |> Map.toSeq
       |> Seq.map initParameter
-      |> Dlr.block []
+      |> Dlr.Fast.blockOfSeq  []
 
     let selfReference =
       match (!ctx.Scope).SelfReference with
       | None -> Dlr.void'
       | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
 
-    Dlr.block [] [defined; selfReference; parameters]
+    Dlr.Fast.block [||] [|defined; selfReference; parameters|]
 
   ///
   let init (ctx:Ctx) =
@@ -211,13 +212,13 @@ module Scope =
     let argumentsInit = ctx $ initArguments
 
     let initBlock = 
-      Dlr.block [] [
+      Dlr.Fast.block [||] [|
         globalScopeInit
         privateScopeInit
         sharedScopeInit
         dynamicScopeInit
         variablesInit
         argumentsInit
-      ]
+      |]
 
     initBlock, ctx

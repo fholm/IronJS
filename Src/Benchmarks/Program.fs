@@ -11,6 +11,14 @@ let setTestDirectory () =
   let project = Directory.GetParent(current).Parent.FullName
   project + @"\sunspider-0.9.1" |> Directory.SetCurrentDirectory
 
+let test (ctx:Ijs.T) =
+  for file in Directory.GetFiles(".") do
+    if file.EndsWith(".js") then
+      let ast, data = file |> IronJS.Compiler.Parser.parseFile ctx.Env
+      data |> IronJS.Compiler.Analyzer.analyzeScopeChain
+      let global' = ast |> IronJS.Compiler.Core.compileAsGlobal ctx.Env
+      ()
+
 [<EntryPoint>]
 let main (args:string array) = 
   
@@ -25,11 +33,16 @@ let main (args:string array) =
   // Create IronJS context
   let ctx = Ijs.createContext()
 
-  for file in Directory.GetFiles(".") do
-    if file.EndsWith(".js") then
-      let ast, data = file |> IronJS.Compiler.Parser.parseFile ctx.Env
-      data |> IronJS.Compiler.Analyzer.analyzeScopeChain
-      let global' = ast |> IronJS.Compiler.Core.compileAsGlobal ctx.Env
-      ()
+  // Warmup
+  test ctx
+
+  // Benchmark
+  let sw = Stopwatch()
+  sw.Start()
+  test ctx
+  sw.Stop()
+
+  printfn "Time: %i, Press [Enter] to exit" sw.ElapsedMilliseconds
+  Console.ReadLine() |> ignore
 
   0

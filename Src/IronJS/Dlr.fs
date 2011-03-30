@@ -423,7 +423,7 @@ module Dlr =
   let assignDefault ex = assign ex (default' ex.Type)
   let assignNull = assignDefault
 
-  module V2 = 
+  module Fast = 
 
     open System
 
@@ -483,6 +483,19 @@ module Dlr =
       match FSharp.Reflection.getMethodArgs expr.Type name (exprTypes args) with
       | Some method' -> Expr.Call(expr, method', args) :> Expr
       | None -> failwith "No method found with matching name and arguments"
+
+    let block (parameters:Parameter array) (expressions:Expr array) =
+      Et.Block(parameters, expressions) :> Expr
+
+    let blockOfSeq (parameters:ExprParam seq) (expressions:Expr seq) =
+      Et.Block(parameters, expressions) :> Expr
+
+    let blockTemp tempType (f:Parameter -> Expr array) =
+      let tmp = param (tmpName()) tempType
+      tmp |> f |> block [|tmp|]
+
+    let blockTempT<'a> f =
+      blockTmp typeof<'a> f
 
     module Object =
       

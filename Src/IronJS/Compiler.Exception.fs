@@ -17,14 +17,14 @@ module Exception =
     match catch with
     | Ast.Catch(name, ast) ->
 
-      match !ctx.ActiveCatchScopes with
+      match !ctx.CatchScopes with
       | [] -> failwith "Missing catch scopes"
       | x::xs ->
         let catch = !x
 
         // Remove the catch scope from the
         // current contexts list of possible scopes
-        ctx.ActiveCatchScopes := xs
+        ctx.CatchScopes := xs
 
         // The .NET/DLR exception parameter
         let caughtExn = 
@@ -39,9 +39,8 @@ module Exception =
         let ctx = 
           {ctx with 
             ClosureLevel = catch.ClosureLevel
-            ActiveCatchScopes = ref catch.CatchScopes
-            ActiveVariables = 
-              ctx.ActiveVariables |> Map.add catch.Name sharedVariable
+            CatchScopes = ref catch.CatchScopes
+            Variables = ctx.Variables |> Map.add catch.Name sharedVariable
           }
 
         let catchBlock =

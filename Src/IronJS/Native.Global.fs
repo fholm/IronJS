@@ -23,13 +23,9 @@ module Global =
           let scope = ref {Ast.Scope.New with Variables=target.Closures}
           let tree = Ast.FunctionFast(None, scope, ast)
           let levels = Some(target.GlobalLevel, target.ClosureLevel)
-          
-          Core.compile {
-            Ast = ast
-            TargetMode = TargetMode.Eval
-            Delegate = None
-            Environment = target.Function.Env
-          }
+          let env = target.Function.Env
+
+          env |> Target.createEval ast |> Core.compile
         )
 
       let localScope =

@@ -273,6 +273,10 @@ module Ast =
       (!s).ParameterNames
 
     ///
+    let parameterCount (s:S) =
+      (!s).ParameterNames.Length
+
+    ///
     let privateCount (s:S) = 
       (!s).PrivateCount
 

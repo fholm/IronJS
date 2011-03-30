@@ -26,9 +26,10 @@ let main (args:string array) =
   let ctx = Ijs.createContext()
 
   for file in Directory.GetFiles(".") do
-    let ast, data = file |> IronJS.Compiler.Parser.parseFile ctx.Env
-    data |> IronJS.Compiler.Analyzer.analyzeScopeChain
-    let global' = ast |> IronJS.Compiler.Core.compileAsGlobal ctx.Env
-    ()
+    if file.EndsWith(".js") then
+      let ast, data = file |> IronJS.Compiler.Parser.parseFile ctx.Env
+      data |> IronJS.Compiler.Analyzer.analyzeScopeChain
+      let global' = ast |> IronJS.Compiler.Core.compileAsGlobal ctx.Env
+      ()
 
   0

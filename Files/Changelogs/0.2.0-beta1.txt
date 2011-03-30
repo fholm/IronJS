@@ -1,22 +1,23 @@
 ### Changelog for 0.2.0-beta1 ###
 
 * Major API refactoring moving all Module/Functions located in Api.fs to their appropiate classes in Core.fs instead
-* Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
 * Re-implemented the AST analyzer to make it single pass
+* Re-implemented variable handling allowing for faster and easier compilation
 * Removed the dependancy of Microsoft.Dynamic.dll for CLR4 projects
 * Removed dependancy on FSKit 
 * Implemented the Date object
 * Implemented the RegExp object
 * Implemented missing functionality on String.prototype (match, split, search, replace)
 * Implemented F# operators ? and ?<- for setting/getting properties on CommonObject instances
-* Implemented operators for all common binary DLR expressions
-* Cleaned up and removed a lot of old/redundant code
+* Implemented F# operators for all common binary DLR expressions
+* Implemented a Sputnik test suite runner, courtesy of John Gietzen
+* Implemented a proper REPL console, available in the aptly named "REPL" project.
 * Implemented dynamic invoke operators for calling IronJS functions with an unknown amount of arguments
+* Implemented a new F# based lexer and parser which allows IronJS to drop the dependencies on Xebic.ES3.dll and Antlr.Runtime.dll
+* Cleaned up and removed a lot of old/redundant code
 * Renamed ObjectClass to "Schema" and split out the dynamic functionallity into it's own DynamicSchema class
 * Replaced the FunctionCompiler class with an F# function with the signature IronJS.FunctionObject -> System.Type -> #Delegate
 * A lot of smaller improvements to code stability, readability and ECMA3 conformance
 * Added debug constructs in big parts of the codebase that only gets compiled when the DEBUG flag is set
 * Refactored several constructors in the IronJS.Ast.Tree union to be more obvious
 * Unified error handling, so it all passes through IronJS.Error and its members
-* Re-implemented variable handling allowing for faster and easier compilation
-* A new Sputnik test runner, courtesy of John Gietzen

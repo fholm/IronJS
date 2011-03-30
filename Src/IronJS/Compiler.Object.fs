@@ -2,10 +2,13 @@
 
 open System
 open IronJS
-open IronJS.Compiler.Utils
 open IronJS.Dlr
 open IronJS.Dlr.Operators
 open IronJS.Dlr.ExtensionMethods
+open IronJS.Support.CustomOperators
+open IronJS.Compiler
+open IronJS.Compiler.Utils
+open IronJS.Compiler.Context
 
 module Object =
 
@@ -142,16 +145,18 @@ module Object =
 
   // MemberExpression . Identifier
   let getProperty (ctx:Ctx) object' (name:string) =
-    let object' = object' |> ctx.Compile
+    let object' = ctx $ compile object'
 
     ensureObject ctx object'
       (Property.get !!!name)
-      (fun x -> Constants.Boxed.undefined)
+      (fun x -> 
+        Constants.Boxed.undefined
+      )
 
   // MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let index = index |> Utils.compileIndex ctx
-    let object' = object' |> ctx.Compile
+    let object' = ctx $ compile object'
 
     ensureObject ctx object'
       (fun x -> Index.get x index)
@@ -177,7 +182,7 @@ module Object =
             | Ast.Pass -> Ast.Undefined
             | value -> value
 
-          let value = ctx.Compile value
+          let value = ctx $ compile value
           let index = !!!(i |> uint32)
 
           tmp |> Index.put index value
@@ -191,7 +196,7 @@ module Object =
     let newExpr = ctx.Env.CallMember("NewObject")
 
     let setProperty tmp (name:string, value) =
-      let value = ctx.Compile value
+      let value = ctx $ compile value
       tmp |> Property.put !!!name value
 
     Dlr.blockTmpT<CO> (fun tmp -> 

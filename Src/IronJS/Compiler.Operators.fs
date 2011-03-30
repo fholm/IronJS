@@ -46,7 +46,7 @@ module Unary =
     
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
-      let args = [ctx.DynamicScope; ctx.Globals; Dlr.const' name]
+      let args = [ctx.Parameters.DynamicScope :> Dlr.Expr; ctx.Globals; Dlr.const' name]
       Dlr.callStaticT<DynamicScopeHelpers> "Delete" args
 
     elif name = "arguments" && ctx.Scope |> Ast.NewVars.isFunction then
@@ -218,7 +218,7 @@ module Binary =
 
   //----------------------------------------------------------------------------
   // 11.13.1 assignment operator =
-  let assign (ctx:Context) ltree rtree =
+  let assign (ctx:Ctx) ltree rtree =
     let value = ctx.Compile rtree
 
     match ltree with

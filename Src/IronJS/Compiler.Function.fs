@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Compiler
 
 open System
+
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
@@ -10,42 +11,51 @@ module Function =
 
   let closureScope expr = Dlr.propertyOrField expr "ScopeChain"
   let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
-
-  //----------------------------------------------------------------------------
-  let applyCompiler (compiler:Target -> Delegate) target (_:FunctionObject) delegate' =
-    compiler {target with Delegate = Some delegate'}
   
   //----------------------------------------------------------------------------
-  let makeCompiler ctx compiler tree =
+  let createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
     let target = {
-      Ast = tree
-      TargetMode = TargetMode.Function
-      Delegate = None
-      Environment = ctx.Target.Environment
-    }
+      Target.T.Ast = ast
+      Target.T.Mode = Target.Mode.Function
+      Target.T.DelegateType = None
+      Target.T.Environment = ctx.Target.Environment
+      Target.T.ParameterTypes = [||]
 
-    applyCompiler compiler target
+      // Currently not used
+      Target.T.Scope = Unchecked.defaultof<Ast.FunctionScope ref>
+    }
+    
+    // It's faster to return a non-partially applied function
+    // that can be invoked, instead of partially applying
+    // createCompiler which makes it impossible to use .InvokeFast
+    fun (f:FO) delegateType ->
+      compiler {
+        target with 
+          DelegateType = Some delegateType
+          ParameterTypes = delegateType |> Some |> Target.getParameterTypes
+        }
     
   //----------------------------------------------------------------------------
-  let create ctx compiler (scope:Ast.Scope ref) ast =
+  let create (ctx:Ctx) compiler (scope:Ast.Scope ref) ast =
     //Make sure a compiler exists for this function
     let scope = !scope
 
     if ctx.Target.Environment.HasCompiler scope.Id |> not then
-      let compiler = (makeCompiler ctx compiler ast)
+      let compiler = ctx |> createCompiler compiler ast
       ctx.Target.Environment.AddCompiler(scope.Id, compiler)
 
     let funcArgs = [
       (Dlr.const' scope.Id)
       (Dlr.const' scope.ParameterNames.Length)
-      (ctx.ClosureScope)
-      (ctx.DynamicScope)
+      (ctx.Parameters.SharedScope :> Dlr.Expr)
+      (ctx.Parameters.DynamicScope :> Dlr.Expr)
     ]
 
-    Dlr.call ctx.Env "NewFunction" funcArgs
+    let env = ctx.Parameters.Function .-> "Env"
+    Dlr.call env "NewFunction" funcArgs
 
   //----------------------------------------------------------------------------
-  let invokeFunction ctx this' args func =
+  let invokeFunction (ctx:Ctx) this' args func =
     Utils.ensureFunction ctx func
       (fun func -> 
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
@@ -61,7 +71,7 @@ module Function =
     let typeArgs = DelegateCache.addInternalArgs [for a in args -> a.Type]
     let delegateType = DelegateCache.getDelegate typeArgs
     let dynamicArgs = Identifier.getDynamicArgs ctx name
-    let defaultArgs = [Dlr.const' name; argsArray; ctx.DynamicScope]
+    let defaultArgs = [Dlr.const' name; argsArray; ctx.Parameters.DynamicScope :> Dlr.Expr]
     
     Dlr.callStaticGenericT<DynamicScopeHelpers> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
     
@@ -156,6 +166,11 @@ module Function =
   //----------------------------------------------------------------------------
   // 12.9 the return statement
   let return' (ctx:Ctx) tree =
-    Dlr.blockSimple [
-      (Utils.assign ctx.EnvReturnBox (ctx.Compile tree))
-      (Dlr.returnVoid ctx.ReturnLabel)]
+    match ctx.Labels.ReturnCompiler with
+    | None ->
+      Dlr.blockSimple [
+        (Utils.assign ctx.ReturnBox (ctx.Compile tree))
+        (Dlr.returnVoid ctx.Labels.Return)]
+
+    | Some returnCompiler ->
+      tree |> ctx.Compile |> returnCompiler

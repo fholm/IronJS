@@ -8,13 +8,63 @@ open IronJS.Dlr.Operators
 
 module Core =
 
-  //----------------------------------------------------------------------------
-  let rec private compileAst (ctx:Context) ast =
+  /// 
+  let compileUnary ctx op ast =
+    match op with
+    | Ast.UnaryOp.Delete -> Unary.delete ctx ast
+    | Ast.UnaryOp.TypeOf -> Unary.typeOf ctx ast
+    | Ast.UnaryOp.Void -> Unary.void' ctx ast
+    | Ast.UnaryOp.Inc -> Unary.increment ctx ast
+    | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
+    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx ast
+    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx ast
+    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx ast
+    | Ast.UnaryOp.Not -> Unary.not ctx ast
+    | Ast.UnaryOp.Plus -> Unary.plus ctx ast
+    | Ast.UnaryOp.Minus -> Unary.minus ctx ast
+    | _ -> failwithf "Invalid unary op %A" op
+
+  /// 
+  let compileEval (ctx:Ctx) evalTarget =
+    let eval = Dlr.paramT<BoxedValue> "eval"
+    let target = Dlr.paramT<EvalTarget> "target"
+    let evalTarget = ctx.Compile evalTarget
+    
+    Dlr.block [eval; target] [
+      (Dlr.assign eval (ctx.Parameters |> Parameters.globals |> Object.Property.get !!!"eval"))
+      (Dlr.assign target Dlr.newT<EvalTarget>)
+
+      (Utils.assign
+        (Dlr.field target "GlobalLevel") 
+        (Dlr.const' (!ctx.Scope).GlobalLevel))
+
+      (Utils.assign
+        (Dlr.field target "ClosureLevel") 
+        (Dlr.const' (!ctx.Scope).ClosureLevel))
+
+      (*
+      (Utils.assign
+        (Dlr.field target "Closures") 
+        (Dlr.const' (!ctx.Scope).Closures))
+      *)
+        
+      (Utils.assign (Dlr.field target "Target") evalTarget)
+      (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
+      (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
+      (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
+      (Utils.assign (Dlr.field target "ClosureScope") ctx.Parameters.SharedScope)
+      (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
+
+      eval |> Function.invokeFunction ctx ctx.Parameters.This [target]
+    ]
+
+  ///
+  let rec compileAst (ctx:Ctx) ast =
     match ast with
     //Constants
     | Ast.Null -> Dlr.null'
     | Ast.Pass -> Dlr.void'
-    | Ast.This -> ctx.This
+    | Ast.This -> ctx.Parameters.This :> Dlr.Expr
     | Ast.Undefined -> Utils.Constants.Boxed.undefined
     | Ast.String s -> Dlr.constant s
     | Ast.Number n -> Dlr.constant n
@@ -24,13 +74,13 @@ module Core =
     //Others
     | Ast.Convert(tag, ast) -> Unary.convert ctx tag ast
     | Ast.Identifier name -> Identifier.getValue ctx name
-    | Ast.Block trees -> Dlr.blockSimple [for t in trees -> compileAst ctx t]
+    | Ast.Block trees -> Dlr.blockSimple [for t in trees -> ctx.Compile t]
     | Ast.Eval tree -> compileEval ctx tree
     | Ast.Comma(left, right) -> Dlr.block [] [ctx.Compile left; ctx.Compile right;]
     | Ast.Var ast ->
       match ast with
       | Ast.Identifier name -> Dlr.void'
-      | ast -> compileAst ctx ast
+      | ast -> ctx.Compile ast
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
@@ -72,131 +122,99 @@ module Core =
     | Ast.Regex(regex, flags) ->
       Dlr.call ctx.Env "NewRegExp" [!!!regex; !!!flags]
 
-    #if DEBUG
-    | Ast.Line (file, line) ->
-      let line = Dlr.call !!!line "ToString" []
-      let concat = Dlr.callStaticT<String> "Concat" [!!!file; !!!": "; line]
-      Dlr.callStaticT<Console> "WriteLine" [concat]
-    #endif
+    | _ -> 
+      failwithf "Failed to compile %A" ast
 
-    | _ -> failwithf "Failed to compile %A" ast
-      
-  //----------------------------------------------------------------------------
-  and private compileUnary ctx op ast =
-    match op with
-    | Ast.UnaryOp.Delete -> Unary.delete ctx ast
-    | Ast.UnaryOp.TypeOf -> Unary.typeOf ctx ast
-    | Ast.UnaryOp.Void -> Unary.void' ctx ast
-    | Ast.UnaryOp.Inc -> Unary.increment ctx ast
-    | Ast.UnaryOp.Dec -> Unary.decrement ctx ast
-    | Ast.UnaryOp.PostInc -> Unary.postIncrement ctx ast
-    | Ast.UnaryOp.PostDec -> Unary.postDecrement ctx ast
-    | Ast.UnaryOp.BitCmpl -> Unary.complement ctx ast
-    | Ast.UnaryOp.Not -> Unary.not ctx ast
-    | Ast.UnaryOp.Plus -> Unary.plus ctx ast
-    | Ast.UnaryOp.Minus -> Unary.minus ctx ast
-      
-  //----------------------------------------------------------------------------
-  and compileEval (ctx:Context) evalTarget =
-    let eval = Dlr.paramT<BoxedValue> "eval"
-    let target = Dlr.paramT<EvalTarget> "target"
-    let evalTarget = compileAst ctx evalTarget
-    
-    Dlr.block [eval; target] [
-      (Dlr.assign eval (ctx.Globals |> Object.Property.get !!!"eval"))
-      (Dlr.assign target Dlr.newT<EvalTarget>)
+  ///
+  and compile (target:Target.T) =
 
-      (Utils.assign
-        (Dlr.field target "GlobalLevel") 
-        (Dlr.const' (!ctx.Scope).GlobalLevel))
-
-      (Utils.assign
-        (Dlr.field target "ClosureLevel") 
-        (Dlr.const' (!ctx.Scope).ClosureLevel))
-
-      (*
-      (Utils.assign
-        (Dlr.field target "Closures") 
-        (Dlr.const' (!ctx.Scope).Closures))
-      *)
-        
-      (Utils.assign (Dlr.field target "Target") evalTarget)
-      (Utils.assign (Dlr.field target "Function") ctx.Function)
-      (Utils.assign (Dlr.field target "This") ctx.This)
-      (Utils.assign (Dlr.field target "LocalScope") ctx.LocalScope)
-      (Utils.assign (Dlr.field target "ClosureScope") ctx.ClosureScope)
-      (Utils.assign (Dlr.field target "DynamicScope") ctx.DynamicScope)
-
-      eval |> Function.invokeFunction ctx ctx.This [target]
-    ]
-
-  //----------------------------------------------------------------------------
-  and compile (target:Target) =
-
-    //Extract scope and ast from top level ast node
     let scope, ast =
-      match target.Ast with
-      | Ast.FunctionFast(_, scope, ast) -> 
-        let scope = ref !scope
+      
+      // Extract scope and ast from top level ast node,
+      // which must be an Ast.FastFunction node
 
-        match target.Delegate with
-        | None -> ()
+      match target.Ast with
+      | Ast.FunctionFast(_, s, ast) -> 
+
+        // Clone the scope ref
+        let s = ref !s
+
+        match target.DelegateType with
+        | None -> s, ast
         | Some delegate' ->
+          
+          // Extract argument types, and skip the two first because
+          // they are the two internal Function and This parameters
           let argTypes = 
             delegate' |> FSharp.Reflection.getDelegateArgTypes
-                      |> Seq.skip 2
-                      |> Seq.toArray
+                      |> FSharp.Array.skip 2
 
+          // Skip count is the amount of types in argTypes that we should
+          // remove, because they already have parameters defined by user code
           let skipCount =
-            if argTypes.Length >= (!scope).ParameterNames.Length
-              then (!scope).ParameterNames.Length
-              else 0
+            let parameterCount = s |> Ast.NewVars.parameterCount
+            if argTypes.Length >= parameterCount then parameterCount else 0
 
-          let argLength = 
-            argTypes  |> Seq.skip skipCount
-                      |> Seq.toArray
-                      |> Array.length
+          // Extra args is the amount of extra arguments
+          // we need to add to the scope so we can accept
+          // as many parameters as required by the delegate type
+          let extraArgsCount = 
+            argTypes |> FSharp.Array.skip skipCount
+                     |> Array.length
 
-          for i = 0 to (argLength - 1) do
-            let name = "~arg" + string (!scope).ParameterNames.Length
-            scope |> Ast.NewVars.addParameterName name
-            scope |> Ast.NewVars.createPrivateVariable name
+          // Add any extra args, and since F# for loops
+          // are <= max we need to reduce extraArgsCount with 1
+          for i = 0 to (extraArgsCount - 1) do
+            let parameterCount = s |> Ast.NewVars.parameterCount
+            let name = sprintf "~arg%i" parameterCount
+            s |> Ast.NewVars.addParameterName name
+            s |> Ast.NewVars.createPrivateVariable name
 
-        scope, ast
+          // Return the scope and AST
+          s, ast
 
-      | _ -> failwith "Top AST node must be Tree.FastFunction"
-
-    //We have to clone the refs
-    //to all 
+      | _ -> 
+        failwith "Top AST node must be Tree.FastFunction"
 
     //Context
-    let ctx = {
-      Compiler = compileAst
-      Target = target
-      InsideWith = false
-      Scope = scope
-      ReturnLabel = Dlr.labelVoid "~return"
+    let rec ctx = {
+      Context.T.Target = target
+      Context.T.Compiler = compileAst
+      Context.T.InsideWith = false
+      Context.T.Scope = scope
+      Context.T.ClosureLevel = scope |> Ast.NewVars.closureLevel
+      Context.T.Variables = (!scope).Variables
+      Context.T.CatchScopes = ref (!scope).CatchScopes
 
-      Break = None
-      Continue = None
-      BreakLabels = Map.empty
-      ContinueLabels = Map.empty
-      ClosureLevel = scope |> Ast.NewVars.closureLevel
+      Context.T.Labels = 
+        {
+          Labels.T.Return = Dlr.labelVoid "~return"
+          Labels.T.Break = None
+          Labels.T.Continue = None
+          Labels.T.BreakLabels = Map.empty
+          Labels.T.ContinueLabels = Map.empty
 
-      ActiveVariables = (!scope).Variables
-      ActiveCatchScopes = ref (!scope).CatchScopes
+          // Currently not used, indented for solving the 
+          // finally + break/continue/return issue
+          Labels.T.BreakCompilers = List.empty
+          Labels.T.ContinueCompilers = List.empty
+          Labels.T.ReturnCompiler = None
+        }
 
-      Function = Dlr.paramT<FO> "~function"
-      This = Dlr.paramT<CO> "~this"
-      LocalScope = Dlr.paramT<Scope> "~private"
-      ClosureScope = Dlr.paramT<Scope> "~shared"
-      DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
-
-      Parameters = target.ParamTypes |> Seq.mapi Dlr.paramI |> Seq.toArray
+      Context.T.Parameters = 
+        {
+          Parameters.T.This = Dlr.paramT<CO> "~this"
+          Parameters.T.Function = Dlr.paramT<FO> "~function"
+          Parameters.T.PrivateScope = Dlr.paramT<Scope> "~private"
+          Parameters.T.SharedScope = Dlr.paramT<Scope> "~shared"
+          Parameters.T.DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
+          Parameters.T.UserParameters = target.ParameterTypes |> Array.mapi Dlr.paramI
+        }
     }
 
     //Initialize scope
-    let scopeInit, ctx = Scope.init ctx
+    let scopeInit, ctx = 
+      Scope.init ctx
     
     //Initialize hoisted function definitions
     let initializeFunction (_, func) =
@@ -220,61 +238,107 @@ module Core =
       (!scope).Functions
       |> Map.toSeq
       |> Seq.map initializeFunction
-      |> Dlr.blockSimple
+      |> Dlr.block []
 
-    //Return expression
-    let returnExpr = 
-      if ctx.Target.IsFunction 
-        then [
-            Utils.assign ctx.EnvReturnBox Utils.Constants.Boxed.undefined;
-            Dlr.returnVoid ctx.ReturnLabel;
-            Dlr.labelExprVoid ctx.ReturnLabel; 
-            ctx.EnvReturnBox;
-          ]
+    // The internal variables is either none
+    // incase of eval (because they are passed in
+    // as parameters when the eval code is executed) 
+    // or it's the private, shared and dynamic scope objects
+    // which are created on function initialization
+    let internalVariables = 
+      match ctx.Target.Mode with
+      | Target.Mode.Eval -> [||]
+      | _ ->
+        [|
+          ctx.Parameters.PrivateScope
+          ctx.Parameters.SharedScope
+          ctx.Parameters.DynamicScope
+        |]
 
-        else []
-
-    //Local internal variables
-    let locals = 
-      if ctx.Target.IsEval then Seq.empty
-      else
-        let locals = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope;]
-        locals |> Seq.cast<Dlr.ExprParam> 
-
-    //Main function body
+    // This is the main function body, which 
+    // includes initialization of the scope,
+    // functions in the scope and the function body
     let functionBody = 
-      let body = [scopeInit; functionsInit; ctx.Compile ast] @ returnExpr
-      Dlr.block locals body
+      Dlr.block internalVariables [|
+        scopeInit
+        functionsInit
+        ctx.Compile ast
+      |]
 
-    //Parameters
-    let commonParams = [ctx.Function; ctx.This] |> Seq.cast<Dlr.ExprParam>
-    let specificParams = 
-      if ctx.Target.IsEval then 
-        let evalParams = [ctx.LocalScope; ctx.ClosureScope; ctx.DynamicScope]
-        evalParams |> Seq.cast<Dlr.ExprParam>
+    // If the this is function code
+    // we have to append a couple 
+    // of expressions that deal with
+    // the (possible) return statement
+    let functionBody = 
+      match ctx.Target.Mode with
+      | Target.Mode.Function ->
+        [|
+          functionBody
+          Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
+          Dlr.returnVoid ctx.Labels.Return
+          Dlr.labelExprVoid ctx.Labels.Return
+          ctx.ReturnBox
+        |] |> Dlr.block []
 
-      else 
-        ctx.Parameters |> Seq.ofArray
+      | _ -> 
+        functionBody
 
-    let parameters = Seq.append commonParams specificParams
+    // The two internal parameters that
+    // always are present in every function
+    // compiled by the IronJS compiler
+    let internalParameters = 
+      [|
+        ctx.Parameters.Function
+        ctx.Parameters.This
+      |]
 
-    //Build lambda
-    let lambda = 
-      match target.Delegate with 
-      | Some d -> Dlr.lambda d parameters functionBody
-      | _ -> Dlr.lambdaAuto parameters functionBody
+    // External parameters is either the 
+    // parent scopes scope objects or 
+    // the parameters the function is called with
+    let externalParameters = 
+      match ctx.Target.Mode with
+      | Target.Mode.Eval ->
+        [| 
+          ctx.Parameters.PrivateScope
+          ctx.Parameters.SharedScope
+          ctx.Parameters.DynamicScope
+        |]
+
+      | _ ->
+        ctx.Parameters.UserParameters
+
+    // Append the external parameters to the internal ones
+    // which forms the complete parameters we want to compile
+    // with, in case of target.DelegateType being present
+    // these have to match the parameter signature of the delegate
+    let allParameters =
+      Array.append internalParameters externalParameters
+
+    // Construct the lamda expression, if a DelegateType is
+    // present in the target object all of the parameters 
+    // and the return type of the constructed expression
+    // must match the lambda signature, if it's not we
+    // just .lambdaAuto which detects it automatically, but
+    // forces us to use .DynamicInvoke when calling it
+    let lambdaExpression = 
+      
+      match target.DelegateType with 
+      | Some delegateType -> 
+        Dlr.lambda delegateType allParameters functionBody
+
+      | _ -> 
+        Dlr.lambdaAuto allParameters functionBody
       
     #if DEBUG
-    lambda |> Support.Debug.printExpr
+    lambdaExpression 
+      |> Support.Debug.printExpr
     #endif
 
-    lambda.Compile()
+    // The last step is to compile the lambda expression
+    // which causes the DLR to generate the IL and return
+    // a compiled delegate which we can call .Invoke on
+    lambdaExpression.Compile()
       
-  let compileAsGlobal env tree =
-    compile {
-      TargetMode = TargetMode.Global
-      Ast = tree
-      Delegate = None
-      Environment = env
-    }
-
+  ///
+  let compileAsGlobal env ast =
+    env |> Target.create ast Target.Mode.Global None |> compile

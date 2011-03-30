@@ -44,10 +44,21 @@ module FSharp =
     
     ///
     let appendOne (item:'a) (array:'a array) =
-      let array' = Array.zeroCreate (array.Length+1)
+      let array' = Array.zeroCreate<'a>(array.Length+1)
       System.Array.Copy(array, array', array.Length)
       array'.[array.Length] <- item
       array'
+
+
+    ///
+    let skip n (array:'a array) =
+      if array.Length >= n then
+        let newArray = Array.zeroCreate<'a>(array.Length - n)
+        System.Array.Copy(array, n, newArray, 0, newArray.Length)
+        newArray
+
+      else
+        failwithf "Array is shorter then %i" n
 
   ///
   module Ref =

@@ -10,26 +10,33 @@ module Math =
   let private random (random:FunctionObject) (_:CommonObject) =
     random.Env.Random.NextDouble()
 
+  let private compNaN f a b =
+    if Double.IsNaN(a) then a
+    elif Double.IsNaN(b) then b
+    else f a b
+
   let private max (args:BoxedValue array) =
     let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
-    if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.max
+    let max = compNaN max
+    args |> Array.map toNumber |> Array.fold max NegInf
 
   let private min (args:BoxedValue array) =
     let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
-    if args.Length = 0 then NegInf else args |> Array.map toNumber |> Array.min
+    let min = compNaN min
+    args |> Array.map toNumber |> Array.fold min PosInf
 
   let setup (env:Environment) =
     let math = env.NewMath()
     
     math.Prototype <- env.Prototypes.Object
     math.Put("E", Math.E, Immutable)
-    math.Put("LN10", 2.302585092994046, Immutable)
-    math.Put("LN2", 0.6931471805599453, Immutable)
-    math.Put("LOG2E", 1.4426950408889634, Immutable)
-    math.Put("LOG10E", 0.4342944819032518, Immutable)
+    math.Put("LN10", Math.Log(10.0), Immutable)
+    math.Put("LN2", Math.Log(2.0), Immutable)
+    math.Put("LOG2E", 1.0 / Math.Log(2.0), Immutable)
+    math.Put("LOG10E", Math.Log10(Math.E), Immutable)
     math.Put("PI", Math.PI, Immutable)
-    math.Put("SQRT1_2", 0.7071067811865476, Immutable)
-    math.Put("SQRT2", 1.4142135623730951, Immutable)
+    math.Put("SQRT1_2", Math.Sqrt(0.5), Immutable)
+    math.Put("SQRT2", Math.Sqrt(2.0), Immutable)
 
     env.Globals.Put("Math", math, DontEnum)
 
@@ -49,7 +56,12 @@ module Math =
     let atan = Utils.createHostFunction env atan
     math.Put("atan", atan, DontEnum)
 
-    let inline atan2 a b = Math.Atan2(a, b)
+    let inline atan2 a b =
+      if Double.IsPositiveInfinity(a) && Double.IsPositiveInfinity(b) then Math.PI / 4.0
+      elif Double.IsPositiveInfinity(a) && Double.IsNegativeInfinity(b) then 3.0 * Math.PI / 4.0
+      elif Double.IsNegativeInfinity(a) && Double.IsPositiveInfinity(b) then -Math.PI / 4.0
+      elif Double.IsNegativeInfinity(a) && Double.IsNegativeInfinity(b) then -3.0 * Math.PI / 4.0
+      else Math.Atan2(a, b)
     let atan2 = new Func<double, double, double>(atan2)
     let atan2 = Utils.createHostFunction env atan2
     math.Put("atan2", atan2, DontEnum)
@@ -82,7 +94,13 @@ module Math =
     let min = Utils.createHostFunction env min
     math.Put("min", min, DontEnum)
 
-    let inline pow a b = Math.Pow(a, b)
+    let inline pow a b =
+      if Double.IsNaN(b) then nan
+      elif b = 0.0 then 1.0
+      elif Double.IsNaN(a) && b <> 0.0 then nan
+      elif Math.Abs(a) = 1.0 && Double.IsPositiveInfinity(b) then nan
+      elif Math.Abs(a) = 1.0 && Double.IsNegativeInfinity(b) then nan
+      else Math.Pow(a, b)
     let pow = new Func<double, double, double>(pow)
     let pow = Utils.createHostFunction env pow
     math.Put("pow", pow, DontEnum)
@@ -91,7 +109,10 @@ module Math =
     let random = Utils.createHostFunction env random
     math.Put("random", random, DontEnum)
 
-    let round = new Func<double, double>(Math.Round)
+    let inline round a =
+      if a < 0.0 && a > -0.5 then Math.Round(a)
+      else Math.Floor(a + 0.5)
+    let round = new Func<double, double>(round)
     let round = Utils.createHostFunction env round
     math.Put("round", round, DontEnum)
     

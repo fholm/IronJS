@@ -55,8 +55,11 @@ module Global =
   let parseInt (str:string) = 
     str |> Int32.Parse |> double |> BV.Box
 
-  let parseFloat (str:string) = 
-    str |> TC.ToNumber |> BV.Box
+  let parseFloat (str:string) =
+    let trimmedString = str.TrimStart()
+    let prefixMatch = System.Text.RegularExpressions.Regex.Match(trimmedString, @"^[-+]?(Infinity|([0-9]+\.[0-9]*|[0-9]*\.[0-9]+|[0-9]+)([eE][-+]?[0-9]+)?)")
+    if prefixMatch.Success = false then nan |> BV.Box
+    else prefixMatch.Value |> TC.ToNumber |> BV.Box
 
   let isNaN (number:double) = 
     number <> number |> BV.Box

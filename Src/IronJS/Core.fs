@@ -2128,7 +2128,7 @@ and TypeConverter() =
       if Double.IsInfinity m then sign + "Infinity"
       else
         let format = "0.00000000000000000e0"
-        let parts = m.ToString(format).Split('e')
+        let parts = m.ToString(format, invariantCulture).Split('e')
         let s = parts.[0].TrimEnd('0').Replace(".", "")
         let k = s.Length
         let n = System.Int32.Parse(parts.[1]) + 1

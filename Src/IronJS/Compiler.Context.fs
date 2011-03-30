@@ -108,8 +108,8 @@ module NewContext =
   }
 
   ///
-  let compile ast (t:T) =
-    ast |> t.Compiler t
+  let inline compile ast (t:T) =
+    t.Compiler t ast
 
 
 //------------------------------------------------------------------------------
@@ -140,9 +140,7 @@ type Target = {
   member x.IsEval = x.TargetMode = TargetMode.Eval
   member x.IsGlobal = x.TargetMode = TargetMode.Global
 
-//------------------------------------------------------------------------------
-// Class representing an eval operation
-//------------------------------------------------------------------------------
+///
 type [<AllowNullLiteral>] EvalTarget() = 
   [<DefaultValue>] val mutable Target : BoxedValue
   [<DefaultValue>] val mutable GlobalLevel : int

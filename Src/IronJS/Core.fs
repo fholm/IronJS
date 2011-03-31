@@ -1067,15 +1067,18 @@ and [<AllowNullLiteral>] RegExpObject =
 
   new (env, pattern, options, global') as this =
     {
-      inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp)
+      inherit CO(env, env.Maps.RegExp, env.Prototypes.RegExp)
       RegExp = null
       Global = global'
     }
     then
-    try
-      this.RegExp <- new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
-    with
-      | :? ArgumentException as e -> env.RaiseSyntaxError(e.Message)
+      try
+        let options = options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled
+        this.RegExp <- new Regex(pattern, options)
+
+      with
+        | :? ArgumentException as e -> 
+          env.RaiseSyntaxError(e.Message)
 
   new (env, pattern) = 
     RegExpObject(env, pattern, RegexOptions.None, false)

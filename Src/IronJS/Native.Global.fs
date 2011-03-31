@@ -135,32 +135,41 @@ module Global =
   let private replaceChar (uri:string) (c:char) =
     uri.Replace(Uri.EscapeDataString(string c), string c)
 
-  let decodeURI (uri:BoxedValue) =
+  let decodeURI (env:Environment) (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
       let uri = uri |> TypeConverter.ToString
-      Uri.UnescapeDataString(uri.Replace('+', ' '))
-      
+      try
+        Uri.UnescapeDataString(uri.Replace('+', ' '))
+      with
+        | :? UriFormatException as e -> env.RaiseURIError(e.Message)
+
   let decodeURIComponent = 
     decodeURI
-  
-  let encodeURI (uri:BoxedValue) =
+
+  let encodeURI (env:Environment) (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
-      let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
-      let uri = Array.fold replaceChar uri reservedEncoded
-      let uri = Array.fold replaceChar uri reservedEncodedComponent
-      uri.ToUpperInvariant()
-      
-  let encodeURIComponent (uri:BoxedValue) =
+      try
+        let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
+        let uri = Array.fold replaceChar uri reservedEncoded
+        let uri = Array.fold replaceChar uri reservedEncodedComponent
+        uri.ToUpperInvariant()
+      with
+        | :? UriFormatException as e -> env.RaiseURIError(e.Message)
+
+  let encodeURIComponent (env:Environment) (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> ""
     | _ ->
-      let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
-      let uri = Array.fold replaceChar uri reservedEncodedComponent
-      uri.ToUpperInvariant()
+      try
+        let uri = uri |> TypeConverter.ToString |> Uri.EscapeDataString
+        let uri = Array.fold replaceChar uri reservedEncodedComponent
+        uri.ToUpperInvariant()
+      with
+        | :? UriFormatException as e -> env.RaiseURIError(e.Message)
 
   let setup (env:Environment) =
     let attrs = DontDelete ||| DontEnum
@@ -190,18 +199,18 @@ module Global =
     let isFinite = Utils.createHostFunction env isFinite
     env.Globals.Put("isFinite", isFinite, DontEnum)
 
-    let decodeURI = new Func<BoxedValue, string>(decodeURI)
+    let decodeURI = new Func<BoxedValue, string>(decodeURI env)
     let decodeURI = Utils.createHostFunction env decodeURI
     env.Globals.Put("decodeURI", decodeURI, DontEnum)
     
-    let decodeURIComponent = new Func<BoxedValue, string>(decodeURIComponent)
+    let decodeURIComponent = new Func<BoxedValue, string>(decodeURIComponent env)
     let decodeURIComponent = Utils.createHostFunction env decodeURIComponent
     env.Globals.Put("decodeURIComponent", decodeURIComponent, DontEnum)
     
-    let encodeURI = new Func<BoxedValue, string>(encodeURI)
+    let encodeURI = new Func<BoxedValue, string>(encodeURI env)
     let encodeURI = Utils.createHostFunction env encodeURI
     env.Globals.Put("encodeURI", encodeURI, DontEnum)
 
-    let encodeURIComponent = new Func<BoxedValue, string>(encodeURIComponent)
+    let encodeURIComponent = new Func<BoxedValue, string>(encodeURIComponent env)
     let encodeURIComponent = Utils.createHostFunction env encodeURIComponent
     env.Globals.Put("encodeURIComponent", encodeURIComponent, DontEnum)

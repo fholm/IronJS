@@ -1034,13 +1034,13 @@ and [<AllowNullLiteral>] CommonObject =
 *)
 and VO = ValueObject
 and [<AllowNullLiteral>][<AbstractClass>] ValueObject = 
-  inherit CommonObject
+  inherit CO
 
   [<DefaultValue>]
   val mutable Value : Descriptor
   
   new (env, map, prototype) = {
-    inherit CommonObject(env, map, prototype)
+    inherit CO(env, map, prototype)
   }
 
   static member GetValue(o:CO) =
@@ -1054,7 +1054,7 @@ and [<AllowNullLiteral>][<AbstractClass>] ValueObject =
 *)
 and RO = RegExpObject
 and [<AllowNullLiteral>] RegExpObject = 
-  inherit CommonObject
+  inherit CO
 
   val mutable RegExp : Regex
   val Global : bool
@@ -1146,7 +1146,7 @@ and ArrayLength = uint32
 and SparseArray = MutableSorted<uint32, BoxedValue>
 and AO = ArrayObject
 and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
-  inherit CommonObject(env, env.Maps.Array, env.Prototypes.Array)
+  inherit CO(env, env.Maps.Array, env.Prototypes.Array)
 
   let mutable length = size
 
@@ -1999,7 +1999,7 @@ and FinallyReturnJump(value:BV) =
 ///
 and BoxingUtils() =
 
-  static member JsBox (o:obj) =
+  static member JsBox(o:obj) =
     if o :? BV then 
       unbox o
 
@@ -2008,14 +2008,12 @@ and BoxingUtils() =
 
     else
       match o.GetType() |> TypeTag.OfType with
-      | TypeTags.Bool -> BV.Box (o :?> bool)
-      | TypeTags.Number -> BV.Box (o :?> double)
+      | TypeTags.Bool -> BV.Box(o :?> bool)
+      | TypeTags.Number -> BV.Box(o :?> double)
       | tag -> BV.Box(o, tag)
 
-  static member ClrBox (o:obj) =
-    if o :? BoxedValue 
-      then (o :?> BoxedValue).ClrBoxed 
-      else o
+  static member ClrBox(o:obj) =
+    if o :? BV then (o :?> BV).ClrBoxed else o
 
 ///
 and TC = TypeConverter

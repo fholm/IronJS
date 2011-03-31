@@ -104,15 +104,26 @@ module TaggedBools =
 
   let ToTagged b = if b then True else False
 
-(*
-//  A dynamic value tagged with it's type
-*)
+module Offset =
+  #if X64
+  let [<Literal>] ValueType = 8
+  let [<Literal>] Tag = 12
+  let [<Literal>] Marker = 14
+  #else
+  let [<Literal>] ValueType = 4
+  let [<Literal>] Tag = 8
+  let [<Literal>] Marker = 10
+  #endif
+
 type BV = BoxedValue
 and Args = BV array
+
+/// This is a NaN-tagged struct that is used for representing
+/// values that don't have a known or static type at runtime
 and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
 
-    //Reference Types
+    // Reference Types
     [<FieldOffset(0)>] val mutable Clr : Object 
     [<FieldOffset(0)>] val mutable Object : CO
     [<FieldOffset(0)>] val mutable Array : AO
@@ -120,13 +131,13 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     [<FieldOffset(0)>] val mutable String : string
     [<FieldOffset(0)>] val mutable Scope : BV array
 
-    //Value Types
-    [<FieldOffset(8)>] val mutable Bool : bool
-    [<FieldOffset(8)>] val mutable Number : double
+    // Value Types
+    [<FieldOffset(Offset.ValueType)>] val mutable Bool : bool
+    [<FieldOffset(Offset.ValueType)>] val mutable Number : double
 
-    //Type & Tag
-    [<FieldOffset(12)>] val mutable Tag : uint32
-    [<FieldOffset(14)>] val mutable Marker : uint16
+    // Type & Tag
+    [<FieldOffset(Offset.Tag)>] val mutable Tag : uint32
+    [<FieldOffset(Offset.Marker)>] val mutable Marker : uint16
 
     member x.IsNumber = x.Marker < Markers.Tagged
     member x.IsTagged = x.Marker > Markers.Number

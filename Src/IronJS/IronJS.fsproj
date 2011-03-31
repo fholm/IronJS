@@ -18,7 +18,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;X64</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
@@ -31,8 +31,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants>X64</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>

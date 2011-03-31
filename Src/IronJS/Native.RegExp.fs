@@ -86,12 +86,12 @@ module RegExp =
     let result = (exec f this input).Clr 
     result <> null |> BV.Box
   
-  let internal createPrototype (env:Environment) objPrototype =
+  let internal createPrototype (env:Env) objPrototype =
     let prototype = env.NewObject()
     prototype.Prototype <- objPrototype
     prototype
 
-  let internal setupConstructor (env:Environment) =
+  let internal setupConstructor (env:Env) =
     let ctor = new JsFunc<BV, BV>(constructor')
     let ctor = ctor |> Utils.createHostFunction env
 
@@ -101,7 +101,7 @@ module RegExp =
     env.Constructors <- {env.Constructors with RegExp=ctor}
     env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
 
-  let internal setupPrototype (env:Environment) =
+  let internal setupPrototype (env:Env) =
     let create func = func |> Utils.createHostFunction env
     let proto = env.Prototypes.RegExp
 

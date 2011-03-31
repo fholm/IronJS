@@ -34,9 +34,9 @@ module Global =
           else target.LocalScope
 
       let closureScope =
-        if target.ClosureScope = null 
+        if target.SharedScope = null 
           then Array.empty<BV> 
-          else target.ClosureScope
+          else target.SharedScope
 
       let result =
         

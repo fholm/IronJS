@@ -191,5 +191,5 @@ type [<AllowNullLiteral>] EvalTarget() =
   [<DefaultValue>] val mutable This : CO
   [<DefaultValue>] val mutable EvalScope : CO
   [<DefaultValue>] val mutable LocalScope : Scope
-  [<DefaultValue>] val mutable ClosureScope : Scope
+  [<DefaultValue>] val mutable SharedScope : Scope
   [<DefaultValue>] val mutable DynamicScope : DynamicScope

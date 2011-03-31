@@ -9,24 +9,24 @@ module HostFunction =
   [<ReferenceEquality>]
   type private DispatchTarget<'a when 'a :> Delegate> = {
     Delegate : System.Type
-    Function : HostFunction<'a>
+    Function : HFO<'a>
     Invoke: Dlr.Expr -> Dlr.Expr seq -> Dlr.Expr
   }
 
-  let private marshalArgs (args:Dlr.ExprParam array) (env:Dlr.Expr) i t =
+  let private marshalArgs (args:Dlr.Parameter array) (env:Dlr.Expr) i t =
     if i < args.Length 
       then TypeConverter.ConvertTo(env, args.[i], t)
       else
         if FSharp.Utils.isTypeT<BoxedValue> t
           then Constants.Boxed.undefined else Dlr.default' t
       
-  let private marshalBoxParams (f:HostFunction<_>) args m =
+  let private marshalBoxParams (f:HFO<_>) args m =
     args
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map Compiler.Utils.box
-    |> fun x -> Seq.append m [Dlr.newArrayItemsT<BoxedValue> x]
+    |> fun x -> Seq.append m [Dlr.newArrayItemsT<BV> x]
     
-  let private marshalObjectParams (f:HostFunction<_>) (args:Dlr.ExprParam array) m =
+  let private marshalObjectParams (f:HFO<_>) (args:Dlr.Parameter array) m =
     args
     |> Seq.skip f.ArgTypes.Length
     |> Seq.map TypeConverter.ToClrObject
@@ -62,13 +62,13 @@ module HostFunction =
       | ParamsModes.ObjectParams when paramsExist -> 
         if paramsExist
           then marshalObjectParams f passedArgs marshalled
-          else addEmptyParamsObject<System.Object> passedArgs 
+          else addEmptyParamsObject<obj> passedArgs 
 
       | _ -> marshalled
 
     let invoke = target.Invoke func marshalled
     let body = 
-      if FSharp.Utils.isTypeT<BoxedValue> f.ReturnType 
+      if FSharp.Utils.isTypeT<BV> f.ReturnType 
         then invoke
         elif FSharp.Utils.isVoid f.ReturnType 
           then Utils.voidAsUndefined invoke
@@ -83,12 +83,12 @@ module HostFunction =
     lambda.Compile()
 
   let private generateInvoke<'a when 'a :> Delegate> f args =
-    let casted = Dlr.castT<HostFunction<'a>> f
+    let casted = Dlr.castT<HFO<'a>> f
     Dlr.invoke (Dlr.field casted "Delegate") args
   
-  let compile<'a when 'a :> Delegate> (x:FunctionObject) (delegate':System.Type) =
+  let compile<'a when 'a :> Delegate> (f:FO) delegateType =
     compileDispatcher {
-      Delegate = delegate'
-      Function = x :?> HostFunction<'a>
+      Delegate = delegateType
+      Function = f :?> HFO<'a>
       Invoke = generateInvoke<'a>
     }

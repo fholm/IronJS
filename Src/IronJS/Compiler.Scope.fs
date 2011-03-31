@@ -119,7 +119,7 @@ module Scope =
     match ctx.Target.Mode with
     | Target.Mode.Eval -> Dlr.void'
     | _ ->
-      let functionSharedScope = ctx.Parameters.Function .-> "ClosureScope"
+      let functionSharedScope = ctx.Parameters.Function .-> "SharedScope"
       match ctx.Scope $ Ast.NewVars.sharedCount with
       | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
       | n -> 

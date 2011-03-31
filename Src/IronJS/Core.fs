@@ -1516,11 +1516,19 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     base.Delete(index)
 
-(*
-//
-*)
-and FO = FunctionObject
 and CompiledCache = MutableDict<Type, Delegate>
+
+/// This delegate type is used for functions that are called
+/// with more then six arguments. Instead of compiling a function
+/// for each arity above six we pass in an array of BV values 
+/// instead and then sort it out inside the function body.
+and UnknownArityFunction = delegate of FO * CO * Args -> BV
+
+/// Alias for FunctionObject
+and FO = FunctionObject
+
+/// Type that is used for representing objects that also
+/// support the [[Call]] and [[Construct]] functions
 and [<AllowNullLiteral>] FunctionObject =
   inherit CommonObject
 
@@ -1529,31 +1537,31 @@ and [<AllowNullLiteral>] FunctionObject =
   val mutable ConstructorMode : byte
   val mutable CompilerCache : CompiledCache
 
-  val mutable ClosureScope : Scope
+  val mutable SharedScope : Scope
   val mutable DynamicScope : DynamicScope
      
-  new (env:Environment, funcId, closureScope, dynamicScope) = { 
-    inherit CommonObject(env, env.Maps.Function, env.Prototypes.Function)
+  new (env:Env, funcId, closureScope, dynamicScope) = { 
+    inherit CO(env, env.Maps.Function, env.Prototypes.Function)
 
     Compiler = env.Compilers.[funcId]
     CompilerCache = env.GetCompilerCache(funcId)
     FunctionId = funcId
     ConstructorMode = ConstructorModes.User
 
-    ClosureScope = closureScope
+    SharedScope = closureScope
     DynamicScope = dynamicScope
   }
 
-  new (env:Environment, propertyMap) as x = 
+  new (env:Env, propertyMap) as x = 
     {
-      inherit CommonObject(env, propertyMap, env.Prototypes.Function)
+      inherit CO(env, propertyMap, env.Prototypes.Function)
 
       Compiler = fun _ _ -> null
       CompilerCache = null
       FunctionId = env.NextFunctionId()
       ConstructorMode = 0uy
 
-      ClosureScope = null
+      SharedScope = null
       DynamicScope = List.empty
     } then
       x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
@@ -1566,7 +1574,7 @@ and [<AllowNullLiteral>] FunctionObject =
     FunctionId = 0UL
     ConstructorMode = 0uy
 
-    ClosureScope = null
+    SharedScope = null
     DynamicScope = List.empty
   }
 

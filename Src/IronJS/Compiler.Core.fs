@@ -52,7 +52,7 @@ module Core =
       (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
       (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
       (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
-      (Utils.assign (Dlr.field target "ClosureScope") ctx.Parameters.SharedScope)
+      (Utils.assign (Dlr.field target "SharedScope") ctx.Parameters.SharedScope)
       (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
 
       eval |> Function.invokeFunction ctx ctx.Parameters.This [target]

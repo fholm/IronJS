@@ -104,7 +104,7 @@ module TaggedBools =
 
   let ToTagged b = if b then True else False
 
-module Offset =
+module BoxedValueOffsets =
   #if X64
   let [<Literal>] ValueType = 8
   let [<Literal>] Tag = 12
@@ -132,12 +132,12 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     [<FieldOffset(0)>] val mutable Scope : BV array
 
     // Value Types
-    [<FieldOffset(Offset.ValueType)>] val mutable Bool : bool
-    [<FieldOffset(Offset.ValueType)>] val mutable Number : double
+    [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Bool : bool
+    [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Number : double
 
     // Type & Tag
-    [<FieldOffset(Offset.Tag)>] val mutable Tag : uint32
-    [<FieldOffset(Offset.Marker)>] val mutable Marker : uint16
+    [<FieldOffset(BoxedValueOffsets.Tag)>] val mutable Tag : uint32
+    [<FieldOffset(BoxedValueOffsets.Marker)>] val mutable Marker : uint16
 
     member x.IsNumber = x.Marker < Markers.Tagged
     member x.IsTagged = x.Marker > Markers.Number

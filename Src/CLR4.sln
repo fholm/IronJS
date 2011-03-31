@@ -31,7 +31,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{39A51F96-9421-4146-B875-D704349A51F4}"
 	ProjectSection(SolutionItems) = preProject
 		..\Files\Scripts\Browser.html = ..\Files\Scripts\Browser.html
-		..\Files\Scripts\Debug.fsx = ..\Files\Scripts\Debug.fsx
 		..\Files\Scripts\Release.fsx = ..\Files\Scripts\Release.fsx
 	EndProjectSection
 EndProject

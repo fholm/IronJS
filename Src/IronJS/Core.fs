@@ -403,22 +403,28 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     raise (new UserError(BoxedValue.Box error, 0, 0))
 
   member x.RaiseEvalError() = x.RaiseEvalError("")
-  member x.RaiseEvalError(message) = x.RaiseError(x.Prototypes.EvalError, message)
+  member x.RaiseEvalError(message) = 
+    x.RaiseError(x.Prototypes.EvalError, message)
   
   member x.RaiseRangeError() = x.RaiseRangeError("")
-  member x.RaiseRangeError(message) = x.RaiseError(x.Prototypes.RangeError, message)
+  member x.RaiseRangeError(message) = 
+    x.RaiseError(x.Prototypes.RangeError, message)
   
   member x.RaiseSyntaxError() = x.RaiseSyntaxError("")
-  member x.RaiseSyntaxError(message) = x.RaiseError(x.Prototypes.SyntaxError, message)
+  member x.RaiseSyntaxError(message) = 
+    x.RaiseError(x.Prototypes.SyntaxError, message)
   
   member x.RaiseTypeError() = x.RaiseTypeError("")
-  member x.RaiseTypeError(message) = x.RaiseError(x.Prototypes.TypeError, message)
+  member x.RaiseTypeError(message) = 
+    x.RaiseError(x.Prototypes.TypeError, message)
   
   member x.RaiseURIError() = x.RaiseURIError("")
-  member x.RaiseURIError(message) = x.RaiseError(x.Prototypes.URIError, message)
+  member x.RaiseURIError(message) = 
+    x.RaiseError(x.Prototypes.URIError, message)
   
   member x.RaiseReferenceError() = x.RaiseReferenceError("")
-  member x.RaiseReferenceError(message) = x.RaiseError(x.Prototypes.ReferenceError, message)
+  member x.RaiseReferenceError(message) = 
+    x.RaiseError(x.Prototypes.ReferenceError, message)
 
 
 #if DEBUG

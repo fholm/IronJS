@@ -169,7 +169,7 @@ module FSharp =
 
   ///
   let executeAs<'a> source (t:T) =
-    t |> execute source :?> 'a
+    t |> execute source |> BoxingUtils.ClrBox :?> 'a
 
   ///
   let executeFile path (t:T) =
@@ -177,7 +177,7 @@ module FSharp =
 
   ///
   let executeFileAs<'a> path (t:T) =
-    t |> executeFile path :?> 'a
+    t |> executeFile path |> BoxingUtils.ClrBox :?> 'a
 
   module Utils =
 

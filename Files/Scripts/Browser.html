@@ -3,19 +3,20 @@
         <title></title>
         <script type="text/javascript">
             $ERROR = alert;
-            (function () {
-                var fs = [];
 
-                for(var i = 0; i < 2; ++i) {
+            (function () {
+                foo: while(true) {
                     try {
-                        throw i;
-                    } catch(x) {
-                        fs[i] = function () { alert(x); }
+                        
+                    } finally {
+                        bar: while(false) {
+                            try {
+                                break foo;
+                            } finally {
+                                break bar;
+                            }
+                        }
                     }
-                }
-                
-                for(var i = 0; i < 2; ++i) {
-                    fs[i]();
                 }
             })();
 

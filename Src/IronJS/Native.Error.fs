@@ -19,7 +19,7 @@ module Error =
       error :> CO
 
     let setupConstructor (env:Env) (name:string) (proto:CO) update =
-      let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor' proto)
+      let ctor = new Func<FO, CO, BV, CO>(constructor' proto)
       let ctor = Utils.createHostFunction env ctor
       
       ctor.Prototype <- env.Prototypes.Function
@@ -37,23 +37,23 @@ module Error =
   let private name = "Error"
   let private updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
 
-  let toString (o:CommonObject) =
-    name + ": " + TypeConverter.ToString(o.Get "message")
+  let toString (o:CO) =
+    (o.Get("name") |> TC.ToString) + ": " + (o.Get("message") |> TC.ToString)
 
-  let createPrototype (env:Environment) proto =
+  let createPrototype (env:Env) proto =
     let prototype = env.NewError()
     prototype.Prototype <- proto
     prototype
 
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.Error
     Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.Error
     let ctor = env.Constructors.Error
     
-    let toString = new Func<CommonObject, string>(toString)
+    let toString = new Func<CO, string>(toString)
     let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 
@@ -63,11 +63,11 @@ module EvalError =
   let private name = "EvalError" 
   let private updater (ctors:Constructors) ctor = {ctors with EvalError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.EvalError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.EvalError
     let ctor = env.Constructors.EvalError
     Error.Utils.setupPrototype name ctor proto
@@ -76,11 +76,11 @@ module RangeError =
   let private name = "RangeError" 
   let private updater (ctors:Constructors) ctor = {ctors with RangeError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.RangeError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.RangeError
     let ctor = env.Constructors.RangeError
     Error.Utils.setupPrototype name ctor proto
@@ -89,11 +89,11 @@ module ReferenceError =
   let private name = "ReferenceError" 
   let private updater (ctors:Constructors) ctor = {ctors with ReferenceError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.ReferenceError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.ReferenceError
     let ctor = env.Constructors.ReferenceError
     Error.Utils.setupPrototype name ctor proto
@@ -102,11 +102,11 @@ module SyntaxError =
   let private name = "SyntaxError" 
   let private updater (ctors:Constructors) ctor = {ctors with SyntaxError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.SyntaxError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.SyntaxError
     let ctor =  env.Constructors.SyntaxError
     Error.Utils.setupPrototype name ctor proto
@@ -115,11 +115,11 @@ module URIError =
   let private name = "URIError" 
   let private updater (ctors:Constructors) ctor = {ctors with URIError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.URIError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) = 
+  let setupPrototype (env:Env) = 
     let proto = env.Prototypes.URIError
     let ctor = env.Constructors.URIError
     Error.Utils.setupPrototype name ctor proto
@@ -128,11 +128,11 @@ module TypeError =
   let private name = "TypeError" 
   let private updater (ctors:Constructors) ctor = {ctors with TypeError=ctor} 
   
-  let setupConstructor (env:Environment) =
+  let setupConstructor (env:Env) =
     let proto = env.Prototypes.TypeError
     Error.Utils.setupConstructor env name proto updater
 
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.TypeError
     let ctor = env.Constructors.TypeError
     Error.Utils.setupPrototype name ctor proto

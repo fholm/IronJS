@@ -12,6 +12,7 @@ module Dlr =
 
   type Expr = Expression
   type ExprParam = ParameterExpression
+  type Parameter = ParameterExpression
 
   type Label = LabelTarget
   type ExprType = ExpressionType
@@ -422,7 +423,7 @@ module Dlr =
   let assignDefault ex = assign ex (default' ex.Type)
   let assignNull = assignDefault
 
-  module V2 = 
+  module Fast = 
 
     open System
 
@@ -482,6 +483,27 @@ module Dlr =
       match FSharp.Reflection.getMethodArgs expr.Type name (exprTypes args) with
       | Some method' -> Expr.Call(expr, method', args) :> Expr
       | None -> failwith "No method found with matching name and arguments"
+
+    let block (parameters:Parameter array) (expressions:Expr array) =
+      if expressions.Length = 0
+        then void' 
+        elif parameters.Length = 0 
+          then Et.Block(expressions) :> Expr
+          else Et.Block(parameters, expressions) :> Expr
+
+    let blockOfSeq (parameters:ExprParam seq) (expressions:Expr seq) =
+      if Seq.length expressions = 0
+        then void' 
+        elif Seq.length parameters = 0 
+          then Et.Block(expressions) :> Expr
+          else Et.Block(parameters, expressions) :> Expr
+
+    let blockTemp tempType (f:Parameter -> Expr array) =
+      let tmp = param (tmpName()) tempType
+      tmp |> f |> block [|tmp|]
+
+    let blockTempT<'a> f =
+      blockTmp typeof<'a> f
 
     module Object =
       

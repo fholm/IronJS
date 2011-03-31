@@ -1967,7 +1967,7 @@ and [<AllowNullLiteral>] DynamicSchema =
 /// thrown from within the engine which is supposed
 /// to be catchable by user code.
 and UserError(value:BV, line:int, column:int) =
-  inherit IronJS.Error.Error("User Error")
+  inherit IronJS.Error.Error(value |> TC.ToString)
   member x.Value = value
   member x.Line = line
   member x.Column = column

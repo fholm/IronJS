@@ -85,23 +85,8 @@ module Markers =
   let [<Literal>] Tagged = 0xFFF9us
 
 module TaggedBools =
-  let True = 
-    let bytes = FSharp.Bit.double2bytes 0.0
-    bytes.[0] <- 0x1uy
-    bytes.[4] <- 0x1uy
-    bytes.[5] <- 0xFFuy
-    bytes.[6] <- 0xFFuy
-    bytes.[7] <- 0xFFuy
-    FSharp.Bit.bytes2double bytes
-
-  let False = 
-    let bytes = FSharp.Bit.double2bytes 0.0
-    bytes.[4] <- 0x1uy
-    bytes.[5] <- 0xFFuy
-    bytes.[6] <- 0xFFuy
-    bytes.[7] <- 0xFFuy
-    FSharp.Bit.bytes2double bytes
-
+  let True = -1095216660479L |> BitConverter.Int64BitsToDouble
+  let False = -1095216660480L |> BitConverter.Int64BitsToDouble
   let ToTagged b = if b then True else False
 
 module BoxedValueOffsets =

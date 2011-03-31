@@ -11,7 +11,7 @@ module Identifier =
   let getVariableStorage (name:string) (ctx:Ctx)  =
     
     let rec walkSharedChain n expr = 
-      if n = 0 then expr 
+      if n = 0 then expr
       else 
         let expr = Dlr.index0 expr .-> "Scope"
         expr |> walkSharedChain (n-1)
@@ -20,7 +20,7 @@ module Identifier =
     | Some variable ->
       match variable with
       | Ast.Shared(storageIndex, globalLevel, closureLevel) ->
-        let closureDifference = closureLevel - ctx.ClosureLevel
+        let closureDifference = ctx.ClosureLevel - closureLevel 
 
         let expr = 
           ctx.Parameters.SharedScope 

@@ -1238,8 +1238,15 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
       x.Dense <- newValues
 
   member x.Find(index:uint32) =
-    let denseExists = x.IsDense && index < Array.DenseMaxSize && x.Dense.[int index].HasValue
-    let sparseExists = x.IsDense |> not && x.Sparse.ContainsKey index
+    let denseExists = 
+      x.IsDense 
+      && index < uint32 x.Dense.Length 
+      && index < Array.DenseMaxSize 
+      && x.Dense.[int index].HasValue
+
+    let sparseExists = 
+      x.IsDense |> not 
+      && x.Sparse.ContainsKey index
 
     if index < x.Length && (denseExists || sparseExists) 
       then x

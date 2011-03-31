@@ -195,11 +195,11 @@ module Ast =
     = Catch of CatchScope ref
     | Function of FunctionScope ref
 
-  and [<NoComparison; NoEquality>] NewVariable
+  and [<NoComparison; NoEquality>] Variable
     = Shared  of int * int * int
     | Private of int
 
-  and VariableMap = Map<string, NewVariable>
+  and VariableMap = Map<string, Variable>
 
   module NewVars =
     

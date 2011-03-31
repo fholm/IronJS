@@ -163,7 +163,7 @@ module Context =
     InsideWith: bool
     ClosureLevel: int
 
-    Variables: Map<string, Ast.NewVariable>
+    Variables: Map<string, Ast.Variable>
     CatchScopes: Ast.CatchScope ref list ref
   
     Target: Target.T
@@ -183,10 +183,10 @@ type Ctx = Context.T
 
 ///
 type [<AllowNullLiteral>] EvalTarget() = 
-  [<DefaultValue>] val mutable Target : BoxedValue
+  [<DefaultValue>] val mutable Target : BV
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int
-  [<DefaultValue>] val mutable Closures : Map<string, Ast.NewVariable>
+  [<DefaultValue>] val mutable Closures : Map<string, Ast.Variable>
   [<DefaultValue>] val mutable Function : FO
   [<DefaultValue>] val mutable This : CO
   [<DefaultValue>] val mutable EvalScope : CO

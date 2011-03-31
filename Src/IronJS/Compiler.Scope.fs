@@ -152,12 +152,12 @@ module Scope =
     let scopeGlobalLevel = 
       ctx.Scope |> Ast.NewVars.globalLevel
 
-    let fromThisScope (_, var:Ast.NewVariable) =
+    let fromThisScope (_, var:Ast.Variable) =
       match var with
       | Ast.Shared(_, g, _) when g <> scopeGlobalLevel -> false
       | _ -> true
 
-    let initDefined (_, var:Ast.NewVariable) =
+    let initDefined (_, var:Ast.Variable) =
       let storage = 
         match var with
         | Ast.Shared(storageIndex, _, _) -> 
@@ -168,7 +168,7 @@ module Scope =
 
       Utils.assign storage Utils.Constants.undefined
 
-    let initParameter (name, var:Ast.NewVariable) =
+    let initParameter (name, var:Ast.Variable) =
       let storage = 
         match var with
         | Ast.Shared(storageIndex, _, _) ->

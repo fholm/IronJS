@@ -31,28 +31,57 @@ module RegExp =
 
     !result |> BV.Box
 
-  let internal exec (f:FO) (this:CO) (input:string) : BV =
-    let ro = this.CastTo<RO>()
-    let matches = ro.RegExp.Matches(input)
-    match matches.Count with
-    | 0 -> BoxedConstants.Null
-    | _ ->
-      if ro.Global then
-        let a = f.Env.NewArray(matches.Count |> uint32)
-        for i = 0 to (matches.Count-1) do
-          a.Put(uint32 i, matches.[i].Value)
-
-        a |> BV.Box
-
+  // These steps are outlined in the ECMA-262, Section 15.10.6.2
+  let internal exec (f:FO) (this:CO) (input:BV) : BV =
+    // Step 1
+    let R = this.CastTo<RO>()
+    // Step 2
+    let S = TC.ToString(input)
+    // Step 3
+    let length = S.Length
+    // Step 4
+    let lastIndex = R.Get("lastIndex")
+    // Step 5
+    let mutable i = TC.ToInteger(lastIndex)
+    // Step 6
+    let global' = R.Global  // INFO: The method of retrieving this value differs from the spec.
+    // Step 7
+    if not global' then i <- 0
+    // Step 8 is not needed
+    // Step 9, using .NET's implementation.
+    if i < 0 || i > length then
+      R.Put("lastIndex", 0)
+      BoxedConstants.Null
+    else
+      let r = R.RegExp.Match(S, i)
+      if not r.Success then
+        R.Put("lastIndex", 0)
+        BoxedConstants.Null
       else
-        let groups = matches.[0].Groups
-        let a = f.Env.NewArray(groups.Count |> uint32)
-        for i = 0 to (groups.Count-1) do
-          a.Put(uint32 i, groups.[i].Value)
+        // Step 10
+        let e = r.Index + r.Length
+        // Step 11
+        if global' then R.Put("lastIndex", e |> BV.Box)
+        // Step 12
+        let n = r.Groups.Count - 1  // We subtract 1, because .NET's implementation adds the whole string as capture group #0.
+        // Step 13
+        let A = f.Env.NewArray()
+        // Step 14
+        let matchIndex = r.Index
+        // Steps 15, 16, & 17
+        A.Put("index", matchIndex |> BV.Box)
+        A.Put("input", S |> BV.Box)
+        A.Put("length", (n+1) |> BV.Box)
+        // Steps 18 & 19
+        A.Put(uint32 0, r.Value |> BV.Box)
+        // Step 20
+        for i = 1 to n do  // We use a starting index of 1, even though .NET is 0-based, because the zeroth item is the whole capture.
+          let g = r.Groups.[i]
+          A.Put(uint32 i, if g.Success then g.Value |> BV.Box else Undefined.Boxed)
+        // Step 21
+        A |> BV.Box
 
-        a |> BV.Box
-
-  let private test (f:FO) (this:CO) (input:string) =
+  let private test (f:FO) (this:CO) (input:BV) =
     (exec f this input).Clr = null |> BV.Box
   
   let internal createPrototype (env:Environment) objPrototype =
@@ -76,5 +105,5 @@ module RegExp =
 
     proto?constructor <- env.Constructors.RegExp
     proto?toString <- (JsFunc(toString) |> create)
-    proto?exec <- (JsFunc<string>(exec) |> create)
-    proto?test <- (JsFunc<string>(test) |> create)
+    proto?exec <- (JsFunc<BV>(exec) |> create)
+    proto?test <- (JsFunc<BV>(test) |> create)

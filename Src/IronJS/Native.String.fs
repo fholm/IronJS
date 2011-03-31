@@ -97,7 +97,7 @@ module String =
     
   let internal match' (f:FO) (this:CO) (regexp:BV) =
     let regexp = regexp |> toRegExp f.Env
-    RegExp.exec f regexp (this |> TC.ToString)
+    RegExp.exec f regexp (this |> TC.ToString |> BV.Box)
 
   let private replacePattern =
     new Regex(@"\$\$|\$&|\$`|\$'|\$\d{1,2}", RegexOptions.Compiled)

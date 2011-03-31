@@ -23,8 +23,8 @@ module Utils =
     let undefined = Dlr.propertyStaticT<Undefined> "Instance"
 
     module Boxed = 
-      let null' = Dlr.propertyStaticT<BoxedConstants> "Null"
-      let zero = Dlr.propertyStaticT<BoxedConstants> "Zero"
+      let null' = Dlr.propertyStaticT<Environment> "BoxedNull"
+      let zero = Dlr.propertyStaticT<Environment> "BoxedZero"
       let undefined = Dlr.propertyStaticT<Undefined> "Boxed"
       
   //----------------------------------------------------------------------------

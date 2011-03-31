@@ -210,10 +210,9 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
 
   end
 
-(*
-//  
-*)
 and Desc = Descriptor
+
+/// 
 and [<NoComparison>] Descriptor =
   struct
     val mutable Value : BV
@@ -225,9 +224,7 @@ and [<NoComparison>] Descriptor =
     member x.IsEnumerable = (x.Attributes &&& DescriptorAttrs.DontEnum) = 0us
   end
 
-(*
-//  
-*)
+///
 and Undef = Undefined
 and [<AllowNullLiteral>] Undefined() =
   static let instance = new Undefined()
@@ -240,23 +237,7 @@ and [<AllowNullLiteral>] Undefined() =
   static member Instance = instance
   static member Boxed = boxed
 
-(*
-//  
-*)
-and [<AbstractClass>] BoxedConstants() =
-  static let zero = BV()
-  static let null' =
-    let mutable box = BV()
-    box.Tag <- TypeTags.Clr
-    box.Clr <- null
-    box
-
-  static member Zero = zero
-  static member Null = null'
-
-(*
-//  
-*)
+///
 and [<AbstractClass>] TypeTag() =
 
   static member OfType (t:Type) =
@@ -279,14 +260,22 @@ and [<AbstractClass>] TypeTag() =
 *)
 and Env = Environment
 and [<AllowNullLiteral>] Environment() = // Alias: Env
+  static let null' =
+    let mutable box = BV()
+    box.Tag <- TypeTags.Clr
+    box.Clr <- null
+    box
+
   let currentFunctionId = ref 0UL
   let currentSchemaId = ref 0UL
-  
+
   let rnd = new System.Random()
   let compilers = new MutableDict<uint64, FunctionCompiler>()
   let functionStrings = new MutableDict<uint64, string>()
-  let null' = BV.Box(null, TypeTags.Clr)
   let compiledCaches = new MutableDict<uint64, CompiledCache>()
+  
+  static member BoxedZero = BV()
+  static member BoxedNull = null'
 
   [<DefaultValue>] val mutable Return : BV
   [<DefaultValue>] val mutable Globals : CO
@@ -295,7 +284,6 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
 
-  member x.Null = null'
   member x.Random = rnd
   member x.Compilers = compilers
   member x.FunctionSourceStrings = functionStrings
@@ -453,6 +441,7 @@ and [<AllowNullLiteral>] CommonObject =
   val mutable Prototype : CO
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
+
   #if DEBUG
   val mutable DebugId : int64
   #endif
@@ -462,6 +451,7 @@ and [<AllowNullLiteral>] CommonObject =
     Prototype = prototype
     PropertySchema = map
     Properties = Array.zeroCreate (map.IndexMap.Count)
+
     #if DEBUG
     DebugId = DebugUtils.DebugId
     #endif
@@ -472,6 +462,7 @@ and [<AllowNullLiteral>] CommonObject =
     Prototype = null
     PropertySchema = null
     Properties = null
+
     #if DEBUG
     DebugId = DebugUtils.DebugId
     #endif
@@ -1818,9 +1809,7 @@ and [<AllowNullLiteral>] StringObject(env:Env) =
     else
       base.Get(s)
 
-(*
-//  
-*)
+///
 and NO = NumberObject
 and [<AllowNullLiteral>] NumberObject =
   inherit ValueObject
@@ -1831,9 +1820,7 @@ and [<AllowNullLiteral>] NumberObject =
     inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
   }
 
-(*
-//  
-*)
+///
 and BO = BooleanObject
 and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
@@ -2000,7 +1987,7 @@ and BoxingUtils() =
       unbox o
 
     elif o |> FSharp.Utils.isNull then 
-      BoxedConstants.Null
+      Environment.BoxedNull
 
     else
       match o.GetType() |> TypeTag.OfType with

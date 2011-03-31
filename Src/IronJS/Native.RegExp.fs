@@ -35,7 +35,7 @@ module RegExp =
     let ro = this.CastTo<RO>()
     let matches = ro.RegExp.Matches(input)
     match matches.Count with
-    | 0 -> BoxedConstants.Null
+    | 0 -> Environment.BoxedNull
     | _ ->
       if ro.Global then
         let a = f.Env.NewArray(matches.Count |> uint32)

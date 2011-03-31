@@ -1522,7 +1522,7 @@ and CompiledCache = MutableDict<Type, Delegate>
 /// with more then six arguments. Instead of compiling a function
 /// for each arity above six we pass in an array of BV values 
 /// instead and then sort it out inside the function body.
-and UnknownArityFunction = delegate of FO * CO * Args -> BV
+and DynamicArityFunction = delegate of FO * CO * Args -> BV
 
 /// Alias for FunctionObject
 and FO = FunctionObject

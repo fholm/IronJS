@@ -200,6 +200,42 @@ module Scope =
     Dlr.Fast.block [||] [|defined; selfReference; parameters|]
 
   ///
+  let private initializeDynamicArityFunction (ctx:Ctx) =
+    ()
+
+  ///
+  let private initializeStaticArityFunction (ctx:Ctx) =
+    ()
+
+  ///
+  let private initializeFunctionScope (ctx:Ctx) =
+    match ctx.Target.DelegateType with
+    | None -> failwith "Que?"
+    | Some delegateType ->
+      let dynamicArityType = typeof<DynamicArityFunction> 
+      if FSharp.Utils.refEq dynamicArityType delegateType
+        then ctx $ initializeDynamicArityFunction
+        else ctx $ initializeStaticArityFunction
+
+  ///
+  let private initializeGlobalScope (ctx:Ctx) =
+    ()
+
+  ///
+  let private initializeEvalScope (ctx:Ctx) =
+    ()
+
+  ///
+  let initialize (ctx:Ctx) =
+    let scope = ctx.Scope $ Ast.NewVars.clone
+    let ctx = {ctx with Scope = scope}
+
+    match ctx.Target.Mode with
+    | Target.Mode.Function -> ctx $ initializeFunctionScope 
+    | Target.Mode.Global -> ctx $ initializeGlobalScope 
+    | Target.Mode.Eval -> ctx $ initializeEvalScope 
+
+  ///
   let init (ctx:Ctx) =
     let scope = ctx.Scope $ Ast.NewVars.clone
     let ctx = {ctx with Scope = scope}

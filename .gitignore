@@ -9,12 +9,10 @@ last-test
 *.user
 *.suo
 *.dll
-*.js
 *.pdb
 *.xml
 *.XML
 *.exe
-*.txt
 *.cache
 *.force
 *.baml

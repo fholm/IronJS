@@ -1056,7 +1056,7 @@ and RO = RegExpObject
 and [<AllowNullLiteral>] RegExpObject = 
   inherit CommonObject
 
-  val RegExp : Regex
+  val mutable RegExp : Regex
   val Global : bool
 
   member x.IgnoreCase:bool =
@@ -1065,15 +1065,21 @@ and [<AllowNullLiteral>] RegExpObject =
   member x.MultiLine:bool =
     (x.RegExp.Options &&& RegexOptions.Multiline) = RegexOptions.Multiline
 
-  new (env, pattern, options, global') = {
-    inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp) 
-    RegExp = new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
-    Global = global'
-  }
+  new (env, pattern, options, global') as this =
+    {
+      inherit CommonObject(env, env.Maps.RegExp, env.Prototypes.RegExp)
+      RegExp = null
+      Global = global'
+    }
+    then
+    try
+      this.RegExp <- new Regex(pattern, options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled)
+    with
+      | :? ArgumentException as e -> env.RaiseSyntaxError(e.Message)
 
   new (env, pattern) = 
     RegExpObject(env, pattern, RegexOptions.None, false)
-    
+
 (*
 //  
 *)

@@ -71,6 +71,15 @@ module FSharp =
 
   ///
   module Reflection =
+    
+    type Method = Reflection.MethodInfo
+    type Field = Reflection.FieldInfo
+    type Constructor = Reflection.ConstructorInfo
+    type Parameter = Reflection.ParameterInfo
+    type Event = Reflection.EventInfo
+    type Member = Reflection.MemberInfo
+    type Property = Reflection.PropertyInfo
+    type LocalVariable = Reflection.LocalVariableInfo
 
     type CtorInfo = Reflection.ConstructorInfo
     type ParamInfo = Reflection.ParameterInfo

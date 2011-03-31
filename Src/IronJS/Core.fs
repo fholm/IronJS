@@ -255,11 +255,11 @@ and [<AbstractClass>] TypeTag() =
       then TypeTags.Clr
       else o.GetType() |> TypeTag.OfType
 
-(*
-//  
-*)
 and Env = Environment
-and [<AllowNullLiteral>] Environment() = // Alias: Env
+
+///
+and [<AllowNullLiteral>] Environment() =
+  
   static let null' =
     let mutable box = BV()
     box.Tag <- TypeTags.Clr

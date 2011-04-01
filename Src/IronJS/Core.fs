@@ -1669,89 +1669,71 @@ and [<AllowNullLiteral>] FunctionObject =
   member x.Call(this,args:Args) : BV =
     let func = x.CompileAs<VariadicFunction>()
     func.Invoke(x, this, args)
+
+  member x.PickReturnObject(r:BV, o:CO) =
+      match r.Tag with
+      | TypeTags.Function-> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> o |> BV.Box
     
-  member x.Construct (this:CO) =
+  member x.Construct() =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
-  member x.Construct (this:CO, a:'a) =
+  member x.Construct(a:'a) =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null, a)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o, a) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
-  member x.Construct (this:CO, a, b) =
+  member x.Construct(a, b) =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null, a, b)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o, a, b) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
-  member x.Construct (this:CO, a, b, c) =
+  member x.Construct(a, b, c) =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null, a, b, c)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o, a, b, c) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a, b, c, d) =
+  member x.Construct(a, b, c, d) =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null, a, b, c, d)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o, a, b, c, d) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, args:Args) =
+  member x.Construct(args:Args) =
     match x.ConstructorMode with
     | ConstructorModes.Host -> x.Call(null, args)
     | ConstructorModes.User -> 
       let o = x.NewInstance()
-
-      match x.Call(o, args) with
-      | x when x.IsFunction -> x.Func |> BV.Box
-      | x when x.IsObject -> x.Object |> BV.Box
-      | _ -> o |> BV.Box
+      x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-(*
-//
-*)
+/// Host function alias
 and HFO<'a when 'a :> Delegate> = HostFunction<'a>
+
+///
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit FunctionObject
   

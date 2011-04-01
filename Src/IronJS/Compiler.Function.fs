@@ -126,7 +126,6 @@ module Function =
       
       (fun f ->
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
-        let args = ctx.Globals :: args
         Dlr.callGeneric f "Construct" argTypes args
       )
 

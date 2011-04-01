@@ -29,7 +29,7 @@ module Function =
         let ast, scopeData = source |> Compiler.Parser.parseString f.Env
         scopeData |> Compiler.Analyzer.analyzeScopeChain
 
-        let compiled = Compiler.Core.compileAsGlobal f.Env ast
+        let compiled = Compiler.Core.compileGlobal f.Env ast
         (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject
       )
 

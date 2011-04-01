@@ -5,7 +5,7 @@ open IronJS.Compiler
 open IronJS.Dlr.Operators
 
 module Unary =
-      
+  
   //----------------------------------------------------------------------------
   // 11.3
   let postIncDec (ctx:Ctx) (ast:Ast.Tree) op =
@@ -149,6 +149,22 @@ module Unary =
       Dlr.callStaticT<TypeConverter> "ToNumber" [ctx.Compile ast]
 
     | _ -> failwith "Que?"
+
+  /// 
+  let compile ctx op ast =
+    match op with
+    | Ast.UnaryOp.Delete -> delete ctx ast
+    | Ast.UnaryOp.TypeOf -> typeOf ctx ast
+    | Ast.UnaryOp.Void -> void' ctx ast
+    | Ast.UnaryOp.Inc -> increment ctx ast
+    | Ast.UnaryOp.Dec -> decrement ctx ast
+    | Ast.UnaryOp.PostInc -> postIncrement ctx ast
+    | Ast.UnaryOp.PostDec -> postDecrement ctx ast
+    | Ast.UnaryOp.BitCmpl -> complement ctx ast
+    | Ast.UnaryOp.Not -> not ctx ast
+    | Ast.UnaryOp.Plus -> plus ctx ast
+    | Ast.UnaryOp.Minus -> minus ctx ast
+    | _ -> failwithf "Invalid unary op %A" op
 
 module Binary = 
 

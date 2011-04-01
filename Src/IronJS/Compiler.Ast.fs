@@ -285,6 +285,10 @@ module Ast =
       (!s).SharedCount
 
     ///
+    let catchScopes (s:S) = 
+      (!s).CatchScopes
+
+    ///
     let increaseSharedCount (s:S) =
       s := {!s with PrivateCount = (!s).PrivateCount - 1}
       s := {!s with SharedCount = (!s).SharedCount + 1}

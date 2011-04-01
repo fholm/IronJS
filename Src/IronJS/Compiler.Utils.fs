@@ -93,7 +93,16 @@ module Utils =
 
     else 
       failwithf "Can't unbox expression of type %A to %A" expr.Type type'
-        
+
+  let clrBoxed (expr:Dlr.Expr) =
+    if expr.Type = typeof<BV> then
+      expr .-> "ClrBoxed"
+
+    elif expr.Type = typeof<System.Void> then 
+      Dlr.Fast.block [||] [|expr; Dlr.null'|]
+
+    else
+      Dlr.castT<obj> expr
 
   let tempBlock (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
     if value |> Dlr.Ext.isStatic then

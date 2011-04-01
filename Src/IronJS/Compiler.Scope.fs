@@ -4,14 +4,14 @@ open System
 
 open IronJS
 open IronJS.Support.CustomOperators
+open IronJS.Support.Aliases
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 
-//------------------------------------------------------------------------------
+///
 module Scope =
 
-  //----------------------------------------------------------------------------
-  // 12.10 the with statement
+  /// 12.10 the with statement
   let with' (ctx:Ctx) init tree =
     let args = [ctx.Parameters.Function .-> "Env"; ctx.Compile init]
     let object' = Dlr.callStaticT<TC> "ToObject" args
@@ -43,218 +43,369 @@ module Scope =
         (Dlr.callStaticT<DynamicScopeHelpers> "Pop" [ctx.Parameters.DynamicScope :> Dlr.Expr])
       )
     ]
-        
-  let initArguments (ctx:Ctx) =
-    let s = ctx.Scope
 
-    if s |> Ast.NewVars.hasArgumentsObject |> not then Dlr.void'
-    else
-      match s |> Ast.NewVars.variables |> Map.tryFind "arguments" with
-      | None -> failwith "Arguments variable missing"
-      | Some var ->
-        match var with
-        | Ast.Shared(_, _, _) -> failwith "Arguments object can't be shared"
-        | Ast.Private(storageIndex) ->
-          
-          let linkMap =
-            s $ Ast.NewVars.parameterNames
-              $ List.map (fun name ->
-                  match s |> Ast.NewVars.variables |> Map.find name with
-                  | Ast.Shared(storageIndex, _, _) ->
-                    ArgumentsLinkArray.ClosedOver, storageIndex
-
-                  | Ast.Private(storageIndex) ->
-                    ArgumentsLinkArray.Locals, storageIndex
-                )
-              $ List.sortBy (fun (_, i) -> i)
-              $ Seq.take (ctx.Target $ Target.parameterCount)
-              $ Array.ofSeq
-          
-          (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
-            [
-              (Dlr.assign arguments 
-                (Dlr.callStaticT<ArgumentsObject> "New" [
-                  ctx.Parameters.Function .-> "Env";
-                  Dlr.const' linkMap;
-                  ctx.Parameters.PrivateScope;
-                  ctx.Parameters.SharedScope;
-                  ctx.Parameters.Function]))
-
-              (Utils.assign 
-                (Dlr.indexInt ctx.Parameters.PrivateScope storageIndex)
-                (arguments))
-            ] |> Seq.ofList
-          ))
-        
-  ///
-  let private initGlobalScope (ctx:Ctx) =
-    (!ctx.Scope).Globals 
-      $ Set.toSeq
-      $ Seq.map (fun name ->
-        [
-          ctx.Parameters 
-            $ Parameters.globals 
-            $ Object.Property.put !!!name Utils.Constants.undefined 
-
-          ctx.Parameters 
-            $ Parameters.globals
-            $ Object.Property.attr !!!name DescriptorAttrs.DontDelete
-        ]
-      )
-
-      $ Seq.concat
-      $ Dlr.block []
-
-  /// Initializes the private scope storage
-  let private initPrivateScope (ctx:Ctx) =
-    match ctx.Target.Mode with
-    | Target.Mode.Eval -> Dlr.void'
-    | _ ->
-      match ctx.Scope $ Ast.NewVars.privateCount with
-      | 0 -> Dlr.void'
-      | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
-
-  /// Initializes the shared scope storage
-  let private initSharedScope (ctx:Ctx) =
-    match ctx.Target.Mode with
-    | Target.Mode.Eval -> Dlr.void'
-    | _ ->
-      let functionSharedScope = ctx.Parameters.Function .-> "SharedScope"
-      match ctx.Scope $ Ast.NewVars.sharedCount with
-      | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
-      | n -> 
-        Dlr.block [] [
-          ctx.Parameters.SharedScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
-          Dlr.index0 ctx.Parameters.SharedScope  .-> "Scope" .= functionSharedScope
-        ]
-          
   ///
   let private initDynamicScope (ctx:Ctx) =
     Dlr.assign ctx.Parameters.DynamicScope (ctx.Parameters.Function .-> "DynamicScope")
 
   ///
-  let private initVariables (ctx:Ctx) =
-    let parameterCount = 
-      ctx.Target |> Target.parameterCount
+  let private getAst (ctx:Ctx) =
+    match ctx.Target.Ast with
+    | Ast.FunctionFast(_, _, ast) -> ast
+    | _ -> failwith "Top node must be of type FunctionFast" 
 
-    let parameterMap = 
-      ctx.Scope 
-      |> Ast.NewVars.parameterNames 
-      |> List.mapi (fun i n -> n, i)
-      |> List.filter (fun (_, i) -> i < parameterCount)
-      |> Map.ofList
+  /// 
+  let private initHoistedFunctions f (ctx:Ctx) : Dlr.Expr =
+    
+    let initFunction = 
+      function
+      | _, (Ast.FunctionFast(Some name, scope, body) as func) ->
+        Function.create ctx scope func $ f ctx name
 
-    let parameters, defined =
-      ctx.Scope
-      |> Ast.NewVars.variables
-      |> Map.partition (fun name _ -> parameterMap.ContainsKey name)
-
-    let scopeGlobalLevel = 
-      ctx.Scope |> Ast.NewVars.globalLevel
-
-    let fromThisScope (_, var:Ast.Variable) =
-      match var with
-      | Ast.Shared(_, g, _) when g <> scopeGlobalLevel -> false
-      | _ -> true
-
-    let initDefined (_, var:Ast.Variable) =
-      let storage = 
-        match var with
-        | Ast.Shared(storageIndex, _, _) -> 
-          Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
-
-        | Ast.Private(storageIndex) ->
-          Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
-
-      Utils.assign storage Utils.Constants.undefined
-
-    let initParameter (name, var:Ast.Variable) =
-      let storage = 
-        match var with
-        | Ast.Shared(storageIndex, _, _) ->
-          Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
-
-        | Ast.Private(storageIndex) ->
-          Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
-
-      Utils.assign storage ctx.Parameters.UserParameters.[parameterMap.[name]]
-
-    let defined =
-      defined 
-      |> Map.toSeq
-      |> Seq.filter fromThisScope
-      |> Seq.map initDefined
-      |> Dlr.Fast.blockOfSeq []
-
-    let parameters =
-      parameters
-      |> Map.toSeq
-      |> Seq.map initParameter
-      |> Dlr.Fast.blockOfSeq  []
-
-    let selfReference =
-      match (!ctx.Scope).SelfReference with
-      | None -> Dlr.void'
-      | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
-
-    Dlr.Fast.block [||] [|defined; selfReference; parameters|]
+    (!ctx.Scope).Functions
+    $ Map.toSeq
+    $ Seq.map initFunction
+    $ Dlr.block []
 
   ///
-  let private initializeDynamicArityFunction (ctx:Ctx) =
-    ()
+  let private compileAsClrValue (ctx:Ctx) =
+    match ctx $ getAst with
+    | Ast.Block nodes ->
+      let length = nodes.Length
+      let expressionList = new MutableList<Dlr.Expr>()
 
-  ///
-  let private initializeStaticArityFunction (ctx:Ctx) =
-    ()
+      for node in nodes do
+        expressionList.Add(ctx $ Context.compile node)
 
-  ///
-  let private initializeFunctionScope (ctx:Ctx) =
-    match ctx.Target.DelegateType with
-    | None -> failwith "Que?"
-    | Some delegateType ->
-      let dynamicArityType = typeof<DynamicArityFunction> 
-      if FSharp.Utils.refEq dynamicArityType delegateType
-        then ctx $ initializeDynamicArityFunction
-        else ctx $ initializeStaticArityFunction
+      // Check so we have at least one node
+      if length > 0 then
+          
+        // Convert the last expression to a 
+        // clr boxed value so we know the return
+        // type will match the GlobalCode delegate
+        expressionList.[length-1] <- 
+          expressionList.[length-1] $ Utils.clrBoxed
 
-  ///
-  let private initializeGlobalScope (ctx:Ctx) =
-    ()
+        // Wrap the expression list in a block
+        Dlr.block [] expressionList
 
-  ///
-  let private initializeEvalScope (ctx:Ctx) =
-    ()
+      // If we don't have any nodes, just return null
+      else
+        Dlr.null'
 
-  ///
-  let initialize (ctx:Ctx) =
-    let scope = ctx.Scope $ Ast.NewVars.clone
-    let ctx = {ctx with Scope = scope}
+    | node -> 
 
-    match ctx.Target.Mode with
-    | Target.Mode.Function -> ctx $ initializeFunctionScope 
-    | Target.Mode.Global -> ctx $ initializeGlobalScope 
-    | Target.Mode.Eval -> ctx $ initializeEvalScope 
+      // This is a non-block node, just compile it
+      // and wrap it as a clr boxed value so we match
+      // the return type of the GlobalCode delegate
 
-  ///
-  let init (ctx:Ctx) =
-    let scope = ctx.Scope $ Ast.NewVars.clone
-    let ctx = {ctx with Scope = scope}
+      ctx $ Context.compile node $ Utils.clrBoxed
 
-    let globalScopeInit = ctx $ initGlobalScope
-    let privateScopeInit = ctx $ initPrivateScope
-    let sharedScopeInit = ctx $ initSharedScope
-    let dynamicScopeInit = ctx $ initDynamicScope
-    let variablesInit = ctx $ initVariables
-    let argumentsInit = ctx $ initArguments
+  /// Function scope compiler
+  module private FunctionScope =
+    
+    ///
+    module private StaticArity =
+      
+      ///
+      let private syncParametersWithDelegate (ctx:Ctx) = 
+        match ctx.Target.DelegateType with
+        | Some delegate' ->
+          
+          // Extract argument types, and skip the two first because
+          // they are the two internal Function and This parameters
+          let argTypes = 
+            delegate' $ FSharp.Reflection.getDelegateArgTypes
+                      $ FSharp.Array.skip 2
 
-    let initBlock = 
+          // Skip count is the amount of types in argTypes that we should
+          // remove, because they already have parameters defined by user code
+          let skipCount =
+            let parameterCount = ctx.Scope $ Ast.NewVars.parameterCount
+            if argTypes.Length >= parameterCount then parameterCount else 0
+
+          // Extra args is the amount of extra arguments
+          // we need to add to the scope so we can accept
+          // as many parameters as required by the delegate type
+          let extraArgsCount = 
+            argTypes $ FSharp.Array.skip skipCount
+                     $ Array.length
+
+          // Add any extra args, and since F# for loops
+          // are <= max we need to reduce extraArgsCount with 1
+          for i = 0 to (extraArgsCount - 1) do
+            let parameterCount = ctx.Scope $ Ast.NewVars.parameterCount
+            let name = sprintf "~arg%i" parameterCount
+            ctx.Scope |> Ast.NewVars.addParameterName name
+            ctx.Scope |> Ast.NewVars.createPrivateVariable name
+       
+      ///
+      let private initArgumentsObject (ctx:Ctx) =
+        let s = ctx.Scope
+
+        if ctx.Scope |> Ast.NewVars.hasArgumentsObject then
+      
+          match s |> Ast.NewVars.variables |> Map.find "arguments" with
+          | Ast.Private(storageIndex) ->
+        
+            let linkMap =
+              s $ Ast.NewVars.parameterNames
+                $ List.map (fun name ->
+                    match s |> Ast.NewVars.variables |> Map.find name with
+                    | Ast.Shared(storageIndex, _, _) ->
+                      ArgumentsLinkArray.ClosedOver, storageIndex
+
+                    | Ast.Private(storageIndex) ->
+                      ArgumentsLinkArray.Locals, storageIndex
+                  )
+                $ List.sortBy (fun (_, i) -> i)
+                $ Seq.take (ctx.Target $ Target.parameterCount)
+                $ Array.ofSeq
+          
+            (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
+              [
+                (Dlr.assign arguments 
+                  (Dlr.callStaticT<ArgumentsObject> "New" [
+                    ctx.Parameters.Function .-> "Env";
+                    Dlr.const' linkMap;
+                    ctx.Parameters.PrivateScope;
+                    ctx.Parameters.SharedScope;
+                    ctx.Parameters.Function]))
+
+                (Utils.assign 
+                  (Dlr.indexInt ctx.Parameters.PrivateScope storageIndex)
+                  (arguments))
+              ] |> Seq.ofList
+            ))
+
+        else
+          Dlr.void'
+
+      /// Initializes the private scope storage
+      let private initPrivateScope (ctx:Ctx) =
+        match ctx.Scope $ Ast.NewVars.privateCount with
+        | 0 -> Dlr.void'
+        | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
+
+      /// Initializes the shared scope storage
+      let private initSharedScope (ctx:Ctx) =
+        let functionSharedScope = 
+          ctx.Parameters.Function .-> "SharedScope"
+
+        match ctx.Scope $ Ast.NewVars.sharedCount with
+        | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
+        | n -> 
+          Dlr.block [] [
+            ctx.Parameters.SharedScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
+            Dlr.index0 ctx.Parameters.SharedScope  .-> "Scope" .= functionSharedScope
+          ]
+
+      ///
+      let private initVariables (ctx:Ctx) =
+        let parameterCount = 
+          ctx.Target |> Target.parameterCount
+
+        let parameterMap = 
+          ctx.Scope 
+          |> Ast.NewVars.parameterNames 
+          |> List.mapi (fun i n -> n, i)
+          |> List.filter (fun (_, i) -> i < parameterCount)
+          |> Map.ofList
+
+        let parameters, defined =
+          ctx.Scope
+          |> Ast.NewVars.variables
+          |> Map.partition (fun name _ -> parameterMap.ContainsKey name)
+
+        let scopeGlobalLevel = 
+          ctx.Scope |> Ast.NewVars.globalLevel
+
+        let fromThisScope (_, var:Ast.Variable) =
+          match var with
+          | Ast.Shared(_, g, _) when g <> scopeGlobalLevel -> false
+          | _ -> true
+
+        let initDefined (_, var:Ast.Variable) =
+          let storage = 
+            match var with
+            | Ast.Shared(storageIndex, _, _) -> 
+              Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
+
+            | Ast.Private(storageIndex) ->
+              Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
+
+          Utils.assign storage Utils.Constants.undefined
+
+        let initParameter (name, var:Ast.Variable) =
+          let storage = 
+            match var with
+            | Ast.Shared(storageIndex, _, _) ->
+              Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
+
+            | Ast.Private(storageIndex) ->
+              Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
+
+          Utils.assign storage ctx.Parameters.UserParameters.[parameterMap.[name]]
+
+        let defined =
+          defined 
+          |> Map.toSeq
+          |> Seq.filter fromThisScope
+          |> Seq.map initDefined
+          |> Dlr.Fast.blockOfSeq []
+
+        let parameters =
+          parameters
+          |> Map.toSeq
+          |> Seq.map initParameter
+          |> Dlr.Fast.blockOfSeq  []
+
+        let selfReference =
+          match (!ctx.Scope).SelfReference with
+          | None -> Dlr.void'
+          | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
+
+        Dlr.Fast.block [||] [|defined; selfReference; parameters|]
+
+      ///
+      let private compileAst (ctx:Ctx) =
+        let functionBody =
+          [|
+            ctx $ Context.compile (ctx $ getAst)
+
+            // Assign default return value (undefined)
+            Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
+
+            // Return label
+            Dlr.labelExprVoid ctx.Labels.Return
+
+            // Last expression, return value
+            ctx.ReturnBox
+          |] 
+          
+        functionBody $ Dlr.Fast.block [||]
+
+      ///
+      let private getDelegateType (ctx:Ctx) =
+        match ctx.Target.DelegateType with
+        | Some delegateType -> delegateType
+
+      ///
+      let compile (ctx:Ctx) =
+        ctx $ syncParametersWithDelegate
+        
+        let delegateType = ctx $ getDelegateType
+        let internalVariables = ctx $ Context.getInternalVariables
+        let internalParameters = ctx $ Context.getInternalParameters
+        let parameters = Array.append internalParameters ctx.Parameters.UserParameters
+
+        let compiledAst = 
+          Dlr.Fast.block internalVariables [|
+            ctx $ initPrivateScope
+            ctx $ initSharedScope
+            ctx $ initDynamicScope
+            ctx $ initVariables
+            ctx $ initArgumentsObject
+            ctx $ initHoistedFunctions Identifier.setValue
+            ctx $ compileAst 
+          |]
+
+        Dlr.lambda delegateType parameters compiledAst
+
+    ///
+    module private DynamicArity =
+
+      ///
+      let compile (ctx:Ctx) =
+        ctx $ StaticArity.compile 
+
+    ///
+    let compile (ctx:Ctx) =
+      
+      let isDynamicArity delegateType =
+        let dynamicArityType = typeof<DynamicArityFunction> 
+        FSharp.Utils.refEq dynamicArityType delegateType
+
+      match ctx.Target.DelegateType with
+      | None -> failwith "Que?"
+      | Some delegateType ->
+        if delegateType $ isDynamicArity
+          then ctx $ DynamicArity.compile
+          else ctx $ StaticArity.compile
+
+  /// Global scope compiler
+  module private GlobalScope =  
+    
+    ///
+    let private initPrivateAndSharedScopes (ctx:Ctx) =
       Dlr.Fast.block [||] [|
-        globalScopeInit
-        privateScopeInit
-        sharedScopeInit
-        dynamicScopeInit
-        variablesInit
-        argumentsInit
+        ctx.Parameters.PrivateScope .= Dlr.defaultT<Scope>
+        ctx.Parameters.SharedScope .= Dlr.defaultT<Scope>
       |]
 
-    initBlock, ctx
+    ///
+    let private initGlobalVariables (ctx:Ctx) =
+      
+      //
+      let setUnintializedGlobal name =
+        let attributes = DescriptorAttrs.DontDelete
+        let value = Utils.Constants.undefined
+        let args = [|!!!name; value; !!!attributes|]
+        Dlr.call ctx.Globals "Put" args
+
+      (!ctx.Scope).Globals 
+        $ Set.toSeq
+        $ Seq.map setUnintializedGlobal
+        $ Dlr.Fast.blockOfSeq []
+
+    ///
+    let private putHoistedFunction (ctx:Ctx) (name:string) (func:Dlr.Expr) =
+      let attribute = DescriptorAttrs.DontDelete
+      let setVariable = Identifier.setValue ctx name func
+      let setAttribute = Dlr.call ctx.Globals "SetAttrs" [!!!name; !!!attribute]
+      Dlr.Fast.block [||] [|setVariable; setAttribute|]
+
+    ///
+    let compile (ctx:Ctx) =
+      let internalVariables = ctx $ Context.getInternalVariables
+      let internalParameters = ctx $ Context.getInternalParameters
+
+      let compiledAst = 
+        Dlr.Fast.block internalVariables [|
+          ctx $ initGlobalVariables
+          ctx $ initPrivateAndSharedScopes
+          ctx $ initDynamicScope
+          ctx $ initHoistedFunctions putHoistedFunction
+          ctx $ compileAsClrValue
+        |]
+      
+      Dlr.lambdaT<GlobalCode> internalParameters compiledAst 
+        :> Dlr.Lambda
+
+  ///
+  module private EvalScope =
+    
+    ///
+    let compile (ctx:Ctx) =
+    
+      let internalVariables = ctx $ Context.getInternalVariables
+      let internalParameters = ctx $ Context.getInternalParameters
+      let parameters = Array.append internalParameters internalVariables
+      let compiledAst = ctx $ compileAsClrValue
+
+      Dlr.lambdaT<EvalCode> parameters compiledAst 
+        :> Dlr.Lambda
+
+  ///
+  let compile (ctx:Ctx) =
+    let lambdaExpression =
+      match ctx.Target.Mode with
+      | Target.Mode.Function -> ctx $ FunctionScope.compile 
+      | Target.Mode.Global -> ctx $ GlobalScope.compile 
+      | Target.Mode.Eval -> ctx $ EvalScope.compile 
+
+    #if DEBUG
+    lambdaExpression $ Support.Debug.printExpr
+    #endif
+
+    lambdaExpression.Compile()

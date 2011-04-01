@@ -213,6 +213,9 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       | TypeTags.Clr        -> BoxFields.Clr
       | _ -> Error.CompileError.Raise(Error.invalidTypeTag tag)
 
+    static member op_Implicit(bv:BV) : obj =
+      box bv
+
   end
 
 and Desc = Descriptor
@@ -1517,6 +1520,19 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
     base.Delete(index)
 
 and CompiledCache = MutableDict<Type, Delegate>
+
+and GlobalCode = delegate of FO * CO -> obj
+and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
+
+/// We only optimize for aritys that is <= 6, any more then that
+/// and we'll use the DynamicArityFunction delegate instead.
+and StaticArityFunction = delegate of FO * CO -> BV
+and StaticArityFunction<'a> = delegate of FO * CO * 'a -> BV
+and StaticArityFunction<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
+and StaticArityFunction<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
+and StaticArityFunction<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
+and StaticArityFunction<'a, 'b, 'c, 'd, 'e> = delegate of FO * CO * 'a * 'b * 'c * 'd * 'e -> BV
+and StaticArityFunction<'a, 'b, 'c, 'd, 'e, 'f> = delegate of FO * CO * 'a * 'b * 'c * 'd * 'e * 'f -> BV
 
 /// This delegate type is used for functions that are called
 /// with more then six arguments. Instead of compiling a function

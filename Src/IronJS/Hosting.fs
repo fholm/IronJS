@@ -157,7 +157,7 @@ module FSharp =
     #endif
 
     // Compile the global code and return it
-    ast |> Compiler.Core.compileAsGlobal (t |> env)
+    ast |> Compiler.Core.compileGlobal (t |> env)
 
   ///
   let internal compileFile file (t:T) =

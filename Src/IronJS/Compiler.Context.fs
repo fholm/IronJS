@@ -157,6 +157,7 @@ module Parameters =
 module Context = 
   
   type T = {
+    CompileFunction : Target.T -> Delegate
     Compiler : T -> Ast.Tree -> Dlr.Expr
     Scope: Ast.FunctionScope ref
 
@@ -176,8 +177,24 @@ module Context =
     member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
     member x.Compile ast = x.Compiler x ast
 
+  ///
   let inline compile (ast:Ast.Tree) (t:T) =
     t.Compiler t ast
+
+  ///
+  let internal getInternalParameters (t:T) =
+    [|
+      t.Parameters.Function
+      t.Parameters.This
+    |]
+
+  ///
+  let internal getInternalVariables (t:T) =
+    [|
+      t.Parameters.PrivateScope
+      t.Parameters.SharedScope
+      t.Parameters.DynamicScope
+    |]
 
 type Ctx = Context.T
 

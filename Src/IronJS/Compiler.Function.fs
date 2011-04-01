@@ -6,13 +6,13 @@ open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 
-//------------------------------------------------------------------------------
+///
 module Function =
 
   let closureScope expr = Dlr.propertyOrField expr "ScopeChain"
   let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
   
-  //----------------------------------------------------------------------------
+  ///
   let createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
     let target = {
       Target.T.Ast = ast
@@ -35,13 +35,13 @@ module Function =
           ParameterTypes = delegateType |> Some |> Target.getParameterTypes
         }
     
-  //----------------------------------------------------------------------------
-  let create (ctx:Ctx) compiler (scope:Ast.Scope ref) ast =
+  ///
+  let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
     //Make sure a compiler exists for this function
     let scope = !scope
 
     if ctx.Target.Environment.HasCompiler scope.Id |> not then
-      let compiler = ctx |> createCompiler compiler ast
+      let compiler = ctx |> createCompiler ctx.CompileFunction ast
       ctx.Target.Environment.AddCompiler(scope.Id, compiler)
 
     let funcArgs = [
@@ -54,7 +54,7 @@ module Function =
     let env = ctx.Parameters.Function .-> "Env"
     Dlr.call env "NewFunction" funcArgs
 
-  //----------------------------------------------------------------------------
+  ///
   let invokeFunction (ctx:Ctx) this' args func =
     Utils.ensureFunction ctx func
       (fun func -> 
@@ -65,7 +65,7 @@ module Function =
         Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
       )
 
-  //----------------------------------------------------------------------------
+  ///
   let invokeIdentifierDynamic (ctx:Ctx) name args =
     let argsArray = Dlr.newArrayItemsT<obj> [for a in args -> Dlr.castT<obj> a]
     let typeArgs = DelegateCache.addInternalArgs [for a in args -> a.Type]
@@ -75,13 +75,13 @@ module Function =
     
     Dlr.callStaticGenericT<DynamicScopeHelpers> "Call" [|delegateType|] (defaultArgs @ dynamicArgs)
     
-  //----------------------------------------------------------------------------
+  ///
   let invokeIdentifier (ctx:Ctx) name args =
     if ctx.DynamicLookup 
       then invokeIdentifierDynamic ctx name args
       else name |> Identifier.getValue ctx |> invokeFunction ctx ctx.Globals args
       
-  //----------------------------------------------------------------------------
+  ///
   let invokeProperty (ctx:Ctx) object' name args =
     (Utils.ensureObject ctx object'
       (fun x -> x |> Object.Property.get !!!name |> invokeFunction ctx x args)
@@ -93,7 +93,7 @@ module Function =
         )
       ))
 
-  //----------------------------------------------------------------------------
+  ///
   let invokeIndex (ctx:Ctx) object' index args =
     (Utils.ensureObject ctx object'
       (fun x -> Object.Index.get x index |> invokeFunction ctx x args)
@@ -105,7 +105,7 @@ module Function =
         )
       ))
     
-  //----------------------------------------------------------------------------
+  ///
   let createTempVars args =
     List.foldBack (fun a (temps, args:Dlr.Expr list, ass) -> 
 
@@ -117,8 +117,7 @@ module Function =
 
     ) args ([], [], [])
 
-  //----------------------------------------------------------------------------
-  // 11.2.2 the new operator
+  /// 11.2.2 the new operator
   let new' (ctx:Ctx) func args =
     let args = [for a in args -> ctx.Compile a]
     let func = ctx.Compile func
@@ -135,8 +134,7 @@ module Function =
         Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
       )
       
-  //----------------------------------------------------------------------------
-  // 11.2.3 function calls
+  /// 11.2.3 function calls
   let invoke (ctx:Ctx) tree argTrees =
     let args = [for tree in argTrees -> ctx.Compile tree]
     let temps, args, assigns = createTempVars args
@@ -163,8 +161,7 @@ module Function =
 
     Dlr.block temps (assigns @ [invokeExpr])
     
-  //----------------------------------------------------------------------------
-  // 12.9 the return statement
+  /// 12.9 the return statement
   let return' (ctx:Ctx) tree =
     match ctx.Labels.ReturnCompiler with
     | None ->
@@ -174,3 +171,37 @@ module Function =
 
     | Some returnCompiler ->
       tree |> ctx.Compile |> returnCompiler
+
+  /// 
+  let evalInvocation (ctx:Ctx) evalTarget =
+    let eval = Dlr.paramT<BoxedValue> "eval"
+    let target = Dlr.paramT<EvalTarget> "target"
+    let evalTarget = ctx.Compile evalTarget
+    
+    Dlr.block [eval; target] [
+      (Dlr.assign eval (ctx.Parameters |> Parameters.globals |> Object.Property.get !!!"eval"))
+      (Dlr.assign target Dlr.newT<EvalTarget>)
+
+      (Utils.assign
+        (Dlr.field target "GlobalLevel") 
+        (Dlr.const' (!ctx.Scope).GlobalLevel))
+
+      (Utils.assign
+        (Dlr.field target "ClosureLevel") 
+        (Dlr.const' (!ctx.Scope).ClosureLevel))
+
+      (*
+      (Utils.assign
+        (Dlr.field target "Closures") 
+        (Dlr.const' (!ctx.Scope).Closures))
+      *)
+        
+      (Utils.assign (Dlr.field target "Target") evalTarget)
+      (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)
+      (Utils.assign (Dlr.field target "This") ctx.Parameters.This)
+      (Utils.assign (Dlr.field target "LocalScope") ctx.Parameters.PrivateScope)
+      (Utils.assign (Dlr.field target "SharedScope") ctx.Parameters.SharedScope)
+      (Utils.assign (Dlr.field target "DynamicScope") ctx.Parameters.DynamicScope)
+
+      eval |> invokeFunction ctx ctx.Parameters.This [target]
+    ]

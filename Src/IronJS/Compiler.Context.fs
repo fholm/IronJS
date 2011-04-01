@@ -43,25 +43,19 @@ module Target =
     t.ParameterTypes.Length
 
   /// Extracts the parameter types from a delegate
-  let getParameterTypes delegateType =
-    match delegateType with
+  let getParameterTypes = function
     | None -> [||]
-    | Some delegateType -> 
-      delegateType
-      |> FSharp.Reflection.getDelegateArgTypes
-      |> Dlr.ArrayUtils.RemoveFirst
-      |> Dlr.ArrayUtils.RemoveFirst
+    | Some(delegateType:Type) -> 
+      delegateType.GetGenericArguments()
 
   /// Creates a new T record
   let create ast mode delegateType env =
     {
       Ast = ast
       Mode = mode
+      Environment = env
       DelegateType = delegateType
       ParameterTypes = delegateType |> getParameterTypes
-      Environment = env
-
-      // Currently not used
       Scope = Unchecked.defaultof<Ast.FunctionScope ref>
     }
     

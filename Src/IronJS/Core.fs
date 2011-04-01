@@ -1548,11 +1548,11 @@ and NativeVariadicFunction = delegate of FO * CO * ClrArgs -> BV
 
 // We only optimize for aritys that is <= 4, any more then that
 // and we'll use the VariadicFunction delegate instead.
-and NullaryFunction = delegate of FO * CO -> BV
-and UnaryFunction<'a> = delegate of FO * CO * 'a -> BV
-and BinaryFunction<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
-and TernaryFunction<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
-and QuaternaryFunction<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
+and Function = delegate of FO * CO -> BV
+and Function<'a> = delegate of FO * CO * 'a -> BV
+and Function<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
+and Function<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
+and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
 
 /// Alias for FunctionObject
 and FO = FunctionObject
@@ -1647,30 +1647,30 @@ and [<AllowNullLiteral>] FunctionObject =
     compiled :?> 'a
 
   member x.Call(this) : BV  =
-    let func = x.CompileAs<NullaryFunction>()
+    let func = x.CompileAs<Function>()
     func.Invoke(x, this)
 
   member x.Call(this,a:'a) : BV  =
-    let func = x.CompileAs<UnaryFunction<'a>>()
+    let func = x.CompileAs<Function<'a>>()
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) : BV  =
-    let func = x.CompileAs<BinaryFunction<'a,'b>>()
+    let func = x.CompileAs<Function<'a,'b>>()
     func.Invoke(x, this, a, b)
     
   member x.Call(this,a:'a,b:'b,c:'c) : BV  =
-    let func = x.CompileAs<TernaryFunction<'a,'b,'c>>()
+    let func = x.CompileAs<Function<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
-    let func = x.CompileAs<QuaternaryFunction<'a,'b,'c,'d>>()
+    let func = x.CompileAs<Function<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
   member x.Call(this,args:Args) : BV =
     let func = x.CompileAs<VariadicFunction>()
     func.Invoke(x, this, args)
 
-  member x.PickReturnObject(r:BV, o:CO) =
+  member private x.PickReturnObject(r:BV, o:CO) =
       match r.Tag with
       | TypeTags.Function-> r.Func |> BV.Box
       | TypeTags.Object -> r.Object |> BV.Box

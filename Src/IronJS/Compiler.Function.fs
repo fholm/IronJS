@@ -55,15 +55,37 @@ module Function =
     Dlr.call env "NewFunction" funcArgs
 
   ///
-  let invokeFunction (ctx:Ctx) this' args func =
-    Utils.ensureFunction ctx func
-      (fun func -> 
+  let invokeFunction (ctx:Ctx) this (args:Dlr.Expr list) func =
+    
+    //
+    let invokeJs func =
+
+      if args.Length > 4 then
+        let variadicArray = 
+          Dlr.paramT<BV array> "~args"
+
+        Dlr.Fast.block [|variadicArray|] [|
+          variadicArray .= Dlr.newArrayBoundsT<BV> (!!!args.Length)
+
+          Dlr.Fast.blockOfSeq [] 
+            (List.mapi (fun i arg -> 
+              Utils.assign (Dlr.indexInt variadicArray i) arg
+            ) args) 
+
+          Dlr.call func "Call" [|this; variadicArray|]
+        |]
+
+      else
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
-        let args = this' :: args
-        Dlr.callGeneric func "Call" argTypes args)
-      (fun _ -> 
-        Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
-      )
+        let args = this :: args
+        Dlr.callGeneric func "Call" argTypes args
+
+    //
+    let invokeClr func =
+      Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+
+    //
+    Utils.ensureFunction ctx func invokeJs invokeClr
 
   ///
   let invokeIdentifierDynamic (ctx:Ctx) name args =

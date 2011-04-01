@@ -84,20 +84,6 @@ module Exception =
     Dlr.throwT<FinallyReturnJump> [Utils.box expr]
 
   ///
-  (*
-  let private jumpCompiler type' availableLabels usedLabels (name:string) (compareTo:Dlr.Label) =
-    match availableLabels $ Map.tryFind name with
-    | None -> None
-    | Some (index:int, label:Dlr.Label) ->
-      if FSharp.Utils.refEq label compareTo then 
-        usedLabels := !usedLabels $ Map.add index label
-        Dlr.throw type' [!!!index] $ Some
-
-      else 
-        None
-  *)
-
-  ///
   let private buildCatchJumpBlock type' usedLabels =
     let jumpExn = Dlr.param "~jumpExn" type' 
     let jumpLabelId = jumpExn .-> "LabelId"

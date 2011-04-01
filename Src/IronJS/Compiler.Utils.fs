@@ -185,8 +185,6 @@ module Utils =
               (ifObj (TC.ToObject(ctx.Env, expr))))
         ])
 
-    | tag -> failwithf "Invalid TypeTag '%i'" tag
-
   //----------------------------------------------------------------------------
   let ensureFunction (ctx:Ctx) (expr:Dlr.Expr) ifFunc ifClr =
     match expr.Type |> TypeTag.OfType with
@@ -211,5 +209,3 @@ module Utils =
               (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV> ] [])
             )
         ])
-
-    | tag -> failwithf "Invalid TypeTag '%i'" tag

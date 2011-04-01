@@ -12,14 +12,7 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
-let src = @"
-var x;
+let src = @"function foo(a, b) { } foo(1, 2, 3, 4, 5);"
 
-function foo(a, b) { 
-  eval('x = 2'); 
-}
-foo();
 
-x
-"
-
+ctx |> Ijs.execute  src

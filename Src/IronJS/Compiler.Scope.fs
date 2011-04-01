@@ -313,7 +313,7 @@ module Scope =
         Dlr.lambda delegateType parameters compiledAst
 
     ///
-    module private DynamicArity =
+    module private VariadicArity =
 
       ///
       let compile (ctx:Ctx) =
@@ -322,15 +322,15 @@ module Scope =
     ///
     let compile (ctx:Ctx) =
       
-      let isDynamicArity delegateType =
-        let dynamicArityType = typeof<DynamicArityFunction> 
-        FSharp.Utils.refEq dynamicArityType delegateType
+      let isVariadicArity delegateType =
+        let variadicType = typeof<VariadicFunction> 
+        FSharp.Utils.refEq variadicType delegateType
 
       match ctx.Target.DelegateType with
       | None -> failwith "Que?"
       | Some delegateType ->
-        if delegateType $ isDynamicArity
-          then ctx $ DynamicArity.compile
+        if delegateType $ isVariadicArity
+          then ctx $ VariadicArity.compile
           else ctx $ StaticArity.compile
 
   /// Global scope compiler

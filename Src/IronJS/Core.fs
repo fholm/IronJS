@@ -1521,24 +1521,38 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
 and CompiledCache = MutableDict<Type, Delegate>
 
+/// Delegate for global code, it has the same
+/// signature as StaticArityFunction but we need
+/// a separate type so we can distinguish between 
+/// code compiled in the global scope and a function
+/// called with zero arguments.
 and GlobalCode = delegate of FO * CO -> obj
+
+/// Delegate for code compiled in an eval call, this
+/// delegate differs from the other types in that it
+/// get its private, shared and dynamic scope passed
+/// into it from the calling context, it also returns
+/// a CLR boxed value like GlobalCode.
 and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
 
-/// We only optimize for aritys that is <= 6, any more then that
-/// and we'll use the DynamicArityFunction delegate instead.
-and StaticArityFunction = delegate of FO * CO -> BV
-and StaticArityFunction<'a> = delegate of FO * CO * 'a -> BV
-and StaticArityFunction<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
-and StaticArityFunction<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
-and StaticArityFunction<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
-and StaticArityFunction<'a, 'b, 'c, 'd, 'e> = delegate of FO * CO * 'a * 'b * 'c * 'd * 'e -> BV
-and StaticArityFunction<'a, 'b, 'c, 'd, 'e, 'f> = delegate of FO * CO * 'a * 'b * 'c * 'd * 'e * 'f -> BV
-
 /// This delegate type is used for functions that are called
-/// with more then six arguments. Instead of compiling a function
+/// with more then four arguments. Instead of compiling a function
 /// for each arity above six we pass in an array of BV values 
 /// instead and then sort it out inside the function body.
-and DynamicArityFunction = delegate of FO * CO * Args -> BV
+and VariadicFunction = delegate of FO * CO * Args -> BV
+
+/// This delegate is used in the same way as VariadicFunction is
+/// but for delegates that want their parameters passed in 
+/// as a obj array instead of a BoxedValue array.
+and NativeVariadicFunction = delegate of FO * CO * ClrArgs -> BV
+
+// We only optimize for aritys that is <= 4, any more then that
+// and we'll use the VariadicFunction delegate instead.
+and NullaryFunction = delegate of FO * CO -> BV
+and UnaryFunction<'a> = delegate of FO * CO * 'a -> BV
+and BinaryFunction<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
+and TernaryFunction<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
+and QuaternaryFunction<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
 
 /// Alias for FunctionObject
 and FO = FunctionObject
@@ -1546,7 +1560,7 @@ and FO = FunctionObject
 /// Type that is used for representing objects that also
 /// support the [[Call]] and [[Construct]] functions
 and [<AllowNullLiteral>] FunctionObject =
-  inherit CommonObject
+  inherit CO
 
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : uint64
@@ -1583,7 +1597,7 @@ and [<AllowNullLiteral>] FunctionObject =
       x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
 
   new (env:Environment) = {
-    inherit CommonObject(env)
+    inherit CO(env)
 
     Compiler = fun _ _ -> null
     CompilerCache = env.GetCompilerCache(0UL)
@@ -1602,6 +1616,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
     | _ -> x.Env.Prototypes.Object
+    
+  member x.NewInstance() =
+    let o = x.Env.NewObject()
+    o.Prototype <- x.InstancePrototype
+    o
 
   member x.HasInstance(v:CO) : bool =
     let o = x.Get("prototype")
@@ -1627,143 +1646,105 @@ and [<AllowNullLiteral>] FunctionObject =
 
     compiled :?> 'a
 
-  member x.Call(this) : BV =
-    let func = x.CompileAs<JsFunc>()
+  member x.Call(this) : BV  =
+    let func = x.CompileAs<NullaryFunction>()
     func.Invoke(x, this)
 
-  member x.Call(this,a:'a) : BV =
-    let func = x.CompileAs<JsFunc<'a>>()
+  member x.Call(this,a:'a) : BV  =
+    let func = x.CompileAs<UnaryFunction<'a>>()
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b>>()
+    let func = x.CompileAs<BinaryFunction<'a,'b>>()
     func.Invoke(x, this, a, b)
-
+    
   member x.Call(this,a:'a,b:'b,c:'c) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c>>()
+    let func = x.CompileAs<TernaryFunction<'a,'b,'c>>()
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d>>()
+    let func = x.CompileAs<QuaternaryFunction<'a,'b,'c,'d>>()
     func.Invoke(x, this, a, b, c, d)
 
-  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e>>()
-    func.Invoke(x, this, a, b, c, d, e)
-
-  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e,f:'f) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e, 'f>>()
-    func.Invoke(x, this, a, b, c, d, e, f)
-
+  member x.Call(this,args:Args) : BV =
+    let func = x.CompileAs<VariadicFunction>()
+    func.Invoke(x, this, args)
+    
   member x.Construct (this:CO) =
-    let func = x.CompileAs<JsFunc>()
-
     match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null)
+    | ConstructorModes.Host -> x.Call(null)
     | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o) 
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      let o = x.NewInstance()
+
+      match x.Call(o) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
 
     | _ -> x.Env.RaiseTypeError()
-
+    
   member x.Construct (this:CO, a:'a) =
-    let func = x.CompileAs<JsFunc<'a>>()
-
     match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a)
+    | ConstructorModes.Host -> x.Call(null, a)
     | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      let o = x.NewInstance()
+
+      match x.Call(o, a) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
+
+    | _ -> x.Env.RaiseTypeError()
+    
+  member x.Construct (this:CO, a, b) =
+    match x.ConstructorMode with
+    | ConstructorModes.Host -> x.Call(null, a, b)
+    | ConstructorModes.User -> 
+      let o = x.NewInstance()
+
+      match x.Call(o, a, b) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
+
+    | _ -> x.Env.RaiseTypeError()
+    
+  member x.Construct (this:CO, a, b, c) =
+    match x.ConstructorMode with
+    | ConstructorModes.Host -> x.Call(null, a, b, c)
+    | ConstructorModes.User -> 
+      let o = x.NewInstance()
+
+      match x.Call(o, a, b, c) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a:'a, b:'b) =
-    let func = x.CompileAs<JsFunc<'a, 'b>>()
-
+  member x.Construct (this:CO, a, b, c, d) =
     match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b)
+    | ConstructorModes.Host -> x.Call(null, a, b, c, d)
     | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      let o = x.NewInstance()
+
+      match x.Call(o, a, b, c, d) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a:'a, b:'b, c:'c) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c>>()
-
+  member x.Construct (this:CO, args:Args) =
     match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c)
+    | ConstructorModes.Host -> x.Call(null, args)
     | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      let o = x.NewInstance()
 
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
-
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d, e)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
-
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e, f:'f) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e, 'f>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e, f)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d, e, f)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      match x.Call(o, args) with
+      | x when x.IsFunction -> x.Func |> BV.Box
+      | x when x.IsObject -> x.Object |> BV.Box
+      | _ -> o |> BV.Box
 
     | _ -> x.Env.RaiseTypeError()
 

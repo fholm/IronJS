@@ -141,42 +141,20 @@ module Scope =
        
       ///
       let private initArgumentsObject (ctx:Ctx) =
-        let s = ctx.Scope
-
         if ctx.Scope |> Ast.NewVars.hasArgumentsObject then
-      
-          match s |> Ast.NewVars.variables |> Map.find "arguments" with
-          | Ast.Private(storageIndex) ->
-        
-            let linkMap =
-              s $ Ast.NewVars.parameterNames
-                $ List.map (fun name ->
-                    match s |> Ast.NewVars.variables |> Map.find name with
-                    | Ast.Shared(storageIndex, _, _) ->
-                      ArgumentsLinkArray.ClosedOver, storageIndex
 
-                    | Ast.Private(storageIndex) ->
-                      ArgumentsLinkArray.Locals, storageIndex
-                  )
-                $ List.sortBy (fun (_, i) -> i)
-                $ Seq.take (ctx.Target $ Target.parameterCount)
-                $ Array.ofSeq
-          
-            (Dlr.blockTmpT<ArgumentsObject> (fun arguments ->
-              [
-                (Dlr.assign arguments 
-                  (Dlr.callStaticT<ArgumentsObject> "New" [
-                    ctx.Parameters.Function .-> "Env";
-                    Dlr.const' linkMap;
-                    ctx.Parameters.PrivateScope;
-                    ctx.Parameters.SharedScope;
-                    ctx.Parameters.Function]))
+          match ctx.Scope |> Ast.NewVars.variables |> Map.find "arguments" with
+          | Ast.Private storageIndex ->
+            let storage = Dlr.indexInt ctx.Parameters.PrivateScope storageIndex
 
-                (Utils.assign 
-                  (Dlr.indexInt ctx.Parameters.PrivateScope storageIndex)
-                  (arguments))
-              ] |> Seq.ofList
-            ))
+            let callArguments = [
+              ctx.Parameters.Function     :> Dlr.Expr
+              ctx.Parameters.PrivateScope :> Dlr.Expr
+              ctx.Parameters.SharedScope  :> Dlr.Expr
+            ]
+
+            let initArguments = Dlr.callStaticT<FunctionScopeHelpers> "InitArguments" callArguments
+            (Utils.assign storage initArguments)
 
         else
           Dlr.void'

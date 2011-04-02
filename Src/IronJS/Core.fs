@@ -1557,6 +1557,26 @@ and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
 /// Alias for FunctionObject
 and FO = FunctionObject
 
+///
+and [<AllowNullLiteral>] FunctionMetaData(id, mode, compiler, parameterStorage) =
+  let delegateCache = new CompiledCache()
+  
+  member x.Id : uint64 = id
+  member x.Compiler : FunctionCompiler = compiler
+  member x.Mode : byte = mode
+  member x.DelegateCache = delegateCache
+  member x.ParameterStorage : (int * int) list = parameterStorage
+
+  /// This constructor is for user functions, which we know
+  /// always have ConstructorMode.User.
+  new (id, compiler, parameterStorage) =
+    FunctionMetaData(id, ConstructorModes.User, compiler, parameterStorage)
+
+  /// This constructor is for host functions, which we don't
+  /// need parameter storage information about.
+  new (id, mode, compiler) =
+    FunctionMetaData(id, mode, compiler, [])
+
 /// Type that is used for representing objects that also
 /// support the [[Call]] and [[Construct]] functions
 and [<AllowNullLiteral>] FunctionObject =
@@ -1669,12 +1689,6 @@ and [<AllowNullLiteral>] FunctionObject =
   member x.Call(this,args:Args) : BV =
     let func = x.CompileAs<VariadicFunction>()
     func.Invoke(x, this, args)
-
-  member private x.PickReturnObject(r:BV, o:CO) =
-      match r.Tag with
-      | TypeTags.Function-> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> o |> BV.Box
     
   member x.Construct() =
     match x.ConstructorMode with
@@ -1730,6 +1744,12 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
+  member private x.PickReturnObject(r:BV, o:CO) =
+      match r.Tag with
+      | TypeTags.Function-> r.Func |> BV.Box
+      | TypeTags.Object -> r.Object |> BV.Box
+      | _ -> o |> BV.Box
+
 /// Host function alias
 and HFO<'a when 'a :> Delegate> = HostFunction<'a>
 
@@ -1781,10 +1801,9 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
-(*
-//  
-*)
 and SO = StringObject
+
+///
 and [<AllowNullLiteral>] StringObject(env:Env) =
   inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
 
@@ -1807,8 +1826,9 @@ and [<AllowNullLiteral>] StringObject(env:Env) =
     else
       base.Get(s)
 
-///
 and NO = NumberObject
+
+///
 and [<AllowNullLiteral>] NumberObject =
   inherit ValueObject
   
@@ -1818,8 +1838,9 @@ and [<AllowNullLiteral>] NumberObject =
     inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
   }
 
-///
 and BO = BooleanObject
+
+///
 and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
 
@@ -1829,10 +1850,9 @@ and [<AllowNullLiteral>] BooleanObject =
     inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean)
   }
 
-(*
-//  
-*)
 and MO = MathObject
+
+///
 and [<AllowNullLiteral>] MathObject =
   inherit CO
 
@@ -1841,11 +1861,10 @@ and [<AllowNullLiteral>] MathObject =
   new (env:Env) = {
     inherit CO(env, env.Maps.Base, env.Prototypes.Object)
   }
-
-(*
-//  
-*)
+  
 and EO = ErrorObject
+
+///
 and [<AllowNullLiteral>] ErrorObject =
   inherit CO
 
@@ -1855,12 +1874,11 @@ and [<AllowNullLiteral>] ErrorObject =
     inherit CO(env, env.Maps.Base, env.Prototypes.Error)
   }
     
-(*
-//  
-*)
 and IndexMap   = MutableDict<string, int>
 and IndexStack = MutableStack<int>
 and SchemaMap  = MutableDict<string, Schema>
+
+///
 and [<AllowNullLiteral>] Schema =
 
   val Id : uint64

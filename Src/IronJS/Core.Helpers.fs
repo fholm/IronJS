@@ -61,21 +61,28 @@ module DelegateCache =
 
     createDelegate' types
 
+///
+type FunctionScopeHelpers() =
+  
+  ///
+  static member InitArgumentsObject(f:FO, privateScope:Scope, sharedScope:Scope) : CO =
+    null
+
 /// Helper functions for the global scope
 type GlobalScopeHelper() =
   
+  ///
   static member GetGlobal(globals:CO, name:string) =
     let descriptor = globals.Find(name)
     if descriptor.HasValue 
       then descriptor.Value
       else globals.Env.RaiseReferenceError(sprintf "%s is not defined" name)
 
+  ///
   static member GetGlobalNice(globals:CO, name:string) =
     globals.Get(name)
 
-(*
-//
-*)
+///
 type DynamicScopeHelpers() =
 
   static let findObject (name:string) (dc:DynamicScope) stop =

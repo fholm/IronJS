@@ -5,15 +5,13 @@ open System
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
+open IronJS.Support.CustomOperators
 
 ///
 module Function =
 
-  let closureScope expr = Dlr.propertyOrField expr "ScopeChain"
-  let dynamicScope expr = Dlr.propertyOrField expr "DynamicChain"
-  
-  ///
-  let createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
+  /// 
+  let private createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
     let target = {
       Target.T.Ast = ast
       Target.T.Mode = Target.Mode.Function
@@ -35,24 +33,29 @@ module Function =
           ParameterTypes = delegateType |> Some |> Target.getParameterTypes
         }
     
-  ///
+  /// 
   let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
-    //Make sure a compiler exists for this function
     let scope = !scope
 
     if ctx.Target.Environment.HasCompiler scope.Id |> not then
       let compiler = ctx |> createCompiler ctx.CompileFunction ast
       ctx.Target.Environment.AddCompiler(scope.Id, compiler)
 
-    let funcArgs = [
-      (Dlr.const' scope.Id)
-      (Dlr.const' scope.ParameterNames.Length)
-      (ctx.Parameters.SharedScope :> Dlr.Expr)
-      (ctx.Parameters.DynamicScope :> Dlr.Expr)
+    // Make sure a meta data object exists for this function
+    if not <| ctx.Target.Environment.HasFunctionMetaData(scope.Id) then
+      let compiler = ctx $ createCompiler ctx.CompileFunction ast
+      let metaData = new FunctionMetaData(scope.Id, compiler, [])
+      ctx.Target.Environment.AddFunctionMetaData(metaData)
+
+    let newFunctionArgs = [
+      (!!!scope.Id)
+      (!!!scope.ParameterNames.Length)
+      (ctx.Parameters.SharedScope   :> Dlr.Expr)
+      (ctx.Parameters.DynamicScope  :> Dlr.Expr)
     ]
 
     let env = ctx.Parameters.Function .-> "Env"
-    Dlr.call env "NewFunction" funcArgs
+    Dlr.call env "NewFunction" newFunctionArgs
 
   ///
   let invokeFunction (ctx:Ctx) this (args:Dlr.Expr list) func =

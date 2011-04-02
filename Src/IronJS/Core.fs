@@ -80,6 +80,10 @@ module ArgumentsLinkArray =
   let [<Literal>] Locals = 0uy
   let [<Literal>] ClosedOver = 1uy
 
+type ParameterStorageType 
+  = Private
+  | Shared
+
 module Markers =
   let [<Literal>] Number = 0xFFF8us
   let [<Literal>] Tagged = 0xFFF9us
@@ -281,6 +285,7 @@ and [<AllowNullLiteral>] Environment() =
   let compilers = new MutableDict<uint64, FunctionCompiler>()
   let functionStrings = new MutableDict<uint64, string>()
   let compiledCaches = new MutableDict<uint64, CompiledCache>()
+  let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
   
   static member BoxedZero = BV()
   static member BoxedNull = null'
@@ -299,7 +304,12 @@ and [<AllowNullLiteral>] Environment() =
   member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
   member x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
 
-  member x.HasCompiler id = x.Compilers.ContainsKey id
+  member x.GetFunctionMetaData(id:uint64) = functionMetaData.[id]
+  member x.HasFunctionMetaData(id:uint64) = functionMetaData.ContainsKey(id)
+  member x.AddFunctionMetaData(metaData:FunctionMetaData) = 
+    functionMetaData.[metaData.Id] <- metaData
+
+  member x.HasCompiler id = x.Compilers.ContainsKey(id)
 
   member x.AddCompiler(id, compiler : FunctionCompiler) =
     if x.HasCompiler id |> not then 
@@ -1544,7 +1554,7 @@ and VariadicFunction = delegate of FO * CO * Args -> BV
 /// This delegate is used in the same way as VariadicFunction is
 /// but for delegates that want their parameters passed in 
 /// as a obj array instead of a BoxedValue array.
-and NativeVariadicFunction = delegate of FO * CO * ClrArgs -> BV
+and ClrVariadicFunction = delegate of FO * CO * ClrArgs -> BV
 
 // We only optimize for aritys that is <= 4, any more then that
 // and we'll use the VariadicFunction delegate instead.
@@ -1557,31 +1567,44 @@ and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
 /// Alias for FunctionObject
 and FO = FunctionObject
 
-///
+/// 
 and [<AllowNullLiteral>] FunctionMetaData(id, mode, compiler, parameterStorage) =
-  let delegateCache = new CompiledCache()
+  let delegateCache = new MutableDict<Type, Delegate>()
   
   member x.Id : uint64 = id
-  member x.Compiler : FunctionCompiler = compiler
-  member x.Mode : byte = mode
-  member x.DelegateCache = delegateCache
-  member x.ParameterStorage : (int * int) list = parameterStorage
+  member x.Source : string option = None
+  member x.Compiler : FO -> Type -> Delegate = compiler
+  member x.Mode : int = mode
+  member x.ParameterStorage : (ParameterStorageType * int) list = parameterStorage
 
   /// This constructor is for user functions, which we know
   /// always have ConstructorMode.User.
   new (id, compiler, parameterStorage) =
-    FunctionMetaData(id, ConstructorModes.User, compiler, parameterStorage)
+    FunctionMetaData(id, int ConstructorModes.User, compiler, parameterStorage)
 
   /// This constructor is for host functions, which we don't
   /// need parameter storage information about.
   new (id, mode, compiler) =
     FunctionMetaData(id, mode, compiler, [])
 
+  /// Retrieves and already compiled delegate for the current
+  /// function, or compiles a new one if there is needed.
+  member x.GetDelegate<'a when 'a :> Delegate>(f:FO) =
+    let mutable compiled = null
+    let delegateType = typeof<'a>
+
+    if not <| delegateCache.TryGetValue(delegateType, &compiled) then
+      compiled <- x.Compiler f delegateType
+      delegateCache.[delegateType] <- compiled
+
+    compiled :?> 'a
+
 /// Type that is used for representing objects that also
 /// support the [[Call]] and [[Construct]] functions
 and [<AllowNullLiteral>] FunctionObject =
   inherit CO
 
+  val mutable MetaData : FunctionMetaData
   val mutable Compiler : FunctionCompiler
   val mutable FunctionId : uint64
   val mutable ConstructorMode : byte
@@ -1590,12 +1613,13 @@ and [<AllowNullLiteral>] FunctionObject =
   val mutable SharedScope : Scope
   val mutable DynamicScope : DynamicScope
      
-  new (env:Env, funcId, closureScope, dynamicScope) = { 
+  new (env:Env, id, closureScope, dynamicScope) = { 
     inherit CO(env, env.Maps.Function, env.Prototypes.Function)
 
-    Compiler = env.Compilers.[funcId]
-    CompilerCache = env.GetCompilerCache(funcId)
-    FunctionId = funcId
+    MetaData = env.GetFunctionMetaData(id)
+    Compiler = env.Compilers.[id]
+    CompilerCache = env.GetCompilerCache(id)
+    FunctionId = id
     ConstructorMode = ConstructorModes.User
 
     SharedScope = closureScope
@@ -1605,7 +1629,8 @@ and [<AllowNullLiteral>] FunctionObject =
   new (env:Env, propertyMap) as x = 
     {
       inherit CO(env, propertyMap, env.Prototypes.Function)
-
+      
+      MetaData = null
       Compiler = fun _ _ -> null
       CompilerCache = null
       FunctionId = env.NextFunctionId()
@@ -1616,9 +1641,10 @@ and [<AllowNullLiteral>] FunctionObject =
     } then
       x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
 
-  new (env:Environment) = {
+  new (env:Env) = {
     inherit CO(env)
 
+    MetaData = env.GetFunctionMetaData(0UL)
     Compiler = fun _ _ -> null
     CompilerCache = env.GetCompilerCache(0UL)
     FunctionId = 0UL
@@ -1667,27 +1693,27 @@ and [<AllowNullLiteral>] FunctionObject =
     compiled :?> 'a
 
   member x.Call(this) : BV  =
-    let func = x.CompileAs<Function>()
+    let func = x.MetaData.GetDelegate<Function>(x)
     func.Invoke(x, this)
 
   member x.Call(this,a:'a) : BV  =
-    let func = x.CompileAs<Function<'a>>()
+    let func = x.MetaData.GetDelegate<Function<'a>>(x)
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) : BV  =
-    let func = x.CompileAs<Function<'a,'b>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b>>(x)
     func.Invoke(x, this, a, b)
     
   member x.Call(this,a:'a,b:'b,c:'c) : BV  =
-    let func = x.CompileAs<Function<'a,'b,'c>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b,'c>>(x)
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
-    let func = x.CompileAs<Function<'a,'b,'c,'d>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b,'c,'d>>(x)
     func.Invoke(x, this, a, b, c, d)
 
   member x.Call(this,args:Args) : BV =
-    let func = x.CompileAs<VariadicFunction>()
+    let func = x.MetaData.GetDelegate<VariadicFunction>(x)
     func.Invoke(x, this, args)
     
   member x.Construct() =
@@ -1764,7 +1790,7 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
 
-  new (env:Environment, delegate') as x = 
+  new (env:Env, delegate') as x = 
     {
       inherit FunctionObject(env, env.Maps.Function)
 
@@ -1882,11 +1908,11 @@ and SchemaMap  = MutableDict<string, Schema>
 and [<AllowNullLiteral>] Schema =
 
   val Id : uint64
-  val Env : Environment
+  val Env : Env
   val IndexMap : IndexMap
   val SubSchemas : SchemaMap
   
-  new(env:Environment, map) = {
+  new(env:Env, map) = {
     Id = env.NextPropertyMapId()
     Env = env
     IndexMap = map

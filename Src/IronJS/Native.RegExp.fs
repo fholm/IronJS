@@ -96,7 +96,6 @@ module RegExp =
     let ctor = ctor |> Utils.createHostFunction env
 
     ctor?prototype <- env.Prototypes.RegExp
-    ctor.ConstructorMode <- ConstructorModes.Host
 
     env.Constructors <- {env.Constructors with RegExp=ctor}
     env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)

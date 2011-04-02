@@ -35,12 +35,12 @@ module Function =
 
   let private prototype (f:FO) _ =
     Undefined.Boxed
-    
+
   let toString (toString:FO) (o:CO) =
     let f = o.CastTo<FO>()
-    match f.Env.FunctionSourceStrings.TryGetValue f.FunctionId with
-    | true, value -> value
-    | _ -> "function() { [native code] }"
+    match f.MetaData.Source with
+    | None -> "function() { [native code] }"
+    | Some source -> source
 
   let private getThisObject (env:Env) (this:BV) =
     match this.Tag with
@@ -84,7 +84,7 @@ module Function =
     let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
     let type' = DelegateCache.getDelegate argTypes
     let args = Array.append [|func :> obj; this :> obj|] args
-    let compiled = f.Compiler f type'
+    let compiled = f.MetaData.GetDelegate(f, type')
 
     Utils.trapSyntaxError f.Env (fun () -> 
       compiled.DynamicInvoke(args) |> BoxingUtils.JsBox)
@@ -97,14 +97,14 @@ module Function =
     let args = Array.append [|f :> obj; this :> obj|] args
 
     Utils.trapSyntaxError f.Env (fun () -> 
-      (f.Compiler f type').DynamicInvoke args |> BoxingUtils.JsBox)
+      let f = f.MetaData.GetDelegate(f, type')
+      f.DynamicInvoke(args) |> BoxingUtils.JsBox)
 
   let setupConstructor (env:Env) =
     let ctor = new Func<FO, CO, Args, FO>(constructor')
     let ctor = Utils.createHostFunction env ctor
       
     ctor.Prototype <- env.Prototypes.Function
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)
 
     env.Globals.Put("Function", ctor, DescriptorAttrs.DontEnum)

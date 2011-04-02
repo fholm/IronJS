@@ -299,7 +299,6 @@ module String =
     let fromCharCode = Utils.createHostFunction env fromCharCode
     ctor.Put("fromCharCode", fromCharCode, DontEnum)
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.String, Immutable)
 
     env.Globals.Put("String", ctor, DontEnum)

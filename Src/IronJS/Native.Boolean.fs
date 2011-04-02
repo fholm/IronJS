@@ -29,7 +29,6 @@ module Boolean =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
 
     env.Globals.Put("Boolean", ctor, DontEnum)

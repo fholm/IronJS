@@ -284,7 +284,7 @@ module Array =
     *)
 
     let denseSortFunc (f:FO) =
-      let sort = f.CompileAs<Sort>()
+      let sort = f.MetaData.GetDelegate<Sort>(f)
 
       fun (x:Descriptor) (y:Descriptor) -> 
         let x = if x.HasValue then x.Value else Undefined.Boxed
@@ -321,7 +321,7 @@ module Array =
       newArray
 
     let sparseSortFunc (f:FunctionObject) =
-      let sort = f.CompileAs<Sort>()
+      let sort = f.MetaData.GetDelegate<Sort>(f)
       fun (x:BoxedValue) (y:BoxedValue) -> 
         let result = sort.Invoke(f, f.Env.Globals, x, y)
         result |> TypeConverter.ToNumber |> int
@@ -338,7 +338,7 @@ module Array =
           a.Dense |> Array.sortInPlaceWith (denseSortFunc cmp.Func)
 
         else
-          let sort = f.CompileAs<Sort>()
+          let sort = f.MetaData.GetDelegate<Sort>(f)
           let cmp = new SparseComparer(sparseSortFunc cmp.Func)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
@@ -347,7 +347,7 @@ module Array =
           a.Dense |> Array.sortInPlaceWith denseSortDefault
 
         else
-          let sort = f.CompileAs<Sort>()
+          let sort = f.MetaData.GetDelegate<Sort>(f)
           let cmp = new SparseComparer(sparseSortDefault)
           a.Sparse <- sparseSort cmp a.Length a.Sparse
 
@@ -409,31 +409,30 @@ module Array =
     this
       
   //----------------------------------------------------------------------------
-  let internal toString (f:FunctionObject) (a:CommonObject) =
+  let internal toString (f:FO) (a:CO) =
     a.CheckType<AO>()
     join f a Undefined.Boxed
 
   let internal toLocaleString = toString
 
   //----------------------------------------------------------------------------
-  let setupConstructor (env:Environment) =
-    let ctor = new Func<FunctionObject, CommonObject, BoxedValue array, CommonObject>(constructor')
+  let setupConstructor (env:Env) =
+    let ctor = new Func<FO, CO, Args, CO>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Array, Immutable)
 
     env.Globals.Put("Array", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Array = ctor}
     
   //----------------------------------------------------------------------------
-  let createPrototype (env:Environment) objPrototype =
+  let createPrototype (env:Env) objPrototype =
     let prototype = env.NewArray()
     prototype.Prototype <- objPrototype
     prototype
     
   //----------------------------------------------------------------------------
-  let setupPrototype (env:Environment) =
+  let setupPrototype (env:Env) =
     let proto = env.Prototypes.Array
     proto.Put("constructor", env.Constructors.Array, DontEnum)
     

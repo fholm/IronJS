@@ -18,9 +18,6 @@ module Function =
       Target.T.DelegateType = None
       Target.T.Environment = ctx.Target.Environment
       Target.T.ParameterTypes = [||]
-
-      // Currently not used
-      Target.T.Scope = Unchecked.defaultof<Ast.FunctionScope ref>
     }
     
     // It's faster to return a non-partially applied function
@@ -36,10 +33,6 @@ module Function =
   /// 
   let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
     let scope = !scope
-
-    if ctx.Target.Environment.HasCompiler scope.Id |> not then
-      let compiler = ctx |> createCompiler ctx.CompileFunction ast
-      ctx.Target.Environment.AddCompiler(scope.Id, compiler)
 
     // Make sure a meta data object exists for this function
     if not <| ctx.Target.Environment.HasFunctionMetaData(scope.Id) then

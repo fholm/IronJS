@@ -52,11 +52,6 @@ module DescriptorAttrs =
   let [<Literal>] DontDelete = 4us
   let [<Literal>] Immutable = 7us
 
-module ConstructorModes =
-  let [<Literal>] Function = 0uy
-  let [<Literal>] User = 1uy
-  let [<Literal>] Host = 2uy
-
 module ParamsModes =
   let [<Literal>] NoParams = 0uy
   let [<Literal>] ObjectParams = 1uy
@@ -83,6 +78,11 @@ module ArgumentsLinkArray =
 type ParameterStorageType 
   = Private
   | Shared
+
+type FunctionType
+  = UserDefined
+  | NativeConstructor
+  | NativeFunction
 
 module Markers =
   let [<Literal>] Number = 0xFFF8us
@@ -282,11 +282,11 @@ and [<AllowNullLiteral>] Environment() =
   let currentSchemaId = ref 0UL
 
   let rnd = new System.Random()
-  let compilers = new MutableDict<uint64, FunctionCompiler>()
-  let functionStrings = new MutableDict<uint64, string>()
-  let compiledCaches = new MutableDict<uint64, CompiledCache>()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
   
+  do 
+    functionMetaData.Add(0UL, null)
+
   static member BoxedZero = BV()
   static member BoxedNull = null'
 
@@ -298,8 +298,6 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Constructors : Constructors
 
   member x.Random = rnd
-  member x.Compilers = compilers
-  member x.FunctionSourceStrings = functionStrings
 
   member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
   member x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
@@ -308,26 +306,18 @@ and [<AllowNullLiteral>] Environment() =
   member x.HasFunctionMetaData(id:uint64) = functionMetaData.ContainsKey(id)
   member x.AddFunctionMetaData(metaData:FunctionMetaData) = 
     functionMetaData.[metaData.Id] <- metaData
+    
+  member x.CreateHostMetaData(functionType:FunctionType, compiler:FunctionCompiler) =
+    let id = x.NextFunctionId()
+    let metaData = new FunctionMetaData(id, functionType, compiler)
+    x.AddFunctionMetaData(metaData)
+    metaData
 
-  member x.HasCompiler id = x.Compilers.ContainsKey(id)
+  member x.CreateHostConstructorMetaData(compiler) =
+    x.CreateHostMetaData(FunctionType.NativeConstructor, compiler)
 
-  member x.AddCompiler(id, compiler : FunctionCompiler) =
-    if x.HasCompiler id |> not then 
-      x.Compilers.Add(id, compiler)
-
-  member x.AddCompiler(f:FO, compiler:FunctionCompiler) =
-    if x.HasCompiler f.FunctionId |> not then
-      f.Compiler <- compiler
-      x.Compilers.Add(f.FunctionId, f.Compiler)
-
-  member x.GetCompilerCache(id:uint64) =
-    let mutable cache = Unchecked.defaultof<CompiledCache>
-
-    if compiledCaches.TryGetValue(id, &cache) |> not then
-      cache <- new CompiledCache()
-      compiledCaches.[id] <- cache
-
-    cache
+  member x.CreateHostFunctionMetaData(compiler) =
+    x.CreateHostMetaData(FunctionType.NativeFunction, compiler)
 
   member x.NewObject() =
     let map = x.Maps.Base
@@ -402,14 +392,13 @@ and [<AllowNullLiteral>] Environment() =
     prototype
 
   member x.NewFunction (id, args, closureScope, dynamicScope) =
-    let proto = x.NewPrototype()
     let func = FO(x, id, closureScope, dynamicScope)
+    let proto = x.NewPrototype()
 
     proto.Put("constructor", func, DescriptorAttrs.DontEnum)
-    func.ConstructorMode <- ConstructorModes.User
+
     func.Put("prototype", proto, DescriptorAttrs.DontDelete)
     func.Put("length", double args, DescriptorAttrs.Immutable)
-
     func
 
   member x.NewError() = EO(x)
@@ -455,9 +444,6 @@ and DebugUtils() =
     id
 #endif
 
-(*
-//  
-*)
 and CO = CommonObject
 and [<AllowNullLiteral>] CommonObject = 
 
@@ -1568,36 +1554,39 @@ and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
 and FO = FunctionObject
 
 /// 
-and [<AllowNullLiteral>] FunctionMetaData(id, mode, compiler, parameterStorage) =
+and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, parameterStorage) =
   let delegateCache = new MutableDict<Type, Delegate>()
   
   member x.Id : uint64 = id
   member x.Source : string option = None
   member x.Compiler : FO -> Type -> Delegate = compiler
-  member x.Mode : int = mode
+  member x.FunctionType : FunctionType = functionType
   member x.ParameterStorage : (ParameterStorageType * int) list = parameterStorage
 
   /// This constructor is for user functions, which we know
   /// always have ConstructorMode.User.
-  new (id, compiler, parameterStorage) =
-    FunctionMetaData(id, int ConstructorModes.User, compiler, parameterStorage)
+  new (id:uint64, compiler:FunctionCompiler, parameterStorage:(ParameterStorageType * int) list) =
+    FunctionMetaData(id, FunctionType.UserDefined, compiler, parameterStorage)
 
   /// This constructor is for host functions, which we don't
   /// need parameter storage information about.
-  new (id, mode, compiler) =
+  new (id:uint64, mode:FunctionType, compiler:FunctionCompiler) =
     FunctionMetaData(id, mode, compiler, [])
 
-  /// Retrieves and already compiled delegate for the current
-  /// function, or compiles a new one if there is needed.
-  member x.GetDelegate<'a when 'a :> Delegate>(f:FO) =
+  /// 
+  member x.GetDelegate(f:FO, delegateType:Type) =
     let mutable compiled = null
-    let delegateType = typeof<'a>
 
     if not <| delegateCache.TryGetValue(delegateType, &compiled) then
       compiled <- x.Compiler f delegateType
       delegateCache.[delegateType] <- compiled
 
-    compiled :?> 'a
+    compiled
+
+  /// Retrieves and already compiled delegate for the current
+  /// function, or compiles a new one if there is needed.
+  member x.GetDelegate<'a when 'a :> Delegate>(f:FO) =
+    x.GetDelegate(f, typeof<'a>) :?> 'a
 
 /// Type that is used for representing objects that also
 /// support the [[Call]] and [[Construct]] functions
@@ -1605,51 +1594,26 @@ and [<AllowNullLiteral>] FunctionObject =
   inherit CO
 
   val mutable MetaData : FunctionMetaData
-  val mutable Compiler : FunctionCompiler
-  val mutable FunctionId : uint64
-  val mutable ConstructorMode : byte
-  val mutable CompilerCache : CompiledCache
-
   val mutable SharedScope : Scope
   val mutable DynamicScope : DynamicScope
      
   new (env:Env, id, closureScope, dynamicScope) = { 
     inherit CO(env, env.Maps.Function, env.Prototypes.Function)
-
     MetaData = env.GetFunctionMetaData(id)
-    Compiler = env.Compilers.[id]
-    CompilerCache = env.GetCompilerCache(id)
-    FunctionId = id
-    ConstructorMode = ConstructorModes.User
-
     SharedScope = closureScope
     DynamicScope = dynamicScope
   }
 
-  new (env:Env, propertyMap) as x = 
-    {
-      inherit CO(env, propertyMap, env.Prototypes.Function)
-      
-      MetaData = null
-      Compiler = fun _ _ -> null
-      CompilerCache = null
-      FunctionId = env.NextFunctionId()
-      ConstructorMode = 0uy
-
-      SharedScope = null
-      DynamicScope = List.empty
-    } then
-      x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
+  new (env:Env, metaData, propertyMap) = {
+    inherit CO(env, propertyMap, env.Prototypes.Function)
+    MetaData = metaData
+    SharedScope = [||]
+    DynamicScope = List.empty
+  }
 
   new (env:Env) = {
     inherit CO(env)
-
     MetaData = env.GetFunctionMetaData(0UL)
-    Compiler = fun _ _ -> null
-    CompilerCache = env.GetCompilerCache(0UL)
-    FunctionId = 0UL
-    ConstructorMode = 0uy
-
     SharedScope = null
     DynamicScope = List.empty
   }
@@ -1683,15 +1647,6 @@ and [<AllowNullLiteral>] FunctionObject =
 
     found
 
-  member x.CompileAs<'a when 'a :> Delegate>() =
-    let mutable compiled = Unchecked.defaultof<Delegate>
-
-    if x.CompilerCache.TryGetValue(typeof<'a>, &compiled) |> not then
-      compiled <- (x.Compiler x typeof<'a>)
-      x.CompilerCache.[typeof<'a>] <- compiled
-
-    compiled :?> 'a
-
   member x.Call(this) : BV  =
     let func = x.MetaData.GetDelegate<Function>(x)
     func.Invoke(x, this)
@@ -1717,54 +1672,54 @@ and [<AllowNullLiteral>] FunctionObject =
     func.Invoke(x, this, args)
     
   member x.Construct() =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null)
+    | FunctionType.UserDefined ->
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
   member x.Construct(a:'a) =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null, a)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a)
+    | FunctionType.UserDefined ->
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
   member x.Construct(a, b) =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null, a, b)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b)
+    | FunctionType.UserDefined ->
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
     
   member x.Construct(a, b, c) =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null, a, b, c)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b, c)
+    | FunctionType.UserDefined ->
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct(a, b, c, d) =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null, a, b, c, d)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b, c, d)
+    | FunctionType.UserDefined ->
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
     | _ -> x.Env.RaiseTypeError()
 
   member x.Construct(args:Args) =
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> x.Call(null, args)
-    | ConstructorModes.User -> 
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, args)
+    | FunctionType.UserDefined -> 
       let o = x.NewInstance()
       x.PickReturnObject(x.Call(o), o)
 
@@ -1790,11 +1745,11 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
 
-  new (env:Env, delegate') as x = 
+  new (env:Env, delegateFunction, metaData) as x = 
     {
-      inherit FunctionObject(env, env.Maps.Function)
+      inherit FunctionObject(env, metaData, env.Maps.Function)
 
-      Delegate = delegate'
+      Delegate = delegateFunction
 
       ArgTypes = FSharp.Reflection.getDelegateArgTypesT<'a>
       ReturnType = FSharp.Reflection.getDelegateReturnTypeT<'a>

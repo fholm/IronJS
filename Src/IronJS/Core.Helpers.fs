@@ -121,7 +121,7 @@ type DynamicScopeHelpers() =
     if func.IsFunction then
       let func = func.Func
       let internalArgs = [|func :> obj; this :> obj|]
-      let compiled = func.CompileAs<'a>()
+      let compiled = func.MetaData.GetDelegate<'a>(func)
       compiled.DynamicInvoke(Array.append internalArgs args) |> BoxingUtils.JsBox
 
     else

@@ -28,6 +28,7 @@ namespace DebugConsole
             loadCacheFile();
 
             IronJS.Support.Debug.registerExprPrinter(expressionTreePrinter);
+            IronJS.Support.Debug.registerAstPrinter(syntaxTreePrinter);
         }
 
         void loadCacheFile()
@@ -44,12 +45,17 @@ namespace DebugConsole
 
         void expressionTreePrinter(string expressionTree)
         {
-            outputText.Text += expressionTree;
+            expressionTreeOutput.Text += expressionTree;
+        }
+
+        void syntaxTreePrinter(string syntaxTree)
+        {
+            syntaxTreeOutput.Text += syntaxTree;
         }
 
         void runButton_Click(object sender, RoutedEventArgs e)
         {
-            outputText.Text = String.Empty;
+            expressionTreeOutput.Text = String.Empty;
             var ctx = new IronJS.Hosting.CSharp.Context();
             ctx.Execute(inputText.Text);
         }

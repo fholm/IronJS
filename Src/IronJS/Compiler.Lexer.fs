@@ -582,10 +582,15 @@ module Lexer =
   // Parses an identifier or keyword
   *)
   let private invalidCharInIdentifier = 
-    sprintf "Invalid character '%c' in identifier"
+    sprintf "Invalid character '%s' in identifier"
 
   let private reservedKeyword =
     sprintf "'%s' is a reserved keyword and can't be used"
+
+  let private escapeChar (c:char) =
+    let code = int c
+    if code <= 126 && code >= 32 then c.ToString()
+    else "\\u" + code.ToString("X").PadLeft(4, '0')
 
   let private identifier (s:Input.T) (first:char) =
     s |> storePosition
@@ -602,12 +607,12 @@ module Lexer =
 
           match s |> readUnicodeEscape with
           | c when c |> isIdentifier -> c |> buffer s
-          | c -> c |> invalidCharInIdentifier |> error s  
+          | c -> c |> escapeChar |> invalidCharInIdentifier |> error s  
 
           s |> advance
 
         else
-          '\\' |> invalidCharInIdentifier |> error s
+          "\\\\" |> invalidCharInIdentifier |> error s
 
       | c when c |> isIdentifier ->
         c |> buffer s

@@ -42,11 +42,11 @@ namespace IronJS.Tests.Sputnik
 
             InitializeComponent();
 
-            this.skipTests.Add("S8.6_D1.2.js");
-            this.skipTests.Add("S8.6_D1.3.js");
-            this.skipTests.Add("S8.6_D1.4.js");
-            this.skipTests.Add("S8.8_D1.3.js");
-            this.skipTests.Add("S13.2_D1.2.js");
+            //this.skipTests.Add("S8.6_D1.2.js");
+            //this.skipTests.Add("S8.6_D1.3.js");
+            //this.skipTests.Add("S8.6_D1.4.js");
+            //this.skipTests.Add("S8.8_D1.3.js");
+            //this.skipTests.Add("S13.2_D1.2.js");
 
             this.worker.DoWork += this.RunTests;
             this.worker.ProgressChanged += this.Worker_ProgressChanged;
@@ -119,10 +119,12 @@ namespace IronJS.Tests.Sputnik
 
         private void LoadResults()
         {
+            var path = new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName;
+
             XDocument doc;
             try
             {
-                doc = XDocument.Load("tests.xml");
+                doc = XDocument.Load(Path.Combine(path, "tests.xml"));
             }
             catch (IOException)
             {
@@ -167,7 +169,9 @@ namespace IronJS.Tests.Sputnik
                               new XAttribute("Path", t.TestCase.RelativePath),
                               new XAttribute("Status", t.Status.ToString()),
                               new XAttribute("Selected", t.Selected)));
-            doc.Save("tests.xml");
+
+            var path = new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName;
+            doc.Save(Path.Combine(path, "tests.xml"));
         }
 
         private static string GetExecutableDirectory()

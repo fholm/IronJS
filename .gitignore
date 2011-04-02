@@ -8,12 +8,12 @@ last-test
 *.dia
 *.user
 *.suo
-*.dll
 *.pdb
 *.xml
 *.XML
 *.exe
 *.cache
+*.Cache
 *.force
 *.baml
 *.resources
@@ -21,3 +21,4 @@ last-test
 *.manifest
 *.config
 *.trx
+Thumbs.db

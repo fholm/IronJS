@@ -17,7 +17,7 @@ module Number =
     match this with
     | null -> ctor.Env.NewNumber(value) |> BV.Box
     | _ -> value |> TC.ToNumber |> BV.Box
-    
+
   //----------------------------------------------------------------------------
   let private nanToString number =
     if number <> number then "NaN"
@@ -25,44 +25,63 @@ module Number =
     elif number = PosInf then "Infinity"
     else failwith "Number is not NaN, Infinity or -Infinity"
 
-  let internal toString (f:FunctionObject) (this:CommonObject) (radix:double) =
+  let internal toString (f:FunctionObject) (this:CommonObject) (radix:BoxedValue) =
     this.CheckType<NO>()
     let number = (this |> ValueObject.GetValue).Number
+
+    let radix = if radix.IsUndefined then 10 else TC.ToInteger(radix)
+    if radix < 2 || radix > 36 then
+      f.Env.RaiseRangeError("radix must be between 2 and 36 inclusive")
 
     if FSharp.Utils.isNaNOrInf number then nanToString number
     else
       match radix with
-      | 0.0 | 10.0 -> TypeConverter.ToString(number)
-      | 2.0 -> Convert.ToString(int64 number, 2)
-      | 8.0 -> Convert.ToString(int64 number, 8)
-      | 16.0 -> Convert.ToString(int64 number, 16)
-      | _ -> "Radix must be 0, 2, 8, 10 or 16"
-      
+      | 0 | 10 -> TypeConverter.ToString(number)
+      | _ ->
+        let digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let mutable result = ""
+        let mutable number = bigint number
+        if number < bigint.Zero then
+          result <- "-"
+          number <- -number
+        if number = bigint.Zero then "0"
+        else
+          let radix = bigint radix
+          while number > bigint.Zero do
+            let digit = int (number % radix)
+            number <- number / radix
+            result <- result + digits.[digit].ToString()
+          result
+
   //----------------------------------------------------------------------------
   let internal toLocaleString (f:FunctionObject) (this:CommonObject) = 
-    toString f this 10.0
-    
+    toString f this (10.0 |> BV.Box)
+
   //----------------------------------------------------------------------------
   let internal valueOf (f:FunctionObject) (this:CommonObject) =
     this.CheckType<NO>()
     this |> ValueObject.GetValue
 
-  //----------------------------------------------------------------------------
-  // This implementation is a C# to F# adaption of the Jint sources
   let private verifyFractions (env:Environment) fractions = 
     if fractions < 0 || fractions > 20 then
       env.RaiseRangeError("fractions must be between 0 and 20")
 
-  let internal toFixed (f:FunctionObject) (this:CommonObject) (fractions:double) =
+  // These steps are outlined in the ECMA-262, Section 15.7.4.5
+  let internal toFixed (f:FunctionObject) (this:CommonObject) (fractionDigits:double) =
     this.CheckType<NO>()
-
-    let number = (this |> ValueObject.GetValue).Number
-    let fractions = fractions |> TypeConverter.ToInt32
-
-    if number |> FSharp.Utils.isNaNOrInf then nanToString number
+    // Step 1
+    let fractions = fractionDigits |> TC.ToInteger
+    // Step 2
+    verifyFractions f.Env fractions
+    // Step 3
+    let x = (this |> ValueObject.GetValue).Number
+    // Step 4
+    if x <> x then nanToString x
+    // Steps 6-9
+    elif x >= 1e21 || x <= -1e21 then
+      TC.ToString(x)
     else
-      verifyFractions f.Env fractions
-      number.ToString("f" + string fractions, invariantCulture)
+      x.ToString("f" + string fractions, invariantCulture)
 
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
@@ -72,7 +91,7 @@ module Number =
     let number = (this |> ValueObject.GetValue).Number
 
     if fractions.IsUndefined then 
-      toString f this 10.0
+      toString f this (10.0 |> BV.Box)
 
     elif number |> FSharp.Utils.isNaNOrInf then 
       nanToString number
@@ -95,7 +114,7 @@ module Number =
     let number = (this |> ValueObject.GetValue).Number
 
     if precision.IsUndefined then 
-      toString f this 10.0
+      toString f this (10.0 |> BV.Box)
 
     elif number |> FSharp.Utils.isNaNOrInf then 
       nanToString number
@@ -142,7 +161,7 @@ module Number =
 
     proto.Put("constructor", env.Constructors.Number, DontEnum)
 
-    let toString = new Func<FunctionObject, CommonObject, double, string>(toString)
+    let toString = new Func<FunctionObject, CommonObject, BoxedValue, string>(toString)
     let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 

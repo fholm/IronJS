@@ -1,0 +1,432 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{60820940-C9B1-4DFB-B88A-AF4D20C703C9}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IronJS.Tests.UnitTests</RootNamespace>
+    <AssemblyName>UnitTests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug-x86\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release-x86\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug-x64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\UnitTests.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\Release-x64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\UnitTests.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit-console-runner">
+      <HintPath>..\nunit-console-runner.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.core, Version=2.5.9.10348, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\nunit.core.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.core.interfaces, Version=2.5.9.10348, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\nunit.core.interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.5.9.10348, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.util">
+      <HintPath>..\nunit.util.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\Definitions\ArgumentsObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\Definitions\DefinitionsTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\Definitions\GlobalObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\Definitions\ScopeChainAndIdentifierResolutionTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\Definitions\VariableInstantiationTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\EnteringAnExecutionContext\EnteringAnExecutionContextTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\EnteringAnExecutionContext\EvalCodeTests.cs" />
+    <Compile Include="Sputnik\Conformance\ExecutionContexts\EnteringAnExecutionContext\GlobalCodeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\AdditiveOperators\TheAdditionOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\AdditiveOperators\TheSubtractionOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\AssignmentOperators\CompoundAssignmentTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\AssignmentOperators\SimpleAssignmentTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BinaryBitwiseOperators\ANDOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BinaryBitwiseOperators\OROperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BinaryBitwiseOperators\XOROperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BinaryLogicalOperators\LogicalANDOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BinaryLogicalOperators\LogicalOROperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BitwiseShiftOperators\TheLeftShiftOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BitwiseShiftOperators\TheSignLeftShiftOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\BitwiseShiftOperators\TheUnsignedRightShiftOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\CommaOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\ConditionalOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\EqualityOperators\TheDoesNotEqualsOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\EqualityOperators\TheEqualsOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\EqualityOperators\TheStrictDoesNotEqualsOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\EqualityOperators\TheStrictEqualsOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\LeftHandSideExpressions\ArgumentListsTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\LeftHandSideExpressions\FunctionCallsTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\LeftHandSideExpressions\PropertyAccessorsTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\LeftHandSideExpressions\TheNewOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\MultiplicativeOperators\ApplyingTheAsteriskOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\MultiplicativeOperators\ApplyingThePercentOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\MultiplicativeOperators\ApplyingTheSlashOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PostfixExpressions\PostfixDecrementOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PostfixExpressions\PostfixIncrementOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PrimaryExpressions\ArrayInitialiserTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PrimaryExpressions\IdentifierReferenceTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PrimaryExpressions\ObjectInitializerTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PrimaryExpressions\TheGroupingOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\PrimaryExpressions\TheThisKeywordTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheGraterThanOrEqualOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheGreaterThanOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheInOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheInstanceofOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheLessThanOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\RelationalOperators\TheLessThanOrEqualOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\BitwiseNOTOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\LogicalNOTOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\PrefixDecrementOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\PrefixIncrementOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\TheDeleteOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\TheTypeofOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\TheVoidOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\UnaryMinusOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\Expressions\UnaryOperators\UnaryPlusOperatorTests.cs" />
+    <Compile Include="Sputnik\Conformance\FunctionDefinition\CreatingFunctionObjectsTests.cs" />
+    <Compile Include="Sputnik\Conformance\FunctionDefinition\FunctionDefinitionTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\AutomaticSemicolonInsertion\AutomaticSemicolonInsertionTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\AutomaticSemicolonInsertion\ExamplesOfAutomaticSemicolonInsertionTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\CommentsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\IdentifiersTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\LineTerminatorsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Literals\BooleanLiteralsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Literals\NullLiteralsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Literals\NumericLiteralsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Literals\RegularExpressionLiteralsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Literals\StringLiteralsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\PunctuatorsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Tokens\FutureReservedWordsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Tokens\KeywordsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\Tokens\ReservedWordsTests.cs" />
+    <Compile Include="Sputnik\Conformance\LexicalConventions\WhiteSpaceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\ArrayObjectsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfArrayInstances\LengthTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfArrayInstances\PutTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayConstructor\ArrayPrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayConstructor\PropertiesOfTheArrayConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeConcatTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeJoinTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypePopTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypePushTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeReverseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeShiftTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeSliceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeSortTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeSpliceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeToLocaleStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\ArrayPrototypeUnshiftTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\PropertiesOfTheArrayPrototypeObject\PropertiesOfTheArrayPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\TheArrayConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\TheArrayConstructor\NewArrayLenTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ArrayObjects\TheArrayConstructor\NewArrayTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\BooleanObjects\PropertiesOfTheBooleanConstructor\BooleanPrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\BooleanObjects\PropertiesOfTheBooleanConstructor\PropertiesOfTheBooleanConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\BooleanObjects\PropertiesOfTheBooleanPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\BooleanObjects\TheBooleanConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\BooleanObjects\TheBooleanConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDateConstructor\DateParseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDateConstructor\DatePrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDateConstructor\DateUTCTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDateConstructor\PropertiesOfTheDateConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetDateTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetDayTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetFullYearTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetHoursTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetMillisecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetMinutesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetMonthTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetSecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetTimeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetTimezoneOffsetTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCDateTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCDayTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCFullYearTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCHoursTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCMillisecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCMinutesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCMonthTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeGetUTCSecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetDateTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetFullYearTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetHoursTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetMillisecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetMinutesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetMonthTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetSecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetTimeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCDateTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCFullYearTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCHoursTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCMillisecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCMinutesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCMonthTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeSetUTCSecondsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToDateStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToLocaleDateStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToLocaleStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToLocaleTimeStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToTimeStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeToUTCStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\DatePrototypeValueOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\PropertiesOfTheDatePrototypeObject\PropertiesOfTheDatePrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\TheDateConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\DateObjects\TheDateConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ErrorObjects\PropertiesOfTheErrorConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ErrorObjects\PropertiesOfTheErrorPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ErrorObjects\TheErrorConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ErrorObjects\TheErrorConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\FunctionObjectsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfFunctionInstancesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionConstructor\FunctionPrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionConstructor\PropertiesOfTheFunctionConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionPrototypeObject\FunctionPrototypeApplyTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionPrototypeObject\FunctionPrototypeCallTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionPrototypeObject\FunctionPrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\PropertiesOfTheFunctionPrototypeObject\PropertiesOfTheFunctionPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\FunctionObjects\TheFunctionConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberMAXVALUETests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberMINVALUETests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberNaNTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberNEGATIVEINFINITYTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberPOSITIVEINFINITYTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\NumberPrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberConstructor\PropertiesOfNumberConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfNumberInstancesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfTheNumberPrototypeObject\NumberPrototypeConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfTheNumberPrototypeObject\NumberPrototypeToFixedTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfTheNumberPrototypeObject\NumberPrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfTheNumberPrototypeObject\NumberPrototypeValueOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\PropertiesOfTheNumberPrototypeObject\PropertiesOfTheNumberPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\TheNumberConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\NumberObjects\TheNumberConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\ObjectObjectsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectConstructor\ObjectPrototypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectConstructor\PropertiesOfTheObjectConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypeHasOwnPropertyTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypeIsPrototypeOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypePropertyIsEnumerableTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypeToLocaleStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\ObjectPrototypeValueOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\PropertiesOfTheObjectPrototypeObject\PropertiesOfTheObjectPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\TheObjectConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\ObjectObjects\TheObjectConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\AssertionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\AtomEscapeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\AtomTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\CharacterClassEscapeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\CharacterClassTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\CharacterEscapeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\DecimalEscapeTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\DisjunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\NonemptyClassRangesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\PatternSemanticsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\QuantifierTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternSemantics\TermTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PatternsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\GlobalTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\IgnoreCaseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\LastIndexTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\MultilineTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\PropertiesOfRegExpInstancesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfRegExpInstances\SourceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfTheRegExpConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfTheRegExpPrototypeObject\PropertiesOfTheRegExpPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfTheRegExpPrototypeObject\RegExpPrototypeExecTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfTheRegExpPrototypeObject\RegExpPrototypeTestTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\PropertiesOfTheRegExpPrototypeObject\RegExpPrototypeToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\TheRegExpConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\RegExpObjects\TheRegExpConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfStringInstancesTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\PropertiesOfTheStringPrototypeObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeCharAtTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeCharCodeAtTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeConcatTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeIndexOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeLastIndexOfTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeLocaleCompareTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeMatchTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeReplaceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeSearchTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeSliceTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeSplitTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeSubstringTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeToLocaleLowerCaseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeToLocaleUpperCaseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeToLowerCaseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\PropertiesOfTheStringPrototypeObject\StringPrototypeToUpperCaseTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\TheStringConstructorCalledAsAFunctionTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\StringObjects\TheStringConstructorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\FunctionPropertiesOfTheGlobalObject\EvalTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\FunctionPropertiesOfTheGlobalObject\IsFiniteTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\FunctionPropertiesOfTheGlobalObject\IsNaNTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\FunctionPropertiesOfTheGlobalObject\ParseFloatTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\FunctionPropertiesOfTheGlobalObject\ParseIntTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\TheGlobalObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\URIHandlingFunctionProperties\DecodeURIComponentTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\URIHandlingFunctionProperties\DecodeURITests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\URIHandlingFunctionProperties\EncodeURIComponentTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\URIHandlingFunctionProperties\EncodeURITests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\ValuePropertiesOfTheGlobalObject\InfinityTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\ValuePropertiesOfTheGlobalObject\NaNTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheGlobalObject\ValuePropertiesOfTheGlobalObject\UndefinedTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\AbsTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\AcosTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\AsinTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\Atan2Tests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\AtanTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\CeilTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\CosTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\ExpTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\FloorTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\LogTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\MaxTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\MinTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\PowTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\RandomTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\RoundTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\SinTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\SqrtTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\FunctionPropertiesOfTheMathObject\TanTests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\ETests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\LN10Tests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\LN2Tests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\LOG10ETests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\LOG2ETests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\PITests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\SQRT12Tests.cs" />
+    <Compile Include="Sputnik\Conformance\NativeECMAScriptObjects\TheMathObject\ValuePropertiesOfTheMathObject\SQRT2Tests.cs" />
+    <Compile Include="Sputnik\Conformance\ProgramTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\BlockTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\EmptyStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\ExpressionStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\IterationStatements\TheDoWhileStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\IterationStatements\TheForInStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\IterationStatements\TheForStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\IterationStatements\TheWhileStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\LabelledStatementsTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheBreakStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheContinueStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheIfStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheReturnStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheSwitchStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheThrowStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheTryStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\TheWithStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\Statement\VariableStatementTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToBooleanTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToInt32Tests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToIntegerTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToNumber\ToNumberFromStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToNumber\ToNumberTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToObjectTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToPrimitiveTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToString\ToStringAppliedToTheNumberTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToString\ToStringTests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToUint16Tests.cs" />
+    <Compile Include="Sputnik\Conformance\TypeConversion\ToUint32Tests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheBooleanTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheListTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheNullTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheNumberTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheObjectType\InternalPropertiesAndMethodsTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheObjectType\PropertyAttributesTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheObjectType\TheObjectTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheReferenceTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheStringTypeTests.cs" />
+    <Compile Include="Sputnik\Conformance\Types\TheUndefinedTypeTests.cs" />
+    <Compile Include="Sputnik\ImplementationDiagnostics\ImplementationDiagnosticsTests.cs" />
+    <Compile Include="Sputnik\Regression\RegressionTests.cs" />
+    <Compile Include="Sputnik\SputnikTestFixture.cs" />
+    <Compile Include="Sputnik\Unicode\Unicode218Tests.cs" />
+    <Compile Include="Sputnik\Unicode\Unicode320Tests.cs" />
+    <Compile Include="Sputnik\Unicode\Unicode410Tests.cs" />
+    <Compile Include="Sputnik\Unicode\Unicode500Tests.cs" />
+    <Compile Include="Sputnik\Unicode\Unicode510Tests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
+      <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
+      <Name>IronJS</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

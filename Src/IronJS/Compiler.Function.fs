@@ -22,14 +22,14 @@ module Function =
     
     // It's faster to return a non-partially applied function
     // that can be invoked, instead of partially applying
-    // createCompiler which makes it impossible to use .InvokeFast
+    // createCompiler which makes it impossible for F# to use .InvokeFast
     fun (f:FO) delegateType ->
       compiler {
         target with 
           DelegateType = Some delegateType
           ParameterTypes = delegateType |> Some |> Target.getParameterTypes
         }
-    
+
   /// 
   let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
     let scope = !scope

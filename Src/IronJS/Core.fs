@@ -284,8 +284,10 @@ and [<AllowNullLiteral>] Environment() =
   let rnd = new System.Random()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
   
-  do 
-    functionMetaData.Add(0UL, null)
+  // We need the the special global function id 0UL to exist in 
+  // the metaData dictionary but i need not actually be there so 
+  // we just pass in null
+  do functionMetaData.Add(0UL, null)
 
   static member BoxedZero = BV()
   static member BoxedNull = null'
@@ -700,14 +702,11 @@ and [<AllowNullLiteral>] CommonObject =
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
 
-  //----------------------------------------------------------------------------
   member x.Put(name:String, value:bool) : unit = x.Put(name, value |> TaggedBools.ToTagged)
   member x.Put(name:String, value:obj) : unit = x.Put(name, value, TypeTags.Clr)
   member x.Put(name:String, value:String) : unit = x.Put(name, value, TypeTags.String)
   member x.Put(name:String, value:Undefined) : unit = x.Put(name, value, TypeTags.Undefined)
-  member x.Put(name:String, value:CO) : unit = 
-    x.Put(name, value, TypeTags.Object)
-
+  member x.Put(name:String, value:CO) : unit = x.Put(name, value, TypeTags.Object)
   member x.Put(name:String, value:FO) : unit = x.Put(name, value, TypeTags.Function)
 
   member x.Put(index:uint32, value:bool) : unit = x.Put(index, value |> TaggedBools.ToTagged)

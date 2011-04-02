@@ -104,7 +104,7 @@ module Core =
 
   ///
   let rec private compile (target:Target.T) =
-    
+
     let scope = 
       target $ cloneScope
 

@@ -134,6 +134,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Unicode
         [TestCase("S7.6_A1.1_T4.js", Description = "IdentifierStart :: UnicodeLetter (any character in the Unicode categories \"Lu\", \"Ll\", \"Lt\", \"Lm\", \"Lo\", \"Nl\")")]
         [TestCase("S7.6_A1.1_T5.js", Description = "IdentifierStart :: UnicodeLetter (any character in the Unicode categories \"Lu\", \"Ll\", \"Lt\", \"Lm\", \"Lo\", \"Nl\")")]
         [TestCase("S7.6_A1.1_T6.js", Description = "IdentifierStart :: UnicodeLetter (any character in the Unicode categories \"Lu\", \"Ll\", \"Lt\", \"Lm\", \"Lo\", \"Nl\")")]
+        [Explicit("Very high memory usage.")]
         public void IdentifierStartUnicodeLetterAnyCharacterInTheUnicodeCategoriesLuLlLtLmLoNl(string file)
         {
             RunFile(file);
@@ -211,6 +212,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Unicode
         [TestCase("S7.6_A5.2_T7.js", Description = "If a \\UnicodeEscapeSequence sequence were replaced by its UnicodeEscapeSequence\'s CV, the result must still be a valid Identifier that has the exact same sequence of characters as the original Identifier")]
         [TestCase("S7.6_A5.2_T8.js", Description = "If a \\UnicodeEscapeSequence sequence were replaced by its UnicodeEscapeSequence\'s CV, the result must still be a valid Identifier that has the exact same sequence of characters as the original Identifier")]
         [TestCase("S7.6_A5.2_T9.js", Description = "If a \\UnicodeEscapeSequence sequence were replaced by its UnicodeEscapeSequence\'s CV, the result must still be a valid Identifier that has the exact same sequence of characters as the original Identifier")]
+        [Explicit("Very high memory usage.")]
         public void IfAUnicodeEscapeSequenceSequenceWereReplacedByItsUnicodeEscapeSequenceSCVTheResultMustStillBeAValidIdentifierThatHasTheExactSameSequenceOfCharactersAsTheOriginalIdentifier(string file)
         {
             RunFile(file);

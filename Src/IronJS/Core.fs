@@ -1048,6 +1048,7 @@ and RO = RegExpObject
 and [<AllowNullLiteral>] RegExpObject = 
   inherit CO
 
+  [<DefaultValue>]
   val mutable RegExp : Regex
   val Global : bool
 
@@ -1060,7 +1061,6 @@ and [<AllowNullLiteral>] RegExpObject =
   new (env, pattern, options, global') as this =
     {
       inherit CO(env, env.Maps.RegExp, env.Prototypes.RegExp)
-      RegExp = null
       Global = global'
     }
     then
@@ -1083,9 +1083,9 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   inherit CommonObject(env, env.Maps.Base, env.Prototypes.Date)
 
   static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
-  static let ticks = 10000L
-  
-  [<DefaultValue>] 
+  static let tickScale = 10000L
+
+  [<DefaultValue>]
   val mutable Date : DateTime
 
   do 
@@ -1122,13 +1122,13 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
         | _ -> x.Env.RaiseTypeError()
 
   static member TicksToDateTime(ticks:int64) : DateTime =
-    new DateTime(ticks * ticks + offset, DateTimeKind.Utc)
+    new DateTime(ticks * tickScale + offset, DateTimeKind.Utc)
     
   static member TicksToDateTime(ticks:double) : DateTime = 
     DateObject.TicksToDateTime(int64 ticks)
 
   static member DateTimeToTicks(date:DateTime) : int64 =
-    (date.ToUniversalTime().Ticks - offset) / ticks
+    (date.ToUniversalTime().Ticks - offset) / tickScale
 
 (*
 //  

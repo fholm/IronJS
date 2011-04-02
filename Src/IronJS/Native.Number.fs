@@ -47,22 +47,26 @@ module Number =
     this.CheckType<NO>()
     this |> ValueObject.GetValue
 
-  //----------------------------------------------------------------------------
-  // This implementation is a C# to F# adaption of the Jint sources
   let private verifyFractions (env:Environment) fractions = 
     if fractions < 0 || fractions > 20 then
       env.RaiseRangeError("fractions must be between 0 and 20")
 
-  let internal toFixed (f:FunctionObject) (this:CommonObject) (fractions:double) =
+  // These steps are outlined in the ECMA-262, Section 15.7.4.5
+  let internal toFixed (f:FunctionObject) (this:CommonObject) (fractionDigits:double) =
     this.CheckType<NO>()
-
-    let number = (this |> ValueObject.GetValue).Number
-    let fractions = fractions |> TypeConverter.ToInt32
-
-    if number |> FSharp.Utils.isNaNOrInf then nanToString number
+    // Step 1
+    let fractions = fractionDigits |> TC.ToInteger
+    // Step 2
+    verifyFractions f.Env fractions
+    // Step 3
+    let x = (this |> ValueObject.GetValue).Number
+    // Step 4
+    if x <> x then nanToString x
+    // Steps 6-9
+    elif x >= 1e21 || x <= -1e21 then
+      TC.ToString(x)
     else
-      verifyFractions f.Env fractions
-      number.ToString("f" + string fractions, invariantCulture)
+      x.ToString("f" + string fractions, invariantCulture)
 
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources

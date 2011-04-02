@@ -1,0 +1,50 @@
+﻿<Window x:Class="DebugConsole.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="IronJS - Debug Console" Height="350" Width="525">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="279*" />
+            <ColumnDefinition Width="224*" />
+        </Grid.ColumnDefinitions>
+        
+        <TextBox TextWrapping="Wrap" Grid.Column="0"
+            AcceptsTab="True" FontFamily="Consolas" 
+            VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+            Name="inputText" TextChanged="inputText_TextChanged" Margin="10,28,0,43" />
+        
+        <TextBox TextWrapping="Wrap" Grid.Column="1"
+            AcceptsTab="True" FontFamily="Consolas" 
+            VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+            Name="outputText" Margin="10,28,10,10" />
+        
+        <Button 
+            Content="Run" Name="runButton" Click="runButton_Click" 
+            Margin="0,0,0,10" Height="23" VerticalAlignment="Bottom" 
+            HorizontalAlignment="Right" Width="75" />
+        
+        <Button 
+            Content="Stop" 
+            Height="23" 
+            Name="stopButton" 
+            VerticalAlignment="Bottom" 
+            Grid.Column="0" 
+            HorizontalAlignment="Right" 
+            Width="75" 
+            Margin="0,0,85,10" Click="stopButton_Click" />
+        
+        <Label Content="Expression Tree Output" 
+               Grid.Column="1" Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="10,0,0,0" FontWeight="Bold"
+               Padding="0,5,0,0"
+               VerticalAlignment="Top" />
+        
+        <Label Content="JavaScript Input"
+               FontWeight="Bold"
+               Grid.Column="0" Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="10,0,0,0" Padding="0,5,0,0"
+               VerticalAlignment="Top" />
+    </Grid>
+</Window>

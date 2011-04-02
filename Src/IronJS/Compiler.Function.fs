@@ -30,14 +30,24 @@ module Function =
           ParameterTypes = delegateType |> Some |> Target.getParameterTypes
         }
 
+  ///
+  let private getScopeParameterStorage (scope:Ast.Scope) =
+    [
+      for parameter in scope.ParameterNames ->
+        match scope.Variables.[parameter] with
+        | Ast.Shared(storageIndex, _, _) -> ParameterStorageType.Shared, storageIndex
+        | Ast.Private(storageIndex) -> ParameterStorageType.Private, storageIndex
+    ]
+
   /// 
   let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
     let scope = !scope
 
     // Make sure a meta data object exists for this function
     if not <| ctx.Target.Environment.HasFunctionMetaData(scope.Id) then
+      let parameterStorage = scope $ getScopeParameterStorage
       let compiler = ctx $ createCompiler ctx.CompileFunction ast
-      let metaData = new FunctionMetaData(scope.Id, compiler, [])
+      let metaData = new FunctionMetaData(scope.Id, compiler, parameterStorage)
       ctx.Target.Environment.AddFunctionMetaData(metaData)
 
     let newFunctionArgs = [
@@ -51,25 +61,33 @@ module Function =
     Dlr.call env "NewFunction" newFunctionArgs
 
   ///
+  let private invokeVariadic func this (args:Dlr.Expr list) =
+
+    // Set an argument in the args array
+    let setArgumentInArray argsArray i arg =
+      Utils.assign (Dlr.indexInt argsArray i) arg
+
+    Dlr.Fast.blockTempT<Args> (fun argsArray ->
+      [|
+        // Create arguments array
+        argsArray .= Dlr.newArrayBoundsT<BV> (!!!args.Length)  
+
+        // Put all the parameters into the array
+        args $ List.mapi (setArgumentInArray argsArray) $ Dlr.block []
+
+        // Invoke variadic call function
+        Dlr.call func "Call" [|this; argsArray|]
+      |]
+    )
+
+  ///
   let invokeFunction (ctx:Ctx) this (args:Dlr.Expr list) func =
     
     //
     let invokeJs func =
 
       if args.Length > 4 then
-        let variadicArray = 
-          Dlr.paramT<BV array> "~args"
-
-        Dlr.Fast.block [|variadicArray|] [|
-          variadicArray .= Dlr.newArrayBoundsT<BV> (!!!args.Length)
-
-          Dlr.Fast.blockOfSeq [] 
-            (List.mapi (fun i arg -> 
-              Utils.assign (Dlr.indexInt variadicArray i) arg
-            ) args) 
-
-          Dlr.call func "Call" [|this; variadicArray|]
-        |]
+        invokeVariadic func this args
 
       else
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]

@@ -504,7 +504,7 @@ module Dlr =
       tmp |> f |> block [|tmp|]
 
     let blockTempT<'a> f =
-      blockTmp typeof<'a> f
+      blockTemp typeof<'a> f
 
     module Object =
       

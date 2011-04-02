@@ -14,5 +14,4 @@ ctx |> Ijs.Utils.createPrintFunction
 
 let src = @"function foo(a, b) { } foo(1, 2, 3, 4, 5);"
 
-
 ctx |> Ijs.execute  src

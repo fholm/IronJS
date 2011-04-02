@@ -13,7 +13,7 @@
         [STAThread]
         public static void Main(string[] args)
         {
-            Runner.Main(new[] { Program.GetAssemblyPath(), "/nodots", "/nologo", "/labels", "/xml=NUnit.xml" });
+            Runner.Main(new[] { Program.GetAssemblyPath(), "/nodots", "/nologo", "/labels" });
         }
 
         public static string GetAssemblyPath()

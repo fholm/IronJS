@@ -312,6 +312,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.6")]
         [TestCase("S8.6_D1.1.js", Description = "An Object may have up to 4096 properties")]
+        [Explicit("Very high memory usage.")]
         public void AnObjectMayHaveUpTo4096Properties(string file)
         {
             RunFile(file);
@@ -321,6 +322,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.6")]
         [TestCase("S8.6_D1.2.js", Description = "An Object may have up to 16384 properties ")]
+        [Explicit("Very high memory usage.")]
         public void AnObjectMayHaveUpTo16384Properties(string file)
         {
             RunFile(file);
@@ -330,6 +332,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.6")]
         [TestCase("S8.6_D1.3.js", Description = "An Object may have up to 65536 properties ")]
+        [Explicit("Very high memory usage.")]
         public void AnObjectMayHaveUpTo65536Properties(string file)
         {
             RunFile(file);
@@ -339,6 +342,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.6")]
         [TestCase("S8.6_D1.4.js", Description = "An Object may have up to 262144 properties ")]
+        [Explicit("Very high memory usage.")]
         public void AnObjectMayHaveUpTo262144Properties(string file)
         {
             RunFile(file);
@@ -348,6 +352,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.8")]
         [TestCase("S8.8_D1.1.js", Description = "Arguments list may have up to 512 elements")]
+        [Explicit("Very high memory usage.")]
         public void ArgumentsListMayHaveUpTo512Elements(string file)
         {
             RunFile(file);
@@ -357,6 +362,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.8")]
         [TestCase("S8.8_D1.2.js", Description = "Arguments list may have up to 2048 elements")]
+        [Explicit("Very high memory usage.")]
         public void ArgumentsListMayHaveUpTo2048Elements(string file)
         {
             RunFile(file);
@@ -366,6 +372,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
         [Category("Sputnik Implementation_Diagnostics")]
         [Category("ECMA 8.8")]
         [TestCase("S8.8_D1.3.js", Description = "Arguments list may have up to 8192 elements")]
+        [Explicit("Very high memory usage.")]
         public void ArgumentsListMayHaveUpTo8192Elements(string file)
         {
             RunFile(file);

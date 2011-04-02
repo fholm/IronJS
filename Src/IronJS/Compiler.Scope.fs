@@ -103,6 +103,43 @@ module Scope =
 
   /// Function scope compiler
   module private FunctionScope =
+
+    /// Initializes the private scope storage
+    let private initPrivateScope (ctx:Ctx) =
+      match ctx.Scope $ Ast.NewVars.privateCount with
+      | 0 -> Dlr.void'
+      | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
+
+    /// Initializes the shared scope storage
+    let private initSharedScope (ctx:Ctx) =
+      let functionSharedScope = 
+        ctx.Parameters.Function .-> "SharedScope"
+
+      match ctx.Scope $ Ast.NewVars.sharedCount with
+      | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
+      | n -> 
+        Dlr.block [] [
+          ctx.Parameters.SharedScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
+          Dlr.index0 ctx.Parameters.SharedScope  .-> "Scope" .= functionSharedScope
+        ]
+
+    ///
+    let private compileAst (ctx:Ctx) =
+      let functionBody =
+        [|
+          ctx $ Context.compile (ctx $ getAst)
+
+          // Assign default return value (undefined)
+          Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
+
+          // Return label
+          Dlr.labelExprVoid ctx.Labels.Return
+
+          // Last expression, return value
+          ctx.ReturnBox
+        |] 
+          
+      functionBody $ Dlr.Fast.block [||]
     
     ///
     module private StaticArity =
@@ -158,25 +195,6 @@ module Scope =
 
         else
           Dlr.void'
-
-      /// Initializes the private scope storage
-      let private initPrivateScope (ctx:Ctx) =
-        match ctx.Scope $ Ast.NewVars.privateCount with
-        | 0 -> Dlr.void'
-        | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
-
-      /// Initializes the shared scope storage
-      let private initSharedScope (ctx:Ctx) =
-        let functionSharedScope = 
-          ctx.Parameters.Function .-> "SharedScope"
-
-        match ctx.Scope $ Ast.NewVars.sharedCount with
-        | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
-        | n -> 
-          Dlr.block [] [
-            ctx.Parameters.SharedScope .= Dlr.newArrayBoundsT<BV> !!!(n+1)
-            Dlr.index0 ctx.Parameters.SharedScope  .-> "Scope" .= functionSharedScope
-          ]
 
       ///
       let private initVariables (ctx:Ctx) =
@@ -246,24 +264,6 @@ module Scope =
         Dlr.Fast.block [||] [|defined; selfReference; parameters|]
 
       ///
-      let private compileAst (ctx:Ctx) =
-        let functionBody =
-          [|
-            ctx $ Context.compile (ctx $ getAst)
-
-            // Assign default return value (undefined)
-            Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
-
-            // Return label
-            Dlr.labelExprVoid ctx.Labels.Return
-
-            // Last expression, return value
-            ctx.ReturnBox
-          |] 
-          
-        functionBody $ Dlr.Fast.block [||]
-
-      ///
       let private getDelegateType (ctx:Ctx) =
         match ctx.Target.DelegateType with
         | Some delegateType -> delegateType
@@ -295,7 +295,26 @@ module Scope =
 
       ///
       let compile (ctx:Ctx) =
-        ctx $ StaticArity.compile 
+        
+        let delegateType = typeof<VariadicFunction>
+        let internalVariables = ctx $ Context.getInternalVariables
+        let internalParameters = ctx $ Context.getInternalParameters
+        let variadicParameter = Dlr.paramT<Args> "~args"
+        let parameters = Array.append internalParameters [|variadicParameter|]
+        
+        let compiledAst = 
+          Dlr.Fast.block internalVariables [|
+            ctx $ initPrivateScope
+            ctx $ initSharedScope
+            ctx $ initDynamicScope
+            //ctx $ initVariables
+            //ctx $ initArgumentsObject
+            ctx $ initHoistedFunctions Identifier.setValue
+            ctx $ compileAst 
+          |]
+
+        Dlr.lambda delegateType parameters compiledAst
+
 
     ///
     let compile (ctx:Ctx) =

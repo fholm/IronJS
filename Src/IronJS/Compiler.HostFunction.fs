@@ -92,3 +92,39 @@ module HostFunction =
       Function = f :?> HFO<'a>
       Invoke = generateInvoke<'a>
     }
+
+  let private variadicDelegateType =
+    typeof<VariadicFunction>
+
+  let private compileVariadicToVariadic (f:HFO<'a>) =
+    f.Delegate :> Delegate
+
+  let private compileVariadicToStatic (f:HFO<'a>) (hostDelegateType:Type) =
+    failwith "Not Implemented"
+
+  let private compileVariadic (f:HFO<'a>) =
+    let hostDelegateType = typeof<'a>
+    if hostDelegateType = variadicDelegateType
+      then compileVariadicToVariadic f
+      else compileVariadicToStatic f hostDelegateType
+
+  let private compileStaticToVariadic (f:HFO<'a>) (delegateType:Type) =
+    failwith "Not Implemented"
+
+  let private compileStaticToStatic (f:HFO<'a>) (delegateType:Type) (hostDelegateType:Type) =
+    failwith "Not Implemented"
+
+  let private compileStatic (f:HFO<'a>) delegateType =
+    let hostDelegateType = typeof<'a>
+    if hostDelegateType = variadicDelegateType
+      then compileStaticToVariadic f delegateType
+      else compileStaticToStatic f delegateType hostDelegateType
+
+  let compile2<'a when 'a :> Delegate> (f:FO) delegateType =
+    let casted = f :?> HFO<'a>
+
+    if variadicDelegateType = delegateType 
+      then compileVariadic casted
+      else compileStatic casted delegateType
+        
+

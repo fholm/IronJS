@@ -435,17 +435,6 @@ and [<AllowNullLiteral>] Environment() =
   member x.RaiseReferenceError(message) = 
     x.RaiseError(x.Prototypes.ReferenceError, message)
 
-
-#if DEBUG
-and DebugUtils() =
-  
-  static let mutable id = 0L
-
-  static member DebugId = 
-    id <- id + 1L
-    id
-#endif
-
 and CO = CommonObject
 and [<AllowNullLiteral>] CommonObject = 
 
@@ -453,20 +442,12 @@ and [<AllowNullLiteral>] CommonObject =
   val mutable Prototype : CO
   val mutable PropertySchema : Schema
   val mutable Properties : Descriptor array
-
-  #if DEBUG
-  val mutable DebugId : int64
-  #endif
   
   new (env, map, prototype) = {
     Env = env
     Prototype = prototype
     PropertySchema = map
     Properties = Array.zeroCreate (map.IndexMap.Count)
-
-    #if DEBUG
-    DebugId = DebugUtils.DebugId
-    #endif
   }
 
   new (env) = {
@@ -474,10 +455,6 @@ and [<AllowNullLiteral>] CommonObject =
     Prototype = null
     PropertySchema = null
     Properties = null
-
-    #if DEBUG
-    DebugId = DebugUtils.DebugId
-    #endif
   }
 
   abstract ClassName : string with get
@@ -2264,10 +2241,8 @@ and TypeConverter() =
   static member ToInteger(d:double) : int32 = if d > 2147483647.0 then 2147483647 else d |> uint32 |> int
   static member ToInteger(b:BV) : int32 = b |> TC.ToNumber |> TC.ToInteger
 
+
   
-  (*
-  //
-  *)
   static member TryToIndex (value:double, index:uint32 byref) =
     index <- uint32 value
     double index = value
@@ -2280,7 +2255,7 @@ and TypeConverter() =
     elif  value.IsString  then TC.TryToIndex(value.String, &index)
                           else false
 
-  (**)
+  ///
   static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:Type) =
     if Object.ReferenceEquals(expr.Type, t) then expr
     elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
@@ -2293,7 +2268,7 @@ and TypeConverter() =
       elif t = typeof<obj> then TC.ToClrObject expr
       else Error.CompileError.Raise(Error.missingNoConversion expr.Type t)
     
-(**)
+///
 and Maps = {
   Base : Schema
   Array : Schema
@@ -2305,7 +2280,7 @@ and Maps = {
   RegExp : Schema
 }
 
-(**)
+///
 and Prototypes = {
   Object : CO
   Array : CO
@@ -2324,7 +2299,7 @@ and Prototypes = {
   URIError : CO
 }
 
-(**)
+///
 and Constructors = {
   Object : FO
   Array : FO
@@ -2343,17 +2318,11 @@ and Constructors = {
   URIError : FO
 }
 
-(*
-//  
-*)
 and ClrArgs = obj array
 and Scope = BV array
 and DynamicScope = (int * CO) list
 and FunctionCompiler = FO -> Type -> Delegate
 
-(*
-//  
-*)
 and JsFunc = Func<FO,CO,BV>
 and JsFunc<'a> = Func<FO,CO,'a,BV>
 and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>

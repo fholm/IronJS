@@ -4,7 +4,9 @@ module HostFunction =
 
   open System
   open IronJS
+  open IronJS.Dlr.Operators
   open IronJS.Compiler.Utils
+  open IronJS.Support.CustomOperators
   
   [<ReferenceEquality>]
   type private DispatchTarget<'a when 'a :> Delegate> = {
@@ -93,13 +95,34 @@ module HostFunction =
       Invoke = generateInvoke<'a>
     }
 
+  let private functionParameter() = Dlr.paramT<FO> "~function"
+  let private thisParameter() = Dlr.paramT<CO> "~this"
+
   let private variadicDelegateType =
     typeof<VariadicFunction>
+
+  let private generateHostInvoke<'a> function' arguments =
+    let functionCasted = Dlr.cast (typeof<'a>) function'
+    let hostDelegate = functionCasted .-> "Delegate"
+    Dlr.invoke hostDelegate arguments
+    
+  let private convertTo =
+    Microsoft.FSharp.Core.FuncConvert.FuncFromTupled(TC.ConvertTo)
+
+  let private compileDelegate delegateType parameters body =
+    let lambda = Dlr.lambda delegateType parameters body
+
+    #if DEBUG
+    lambda $ Support.Debug.printExpr
+    #endif
+
+    lambda.Compile()
 
   let private compileVariadicToVariadic (f:HFO<'a>) =
     f.Delegate :> Delegate
 
   let private compileVariadicToStatic (f:HFO<'a>) (hostDelegateType:Type) =
+    let hostParameterTypes = hostDelegateType.GetGenericArguments()
     failwith "Not Implemented"
 
   let private compileVariadic (f:HFO<'a>) =
@@ -109,10 +132,88 @@ module HostFunction =
       else compileVariadicToStatic f hostDelegateType
 
   let private compileStaticToVariadic (f:HFO<'a>) (delegateType:Type) =
-    failwith "Not Implemented"
+    let delegateParameters = 
+      delegateType.GetGenericArguments() $ Array.mapi Dlr.paramI
 
-  let private compileStaticToStatic (f:HFO<'a>) (delegateType:Type) (hostDelegateType:Type) =
-    failwith "Not Implemented"
+    let boxedParameters =
+      delegateParameters $ Array.map Utils.box
+
+    let variadicArgs =
+      Dlr.newArrayItemsT<BV> boxedParameters
+
+    let functionParameter = functionParameter()
+    let thisParameter = thisParameter()
+
+    let delegateParameters =
+      delegateParameters
+      $ Array.append [|functionParameter; thisParameter|] 
+
+    let hostArguments =
+      [|
+        functionParameter :> Dlr.Expr
+        thisParameter :> Dlr.Expr
+        variadicArgs
+      |] 
+
+    let invoke = generateHostInvoke<HFO<'a>> functionParameter hostArguments
+    compileDelegate delegateType delegateParameters invoke
+
+  let private compileStaticToStatic (f:HFO<'a>) (delegateType:Type) (hostType:Type) =
+    // If we're lucky we're invoking the exact same
+    // delegate type the host function is wrapping
+    if delegateType = hostType then
+      f.Delegate :> Delegate
+
+    else
+      let functionParameter = functionParameter()
+      let thisParameter = thisParameter()
+      let environment = functionParameter .-> "Env"
+
+      let hostParameterTypes = hostType.GetGenericArguments()
+      let delegateParameters = 
+        delegateType.GetGenericArguments() $ Array.mapi Dlr.paramI
+
+      // Calculate arguments to pass to the host
+      // function, there are three possible cases
+      let hostArguments = 
+        
+        let mapArguments a b = Seq.map2 (convertTo environment) a b
+        let prependInternal = Seq.append [|functionParameter :> Dlr.Expr; thisParameter :> Dlr.Expr|]
+
+        // Case 1: Lenghts match perfectly
+        if hostParameterTypes.Length = delegateParameters.Length then
+          hostParameterTypes $ mapArguments delegateParameters $ prependInternal
+
+        // Case 2: Host function has more parameters then the delegate type
+        elif hostParameterTypes.Length > delegateParameters.Length then
+          let diff = hostParameterTypes.Length - delegateParameters.Length
+
+          let existingArgs =
+            hostParameterTypes 
+            $ Seq.skip diff
+            $ mapArguments delegateParameters
+            
+          hostParameterTypes 
+          $ Seq.skip delegateParameters.Length
+          $ Seq.map Dlr.default'
+          $ Seq.append existingArgs
+          $ prependInternal
+
+        // Case 3: Delegate has more parameters then the host function
+        else
+          let diff = delegateParameters.Length - hostParameterTypes.Length 
+          let delegateParameters = delegateParameters $ Seq.skip diff
+          hostParameterTypes $ mapArguments delegateParameters $ prependInternal
+
+      let delegateParameters =
+        delegateParameters
+        $ Array.append [|functionParameter; thisParameter|]
+
+      let functionCasted = Dlr.cast (f.GetType()) functionParameter
+      let hostDelegate = functionCasted .-> "Delegate"
+      let invoke = Dlr.invoke hostDelegate hostArguments
+
+      compileDelegate delegateType delegateParameters invoke
 
   let private compileStatic (f:HFO<'a>) delegateType =
     let hostDelegateType = typeof<'a>
@@ -126,5 +227,4 @@ module HostFunction =
     if variadicDelegateType = delegateType 
       then compileVariadic casted
       else compileStatic casted delegateType
-        
 

@@ -10,8 +10,8 @@ module Ijs = IronJS.Hosting.FSharp
 IronJS.Support.Debug.registerConsolePrinter()
 
 let ctx = Ijs.createContext()
-ctx |> Ijs.Utils.createPrintFunction
 
-let src = @"function foo(a, b) { } foo(1, 2, 3, 4, 5);"
+let snd (_:FO) (_:CO) (a:Args) =a.[0]
 
-ctx |> Ijs.execute  src
+let func = VariadicFunction(snd)
+let hostFunc = Native.Utils.createHostFunction ctx.Env func

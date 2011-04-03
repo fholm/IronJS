@@ -2256,15 +2256,22 @@ and TypeConverter() =
                           else false
 
   ///
-  static member ConvertTo (env:Dlr.Expr, expr:Dlr.Expr, t:Type) =
-    if Object.ReferenceEquals(expr.Type, t) then expr
-    elif t.IsAssignableFrom(expr.Type) then Dlr.cast t expr
+  static member ConvertTo (envExpr:Dlr.Expr, expr:Dlr.Expr, t:Type) =
+    // If the types are identical just return the expr
+    if Object.ReferenceEquals(expr.Type, t) then 
+      expr
+
+    // If expr.Type is a subclass of t, cast expr to t
+    elif t.IsAssignableFrom(expr.Type) then 
+      Dlr.cast t expr
+
+    // Else, apply the javascript type converter
     else 
       if   t = typeof<double> then TC.ToNumber expr
       elif t = typeof<string> then TC.ToString expr
       elif t = typeof<bool> then TC.ToBoolean expr
       elif t = typeof<BV> then TC.ToBoxedValue expr
-      elif t = typeof<CO> then TC.ToObject(env, expr)
+      elif t = typeof<CO> then TC.ToObject(envExpr, expr)
       elif t = typeof<obj> then TC.ToClrObject expr
       else Error.CompileError.Raise(Error.missingNoConversion expr.Type t)
     

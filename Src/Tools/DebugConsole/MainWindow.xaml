@@ -32,12 +32,24 @@
                   FontFamily="Consolas"
                   FontSize="11" />
             </TabItem>
+            <TabItem Header="Console Output">
+                <TextBox TextWrapping="Wrap" Grid.Column="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="consoleOutput" Margin="0" />
+            </TabItem>
+            <TabItem Header="Last Statement">
+                <TextBox TextWrapping="Wrap" Grid.Column="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="lastStatementOutput" Margin="0" />
+            </TabItem>
         </TabControl>
         
         <Button 
             Content="Run" Name="runButton" Click="runButton_Click" 
             Margin="0,0,0,10" Height="23" VerticalAlignment="Bottom" 
-            HorizontalAlignment="Right" Width="75" />
+            HorizontalAlignment="Right" Width="50" />
         
         <Button 
             Content="Stop" 
@@ -46,9 +58,18 @@
             VerticalAlignment="Bottom" 
             Grid.Column="0" 
             HorizontalAlignment="Right" 
-            Width="75" 
-            Margin="0,0,85,10" Click="stopButton_Click" />
-        
+            Width="50" 
+            Margin="0,0,60,10" Click="stopButton_Click" />
+
+        <Button 
+            Content="Reset Environment" 
+            Height="23" 
+            HorizontalAlignment="Right" 
+            Margin="0,0,120,10" 
+            Name="resetEnvironment" 
+            VerticalAlignment="Bottom" 
+            Width="110" Click="resetEnvironment_Click" />
+
         <Label Content="JavaScript Input"
                FontWeight="Bold"
                Grid.Column="0" Height="28" 

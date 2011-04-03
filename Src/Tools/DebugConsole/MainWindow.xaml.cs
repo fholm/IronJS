@@ -19,11 +19,10 @@ namespace DebugConsole
     {
         const string CACHE_FILE = "input.cache";
 
-        Dictionary<Type, Color> typeColors =
-            new Dictionary<Type, Color>();
-
-        HashSet<object> alreadyRendered =
-            new HashSet<object>();
+        CallbackWriter callbackWriter;
+        Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
+        HashSet<object> alreadyRendered = new HashSet<object>();
+        IronJS.Hosting.CSharp.Context context;
 
         public MainWindow()
         {
@@ -42,6 +41,11 @@ namespace DebugConsole
             typeColors.Add(typeof(IronJS.Undefined), Colors.DarkGoldenrod);
             typeColors.Add(typeof(IronJS.CommonObject), Colors.DarkGreen);
             typeColors.Add(typeof(object), Colors.Black);
+
+            callbackWriter = new CallbackWriter(printConsoleText);
+            Console.SetOut(callbackWriter);
+
+            createEnvironment();
         }
 
         void loadCacheFile()
@@ -75,6 +79,11 @@ namespace DebugConsole
                 alreadyRendered.Clear();
                 EnvironmentVariables.Items.Add(item);
             }
+        }
+
+        void printConsoleText(string value)
+        {
+            consoleOutput.Text += value;
         }
 
         IEnumerable<TreeViewItem> renderObjectProperties(IronJS.CommonObject ijsObject)
@@ -161,10 +170,17 @@ namespace DebugConsole
 
         void runButton_Click(object sender, RoutedEventArgs e)
         {
+            consoleOutput.Text = String.Empty;
             expressionTreeOutput.Text = String.Empty;
-            var ctx = new IronJS.Hosting.CSharp.Context();
-            ctx.Execute(inputText.Text);
-            printEnvironmentVariables(ctx.Globals);
+            syntaxTreeOutput.Text = String.Empty;
+            lastStatementOutput.Text = String.Empty;
+
+            var result = context.Execute(inputText.Text);
+
+            lastStatementOutput.Text =
+                IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(result));
+
+            printEnvironmentVariables(context.Globals);
         }
 
         void stopButton_Click(object sender, RoutedEventArgs e)
@@ -182,6 +198,18 @@ namespace DebugConsole
             {
 
             }
+        }
+
+        void createEnvironment()
+        {
+            context = new IronJS.Hosting.CSharp.Context();
+            context.CreatePrintFunction();
+        }
+
+        void resetEnvironment_Click(object sender, RoutedEventArgs e)
+        {
+            createEnvironment();
+            printEnvironmentVariables(context.Globals);
         }
     }
 }

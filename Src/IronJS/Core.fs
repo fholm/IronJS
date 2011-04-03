@@ -362,16 +362,22 @@ and [<AllowNullLiteral>] Environment() =
   member x.NewRegExp() = x.NewRegExp("")
   member x.NewRegExp(pattern) = x.NewRegExp(pattern, "")
   member x.NewRegExp(pattern:string, options:string) =
-    let options = string options // gets rid of null
+    let options = string options
+
+    let mutable multiline:bool = false
+    let mutable ignoreCase:bool = false
+    let mutable global':bool = false
+
+    for o:char in options do
+      if o = 'm' && not multiline then multiline <- true
+      elif o = 'i' && not ignoreCase then ignoreCase <- true
+      elif o = 'g' && not global' then global' <- true
+      else x.RaiseSyntaxError("Invalid RegExp options '" + options + "'") |> ignore
+
     let mutable opts = RegexOptions.None
-
-    if options.Contains("m") then
-      opts <- opts ||| RegexOptions.Multiline
-
-    if options.Contains("i") then
-      opts <- opts ||| RegexOptions.IgnoreCase
-
-    x.NewRegExp(pattern, opts, options.Contains("g"))
+    if multiline then opts <- opts ||| RegexOptions.Multiline
+    if ignoreCase then opts <- opts ||| RegexOptions.IgnoreCase
+    x.NewRegExp(pattern, opts, global')
 
   member x.NewRegExp(pattern:string, options:RegexOptions, isGlobal:bool) =
     let regexp = new RO(x, pattern, options, isGlobal)

@@ -9,7 +9,7 @@ open IronJS.DescriptorAttrs
 // 15.4
 module Array =
 
-  type private Sort = Func<FO, CO, BV, BV, BV>
+  type private Sort = Function<BV, BV>
 
   //----------------------------------------------------------------------------
   let internal constructor' (f:FO) (_:CO) (args:Args) =

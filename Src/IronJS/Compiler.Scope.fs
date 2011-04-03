@@ -181,59 +181,22 @@ module Scope =
             Utils.assign storage ctx.Parameters.Function
 
     ///
-    module private StaticArity =
-      
-      ///
-      let private syncParametersWithDelegate (ctx:Ctx) = 
-        match ctx.Target.DelegateType with
-        | Some delegate' ->
+    let private initArgumentsObject f (ctx:Ctx) =
+      if ctx.Scope |> Ast.NewVars.hasArgumentsObject then
+        
+        match ctx.Scope |> Ast.NewVars.variables |> Map.find "arguments" with
+        | Ast.Private storageIndex ->
           
-          // Extract argument types, and skip the two first because
-          // they are the two internal Function and This parameters
-          let argTypes = 
-            delegate' $ FSharp.Reflection.getDelegateArgTypes
-                      $ FSharp.Array.skip 2
+          let storage = 
+            Dlr.indexInt ctx.Parameters.PrivateScope storageIndex
 
-          // Skip count is the amount of types in argTypes that we should
-          // remove, because they already have parameters defined by user code
-          let skipCount =
-            let parameterCount = ctx.Scope $ Ast.NewVars.parameterCount
-            if argTypes.Length >= parameterCount then parameterCount else 0
+          f ctx storage
 
-          // Extra args is the amount of extra arguments
-          // we need to add to the scope so we can accept
-          // as many parameters as required by the delegate type
-          let extraArgsCount = 
-            argTypes $ FSharp.Array.skip skipCount
-                     $ Array.length
+      else
+        Dlr.void'
 
-          // Add any extra args, and since F# for loops
-          // are <= max we need to reduce extraArgsCount with 1
-          for i = 0 to (extraArgsCount - 1) do
-            let parameterCount = ctx.Scope $ Ast.NewVars.parameterCount
-            let name = sprintf "~arg%i" parameterCount
-            ctx.Scope |> Ast.NewVars.addParameterName name
-            ctx.Scope |> Ast.NewVars.createPrivateVariable name
-       
-      ///
-      let private initArgumentsObject (ctx:Ctx) =
-        if ctx.Scope |> Ast.NewVars.hasArgumentsObject then
-
-          match ctx.Scope |> Ast.NewVars.variables |> Map.find "arguments" with
-          | Ast.Private storageIndex ->
-            let storage = Dlr.indexInt ctx.Parameters.PrivateScope storageIndex
-
-            let callArguments = [
-              ctx.Parameters.Function     :> Dlr.Expr
-              ctx.Parameters.PrivateScope :> Dlr.Expr
-              ctx.Parameters.SharedScope  :> Dlr.Expr
-            ]
-
-            let initArguments = Dlr.callStaticT<FunctionScopeHelpers> "InitArguments" callArguments
-            (Utils.assign storage initArguments)
-
-        else
-          Dlr.void'
+    ///
+    module private StaticArity =
 
       ///
       let private initVariables (ctx:Ctx) =
@@ -284,9 +247,41 @@ module Scope =
         | Some delegateType -> delegateType
 
       ///
-      let compile (ctx:Ctx) =
-        ctx $ syncParametersWithDelegate
+      let private initArguments (ctx:Ctx) storage =
         
+        let parameterCount = 
+          ctx.Scope $ Ast.NewVars.parameterCount
+
+        let unnamedParameters =
+
+          if ctx.Parameters.UserParameters.Length > parameterCount then
+            ctx.Parameters.UserParameters
+            $ Seq.skip parameterCount
+            $ Seq.map Utils.box
+
+          else
+            Seq.empty
+
+        let passedNameParameters =
+          if ctx.Parameters.UserParameters.Length > parameterCount 
+            then parameterCount
+            else ctx.Parameters.UserParameters.Length
+
+        let callArguments = [
+          ctx.Parameters.Function     :> Dlr.Expr
+          ctx.Parameters.PrivateScope :> Dlr.Expr
+          ctx.Parameters.SharedScope  :> Dlr.Expr
+          !!!passedNameParameters
+          Dlr.newArrayItemsT<BV> unnamedParameters
+        ]
+
+        let createCall = 
+          Dlr.callStaticT<ArgumentsObject> "CreateForFunction" callArguments
+
+        Utils.assign storage createCall
+
+      ///
+      let compile (ctx:Ctx) =
         let delegateType = ctx $ getDelegateType
         let internalVariables = ctx $ Context.getInternalVariables
         let internalParameters = ctx $ Context.getInternalParameters
@@ -298,7 +293,7 @@ module Scope =
             ctx $ initSharedScope
             ctx $ initDynamicScope
             ctx $ initVariables
-            ctx $ initArgumentsObject
+            ctx $ initArgumentsObject initArguments
             ctx $ initHoistedFunctions Identifier.setValue
             ctx $ compileAst 
           |]
@@ -314,8 +309,8 @@ module Scope =
         let initParameter (index:int) (_:string, var:Ast.Variable) =
           let storage =
             match var with
-            | Ast.Shared(storageIndex, _, _) -> Dlr.indexInt ctx.Parameters.SharedScope index
-            | Ast.Private(storageIndex) -> Dlr.indexInt ctx.Parameters.PrivateScope index
+            | Ast.Shared(storageIndex, _, _) -> Dlr.indexInt ctx.Parameters.SharedScope storageIndex
+            | Ast.Private(storageIndex) -> Dlr.indexInt ctx.Parameters.PrivateScope storageIndex
 
           Dlr.if'
             (Dlr.lt !!!index (variadicArgs .-> "Length"))
@@ -347,6 +342,20 @@ module Scope =
         Dlr.Fast.block [||] [|defined; ctx $ initSelfReference; parameters|]
 
       ///
+      let private initArgument (variadicParameter:Dlr.Expr) (ctx:Ctx) (storage:Dlr.Expr) =
+        let callArguments = [
+          ctx.Parameters.Function     :> Dlr.Expr
+          ctx.Parameters.PrivateScope :> Dlr.Expr
+          ctx.Parameters.SharedScope  :> Dlr.Expr
+          variadicParameter
+        ]
+
+        let createCall = 
+          Dlr.callStaticT<ArgumentsObject> "CreateForVariadicFunction" callArguments
+
+        Utils.assign storage createCall
+
+      ///
       let compile (ctx:Ctx) =
         
         let delegateType = typeof<VariadicFunction>
@@ -361,7 +370,7 @@ module Scope =
             ctx $ initSharedScope
             ctx $ initDynamicScope
             ctx $ initVariables variadicParameter
-            //ctx $ initArgumentsObject
+            ctx $ initArgumentsObject (initArgument variadicParameter)
             ctx $ initHoistedFunctions Identifier.setValue
             ctx $ compileAst 
           |]
@@ -441,7 +450,12 @@ module Scope =
       let internalVariables = ctx $ Context.getInternalVariables
       let internalParameters = ctx $ Context.getInternalParameters
       let parameters = Array.append internalParameters internalVariables
-      let compiledAst = ctx $ compileAsClrValue
+
+      let compiledAst =
+        Dlr.Fast.block [||] [|
+          ctx $ initHoistedFunctions Identifier.setValue
+          ctx $ compileAsClrValue
+        |]
 
       Dlr.lambdaT<EvalCode> parameters compiledAst 
         :> Dlr.Lambda

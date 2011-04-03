@@ -1401,7 +1401,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 (*
 //  
 *)
-and ArgLink = byte * int
+and ArgLink = ParameterStorageType * int
 and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals, closedOver) as x =
   inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
   
@@ -1416,25 +1416,51 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
     x.LinkMap <- linkMap
     x.LinkIntact <- true
     x.Prototype <- x.Env.Prototypes.Object
+
+  ///
+  static member CreateForVariadicFunction(f:FO, privateScope:Scope, sharedScope:Scope, variadicArgs:Args) =
     
-  //----------------------------------------------------------------------------
-  static member New(env, linkMap, locals, closedOver, callee:FO) : ArgumentsObject =
-    let x = new ArgumentsObject(env, linkMap, locals, closedOver)
+    let x = new ArgumentsObject(f.Env, f.MetaData.ParameterStorage, privateScope, sharedScope)
+
     x.CopyLinkedValues()
-    x.Put("constructor", env.Constructors.Object)
-    x.Put("length", linkMap.Length |> double, DescriptorAttrs.DontEnum)
-    x.Put("callee", callee, DescriptorAttrs.DontEnum)
+    x.Put("constructor", f.Env.Constructors.Object)
+    x.Put("length", variadicArgs.Length |> double, DescriptorAttrs.DontEnum)
+    x.Put("callee", f, DescriptorAttrs.DontEnum)
+
+    if variadicArgs |> FSharp.Utils.notNull then
+      for i = f.MetaData.ParameterStorage.Length to (variadicArgs.Length-1) do
+        x.Put(uint32 i, variadicArgs.[i])
+
+    x
+
+  ///
+  static member CreateForFunction(f:FO, privateScope:Scope, sharedScope:Scope, namedPassedArgs:int, extraArgs:Args) =
+    let length = namedPassedArgs + extraArgs.Length
+    let storage = 
+      f.MetaData.ParameterStorage 
+      |> Seq.take namedPassedArgs
+      |> Array.ofSeq
+
+    let x = new ArgumentsObject(f.Env, storage, privateScope, sharedScope)
+    x.CopyLinkedValues()
+    x.Put("constructor", f.Env.Constructors.Object)
+    x.Put("length", length |> double, DescriptorAttrs.DontEnum)
+    x.Put("callee", f, DescriptorAttrs.DontEnum)
+
+    for i = 0 to (extraArgs.Length-1) do      
+      x.Put(uint32 (i + namedPassedArgs), extraArgs.[i])
+
     x
       
-  //----------------------------------------------------------------------------
+  ///
   member x.CopyLinkedValues() : unit =
     for i = 0 to (x.LinkMap.Length-1) do
       let sourceArray, index = x.LinkMap.[i]
       match sourceArray with
-      | ArgumentsLinkArray.Locals -> 
+      | ParameterStorageType.Private -> 
         base.Put(uint32 i, x.Locals.[index])
 
-      | ArgumentsLinkArray.ClosedOver -> 
+      | ParameterStorageType.Shared -> 
         base.Put(uint32 i, x.ClosedOver.[index])
 
       | _ -> 
@@ -1445,8 +1471,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> x.Locals.[index] <- value
-      | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index] <- value
+      | ParameterStorageType.Private, index -> x.Locals.[index] <- value
+      | ParameterStorageType.Shared, index -> x.ClosedOver.[index] <- value
       | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
@@ -1456,8 +1482,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> x.Locals.[index].Number <- value
-      | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index].Number <- value
+      | ParameterStorageType.Private, index -> x.Locals.[index].Number <- value
+      | ParameterStorageType.Shared, index -> x.ClosedOver.[index].Number <- value
       | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
@@ -1467,11 +1493,11 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> 
+      | ParameterStorageType.Private, index -> 
         x.Locals.[index].Clr <- value
         x.Locals.[index].Tag <- tag
 
-      | ArgumentsLinkArray.ClosedOver, index -> 
+      | ParameterStorageType.Shared, index -> 
         x.ClosedOver.[index].Clr <- value
         x.ClosedOver.[index].Tag <- tag
 
@@ -1485,10 +1511,10 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> 
+      | ParameterStorageType.Private, index -> 
         x.Locals.[index]
          
-      | ArgumentsLinkArray.ClosedOver, index -> 
+      | ParameterStorageType.Shared, index -> 
         x.ClosedOver.[index]
 
       | _ -> 
@@ -1561,17 +1587,17 @@ and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, par
   member x.Source : string option = None
   member x.Compiler : FO -> Type -> Delegate = compiler
   member x.FunctionType : FunctionType = functionType
-  member x.ParameterStorage : (ParameterStorageType * int) list = parameterStorage
+  member x.ParameterStorage : (ParameterStorageType * int) array = parameterStorage
 
   /// This constructor is for user functions, which we know
   /// always have ConstructorMode.User.
-  new (id:uint64, compiler:FunctionCompiler, parameterStorage:(ParameterStorageType * int) list) =
+  new (id:uint64, compiler:FunctionCompiler, parameterStorage:(ParameterStorageType * int) array) =
     FunctionMetaData(id, FunctionType.UserDefined, compiler, parameterStorage)
 
   /// This constructor is for host functions, which we don't
   /// need parameter storage information about.
   new (id:uint64, mode:FunctionType, compiler:FunctionCompiler) =
-    FunctionMetaData(id, mode, compiler, [])
+    FunctionMetaData(id, mode, compiler, Array.empty)
 
   /// 
   member x.GetDelegate(f:FO, delegateType:Type) =
@@ -1685,7 +1711,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | FunctionType.NativeConstructor -> x.Call(null, a)
     | FunctionType.UserDefined ->
       let o = x.NewInstance()
-      x.PickReturnObject(x.Call(o), o)
+      x.PickReturnObject(x.Call(o, a), o)
 
     | _ -> x.Env.RaiseTypeError()
     
@@ -1694,7 +1720,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | FunctionType.NativeConstructor -> x.Call(null, a, b)
     | FunctionType.UserDefined ->
       let o = x.NewInstance()
-      x.PickReturnObject(x.Call(o), o)
+      x.PickReturnObject(x.Call(o, a, b), o)
 
     | _ -> x.Env.RaiseTypeError()
     
@@ -1703,7 +1729,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | FunctionType.NativeConstructor -> x.Call(null, a, b, c)
     | FunctionType.UserDefined ->
       let o = x.NewInstance()
-      x.PickReturnObject(x.Call(o), o)
+      x.PickReturnObject(x.Call(o, a, b, c), o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1712,7 +1738,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | FunctionType.NativeConstructor -> x.Call(null, a, b, c, d)
     | FunctionType.UserDefined ->
       let o = x.NewInstance()
-      x.PickReturnObject(x.Call(o), o)
+      x.PickReturnObject(x.Call(o, a, b, c, d), o)
 
     | _ -> x.Env.RaiseTypeError()
 
@@ -1721,7 +1747,7 @@ and [<AllowNullLiteral>] FunctionObject =
     | FunctionType.NativeConstructor -> x.Call(null, args)
     | FunctionType.UserDefined -> 
       let o = x.NewInstance()
-      x.PickReturnObject(x.Call(o), o)
+      x.PickReturnObject(x.Call(o, args), o)
 
     | _ -> x.Env.RaiseTypeError()
 

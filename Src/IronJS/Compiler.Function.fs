@@ -32,12 +32,12 @@ module Function =
 
   ///
   let private getScopeParameterStorage (scope:Ast.Scope) =
-    [
+    [|
       for parameter in scope.ParameterNames ->
         match scope.Variables.[parameter] with
         | Ast.Shared(storageIndex, _, _) -> ParameterStorageType.Shared, storageIndex
         | Ast.Private(storageIndex) -> ParameterStorageType.Private, storageIndex
-    ]
+    |]
 
   /// 
   let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
@@ -76,7 +76,11 @@ module Function =
         args $ List.mapi (setArgumentInArray argsArray) $ Dlr.block []
 
         // Invoke variadic call function
-        Dlr.call func "Call" [|this; argsArray|]
+        (
+          match this with
+          | None -> Dlr.call func "Construct" [|argsArray|]
+          | Some this -> Dlr.call func "Call" [|this; argsArray|]
+        )
       |]
     )
 
@@ -87,7 +91,7 @@ module Function =
     let invokeJs func =
 
       if args.Length > 4 then
-        invokeVariadic func this args
+        invokeVariadic func (Some this) args
 
       else
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
@@ -104,8 +108,7 @@ module Function =
   ///
   let invokeIdentifierDynamic (ctx:Ctx) name args =
     let argsArray = Dlr.newArrayItemsT<obj> [for a in args -> Dlr.castT<obj> a]
-    let typeArgs = DelegateCache.addInternalArgs [for a in args -> a.Type]
-    let delegateType = DelegateCache.getDelegate typeArgs
+    let delegateType = DelegateCache.getDelegate [for a in args -> a.Type]
     let dynamicArgs = Identifier.getDynamicArgs ctx name
     let defaultArgs = [Dlr.const' name; argsArray; ctx.Parameters.DynamicScope :> Dlr.Expr]
     
@@ -162,7 +165,11 @@ module Function =
       
       (fun f ->
         let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
-        Dlr.callGeneric f "Construct" argTypes args
+        if argTypes.Length > 4 then
+          invokeVariadic f None args
+          
+        else
+          Dlr.callGeneric f "Construct" argTypes args
       )
 
       (fun _ -> 

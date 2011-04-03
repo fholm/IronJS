@@ -140,7 +140,46 @@ module Scope =
         |] 
           
       functionBody $ Dlr.Fast.block [||]
-    
+
+    ///
+    let private initDefinedVariable (ctx:Ctx) (_, var:Ast.Variable) =
+      let storage = 
+        match var with
+        | Ast.Shared(storageIndex, _, _) -> 
+          Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
+
+        | Ast.Private(storageIndex) ->
+          Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
+
+      Utils.assign storage Utils.Constants.undefined
+
+
+    ///
+    let private fromThisScope (ctx:Ctx) (_, var:Ast.Variable) =
+      let globalLevel = 
+        ctx.Scope $ Ast.NewVars.globalLevel
+
+      match var with
+      | Ast.Shared(_, g, _) when g <> globalLevel -> false
+      | _ -> true
+
+    ///
+    let initSelfReference (ctx:Ctx) =
+      match (!ctx.Scope).SelfReference with
+      | None -> Dlr.void'
+      | Some name -> 
+        match ctx.Scope $ Ast.NewVars.variables $ Map.tryFind name with
+        | None -> Dlr.void'
+        | Some variable ->
+          match variable with
+          | Ast.Private(storageIndex) -> 
+            let storage = Dlr.indexInt ctx.Parameters.PrivateScope storageIndex
+            Utils.assign storage ctx.Parameters.Function
+
+          | Ast.Shared(storageIndex, _, _) ->
+            let storage = Dlr.indexInt ctx.Parameters.SharedScope storageIndex
+            Utils.assign storage ctx.Parameters.Function
+
     ///
     module private StaticArity =
       
@@ -213,25 +252,6 @@ module Scope =
           |> Ast.NewVars.variables
           |> Map.partition (fun name _ -> parameterMap.ContainsKey name)
 
-        let scopeGlobalLevel = 
-          ctx.Scope |> Ast.NewVars.globalLevel
-
-        let fromThisScope (_, var:Ast.Variable) =
-          match var with
-          | Ast.Shared(_, g, _) when g <> scopeGlobalLevel -> false
-          | _ -> true
-
-        let initDefined (_, var:Ast.Variable) =
-          let storage = 
-            match var with
-            | Ast.Shared(storageIndex, _, _) -> 
-              Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
-
-            | Ast.Private(storageIndex) ->
-              Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
-
-          Utils.assign storage Utils.Constants.undefined
-
         let initParameter (name, var:Ast.Variable) =
           let storage = 
             match var with
@@ -246,8 +266,8 @@ module Scope =
         let defined =
           defined 
           |> Map.toSeq
-          |> Seq.filter fromThisScope
-          |> Seq.map initDefined
+          |> Seq.filter (fromThisScope ctx)
+          |> Seq.map (initDefinedVariable ctx)
           |> Dlr.Fast.blockOfSeq []
 
         let parameters =
@@ -256,12 +276,7 @@ module Scope =
           |> Seq.map initParameter
           |> Dlr.Fast.blockOfSeq  []
 
-        let selfReference =
-          match (!ctx.Scope).SelfReference with
-          | None -> Dlr.void'
-          | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
-
-        Dlr.Fast.block [||] [|defined; selfReference; parameters|]
+        Dlr.Fast.block [||] [|defined; ctx $ initSelfReference; parameters|]
 
       ///
       let private getDelegateType (ctx:Ctx) =
@@ -292,78 +307,44 @@ module Scope =
 
     ///
     module private VariadicArity =
-      (*
-      
 
       ///
-      let private initVariables (ctx:Ctx) =
-        let parameterCount = 
-          ctx.Target |> Target.parameterCount
+      let private initVariables (variadicArgs:Dlr.Parameter) (ctx:Ctx) =
 
-        let parameterMap = 
+        let initParameter (index:int) (_:string, var:Ast.Variable) =
+          let storage =
+            match var with
+            | Ast.Shared(storageIndex, _, _) -> Dlr.indexInt ctx.Parameters.SharedScope index
+            | Ast.Private(storageIndex) -> Dlr.indexInt ctx.Parameters.PrivateScope index
+
+          Dlr.if'
+            (Dlr.lt !!!index (variadicArgs .-> "Length"))
+            (Utils.assign storage (Dlr.indexInt variadicArgs index))
+
+        let parameterSet = 
           ctx.Scope 
-          |> Ast.NewVars.parameterNames 
-          |> List.mapi (fun i n -> n, i)
-          |> List.filter (fun (_, i) -> i < parameterCount)
-          |> Map.ofList
+          $ Ast.NewVars.parameterNames 
+          $ Set.ofList
 
         let parameters, defined =
           ctx.Scope
-          |> Ast.NewVars.variables
-          |> Map.partition (fun name _ -> parameterMap.ContainsKey name)
-
-        let scopeGlobalLevel = 
-          ctx.Scope |> Ast.NewVars.globalLevel
-
-        let fromThisScope (_, var:Ast.Variable) =
-          match var with
-          | Ast.Shared(_, g, _) when g <> scopeGlobalLevel -> false
-          | _ -> true
-
-        let initDefined (_, var:Ast.Variable) =
-          let storage = 
-            match var with
-            | Ast.Shared(storageIndex, _, _) -> 
-              Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
-
-            | Ast.Private(storageIndex) ->
-              Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
-
-          Utils.assign storage Utils.Constants.undefined
-
-        let initParameter (name, var:Ast.Variable) =
-          let storage = 
-            match var with
-            | Ast.Shared(storageIndex, _, _) ->
-              Dlr.indexInt ctx.Parameters.SharedScope storageIndex 
-
-            | Ast.Private(storageIndex) ->
-              Dlr.indexInt ctx.Parameters.PrivateScope storageIndex 
-
-          Utils.assign storage ctx.Parameters.UserParameters.[parameterMap.[name]]
+          $ Ast.NewVars.variables
+          $ Map.partition (fun name _ -> parameterSet $ Set.contains name)
 
         let defined =
           defined 
           |> Map.toSeq
-          |> Seq.filter fromThisScope
-          |> Seq.map initDefined
+          |> Seq.filter (fromThisScope ctx)
+          |> Seq.map (initDefinedVariable ctx)
           |> Dlr.Fast.blockOfSeq []
 
         let parameters =
           parameters
           |> Map.toSeq
-          |> Seq.map initParameter
-          |> Dlr.Fast.blockOfSeq  []
+          |> Seq.mapi initParameter
+          |> Dlr.Fast.blockOfSeq []
 
-        let selfReference =
-          match (!ctx.Scope).SelfReference with
-          | None -> Dlr.void'
-          | Some name -> Identifier.setValue ctx name (ctx.Parameters.Function)
-
-        Dlr.Fast.block [||] [|defined; selfReference; parameters|]
-      *)
-      let private initVariables (ctx:Ctx) =
-        
+        Dlr.Fast.block [||] [|defined; ctx $ initSelfReference; parameters|]
 
       ///
       let compile (ctx:Ctx) =
@@ -379,7 +360,7 @@ module Scope =
             ctx $ initPrivateScope
             ctx $ initSharedScope
             ctx $ initDynamicScope
-            //ctx $ initVariables
+            ctx $ initVariables variadicParameter
             //ctx $ initArgumentsObject
             ctx $ initHoistedFunctions Identifier.setValue
             ctx $ compileAst 

@@ -13,7 +13,7 @@
             VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
             Name="inputText" TextChanged="inputText_TextChanged" Margin="10,28,0,43" />
 
-        <TabControl Grid.Column="1" Margin="10,5,10,10">
+        <TabControl Grid.Column="1" Margin="10,5,10,10" Name="tabs">
             <TabItem Header="Expression Tree">
                 <TextBox TextWrapping="Wrap" Grid.Column="1"
                     AcceptsTab="True" FontFamily="Consolas" 

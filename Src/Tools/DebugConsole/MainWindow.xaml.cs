@@ -19,7 +19,6 @@ namespace DebugConsole
     {
         const string CACHE_FILE = "input.cache";
 
-        CallbackWriter callbackWriter;
         Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
         HashSet<object> alreadyRendered = new HashSet<object>();
         IronJS.Hosting.CSharp.Context context;
@@ -42,8 +41,7 @@ namespace DebugConsole
             typeColors.Add(typeof(IronJS.CommonObject), Colors.DarkGreen);
             typeColors.Add(typeof(object), Colors.Black);
 
-            callbackWriter = new CallbackWriter(printConsoleText);
-            Console.SetOut(callbackWriter);
+            Console.SetOut(new CallbackWriter(printConsoleText));
 
             createEnvironment();
         }
@@ -208,6 +206,7 @@ namespace DebugConsole
 
         void resetEnvironment_Click(object sender, RoutedEventArgs e)
         {
+            tabs.SelectedIndex = 2;
             createEnvironment();
             printEnvironmentVariables(context.Globals);
         }

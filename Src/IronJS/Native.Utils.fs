@@ -44,7 +44,7 @@ module Utils =
       let h = HostFunction<'a>(env, delegate', metaData)
       h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
       h :> FunctionObject
-
+        
   (*
   //  This function is horribly slow, but it's the only way
   //  that IronJS currently supports invoking methods with 

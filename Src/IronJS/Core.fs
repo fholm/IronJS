@@ -488,7 +488,8 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Members = 
     let dict = new MutableDict<string, obj>()
     for kvp in x.PropertySchema.IndexMap do
-      dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
+      if x.Properties.[kvp.Value].HasValue then
+        dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
     dict
   #endif
 
@@ -1084,7 +1085,7 @@ and [<AllowNullLiteral>] RegExpObject =
 *)
 and DO = DateObject
 and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
-  inherit CommonObject(env, env.Maps.Base, env.Prototypes.Date)
+  inherit CO(env, env.Maps.Base, env.Prototypes.Date)
 
   static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
   static let ticks = 10000L

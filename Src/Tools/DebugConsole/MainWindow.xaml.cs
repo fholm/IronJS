@@ -19,6 +19,12 @@ namespace DebugConsole
     {
         const string CACHE_FILE = "input.cache";
 
+        Dictionary<Type, Color> typeColors =
+            new Dictionary<Type, Color>();
+
+        HashSet<object> alreadyRendered =
+            new HashSet<object>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -29,6 +35,13 @@ namespace DebugConsole
 
             IronJS.Support.Debug.registerExprPrinter(expressionTreePrinter);
             IronJS.Support.Debug.registerAstPrinter(syntaxTreePrinter);
+
+            typeColors.Add(typeof(double), Colors.DarkOrchid);
+            typeColors.Add(typeof(string), Colors.Brown);
+            typeColors.Add(typeof(bool), Colors.DarkBlue);
+            typeColors.Add(typeof(IronJS.Undefined), Colors.DarkGoldenrod);
+            typeColors.Add(typeof(IronJS.CommonObject), Colors.DarkGreen);
+            typeColors.Add(typeof(object), Colors.Black);
         }
 
         void loadCacheFile()
@@ -53,11 +66,105 @@ namespace DebugConsole
             syntaxTreeOutput.Text += syntaxTree;
         }
 
+        void printEnvironmentVariables(IronJS.CommonObject globals)
+        {
+            EnvironmentVariables.Items.Clear();
+
+            foreach (var item in renderObjectProperties(globals))
+            {
+                alreadyRendered.Clear();
+                EnvironmentVariables.Items.Add(item);
+            }
+        }
+
+        IEnumerable<TreeViewItem> renderObjectProperties(IronJS.CommonObject ijsObject)
+        {
+            if (ijsObject != null && !alreadyRendered.Contains(ijsObject))
+            {
+                if (ijsObject.Prototype != null)
+                {
+                    yield return renderProperty("[[Prototype]]", ijsObject.Prototype);
+                }
+
+                if (ijsObject is IronJS.ValueObject)
+                {
+                    var value = (ijsObject as IronJS.ValueObject).Value.Value.ClrBoxed;
+                    yield return renderProperty("[[Value]]", value);
+                }
+
+                alreadyRendered.Add(ijsObject);
+                foreach (var member in ijsObject.Members)
+                {
+                    yield return renderProperty(member.Key, member.Value);
+                }
+
+                if (ijsObject is IronJS.ArrayObject)
+                {
+                    var arrayObject = ijsObject as IronJS.ArrayObject;
+                    for (var i = 0u; i < arrayObject.Length; ++i)
+                    {
+                        yield return renderProperty("[" + i + "]", arrayObject.Get(i).ClrBoxed);
+                    }
+                }
+            }
+        }
+
+        TreeViewItem renderProperty(string name, object value)
+        {
+            Color color;
+
+            var item = new TreeViewItem();
+            var header = item as HeaderedItemsControl;
+
+            if (!typeColors.TryGetValue(value.GetType(), out color))
+            {
+                if (value is IronJS.CommonObject)
+                {
+                    color = typeColors[typeof(IronJS.CommonObject)];
+                }
+                else
+                {
+                    color = typeColors[typeof(object)];
+                }
+            }
+
+            header.Foreground = new SolidColorBrush(color);
+
+            if (value is IronJS.CommonObject)
+            {
+                var commonObject = value as IronJS.CommonObject;
+                item.Header = name + ": " + commonObject.ClassName;
+
+                if (alreadyRendered.Contains(value))
+                {
+                    item.Header += " <recursive>";
+                }
+                else
+                {
+                    foreach (var property in renderObjectProperties(commonObject))
+                    {
+                        item.Items.Add(property);
+                    }
+                }
+            }
+            else if (value is string)
+            {
+                item.Header = name + ": \"" + value + "\"";
+            }
+            else
+            {
+                item.Header = name + ": " + IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(value));
+            }
+
+            return item;
+        }
+
         void runButton_Click(object sender, RoutedEventArgs e)
         {
             expressionTreeOutput.Text = String.Empty;
             var ctx = new IronJS.Hosting.CSharp.Context();
             ctx.Execute(inputText.Text);
+            printEnvironmentVariables(ctx.Globals);
         }
 
         void stopButton_Click(object sender, RoutedEventArgs e)

@@ -18,15 +18,19 @@
                 <TextBox TextWrapping="Wrap" Grid.Column="1"
                     AcceptsTab="True" FontFamily="Consolas" 
                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
-                    Name="expressionTreeOutput" Margin="10,10,10,10" />
+                    Name="expressionTreeOutput" Margin="0" />
             </TabItem>
             <TabItem Header="Syntax Tree">
                 <TextBox TextWrapping="Wrap" Grid.Column="1"
                     AcceptsTab="True" FontFamily="Consolas" 
                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
-                    Name="syntaxTreeOutput" Margin="10,10,10,10" />
+                    Name="syntaxTreeOutput" Margin="0" />
             </TabItem>
-            <TabItem Header="Global Environment">
+            <TabItem Header="Environment Variables">
+                <TreeView 
+                  Name="EnvironmentVariables" 
+                  FontFamily="Consolas"
+                  FontSize="11" />
             </TabItem>
         </TabControl>
         

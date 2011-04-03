@@ -4,7 +4,6 @@
 
 open System
 open IronJS
-open IronJS.Hosting.FSharp
 
 module Ijs = IronJS.Hosting.FSharp
 
@@ -13,5 +12,6 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 ctx |> Ijs.Utils.createPrintFunction
 
-let src = @""
-ctx |> Ijs.execute src
+let src = @"function foo(a, b) { } foo(1, 2, 3, 4, 5);"
+
+ctx |> Ijs.execute  src

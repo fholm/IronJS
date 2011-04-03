@@ -43,39 +43,34 @@ module DelegateCache =
   let private internalReturnType = Seq.ofList [typeof<BV>]
   let private delegateCache = new ConcurrentMutableDict<RuntimeTypeHandle list, Type>()
 
-  let addInternalArgs (types:Type seq) = 
-    Seq.concat [internalArgs; types; internalReturnType]
+  let addInternalArgs (types:Type seq) = types
 
   let getDelegate (types:Type seq) =
-    let toTypeHandle state (type':Type) = type'.TypeHandle :: state
-    let key = Seq.fold toTypeHandle [] types
-
-    let rec createDelegate' types =
-      let success, func = delegateCache.TryGetValue key
-      if success then func
-      else
-        let funcType = Dlr.delegateType types
-        if delegateCache.TryAdd(key, funcType) 
-          then funcType
-          else createDelegate' types
-
-    createDelegate' types
+    let types = Array.ofSeq types
+    
+    match types.Length with
+    | 0 -> typeof<Function>
+    | 1 -> typedefof<Function<_>>.MakeGenericType(types)
+    | 2 -> typedefof<Function<_, _>>.MakeGenericType(types)
+    | 3 -> typedefof<Function<_, _, _>>.MakeGenericType(types)
+    | 4 -> typedefof<Function<_, _, _, _>>.MakeGenericType(types)
+    | _ -> typeof<VariadicFunction>
 
 /// Helper functions for the global scope
 type GlobalScopeHelper() =
   
+  ///
   static member GetGlobal(globals:CO, name:string) =
     let descriptor = globals.Find(name)
     if descriptor.HasValue 
       then descriptor.Value
       else globals.Env.RaiseReferenceError(sprintf "%s is not defined" name)
 
+  ///
   static member GetGlobalNice(globals:CO, name:string) =
     globals.Get(name)
 
-(*
-//
-*)
+///
 type DynamicScopeHelpers() =
 
   static let findObject (name:string) (dc:DynamicScope) stop =
@@ -100,7 +95,7 @@ type DynamicScopeHelpers() =
     | Some o -> o.Get name
     | _ -> if s = null then g.Get name else s.[i]
     
-  static member Set (name:string, v:BoxedValue, dc, stop, g:CO, s:Scope, i) =
+  static member Set (name:string, v:BV, dc, stop, g:CO, s:Scope, i) =
     match findObject name dc stop with
     | Some o -> o.Put(name, v)
     | _ -> if s = null then g.Put(name, v) else s.[i] <- v
@@ -109,12 +104,12 @@ type DynamicScopeHelpers() =
     let this, func = 
       match findObject name dc stop with
       | Some o -> o, o.Get(name)
-      | _ -> g, if s=null then g.Get(name) else s.[i]
+      | _ -> g, if s = null then g.Get(name) else s.[i]
 
     if func.IsFunction then
       let func = func.Func
       let internalArgs = [|func :> obj; this :> obj|]
-      let compiled = func.CompileAs<'a>()
+      let compiled = func.MetaData.GetDelegate<'a>(func)
       compiled.DynamicInvoke(Array.append internalArgs args) |> BoxingUtils.JsBox
 
     else

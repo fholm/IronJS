@@ -32,10 +32,6 @@ module Target =
     DelegateType: Type option
     ParameterTypes: Type array
     Environment: Env
-
-    // Currently not used, intended the top
-    // match clause in Core.compile
-    Scope: Ast.FunctionScope ref
   }
 
   /// The amount of parameters for this target
@@ -43,26 +39,19 @@ module Target =
     t.ParameterTypes.Length
 
   /// Extracts the parameter types from a delegate
-  let getParameterTypes delegateType =
-    match delegateType with
+  let getParameterTypes = function
     | None -> [||]
-    | Some delegateType -> 
-      delegateType
-      |> FSharp.Reflection.getDelegateArgTypes
-      |> Dlr.ArrayUtils.RemoveFirst
-      |> Dlr.ArrayUtils.RemoveFirst
+    | Some(delegateType:Type) -> 
+      delegateType.GetGenericArguments()
 
   /// Creates a new T record
   let create ast mode delegateType env =
     {
       Ast = ast
       Mode = mode
+      Environment = env
       DelegateType = delegateType
       ParameterTypes = delegateType |> getParameterTypes
-      Environment = env
-
-      // Currently not used
-      Scope = Unchecked.defaultof<Ast.FunctionScope ref>
     }
     
   /// Creates a new T record with Eval mode
@@ -157,13 +146,14 @@ module Parameters =
 module Context = 
   
   type T = {
+    CompileFunction : Target.T -> Delegate
     Compiler : T -> Ast.Tree -> Dlr.Expr
     Scope: Ast.FunctionScope ref
 
     InsideWith: bool
     ClosureLevel: int
 
-    Variables: Map<string, Ast.NewVariable>
+    Variables: Map<string, Ast.Variable>
     CatchScopes: Ast.CatchScope ref list ref
   
     Target: Target.T
@@ -176,20 +166,36 @@ module Context =
     member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
     member x.Compile ast = x.Compiler x ast
 
+  ///
   let inline compile (ast:Ast.Tree) (t:T) =
     t.Compiler t ast
+
+  ///
+  let internal getInternalParameters (t:T) =
+    [|
+      t.Parameters.Function
+      t.Parameters.This
+    |]
+
+  ///
+  let internal getInternalVariables (t:T) =
+    [|
+      t.Parameters.PrivateScope
+      t.Parameters.SharedScope
+      t.Parameters.DynamicScope
+    |]
 
 type Ctx = Context.T
 
 ///
 type [<AllowNullLiteral>] EvalTarget() = 
-  [<DefaultValue>] val mutable Target : BoxedValue
+  [<DefaultValue>] val mutable Target : BV
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int
-  [<DefaultValue>] val mutable Closures : Map<string, Ast.NewVariable>
+  [<DefaultValue>] val mutable Closures : Map<string, Ast.Variable>
   [<DefaultValue>] val mutable Function : FO
   [<DefaultValue>] val mutable This : CO
   [<DefaultValue>] val mutable EvalScope : CO
   [<DefaultValue>] val mutable LocalScope : Scope
-  [<DefaultValue>] val mutable ClosureScope : Scope
+  [<DefaultValue>] val mutable SharedScope : Scope
   [<DefaultValue>] val mutable DynamicScope : DynamicScope

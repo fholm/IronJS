@@ -108,10 +108,10 @@
     <Compile Include="Compiler.Object.fs" />
     <Compile Include="Compiler.Identifier.fs" />
     <Compile Include="Compiler.Function.fs" />
-    <Compile Include="Compiler.Scope.fs" />
     <Compile Include="Compiler.Exception.fs" />
     <Compile Include="Compiler.Operators.fs" />
     <Compile Include="Compiler.ControlFlow.fs" />
+    <Compile Include="Compiler.Scope.fs" />
     <Compile Include="Compiler.Core.fs" />
     <Compile Include="Native.Utils.fs" />
     <Compile Include="Native.Global.fs" />

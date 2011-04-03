@@ -1,0 +1,84 @@
+﻿<Window x:Class="DebugConsole.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="IronJS - Debug Console" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="210*" />
+            <RowDefinition Height="101*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="279*" />
+            <ColumnDefinition Width="224*" />
+        </Grid.ColumnDefinitions>
+        
+        <TextBox TextWrapping="Wrap" AcceptsTab="True" FontFamily="Consolas" 
+            VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+            Name="inputText" TextChanged="inputText_TextChanged" Margin="10,28,0,10" Grid.RowSpan="1" />
+        
+        <TextBox TextWrapping="Wrap" Grid.Row="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="consoleOutput" Margin="10,25,0,43" />
+
+        <TabControl Grid.Column="1" Margin="10,5,10,10" Name="tabs" Grid.RowSpan="2">
+            <TabItem Header="Expression Tree">
+                <TextBox TextWrapping="Wrap" Grid.Column="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="expressionTreeOutput" Margin="0" />
+            </TabItem>
+            <TabItem Header="Syntax Tree">
+                <TextBox TextWrapping="Wrap" Grid.Column="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="syntaxTreeOutput" Margin="0" />
+            </TabItem>
+            <TabItem Header="Environment Variables">
+                <TreeView 
+                  Name="EnvironmentVariables" 
+                  FontFamily="Consolas"
+                  FontSize="11" />
+            </TabItem>
+            <TabItem Header="Last Statement">
+                <TextBox TextWrapping="Wrap" Grid.Column="1"
+                    AcceptsTab="True" FontFamily="Consolas" 
+                    VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
+                    Name="lastStatementOutput" Margin="0" />
+            </TabItem>
+        </TabControl>
+        
+        <Button 
+            Content="Run" Name="runButton" Click="runButton_Click" 
+            Margin="0,0,0,10" Height="23" VerticalAlignment="Bottom" 
+            HorizontalAlignment="Right" Width="50" Grid.Row="1" />
+        
+        <Button 
+            Content="Stop" 
+            Height="23" 
+            Name="stopButton" 
+            VerticalAlignment="Bottom" HorizontalAlignment="Right" 
+            Width="50" 
+            Margin="0,0,60,10" Click="stopButton_Click" Grid.Row="1" />
+
+        <Button 
+            Content="Reset Environment" 
+            Height="23" 
+            HorizontalAlignment="Right" 
+            Margin="0,0,120,10" 
+            Name="resetEnvironment" 
+            VerticalAlignment="Bottom" 
+            Width="110" Click="resetEnvironment_Click" Grid.Row="1" />
+
+        <Label Content="JavaScript"
+               FontWeight="Bold" Height="28" 
+               HorizontalAlignment="Left" 
+               Margin="10,0,0,0" Padding="0,5,0,0"
+               VerticalAlignment="Top" />
+        
+        <Label Content="Console Output" 
+               Grid.Row="1" Height="23" FontWeight="Bold"
+               HorizontalAlignment="Left" Margin="10,0,0,0" 
+               Padding="0" VerticalAlignment="Top" />
+    </Grid>
+</Window>

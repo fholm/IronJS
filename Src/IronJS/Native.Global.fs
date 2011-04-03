@@ -20,12 +20,12 @@ module Global =
             |> Parser.parse target.Target.String 
             |> fst
 
-          let scope = ref {Ast.Scope.New with Variables=target.Closures}
+          let scope = ref {Ast.Scope.New with Variables = target.Closures}
           let tree = Ast.FunctionFast(None, scope, ast)
           let levels = Some(target.GlobalLevel, target.ClosureLevel)
           let env = target.Function.Env
 
-          env |> Target.createEval ast |> Core.compile
+          ast |> Core.compileEval env
         )
 
       let localScope =
@@ -34,9 +34,9 @@ module Global =
           else target.LocalScope
 
       let closureScope =
-        if target.ClosureScope = null 
+        if target.SharedScope = null 
           then Array.empty<BV> 
-          else target.ClosureScope
+          else target.SharedScope
 
       let result =
         

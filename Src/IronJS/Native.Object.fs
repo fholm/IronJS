@@ -67,7 +67,6 @@ module Object =
     let ctor = new Func<FunctionObject, CommonObject, BoxedValue, CommonObject>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Object, Immutable)
 
     env.Prototypes.Object.Put("constructor", ctor, DontEnum)

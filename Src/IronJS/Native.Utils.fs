@@ -24,13 +24,12 @@ module Utils =
     let bindingAttrs = BindingFlags.Static ||| BindingFlags.NonPublic
     let genericGetCompiler = typeof<HostFunctionHack>.GetMethod("Get", bindingAttrs)
     let concreteGetCompiler = genericGetCompiler.MakeGenericMethod([|delegateType|])
+    let compiler = concreteGetCompiler.Invoke(null, [||]) :?> FunctionCompiler
+    let metaData = env.CreateHostConstructorMetaData(compiler)
 
     let delegate' = delegate' :> obj
-    let hostFunction = constructor'.Invoke([|env :> obj; delegate'|]) :?> FunctionObject
+    let hostFunction = constructor'.Invoke([|env :> obj; delegate'; metaData|]) :?> FunctionObject
     let argsLength = double (argsLengthProperty.GetValue(hostFunction, null) :?> int)
-    let compiler = concreteGetCompiler.Invoke(null, [||]) :?> FunctionCompiler
-
-    env.AddCompiler(hostFunction, compiler)
 
     hostFunction.Put("length", double argsLength, DescriptorAttrs.Immutable)
     hostFunction
@@ -40,11 +39,12 @@ module Utils =
       createHostFunctionDynamic env delegate'
 
     else
-      let h = HostFunction<'a>(env, delegate')
-      env.AddCompiler(h, Compiler.HostFunction.compile<'a>)
+      let compiler = Compiler.HostFunction.compile<'a>
+      let metaData = env.CreateHostConstructorMetaData(compiler)
+      let h = HostFunction<'a>(env, delegate', metaData)
       h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
       h :> FunctionObject
-
+        
   (*
   //  This function is horribly slow, but it's the only way
   //  that IronJS currently supports invoking methods with 

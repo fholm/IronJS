@@ -145,7 +145,6 @@ module Number =
     let ctor = new Func<FO, CO, Args, BoxedValue>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor.Put("prototype", env.Prototypes.Number, Immutable) 
     ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) 
     ctor.Put("MIN_VALUE", Double.Epsilon, Immutable) 

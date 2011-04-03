@@ -102,32 +102,6 @@ module Analyzer =
           if (!s).SharedCount > 0 
             then closureLevel + 1
             else closureLevel
-
-        (*
-        let lookupMode =
-          match (!s).LookupMode with
-          | LookupMode.Dynamic -> LookupMode.Dynamic
-          | _ when withCount > 0 -> LookupMode.Dynamic
-          | _ ->
-            match p.ScopeParents.[id] with
-            | [] -> LookupMode.Static
-            | x::_ -> (!x).LookupMode
-        *)
-
-        (*
-        let evalMode =
-          match (!s).EvalMode with
-          | EvalMode.Clean ->
-
-            match p.ScopeParents.[id] with
-            | [] -> EvalMode.Clean
-            | x::_ ->
-              match (!x).EvalMode with
-              | EvalMode.Clean -> EvalMode.Clean
-              | _ -> EvalMode.Effected
-
-          | mode -> mode
-        *)
         
         // This functions updates all 
         // closure levels of all

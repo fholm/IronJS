@@ -23,7 +23,6 @@ module Error =
       let ctor = Utils.createHostFunction env ctor
       
       ctor.Prototype <- env.Prototypes.Function
-      ctor.ConstructorMode <- ConstructorModes.Host
       ctor.Put("prototype", proto, Immutable)
 
       env.Globals.Put(name, ctor, DontEnum)

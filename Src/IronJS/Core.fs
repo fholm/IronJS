@@ -52,11 +52,6 @@ module DescriptorAttrs =
   let [<Literal>] DontDelete = 4us
   let [<Literal>] Immutable = 7us
 
-module ConstructorModes =
-  let [<Literal>] Function = 0uy
-  let [<Literal>] User = 1uy
-  let [<Literal>] Host = 2uy
-
 module ParamsModes =
   let [<Literal>] NoParams = 0uy
   let [<Literal>] ObjectParams = 1uy
@@ -79,6 +74,15 @@ module Array =
 module ArgumentsLinkArray =
   let [<Literal>] Locals = 0uy
   let [<Literal>] ClosedOver = 1uy
+
+type ParameterStorageType 
+  = Private
+  | Shared
+
+type FunctionType
+  = UserDefined
+  | NativeConstructor
+  | NativeFunction
 
 module Markers =
   let [<Literal>] Number = 0xFFF8us
@@ -213,6 +217,9 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       | TypeTags.Clr        -> BoxFields.Clr
       | _ -> Error.CompileError.Raise(Error.invalidTypeTag tag)
 
+    static member op_Implicit(bv:BV) : obj =
+      box bv
+
   end
 
 and Desc = Descriptor
@@ -260,11 +267,11 @@ and [<AbstractClass>] TypeTag() =
       then TypeTags.Clr
       else o.GetType() |> TypeTag.OfType
 
-(*
-//  
-*)
 and Env = Environment
-and [<AllowNullLiteral>] Environment() = // Alias: Env
+
+///
+and [<AllowNullLiteral>] Environment() =
+  
   static let null' =
     let mutable box = BV()
     box.Tag <- TypeTags.Clr
@@ -275,10 +282,13 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   let currentSchemaId = ref 0UL
 
   let rnd = new System.Random()
-  let compilers = new MutableDict<uint64, FunctionCompiler>()
-  let functionStrings = new MutableDict<uint64, string>()
-  let compiledCaches = new MutableDict<uint64, CompiledCache>()
+  let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
   
+  // We need the the special global function id 0UL to exist in 
+  // the metaData dictionary but i need not actually be there so 
+  // we just pass in null
+  do functionMetaData.Add(0UL, null)
+
   static member BoxedZero = BV()
   static member BoxedNull = null'
 
@@ -290,31 +300,26 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
   [<DefaultValue>] val mutable Constructors : Constructors
 
   member x.Random = rnd
-  member x.Compilers = compilers
-  member x.FunctionSourceStrings = functionStrings
 
   member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
   member x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
 
-  member x.HasCompiler id = x.Compilers.ContainsKey id
+  member x.GetFunctionMetaData(id:uint64) = functionMetaData.[id]
+  member x.HasFunctionMetaData(id:uint64) = functionMetaData.ContainsKey(id)
+  member x.AddFunctionMetaData(metaData:FunctionMetaData) = 
+    functionMetaData.[metaData.Id] <- metaData
+    
+  member x.CreateHostMetaData(functionType:FunctionType, compiler:FunctionCompiler) =
+    let id = x.NextFunctionId()
+    let metaData = new FunctionMetaData(id, functionType, compiler)
+    x.AddFunctionMetaData(metaData)
+    metaData
 
-  member x.AddCompiler(id, compiler : FunctionCompiler) =
-    if x.HasCompiler id |> not then 
-      x.Compilers.Add(id, compiler)
+  member x.CreateHostConstructorMetaData(compiler) =
+    x.CreateHostMetaData(FunctionType.NativeConstructor, compiler)
 
-  member x.AddCompiler(f:FO, compiler:FunctionCompiler) =
-    if x.HasCompiler f.FunctionId |> not then
-      f.Compiler <- compiler
-      x.Compilers.Add(f.FunctionId, f.Compiler)
-
-  member x.GetCompilerCache(id:uint64) =
-    let mutable cache = Unchecked.defaultof<CompiledCache>
-
-    if compiledCaches.TryGetValue(id, &cache) |> not then
-      cache <- new CompiledCache()
-      compiledCaches.[id] <- cache
-
-    cache
+  member x.CreateHostFunctionMetaData(compiler) =
+    x.CreateHostMetaData(FunctionType.NativeFunction, compiler)
 
   member x.NewObject() =
     let map = x.Maps.Base
@@ -389,14 +394,13 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     prototype
 
   member x.NewFunction (id, args, closureScope, dynamicScope) =
-    let proto = x.NewPrototype()
     let func = FO(x, id, closureScope, dynamicScope)
+    let proto = x.NewPrototype()
 
     proto.Put("constructor", func, DescriptorAttrs.DontEnum)
-    func.ConstructorMode <- ConstructorModes.User
+
     func.Put("prototype", proto, DescriptorAttrs.DontDelete)
     func.Put("length", double args, DescriptorAttrs.Immutable)
-
     func
 
   member x.NewError() = EO(x)
@@ -408,22 +412,28 @@ and [<AllowNullLiteral>] Environment() = // Alias: Env
     raise (new UserError(BoxedValue.Box error, 0, 0))
 
   member x.RaiseEvalError() = x.RaiseEvalError("")
-  member x.RaiseEvalError(message) = x.RaiseError(x.Prototypes.EvalError, message)
+  member x.RaiseEvalError(message) = 
+    x.RaiseError(x.Prototypes.EvalError, message)
   
   member x.RaiseRangeError() = x.RaiseRangeError("")
-  member x.RaiseRangeError(message) = x.RaiseError(x.Prototypes.RangeError, message)
+  member x.RaiseRangeError(message) = 
+    x.RaiseError(x.Prototypes.RangeError, message)
   
   member x.RaiseSyntaxError() = x.RaiseSyntaxError("")
-  member x.RaiseSyntaxError(message) = x.RaiseError(x.Prototypes.SyntaxError, message)
+  member x.RaiseSyntaxError(message) = 
+    x.RaiseError(x.Prototypes.SyntaxError, message)
   
   member x.RaiseTypeError() = x.RaiseTypeError("")
-  member x.RaiseTypeError(message) = x.RaiseError(x.Prototypes.TypeError, message)
+  member x.RaiseTypeError(message) = 
+    x.RaiseError(x.Prototypes.TypeError, message)
   
   member x.RaiseURIError() = x.RaiseURIError("")
-  member x.RaiseURIError(message) = x.RaiseError(x.Prototypes.URIError, message)
+  member x.RaiseURIError(message) = 
+    x.RaiseError(x.Prototypes.URIError, message)
   
   member x.RaiseReferenceError() = x.RaiseReferenceError("")
-  member x.RaiseReferenceError(message) = x.RaiseError(x.Prototypes.ReferenceError, message)
+  member x.RaiseReferenceError(message) = 
+    x.RaiseError(x.Prototypes.ReferenceError, message)
 
 
 #if DEBUG
@@ -436,9 +446,6 @@ and DebugUtils() =
     id
 #endif
 
-(*
-//  
-*)
 and CO = CommonObject
 and [<AllowNullLiteral>] CommonObject = 
 
@@ -481,7 +488,8 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Members = 
     let dict = new MutableDict<string, obj>()
     for kvp in x.PropertySchema.IndexMap do
-      dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
+      if x.Properties.[kvp.Value].HasValue then
+        dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
     dict
   #endif
 
@@ -695,14 +703,11 @@ and [<AllowNullLiteral>] CommonObject =
         | Some v when v.IsPrimitive -> v
         | _ -> x.Env.RaiseTypeError()
 
-  //----------------------------------------------------------------------------
   member x.Put(name:String, value:bool) : unit = x.Put(name, value |> TaggedBools.ToTagged)
   member x.Put(name:String, value:obj) : unit = x.Put(name, value, TypeTags.Clr)
   member x.Put(name:String, value:String) : unit = x.Put(name, value, TypeTags.String)
   member x.Put(name:String, value:Undefined) : unit = x.Put(name, value, TypeTags.Undefined)
-  member x.Put(name:String, value:CO) : unit = 
-    x.Put(name, value, TypeTags.Object)
-
+  member x.Put(name:String, value:CO) : unit = x.Put(name, value, TypeTags.Object)
   member x.Put(name:String, value:FO) : unit = x.Put(name, value, TypeTags.Function)
 
   member x.Put(index:uint32, value:bool) : unit = x.Put(index, value |> TaggedBools.ToTagged)
@@ -1080,7 +1085,7 @@ and [<AllowNullLiteral>] RegExpObject =
 *)
 and DO = DateObject
 and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
-  inherit CommonObject(env, env.Maps.Base, env.Prototypes.Date)
+  inherit CO(env, env.Maps.Base, env.Prototypes.Date)
 
   static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
   static let tickScale = 10000L
@@ -1396,7 +1401,7 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
 (*
 //  
 *)
-and ArgLink = byte * int
+and ArgLink = ParameterStorageType * int
 and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals, closedOver) as x =
   inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
   
@@ -1411,25 +1416,51 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
     x.LinkMap <- linkMap
     x.LinkIntact <- true
     x.Prototype <- x.Env.Prototypes.Object
+
+  ///
+  static member CreateForVariadicFunction(f:FO, privateScope:Scope, sharedScope:Scope, variadicArgs:Args) =
     
-  //----------------------------------------------------------------------------
-  static member New(env, linkMap, locals, closedOver, callee:FO) : ArgumentsObject =
-    let x = new ArgumentsObject(env, linkMap, locals, closedOver)
+    let x = new ArgumentsObject(f.Env, f.MetaData.ParameterStorage, privateScope, sharedScope)
+
     x.CopyLinkedValues()
-    x.Put("constructor", env.Constructors.Object)
-    x.Put("length", linkMap.Length |> double, DescriptorAttrs.DontEnum)
-    x.Put("callee", callee, DescriptorAttrs.DontEnum)
+    x.Put("constructor", f.Env.Constructors.Object)
+    x.Put("length", variadicArgs.Length |> double, DescriptorAttrs.DontEnum)
+    x.Put("callee", f, DescriptorAttrs.DontEnum)
+
+    if variadicArgs |> FSharp.Utils.notNull then
+      for i = f.MetaData.ParameterStorage.Length to (variadicArgs.Length-1) do
+        x.Put(uint32 i, variadicArgs.[i])
+
+    x
+
+  ///
+  static member CreateForFunction(f:FO, privateScope:Scope, sharedScope:Scope, namedPassedArgs:int, extraArgs:Args) =
+    let length = namedPassedArgs + extraArgs.Length
+    let storage = 
+      f.MetaData.ParameterStorage 
+      |> Seq.take namedPassedArgs
+      |> Array.ofSeq
+
+    let x = new ArgumentsObject(f.Env, storage, privateScope, sharedScope)
+    x.CopyLinkedValues()
+    x.Put("constructor", f.Env.Constructors.Object)
+    x.Put("length", length |> double, DescriptorAttrs.DontEnum)
+    x.Put("callee", f, DescriptorAttrs.DontEnum)
+
+    for i = 0 to (extraArgs.Length-1) do      
+      x.Put(uint32 (i + namedPassedArgs), extraArgs.[i])
+
     x
       
-  //----------------------------------------------------------------------------
+  ///
   member x.CopyLinkedValues() : unit =
     for i = 0 to (x.LinkMap.Length-1) do
       let sourceArray, index = x.LinkMap.[i]
       match sourceArray with
-      | ArgumentsLinkArray.Locals -> 
+      | ParameterStorageType.Private -> 
         base.Put(uint32 i, x.Locals.[index])
 
-      | ArgumentsLinkArray.ClosedOver -> 
+      | ParameterStorageType.Shared -> 
         base.Put(uint32 i, x.ClosedOver.[index])
 
       | _ -> 
@@ -1440,8 +1471,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> x.Locals.[index] <- value
-      | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index] <- value
+      | ParameterStorageType.Private, index -> x.Locals.[index] <- value
+      | ParameterStorageType.Shared, index -> x.ClosedOver.[index] <- value
       | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
@@ -1451,8 +1482,8 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> x.Locals.[index].Number <- value
-      | ArgumentsLinkArray.ClosedOver, index -> x.ClosedOver.[index].Number <- value
+      | ParameterStorageType.Private, index -> x.Locals.[index].Number <- value
+      | ParameterStorageType.Shared, index -> x.ClosedOver.[index].Number <- value
       | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
@@ -1462,11 +1493,11 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> 
+      | ParameterStorageType.Private, index -> 
         x.Locals.[index].Clr <- value
         x.Locals.[index].Tag <- tag
 
-      | ArgumentsLinkArray.ClosedOver, index -> 
+      | ParameterStorageType.Shared, index -> 
         x.ClosedOver.[index].Clr <- value
         x.ClosedOver.[index].Tag <- tag
 
@@ -1480,10 +1511,10 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     if x.LinkIntact && ii < x.LinkMap.Length then
       match x.LinkMap.[ii] with
-      | ArgumentsLinkArray.Locals, index -> 
+      | ParameterStorageType.Private, index -> 
         x.Locals.[index]
          
-      | ArgumentsLinkArray.ClosedOver, index -> 
+      | ParameterStorageType.Shared, index -> 
         x.ClosedOver.[index]
 
       | _ -> 
@@ -1510,57 +1541,106 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
 
     base.Delete(index)
 
-(*
-//
-*)
-and FO = FunctionObject
 and CompiledCache = MutableDict<Type, Delegate>
+
+/// Delegate for global code, it has the same
+/// signature as StaticArityFunction but we need
+/// a separate type so we can distinguish between 
+/// code compiled in the global scope and a function
+/// called with zero arguments.
+and GlobalCode = delegate of FO * CO -> obj
+
+/// Delegate for code compiled in an eval call, this
+/// delegate differs from the other types in that it
+/// get its private, shared and dynamic scope passed
+/// into it from the calling context, it also returns
+/// a CLR boxed value like GlobalCode.
+and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
+
+/// This delegate type is used for functions that are called
+/// with more then four arguments. Instead of compiling a function
+/// for each arity above six we pass in an array of BV values 
+/// instead and then sort it out inside the function body.
+and VariadicFunction = delegate of FO * CO * Args -> BV
+
+/// This delegate is used in the same way as VariadicFunction is
+/// but for delegates that want their parameters passed in 
+/// as a obj array instead of a BoxedValue array.
+and ClrVariadicFunction = delegate of FO * CO * ClrArgs -> BV
+
+// We only optimize for aritys that is <= 4, any more then that
+// and we'll use the VariadicFunction delegate instead.
+and Function = delegate of FO * CO -> BV
+and Function<'a> = delegate of FO * CO * 'a -> BV
+and Function<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
+and Function<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
+and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
+
+/// Alias for FunctionObject
+and FO = FunctionObject
+
+/// 
+and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, parameterStorage) =
+  let delegateCache = new MutableDict<Type, Delegate>()
+  
+  member x.Id : uint64 = id
+  member x.Source : string option = None
+  member x.Compiler : FO -> Type -> Delegate = compiler
+  member x.FunctionType : FunctionType = functionType
+  member x.ParameterStorage : (ParameterStorageType * int) array = parameterStorage
+
+  /// This constructor is for user functions, which we know
+  /// always have ConstructorMode.User.
+  new (id:uint64, compiler:FunctionCompiler, parameterStorage:(ParameterStorageType * int) array) =
+    FunctionMetaData(id, FunctionType.UserDefined, compiler, parameterStorage)
+
+  /// This constructor is for host functions, which we don't
+  /// need parameter storage information about.
+  new (id:uint64, mode:FunctionType, compiler:FunctionCompiler) =
+    FunctionMetaData(id, mode, compiler, Array.empty)
+
+  /// 
+  member x.GetDelegate(f:FO, delegateType:Type) =
+    let mutable compiled = null
+
+    if not <| delegateCache.TryGetValue(delegateType, &compiled) then
+      compiled <- x.Compiler f delegateType
+      delegateCache.[delegateType] <- compiled
+
+    compiled
+
+  /// Retrieves and already compiled delegate for the current
+  /// function, or compiles a new one if there is needed.
+  member x.GetDelegate<'a when 'a :> Delegate>(f:FO) =
+    x.GetDelegate(f, typeof<'a>) :?> 'a
+
+/// Type that is used for representing objects that also
+/// support the [[Call]] and [[Construct]] functions
 and [<AllowNullLiteral>] FunctionObject =
-  inherit CommonObject
+  inherit CO
 
-  val mutable Compiler : FunctionCompiler
-  val mutable FunctionId : uint64
-  val mutable ConstructorMode : byte
-  val mutable CompilerCache : CompiledCache
-
-  val mutable ClosureScope : Scope
+  val mutable MetaData : FunctionMetaData
+  val mutable SharedScope : Scope
   val mutable DynamicScope : DynamicScope
      
-  new (env:Environment, funcId, closureScope, dynamicScope) = { 
-    inherit CommonObject(env, env.Maps.Function, env.Prototypes.Function)
-
-    Compiler = env.Compilers.[funcId]
-    CompilerCache = env.GetCompilerCache(funcId)
-    FunctionId = funcId
-    ConstructorMode = ConstructorModes.User
-
-    ClosureScope = closureScope
+  new (env:Env, id, closureScope, dynamicScope) = { 
+    inherit CO(env, env.Maps.Function, env.Prototypes.Function)
+    MetaData = env.GetFunctionMetaData(id)
+    SharedScope = closureScope
     DynamicScope = dynamicScope
   }
 
-  new (env:Environment, propertyMap) as x = 
-    {
-      inherit CommonObject(env, propertyMap, env.Prototypes.Function)
+  new (env:Env, metaData, propertyMap) = {
+    inherit CO(env, propertyMap, env.Prototypes.Function)
+    MetaData = metaData
+    SharedScope = [||]
+    DynamicScope = List.empty
+  }
 
-      Compiler = fun _ _ -> null
-      CompilerCache = null
-      FunctionId = env.NextFunctionId()
-      ConstructorMode = 0uy
-
-      ClosureScope = null
-      DynamicScope = List.empty
-    } then
-      x.CompilerCache <- x.Env.GetCompilerCache(x.FunctionId)
-
-  new (env:Environment) = {
-    inherit CommonObject(env)
-
-    Compiler = fun _ _ -> null
-    CompilerCache = env.GetCompilerCache(0UL)
-    FunctionId = 0UL
-    ConstructorMode = 0uy
-
-    ClosureScope = null
+  new (env:Env) = {
+    inherit CO(env)
+    MetaData = env.GetFunctionMetaData(0UL)
+    SharedScope = null
     DynamicScope = List.empty
   }
 
@@ -1572,6 +1652,11 @@ and [<AllowNullLiteral>] FunctionObject =
     | TypeTags.Function
     | TypeTags.Object -> prototype.Object
     | _ -> x.Env.Prototypes.Object
+    
+  member x.NewInstance() =
+    let o = x.Env.NewObject()
+    o.Prototype <- x.InstancePrototype
+    o
 
   member x.HasInstance(v:CO) : bool =
     let o = x.Get("prototype")
@@ -1588,159 +1673,94 @@ and [<AllowNullLiteral>] FunctionObject =
 
     found
 
-  member x.CompileAs<'a when 'a :> Delegate>() =
-    let mutable compiled = Unchecked.defaultof<Delegate>
-
-    if x.CompilerCache.TryGetValue(typeof<'a>, &compiled) |> not then
-      compiled <- (x.Compiler x typeof<'a>)
-      x.CompilerCache.[typeof<'a>] <- compiled
-
-    compiled :?> 'a
-
-  member x.Call(this) : BV =
-    let func = x.CompileAs<JsFunc>()
+  member x.Call(this) : BV  =
+    let func = x.MetaData.GetDelegate<Function>(x)
     func.Invoke(x, this)
 
-  member x.Call(this,a:'a) : BV =
-    let func = x.CompileAs<JsFunc<'a>>()
+  member x.Call(this,a:'a) : BV  =
+    let func = x.MetaData.GetDelegate<Function<'a>>(x)
     func.Invoke(x, this, a)
 
   member x.Call(this,a:'a,b:'b) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b>>(x)
     func.Invoke(x, this, a, b)
-
+    
   member x.Call(this,a:'a,b:'b,c:'c) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b,'c>>(x)
     func.Invoke(x, this, a, b, c)
 
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d>>()
+    let func = x.MetaData.GetDelegate<Function<'a,'b,'c,'d>>(x)
     func.Invoke(x, this, a, b, c, d)
 
-  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e>>()
-    func.Invoke(x, this, a, b, c, d, e)
+  member x.Call(this,args:Args) : BV =
+    let func = x.MetaData.GetDelegate<VariadicFunction>(x)
+    func.Invoke(x, this, args)
+    
+  member x.Construct() =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null)
+    | FunctionType.UserDefined ->
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o), o)
 
-  member x.Call(this,a:'a,b:'b,c:'c,d:'d,e:'e,f:'f) : BV  =
-    let func = x.CompileAs<JsFunc<'a,'b,'c,'d, 'e, 'f>>()
-    func.Invoke(x, this, a, b, c, d, e, f)
+    | _ -> x.Env.RaiseTypeError()
+    
+  member x.Construct(a:'a) =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a)
+    | FunctionType.UserDefined ->
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o, a), o)
 
-  member x.Construct (this:CO) =
-    let func = x.CompileAs<JsFunc>()
+    | _ -> x.Env.RaiseTypeError()
+    
+  member x.Construct(a, b) =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b)
+    | FunctionType.UserDefined ->
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o, a, b), o)
 
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o) 
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+    | _ -> x.Env.RaiseTypeError()
+    
+  member x.Construct(a, b, c) =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b, c)
+    | FunctionType.UserDefined ->
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o, a, b, c), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a:'a) =
-    let func = x.CompileAs<JsFunc<'a>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+  member x.Construct(a, b, c, d) =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, a, b, c, d)
+    | FunctionType.UserDefined ->
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o, a, b, c, d), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a:'a, b:'b) =
-    let func = x.CompileAs<JsFunc<'a, 'b>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+  member x.Construct(args:Args) =
+    match x.MetaData.FunctionType with
+    | FunctionType.NativeConstructor -> x.Call(null, args)
+    | FunctionType.UserDefined -> 
+      let o = x.NewInstance()
+      x.PickReturnObject(x.Call(o, args), o)
 
     | _ -> x.Env.RaiseTypeError()
 
-  member x.Construct (this:CO, a:'a, b:'b, c:'c) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c)
+  member private x.PickReturnObject(r:BV, o:CO) =
       match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
+      | TypeTags.Function-> r.Func |> BV.Box
       | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
+      | _ -> o |> BV.Box
 
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
-
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d, e)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
-
-    | _ -> x.Env.RaiseTypeError()
-
-  member x.Construct (this:CO, a:'a, b:'b, c:'c, d:'d, e:'e, f:'f) =
-    let func = x.CompileAs<JsFunc<'a, 'b, 'c, 'd, 'e, 'f>>()
-
-    match x.ConstructorMode with
-    | ConstructorModes.Host -> func.Invoke(x, null, a, b, c, d, e, f)
-    | ConstructorModes.User -> 
-      let o = x.Env.NewObject()
-      o.Prototype <- x.InstancePrototype
-      let r = func.Invoke(x, o, a, b, c, d, e, f)
-      match r.Tag with
-      | TypeTags.Function -> r.Func |> BV.Box
-      | TypeTags.Object -> r.Object |> BV.Box
-      | _ -> BoxedValue.Box(o)
-
-    | _ -> x.Env.RaiseTypeError()
-
-(*
-//
-*)
+/// Host function alias
 and HFO<'a when 'a :> Delegate> = HostFunction<'a>
+
+///
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   inherit FunctionObject
   
@@ -1751,11 +1771,11 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   val mutable ParamsMode : byte
   val mutable MarshalMode : int
 
-  new (env:Environment, delegate') as x = 
+  new (env:Env, delegateFunction, metaData) as x = 
     {
-      inherit FunctionObject(env, env.Maps.Function)
+      inherit FunctionObject(env, metaData, env.Maps.Function)
 
-      Delegate = delegate'
+      Delegate = delegateFunction
 
       ArgTypes = FSharp.Reflection.getDelegateArgTypesT<'a>
       ReturnType = FSharp.Reflection.getDelegateReturnTypeT<'a>
@@ -1788,10 +1808,9 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
     | MarshalModes.This -> x.ArgTypes.Length - 1 
     | _ -> x.ArgTypes.Length
 
-(*
-//  
-*)
 and SO = StringObject
+
+///
 and [<AllowNullLiteral>] StringObject(env:Env) =
   inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
 
@@ -1814,8 +1833,9 @@ and [<AllowNullLiteral>] StringObject(env:Env) =
     else
       base.Get(s)
 
-///
 and NO = NumberObject
+
+///
 and [<AllowNullLiteral>] NumberObject =
   inherit ValueObject
   
@@ -1825,8 +1845,9 @@ and [<AllowNullLiteral>] NumberObject =
     inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
   }
 
-///
 and BO = BooleanObject
+
+///
 and [<AllowNullLiteral>] BooleanObject =
   inherit ValueObject
 
@@ -1836,10 +1857,9 @@ and [<AllowNullLiteral>] BooleanObject =
     inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean)
   }
 
-(*
-//  
-*)
 and MO = MathObject
+
+///
 and [<AllowNullLiteral>] MathObject =
   inherit CO
 
@@ -1848,11 +1868,10 @@ and [<AllowNullLiteral>] MathObject =
   new (env:Env) = {
     inherit CO(env, env.Maps.Base, env.Prototypes.Object)
   }
-
-(*
-//  
-*)
+  
 and EO = ErrorObject
+
+///
 and [<AllowNullLiteral>] ErrorObject =
   inherit CO
 
@@ -1862,20 +1881,19 @@ and [<AllowNullLiteral>] ErrorObject =
     inherit CO(env, env.Maps.Base, env.Prototypes.Error)
   }
     
-(*
-//  
-*)
 and IndexMap   = MutableDict<string, int>
 and IndexStack = MutableStack<int>
 and SchemaMap  = MutableDict<string, Schema>
+
+///
 and [<AllowNullLiteral>] Schema =
 
   val Id : uint64
-  val Env : Environment
+  val Env : Env
   val IndexMap : IndexMap
   val SubSchemas : SchemaMap
   
-  new(env:Environment, map) = {
+  new(env:Env, map) = {
     Id = env.NextPropertyMapId()
     Env = env
     IndexMap = map

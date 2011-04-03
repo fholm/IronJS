@@ -13,6 +13,7 @@ module Dlr =
   type Expr = Expression
   type ExprParam = ParameterExpression
   type Parameter = ParameterExpression
+  type Lambda = LambdaExpression
 
   type Label = LabelTarget
   type ExprType = ExpressionType
@@ -503,7 +504,7 @@ module Dlr =
       tmp |> f |> block [|tmp|]
 
     let blockTempT<'a> f =
-      blockTmp typeof<'a> f
+      blockTemp typeof<'a> f
 
     module Object =
       

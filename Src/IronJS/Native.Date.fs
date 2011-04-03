@@ -128,7 +128,6 @@ module Date =
     let create a = Utils.createHostFunction env a
     let ctor = new JsFunc<Args>(constructor') |> create
 
-    ctor.ConstructorMode <- ConstructorModes.Host
     ctor?prototype <- env.Prototypes.Date
     ctor?parse <- (JsFunc<string>(parse) |> create)
     ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)

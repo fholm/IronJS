@@ -34,21 +34,21 @@ namespace Benchmarks
 
         protected override string ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
-            var errors = string.Empty;
+            var errors = new StringBuilder();
 
             Action<string> appendError = err =>
             {
-                if (!string.IsNullOrEmpty(errors))
+                if (errors.Length > 0)
                 {
-                    errors += Environment.NewLine;
+                    errors.AppendLine();
                 }
 
-                errors += err;
+                errors.Append(err);
             };
 
-            Action<string, string> printResult = (name, result) => ColorPrint(ConsoleColor.Green, name + ": " + result);
+            Action<string, string> printResult = (name, result) => { };
             Action<string, string> printError = (name, error) => appendError(name + ": " + error);
-            Action<string> printScore = (score) => ColorPrint(ConsoleColor.Green, "Score: " + score);
+            Action<string> printScore = (score) => ColorPrint(ConsoleColor.Green, "Score: " + score + "  ");
             ctx.SetGlobal("PrintResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, printResult));
             ctx.SetGlobal("PrintError", IronJS.Native.Utils.createHostFunction(ctx.Environment, printError));
             ctx.SetGlobal("PrintScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, printScore));
@@ -65,7 +65,7 @@ namespace Benchmarks
                 appendError("Exception: " + ex.GetBaseException().Message);
             }
 
-            return errors;
+            return errors.Length > 0 ? errors.ToString() : null;
         }
     }
 }

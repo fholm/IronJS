@@ -36,7 +36,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Reg
         [TestCase("S15.10.6.2_A1_T7.js", Description = "RegExp.prototype.exec(string) Performs a regular expression match of ToString(string) against the regular expression and returns an Array object containing the results of the match, or null if the string did not match")]
         [TestCase("S15.10.6.2_A1_T8.js", Description = "RegExp.prototype.exec(string) Performs a regular expression match of ToString(string) against the regular expression and returns an Array object containing the results of the match, or null if the string did not match")]
         [TestCase("S15.10.6.2_A1_T9.js", Description = "RegExp.prototype.exec(string) Performs a regular expression match of ToString(string) against the regular expression and returns an Array object containing the results of the match, or null if the string did not match")]
-        public void RegExpPrototypeExecStringPerformsARegularExpressionMatchOfToStringStringAgainstTheRegularExpressionAndReturnsAnArrayObjectContainingTheResultsOfTheMatchOrNullIfTheStringDidNotMatch(string file)
+        public void RegExpPrototypeExecStringPerformsARegularExpressionMatchOfToStringAndReturnsAnArrayObjectContainingTheResultsOrNull(string file)
         {
             RunFile(file);
         }

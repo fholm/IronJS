@@ -16,7 +16,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Arr
         [Category("Sputnik Conformance")]
         [Category("ECMA 15.4.4.3")]
         [TestCase("S15.4.4.3_A1_T1.js", Description = "The elements of the array are converted to strings using their toLocaleString methods, and these strings are then concatenated, separated by occurrences of a separator string that has been derived in an implementation-defined locale-specific way")]
-        public void TheElementsOfTheArrayAreConvertedToStringsUsingTheirToLocaleStringMethodsAndTheseStringsAreThenConcatenatedSeparatedByOccurrencesOfASeparatorStringThatHasBeenDerivedInAnImplementationDefinedLocaleSpecificWay(string file)
+        public void TheElementsOfTheArrayAreConvertedToStringsUsingTheirToLocaleStringMethodsAndConcatenatedInALocaleSpecificWay(string file)
         {
             RunFile(file);
         }

@@ -42,15 +42,5 @@
             var ctx = CreateContext();
             ctx.ExecuteFile(fileName);
         }
-
-        public void RunFile_ExpectException<T>(string fileName) where T : Exception
-        {
-            Assert.Throws<T>(() => RunFile(fileName));
-        }
-
-        public void RunFile_ExpectException(string fileName)
-        {
-            RunFile_ExpectException<Exception>(fileName);
-        }
     }
 }

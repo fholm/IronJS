@@ -33,7 +33,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Str
         [TestCase("S15.5.4.14_A1_T7.js", Description = "String.prototype.split(separator, limit): i) can be transferred to other kinds of objects for use as a method. separator and limit can be any kinds of object since: ii) if separator is not RegExp ToString(separator) performs and iii) ToInteger(limit) performs")]
         [TestCase("S15.5.4.14_A1_T8.js", Description = "String.prototype.split(separator, limit): i) can be transferred to other kinds of objects for use as a method. separator and limit can be any kinds of object since: ii) if separator is not RegExp ToString(separator) performs and iii) ToInteger(limit) performs")]
         [TestCase("S15.5.4.14_A1_T9.js", Description = "String.prototype.split(separator, limit): i) can be transferred to other kinds of objects for use as a method. separator and limit can be any kinds of object since: ii) if separator is not RegExp ToString(separator) performs and iii) ToInteger(limit) performs")]
-        public void StringPrototypeSplitSeparatorLimitICanBeTransferredToOtherKindsOfObjectsForUseAsAMethodSeparatorAndLimitCanBeAnyKindsOfObjectSinceIiIfSeparatorIsNotRegExpToStringSeparatorPerformsAndIiiToIntegerLimitPerforms(string file)
+        public void StringPrototypeSplitCanBeTransferredToOtherKindsOfObjectsForUseAsAMethod(string file)
         {
             RunFile(file);
         }
@@ -102,33 +102,6 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Str
         [TestCase("S15.5.4.14_A2_T7.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. The substrings are determined by searching from left to right for occurrences of separator")]
         [TestCase("S15.5.4.14_A2_T8.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. The substrings are determined by searching from left to right for occurrences of separator")]
         [TestCase("S15.5.4.14_A2_T9.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. The substrings are determined by searching from left to right for occurrences of separator")]
-        public void StringPrototypeSplitSeparatorLimitReturnsAnArrayObjectIntoWhichSubstringsOfTheResultOfConvertingThisObjectToAStringHaveBeenStoredTheSubstringsAreDeterminedBySearchingFromLeftToRightForOccurrencesOfSeparator(string file)
-        {
-            RunFile(file);
-        }
-
-        [Test]
-        [Category("Sputnik Conformance")]
-        [Category("ECMA 15.5.4.14")]
-        [TestCase("S15.5.4.14_A3_T1.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T10.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T11.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T2.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T3.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T4.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T5.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T6.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T7.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T8.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        [TestCase("S15.5.4.14_A3_T9.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
-        public void StringPrototypeSplitReturnsAnArrayObjectWithILengthEqualedTo1IiGet0EqualedToTheResultOfConvertingThisObjectToAString(string file)
-        {
-            RunFile(file);
-        }
-
-        [Test]
-        [Category("Sputnik Conformance")]
-        [Category("ECMA 15.5.4.14")]
         [TestCase("S15.5.4.14_A4_T1.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
         [TestCase("S15.5.4.14_A4_T10.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
         [TestCase("S15.5.4.14_A4_T11.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
@@ -154,7 +127,26 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Str
         [TestCase("S15.5.4.14_A4_T7.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
         [TestCase("S15.5.4.14_A4_T8.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
         [TestCase("S15.5.4.14_A4_T9.js", Description = "String.prototype.split (separator, limit) returns an Array object into which substrings of the result of converting this object to a string have been stored. If separator is a regular expression then inside of SplitMatch helper the [[Match]] method of R is called giving it the arguments corresponding")]
-        public void StringPrototypeSplitSeparatorLimitReturnsAnArrayObjectIntoWhichSubstringsOfTheResultOfConvertingThisObjectToAStringHaveBeenStoredIfSeparatorIsARegularExpressionThenInsideOfSplitMatchHelperTheMatchMethodOfRIsCalledGivingItTheArgumentsCorresponding(string file)
+        public void StringPrototypeSplitSeparatorLimitReturnsAnArrayObjectIntoWhichSubstringsOfTheResultOfConvertingThisObjectToAStringHaveBeenStored(string file)
+        {
+            RunFile(file);
+        }
+
+        [Test]
+        [Category("Sputnik Conformance")]
+        [Category("ECMA 15.5.4.14")]
+        [TestCase("S15.5.4.14_A3_T1.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T10.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T11.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T2.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T3.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T4.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T5.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T6.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T7.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T8.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        [TestCase("S15.5.4.14_A3_T9.js", Description = "String.prototype.split() returns an Array object with:  i) length equaled to 1, ii) [[Get]](0) equaled to the result of converting this object to a string")]
+        public void StringPrototypeSplitReturnsAnArrayObjectWithILengthEqualedTo1IiGet0EqualedToTheResultOfConvertingThisObjectToAString(string file)
         {
             RunFile(file);
         }

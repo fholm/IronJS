@@ -74,21 +74,13 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Dat
         [TestCase("S15.9.3.1_A4_T4.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 1. Call ToNumber(year) 2. Call ToNumber(month) 3. If date is supplied use ToNumber(date) 4. If hours is supplied use ToNumber(hours) 5. If minutes is supplied use ToNumber(minutes) 6. If seconds is supplied use ToNumber(seconds) 7. If ms is supplied use ToNumber(ms)")]
         [TestCase("S15.9.3.1_A4_T5.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 1. Call ToNumber(year) 2. Call ToNumber(month) 3. If date is supplied use ToNumber(date) 4. If hours is supplied use ToNumber(hours) 5. If minutes is supplied use ToNumber(minutes) 6. If seconds is supplied use ToNumber(seconds) 7. If ms is supplied use ToNumber(ms)")]
         [TestCase("S15.9.3.1_A4_T6.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 1. Call ToNumber(year) 2. Call ToNumber(month) 3. If date is supplied use ToNumber(date) 4. If hours is supplied use ToNumber(hours) 5. If minutes is supplied use ToNumber(minutes) 6. If seconds is supplied use ToNumber(seconds) 7. If ms is supplied use ToNumber(ms)")]
-        public void TheValuePropertyOfTheNewlyConstructedObjectIsSetByFollowingSteps1CallToNumberYear2CallToNumberMonth3IfDateIsSuppliedUseToNumberDate4IfHoursIsSuppliedUseToNumberHours5IfMinutesIsSuppliedUseToNumberMinutes6IfSecondsIsSuppliedUseToNumberSeconds7IfMsIsSuppliedUseToNumberMs(string file)
-        {
-            RunFile(file);
-        }
-
-        [Test]
-        [Category("Sputnik Conformance")]
-        [Category("ECMA 15.9.3.1")]
         [TestCase("S15.9.3.1_A5_T1.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
         [TestCase("S15.9.3.1_A5_T2.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
         [TestCase("S15.9.3.1_A5_T3.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
         [TestCase("S15.9.3.1_A5_T4.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
         [TestCase("S15.9.3.1_A5_T5.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
         [TestCase("S15.9.3.1_A5_T6.js", Description = "The [[Value]] property of the newly constructed object is set by following steps: 8. If Result(1) is not NaN and 0 <= ToInteger(Result(1)) <= 99, Result(8) is 1900+ToInteger(Result(1))")]
-        public void TheValuePropertyOfTheNewlyConstructedObjectIsSetByFollowingSteps8IfResult1IsNotNaNAnd0ToIntegerResult199Result8Is1900ToIntegerResult1(string file)
+        public void TheValuePropertyOfTheNewlyConstructedObjectIsSetByFollowingSpecificSteps(string file)
         {
             RunFile(file);
         }

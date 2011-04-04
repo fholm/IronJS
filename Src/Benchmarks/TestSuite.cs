@@ -65,45 +65,67 @@
         public void Run()
         {
             var tests = this.EnumerateTests().ToList();
+            var results = new List<TestResult>(tests.Count);
 
             ColorPrintLine(ConsoleColor.DarkCyan, this.SuiteName);
             ColorPrintLine(ConsoleColor.DarkCyan, "==================================");
 
             foreach (var test in tests)
             {
-                Console.Write(Path.GetFileName(test) + ": ");
+                Console.WriteLine(Path.GetFileName(test));
 
                 var ctx = this.CreateContext();
 
-                var sw = Stopwatch.StartNew();
-                var error = this.ExecuteTest(ctx, test);
-                sw.Stop();
+                var result = this.ExecuteTest(ctx, test);
+                results.Add(result);
 
-                if (!string.IsNullOrEmpty(error))
+                if (!string.IsNullOrEmpty(result.Error))
                 {
-                    ColorPrintLine(ConsoleColor.Red, error);
+                    Console.Write("  Error: ");
+                    ColorPrintLine(ConsoleColor.Red, result.Error);
                 }
                 else
                 {
-                    ColorPrintLine(ConsoleColor.Yellow, sw.ElapsedMilliseconds + "ms");
+                    Console.Write("  Score: ");
+                    ColorPrintLine(ConsoleColor.Green, result.Score);
                 }
+            }
+
+            Console.WriteLine();
+            ColorPrintLine(ConsoleColor.DarkCyan, "Whole Suite");
+
+            var suiteResult = this.AggregateResults(results);
+
+            if (!string.IsNullOrEmpty(suiteResult.Error))
+            {
+                Console.Write("  Error: ");
+                ColorPrintLine(ConsoleColor.Red, suiteResult.Error);
+            }
+            else
+            {
+                Console.Write("  Score: ");
+                ColorPrintLine(ConsoleColor.Green, suiteResult.Score);
             }
 
             Console.WriteLine();
         }
 
-        protected virtual string ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
+        protected virtual TestResult ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
+            var sw = Stopwatch.StartNew();
             try
             {
                 ctx.ExecuteFile(test);
+                sw.Stop();
             }
             catch (Exception ex)
             {
-                return "Exception: " + ex.GetBaseException().Message;
+                return new TestResult { Error = ex.GetBaseException().Message };
             }
 
-            return null;
+            return new TestResult { Score = sw.ElapsedMilliseconds + "ms" };
         }
+
+        protected abstract TestResult AggregateResults(IList<TestResult> results);
     }
 }

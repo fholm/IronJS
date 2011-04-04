@@ -111,7 +111,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>IronJS.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\..\IronJS.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -188,11 +188,13 @@
     <Resource Include="Images\unknown.gif" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="IronJS.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\code.gif" />
     <Resource Include="Images\run.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\..\..\IronJS.ico">
+      <Link>IronJS.ico</Link>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -75,7 +75,8 @@ namespace IronJS.Tests.UnitTests.Sputnik.ImplementationDiagnostics
 
         [Test]
         [Category("Sputnik Implementation_Diagnostics")]
-        [Category("ECMA 13,12.10")]
+        [Category("ECMA 13")]
+        [Category("ECMA 12.10")]
         [TestCase("S13_D1_T1.js", Description = "Function declaration inside of \"with\" statement interprets as function expression")]
         public void FunctionDeclarationInsideOfWithStatementInterpretsAsFunctionExpression(string file)
         {

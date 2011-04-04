@@ -115,7 +115,8 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.FunctionDefinition
 
         [Test]
         [Category("Sputnik Conformance")]
-        [Category("ECMA 13,13.2")]
+        [Category("ECMA 13")]
+        [Category("ECMA 13.2")]
         [TestCase("S13_A19_T1.js", Description = "\"var\" does not override function declaration")]
         [TestCase("S13_A19_T2.js", Description = "\"var\" does not override function declaration")]
         public void VarDoesNotOverrideFunctionDeclaration(string file)

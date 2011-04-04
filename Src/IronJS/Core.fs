@@ -1064,10 +1064,10 @@ and [<AllowNullLiteral>] RegExpObject =
   val Global : bool
 
   member x.IgnoreCase:bool =
-    (x.RegExp.Options &&& RegexOptions.IgnoreCase) = RegexOptions.IgnoreCase
+    x.RegExp.Options.HasFlag(RegexOptions.IgnoreCase)
 
   member x.MultiLine:bool =
-    (x.RegExp.Options &&& RegexOptions.Multiline) = RegexOptions.Multiline
+    x.RegExp.Options.HasFlag(RegexOptions.Multiline)
 
   new (env, pattern, options, global') as this =
     {

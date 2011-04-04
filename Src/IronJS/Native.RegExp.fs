@@ -10,15 +10,22 @@ module RegExp =
 
   open FSharpOperators
 
-  let private constructor' (f:FO) (o:CO) (pattern:BV) (options:BV) =
-    let pattern = pattern |> TC.ToString
-    let options = 
-      match options.Tag with
-      | TypeTags.Undefined -> ""
-      | _ when options.IsNull -> ""
-      | _ -> options |> TC.ToString
+  // These steps are outlined in the ECMA-262, Section 15.10.4.1
+  let private constructor' (f:FO) (o:CO) (pattern:BV) (flags:BV) =
+    let mutable P = ""
+    let mutable F = ""
 
-    f.Env.NewRegExp(pattern, options) |> BV.Box
+    if pattern.IsRegExp && flags.IsUndefined then
+      let r = pattern.Object :?> RO
+      P <- r.RegExp.ToString()
+      F <- (if r.Global then "g" else "") + (if r.IgnoreCase then "i" else "") + (if r.MultiLine then "m" else "")
+    elif pattern.IsRegExp then
+      f.Env.RaiseTypeError("When specifying a RegExp as the first argument to the RegExp constructor, it is invalid to specify flags.")
+    else
+      P <- if pattern.IsUndefined then "" else TC.ToString(pattern)
+      F <- if flags.IsUndefined then "" else TC.ToString(flags)
+
+    f.Env.NewRegExp(P, F) |> BV.Box
 
   let private toString (f:FO) (this:CO) =
     let this = this.CastTo<RO>()

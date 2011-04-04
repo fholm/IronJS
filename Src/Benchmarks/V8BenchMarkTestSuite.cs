@@ -32,7 +32,7 @@ namespace Benchmarks
             return ctx;
         }
 
-        protected override string ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
+        protected override TestResult ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
             var errors = new StringBuilder();
 
@@ -46,26 +46,45 @@ namespace Benchmarks
                 errors.Append(err);
             };
 
-            Action<string, string> printResult = (name, result) => { };
-            Action<string, string> printError = (name, error) => appendError(name + ": " + error);
-            Action<string> printScore = (score) => ColorPrint(ConsoleColor.Green, "Score: " + score + "  ");
-            ctx.SetGlobal("PrintResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, printResult));
-            ctx.SetGlobal("PrintError", IronJS.Native.Utils.createHostFunction(ctx.Environment, printError));
-            ctx.SetGlobal("PrintScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, printScore));
+            var score = string.Empty;
+
+            Action<string, string> notifyResult = (name, result) => { };
+            Action<string, string> notifyError = (name, error) => appendError(name + ": " + error);
+            Action<string> notifyScore = s => score = s;
+            ctx.SetGlobal("NotifyResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyResult));
+            ctx.SetGlobal("NotifyError", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyError));
+            ctx.SetGlobal("NotifyScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyScore));
 
             try
             {
                 ctx.ExecuteFile(test);
-                ctx.Execute(@"BenchmarkSuite.RunSuites({ NotifyResult: PrintResult,
-                                                         NotifyError: PrintError,
-                                                         NotifyScore: PrintScore });");
+                ctx.Execute(@"BenchmarkSuite.RunSuites({ NotifyResult: NotifyResult,
+                                                         NotifyError: NotifyError,
+                                                         NotifyScore: NotifyScore });");
             }
             catch (Exception ex)
             {
                 appendError("Exception: " + ex.GetBaseException().Message);
             }
 
-            return errors.Length > 0 ? errors.ToString() : null;
+            if (errors.Length > 0)
+            {
+                return new TestResult { Error = errors.ToString() };
+            }
+            else
+            {
+                return new TestResult { Score = score };
+            }
+        }
+
+        protected override TestResult AggregateResults(IList<TestResult> results)
+        {
+            if (results.Where(r => !string.IsNullOrEmpty(r.Error)).Any())
+            {
+                return new TestResult { Error = "Could not aggregate the score, because errors exist." };
+            }
+
+            return new TestResult { Score = "TODO: Calculate the geometric mean of the results." };
         }
     }
 }

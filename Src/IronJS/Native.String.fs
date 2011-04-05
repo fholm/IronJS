@@ -101,38 +101,41 @@ module String =
     let regexp = regexp |> toRegExp f.Env
     RegExp.exec f regexp (this |> TC.ToString |> BV.Box)
 
-  let private replacePattern =
-    new Regex(@"\$\$|\$&|\$`|\$'|\$\d{1,2}", RegexOptions.Compiled)
+  let private replaceTokens =
+    new Regex(@"[^$]+|\$\$|\$&|\$`|\$'|\$\d\d|\$\d|\$", RegexOptions.Compiled)
 
   let private evaluateReplacement (matched:string) (before:string) (after:string) (replacement:string) (groups:GroupCollection) =
     if replacement.Contains("$") then
-      
-      replacePattern.Replace(replacement, MatchEvaluator(fun m ->
-        match m.Value with
-        | "$$" -> "$"
-        | "$&" -> matched
-        | "$`" -> before
-        | "$'" -> after
-        | _ ->
-          match m.Value.Substring 1 |> int with
-          | 0 -> m.Value
-          | subPatternIndex  -> 
-            if subPatternIndex < groups.Count && groups <> null
+
+      let tokens : seq<Capture> = replaceTokens.Matches replacement |> Seq.cast
+      let tokens = tokens |> Seq.map (fun m -> m.Value)
+      Seq.fold (fun (s:string) (t:string) ->
+        let r =
+          match t with
+          | _ when not (t.StartsWith("$")) -> t
+          | "$$" -> "$"
+          | "$0" -> "$0"
+          | "$00" -> "$00"
+          | "$&" -> matched
+          | "$`" -> before
+          | "$'" -> after
+          | _ ->
+            let subPatternIndex = t.Substring 1 |> int
+            if groups <> null && subPatternIndex < groups.Count
               then groups.[subPatternIndex].Value
-              else "$" + string subPatternIndex
-      ))
+              else ""
+        s + r) "" tokens
 
     else
       replacement
 
-    
   //----------------------------------------------------------------------------
   let internal replace (this:CO) (search:BV) (replace:BV) =
     let value = this |> TC.ToString
 
     //replace(regex, _)
     if search.IsRegExp then 
-      let search = search |> toRegExp this.Env
+      let search = search.Object.CastTo<RO>()
       let count = if search.Global then Int32.MaxValue else 1
       let lastIndex = search.Get("lastIndex") |> TC.ToInt32
       let lastIndex = if search.Global then 0 else Math.Max(0, lastIndex-1)
@@ -188,7 +191,7 @@ module String =
         //replace(string, string)
         else
           let before = value.Substring(0, index)
-          let after = value.Substring(index + value.Length)
+          let after = value.Substring(index + search.Length)
           let replace = replace |> TC.ToString
           let replace = evaluateReplacement search before after replace null
           before + replace + after

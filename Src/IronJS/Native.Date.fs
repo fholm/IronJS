@@ -166,10 +166,11 @@ module Date =
     let private toUTCString = toString
 
     let private valueOf (f:FO) (o:CO) =
-      o.CastTo<DO>().Date
-      |> DateObject.DateTimeToTicks 
-      |> float 
-      |> BV.Box
+      let dt = o.CastTo<DO>()
+      if dt.HasValidDate then
+        dt.Date |> DateObject.DateTimeToTicks |> float |> BV.Box
+      else
+        nan |> BV.Box
 
     let private toLocalTime (o:CO) = o.CastTo<DO>().Date.ToLocalTime()
     let private toUTCTime (o:CO) = o.CastTo<DO>().Date.ToUniversalTime()

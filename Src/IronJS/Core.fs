@@ -1113,8 +1113,11 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   static member TicksToDateTime(ticks:int64) : DateTime =
     new DateTime(ticks * tickScale + offset, DateTimeKind.Utc)
     
-  static member TicksToDateTime(ticks:double) : DateTime = 
-    DateObject.TicksToDateTime(int64 ticks)
+  static member TicksToDateTime(ticks:double) : DateTime =
+    if FSharp.Utils.isNaNOrInf ticks then
+        DateTime.MinValue
+    else
+        DateObject.TicksToDateTime(int64 ticks)
 
   static member DateTimeToTicks(date:DateTime) : int64 =
     (date.ToUniversalTime().Ticks - offset) / tickScale

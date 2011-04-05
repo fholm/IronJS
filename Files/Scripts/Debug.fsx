@@ -1,7 +1,6 @@
 #light
 #time
 #r @"../../Src/IronJS/bin/Debug/IronJS.dll"
-
 open System
 open IronJS
 

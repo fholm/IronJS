@@ -212,17 +212,19 @@ module String =
       value.IndexOf(search, StringComparison.Ordinal) |> double
       
   //----------------------------------------------------------------------------
-  let internal slice (this:CommonObject) (start:double) (end':BoxedValue) =
-    let value = this  |> TypeConverter.ToString
-    let start = start |> TypeConverter.ToInteger
+  let internal slice (this:CO) (start:double) (end':BoxedValue) =
+    let S = this |> TC.ToString
+    let len = S.Length
+    let intStart = start |> TC.ToInteger
+    let intEnd = if end'.IsUndefined then len else end' |> TC.ToInteger
 
-    let end' = if end'.IsUndefined then start else value.Length
+    let from = if intStart < 0 then Math.Max(len + intStart, 0) else Math.Min(intStart, len)
+    let to' = if intEnd < 0 then Math.Max(len + intEnd, 0) else Math.Min(intEnd, len)
 
-    let start = Math.Min(Math.Max(start, 0), value.Length)
-    let end'  = Math.Min(Math.Max(end', 0), value.Length)
+    let span = Math.Max(to' - from, 0)
 
-    if end' <= start then "" else value.Substring(start, end' - start)
-    
+    S.Substring(from, span)
+
   //----------------------------------------------------------------------------
   let internal split (f:FO) (this:CO) (separator:BV) (limit:BV) =
     let value = this |> TC.ToString

@@ -141,18 +141,18 @@ module internal Function =
       
     ///
     let setup (env:Env) =
-      
       //
-      let call = VariadicFunction(call) $ Utils.createFunction env (Some 1)
-      env.Prototypes.Function.Put("call", call, DontEnum)
+      let proto = env.Prototypes.Function
+      proto.Put("constructor", env.Constructors.Function, DontEnum)
 
       //
-      let apply = Function<BV, CO>(apply) $ Utils.createFunction env (Some 2)
-      env.Prototypes.Function.Put("apply", apply, DontEnum)
+      let call = call $ Utils.createVariadicFunc env (Some 1)
+      proto.Put("call", call, DontEnum)
+
+      //
+      let apply = apply $ Utils.createFunc2 env (Some 2)
+      proto.Put("apply", apply, DontEnum)
     
       //
-      let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
-      env.Prototypes.Function.Put("toString", toString, DontEnum)
-
-      //
-      env.Prototypes.Function.Put("constructor", env.Constructors.Function, DontEnum)
+      let toString = toString $ Utils.createFunc0 env (Some 0)
+      proto.Put("toString", toString, DontEnum)

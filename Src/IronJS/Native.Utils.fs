@@ -43,6 +43,36 @@ module Utils =
     createHostFunctionObject env length ctor metaData
 
   ///
+  let createFunc0 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'r>(func)
+    $ createFunction env length
+
+  ///
+  let createFunc1 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'r>(func)
+    $ createFunction env length
+
+  ///
+  let createFunc2 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createFunc3 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'c, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createFunc4 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'c, 'd, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createVariadicFunc (env:Env) (length:int option) func =
+    new Func<FO, CO, Args, 'r>(func) 
+    $ createFunction env length
+
+  ///
   let internal trapSyntaxError (env:Env) (f:unit -> 'a) =
       try 
         f()

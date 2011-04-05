@@ -69,23 +69,30 @@ module internal Object =
 
     ///
     let setup (env:Env) =
+      //
       let proto = env.Prototypes.Object
       proto.Put("constructor", env.Constructors.Object, DontEnum)
 
-      let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
+      //
+      let toString = toString $ Utils.createFunc0 env (Some 0)
       proto.Put("toString", toString, DontEnum)
-    
-      let toLocaleString = FunctionReturn<string>(toLocaleString) $ Utils.createFunction env (Some 0)
+
+      //
+      let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
       proto.Put("toLocaleString", toLocaleString, DontEnum)
 
-      let valueOf = FunctionReturn<CO>(valueOf) $ Utils.createFunction env (Some 0)
+      //
+      let valueOf = valueOf $ Utils.createFunc0 env (Some 0)
       proto.Put("valueOf", valueOf, DontEnum)
 
-      let hasOwnProperty = FunctionReturn<string, bool>(hasOwnProperty) $ Utils.createFunction env (Some 1)
+      //
+      let hasOwnProperty = hasOwnProperty $ Utils.createFunc1 env (Some 1)
       proto.Put("hasOwnProperty", hasOwnProperty, DontEnum)
     
-      let isPrototypeOf = FunctionReturn<CO, bool>(isPrototypeOf) $ Utils.createFunction env (Some 1)
+      //
+      let isPrototypeOf = isPrototypeOf $ Utils.createFunc1 env (Some 1)
       proto.Put("isPrototypeOf", isPrototypeOf, DontEnum)
 
-      let isNumerable = FunctionReturn<string, bool>(propertyIsEnumerable) $ Utils.createFunction env (Some 1)
+      //
+      let isNumerable = propertyIsEnumerable $ Utils.createFunc1 env (Some 1)
       proto.Put("propertyIsEnumerable", isNumerable, DontEnum)

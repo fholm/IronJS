@@ -9,7 +9,7 @@ open IronJS.Support.CustomOperators
 module Utils = 
     
   /// Deprecated
-  let internal createHostFunction (env:Environment) (delegate':'a) =
+  let createHostFunction (env:Environment) (delegate':'a) =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
     let h = HostFunction<'a>(env, delegate', metaData)
@@ -44,33 +44,27 @@ module Utils =
 
   ///
   let createFunc0 (env:Env) (length:int option) func =
-    new Func<FO, CO, 'r>(func)
-    $ createFunction env length
+    new Func<FO, CO, 'r>(func) $ createFunction env length
 
   ///
   let createFunc1 (env:Env) (length:int option) func =
-    new Func<FO, CO, 'a, 'r>(func)
-    $ createFunction env length
+    new Func<FO, CO, 'a, 'r>(func) $ createFunction env length
 
   ///
   let createFunc2 (env:Env) (length:int option) func =
-    new Func<FO, CO, 'a, 'b, 'r>(func) 
-    $ createFunction env length
+    new Func<FO, CO, 'a, 'b, 'r>(func) $ createFunction env length
 
   ///
   let createFunc3 (env:Env) (length:int option) func =
-    new Func<FO, CO, 'a, 'b, 'c, 'r>(func) 
-    $ createFunction env length
+    new Func<FO, CO, 'a, 'b, 'c, 'r>(func) $ createFunction env length
 
   ///
   let createFunc4 (env:Env) (length:int option) func =
-    new Func<FO, CO, 'a, 'b, 'c, 'd, 'r>(func) 
-    $ createFunction env length
+    new Func<FO, CO, 'a, 'b, 'c, 'd, 'r>(func) $ createFunction env length
 
   ///
   let createVariadicFunc (env:Env) (length:int option) func =
-    new Func<FO, CO, Args, 'r>(func) 
-    $ createFunction env length
+    new Func<FO, CO, Args, 'r>(func) $ createFunction env length
 
   ///
   let internal trapSyntaxError (env:Env) (f:unit -> 'a) =

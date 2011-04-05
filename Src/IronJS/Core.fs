@@ -1385,6 +1385,49 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
           i := !i + 1u
       }
 
+///
+and SparseArray2 = MutableSorted<uint32, Descriptor>
+and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) = 
+  inherit CO(env, env.Maps.Array, env.Prototypes.Array)
+
+  let mutable dense = 
+    if capacity <= 1024u
+      then Array.zeroCreate<Descriptor>(int capacity)
+      else null
+
+  let mutable sparse =
+    if capacity > 1024u
+      then new SparseArray2()
+      else null
+      
+  /// Internal length property
+  let mutable length = 
+    length
+
+  ///
+  let resizeDense (newCapacity:uint32) =
+    let newDense = Array.zeroCreate<Descriptor> (int newCapacity)
+    Array.Copy(dense, newDense, int newCapacity)
+    dense <- newDense
+
+  /// Returns true if the array object is dense
+  member x.IsDense = 
+    FSharp.Utils.notNull dense 
+
+  /// Modifiy or read the array length
+  member x.Length
+    with  get () = length
+    and   set (newLength) =
+      let previousLength = length
+      length <- newLength
+
+      if x.IsDense then
+        ()
+
+      else
+        ()
+
+
 (*
 //  
 *)

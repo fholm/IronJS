@@ -16,3 +16,7 @@ let src = @"
 "
 
 ctx |> Ijs.execute src
+
+let d = Collections.Generic.SortedDictionary<uint32, string>()
+d.Add(1u, "foo")
+d.[UInt32.MaxValue]

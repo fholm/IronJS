@@ -5,6 +5,7 @@ open System
 
 module CustomOperators =
   let inline ($) a b = b a
+  let inline (==) a b = Object.ReferenceEquals(a, b)
 
 module Attributes = 
 

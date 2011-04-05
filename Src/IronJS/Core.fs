@@ -50,6 +50,7 @@ module DescriptorAttrs =
   let [<Literal>] ReadOnly = 1us
   let [<Literal>] DontEnum = 2us
   let [<Literal>] DontDelete = 4us
+  let [<Literal>] DontEnumOrDelete = 6us
   let [<Literal>] Immutable = 7us
 
 module ParamsModes =
@@ -1446,9 +1447,6 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
       | ParameterStorageType.Shared -> 
         base.Put(uint32 i, x.ClosedOver.[index])
 
-      | _ -> 
-        Error.shouldNotHappen()
-
   override x.Put(index:uint32, value:BoxedValue) : unit =
     let ii = int index
 
@@ -1456,7 +1454,6 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
       match x.LinkMap.[ii] with
       | ParameterStorageType.Private, index -> x.Locals.[index] <- value
       | ParameterStorageType.Shared, index -> x.ClosedOver.[index] <- value
-      | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
 
@@ -1467,7 +1464,6 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
       match x.LinkMap.[ii] with
       | ParameterStorageType.Private, index -> x.Locals.[index].Number <- value
       | ParameterStorageType.Shared, index -> x.ClosedOver.[index].Number <- value
-      | _ -> Error.shouldNotHappen()
 
     base.Put(index, value)
 
@@ -1484,9 +1480,6 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
         x.ClosedOver.[index].Clr <- value
         x.ClosedOver.[index].Tag <- tag
 
-      | _ -> 
-        Error.shouldNotHappen()
-
     base.Put(index, value, tag)
 
   override x.Get(index:uint32) : BV =
@@ -1499,9 +1492,6 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
          
       | ParameterStorageType.Shared, index -> 
         x.ClosedOver.[index]
-
-      | _ -> 
-        Error.shouldNotHappen()
 
     else
       base.Get(index)
@@ -1544,20 +1534,15 @@ and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
 /// with more then four arguments. Instead of compiling a function
 /// for each arity above six we pass in an array of BV values 
 /// instead and then sort it out inside the function body.
-and VariadicFunction = delegate of FO * CO * Args -> BV
-
-/// This delegate is used in the same way as VariadicFunction is
-/// but for delegates that want their parameters passed in 
-/// as a obj array instead of a BoxedValue array.
-and ClrVariadicFunction = delegate of FO * CO * ClrArgs -> BV
+and VariadicFunction = Func<FO, CO, Args, BV>
 
 // We only optimize for aritys that is <= 4, any more then that
 // and we'll use the VariadicFunction delegate instead.
-and Function = delegate of FO * CO -> BV
-and Function<'a> = delegate of FO * CO * 'a -> BV
-and Function<'a, 'b> = delegate of FO * CO * 'a * 'b -> BV
-and Function<'a, 'b, 'c> = delegate of FO * CO * 'a * 'b * 'c -> BV
-and Function<'a, 'b, 'c, 'd> = delegate of FO * CO * 'a * 'b * 'c * 'd -> BV
+and Function = Func<FO, CO, BV>
+and Function<'a> = Func<FO, CO, 'a, BV>
+and Function<'a, 'b> = Func<FO, CO, 'a, 'b, BV>
+and Function<'a, 'b, 'c> = Func<FO, CO, 'a, 'b, 'c, BV>
+and Function<'a, 'b, 'c, 'd> = Func<FO, CO, 'a, 'b, 'c, 'd, BV>
 
 /// Alias for FunctionObject
 and FO = FunctionObject
@@ -1745,51 +1730,15 @@ and HFO<'a when 'a :> Delegate> = HostFunction<'a>
 
 ///
 and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
-  inherit FunctionObject
+  inherit FO
   
   val mutable Delegate : 'a
-  val mutable ArgTypes : System.Type array
-  val mutable ReturnType : System.Type
-
-  val mutable ParamsMode : byte
-  val mutable MarshalMode : int
 
   new (env:Env, delegateFunction, metaData) as x = 
     {
-      inherit FunctionObject(env, metaData, env.Maps.Function)
-
+      inherit FO(env, metaData, env.Maps.Function)
       Delegate = delegateFunction
-
-      ArgTypes = FSharp.Reflection.getDelegateArgTypesT<'a>
-      ReturnType = FSharp.Reflection.getDelegateReturnTypeT<'a>
-
-      ParamsMode = ParamsModes.NoParams
-      MarshalMode = MarshalModes.Default
-    } then 
-
-      let length = x.ArgTypes.Length
-
-      if length >= 2 && x.ArgTypes.[0] = typeof<FO>
-        then x.MarshalMode <- MarshalModes.Function
-        elif length >= 1 && x.ArgTypes.[0] = typeof<CO>
-          then x.MarshalMode <- MarshalModes.This
-          else x.MarshalMode <- MarshalModes.Default
-
-      if length > 0 then
-        let lastArg = x.ArgTypes.[length-1]
-        if lastArg = typeof<BoxedValue array> then
-          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-          x.ParamsMode <- ParamsModes.BoxParams
-
-        if lastArg = typeof<obj array> then
-          x.ArgTypes <- Dlr.ArrayUtils.RemoveLast x.ArgTypes
-          x.ParamsMode <- ParamsModes.ObjectParams
-        
-  member x.ArgsLength =
-    match x.MarshalMode with
-    | MarshalModes.Function -> x.ArgTypes.Length - 2
-    | MarshalModes.This -> x.ArgTypes.Length - 1 
-    | _ -> x.ArgTypes.Length
+    }
 
 and SO = StringObject
 

@@ -3,6 +3,7 @@
 open System
 open System.Reflection
 open IronJS
+open IronJS.Support.CustomOperators
 
 module Utils = 
 
@@ -42,8 +43,34 @@ module Utils =
       let compiler = Compiler.HostFunction.compile<'a>
       let metaData = env.CreateHostConstructorMetaData(compiler)
       let h = HostFunction<'a>(env, delegate', metaData)
-      h.Put("length", double h.ArgsLength, DescriptorAttrs.Immutable)
+      h.Put("length", double 0.0, DescriptorAttrs.Immutable)
       h :> FunctionObject
+
+  ///
+  let private createHostFunctionObject (env:Env) (func:'a when 'a :> Delegate) (length:int option) metaData =
+    let length =
+      match length with
+      | Some length -> length
+      | None -> 
+        typeof<'a> 
+        $ DelegateUtils.getPublicParameterTypes 
+        $ Array.length
+
+    let hfo = HostFunction<'a>(env, func, metaData)
+    hfo.Put("length", double length, DescriptorAttrs.Immutable)
+    hfo :> FunctionObject
+
+  ///
+  let createFunction (env:Env) (func:'a when 'a :> Delegate) (length:int option) =
+    let compiler = Compiler.HostFunction.compile<'a>
+    let metaData = env.CreateHostFunctionMetaData(compiler)
+    createHostFunctionObject env func length metaData
+
+  ///
+  let createConstructor (env:Env) (ctor:'a when 'a :> Delegate) (length:int option) =
+    let compiler = Compiler.HostFunction.compile<'a>
+    let metaData = env.CreateHostConstructorMetaData(compiler)
+    createHostFunctionObject env ctor length metaData
         
   (*
   //  This function is horribly slow, but it's the only way
@@ -52,8 +79,7 @@ module Utils =
   *)
   let invoke (f:FO) (t:CO) (args:Args) =
     let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
-    let internalArgs = argTypes |> DelegateCache.addInternalArgs 
-    let delegate' = internalArgs |> DelegateCache.getDelegate
+    let delegate' = argTypes |> DelegateCache.getDelegate
     let genericMethod = typeof<FO>.GetMethod("CompileAs")
     let compileAs = genericMethod.MakeGenericMethod([|delegate'|])
     let compiledFunc = compileAs.Invoke(f, [||]) :?> Delegate

@@ -10,8 +10,11 @@ module Ijs = IronJS.Hosting.FSharp
 IronJS.Support.Debug.registerConsolePrinter()
 
 let ctx = Ijs.createContext()
+let src = @"
+  function Robin(){this.name='robin'};
+  Robin.prototype=__proto;
+  var __my__robin = new Robin;
+  '';
+"
 
-let snd (_:FO) (_:CO) (a:Args) =a.[0]
-
-let func = VariadicFunction(snd)
-let hostFunc = Native.Utils.createHostFunction ctx.Env func
+ctx |> Ijs.execute src

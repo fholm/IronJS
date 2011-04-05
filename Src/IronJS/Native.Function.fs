@@ -81,8 +81,7 @@ module Function =
         Array.zeroCreate 0
 
     let this = this |> getThisObject apply.Env
-    let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
-    let type' = DelegateCache.getDelegate argTypes
+    let type' = DelegateCache.getDelegate [for a in args -> a.GetType()]
     let args = Array.append [|func :> obj; this :> obj|] args
     let compiled = f.MetaData.GetDelegate(f, type')
 
@@ -91,7 +90,7 @@ module Function =
  
   let call (_:FO) (func:CO) (this:BV) (args:ClrArgs) : BV =
     let f = func.CastTo<FO>()
-    let argTypes = DelegateCache.addInternalArgs [for a in args -> a.GetType()]
+    let argTypes = [for a in args -> a.GetType()]
     let type' = DelegateCache.getDelegate argTypes
     let this = this |> getThisObject f.Env
     let args = Array.append [|f :> obj; this :> obj|] args

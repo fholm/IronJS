@@ -191,19 +191,29 @@ module FSharp =
 
     let getFieldT<'a> = getField typeof<'a>
 
-    let getProperties (type':System.Type) = type'.GetProperties()
+    let getProperties (t:Type) = t.GetProperties()
     let getPropertiesT<'a> = getProperties typeof<'a>
-    let getProperty (type':System.Type) name = type'.GetProperty(name)
+
+    let getProperty (t:Type) name = t.GetProperty(name)
     let getPropertyT<'a> = getProperty typeof<'a>
 
-    let getDelegateReturnType (type':System.Type) = 
-      type'.GetMethod("Invoke").ReturnType
-    let getDelegateReturnTypeT<'a> = getDelegateReturnType typeof<'a>
+    let getDelegateReturnType (t:Type) = 
+      t.GetMethod("Invoke").ReturnType
 
-    let getDelegateArgTypes (type':System.Type) = 
-      [|for x in type'.GetMethod("Invoke").GetParameters() -> x.ParameterType|]
+    let getDelegateReturnTypeT<'a> = 
+      getDelegateReturnType typeof<'a>
 
-    let getDelegateArgTypesT<'a> = getDelegateArgTypes typeof<'a>
+    let getDelegateParameterTypes (t:Type) = 
+      let parameters = t.GetMethod("Invoke").GetParameters()
+      let types = Array.zeroCreate<Type> parameters.Length
+
+      for i = 0 to (parameters.Length-1) do
+        types.[i] <- parameters.[i].ParameterType
+
+      types
+
+    let getDelegateParameterTypesT<'a> = 
+      getDelegateParameterTypes typeof<'a>
 
     let getParameters (mi:MethodInfo) =
       [|for x in mi.GetParameters() -> x.ParameterType|]

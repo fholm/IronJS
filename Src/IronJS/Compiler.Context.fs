@@ -4,6 +4,7 @@ open System
 open IronJS
 open IronJS.Dlr.Operators
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 
 ///
 module Target = 
@@ -42,7 +43,9 @@ module Target =
   let getParameterTypes = function
     | None -> [||]
     | Some(delegateType:Type) -> 
-      delegateType.GetGenericArguments()
+      delegateType 
+      $ FSharp.Reflection.getDelegateParameterTypes 
+      $ FSharp.Array.skip 2
 
   /// Creates a new T record
   let create ast mode delegateType env =

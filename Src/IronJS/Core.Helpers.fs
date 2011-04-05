@@ -3,6 +3,7 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 
 (*
 //
@@ -30,21 +31,81 @@ module ExtensionMethods =
     member x.ToUInt32() = x |> TC.ToUInt32
     member x.ToPrimitive() = x |> TC.ToPrimitive
 
-(*
-// Function + cache that creates delegates for IronJS functions, delegates
-// are cached because calling Dlr.delegateType with >16 types will generate
-// incomptabile delegates for the same arguments each time it's called.
-// E.g: Func<FunctionObject, CommonObject, BoxedValue>
-*)
+///
+module TypeUtils =
+  
+  ///
+  let getTypeArray (a:'a array) =
+    let types = Array.zeroCreate<Type> a.Length
 
+    for i = 0 to (a.Length-1) do
+      types.[i] <- a.[i].GetType()
+
+    types
+
+///
+module DelegateUtils =
+
+  let private foType = typeof<FO>
+  let private coType = typeof<CO>
+  let private argsType = typeof<Args>
+
+  ///
+  let containsInternalParameters (types:Type array) =
+    types.Length > 1 && types.[0] == foType && types.[1] == coType 
+
+  ///
+  let removeInternalParameters (types:Type array) =
+    types $ FSharp.Array.skip 2
+
+  ///
+  let getReturnType (delegateType:Type) =
+    delegateType $ FSharp.Reflection.getDelegateReturnType
+
+  ///
+  let getAllParameterTypes (delegateType:Type) =
+    delegateType $ FSharp.Reflection.getDelegateParameterTypes
+
+  ///
+  let hasInternalParameters (delegateType:Type) =
+    delegateType $ getAllParameterTypes $ containsInternalParameters
+
+  ///
+  let getInternalParameterTypes () =
+    [|foType; coType|]
+
+  ///
+  let getPublicParameterTypes (delegateType:Type) =
+    let types = delegateType $ getAllParameterTypes
+    if types $ containsInternalParameters 
+      then types $ removeInternalParameters
+      else types
+
+  ///
+  let hasVariadicParameter (delegateType:Type) =
+    let types = delegateType $ getPublicParameterTypes
+    types.Length = 1 && types.[0] == argsType 
+
+  ///
+  let getCallSiteDelegate (types:Type seq) =
+    let types = Array.ofSeq types
+    
+    match types.Length with
+    | 0 -> typeof<Function>
+    | 1 -> typedefof<Function<_>>.MakeGenericType(types)
+    | 2 -> typedefof<Function<_, _>>.MakeGenericType(types)
+    | 3 -> typedefof<Function<_, _, _>>.MakeGenericType(types)
+    | 4 -> typedefof<Function<_, _, _, _>>.MakeGenericType(types)
+    | _ -> typeof<VariadicFunction>
+
+  ///
+  let getCallSiteDelegateForArguments (arguments:'a array) =
+    arguments $ TypeUtils.getTypeArray $ getCallSiteDelegate
+
+///
 module DelegateCache =
 
-  let private internalArgs = Seq.ofList [typeof<FO>; typeof<CO>]
-  let private internalReturnType = Seq.ofList [typeof<BV>]
-  let private delegateCache = new ConcurrentMutableDict<RuntimeTypeHandle list, Type>()
-
-  let addInternalArgs (types:Type seq) = types
-
+  ///
   let getDelegate (types:Type seq) =
     let types = Array.ofSeq types
     

@@ -65,7 +65,7 @@ module Global =
       z.ToCharArray() |> Array.fold accumulateDigit (bigint 0)
 
   // These steps are outlined in the ECMA-262, Section 15.1.2.2
-  let parseInt (str:BoxedValue) (radix:BoxedValue) =
+  let parseInt (str:BV) (radix:BV) =
     // Step 1
     let inputString = TC.ToString(str)
     // Step 2

@@ -36,8 +36,10 @@ module Error =
   let private name = "Error"
   let private updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
 
-  let toString (o:CO) =
-    (o.Get("name") |> TC.ToString) + ": " + (o.Get("message") |> TC.ToString)
+  let toString (func:FO) (this:CO) =
+    let name = this.Get("name") |> TC.ToString
+    let message = this.Get("message") |> TC.ToString
+    sprintf "%s: %s" name message |> BV.Box
 
   let createPrototype (env:Env) proto =
     let prototype = env.NewError()
@@ -52,7 +54,7 @@ module Error =
     let proto = env.Prototypes.Error
     let ctor = env.Constructors.Error
     
-    let toString = new Func<CO, string>(toString)
+    let toString = Function(toString)
     let toString = Utils.createHostFunction env toString
     proto.Put("toString", toString, DontEnum)
 

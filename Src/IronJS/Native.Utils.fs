@@ -79,7 +79,7 @@ module Utils =
   *)
   let invoke (f:FO) (t:CO) (args:Args) =
     let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
-    let delegate' = argTypes |> DelegateCache.getDelegate
+    let delegate' = argTypes |> DelegateUtils.getCallSiteDelegate
     let genericMethod = typeof<FO>.GetMethod("CompileAs")
     let compileAs = genericMethod.MakeGenericMethod([|delegate'|])
     let compiledFunc = compileAs.Invoke(f, [||]) :?> Delegate

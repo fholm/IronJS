@@ -1560,6 +1560,8 @@ and FO = FunctionObject
 and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, parameterStorage) =
   let delegateCache = new MutableDict<Type, Delegate>()
   
+  [<DefaultValue>] val mutable Name : string
+
   member x.Id : uint64 = id
   member x.Source : string option = None
   member x.Compiler : FO -> Type -> Delegate = compiler
@@ -1622,6 +1624,8 @@ and [<AllowNullLiteral>] FunctionObject =
   }
 
   override x.ClassName = "Function"
+
+  member x.Name = x.MetaData.Name
 
   member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")

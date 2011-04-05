@@ -92,9 +92,11 @@ module DelegateUtils =
 
   ///
   let getCallSiteDelegate (types:Type seq) =
-    let types = Array.ofSeq types
+    let length = Seq.length types
+    let types = Array.append [|typeof<FO>; typeof<CO>|] (Array.ofSeq types)
+    let types = Array.append types [|typeof<BV>|]
     
-    match types.Length with
+    match length with
     | 0 -> typeof<Function>
     | 1 -> typedefof<Function<_>>.MakeGenericType(types)
     | 2 -> typedefof<Function<_, _>>.MakeGenericType(types)
@@ -105,21 +107,6 @@ module DelegateUtils =
   ///
   let getCallSiteDelegateForArguments (arguments:'a array) =
     arguments $ TypeUtils.getTypeArray $ getCallSiteDelegate
-
-///
-module DelegateCache =
-
-  ///
-  let getDelegate (types:Type seq) =
-    let types = Array.ofSeq types
-    
-    match types.Length with
-    | 0 -> typeof<Function>
-    | 1 -> typedefof<Function<_>>.MakeGenericType(types)
-    | 2 -> typedefof<Function<_, _>>.MakeGenericType(types)
-    | 3 -> typedefof<Function<_, _, _>>.MakeGenericType(types)
-    | 4 -> typedefof<Function<_, _, _, _>>.MakeGenericType(types)
-    | _ -> typeof<VariadicFunction>
 
 /// Helper functions for the global scope
 type GlobalScopeHelper() =

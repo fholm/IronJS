@@ -18,8 +18,9 @@ module internal Boolean =
   ///
   let setup (env:Env) =
     let ctor = new Func<FO, CO, BV, BV>(constructor')
-    let ctor = Utils.createHostFunction env ctor
+    let ctor = ctor $ Utils.createConstructor env (Some 1)
 
+    ctor.MetaData.Name <- "Boolean"
     ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
 
     env.Globals.Put("Boolean", ctor, DontEnum)

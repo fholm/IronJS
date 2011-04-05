@@ -35,6 +35,7 @@ module internal Array =
     let ctor = ctor $ Utils.createConstructor env (Some 0)
 
     ctor.Put("prototype", env.Prototypes.Array, Immutable)
+    ctor.MetaData.Name <- "Array"
 
     env.Globals.Put("Array", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Array = ctor}

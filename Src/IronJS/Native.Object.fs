@@ -20,9 +20,9 @@ module internal Object =
     let ctor = Func<FO, CO, BV, CO>(constructor')
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
+    ctor.MetaData.Name <- "Object"
     ctor.Put("prototype", env.Prototypes.Object, Immutable)
 
-    env.Prototypes.Object.Put("constructor", ctor, DontEnum)
     env.Globals.Put("Object", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Object = ctor}
       
@@ -69,20 +69,23 @@ module internal Object =
 
     ///
     let setup (env:Env) =
+      let proto = env.Prototypes.Object
+      proto.Put("constructor", env.Constructors.Object, DontEnum)
+
       let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
-      env.Prototypes.Object.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DontEnum)
     
       let toLocaleString = FunctionReturn<string>(toLocaleString) $ Utils.createFunction env (Some 0)
-      env.Prototypes.Object.Put("toLocaleString", toLocaleString, DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DontEnum)
 
       let valueOf = FunctionReturn<CO>(valueOf) $ Utils.createFunction env (Some 0)
-      env.Prototypes.Object.Put("valueOf", valueOf, DontEnum)
+      proto.Put("valueOf", valueOf, DontEnum)
 
       let hasOwnProperty = FunctionReturn<string, bool>(hasOwnProperty) $ Utils.createFunction env (Some 1)
-      env.Prototypes.Object.Put("hasOwnProperty", hasOwnProperty, DontEnum)
+      proto.Put("hasOwnProperty", hasOwnProperty, DontEnum)
     
       let isPrototypeOf = FunctionReturn<CO, bool>(isPrototypeOf) $ Utils.createFunction env (Some 1)
-      env.Prototypes.Object.Put("isPrototypeOf", isPrototypeOf, DontEnum)
+      proto.Put("isPrototypeOf", isPrototypeOf, DontEnum)
 
       let isNumerable = FunctionReturn<string, bool>(propertyIsEnumerable) $ Utils.createFunction env (Some 1)
-      env.Prototypes.Object.Put("propertyIsEnumerable", isNumerable, DontEnum)
+      proto.Put("propertyIsEnumerable", isNumerable, DontEnum)

@@ -226,7 +226,7 @@ module Global =
     let parseFloat = Func<BV, BV>(parseFloat) $ Utils.createFunction env (Some 1)
     env.Globals.Put("parseFloat", parseFloat, DontEnum)
     
-    let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env (Some 1)
+    let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env (Some 2)
     env.Globals.Put("parseInt", parseInt, DontEnum)
     
     let isNaN = Func<double, BV>(isNaN) $ Utils.createFunction env (Some 1)

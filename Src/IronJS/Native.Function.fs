@@ -41,7 +41,8 @@ module internal Function =
   let setup (env:Env) =
     let ctor = new Func<FO, CO, Args, FO>(constructor')
     let ctor = ctor $ Utils.createConstructor env (Some 1)
-      
+
+    ctor.MetaData.Name <- "Function"      
     ctor.Prototype <- env.Prototypes.Function
     ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)
 
@@ -101,7 +102,7 @@ module internal Function =
           Array.zeroCreate 0
 
       let this = this |> getThisObject func.Env
-      let type' = DelegateCache.getDelegate [for a in args -> a.GetType()]
+      let type' = DelegateUtils.getCallSiteDelegate [for a in args -> a.GetType()]
       let args = Array.append [|func :> obj; this :> obj|] args
       let compiled = func.MetaData.GetDelegate(func, type')
 

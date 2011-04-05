@@ -173,12 +173,23 @@ namespace DebugConsole
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
 
-            var result = context.Execute(inputText.Text);
+            try
+            {
+                var result = context.Execute(inputText.Text);
 
-            lastStatementOutput.Text =
-                IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(result));
+                lastStatementOutput.Text =
+                    IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(result));
 
-            printEnvironmentVariables(context.Globals);
+            }
+            catch (Exception exn) 
+            {
+                tabs.SelectedIndex = 3;
+                lastStatementOutput.Text = exn.ToString();
+            }
+            finally
+            {
+                printEnvironmentVariables(context.Globals);
+            }
         }
 
         void stopButton_Click(object sender, RoutedEventArgs e)

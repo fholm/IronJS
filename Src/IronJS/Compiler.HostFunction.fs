@@ -40,6 +40,11 @@ module HostFunction =
   let variadicArgs () = 
     Dlr.paramT<Args> "~args"
 
+  let defaultArg env type' =
+    if type' == typeof<BV> 
+      then Utils.Constants.Boxed.undefined
+      else TC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
+
   let compile<'a when 'a :> Delegate> (f:FO) callsiteType =
     let hostType = typeof<'a>
 
@@ -109,7 +114,7 @@ module HostFunction =
 
                 Dlr.ternary (!!!i .< argsLength) 
                   (TC.ConvertTo(env, argsIndex, type'))
-                  (Dlr.default' type')
+                  (defaultArg env type')
               )
 
           concatArguments<'a> func this hostStaticArgs
@@ -150,7 +155,7 @@ module HostFunction =
           elif csLength < hLength then
             hostParameterTypes
             $ Seq.skip csLength
-            $ Seq.map Dlr.default'
+            $ Seq.map (defaultArg env)
             $ Seq.toArray
             $ Array.append callsiteParameters
 

@@ -22,7 +22,9 @@ module internal Number =
   ///
   let setup (env:Env) =
     let ctor = VariadicFunction(constructor')
-    let ctor = Utils.createConstructor env (Some 1) ctor
+    let ctor = ctor $ Utils.createConstructor env (Some 1)
+    
+    ctor.MetaData.Name <- "Number"
 
     ctor.Put("prototype", env.Prototypes.Number, Immutable) 
     ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) 
@@ -162,7 +164,6 @@ module internal Number =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Number;
-
       proto.Put("constructor", env.Constructors.Number, DontEnum)
 
       let toString = new Func<FO, CO, BV, string>(toString)

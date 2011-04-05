@@ -38,6 +38,9 @@ module internal String =
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     //
+    ctor.MetaData.Name <- "String"
+
+    //
     let fromCharCode = new Func<Args, string>(fromCharCode)
     let fromCharCode = fromCharCode $ Utils.createFunction env (Some 1)
     ctor.Put("fromCharCode", fromCharCode, DontEnum)

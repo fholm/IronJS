@@ -37,6 +37,7 @@ module internal RegExp =
   let setup (env:Env) =
     let ctor = Function<BV, BV>(constructor') $ Utils.createConstructor env (Some 2)
     ctor.Put("prototype", env.Prototypes.RegExp, DontEnum)
+    ctor.MetaData.Name <- "RegExp"
 
     env.Constructors <- {env.Constructors with RegExp=ctor}
     env.Globals.Put("RegExp", ctor, DontEnum)

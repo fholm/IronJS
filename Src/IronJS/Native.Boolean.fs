@@ -3,30 +3,21 @@
 open System
 open IronJS
 open IronJS.DescriptorAttrs
+open IronJS.Support.CustomOperators
 
-module Boolean =
-
-  let private constructor' (ctor:FunctionObject) (this:CommonObject) (value:BoxedValue) =
+module internal Boolean =
+  
+  ///
+  let private constructor' (ctor:FO) (this:CO) (value:BV) =
     let value = TypeConverter.ToBoolean value
     match this with
     | null -> ctor.Env.NewBoolean(value) |> BV.Box
     | _ -> value |> BV.Box
+    
 
-  let private valueOf (valueOf:FunctionObject) (this:CommonObject) =
-    this.CheckType<BooleanObject>()
-    this |> ValueObject.GetValue
-
-  let private toString (toString:FunctionObject) (this:CommonObject) =
-    this.CheckType<BooleanObject>()
-    this |> ValueObject.GetValue |> TypeConverter.ToString
-
-  let createPrototype (env:Environment) objPrototype =
-    let prototype = env.NewBoolean()
-    prototype.Prototype <- objPrototype
-    prototype
-
-  let setupConstructor (env:Environment) =
-    let ctor = new Func<FunctionObject, CommonObject, BoxedValue, BoxedValue>(constructor')
+  ///
+  let setup (env:Env) =
+    let ctor = new Func<FO, CO, BV, BV>(constructor')
     let ctor = Utils.createHostFunction env ctor
 
     ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
@@ -34,15 +25,33 @@ module Boolean =
     env.Globals.Put("Boolean", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Boolean=ctor}
 
-  let setupPrototype (env:Environment) =
-    let proto = env.Prototypes.Boolean;
+  ///
+  module Prototype =
 
-    proto.Put("constructor", env.Constructors.Boolean, DontEnum)    
+    ///
+    let private valueOf (valueOf:FO) (this:CO) =
+      this.CheckType<BO>()
+      this |> ValueObject.GetValue
+
+    ///
+    let private toString (toString:FO) (this:CO) =
+      this.CheckType<BO>()
+      this |> ValueObject.GetValue |> TypeConverter.ToString
+
+    ///
+    let create (env:Env) objPrototype =
+      let prototype = env.NewBoolean()
+      prototype.Prototype <- objPrototype
+      prototype
+
+    ///
+    let setup (env:Env) =
+      let proto = env.Prototypes.Boolean;
+
+      proto.Put("constructor", env.Constructors.Boolean, DontEnum)    
     
-    let valueOf = new Func<FunctionObject, CommonObject, BoxedValue>(valueOf)
-    let valueOf = Utils.createHostFunction env valueOf
-    proto.Put("valueOf", valueOf, DontEnum)
+      let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
+      proto.Put("valueOf", valueOf, DontEnum)
 
-    let toString = new Func<FunctionObject, CommonObject, string>(toString)
-    let toString = Utils.createHostFunction env toString
-    proto.Put("toString", toString, DontEnum)
+      let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
+      proto.Put("toString", toString, DontEnum)

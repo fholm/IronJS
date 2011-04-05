@@ -17,7 +17,8 @@ module internal Object =
 
   ///
   let setup (env:Env) =
-    let ctor = Func<FO, CO, BV, CO>(constructor') $ Utils.createConstructor env (Some 1)
+    let ctor = Func<FO, CO, BV, CO>(constructor')
+    let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.Put("prototype", env.Prototypes.Object, Immutable)
 

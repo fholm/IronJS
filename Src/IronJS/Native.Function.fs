@@ -40,7 +40,7 @@ module internal Function =
   ///
   let setup (env:Env) =
     let ctor = new Func<FO, CO, Args, FO>(constructor')
-    let ctor = Utils.createHostFunction env ctor
+    let ctor = ctor $ Utils.createConstructor env (Some 1)
       
     ctor.Prototype <- env.Prototypes.Function
     ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)

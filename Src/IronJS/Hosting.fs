@@ -46,8 +46,8 @@ module private Environment =
       Function = Native.Function.Prototype.create env objectPrototype
       Array = Native.Array.Prototype.create env objectPrototype
       String = Native.String.Prototype.create env objectPrototype
-      Number = Native.Number.createPrototype env objectPrototype
-      Boolean = Native.Boolean.createPrototype env objectPrototype
+      Number = Native.Number.Prototype.create env objectPrototype
+      Boolean = Native.Boolean.Prototype.create env objectPrototype
       Date = Native.Date.Prototype.create env objectPrototype
       RegExp = Native.RegExp.Prototype.create env objectPrototype
       Error = errorPrototype
@@ -72,11 +72,11 @@ module private Environment =
     env |> Native.String.setup
     env |> Native.String.Prototype.setup
         
-    env |> Native.Boolean.setupConstructor
-    env |> Native.Boolean.setupPrototype
+    env |> Native.Boolean.setup
+    env |> Native.Boolean.Prototype.setup
         
-    env |> Native.Number.setupConstructor
-    env |> Native.Number.setupPrototype
+    env |> Native.Number.setup
+    env |> Native.Number.Prototype.setup
         
     env |> Native.Array.setup
     env |> Native.Array.Prototype.setup

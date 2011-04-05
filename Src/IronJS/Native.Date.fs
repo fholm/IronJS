@@ -128,7 +128,8 @@ module Date =
     let create (a:'a) = Utils.createHostFunction env a
     let ctor = new JsFunc<Args>(constructor') |> create
 
-    ctor?prototype <- env.Prototypes.Date
+    ctor.Put("prototype", env.Prototypes.Date, Immutable)
+
     ctor?parse <- (JsFunc<string>(parse) |> create)
     ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)
     ctor?UTC <- (JsFunc<Args>(utc) |> create)
@@ -231,14 +232,14 @@ module Date =
     let private setFullYear:Set = setTimeGeneric toLocalTime DT.setYear (Some setMonth)
     let private setUTCFullYear:Set = setTimeGeneric toUTCTime DT.setYear (Some setUTCMonth)
 
-    let create (env:Environment) objPrototype =
+    let create (env:Env) objPrototype =
       let prototype = env.NewDate(invalidDate)
       prototype.Prototype <- objPrototype
       prototype
 
     type private SetFunc = Func<FO, CO, Args, CO>
 
-    let setup (env:Environment) =
+    let setup (env:Env) =
       let proto = env.Prototypes.Date
       let create (func:'a) = func |> Utils.createHostFunction env
 

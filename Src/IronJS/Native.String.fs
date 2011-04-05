@@ -38,18 +38,20 @@ module String =
   let internal valueOf (func:FO) (this:CO) = 
     toString func this
     
-  //----------------------------------------------------------------------------
+  // These steps are outlined in the ECMA-262, Section 15.5.4.4
   let internal charAt (this:CO) (pos:double) =
-    let value = TypeConverter.ToString this
-    let index = TypeConverter.ToInt32 pos
-    if index < 0 || index >= value.Length then "" else value.[index] |> string
+    let S = this |> TC.ToString
+    let position = pos |> TC.ToInteger
+    let size = S.Length
+    if position < 0 || position >= size then "" else S.[position] |> string
 
-  //----------------------------------------------------------------------------
+  // These steps are outlined in the ECMA-262, Section 15.5.4.5
   let internal charCodeAt (this:CO) (pos:double) =
-    let value = TypeConverter.ToString this
-    let index = TypeConverter.ToInt32 pos
-    if index < 0 || index >= value.Length then nan else value.[index] |> double
-    
+    let S = this |> TC.ToString
+    let position = pos |> TC.ToInteger
+    let size = S.Length
+    if position < 0 || position >= size then nan else S.[position] |> double
+
   //----------------------------------------------------------------------------
   let internal concat (this:CO) (args:Args) =
     let buffer = new Text.StringBuilder(TypeConverter.ToString this)
@@ -210,19 +212,16 @@ module String =
     else
       let search = search |> TypeConverter.ToString
       value.IndexOf(search, StringComparison.Ordinal) |> double
-      
-  //----------------------------------------------------------------------------
+
+  // These steps are outlined in the ECMA-262, Section 15.5.4.13
   let internal slice (this:CO) (start:double) (end':BoxedValue) =
     let S = this |> TC.ToString
     let len = S.Length
     let intStart = start |> TC.ToInteger
     let intEnd = if end'.IsUndefined then len else end' |> TC.ToInteger
-
     let from = if intStart < 0 then Math.Max(len + intStart, 0) else Math.Min(intStart, len)
     let to' = if intEnd < 0 then Math.Max(len + intEnd, 0) else Math.Min(intEnd, len)
-
     let span = Math.Max(to' - from, 0)
-
     S.Substring(from, span)
 
   //----------------------------------------------------------------------------
@@ -252,19 +251,19 @@ module String =
       array.Put(uint32 i, parts.[i])
 
     array
-        
-  //----------------------------------------------------------------------------
-  let internal substring (this:CommonObject) (start:double) (end':double) =
-    let value = this |> TypeConverter.ToString
 
-    let start = start |> TypeConverter.ToInt32
-    let start = if start < 0 then Math.Max(start + value.Length, 0) else start
+  // These steps are outlined in the ECMA-262, Section 15.5.4.15
+  let internal substring (this:CommonObject) (start:double) (end':BV) =
+    let S = this |> TC.ToString
+    let len = S.Length
+    let intStart = start |> TC.ToInteger
+    let intEnd = if end'.IsUndefined then len else end' |> TC.ToInteger
+    let finalStart = Math.Min(Math.Max(intStart, 0), len)
+    let finalEnd = Math.Min(Math.Max(intEnd, 0), len)
+    let from = Math.Min(finalStart, finalEnd)
+    let to' = Math.Max(finalStart, finalEnd)
+    S.Substring(from, to' - from)
 
-    let end' = end' |> TypeConverter.ToInt32
-    let end' = Math.Max(Math.Min(end', value.Length-start), 0)
-
-    if end' <= 0 then "" else value.Substring(start, end')
-    
   //----------------------------------------------------------------------------
   let internal toLowerCase (this:CO) =
     let value = this |> TypeConverter.ToString
@@ -364,7 +363,7 @@ module String =
     let split = Utils.createHostFunction env split
     proto.Put("split", split, DontEnum)
 
-    let substring = new Func<CommonObject, double, double, string>(substring)
+    let substring = new Func<CommonObject, double, BV, string>(substring)
     let substring = Utils.createHostFunction env substring
     proto.Put("substring", substring, DontEnum)
 

@@ -3,7 +3,7 @@
 open System
 open IronJS
 
-module internal Environment =
+module private Environment =
   
   let create () =
     let env = Environment()
@@ -44,12 +44,12 @@ module internal Environment =
     env.Prototypes <- {
       Object = objectPrototype
       Function = Native.Function.Prototype.create env objectPrototype
-      Array = Native.Array.createPrototype env objectPrototype
-      String = Native.String.createPrototype env objectPrototype
+      Array = Native.Array.Prototype.create env objectPrototype
+      String = Native.String.Prototype.create env objectPrototype
       Number = Native.Number.createPrototype env objectPrototype
       Boolean = Native.Boolean.createPrototype env objectPrototype
       Date = Native.Date.Prototype.create env objectPrototype
-      RegExp = Native.RegExp.createPrototype env objectPrototype
+      RegExp = Native.RegExp.Prototype.create env objectPrototype
       Error = errorPrototype
 
       EvalError = Native.Error.createPrototype env errorPrototype
@@ -59,7 +59,7 @@ module internal Environment =
       TypeError = Native.Error.createPrototype env errorPrototype
       URIError = Native.Error.createPrototype env errorPrototype
     }
-    
+
     env |> Native.Global.setup
     env |> Native.Math.setup
         
@@ -69,8 +69,8 @@ module internal Environment =
     env |> Native.Function.setup
     env |> Native.Function.Prototype.setup
         
-    env |> Native.String.setupConstructor
-    env |> Native.String.setupPrototype
+    env |> Native.String.setup
+    env |> Native.String.Prototype.setup
         
     env |> Native.Boolean.setupConstructor
     env |> Native.Boolean.setupPrototype
@@ -78,14 +78,14 @@ module internal Environment =
     env |> Native.Number.setupConstructor
     env |> Native.Number.setupPrototype
         
-    env |> Native.Array.setupConstructor
-    env |> Native.Array.setupPrototype
+    env |> Native.Array.setup
+    env |> Native.Array.Prototype.setup
 
     env |> Native.Date.setup
     env |> Native.Date.Prototype.setup
 
-    env |> Native.RegExp.setupConstructor
-    env |> Native.RegExp.setupPrototype
+    env |> Native.RegExp.setup
+    env |> Native.RegExp.Prototype.setup
         
     //Error Objects
     env |> Native.Error.setupConstructor

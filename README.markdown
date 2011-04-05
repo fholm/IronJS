@@ -1,4 +1,4 @@
-# About
+![IronJS Logo](http://ironjs.files.wordpress.com/2011/03/logo-big.png)
 
 IronJS is a ECMAScript 3.0 implementation built on top of the [Dynamic Language Runtime](http://dlr.codeplex.com/) from [Microsoft](http://www.microsoft.com/) which allows you to embed a javascript runtime into your .NET applications. The current state of the code is at best alpha quality. Use at your own risk.
 

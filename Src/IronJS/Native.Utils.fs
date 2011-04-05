@@ -5,46 +5,16 @@ open System.Reflection
 open IronJS
 open IronJS.Support.CustomOperators
 
+///
 module Utils = 
-
-  (*
-  // This is a hack to get around the fact that you
-  // can't (easily) reflect over F# modules
-  *)
-  type private HostFunctionHack() =
-    static member Get<'a when 'a :> Delegate>() = 
-      Compiler.HostFunction.compile<'a>
-
-  let private createHostFunctionDynamic (env:Environment) (delegate':Delegate) =
-    let delegateType = delegate'.GetType()
-    let genericHostFunc = typeof<HostFunction<_>>.GetGenericTypeDefinition()
-    let concreteHostFunc = genericHostFunc.MakeGenericType([|delegateType|])
-    let constructor' = concreteHostFunc.GetConstructors().[0]
-    let argsLengthProperty = concreteHostFunc.GetProperty("ArgsLength")
-
-    let bindingAttrs = BindingFlags.Static ||| BindingFlags.NonPublic
-    let genericGetCompiler = typeof<HostFunctionHack>.GetMethod("Get", bindingAttrs)
-    let concreteGetCompiler = genericGetCompiler.MakeGenericMethod([|delegateType|])
-    let compiler = concreteGetCompiler.Invoke(null, [||]) :?> FunctionCompiler
-    let metaData = env.CreateHostConstructorMetaData(compiler)
-
-    let delegate' = delegate' :> obj
-    let hostFunction = constructor'.Invoke([|env :> obj; delegate'; metaData|]) :?> FunctionObject
-    let argsLength = double (argsLengthProperty.GetValue(hostFunction, null) :?> int)
-
-    hostFunction.Put("length", double argsLength, DescriptorAttrs.Immutable)
-    hostFunction
     
-  let createHostFunction (env:Environment) (delegate':'a) =
-    if FSharp.Utils.isSameTypeT<'a, Delegate> then
-      createHostFunctionDynamic env delegate'
-
-    else
-      let compiler = Compiler.HostFunction.compile<'a>
-      let metaData = env.CreateHostConstructorMetaData(compiler)
-      let h = HostFunction<'a>(env, delegate', metaData)
-      h.Put("length", double 0.0, DescriptorAttrs.Immutable)
-      h :> FunctionObject
+  /// Deprecated
+  let internal createHostFunction (env:Environment) (delegate':'a) =
+    let compiler = Compiler.HostFunction.compile<'a>
+    let metaData = env.CreateHostConstructorMetaData(compiler)
+    let h = HostFunction<'a>(env, delegate', metaData)
+    h.Put("length", double 0.0, DescriptorAttrs.Immutable)
+    h :> FunctionObject
 
   ///
   let private createHostFunctionObject (env:Env) (length:int option) (func:'a when 'a :> Delegate) metaData =

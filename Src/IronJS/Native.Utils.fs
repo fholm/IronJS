@@ -71,22 +71,6 @@ module Utils =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
     createHostFunctionObject env length ctor metaData
-        
-  (*
-  //  This function is horribly slow, but it's the only way
-  //  that IronJS currently supports invoking methods with 
-  //  an unknown (at compile time) amount of arguments
-  *)
-  let invoke (f:FO) (t:CO) (args:Args) =
-    let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
-    let delegate' = argTypes |> DelegateUtils.getCallSiteDelegate
-    let genericMethod = typeof<FO>.GetMethod("CompileAs")
-    let compileAs = genericMethod.MakeGenericMethod([|delegate'|])
-    let compiledFunc = compileAs.Invoke(f, [||]) :?> Delegate
-    let args = [|for arg in args -> arg :> obj|]
-    let args = Dlr.ArrayUtils.Insert(t :> obj, args)
-    let args = Dlr.ArrayUtils.Insert(f :> obj, args)
-    compiledFunc.DynamicInvoke(args) |> BoxingUtils.JsBox
 
   ///
   let internal trapSyntaxError (env:Env) (f:unit -> 'a) =

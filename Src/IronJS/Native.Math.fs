@@ -3,29 +3,53 @@
 open System
 open IronJS
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 open IronJS.DescriptorAttrs
 
-module Math =
+module internal Math =
 
-  let private random (random:FunctionObject) (_:CommonObject) =
-    random.Env.Random.NextDouble()
+  let private random (func:FO) (_:CO) =
+    func.Env.Random.NextDouble()
 
   let private compNaN f a b =
     if Double.IsNaN(a) then a
     elif Double.IsNaN(b) then b
     else f a b
 
-  let private max (args:BoxedValue array) =
-    let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
+  let private max (args:Args) =
     let max = compNaN max
-    args |> Array.map toNumber |> Array.fold max NegInf
 
-  let private min (args:BoxedValue array) =
-    let toNumber (x:BoxedValue) = TypeConverter.ToNumber x
+    args 
+    $ Array.map TC.ToNumber 
+    $ Array.fold max NegInf
+
+  let private min (args:Args) =
     let min = compNaN min
-    args |> Array.map toNumber |> Array.fold min PosInf
 
-  let setup (env:Environment) =
+    args 
+    $ Array.map TC.ToNumber 
+    $ Array.fold min PosInf
+
+  let private atan2 a b =
+    if Double.IsPositiveInfinity(a) && Double.IsPositiveInfinity(b) then Math.PI / 4.0
+    elif Double.IsPositiveInfinity(a) && Double.IsNegativeInfinity(b) then 3.0 * Math.PI / 4.0
+    elif Double.IsNegativeInfinity(a) && Double.IsPositiveInfinity(b) then -Math.PI / 4.0
+    elif Double.IsNegativeInfinity(a) && Double.IsNegativeInfinity(b) then -3.0 * Math.PI / 4.0
+    else Math.Atan2(a, b)
+
+  let private pow a b =
+    if Double.IsNaN(b) then nan
+    elif b = 0.0 then 1.0
+    elif Double.IsNaN(a) && b <> 0.0 then nan
+    elif Math.Abs(a) = 1.0 && Double.IsPositiveInfinity(b) then nan
+    elif Math.Abs(a) = 1.0 && Double.IsNegativeInfinity(b) then nan
+    else Math.Pow(a, b)
+
+  let private round a =
+    if a < 0.0 && a > -0.5 then Math.Round(a)
+    else Math.Floor(a + 0.5)
+
+  let setup (env:Env) =
     let math = env.NewMath()
     
     math.Prototype <- env.Prototypes.Object
@@ -40,90 +64,56 @@ module Math =
 
     env.Globals.Put("Math", math, DontEnum)
 
-    let abs = new Func<double, double>(Math.Abs)
-    let abs = Utils.createHostFunction env abs
+    let abs = Func<double, double>(Math.Abs) $ Utils.createFunction env
     math.Put("abs", abs, DontEnum)
 
-    let acos = new Func<double, double>(Math.Acos)
-    let acos = Utils.createHostFunction env acos
+    let acos = Func<double, double>(Math.Acos) $ Utils.createFunction env
     math.Put("acos", acos, DontEnum)
 
-    let asin = new Func<double, double>(Math.Asin)
-    let asin = Utils.createHostFunction env asin
+    let asin = Func<double, double>(Math.Asin) $ Utils.createFunction env
     math.Put("asin", asin, DontEnum)
 
-    let atan = new Func<double, double>(Math.Atan)
-    let atan = Utils.createHostFunction env atan
+    let atan = Func<double, double>(Math.Atan) $ Utils.createFunction env
     math.Put("atan", atan, DontEnum)
 
-    let inline atan2 a b =
-      if Double.IsPositiveInfinity(a) && Double.IsPositiveInfinity(b) then Math.PI / 4.0
-      elif Double.IsPositiveInfinity(a) && Double.IsNegativeInfinity(b) then 3.0 * Math.PI / 4.0
-      elif Double.IsNegativeInfinity(a) && Double.IsPositiveInfinity(b) then -Math.PI / 4.0
-      elif Double.IsNegativeInfinity(a) && Double.IsNegativeInfinity(b) then -3.0 * Math.PI / 4.0
-      else Math.Atan2(a, b)
-    let atan2 = new Func<double, double, double>(atan2)
-    let atan2 = Utils.createHostFunction env atan2
+    let atan2 = Func<double, double, double>(atan2) $ Utils.createFunction env
     math.Put("atan2", atan2, DontEnum)
 
-    let ceil = new Func<double, double>(Math.Ceiling)
-    let ceil = Utils.createHostFunction env ceil
+    let ceil = Func<double, double>(Math.Ceiling) $ Utils.createFunction env
     math.Put("ceil", ceil, DontEnum)
 
-    let cos = new Func<double, double>(Math.Cos)
-    let cos = Utils.createHostFunction env cos
+    let cos = Func<double, double>(Math.Cos) $ Utils.createFunction env
     math.Put("cos", cos, DontEnum)
 
-    let exp = new Func<double, double>(Math.Exp)
-    let exp = Utils.createHostFunction env exp
+    let exp = Func<double, double>(Math.Exp) $ Utils.createFunction env
     math.Put("exp", exp, DontEnum)
 
-    let floor = new Func<double, double>(Math.Floor)
-    let floor = Utils.createHostFunction env floor
+    let floor = Func<double, double>(Math.Floor) $ Utils.createFunction env
     math.Put("floor", floor, DontEnum)
 
-    let log = new Func<double, double>(Math.Log)
-    let log = Utils.createHostFunction env log
+    let log = Func<double, double>(Math.Log) $ Utils.createFunction env
     math.Put("log", log, DontEnum)
 
-    let max = new Func<BoxedValue array, double>(max)
-    let max = Utils.createHostFunction env max
+    let max = Func<Args, double>(max) $ Utils.createFunction env
     math.Put("max", max, DontEnum)
-    
-    let min = new Func<BoxedValue array, double>(min)
-    let min = Utils.createHostFunction env min
+
+    let min = Func<Args, double>(min) $ Utils.createFunction env
     math.Put("min", min, DontEnum)
 
-    let inline pow a b =
-      if Double.IsNaN(b) then nan
-      elif b = 0.0 then 1.0
-      elif Double.IsNaN(a) && b <> 0.0 then nan
-      elif Math.Abs(a) = 1.0 && Double.IsPositiveInfinity(b) then nan
-      elif Math.Abs(a) = 1.0 && Double.IsNegativeInfinity(b) then nan
-      else Math.Pow(a, b)
-    let pow = new Func<double, double, double>(pow)
-    let pow = Utils.createHostFunction env pow
+    let pow = Func<double, double, double>(pow) $ Utils.createFunction env
     math.Put("pow", pow, DontEnum)
 
-    let random = new Func<FunctionObject, CommonObject, double>(random)
-    let random = Utils.createHostFunction env random
+    let random = Func<FO, CO, double>(random) $ Utils.createFunction env
     math.Put("random", random, DontEnum)
 
-    let inline round a =
-      if a < 0.0 && a > -0.5 then Math.Round(a)
-      else Math.Floor(a + 0.5)
-    let round = new Func<double, double>(round)
-    let round = Utils.createHostFunction env round
+    let round = Func<double, double>(round) $ Utils.createFunction env
     math.Put("round", round, DontEnum)
     
-    let sin = new Func<double, double>(Math.Sin)
-    let sin = Utils.createHostFunction env sin
+    let sin = Func<double, double>(Math.Sin) $ Utils.createFunction env
     math.Put("sin", sin, DontEnum)
     
-    let sqrt = new Func<double, double>(Math.Sqrt)
-    let sqrt = Utils.createHostFunction env sqrt
+    let sqrt = Func<double, double>(Math.Sqrt) $ Utils.createFunction env
     math.Put("sqrt", sqrt, DontEnum)
     
-    let tan = new Func<double, double>(Math.Tan)
-    let tan = Utils.createHostFunction env tan
+    let tan = Func<double, double>(Math.Tan) $ Utils.createFunction env
     math.Put("tan", tan, DontEnum)

@@ -125,7 +125,7 @@ module Date =
       ticks + offset |> BV.Box
 
   let setup (env:Environment) =
-    let create a = Utils.createHostFunction env a
+    let create (a:'a) = Utils.createHostFunction env a
     let ctor = new JsFunc<Args>(constructor') |> create
 
     ctor?prototype <- env.Prototypes.Date
@@ -240,7 +240,7 @@ module Date =
 
     let setup (env:Environment) =
       let proto = env.Prototypes.Date
-      let create func = func |> Utils.createHostFunction env
+      let create (func:'a) = func |> Utils.createHostFunction env
 
       proto?constructor <- env.Constructors.Date
       proto?valueOf <- (JsFunc(valueOf) |> create)

@@ -1737,7 +1737,7 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
   
   val mutable Delegate : 'a
 
-  new (env:Env, delegateFunction, metaData) as x = 
+  new (env:Env, delegateFunction, metaData) = 
     {
       inherit FO(env, metaData, env.Maps.Function)
       Delegate = delegateFunction

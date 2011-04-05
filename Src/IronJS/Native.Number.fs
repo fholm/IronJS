@@ -108,7 +108,7 @@ module Number =
     
   //----------------------------------------------------------------------------
   // This implementation is a C# to F# adaption of the Jint sources
-  let internal toPrecision (f:FunctionObject) (this:CommonObject) (precision:BoxedValue) =
+  let internal toPrecision (f:FO) (this:CO) (precision:BV) =
     this.CheckType<NO>()
     
     let number = (this |> ValueObject.GetValue).Number

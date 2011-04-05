@@ -108,7 +108,7 @@ module RegExp =
     env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
 
   let internal setupPrototype (env:Env) =
-    let create func = func |> Utils.createHostFunction env
+    let create (func:'a) = func |> Utils.createHostFunction env
     let proto = env.Prototypes.RegExp
 
     proto?constructor <- env.Constructors.RegExp

@@ -12,7 +12,6 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = Ijs.createContext()
 let src = @"
   function Robin(){this.name='robin'};
-  Robin.prototype=__proto;
   var __my__robin = new Robin;
   '';
 "

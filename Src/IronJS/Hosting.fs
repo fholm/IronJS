@@ -38,12 +38,12 @@ module internal Environment =
       RegExp = baseMap.SubClass ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
     }
 
-    let objectPrototype = Native.Object.createPrototype env
+    let objectPrototype = Native.Object.Prototype.create env
     let errorPrototype = Native.Error.createPrototype env objectPrototype
 
     env.Prototypes <- {
       Object = objectPrototype
-      Function = Native.Function.createPrototype env objectPrototype
+      Function = Native.Function.Prototype.create env objectPrototype
       Array = Native.Array.createPrototype env objectPrototype
       String = Native.String.createPrototype env objectPrototype
       Number = Native.Number.createPrototype env objectPrototype
@@ -63,11 +63,11 @@ module internal Environment =
     env |> Native.Global.setup
     env |> Native.Math.setup
         
-    env |> Native.Object.setupConstructor
-    env |> Native.Object.setupPrototype
+    env |> Native.Object.setup
+    env |> Native.Object.Prototype.setup
         
-    env |> Native.Function.setupConstructor
-    env |> Native.Function.setupPrototype
+    env |> Native.Function.setup
+    env |> Native.Function.Prototype.setup
         
     env |> Native.String.setupConstructor
     env |> Native.String.setupPrototype

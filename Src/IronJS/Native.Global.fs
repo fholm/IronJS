@@ -220,29 +220,29 @@ module Global =
     env.Globals.Put("Infinity", PosInf, DontEnumOrDelete) //15.1.1.2
     env.Globals.Put("undefined", Undefined.Instance, DontEnumOrDelete) //15.1.1.3
 
-    let eval = Func<Compiler.EvalTarget, BV>(eval) $ Utils.createFunction env
+    let eval = Func<Compiler.EvalTarget, BV>(eval) $ Utils.createFunction env (Some 1)
     env.Globals.Put("eval", eval, DontEnum)
 
-    let parseFloat = Func<BV, BV>(parseFloat) $ Utils.createFunction env
+    let parseFloat = Func<BV, BV>(parseFloat) $ Utils.createFunction env (Some 1)
     env.Globals.Put("parseFloat", parseFloat, DontEnum)
     
-    let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env
+    let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env (Some 1)
     env.Globals.Put("parseInt", parseInt, DontEnum)
     
-    let isNaN = Func<double, BV>(isNaN) $ Utils.createFunction env
+    let isNaN = Func<double, BV>(isNaN) $ Utils.createFunction env (Some 1)
     env.Globals.Put("isNaN", isNaN, DontEnum)
     
-    let isFinite = Func<double, bool>(isFinite) $ Utils.createFunction env
+    let isFinite = Func<double, bool>(isFinite) $ Utils.createFunction env (Some 1)
     env.Globals.Put("isFinite", isFinite, DontEnum)
 
-    let decodeURI = Function<BV>(decodeURI) $ Utils.createFunction env
+    let decodeURI = Function<BV>(decodeURI) $ Utils.createFunction env (Some 1)
     env.Globals.Put("decodeURI", decodeURI, DontEnum)
     
-    let decodeURIComponent = Function<BV>(decodeURIComponent) $ Utils.createFunction env
+    let decodeURIComponent = Function<BV>(decodeURIComponent) $ Utils.createFunction env (Some 1)
     env.Globals.Put("decodeURIComponent", decodeURIComponent, DontEnum)
     
-    let encodeURI = Function<BV>(encodeURI) $ Utils.createFunction env
+    let encodeURI = Function<BV>(encodeURI) $ Utils.createFunction env (Some 1)
     env.Globals.Put("encodeURI", encodeURI, DontEnum)
 
-    let encodeURIComponent = Function<BV>(encodeURIComponent) $ Utils.createFunction env
+    let encodeURIComponent = Function<BV>(encodeURIComponent) $ Utils.createFunction env (Some 1)
     env.Globals.Put("encodeURIComponent", encodeURIComponent, DontEnum)

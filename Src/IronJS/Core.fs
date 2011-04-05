@@ -1547,6 +1547,12 @@ and Function<'a, 'b> = Func<FO, CO, 'a, 'b, BV>
 and Function<'a, 'b, 'c> = Func<FO, CO, 'a, 'b, 'c, BV>
 and Function<'a, 'b, 'c, 'd> = Func<FO, CO, 'a, 'b, 'c, 'd, BV>
 
+and FunctionReturn<'r> = Func<FO, CO, 'r>
+and FunctionReturn<'a, 'r> = Func<FO, CO, 'a, 'r>
+and FunctionReturn<'a, 'b, 'r> = Func<FO, CO, 'a, 'b, 'r>
+and FunctionReturn<'a, 'b, 'c, 'r> = Func<FO, CO, 'a, 'b, 'c, 'r>
+and FunctionReturn<'a, 'b, 'c, 'd, 'r> = Func<FO, CO, 'a, 'b, 'c, 'd, 'r>
+
 /// Alias for FunctionObject
 and FO = FunctionObject
 

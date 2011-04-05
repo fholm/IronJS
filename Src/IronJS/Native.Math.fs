@@ -64,56 +64,56 @@ module internal Math =
 
     env.Globals.Put("Math", math, DontEnum)
 
-    let abs = Func<double, double>(Math.Abs) $ Utils.createFunction env
+    let abs = Func<double, double>(Math.Abs) $ Utils.createFunction env (Some 1)
     math.Put("abs", abs, DontEnum)
 
-    let acos = Func<double, double>(Math.Acos) $ Utils.createFunction env
+    let acos = Func<double, double>(Math.Acos) $ Utils.createFunction env (Some 1)
     math.Put("acos", acos, DontEnum)
 
-    let asin = Func<double, double>(Math.Asin) $ Utils.createFunction env
+    let asin = Func<double, double>(Math.Asin) $ Utils.createFunction env (Some 1)
     math.Put("asin", asin, DontEnum)
 
-    let atan = Func<double, double>(Math.Atan) $ Utils.createFunction env
+    let atan = Func<double, double>(Math.Atan) $ Utils.createFunction env (Some 1)
     math.Put("atan", atan, DontEnum)
 
-    let atan2 = Func<double, double, double>(atan2) $ Utils.createFunction env
+    let atan2 = Func<double, double, double>(atan2) $ Utils.createFunction env (Some 2)
     math.Put("atan2", atan2, DontEnum)
 
-    let ceil = Func<double, double>(Math.Ceiling) $ Utils.createFunction env
+    let ceil = Func<double, double>(Math.Ceiling) $ Utils.createFunction env (Some 1)
     math.Put("ceil", ceil, DontEnum)
 
-    let cos = Func<double, double>(Math.Cos) $ Utils.createFunction env
+    let cos = Func<double, double>(Math.Cos) $ Utils.createFunction env (Some 1)
     math.Put("cos", cos, DontEnum)
 
-    let exp = Func<double, double>(Math.Exp) $ Utils.createFunction env
+    let exp = Func<double, double>(Math.Exp) $ Utils.createFunction env (Some 1)
     math.Put("exp", exp, DontEnum)
 
-    let floor = Func<double, double>(Math.Floor) $ Utils.createFunction env
+    let floor = Func<double, double>(Math.Floor) $ Utils.createFunction env (Some 1)
     math.Put("floor", floor, DontEnum)
 
-    let log = Func<double, double>(Math.Log) $ Utils.createFunction env
+    let log = Func<double, double>(Math.Log) $ Utils.createFunction env (Some 1)
     math.Put("log", log, DontEnum)
 
-    let max = Func<Args, double>(max) $ Utils.createFunction env
+    let max = Func<Args, double>(max) $ Utils.createFunction env (Some 2)
     math.Put("max", max, DontEnum)
 
-    let min = Func<Args, double>(min) $ Utils.createFunction env
+    let min = Func<Args, double>(min) $ Utils.createFunction env (Some 2)
     math.Put("min", min, DontEnum)
 
-    let pow = Func<double, double, double>(pow) $ Utils.createFunction env
+    let pow = Func<double, double, double>(pow) $ Utils.createFunction env (Some 2)
     math.Put("pow", pow, DontEnum)
 
-    let random = Func<FO, CO, double>(random) $ Utils.createFunction env
+    let random = Func<FO, CO, double>(random) $ Utils.createFunction env (Some 1)
     math.Put("random", random, DontEnum)
 
-    let round = Func<double, double>(round) $ Utils.createFunction env
+    let round = Func<double, double>(round) $ Utils.createFunction env (Some 1)
     math.Put("round", round, DontEnum)
     
-    let sin = Func<double, double>(Math.Sin) $ Utils.createFunction env
+    let sin = Func<double, double>(Math.Sin) $ Utils.createFunction env (Some 1)
     math.Put("sin", sin, DontEnum)
     
-    let sqrt = Func<double, double>(Math.Sqrt) $ Utils.createFunction env
+    let sqrt = Func<double, double>(Math.Sqrt) $ Utils.createFunction env (Some 1)
     math.Put("sqrt", sqrt, DontEnum)
     
-    let tan = Func<double, double>(Math.Tan) $ Utils.createFunction env
+    let tan = Func<double, double>(Math.Tan) $ Utils.createFunction env (Some 1)
     math.Put("tan", tan, DontEnum)

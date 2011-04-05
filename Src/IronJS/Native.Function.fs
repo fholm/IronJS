@@ -2,9 +2,13 @@
 
 open System
 open IronJS
+open IronJS.DescriptorAttrs
+open IronJS.Support.CustomOperators
 
-module Function =
+///
+module internal Function =
 
+  ///
   let private constructor' (f:FO) (_:CO) (args:Args) : FO =
       Utils.trapSyntaxError f.Env (fun () ->
         let args, body = 
@@ -33,73 +37,8 @@ module Function =
         (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject
       )
 
-  let private prototype (f:FO) _ =
-    Undefined.Boxed
-
-  let toString (toString:FO) (o:CO) =
-    let f = o.CastTo<FO>()
-    match f.MetaData.Source with
-    | None -> "function() { [native code] }"
-    | Some source -> source
-
-  let private getThisObject (env:Env) (this:BV) =
-    match this.Tag with
-    | TypeTags.Clr -> env.Globals
-    | TypeTags.Undefined -> env.Globals
-    | _ -> TC.ToObject(env, this)
-      
-  let apply (apply:FO) (func:CO) (this:BV) (args:CO) : BV =
-    let f = func.CastTo<FO>()
-
-    let args = 
-      if args <> null then
-        
-        if args :? AO then
-        
-          let args = args.CastTo<AO>()
-          let getIndex i = args.Get(uint32 i)
-
-          Seq.init (int args.Length) getIndex
-          |> Seq.cast<obj>
-          |> Array.ofSeq
-          
-        elif args :? ArgumentsObject then
-          
-          let args = args.CastTo<ArgumentsObject>()
-          let getIndex i = args.Get(uint32 i)
-          let length = args.GetT<double>("length") |> int32
-
-          Seq.init length getIndex
-          |> Seq.cast<obj>
-          |> Array.ofSeq
-
-        else
-          apply.Env.RaiseTypeError()
-
-
-      else
-        Array.zeroCreate 0
-
-    let this = this |> getThisObject apply.Env
-    let type' = DelegateCache.getDelegate [for a in args -> a.GetType()]
-    let args = Array.append [|func :> obj; this :> obj|] args
-    let compiled = f.MetaData.GetDelegate(f, type')
-
-    Utils.trapSyntaxError f.Env (fun () -> 
-      compiled.DynamicInvoke(args) |> BoxingUtils.JsBox)
- 
-  let call (_:FO) (func:CO) (this:BV) (args:ClrArgs) : BV =
-    let f = func.CastTo<FO>()
-    let argTypes = [for a in args -> a.GetType()]
-    let type' = DelegateCache.getDelegate argTypes
-    let this = this |> getThisObject f.Env
-    let args = Array.append [|f :> obj; this :> obj|] args
-
-    Utils.trapSyntaxError f.Env (fun () -> 
-      let f = f.MetaData.GetDelegate(f, type')
-      f.DynamicInvoke(args) |> BoxingUtils.JsBox)
-
-  let setupConstructor (env:Env) =
+  ///
+  let setup (env:Env) =
     let ctor = new Func<FO, CO, Args, FO>(constructor')
     let ctor = Utils.createHostFunction env ctor
       
@@ -108,26 +47,111 @@ module Function =
 
     env.Globals.Put("Function", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Function = ctor}
-    
-  let createPrototype (env:Env) ownPrototype =
-    let prototype = new Func<FO, CO, BV>(prototype)
-    let prototype = Utils.createHostFunction env prototype
-    prototype.Prototype <- ownPrototype
-    prototype
+
+  module Prototype = 
+
+    ///
+    let private prototype (f:FO) _ =
+      Undefined.Boxed
+
+    ///
+    let private toString (toString:FO) (o:CO) =
+      let f = o.CastTo<FO>()
+      match f.MetaData.Source with
+      | None -> "function() { [native code] }"
+      | Some source -> source
+
+    ///
+    let private getThisObject (env:Env) (this:BV) =
+      match this.Tag with
+      | TypeTags.Clr -> env.Globals
+      | TypeTags.Undefined -> env.Globals
+      | _ -> TC.ToObject(env, this)
       
-  let setupPrototype (env:Env) =
-    let attrs = DescriptorAttrs.DontEnum
+    ///
+    let private apply (_:FO) (func:CO) (this:BV) (args:CO) : BV =
+      let func = func.CastTo<FO>()
 
-    let call = new Func<FO, CO, BV, ClrArgs, BV>(call)
-    let call = Utils.createHostFunction env call
-    env.Prototypes.Function.Put("call", call, attrs)
+      let args = 
+        if args <> null then
+        
+          if args :? AO then
+        
+            let args = args.CastTo<AO>()
+            let getIndex i = args.Get(uint32 i)
 
-    let apply = new Func<FO, CO, BV, CO, BV>(apply)
-    let apply = Utils.createHostFunction env apply
-    env.Prototypes.Function.Put("apply", apply, attrs)
+            Seq.init (int args.Length) getIndex
+            |> Seq.cast<obj>
+            |> Array.ofSeq
+          
+          elif args :? ArgumentsObject then
+          
+            let args = args.CastTo<ArgumentsObject>()
+            let getIndex i = args.Get(uint32 i)
+            let length = args.GetT<double>("length") |> int32
+
+            Seq.init length getIndex
+            |> Seq.cast<obj>
+            |> Array.ofSeq
+
+          else
+            func.Env.RaiseTypeError()
+
+        else
+          Array.zeroCreate 0
+
+      let this = this |> getThisObject func.Env
+      let type' = DelegateCache.getDelegate [for a in args -> a.GetType()]
+      let args = Array.append [|func :> obj; this :> obj|] args
+      let compiled = func.MetaData.GetDelegate(func, type')
+
+      Utils.trapSyntaxError func.Env (fun () -> 
+        compiled.DynamicInvoke(args) |> BoxingUtils.JsBox)
+ 
+    ///
+    let private call (_:FO) (func:CO) (args:Args) : BV =
+      let func = func.CastTo<FO>()
+
+      let this = 
+        if args.Length > 0 
+          then args.[0] 
+          else func.Env.RaiseTypeError()
+          
+      let args = args $ Seq.skip 1 $ Seq.map TC.ToClrObject $ Seq.toArray
+      let argTypes = args $ Array.map TypeUtils.getType
+
+      let type' = argTypes $ DelegateUtils.getCallSiteDelegate
+      let this = this $ getThisObject func .Env
+
+      let args = Array.append [|func  :> obj; this :> obj|] args
+
+      Utils.trapSyntaxError func.Env (fun () -> 
+        let func = func.MetaData.GetDelegate(func, type')
+        func.DynamicInvoke(args) |> BoxingUtils.JsBox
+      )
     
-    let toString = new Func<FO, CO, string>(toString)
-    let toString = Utils.createHostFunction env toString
-    env.Prototypes.Function.Put("toString", toString, attrs)
+    ///
+    let create (env:Env) ownPrototype =
+      let prototype = 
+        Function(prototype) $ Utils.createFunction env (Some 0)
 
-    env.Prototypes.Function.Put("constructor", env.Constructors.Function, attrs)
+      prototype.Prototype <- ownPrototype
+      prototype
+      
+    ///
+    let setup (env:Env) =
+      
+      //
+      let call = VariadicFunction(call) $ Utils.createFunction env (Some 1)
+      env.Prototypes.Function.Put("call", call, DontEnum)
+
+      //
+      let apply = Function<BV, CO>(apply) $ Utils.createFunction env (Some 2)
+      env.Prototypes.Function.Put("apply", apply, DontEnum)
+    
+      //
+      let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
+      env.Prototypes.Function.Put("toString", toString, DontEnum)
+
+      //
+      env.Prototypes.Function.Put("constructor", env.Constructors.Function, DontEnum)

@@ -43,6 +43,10 @@ module TypeUtils =
 
     types
 
+  ///
+  let getType (o:obj) =
+    o.GetType()
+
 ///
 module DelegateUtils =
 

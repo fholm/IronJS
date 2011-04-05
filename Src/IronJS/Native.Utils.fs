@@ -47,7 +47,7 @@ module Utils =
       h :> FunctionObject
 
   ///
-  let private createHostFunctionObject (env:Env) (func:'a when 'a :> Delegate) (length:int option) metaData =
+  let private createHostFunctionObject (env:Env) (length:int option) (func:'a when 'a :> Delegate) metaData =
     let length =
       match length with
       | Some length -> length
@@ -61,16 +61,16 @@ module Utils =
     hfo :> FunctionObject
 
   ///
-  let createFunction (env:Env) (func:'a when 'a :> Delegate) (length:int option) =
+  let createFunction (env:Env) (length:int option) (func:'a when 'a :> Delegate) =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostFunctionMetaData(compiler)
-    createHostFunctionObject env func length metaData
+    createHostFunctionObject env length func metaData
 
   ///
-  let createConstructor (env:Env) (ctor:'a when 'a :> Delegate) (length:int option) =
+  let createConstructor (env:Env) (length:int option) (ctor:'a when 'a :> Delegate) =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
-    createHostFunctionObject env ctor length metaData
+    createHostFunctionObject env length ctor metaData
         
   (*
   //  This function is horribly slow, but it's the only way

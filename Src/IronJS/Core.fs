@@ -1242,41 +1242,45 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   ///
   override x.Put(index:uint32, value:BV) =
-    if x.IsDense then
-      let ii = int index
-      let denseLength = uint32 dense.Length
-
-      // We're within the dense array size
-      if index < denseLength then
-        dense.[ii].Value <- value
-        dense.[ii].HasValue <- true
-
-        // If we're above the current length we need to update it 
-        if index >= length then 
-          x.SetLength(index + 1u)
-
-      // We're above the currently allocated dense size
-      // but not far enough above to switch to sparse
-      // so we expand the denese array
-      elif index < (denseLength + 16u) then
-        resizeDense (denseLength * 2u + 16u)
-        dense.[ii].Value <- value
-        dense.[ii].HasValue <- true
-        x.SetLength(index + 1u)
-
-      // Switch to sparse array
-      else
-        sparse <- SparseArray.OfDense(dense)
-        dense <- null
-        sparse.Put(index, value)
-        x.SetLength(index + 1u)
-
-    // Sparse array
+    if index = System.UInt32.MaxValue then
+      base.Put(string index, value)
+        
     else
-      sparse.Put(index, value)
+      if x.IsDense then
+        let ii = int index
+        let denseLength = uint32 dense.Length
 
-      if index >= length then 
+        // We're within the dense array size
+        if index < denseLength then
+          dense.[ii].Value <- value
+          dense.[ii].HasValue <- true
+
+          // If we're above the current length we need to update it 
+          if index >= length then 
+            x.SetLength(index + 1u)
+
+        // We're above the currently allocated dense size
+        // but not far enough above to switch to sparse
+        // so we expand the denese array
+        elif index < (denseLength + 16u) then
+          resizeDense (denseLength * 2u + 16u)
+          dense.[ii].Value <- value
+          dense.[ii].HasValue <- true
           x.SetLength(index + 1u)
+
+        // Switch to sparse array
+        else
+          sparse <- SparseArray.OfDense(dense)
+          dense <- null
+          sparse.Put(index, value)
+          x.SetLength(index + 1u)
+
+      // Sparse array
+      else
+        sparse.Put(index, value)
+
+        if index >= length then 
+            x.SetLength(index + 1u)
 
   override x.Put(index:uint32, value:double) = 
     x.Put(index, BV.Box(value))
@@ -1300,31 +1304,41 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       else base.Put(name, value, tag)
 
   override x.Get(index:uint32) =
-    if x.HasIndex(index) then
-      if x.IsDense 
-        then dense.[int index].Value
-        else sparse.Get(index)
+    if index = UInt32.MaxValue then
+      base.Get(string index)
 
     else
-      x.Prototype.Get(index)
-
-  override x.Has(index:uint32) =
-    x.HasIndex(index) || x.Prototype.Has(index)
-
-  override x.Delete(index:uint32) =
-    if x.HasIndex(index) then
-      
-      if x.IsDense then
-        let ii = int index
-        dense.[ii].Value <- BV()
-        dense.[ii].HasValue <- false
-        true
+      if x.HasIndex(index) then
+        if x.IsDense 
+          then dense.[int index].Value
+          else sparse.Get(index)
 
       else
-        sparse.Remove(index)
+        x.Prototype.Get(index)
+
+  override x.Has(index:uint32) =
+    if index = UInt32.MaxValue
+      then base.Has(string index)
+      else x.HasIndex(index) || x.Prototype.Has(index)
+
+  override x.Delete(index:uint32) =
+    if index = UInt32.MaxValue then
+      base.Delete(string index)
 
     else
-      false
+      if x.HasIndex(index) then
+      
+        if x.IsDense then
+          let ii = int index
+          dense.[ii].Value <- BV()
+          dense.[ii].HasValue <- false
+          true
+
+        else
+          sparse.Remove(index)
+
+      else
+        false
 
 and ArgLink = ParameterStorageType * int
 

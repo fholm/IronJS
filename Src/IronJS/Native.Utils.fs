@@ -5,46 +5,16 @@ open System.Reflection
 open IronJS
 open IronJS.Support.CustomOperators
 
+///
 module Utils = 
-
-  (*
-  // This is a hack to get around the fact that you
-  // can't (easily) reflect over F# modules
-  *)
-  type private HostFunctionHack() =
-    static member Get<'a when 'a :> Delegate>() = 
-      Compiler.HostFunction.compile<'a>
-
-  let private createHostFunctionDynamic (env:Environment) (delegate':Delegate) =
-    let delegateType = delegate'.GetType()
-    let genericHostFunc = typeof<HostFunction<_>>.GetGenericTypeDefinition()
-    let concreteHostFunc = genericHostFunc.MakeGenericType([|delegateType|])
-    let constructor' = concreteHostFunc.GetConstructors().[0]
-    let argsLengthProperty = concreteHostFunc.GetProperty("ArgsLength")
-
-    let bindingAttrs = BindingFlags.Static ||| BindingFlags.NonPublic
-    let genericGetCompiler = typeof<HostFunctionHack>.GetMethod("Get", bindingAttrs)
-    let concreteGetCompiler = genericGetCompiler.MakeGenericMethod([|delegateType|])
-    let compiler = concreteGetCompiler.Invoke(null, [||]) :?> FunctionCompiler
-    let metaData = env.CreateHostConstructorMetaData(compiler)
-
-    let delegate' = delegate' :> obj
-    let hostFunction = constructor'.Invoke([|env :> obj; delegate'; metaData|]) :?> FunctionObject
-    let argsLength = double (argsLengthProperty.GetValue(hostFunction, null) :?> int)
-
-    hostFunction.Put("length", double argsLength, DescriptorAttrs.Immutable)
-    hostFunction
     
-  let createHostFunction (env:Environment) (delegate':'a) =
-    if FSharp.Utils.isSameTypeT<'a, Delegate> then
-      createHostFunctionDynamic env delegate'
-
-    else
-      let compiler = Compiler.HostFunction.compile<'a>
-      let metaData = env.CreateHostConstructorMetaData(compiler)
-      let h = HostFunction<'a>(env, delegate', metaData)
-      h.Put("length", double 0.0, DescriptorAttrs.Immutable)
-      h :> FunctionObject
+  /// Deprecated
+  let internal createHostFunction (env:Environment) (delegate':'a) =
+    let compiler = Compiler.HostFunction.compile<'a>
+    let metaData = env.CreateHostConstructorMetaData(compiler)
+    let h = HostFunction<'a>(env, delegate', metaData)
+    h.Put("length", double 0.0, DescriptorAttrs.Immutable)
+    h :> FunctionObject
 
   ///
   let private createHostFunctionObject (env:Env) (length:int option) (func:'a when 'a :> Delegate) metaData =
@@ -71,22 +41,36 @@ module Utils =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
     createHostFunctionObject env length ctor metaData
-        
-  (*
-  //  This function is horribly slow, but it's the only way
-  //  that IronJS currently supports invoking methods with 
-  //  an unknown (at compile time) amount of arguments
-  *)
-  let invoke (f:FO) (t:CO) (args:Args) =
-    let argTypes = Array.init args.Length (fun _ -> typeof<BV>)
-    let delegate' = argTypes |> DelegateUtils.getCallSiteDelegate
-    let genericMethod = typeof<FO>.GetMethod("CompileAs")
-    let compileAs = genericMethod.MakeGenericMethod([|delegate'|])
-    let compiledFunc = compileAs.Invoke(f, [||]) :?> Delegate
-    let args = [|for arg in args -> arg :> obj|]
-    let args = Dlr.ArrayUtils.Insert(t :> obj, args)
-    let args = Dlr.ArrayUtils.Insert(f :> obj, args)
-    compiledFunc.DynamicInvoke(args) |> BoxingUtils.JsBox
+
+  ///
+  let createFunc0 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'r>(func)
+    $ createFunction env length
+
+  ///
+  let createFunc1 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'r>(func)
+    $ createFunction env length
+
+  ///
+  let createFunc2 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createFunc3 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'c, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createFunc4 (env:Env) (length:int option) func =
+    new Func<FO, CO, 'a, 'b, 'c, 'd, 'r>(func) 
+    $ createFunction env length
+
+  ///
+  let createVariadicFunc (env:Env) (length:int option) func =
+    new Func<FO, CO, Args, 'r>(func) 
+    $ createFunction env length
 
   ///
   let internal trapSyntaxError (env:Env) (f:unit -> 'a) =

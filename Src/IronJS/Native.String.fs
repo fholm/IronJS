@@ -217,7 +217,8 @@ module internal String =
 
             let args = params'.ToArray()
             let this = this.Env.Globals
-            Utils.invoke replace.Func this args |> TC.ToString
+
+            replace.Func.Call(this, args) |> TC.ToString
         
           //Run regex on our input, using matchEval for replacement
           search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)

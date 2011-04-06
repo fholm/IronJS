@@ -51,9 +51,9 @@ namespace Benchmarks
             Action<string, string> notifyResult = (name, result) => { };
             Action<string, string> notifyError = (name, error) => appendError(name + ": " + error);
             Action<string> notifyScore = s => score = s;
-            ctx.SetGlobal("NotifyResult", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyResult));
-            ctx.SetGlobal("NotifyError", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyError));
-            ctx.SetGlobal("NotifyScore", IronJS.Native.Utils.createHostFunction(ctx.Environment, notifyScore));
+            ctx.SetGlobal("NotifyResult", IronJS.Native.Utils.CreateFunction(ctx.Environment, 2, notifyResult));
+            ctx.SetGlobal("NotifyError", IronJS.Native.Utils.CreateFunction(ctx.Environment, 2, notifyError));
+            ctx.SetGlobal("NotifyScore", IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, notifyScore));
 
             try
             {

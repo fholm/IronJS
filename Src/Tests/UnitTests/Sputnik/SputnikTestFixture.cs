@@ -29,7 +29,7 @@
             var ctx = new IronJS.Hosting.CSharp.Context();
 
             Action<string> errorAction = error => Assert.Fail(error);
-            var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, errorAction);
+            var errorFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, errorAction);
 
             ctx.SetGlobal("ERROR", errorFunc);
             ctx.SetGlobal("$ERROR", errorFunc);

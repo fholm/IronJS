@@ -62,7 +62,7 @@ module Main =
 
     // Create the javascript function wrapper
     let exitFunc = 
-      new Action(exit) |> Native.Utils.createHostFunction (ctx |> env)
+      new Action(exit) |> Native.Utils.createFunction (ctx |> env) (Some(1))
 
 
     // Expose the exit function to user code

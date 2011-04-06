@@ -1270,8 +1270,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
         // We're above the currently allocated dense size
         // but not far enough above to switch to sparse
         // so we expand the denese array
-        elif index < (denseLength + 16u) then
-          resizeDense (denseLength * 2u + 16u)
+        elif index < (denseLength + 10u) then
+          resizeDense (denseLength * 2u + 10u)
           dense.[ii].Value <- value
           dense.[ii].HasValue <- true
           x.SetLength(index + 1u)

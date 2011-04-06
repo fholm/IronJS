@@ -84,32 +84,39 @@ module internal String =
       let toString (x:BoxedValue) = buffer.Append(TC.ToString(x))
       args |> Array.iter (toString >> ignore)
       buffer.ToString()
-    
+
     ///
     let private indexOf (_:FO) (this:CO) (subString:string) (index:double) =
       let value = this |> TC.ToString
       let index = index |> TC.ToInt32
       let index = Math.Min(Math.Max(index, 0), value.Length);
       value.IndexOf(subString, index, StringComparison.Ordinal) |> double
-    
-    ///
-    let private lastIndexOf (_:FO) (this:CO) (subString:string) (index:double) =
-      let value = this |> TC.ToString
 
-      let index = 
-        if Double.IsNaN index 
-          then Int32.MaxValue 
-          else TC.ToInteger index
-
-      let index = Math.Min(index, value.Length-1)
-      let index = Math.Min(index + subString.Length-1, value.Length-1)
-    
-      let index = 
-        if index < 0 
-          then  if value = "" && subString = "" then 0 else -1
-          else value.LastIndexOf(subString, index, StringComparison.Ordinal)
-
-      index |> double
+    /// These steps are outlined in the ECMA-262, Section 15.5.4.8
+    let private lastIndexOf (_:FO) (this:CO) (searchString:BV) (position:BV) =
+      let S = this |> TC.ToString
+      let searchStr = searchString |> TC.ToString
+      let numPos = position |> TC.ToNumber
+      let pos =
+        if numPos <> numPos
+          then Int32.MaxValue
+          else numPos |> TC.ToInteger
+      let len = S.Length
+      let start = Math.Min(Math.Max(pos, 0), len)
+      let searchLen = searchStr.Length
+      let mutable k = start
+      let mutable found = false
+      while k >= 0 && not found do
+        found <- true
+        let mutable j = 0
+        while found && j < searchLen do
+          if k+searchLen > len || (S.[k+j] <> searchStr.[j]) then
+            found <- false
+          else
+            j <- j + 1
+        if not found then
+          k <- k - 1
+      k |> double
 
     ///
     let private localeCompare (_:FO) (this:CO) (that:string) =
@@ -370,7 +377,7 @@ module internal String =
       let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 2)
       proto.Put("indexOf", indexOf, DontEnum)
 
-      let lastIndexOf = FunctionReturn<string, double, double>(lastIndexOf) $ Utils.createFunction env (Some 2)
+      let lastIndexOf = FunctionReturn<BV, BV, double>(lastIndexOf) $ Utils.createFunction env (Some 1)
       proto.Put("lastIndexOf", lastIndexOf, DontEnum)
 
       let localeCompare = FunctionReturn<string, double>(localeCompare) $ Utils.createFunction env (Some 1)

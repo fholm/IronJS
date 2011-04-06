@@ -1122,271 +1122,10 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   static member DateTimeToTicks(date:DateTime) : int64 =
     (date.ToUniversalTime().Ticks - offset) / tickScale
 
-(*
-//  
-*)
-and ArrayIndex = uint32
-and ArrayLength = uint32
-and SparseArray = MutableSorted<uint32, BoxedValue>
 and AO = ArrayObject
-and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) = 
-  inherit CO(env, env.Maps.Array, env.Prototypes.Array)
-
-  let mutable length = size
-
-  let mutable dense = 
-    if size <= 4096u
-      then Array.zeroCreate<Descriptor> (int size) 
-      else null
-
-  let mutable sparse = 
-    if size > 4096u
-      then SparseArray() 
-      else null
-
-  member x.Length 
-    with get() = length 
-    and set(v) = length <- v
-
-  member x.Dense 
-    with get() = dense 
-    and set(v) = dense <- v
-
-  member x.Sparse 
-    with get() = sparse 
-    and set(v) = sparse <- v
-
-  member x.IsDense = 
-    sparse |> FSharp.Utils.isNull
-
-  #if DEBUG
-  member x.ArrayValues =
-    let dict = new MutableDict<uint32, obj>()
-    if x.IsDense then
-      for i = 0 to (x.Dense.Length-1) do
-        if x.Dense.[i].HasValue then
-          dict.Add(uint32 i, x.Dense.[i].Value.ClrBoxed)
-
-    else
-      for kvp in x.Sparse do
-        dict.Add(kvp.Key, kvp.Value.ClrBoxed)
-
-    dict
-  #endif
-
-  member x.UpdateLength(number:double) =
-    if number < 0.0 then
-      x.Env.RaiseRangeError("invalid array length")
-
-    let length = number |> uint32
-
-    if double length <> number then
-      x.Env.RaiseRangeError()
-
-    x.UpdateLength(length)
-
-  member x.UpdateLength (length:uint32) =
-    if length > x.Length then
-      x.Length <- length
-
-    while length < x.Length do
-      let i = int (x.Length-1u)
-      x.Dense.[i].Value <- BoxedValue()
-      x.Dense.[i].Attributes <- 0us
-      x.Dense.[i].HasValue <- false
-      x.Length <- x.Length - 1u
-
-    base.Put("length", double length)
-
-  /// Called from .Put methods to maybe update
-  /// length if it turns out we set a property
-  /// that is at or bigger then current length
-  member x.MaybeUpdateLength (length:uint32) =
-    if length > x.Length then x.UpdateLength(length)
-
-  member x.ConvertToSparse() =
-    if x.IsDense then
-      x.Sparse <- new MutableSorted<uint32, BoxedValue>()
-
-      for i = 0 to int (x.Length-1u) do
-        if x.Dense.[i].HasValue then
-          x.Sparse.Add(uint32 i, x.Dense.[i].Value)
-
-      x.Dense <- null
-
-  member x.ExpandArrayStorage(i) =
-    if x.Sparse = null || x.Dense.Length <= i then
-      let size = if i >= 1073741823 then 2147483647 else ((i+1) * 2)
-      let newValues = Array.zeroCreate size
-
-      if x.Dense <> null && x.Dense.Length > 0 then
-        Array.Copy(x.Dense, newValues, x.Dense.Length)
-
-      x.Dense <- newValues
-
-  member x.Find(index:uint32) =
-    let denseExists = 
-      x.IsDense 
-      && index < uint32 x.Dense.Length 
-      && index < Array.DenseMaxSize 
-      && x.Dense.[int index].HasValue
-
-    let sparseExists = 
-      x.IsDense |> not 
-      && x.Sparse.ContainsKey index
-
-    if index < x.Length && (denseExists || sparseExists) 
-      then x
-      else null
-
-  override x.GetLength() =
-    x.Length
-
-  override x.Put(name:string, value:BV) =
-    if name = "length"
-      then x.UpdateLength(value |> TC.ToNumber)
-      else base.Put(name, value)
-
-  override x.Put (name:string, value:double) =
-    if name = "length" 
-      then x.UpdateLength(value |> TC.ToNumber)
-      else base.Put(name, value)
-
-  override x.Put (name:string, value:obj, tag:uint32) =
-    if name = "length" 
-      then x.UpdateLength(value |> TC.ToNumber)
-      else base.Put(name, value, tag)
-
-  override x.Put(index:uint32, value:BV) =
-    if index > Array.DenseMaxIndex then 
-      x.ConvertToSparse()
-
-    if x.IsDense then
-      if index > 255u && index/2u > x.Length then
-        x.ConvertToSparse()
-        x.Sparse.[index] <- value
-
-      else
-        let i = int index
-
-        if i >= x.Dense.Length then 
-          x.ExpandArrayStorage(i)
-
-        x.Dense.[i].Value <- value
-        x.Dense.[i].HasValue <- true
-
-    else
-      x.Sparse.[index] <- value
-
-    x.MaybeUpdateLength(index + 1u)
-
-  override x.Put(index:uint32, value:double) =
-    if index > Array.DenseMaxIndex then 
-      x.ConvertToSparse()
-
-    if x.IsDense then
-      if index > 255u && index/2u > x.Length then
-        x.ConvertToSparse()
-        x.Sparse.[index] <- BoxedValue.Box value
-
-      else
-        let i = int index
-        if i >= x.Dense.Length then x.ExpandArrayStorage(i)
-        x.Dense.[i].Value.Number <- value
-        x.Dense.[i].HasValue <- true
-
-    else
-      x.Sparse.[index] <- BoxedValue.Box value
-
-    x.MaybeUpdateLength(index + 1u)
-
-  override x.Put(index:uint32, value:Object, tag:uint32) =
-    if index > Array.DenseMaxIndex then 
-      x.ConvertToSparse()
-
-    if x.IsDense then
-      if index > 255u && index/2u > x.Length then
-        x.ConvertToSparse()
-        x.Sparse.[index] <- BoxedValue.Box(value, tag)
-
-      else
-        let i = int index
-        if i >= x.Dense.Length then x.ExpandArrayStorage(i)
-        x.Dense.[i].Value.Clr <- value
-        x.Dense.[i].Value.Tag <- tag
-        x.Dense.[i].HasValue <- true
-
-    else
-      x.Sparse.[index] <- BoxedValue.Box(value, tag)
-
-    x.MaybeUpdateLength(index + 1u)
-
-  override x.Get(index:uint32) =
-    let array = x.Find(index)
-    if FSharp.Utils.isNull array
-      then Undefined.Boxed
-      elif x.IsDense 
-        then x.Dense.[int index].Value
-        else x.Sparse.[index]
-
-  override x.Has(index:uint32) =
-    x.Find(index) |> FSharp.Utils.notNull
-
-  override x.Delete(index:uint32) =
-    let holder = x.Find(index)
-
-    if FSharp.Utils.refEq x holder then
-      
-      if x.IsDense then
-        let ii = int index
-        x.Dense.[ii].Value <- BoxedValue()
-        x.Dense.[ii].HasValue <- false
-
-      else
-        x.Sparse.Remove index |> ignore
-
-      true
-
-    else
-      false
-
-  override x.CollectIndexValues() =
-    //Dense array
-    if x.IsDense then
-      seq {
-        let i = ref 0u
-
-        while !i < x.Length do
-          let descr = x.Dense.[int !i]
-          if descr.HasValue 
-            then yield descr.Value
-
-          elif x.HasPrototype
-            then yield x.Prototype.Get !i
-            else yield Undefined.Boxed
-
-          i := !i + 1u
-      }
-
-    //Sparse array
-    else 
-      seq {
-        let i = ref 0u
-
-        while !i < x.Length do
-          
-          match x.Sparse.TryGetValue !i with
-          | true, box -> yield box
-          | _ -> 
-            if x.HasPrototype 
-              then yield x.Prototype.Get !i
-              else yield Undefined.Boxed
-
-          i := !i + 1u
-      }
 
 ///
-and [<AllowNullLiteral>] SparseArray2() =
+and [<AllowNullLiteral>] SparseArray() =
   
   let storage = new MutableSorted<uint32, BV>()
 
@@ -1400,12 +1139,17 @@ and [<AllowNullLiteral>] SparseArray2() =
   member x.TryGet(index, value:BV byref) = storage.TryGetValue(index, &value)
   member x.Remove(index) = storage.Remove(index)
 
+  ///
   member x.RemoveAbove(newLength:uint32, length:uint32) =
-    ()
+    let mutable length = length
+
+    while newLength < length do
+      storage.Remove(length-1u) |> ignore
+      length <- length - 1u
 
   ///
   static member CreateFromDense (values:Descriptor array) =
-    let sparse = new SparseArray2()
+    let sparse = new SparseArray()
 
     for i = 0 to (values.Length-1) do
       if values.[i].HasValue then
@@ -1414,24 +1158,26 @@ and [<AllowNullLiteral>] SparseArray2() =
     sparse
 
 ///
-and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) = 
+and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) = 
   inherit CO(env, env.Maps.Array, env.Prototypes.Array)
 
+  /// Internal dense array
   let mutable dense = 
-    if capacity <= 1024u
-      then Array.zeroCreate<Descriptor>(int capacity)
+    if length <= 1024u
+      then Array.zeroCreate<Descriptor>(int length)
       else null
 
+  /// Internal sparse array
   let mutable sparse =
-    if capacity > 1024u
-      then new SparseArray2()
+    if length > 1024u
+      then new SparseArray()
       else null
       
   /// Internal length property
   let mutable length = length
 
   ///
-  let resizeDense (newCapacity:uint32) =
+  let resizeDense newCapacity =
     let newCapacity = if newCapacity = 0u then 2u else newCapacity
     let newDense = Array.zeroCreate<Descriptor> (int newCapacity)
     let copyLength = Math.Min(int newCapacity, dense.Length)
@@ -1441,15 +1187,13 @@ and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) =
   #if DEBUG
   member x.Dense = dense
   member x.Sparse = sparse
-  member x.InternalLength = length
+  member x.Length = length
   #endif
 
   ///
-  member x.Length
-    with get () = length
-    and  set (newLength) =
-      length <- newLength
-      base.Put("Length", double length)
+  member x.SetLength(newLength) =
+    length <- newLength
+    base.Put("Length", double length)
 
   ///
   member x.IsDense = 
@@ -1517,7 +1261,7 @@ and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) =
 
       // Switch to sparse array
       else
-        sparse <- SparseArray2.CreateFromDense(dense)
+        sparse <- SparseArray.CreateFromDense(dense)
         dense <- null
         sparse.Put(index, value)
         length <- index + 1u

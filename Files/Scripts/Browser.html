@@ -5,19 +5,8 @@
             $ERROR = alert;
 
             (function () {
-                foo: while(true) {
-                    try {
-                        
-                    } finally {
-                        bar: while(false) {
-                            try {
-                                break foo;
-                            } finally {
-                                break bar;
-                            }
-                        }
-                    }
-                }
+                var x = [];
+                x.length = NaN;
             })();
 
         </script>

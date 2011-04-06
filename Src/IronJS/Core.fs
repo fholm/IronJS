@@ -1229,7 +1229,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       sparse.PutLength(newLength, length)
       length <- newLength
 
-    base.Put("length", double length)
+    base.Put("length", double newLength)
 
   ///
   member private x.PutLength(newLength:double) =

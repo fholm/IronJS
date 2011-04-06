@@ -39,7 +39,7 @@ module internal Array =
   ///
   let setup (env:Env) =
     let ctor = new Func<FO, CO, Args, CO>(constructor')
-    let ctor = ctor $ Utils.createConstructor env (Some 0)
+    let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.Put("prototype", env.Prototypes.Array, Immutable)
     ctor.MetaData.Name <- "Array"

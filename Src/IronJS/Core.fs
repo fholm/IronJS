@@ -1190,6 +1190,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   member x.Length = length
   #endif
 
+  override x.ClassName = "Array"
+
   ///
   member x.SetLength(newLength) =
     length <- newLength

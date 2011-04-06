@@ -1140,7 +1140,7 @@ and [<AllowNullLiteral>] SparseArray() =
   member x.Remove(index) = storage.Remove(index)
 
   ///
-  member x.RemoveAbove(newLength:uint32, length:uint32) =
+  member x.PutLength(newLength:uint32, length:uint32) =
     let mutable length = length
 
     while newLength < length do
@@ -1148,7 +1148,7 @@ and [<AllowNullLiteral>] SparseArray() =
       length <- length - 1u
 
   ///
-  static member CreateFromDense (values:Descriptor array) =
+  static member OfDense (values:Descriptor array) =
     let sparse = new SparseArray()
 
     for i = 0 to (values.Length-1) do
@@ -1209,7 +1209,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     else
       false
 
-  /// 
+  ///
   member private x.PutLength(newLength) =
     if x.IsDense then
       while newLength < length do
@@ -1219,19 +1219,17 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
         length <- length - 1u
 
     else
-      sparse.RemoveAbove(newLength, length)
+      sparse.PutLength(newLength, length)
       length <- newLength
 
     base.Put("length", double length)
 
   ///
   member private x.PutLength(newLength:double) =
-    if newLength < 0.0 then
-      x.Env.RaiseRangeError("Invalid array length")
+    let length = uint32 newLength
 
-    let length = uint32 newLength 
-    if double length <> newLength then
-      x.Env.RaiseRangeError()
+    if newLength < 0.0 || double length <> newLength then
+      x.Env.RaiseRangeError("Invalid array length")
 
     x.PutLength(length)
 
@@ -1261,7 +1259,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
       // Switch to sparse array
       else
-        sparse <- SparseArray.CreateFromDense(dense)
+        sparse <- SparseArray.OfDense(dense)
         dense <- null
         sparse.Put(index, value)
         length <- index + 1u
@@ -1319,10 +1317,9 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     else
       false
 
-(*
-//  
-*)
 and ArgLink = ParameterStorageType * int
+
+///
 and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals, closedOver) as x =
   inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
   

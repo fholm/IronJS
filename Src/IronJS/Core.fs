@@ -90,8 +90,12 @@ module Markers =
   let [<Literal>] Tagged = 0xFFF9us
 
 module TaggedBools =
-  let True = -1095216660479L |> BitConverter.Int64BitsToDouble
-  let False = -1095216660480L |> BitConverter.Int64BitsToDouble
+  let TrueBitPattern = -1095216660479L 
+  let True = TrueBitPattern |> BitConverter.Int64BitsToDouble
+
+  let FalseBitPattern = -1095216660480L
+  let False = FalseBitPattern |> BitConverter.Int64BitsToDouble
+
   let ToTagged b = if b then True else False
 
 module BoxedValueOffsets =
@@ -2120,9 +2124,9 @@ and TypeConverter() =
             else NaN
 
   static member ToNumber(d:double) : double = 
-    if d = TaggedBools.True 
+    if d <> d && TaggedBools.TrueBitPattern = BitConverter.DoubleToInt64Bits(d)
       then 1.0 
-      elif d = TaggedBools.False 
+      elif d <> d && TaggedBools.FalseBitPattern = BitConverter.DoubleToInt64Bits(d)
         then 0.0
         else d
 

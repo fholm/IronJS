@@ -15,9 +15,16 @@ module internal Array =
   
   ///
   let private constructor' (f:FO) (_:CO) (args:Args) =
-    if args.Length = 1 then
-      let number = TC.ToNumber args.[0]
-      let size = TC.ToUInt32 number
+    if args.Length = 1 && args.[0].IsNumber then
+
+      let number = TC.ToNumber(args.[0])
+      let size = TC.ToUInt32(number)
+
+      if   number < 0.0 
+        || number > 4294967295.0 
+        || double size <> number 
+        || Double.IsNaN(number) then f.Env.RaiseRangeError()
+
       f.Env.NewArray(size)
 
     else

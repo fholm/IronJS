@@ -1193,12 +1193,12 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.ClassName = "Array"
 
   ///
-  member x.SetLength(newLength) =
+  member internal x.SetLength(newLength) =
     length <- newLength
-    base.Put("Length", double length)
+    base.Put("length", double length)
 
   ///
-  member x.IsDense = 
+  member internal x.IsDense = 
     FSharp.Utils.notNull dense 
 
   ///
@@ -1214,6 +1214,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   ///
   member private x.PutLength(newLength) =
     if x.IsDense then
+      
       while newLength < length do
         let i = int (length-1u)
         x.Dense.[i].Value <- BV()
@@ -1248,7 +1249,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
         // If we're above the current length we need to update it 
         if index >= length then 
-          length <- index + 1u
+          x.SetLength(index + 1u)
 
       // We're above the currently allocated dense size
       // but not far enough above to switch to sparse
@@ -1257,19 +1258,21 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
         resizeDense (denseLength * 2u + 16u)
         dense.[ii].Value <- value
         dense.[ii].HasValue <- true
-        length <- index + 1u
+        x.SetLength(index + 1u)
 
       // Switch to sparse array
       else
         sparse <- SparseArray.OfDense(dense)
         dense <- null
         sparse.Put(index, value)
-        length <- index + 1u
+        x.SetLength(index + 1u)
 
     // Sparse array
     else
       sparse.Put(index, value)
-      length <- Math.Max(length, index + 1u)
+
+      if index >= length then 
+          x.SetLength(index + 1u)
 
   override x.Put(index:uint32, value:double) = 
     x.Put(index, BV.Box(value))

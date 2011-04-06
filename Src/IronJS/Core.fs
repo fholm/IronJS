@@ -1137,7 +1137,9 @@ and [<AllowNullLiteral>] SparseArray() =
   member x.Values = storage
   #endif
 
-  member x.Put(index, value:BV) = storage.[index] <- value
+  member x.Put(index, value:BV) = 
+    storage.[index] <- value
+
   member x.Has(index) = storage.ContainsKey(index)
   member x.Get(index) = storage.[index]
   member x.TryGet(index, value:BV byref) = storage.TryGetValue(index, &value)
@@ -1145,11 +1147,17 @@ and [<AllowNullLiteral>] SparseArray() =
 
   ///
   member x.PutLength(newLength:uint32, length:uint32) =
-    let mutable length = length
 
+    if newLength < length then
+      for key in storage.Keys |> List.ofSeq do
+        if key >= newLength then
+          storage.Remove(key) |> ignore
+
+    (*
     while newLength < length do
       storage.Remove(length-1u) |> ignore
       length <- length - 1u
+    *)
 
   ///
   static member OfDense (values:Descriptor array) =

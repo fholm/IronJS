@@ -1297,19 +1297,34 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     x.Put(index, BV.Box(value, tag))
     
   override x.Put(name:string, value:BV) =
-    if name = "length"
-      then x.PutLength(TC.ToNumber(value))
-      else base.Put(name, value)
+    if name = "length" then 
+      x.PutLength(TC.ToNumber(value))
+      
+    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+      x.Put(TC.ToUInt32(TC.ToNumber name), value)
+
+    else
+      base.Put(name, value)
 
   override x.Put(name:string, value:double) =
-    if name = "length" 
-      then x.PutLength(TC.ToNumber(value))
-      else base.Put(name, value)
+    if name = "length" then 
+      x.PutLength(TC.ToNumber(value))
+
+    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+      x.Put(TC.ToUInt32(TC.ToNumber name), value)
+
+    else
+      base.Put(name, value)
 
   override x.Put(name:string, value:obj, tag:uint32) =
-    if name = "length" 
-      then x.PutLength(TC.ToNumber(BV.Box(value, tag)))
-      else base.Put(name, value, tag)
+    if name = "length" then 
+      x.PutLength(TC.ToNumber(BV.Box(value, tag)))
+
+    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+      x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)
+
+    else 
+      base.Put(name, value, tag)
 
   override x.Get(index:uint32) =
     if index = UInt32.MaxValue then

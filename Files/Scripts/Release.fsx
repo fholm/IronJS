@@ -6,7 +6,7 @@ open System
 open IronJS
 open IronJS.Hosting.FSharp
 
-module Ijs = IronJS.Hosting.FSharp
+module IronJS = IronJS.Hosting.FSharp
 
 IronJS.Support.Debug.registerConsolePrinter()
 

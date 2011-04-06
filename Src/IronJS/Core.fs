@@ -1386,7 +1386,34 @@ and [<AllowNullLiteral>] ArrayObject(env, size:ArrayLength) =
       }
 
 ///
-and SparseArray2 = MutableSorted<uint32, Descriptor>
+and [<AllowNullLiteral>] SparseArray2() =
+  
+  let storage = new MutableSorted<uint32, BV>()
+
+  #if DEBUG
+  member x.Values = storage
+  #endif
+
+  member x.Put(index, value:BV) = storage.[index] <- value
+  member x.Has(index) = storage.ContainsKey(index)
+  member x.Get(index) = storage.[index]
+  member x.TryGet(index, value:BV byref) = storage.TryGetValue(index, &value)
+  member x.Remove(index) = storage.Remove(index)
+
+  member x.RemoveAbove(newLength:uint32, length:uint32) =
+    ()
+
+  ///
+  static member CreateFromDense (values:Descriptor array) =
+    let sparse = new SparseArray2()
+
+    for i = 0 to (values.Length-1) do
+      if values.[i].HasValue then
+        sparse.Put(uint32 i, values.[i].Value)
+
+    sparse
+
+///
 and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) = 
   inherit CO(env, env.Maps.Array, env.Prototypes.Array)
 
@@ -1401,32 +1428,152 @@ and [<AllowNullLiteral>] ArrayObject2(env, length:uint32, capacity:uint32) =
       else null
       
   /// Internal length property
-  let mutable length = 
-    length
+  let mutable length = length
 
   ///
   let resizeDense (newCapacity:uint32) =
+    let newCapacity = if newCapacity = 0u then 2u else newCapacity
     let newDense = Array.zeroCreate<Descriptor> (int newCapacity)
-    Array.Copy(dense, newDense, int newCapacity)
+    let copyLength = Math.Min(int newCapacity, dense.Length)
+    Array.Copy(dense, newDense, copyLength)
     dense <- newDense
 
-  /// Returns true if the array object is dense
+  #if DEBUG
+  member x.Dense = dense
+  member x.Sparse = sparse
+  member x.InternalLength = length
+  #endif
+
+  ///
+  member x.Length
+    with get () = length
+    and  set (newLength) =
+      length <- newLength
+      base.Put("Length", double length)
+
+  ///
   member x.IsDense = 
     FSharp.Utils.notNull dense 
 
-  /// Modifiy or read the array length
-  member x.Length
-    with  get () = length
-    and   set (newLength) =
-      let previousLength = length
+  ///
+  member private x.HasIndex(index:uint32) = 
+    if index < length then
+      if x.IsDense 
+        then index < uint32 dense.Length && dense.[int index].HasValue
+        else sparse.Has(index)
+
+    else
+      false
+
+  /// 
+  member private x.PutLength(newLength) =
+    if x.IsDense then
+      while newLength < length do
+        let i = int (length-1u)
+        x.Dense.[i].Value <- BV()
+        x.Dense.[i].HasValue <- false
+        length <- length - 1u
+
+    else
+      sparse.RemoveAbove(newLength, length)
       length <- newLength
 
+    base.Put("length", double length)
+
+  ///
+  member private x.PutLength(newLength:double) =
+    if newLength < 0.0 then
+      x.Env.RaiseRangeError("Invalid array length")
+
+    let length = uint32 newLength 
+    if double length <> newLength then
+      x.Env.RaiseRangeError()
+
+    x.PutLength(length)
+
+  ///
+  override x.Put(index:uint32, value:BV) =
+    if x.IsDense then
+      let ii = int index
+      let denseLength = uint32 dense.Length
+
+      // We're within the dense array size
+      if index < denseLength then
+        dense.[ii].Value <- value
+        dense.[ii].HasValue <- true
+
+        // If we're above the current length we need to update it 
+        if index >= length then 
+          length <- index + 1u
+
+      // We're above the currently allocated dense size
+      // but not far enough above to switch to sparse
+      // so we expand the denese array
+      elif index < (denseLength + 16u) then
+        resizeDense (denseLength * 2u + 16u)
+        dense.[ii].Value <- value
+        dense.[ii].HasValue <- true
+        length <- index + 1u
+
+      // Switch to sparse array
+      else
+        sparse <- SparseArray2.CreateFromDense(dense)
+        dense <- null
+        sparse.Put(index, value)
+        length <- index + 1u
+
+    // Sparse array
+    else
+      sparse.Put(index, value)
+      length <- Math.Max(length, index + 1u)
+
+  override x.Put(index:uint32, value:double) = 
+    x.Put(index, BV.Box(value))
+
+  override x.Put(index:uint32, value:obj, tag:uint32) = 
+    x.Put(index, BV.Box(value, tag))
+    
+  override x.Put(name:string, value:BV) =
+    if name = "length"
+      then x.PutLength(TC.ToNumber(value))
+      else base.Put(name, value)
+
+  override x.Put(name:string, value:double) =
+    if name = "length" 
+      then x.PutLength(TC.ToNumber(value))
+      else base.Put(name, value)
+
+  override x.Put(name:string, value:obj, tag:uint32) =
+    if name = "length" 
+      then x.PutLength(TC.ToNumber(BV.Box(value, tag)))
+      else base.Put(name, value, tag)
+
+  override x.Get(index:uint32) =
+    if x.HasIndex(index) then
+      if x.IsDense 
+        then dense.[int index].Value
+        else sparse.Get(index)
+
+    else
+      x.Prototype.Get(index)
+
+  override x.Has(index:uint32) =
+    x.HasIndex(index) || x.Prototype.Has(index)
+
+  override x.Delete(index:uint32) =
+    if x.HasIndex(index) then
+      
       if x.IsDense then
-        ()
+        let ii = int index
+        dense.[ii].Value <- BV()
+        dense.[ii].HasValue <- false
+        true
 
       else
-        ()
+        sparse.Remove(index)
 
+    else
+      false
 
 (*
 //  
@@ -1443,7 +1590,7 @@ and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals,
   do
     x.Locals <- locals
     x.ClosedOver <- closedOver
-    x.LinkMap <- linkMap
+    x.LinkMap <- linkMap 
     x.LinkIntact <- true
     x.Prototype <- x.Env.Prototypes.Object
 

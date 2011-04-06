@@ -4,19 +4,22 @@
 open System
 open IronJS
 
-module Ijs = IronJS.Hosting.FSharp
+module IronJS = IronJS.Hosting.FSharp
 
 IronJS.Support.Debug.registerConsolePrinter()
 
-let ctx = Ijs.createContext()
-let src = @"
-  function Robin(){this.name='robin'};
-  var __my__robin = new Robin;
-  '';
-"
+let ctx = IronJS.createContext()
+let env = ctx |> IronJS.env 
 
-ctx |> Ijs.execute src
+let arr = ArrayObject2(env, 0u, 0u)
 
-let d = Collections.Generic.SortedDictionary<uint32, string>()
-d.Add(1u, "foo")
-d.[UInt32.MaxValue]
+arr.Put(0u, 1.0)
+arr.Put(1u, 2.0)
+arr.Put(2u, 3.0)
+
+
+arr.Put(14u, 15.0)
+
+arr.Put(355u, 356.0)
+
+arr.Sparse

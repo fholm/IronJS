@@ -1214,7 +1214,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     FSharp.Utils.notNull dense 
 
   ///
-  member private x.HasIndex(index:uint32) = 
+  member internal x.HasIndex(index:uint32) = 
     if index < length then
       if x.IsDense 
         then index < uint32 dense.Length && dense.[int index].HasValue
@@ -1229,14 +1229,17 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       
       while newLength < length do
         let i = int (length-1u)
-        x.Dense.[i].Value <- BV()
-        x.Dense.[i].HasValue <- false
+
+        if length < uint32 dense.Length then
+          x.Dense.[i].Value <- BV()
+          x.Dense.[i].HasValue <- false
+
         length <- length - 1u
 
     else
       sparse.PutLength(newLength, length)
-      length <- newLength
 
+    length <- newLength
     base.Put("length", double newLength)
 
   ///

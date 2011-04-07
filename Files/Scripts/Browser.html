@@ -5,8 +5,24 @@
             $ERROR = alert;
 
             (function () {
-                var x = [];
-                x.length = NaN;
+                //CHECK#1
+                if (Array.prototype.concat.propertyIsEnumerable('length') !== false) {
+                    $ERROR('#1: Array.prototype.concat.propertyIsEnumerable(\'length\') === false. Actual: ' + (Array.prototype.concat.propertyIsEnumerable('length')));
+                }
+
+                //CHECK#2
+                result = true;
+                for (p in Array.concat) {
+                    if (p === "length") {
+                        result = false;
+                    }
+                }
+
+                if (result !== true) {
+                    $ERROR('#2: result = true; for (p in Array.concat) { if (p === "length") result = false; }  result === true;');
+                }
+
+
             })();
 
         </script>

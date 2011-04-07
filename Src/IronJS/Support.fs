@@ -13,6 +13,10 @@ module Attributes =
   type HiddenProperty() = inherit Attribute()
   type HiddenField() = inherit Attribute()
 
+  type JsArgumentsLength(length:int) =
+    inherit Attribute()
+    member x.Length = length
+
 module Aliases = 
   
   open System.Globalization

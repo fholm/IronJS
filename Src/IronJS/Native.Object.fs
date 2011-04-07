@@ -42,9 +42,17 @@ module internal Object =
     ///
     let private hasOwnProperty (_:FO) (this:CO) (name:string) =
       let mutable index = 0
-      if this.PropertySchema.IndexMap.TryGetValue(name, &index) 
-        then this.Properties.[index].HasValue
-        else false
+
+      if this.PropertySchema.IndexMap.TryGetValue(name, &index) then 
+        this.Properties.[index].HasValue
+
+      elif this :? AO && name.Length > 0 && FSharp.Char.isDigit name.[0] then
+        let mutable ai = 0u
+        let mutable ao = this :?> AO
+        UInt32.TryParse(name, &ai) && ao.HasIndex(ai)
+
+      else
+        false
 
     ///
     let private isPrototypeOf (_:FO) (this:CO) (v:CO) = 

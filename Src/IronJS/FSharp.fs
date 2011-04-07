@@ -3,7 +3,12 @@
 open System
 open System.Reflection
 
+///
 module FSharp =
+
+  ///
+  module Char =
+    let isDigit c = c >= '0' && c <= '9'
 
   ///
   module Utils =

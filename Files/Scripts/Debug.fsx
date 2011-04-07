@@ -11,7 +11,4 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = IronJS.createContext()
 let env = ctx |> IronJS.env 
 
-ctx |> IronJS.execute @"
-  var x = [];
-  x.length = true;
-"
+ctx |> IronJS.execute @""

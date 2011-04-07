@@ -47,7 +47,60 @@ module internal Array =
     env.Globals.Put("Array", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Array = ctor}
 
+  ///
   module Prototype = 
+
+    /// Implements: 15.4.4.4 Array.prototype.concat ( [ item1 [ , item2 [ , … ] ] ] )
+    let concat (func:FO) (this:CO) (args:Args) =
+      let a = func.Env.NewArray(uint32 args.Length)
+
+      let rec concat (n:uint32) (c:BV) (i:int) =
+        let n =
+          match c.Tag with
+          | TypeTags.Object when (c.Object :? AO) ->
+            let ao = c.Object :?> AO
+
+            let mutable n = n
+            let mutable i = 0u
+
+            while i < ao.Length do
+              a.Put(n, ao.Get(i))
+              i <- i + 1u
+              n <- n + 1u
+
+            n
+
+          | _ ->
+            a.Put(n, c)
+            n + 1u
+
+        if i < args.Length 
+          then concat n args.[i] (i+1)
+          else a
+
+      concat 0u (BV.Box this) 0
+
+    /// Implements: 15.4.4.7 Array.prototype.push ( [ item1 [ , item2 [ , … ] ] ] )
+    let push (func:FO) (this:CO) (args:Args) = 
+      let isArray = this :? AO
+      let mutable n = 
+        if isArray
+          then (this :?> AO).Length |> int64
+          else this.GetLength() |> int64
+
+      for arg in args do
+        this.Put(double n, arg)
+        
+        if isArray && n = int64 UInt32.MaxValue then
+          func.Env.RaiseRangeError()
+
+        n <- n + 1L
+
+
+      if not(this :? AO) then
+        this.Put("length", double n)
+
+      double n
     
     ///
     let create (env:Env) ownPrototype =
@@ -58,5 +111,10 @@ module internal Array =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Array
-      ()
+      
+      let concat = concat $ Utils.createFunc1 env (Some 1)
+      proto.Put("concat", concat, Immutable)
+
+      let push = push $ Utils.createFunc1 env (Some 1)
+      proto.Put("push", push, Immutable)
 

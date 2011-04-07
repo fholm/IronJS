@@ -127,7 +127,7 @@ module internal String =
       if regexp.IsRegExp then
         regexp.Object.CastTo<RO>()
       else
-        let S = regexp |> TC.ToString
+        let S = if regexp.IsUndefined then "" else regexp |> TC.ToString
         env.NewRegExp(S) :?> RO
 
     let private match' (f:FO) (this:CO) (regexp:BV) =

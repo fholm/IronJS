@@ -11,4 +11,7 @@ IronJS.Support.Debug.registerConsolePrinter()
 let ctx = IronJS.createContext()
 let env = ctx |> IronJS.env 
 
-ctx |> IronJS.execute @""
+ctx |> IronJS.Utils.createPrintFunction
+ctx |> IronJS.execute @"
+try { throw 'foo' } catch(e) { if ( e==='foo' ) { print('lol') } }
+"

@@ -372,10 +372,10 @@ module internal String =
       let charCodeAt = FunctionReturn<double, double>(charCodeAt)  $ Utils.createFunction env (Some 1)
       proto.Put("charCodeAt", charCodeAt, DontEnum)
 
-      let concat = FunctionReturn<Args, string>(concat) $ Utils.createFunction env (Some 2)
+      let concat = FunctionReturn<Args, string>(concat) $ Utils.createFunction env (Some 1)
       proto.Put("concat", concat, DontEnum)
 
-      let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 2)
+      let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 1)
       proto.Put("indexOf", indexOf, DontEnum)
 
       let lastIndexOf = FunctionReturn<BV, BV, double>(lastIndexOf) $ Utils.createFunction env (Some 1)

@@ -141,7 +141,9 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsNull = x.IsClr && x.Clr |> FSharp.Utils.isNull
 
     member x.IsPrimitive =
-      if x.IsNumber then 
+      // As per ECMA-262, Section 8.6.2, the following types are primitive:
+      //  Undefined, Null, Boolean, String, or Number
+      if x.IsNumber || x.IsUndefined || x.IsNull then 
         true
 
       else 

@@ -300,7 +300,7 @@ module internal String =
       let parts = 
         if separator.IsRegExp then
           let separator = separator.Object.CastTo<RO>()
-          separator.RegExp.Split(value, limit)
+          separator.RegExp.Split(value) |> Seq.truncate limit |> Seq.toArray
 
         else
           let separator =
@@ -308,7 +308,7 @@ module internal String =
               then "" 
               else separator |> TC.ToString
 
-          value.Split([|separator|], limit, StringSplitOptions.None)
+          value.Split([|separator|], StringSplitOptions.None) |> Seq.truncate limit |> Seq.toArray
 
       let array = f.Env.NewArray(parts.Length |> uint32)
       for i = 0 to parts.Length-1 do

@@ -80,13 +80,23 @@ module internal Array =
 
       concat 0u (BV.Box this) 0
 
+    /// Implements: 15.4.4.6 Array.prototype.pop ( )
+    let pop (func:FO) (this:CO) = 
+      let length = this.GetLength()
+      if length = 0u then 
+        this.Put("length", double 0.0)
+        Undefined.Boxed
+
+      else
+        let value = this.Get(length-1u)
+        this.Delete(length-1u) |> ignore
+        this.Put("length", double (length-1u))
+        value
+
     /// Implements: 15.4.4.7 Array.prototype.push ( [ item1 [ , item2 [ , … ] ] ] )
     let push (func:FO) (this:CO) (args:Args) = 
       let isArray = this :? AO
-      let mutable n = 
-        if isArray
-          then (this :?> AO).Length |> int64
-          else this.GetLength() |> int64
+      let mutable n = this.GetLength() |> int64
 
       for arg in args do
         this.Put(double n, arg)
@@ -117,4 +127,7 @@ module internal Array =
 
       let push = push $ Utils.createFunc1 env (Some 1)
       proto.Put("push", push, Immutable)
+
+      let pop = pop $ Utils.createFunc0 env (Some 0)
+      proto.Put("pop", pop, Immutable)
 

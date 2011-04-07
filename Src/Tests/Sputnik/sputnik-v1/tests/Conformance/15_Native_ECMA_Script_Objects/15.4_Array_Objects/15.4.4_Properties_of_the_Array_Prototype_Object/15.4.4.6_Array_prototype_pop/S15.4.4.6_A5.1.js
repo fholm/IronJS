@@ -16,7 +16,7 @@ if (Array.prototype.pop.propertyIsEnumerable('length') !== false) {
 
 //CHECK#2
 result = true;
-for (p in Array.pop){
+for (p in Array.prototype.pop){
   if (p === "length") {
     result = false;
   }  

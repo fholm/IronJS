@@ -1202,6 +1202,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   member x.Length = length
   #endif
 
+  override x.GetLength () = length
   override x.ClassName = "Array"
 
   ///

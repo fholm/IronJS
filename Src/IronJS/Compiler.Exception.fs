@@ -29,8 +29,11 @@ module Exception =
         ctx.CatchScopes := xs
 
         // The .NET/DLR exception parameter
-        let caughtExn = 
-          Dlr.paramT<UserError> "~exn"
+        let caughtExn =
+          Dlr.paramT<Exception> "~exn"
+
+        let jsErr =
+          Dlr.varT<UserError> "~err"
 
         // The shared variable that we should
         // inject into the ActiveVariables map
@@ -48,7 +51,8 @@ module Exception =
         let catchBlock =
           Dlr.blockTmpT<Scope> (fun tmpScope ->
             let catchBlock =
-              Dlr.block [] [
+              Dlr.block [jsErr] [
+
                 // Create the new scope
                 tmpScope .= Dlr.newArrayBoundsT<BV> !!!2
 
@@ -58,8 +62,15 @@ module Exception =
                 // Replace the old top shared scope with the new one
                 ctx.Parameters.SharedScope .= tmpScope
 
+                jsErr .= Dlr.castAsT<UserError> (Dlr.callInstanceMethod caughtExn (typeof<Exception>.GetMethod("GetBaseException")) Seq.empty)
+
+                (Dlr.if'
+                    (Dlr.isNull jsErr)
+                    (Dlr.throwValue caughtExn)
+                )
+
                 // Copy the javascript exception value into the variable
-                Identifier.setValue ctx name (caughtExn .-> "Value")
+                Identifier.setValue ctx name (jsErr .-> "Value")
 
                 // Compile the javascript catch block
                 ctx $ compile ast $ Dlr.castVoid
@@ -74,7 +85,7 @@ module Exception =
 
             [Dlr.tryFinally catchBlock restoreSharedScope] $ Seq.ofList
           )
-          
+
         Dlr.catchVar caughtExn catchBlock
 
     | _ -> failwith "Que?"

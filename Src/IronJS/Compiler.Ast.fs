@@ -2,11 +2,12 @@
 
 open IronJS
 open IronJS.Support.Aliases
-
 open System.Globalization
 
+///
 module Ast =  
 
+  ///
   type BinaryOp 
     = Add = 1
     | Sub = 2
@@ -35,6 +36,7 @@ module Ast =
     | In = 108
     | InstanceOf = 109
       
+  ///
   type UnaryOp 
     = Inc = 0
     | Dec = 1
@@ -352,84 +354,3 @@ module Ast =
 
         s := {!s with Variables = variables}
         s |> createSharedVariable name sharedIndex (!s).GlobalLevel
-
-  (*
-  module AnalyzersFastUtils =
-
-    module Scope =
-      
-      // Type short hand for scopes
-      type private S = Scope ref
-
-      let locals (s:S) = (!s).Locals
-      let closures (s:S) = (!s).Closures
-      let localCount (s:S) = (!s).LocalCount
-      let paramCount (s:S) = (!s).ParamCount
-      let closedOverCount (s:S) = (!s).ClosedOverCount
-
-      let setContainsArguments (s:S) = s := {!s with ContainsArguments=true}
-      let setContainsEval (s:S) = s := {!s with EvalMode=EvalMode.Contains}
-      let setDynamicLookup (s:S) = s := {!s with LookupMode=LookupMode.Dynamic}
-      let setSelfReference n (s:S) = s := {!s with SelfReference=Some n}
-      let increaseWithCount (s:S) = s := {!s with WithCount=(!s).WithCount + 1}
-      let hasDynamicLookup (s:S) = (!s).LookupMode = LookupMode.Dynamic
-      let hasClosedOverLocals (s:S) = (!s).ClosedOverCount > 0
-
-      let hasClosure name (s:S) = s |> closures |> Map.containsKey name
-      let tryGetClosure name (s:S) = s |> closures|> Map.tryFind name
-      let addClosure (closure:Closure) (s:S) =
-        s := {!s with Closures = s |> closures |> Map.add closure.Name closure}
-        
-      let hasLocal (name:string) (s:S) = s |> locals |> Map.containsKey name
-      let tryGetLocal (name:string) (s:S) = s |> locals |> Map.tryFind name 
-      let replaceLocal (local:Local) (s:S) =
-        s := {!s with Locals = s |> locals |> Map.add local.Name local}
-        
-      let hasVariable name (s:S) = 
-        (s |> hasLocal name) || (s |> hasClosure name)
-
-      let getVariable name (s:S) =
-        match s |> tryGetLocal name with
-        | Some var -> VariableOption.Local var
-        | _ ->
-          match s |> tryGetClosure name with
-          | Some cls -> VariableOption.Closure cls
-          | _ -> VariableOption.Global
-
-      let closeOverLocal name (s:S) =
-
-        let decrementLocalIndexes topIndex (s:S) =
-        
-          let decreaseIndex (i:LocalIndex) =
-            if i.IsClosedOver || i.Index < topIndex
-              then i 
-              else {i with Index=i.Index-1}
-
-          let decreaseLocal _ (l:Local) =
-            {l with Indexes = l.Indexes |> Array.map decreaseIndex}
-
-          s := {!s with Locals = (!s).Locals |> Map.map decreaseLocal}
-
-        match s |> tryGetLocal name with
-        | None -> 
-          Error.CompileError.Raise(Error.missingVariable name)
-
-        | Some (local:Local) ->
-          match local.Indexes.[local.Active] with
-          | active when active.IsClosedOver |> not ->
-            let localIndex = active.Index
-            let closedOverIndex = (s |> closedOverCount) + 1
-            let closedOver = {active with IsClosedOver=true; Index=closedOverIndex}
-
-            s := 
-              {!s with
-                ClosedOverCount = closedOverIndex
-                LocalCount = (s |> localCount) - 1
-              }
-
-            local |> Local.updateActive closedOver
-            s |> decrementLocalIndexes localIndex
-
-          | _ -> 
-            ()
-    *)

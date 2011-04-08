@@ -70,82 +70,42 @@ module Global =
 
   /// These steps are outlined in the ECMA-262, Section 15.1.2.2
   let parseInt (str:BV) (radix:BV) =
-    // Step 1
     let inputString = TC.ToString(str)
-
-    // Step 2
     let mutable S = inputString.TrimStart()
-
-    // Step 3 & 4
     let sign = 
       if S.Length > 0 && S.[0] = '-' 
         then -1 
         else 1
-
-    // Step 5
     if S.Length > 0 && (S.[0] = '+' || S.[0] = '-') 
       then S <- S.Substring(1)
-
-    // Step 6
     let mutable R = TC.ToInt32(radix)
-
-    // Step 7
     let mutable stripPrefix = true
-
-    // Step 8a
     if R <> 0 && (R < 2 || R > 36) then 
       nan |> BV.Box
-
     else
-      // Step 8b
       if R <> 0 && R <> 16 
         then stripPrefix <- false
-
-      // Step 9
       if R = 0 
         then R <- 10
-
-      // Step 10
       if stripPrefix && S.Length >= 2 && (S.StartsWith("0x") || S.StartsWith("0X")) then
         R <- 16
         S <- S.Substring(2)
-
-      // Step 11
       let Z = Regex.Match(S.ToUpperInvariant(), "^[" + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".Substring(0, R) + "]*").Value
-
-      // Step 12
       if Z.Length = 0 then nan |> BV.Box
-
       else
-        // Step 13
         let mathInt = parseWithRadix(Z, R)
-
-        // Step 14
         let number = mathInt |> double
-
-        // Step 15
         (float sign) * number |> BV.Box
 
-  
   /// These steps are outlined in the ECMA-262, Section 15.1.2.3
   let parseFloat (str:BoxedValue) =
-    // Step 1
     let inputString = TC.ToString(str)
-
-    // Step 2
     let trimmedString = inputString.TrimStart()
-
-    // Step 3
     let prefixMatch = Regex.Match(trimmedString, @"^[-+]?(Infinity|([0-9]+\.[0-9]*|[0-9]*\.[0-9]+|[0-9]+)([eE][-+]?[0-9]+)?)")
-
     if not prefixMatch.Success then 
       nan |> BV.Box
-
     else
-      // Step 4
       let numberString = prefixMatch.Value
-
-      // Step 5
       numberString |> TC.ToNumber |> BV.Box
 
   ///
@@ -162,7 +122,7 @@ module Global =
   // These two arrays are copied from the Jint sources
   let private reservedEncoded = [|';'; ','; '/'; '?'; ':'; '@'; '&'; '='; '+'; '$'; '#'|]
   let private reservedEncodedComponent = [|'-'; '_'; '.'; '!'; '~'; '*'; '\''; '('; ')'; '['; ']'|]
-    
+
   ///
   let private replaceChar (uri:string) (c:char) =
     uri.Replace(Uri.EscapeDataString(string c), string c)

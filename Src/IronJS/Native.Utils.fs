@@ -36,11 +36,25 @@ module Utils =
     let metaData = env.CreateHostFunctionMetaData(compiler)
     createHostFunctionObject env length func metaData
 
+  let CreateFunction (env:Env) (length:Nullable<int>) (func:'a when 'a :> Delegate) =
+    let length =
+      if length.HasValue
+        then Some(length.Value)
+        else None
+    createFunction env length func
+
   ///
   let createConstructor (env:Env) (length:int option) (ctor:'a when 'a :> Delegate) =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
     createHostFunctionObject env length ctor metaData
+
+  let CreateConstructor (env:Env) (length:Nullable<int>) (func:'a when 'a :> Delegate) =
+    let length =
+      if length.HasValue
+        then Some(length.Value)
+        else None
+    createConstructor env length func
 
   ///
   let createFunc0 (env:Env) (length:int option) func =

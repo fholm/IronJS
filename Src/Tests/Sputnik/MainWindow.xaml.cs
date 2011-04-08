@@ -284,10 +284,10 @@ namespace IronJS.Tests.Sputnik
             Action<string> printAction = message => Debug.WriteLine(message);
             Action<string> includeAction = file => ctx.ExecuteFile(Path.Combine(libPath, file));
 
-            var errorFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, errorAction);
-            var failFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, failAction);
-            var printFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, printAction);
-            var includeFunc = IronJS.Native.Utils.createHostFunction(ctx.Environment, includeAction);
+            var errorFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, errorAction);
+            var failFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, failAction);
+            var printFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, printAction);
+            var includeFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, includeAction);
 
             ctx.SetGlobal("$FAIL", failFunc);
             ctx.SetGlobal("ERROR", errorFunc);

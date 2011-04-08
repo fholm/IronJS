@@ -145,7 +145,9 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     member x.IsNull = x.IsClr && x.Clr |> FSharp.Utils.isNull
 
     member x.IsPrimitive =
-      if x.IsNumber then 
+      // As per ECMA-262, Section 8.6.2, the following types are primitive:
+      //  Undefined, Null, Boolean, String, or Number
+      if x.IsNumber || x.IsUndefined || x.IsNull then 
         true
 
       else 
@@ -343,7 +345,7 @@ and [<AllowNullLiteral>] Environment() =
   member x.NewString() = x.NewString(String.Empty)
   member x.NewString(value:string) =
     let string = SO(x)
-    string.Put("length", double value.Length)
+    string.Put("length", double value.Length, DescriptorAttrs.DontEnum ||| DescriptorAttrs.ReadOnly)
     string.Value.Value.Clr <- value
     string.Value.Value.Tag <- TypeTags.String
     string.Value.HasValue <- true
@@ -2071,6 +2073,7 @@ and TypeConverter() =
   static member ToString(c:obj) : string = 
     if FSharp.Utils.isNull c then "null" else c.ToString()
 
+  /// These steps are outlined in the ECMA-262, Section 9.8.1
   static member ToString(m:double) : string = 
     if Double.IsNaN m then "NaN"
     elif m = 0.0 then "0"

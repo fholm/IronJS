@@ -84,47 +84,82 @@ module internal String =
       let toString (x:BoxedValue) = buffer.Append(TC.ToString(x))
       args |> Array.iter (toString >> ignore)
       buffer.ToString()
-    
+
     ///
     let private indexOf (_:FO) (this:CO) (subString:string) (index:double) =
       let value = this |> TC.ToString
       let index = index |> TC.ToInt32
       let index = Math.Min(Math.Max(index, 0), value.Length);
       value.IndexOf(subString, index, StringComparison.Ordinal) |> double
-    
-    ///
-    let private lastIndexOf (_:FO) (this:CO) (subString:string) (index:double) =
-      let value = this |> TC.ToString
 
-      let index = 
-        if Double.IsNaN index 
-          then Int32.MaxValue 
-          else TC.ToInteger index
+    /// These steps are outlined in the ECMA-262, Section 15.5.4.8
+    let private lastIndexOf (_:FO) (this:CO) (searchString:BV) (position:BV) =
+      let S = this |> TC.ToString
+      let searchStr = searchString |> TC.ToString
+      let numPos = position |> TC.ToNumber
+      let pos =
+        if numPos <> numPos
+          then Int32.MaxValue
+          else numPos |> TC.ToInteger
+      let len = S.Length
+      let start = Math.Min(Math.Max(pos, 0), len)
+      let searchLen = searchStr.Length
+      let mutable k = start
+      let mutable found = false
+      while k >= 0 && not found do
+        found <- true
+        let mutable j = 0
+        while found && j < searchLen do
+          if k+searchLen > len || (S.[k+j] <> searchStr.[j]) then
+            found <- false
+          else
+            j <- j + 1
+        if not found then
+          k <- k - 1
+      k |> double
 
-      let index = Math.Min(index, value.Length-1)
-      let index = Math.Min(index + subString.Length-1, value.Length-1)
-    
-      let index = 
-        if index < 0 
-          then  if value = "" && subString = "" then 0 else -1
-          else value.LastIndexOf(subString, index, StringComparison.Ordinal)
-
-      index |> double
-      
     ///
     let private localeCompare (_:FO) (this:CO) (that:string) =
       let this = TC.ToString(this)
       String.Compare(this, that) $ double
-    
-    ///
+
     let private toRegExp (env:Env) (regexp:BV) =
-      match regexp.Tag with
-      | TypeTags.String -> env.NewRegExp(regexp.String) :?> RO
-      | _ -> regexp.Object.CastTo<RO>()
-    
+      if regexp.IsRegExp then
+        regexp.Object.CastTo<RO>()
+      else
+        let S = if regexp.IsUndefined then "" else regexp |> TC.ToString
+        env.NewRegExp(S) :?> RO
+
     let private match' (f:FO) (this:CO) (regexp:BV) =
-      let regexp = regexp |> toRegExp f.Env
-      RegExp.Prototype.exec f regexp (this |> TC.ToString |> BV.Box)
+      let S = this |> TC.ToString
+      let rx = regexp |> toRegExp f.Env
+      let global' = rx.Global
+      let exec = RegExp.Prototype.exec
+      if not global' then
+        exec f rx (S |> BV.Box)
+      else
+        rx.Put("lastIndex", 0 |> BV.Box)
+        let A = f.Env.NewArray()
+        let mutable previousLastIndex = 0
+        let mutable n = 0
+        let mutable lastMatch = true
+        while lastMatch do
+          let result = exec f rx (S |> BV.Box)
+          if result.IsNull then lastMatch <- false
+          else
+            let thisIndex = rx.Get("lastIndex") |> TC.ToInt32
+            if thisIndex = previousLastIndex then
+              previousLastIndex <- thisIndex + 1
+              rx.Put("lastIndex", previousLastIndex |> BV.Box)
+            else
+              previousLastIndex <- thisIndex
+            let matchStr = result.Array.Get(0).String
+            A.Put(uint32 n, matchStr)
+            n <- n + 1
+        if n = 0 then
+          Environment.BoxedNull
+        else
+          A |> BV.Box
 
     let private replaceTokens =
       new Regex(@"[^$]+|\$\$|\$&|\$`|\$'|\$\d\d|\$\d|\$", RegexOptions.Compiled)
@@ -265,7 +300,7 @@ module internal String =
       let parts = 
         if separator.IsRegExp then
           let separator = separator.Object.CastTo<RO>()
-          separator.RegExp.Split(value, limit)
+          separator.RegExp.Split(value) |> Seq.truncate limit |> Seq.toArray
 
         else
           let separator =
@@ -273,7 +308,7 @@ module internal String =
               then "" 
               else separator |> TC.ToString
 
-          value.Split([|separator|], limit, StringSplitOptions.None)
+          value.Split([|separator|], StringSplitOptions.None) |> Seq.truncate limit |> Seq.toArray
 
       let array = f.Env.NewArray(parts.Length |> uint32)
       for i = 0 to parts.Length-1 do
@@ -337,13 +372,13 @@ module internal String =
       let charCodeAt = FunctionReturn<double, double>(charCodeAt)  $ Utils.createFunction env (Some 1)
       proto.Put("charCodeAt", charCodeAt, DontEnum)
 
-      let concat = FunctionReturn<Args, string>(concat) $ Utils.createFunction env (Some 2)
+      let concat = FunctionReturn<Args, string>(concat) $ Utils.createFunction env (Some 1)
       proto.Put("concat", concat, DontEnum)
 
-      let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 2)
+      let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 1)
       proto.Put("indexOf", indexOf, DontEnum)
 
-      let lastIndexOf = FunctionReturn<string, double, double>(lastIndexOf) $ Utils.createFunction env (Some 2)
+      let lastIndexOf = FunctionReturn<BV, BV, double>(lastIndexOf) $ Utils.createFunction env (Some 1)
       proto.Put("lastIndexOf", lastIndexOf, DontEnum)
 
       let localeCompare = FunctionReturn<string, double>(localeCompare) $ Utils.createFunction env (Some 1)

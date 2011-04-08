@@ -111,7 +111,49 @@ module internal Array =
         this.Put("length", double n)
 
       double n
-    
+
+    /// Implements: 15.4.4.9 Array.prototype.shift ( )
+    let shift (func:FO) (this:CO) =
+      let length = this.GetLength()
+      if length = 0u then
+        this.Put("length", 0.0)
+        Undefined.Boxed
+
+      else
+        let value = this.Get(0u)
+
+        if this :? AO then
+          let ao = this :?> AO
+
+          if ao.IsDense then
+            let newLength = int (length-1u)
+            let newDense = Array.zeroCreate<Descriptor> newLength
+
+            for i = 1 to newLength do
+              newDense.[i-1].HasValue <- true
+              newDense.[i-1].Value <- ao.Get(uint32 i)
+
+            ao.Dense <- newDense
+
+          else
+            ao.Sparse.ShiftDown()
+
+        else
+          this.Delete(0u) |> ignore
+          
+          let mutable index = 1u
+          while index < length do
+            let value = this.Get(index)
+
+            if this.HasOwn(index) then
+              this.Delete(index) |> ignore
+
+            this.Put(index-1u, value)
+            index <- index + 1u
+
+        this.Put("length", length - 1u |> double)
+        value
+          
     ///
     let create (env:Env) ownPrototype =
       let prototype = env.NewArray()
@@ -131,4 +173,7 @@ module internal Array =
 
       let pop = pop $ Utils.createFunc0 env (Some 0)
       proto.Put("pop", pop, Immutable)
+
+      let shift = shift $ Utils.createFunc0 env (Some 0)
+      proto.Put("shift", shift, Immutable)
 

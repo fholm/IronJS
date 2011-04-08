@@ -596,16 +596,16 @@ and [<AllowNullLiteral>] CommonObject =
   // These methods are the core Put/Get/Has/Delete methods for property access
   //----------------------------------------------------------------------------
 
-  abstract Put : String * BV -> unit
-  default x.Put(name:String, value:BV) : unit =
+  abstract Put : string * BV -> unit
+  default x.Put(name:string, value:BV) : unit =
     let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
       x.Properties.[index].Value <- value
       x.Properties.[index].HasValue <- true
 
-  abstract Put : String * obj * uint32 -> unit
-  default x.Put(name:String, value:obj, tag:uint32) : unit =
+  abstract Put : string * obj * uint32 -> unit
+  default x.Put(name:string, value:obj, tag:uint32) : unit =
     let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
@@ -613,27 +613,34 @@ and [<AllowNullLiteral>] CommonObject =
       x.Properties.[index].Value.Tag <- tag
       x.Properties.[index].HasValue <- true
 
-  abstract Put : String * double -> unit
-  default x.Put(name:String, value:double) : unit =
+  abstract Put : string * double -> unit
+  default x.Put(name:string, value:double) : unit =
     let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
       x.Properties.[index].Value.Number <- value
       x.Properties.[index].HasValue <- true
 
-  abstract Get : String -> BV
-  default x.Get(name:String) =
+  abstract Get : string -> BV
+  default x.Get(name:string) =
     let descriptor = x.Find name
     if descriptor.HasValue 
       then descriptor.Value
       else Undefined.Boxed
 
-  abstract Has : String -> bool
-  default x.Has(name:String) = 
-    (x.Find name).HasValue
+  abstract Has : string -> bool
+  default x.Has(name:string) = 
+    (x.Find(name)).HasValue
 
-  abstract Delete : String -> bool
-  default x.Delete(name:String) =
+  abstract HasOwn : string -> bool
+  default x.HasOwn(name:string) =
+    let mutable index = 0
+    if x.PropertySchema.IndexMap.TryGetValue(name, &index) 
+      then x.Properties.[index].HasValue
+      else false
+
+  abstract Delete : string -> bool
+  default x.Delete(name:string) =
     let mutable index = 0
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
 
@@ -645,19 +652,19 @@ and [<AllowNullLiteral>] CommonObject =
 
     else
       true
-      
+
   //----------------------------------------------------------------------------
   abstract Put : uint32 * BV -> unit
   default x.Put(index:uint32, value:BV) : unit = 
-    x.Put(index.ToString(), value)
+    x.Put(string index, value)
 
   abstract Put : uint32 * obj * uint32 -> unit
   default x.Put(index:uint32, value:obj, tag:uint32)  : unit= 
-    x.Put(index.ToString(), value, tag)
+    x.Put(string index, value, tag)
 
   abstract Put : uint32 * double -> unit
   default x.Put(index:uint32, value:double) : unit = 
-    x.Put(index.ToString(), value)
+    x.Put(string index, value)
 
   abstract Get : uint32 -> BV
   default x.Get(index:uint32) =
@@ -665,11 +672,15 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Has : uint32 -> bool
   default x.Has(index:uint32) =
-    x.Has(index.ToString())
+    x.Has(string index)
+
+  abstract HasOwn : uint32 -> bool
+  default x.HasOwn(index:uint32) =
+    x.HasOwn(string index)
 
   abstract Delete : uint32 -> bool
   default x.Delete(index:uint32) =
-    x.Delete(index.ToString())
+    x.Delete(string index)
 
   abstract DefaultValue : DefaultValueHint -> BV
   default x.DefaultValue(hint:DefaultValueHint) =
@@ -1155,11 +1166,15 @@ and [<AllowNullLiteral>] SparseArray() =
         if key >= newLength then
           storage.Remove(key) |> ignore
 
-    (*
-    while newLength < length do
-      storage.Remove(length-1u) |> ignore
-      length <- length - 1u
-    *)
+  ///
+  member x.ShiftDown() =
+    storage.Remove(0u) |> ignore
+
+    let keys = seq storage.Keys
+    for key in keys do
+      let value = storage.[key]
+      storage.Remove(key) |> ignore
+      storage.Add(key, value)
 
   ///
   static member OfDense (values:Descriptor array) =
@@ -1199,7 +1214,10 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     dense <- newDense
 
   #if DEBUG
-  member x.Dense = dense
+  member x.Dense
+    with  get ( ) = dense 
+    and   set (v) = dense <- v
+
   member x.Sparse = sparse
   member x.Length = length
   #endif

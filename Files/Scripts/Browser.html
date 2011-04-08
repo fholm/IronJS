@@ -5,24 +5,10 @@
             $ERROR = alert;
 
             (function () {
-                //CHECK#1
-                if (Array.prototype.concat.propertyIsEnumerable('length') !== false) {
-                    $ERROR('#1: Array.prototype.concat.propertyIsEnumerable(\'length\') === false. Actual: ' + (Array.prototype.concat.propertyIsEnumerable('length')));
-                }
-
-                //CHECK#2
-                result = true;
-                for (p in Array.concat) {
-                    if (p === "length") {
-                        result = false;
-                    }
-                }
-
-                if (result !== true) {
-                    $ERROR('#2: result = true; for (p in Array.concat) { if (p === "length") result = false; }  result === true;');
-                }
-
-
+                Array.prototype[1] = 1;
+                x = [0];
+                x.length = 2;
+                
             })();
 
         </script>

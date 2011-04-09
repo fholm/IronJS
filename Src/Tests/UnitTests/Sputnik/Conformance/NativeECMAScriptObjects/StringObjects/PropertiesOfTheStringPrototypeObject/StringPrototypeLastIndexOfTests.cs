@@ -17,7 +17,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Str
         [Category("ECMA 15.5.4.8")]
         [TestCase("S15.5.4.8_A1_T1.js", Description = "String.prototype.lastIndexOf(searchString, position)")]
         [TestCase("S15.5.4.8_A1_T10.js", Description = "String.prototype.lastIndexOf(searchString, position)")]
-        [TestCase("S15.5.4.8_A1_T11.js", Description = "String.prototype.lastIndexOf(searchString, position)")]
+        [TestCase("S15.5.4.8_A1_T11.js", Ignore = true, IgnoreReason = "This test is incorrect.  Consult ECMA-262, Section 15.9.5.2.", Description = "String.prototype.lastIndexOf(searchString, position)")]
         [TestCase("S15.5.4.8_A1_T12.js", Description = "String.prototype.lastIndexOf(searchString, position)")]
         [TestCase("S15.5.4.8_A1_T2.js", Description = "String.prototype.lastIndexOf(searchString, position)")]
         [TestCase("S15.5.4.8_A1_T3.js", Description = "String.prototype.lastIndexOf(searchString, position)")]

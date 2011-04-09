@@ -276,20 +276,31 @@ type Operators =
   //----------------------------------------------------------------------------
   // +
   static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
-  static member add (l:BoxedValue, r:BoxedValue) = 
-    if l.IsNumber && r.IsNumber then
-      BV.Box (l.Number + r.Number)
-
-    elif l.Tag = TypeTags.String && r.Tag = TypeTags.String then
-      BV.Box (TC.ToString l + TC.ToString r)
-
-    else
+  static member add (l:BoxedValue, r:BoxedValue) =
+    let fallback() =
       let l' = l |> TC.ToPrimitive
       let r' = r |> TC.ToPrimitive
       if l'.IsString || r'.IsString 
         then (TC.ToString l' + TC.ToString r') |> BV.Box
         else (TC.ToNumber l' + TC.ToNumber r') |> BV.Box
-      
+
+    if l.IsNumber then
+      if r.IsNumber then
+        (l.Number + r.Number) |> BV.Box
+      elif r.IsString then
+        (TC.ToString l + r.String) |> BV.Box
+      else
+        fallback()
+    elif l.IsString then
+      if r.IsNumber then
+        (l.String + TC.ToString r) |> BV.Box
+      elif r.IsString then
+        (l.String + r.String) |> BV.Box
+      else
+        fallback()
+    else
+      fallback()
+
   //----------------------------------------------------------------------------
   // -
   static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]

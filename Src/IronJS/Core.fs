@@ -2300,12 +2300,3 @@ and ClrArgs = obj array
 and Scope = BV array
 and DynamicScope = (int * CO) list
 and FunctionCompiler = FO -> Type -> Delegate
-
-and JsFunc = Func<FO,CO,BV>
-and JsFunc<'a> = Func<FO,CO,'a,BV>
-and JsFunc<'a,'b> = Func<FO,CO,'a,'b,BV>
-and JsFunc<'a,'b,'c> = Func<FO,CO,'a,'b,'c,BV>
-and JsFunc<'a,'b,'c,'d> = Func<FO,CO,'a,'b,'c,'d,BV>
-and JsFunc<'a,'b,'c,'d,'e> = Func<FO,CO,'a,'b,'c,'d,'e,BV>
-and JsFunc<'a,'b,'c,'d,'e,'f> = Func<FO,CO,'a,'b,'c,'d,'e,'f,BV>
-and JsArgsFunc = JsFunc<Args>

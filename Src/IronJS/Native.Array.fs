@@ -105,6 +105,11 @@ module internal Array =
         buffer.Remove(buffer.Length-separator.Length, separator.Length) |> ignore
         buffer.ToString()
 
+    /// Implements: 15.4.4.2 Array.prototype.toString ( )
+    let toString (func:FO) (this:CO) =
+      this.CheckType<AO>()
+      join func this Undefined.Boxed
+
     /// Implements: 15.4.4.6 Array.prototype.pop ( )
     let pop (func:FO) (this:CO) = 
       let length = this.GetLength()
@@ -203,6 +208,9 @@ module internal Array =
       let proto = env.Prototypes.Array
       proto.Put("constructor", env.Constructors.Array, Immutable)
       
+      let toString = toString $ Utils.createFunc0 env (Some 0)
+      proto.Put("toString", toString, Immutable)
+
       let concat = concat $ Utils.createFunc1 env (Some 1)
       proto.Put("concat", concat, Immutable)
 

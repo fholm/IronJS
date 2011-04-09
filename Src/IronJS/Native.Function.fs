@@ -10,32 +10,36 @@ module internal Function =
 
   ///
   let private constructor' (f:FO) (_:CO) (args:Args) : FO =
-      Utils.trapSyntaxError f.Env (fun () ->
-        let args, body = 
-          if args.Length = 0 then 
-            "", ""
+    
+    let makeFunction () = 
+    
+      let args, body = 
+        if args.Length = 0 then 
+          "", ""
 
-          else 
+        else 
 
-            let funcArgs = 
-              args 
-              |> Seq.take (args.Length-1) 
-              |> Seq.map TypeConverter.ToString
-              |> String.concat ", "
+          let funcArgs = 
+            args 
+            |> Seq.take (args.Length-1) 
+            |> Seq.map TypeConverter.ToString
+            |> String.concat ", "
               
-            let body = 
-              args.[args.Length-1] 
-              |> TypeConverter.ToString
+          let body = 
+            args.[args.Length-1] 
+            |> TypeConverter.ToString
 
-            funcArgs, body
+          funcArgs, body
 
-        let source = sprintf "(function(){ return function(%s){%s}; })();" args body
-        let ast, scopeData = source |> Compiler.Parser.parseString f.Env
-        scopeData |> Compiler.Analyzer.analyzeScopeChain
+      let source = sprintf "(function(){ return function(%s){%s}; })();" args body
+      let ast, scopeData = source |> Compiler.Parser.parseString f.Env
+      scopeData |> Compiler.Analyzer.analyzeScopeChain
 
-        let compiled = Compiler.Core.compileGlobal f.Env ast
-        (compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox) :?> FunctionObject
-      )
+      let compiled = Compiler.Core.compileGlobal f.Env ast
+      let result = compiled.DynamicInvoke(f, f.Env.Globals) |> BoxingUtils.ClrBox
+      result :?> FO
+
+    Utils.trapSyntaxError f.Env makeFunction
 
   ///
   let setup (env:Env) =

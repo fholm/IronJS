@@ -43,7 +43,9 @@ module HostFunction =
   let defaultArg env type' =
     if type' == typeof<BV> 
       then Utils.Constants.Boxed.undefined
-      else TC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
+      elif type' == typeof<CO> 
+        then Dlr.defaultT<CO>
+        else TC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
 
   let compile<'a when 'a :> Delegate> (f:FO) callsiteType =
     let hostType = typeof<'a>

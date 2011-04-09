@@ -12,6 +12,4 @@ let ctx = IronJS.createContext()
 let env = ctx |> IronJS.env 
 
 ctx |> IronJS.Utils.createPrintFunction
-ctx |> IronJS.execute @"
-try { throw 'foo' } catch(e) { if ( e==='foo' ) { print('lol') } }
-"
+ctx |> IronJS.execute @"eval('while(true) { break; x = 1;  }; x = 1;') "

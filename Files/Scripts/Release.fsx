@@ -1,20 +1,15 @@
 #light
 #time
 #r @"../../Src/IronJS/bin/Release/IronJS.dll"
-
 open System
 open IronJS
-open IronJS.Hosting.FSharp
 
 module IronJS = IronJS.Hosting.FSharp
 
 IronJS.Support.Debug.registerConsolePrinter()
 
-let ctx = Ijs.createContext()
-ctx |> Ijs.Utils.createPrintFunction
+let ctx = IronJS.createContext()
+let env = ctx |> IronJS.env 
 
-let src = @"
-  
-"
-
-ctx |> Ijs.execute src
+ctx |> IronJS.Utils.createPrintFunction
+ctx |> IronJS.execute @""

@@ -115,17 +115,25 @@ module internal Array =
     /// Implements: 15.4.4.9 Array.prototype.shift ( )
     let shift (func:FO) (this:CO) =
       let length = this.GetLength()
+
+      // Length = 0, put length and return undefined
       if length = 0u then
         this.Put("length", 0.0)
         Undefined.Boxed
 
+      // Length > 0
       else
+        // Get value we're going to return
         let value = this.Get(0u)
 
-        if this :? AO then
-          let ao = this :?> AO
+        let mutable ao = null
 
+        // Use special version for ArrayObject instances
+        if this.TryCastTo<AO>(&ao) then
+
+          // Use even faster version for dense arrays
           if ao.IsDense then
+            
             let newLength = int (length-1u)
             let newDense = Array.zeroCreate<Descriptor> newLength
 
@@ -135,9 +143,11 @@ module internal Array =
 
             ao.Dense <- newDense
 
+          // Sparse arrays implement their own shift operation
           else
-            ao.Sparse.ShiftDown()
+            ao.Sparse.Shift()
 
+        // Use slower version of CommonObject instances
         else
           this.Delete(0u) |> ignore
           
@@ -151,7 +161,10 @@ module internal Array =
             this.Put(index-1u, value)
             index <- index + 1u
 
+        // Update length
         this.Put("length", length - 1u |> double)
+
+        // Return value
         value
           
     ///

@@ -23,6 +23,14 @@ module Core =
     for node in nodes do
       ctx $ Context.compile node $ lst.Add
 
+    let mutable i = (lst.Count-1)
+    let mutable loop = true
+    
+    while loop && i >= 0 do
+      if lst.[i].Type <> typeof<Void> then
+        loop <- false
+        lst.[i] <- Utils.assign ctx.ReturnBox lst.[i]
+        
     lst $ Dlr.Fast.blockOfSeq []
 
   ///

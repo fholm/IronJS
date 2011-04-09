@@ -1167,7 +1167,7 @@ and [<AllowNullLiteral>] SparseArray() =
           storage.Remove(key) |> ignore
 
   ///
-  member x.ShiftDown() =
+  member x.Shift() =
     storage.Remove(0u) |> ignore
 
     let keys = seq storage.Keys
@@ -1532,7 +1532,7 @@ and GlobalCode = delegate of FO * CO -> obj
 /// get its private, shared and dynamic scope passed
 /// into it from the calling context, it also returns
 /// a CLR boxed value like GlobalCode.
-and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
+and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> BV
 
 /// This delegate type is used for functions that are called
 /// with more then four arguments. Instead of compiling a function

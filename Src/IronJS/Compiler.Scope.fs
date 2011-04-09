@@ -454,7 +454,8 @@ module Scope =
       let compiledAst =
         Dlr.Fast.block [||] [|
           ctx $ initHoistedFunctions Identifier.setValue
-          ctx $ compileAsClrValue
+          ctx $ Context.compile (Ast.Block[ctx $ getAst])
+          ctx.ReturnBox
         |]
 
       Dlr.lambdaT<EvalCode> parameters compiledAst 

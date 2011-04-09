@@ -80,6 +80,31 @@ module internal Array =
 
       concat 0u (BV.Box this) 0
 
+    /// Implements: 15.4.4.5 Array.prototype.join (separator)
+    let join (func:FO) (this:CO) (separator:BV) =
+      let length = this.GetLength()
+      let separator =
+        match separator.Tag with
+        | TypeTags.Undefined -> ","
+        | _ -> TC.ToString(separator)
+
+      let buffer = Text.StringBuilder(16)
+      let mutable i = 0u
+
+      while i < length do
+        match this.Get(i) with
+        | x when x.IsUndefined || x.IsNull -> buffer.Append("") |> ignore
+        | x -> buffer.Append(TC.ToString(x)) |> ignore
+        buffer.Append(separator) |> ignore
+        i <- i + 1u
+
+      if length = 0u then 
+        ""
+
+      else 
+        buffer.Remove(buffer.Length-separator.Length, separator.Length) |> ignore
+        buffer.ToString()
+
     /// Implements: 15.4.4.6 Array.prototype.pop ( )
     let pop (func:FO) (this:CO) = 
       let length = this.GetLength()
@@ -189,4 +214,7 @@ module internal Array =
 
       let shift = shift $ Utils.createFunc0 env (Some 0)
       proto.Put("shift", shift, Immutable)
+
+      let join = join $ Utils.createFunc1 env (Some 1)
+      proto.Put("join", join, Immutable)
 

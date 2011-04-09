@@ -1228,7 +1228,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   ///
   member internal x.SetLength(newLength) =
     length <- newLength
-    base.Put("length", double length, DescriptorAttrs.Immutable)
+    base.Put("length", double length, DescriptorAttrs.DontEnum)
 
   ///
   member internal x.IsDense = 

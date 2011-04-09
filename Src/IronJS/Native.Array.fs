@@ -110,6 +110,29 @@ module internal Array =
       this.CheckType<AO>()
       join func this Undefined.Boxed
 
+    /// Implements: 15.4.4.3 Array.prototype.toLocaleString ( )
+    let toLocaleString (func:FO) (this:CO) =
+      this.CheckType<AO>()
+
+      let length = this.GetLength()
+      let separator = ","
+      let buffer = Text.StringBuilder(16)
+      let mutable i = 0u
+
+      while i < length do
+        match this.Get(i) with
+        | x when x.IsUndefined || x.IsNull -> buffer.Append("") |> ignore
+        | x -> buffer.Append(TC.ToObject(func.Env, x).CallMember("toLocaleString")|>TC.ToString) |> ignore
+        buffer.Append(separator) |> ignore
+        i <- i + 1u
+
+      if length = 0u then 
+        ""
+
+      else 
+        buffer.Remove(buffer.Length-separator.Length, separator.Length) |> ignore
+        buffer.ToString()
+
     /// Implements: 15.4.4.6 Array.prototype.pop ( )
     let pop (func:FO) (this:CO) = 
       let length = this.GetLength()
@@ -206,23 +229,26 @@ module internal Array =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Array
-      proto.Put("constructor", env.Constructors.Array, Immutable)
+      proto.Put("constructor", env.Constructors.Array, DontEnum)
       
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, Immutable)
+      proto.Put("toString", toString, DontEnum)
+
+      let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
+      proto.Put("toLocaleString", toLocaleString, DontEnum)
 
       let concat = concat $ Utils.createFunc1 env (Some 1)
-      proto.Put("concat", concat, Immutable)
+      proto.Put("concat", concat, DontEnum)
 
       let push = push $ Utils.createFunc1 env (Some 1)
-      proto.Put("push", push, Immutable)
+      proto.Put("push", push, DontEnum)
 
       let pop = pop $ Utils.createFunc0 env (Some 0)
-      proto.Put("pop", pop, Immutable)
+      proto.Put("pop", pop, DontEnum)
 
       let shift = shift $ Utils.createFunc0 env (Some 0)
-      proto.Put("shift", shift, Immutable)
+      proto.Put("shift", shift, DontEnum)
 
       let join = join $ Utils.createFunc1 env (Some 1)
-      proto.Put("join", join, Immutable)
+      proto.Put("join", join, DontEnum)
 

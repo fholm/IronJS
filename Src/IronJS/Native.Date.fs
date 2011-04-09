@@ -9,6 +9,7 @@ open System.Globalization
 
 open IronJS
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 open IronJS.ExtensionMethods
 open IronJS.DescriptorAttrs
 
@@ -125,14 +126,21 @@ module Date =
       ticks + offset |> BV.Box
 
   let setup (env:Environment) =
-    let create (a:'a) = Utils.createHostFunction env a
-    let ctor = new JsFunc<Args>(constructor') |> create
+    let ctor = new VariadicFunction(constructor')
+    let ctor = ctor $ Utils.createConstructor env (Some 7)
+
+    ctor.MetaData.Name <- "Date"
+
+    let parse = FunctionReturn<string, BV>(parse) $ Utils.createFunction env (Some 1)
+    ctor.Put("parse", parse, DontEnum)
+
+    let parseLocal = FunctionReturn<string, BV>(parseLocal) $ Utils.createFunction env (Some 1)
+    ctor.Put("parseLocal", parseLocal, DontEnum)
+
+    let utc = VariadicFunction(utc) $ Utils.createFunction env (Some 7)
+    ctor.Put("UTC", utc, DontEnum)
 
     ctor.Put("prototype", env.Prototypes.Date, Immutable)
-
-    ctor?parse <- (JsFunc<string>(parse) |> create)
-    ctor?parseLocal <- (JsFunc<string>(parseLocal) |> create)
-    ctor?UTC <- (JsFunc<Args>(utc) |> create)
 
     env.Globals.Put("Date", ctor, DontEnum)
     env.Constructors <- {env.Constructors with Date=ctor}
@@ -175,7 +183,7 @@ module Date =
 
     let private toLocalTime (o:CO) = o.CastTo<DO>().Date.ToLocalTime()
     let private toUTCTime (o:CO) = o.CastTo<DO>().Date.ToUniversalTime()
-    
+
     let private getTime (f:FO) (o:CO) = valueOf f o
     let private getFullYear (f:FO) (o:CO) = (toLocalTime o).Year |> double |> BV.Box
     let private getUTCFullYear (f:FO) (o:CO) = (toUTCTime o).Year |> double |> BV.Box
@@ -241,47 +249,128 @@ module Date =
 
     let setup (env:Env) =
       let proto = env.Prototypes.Date
-      let create (func:'a) = func |> Utils.createHostFunction env
 
-      proto?constructor <- env.Constructors.Date
-      proto?valueOf <- (JsFunc(valueOf) |> create)
-      proto?toString <- (JsFunc(toString) |> create)
-      proto?toDateString <- (JsFunc(toDateString) |> create)
-      proto?toTimeString <- (JsFunc(toTimeString) |> create)
-      proto?toLocaleString <- (JsFunc(toLocaleString) |> create)
-      proto?toLocaleDateString <- (JsFunc(toLocaleDateString) |> create)
-      proto?toLocaleTimeString <- (JsFunc(toLocaleTimeString) |> create)
-      proto?getTime <- (JsFunc(getTime) |> create)
-      proto?getFullYear <- (JsFunc(getFullYear) |> create)
-      proto?getUTCFullYear <- (JsFunc(getUTCFullYear) |> create)
-      proto?getMonth <- (JsFunc(getMonth) |> create)
-      proto?getUTCMonth <- (JsFunc(getUTCMonth) |> create)
-      proto?getDate <- (JsFunc(getDate) |> create)
-      proto?getUTCDate <- (JsFunc(getUTCDate) |> create)
-      proto?getDay <- (JsFunc(getDay) |> create)
-      proto?getUTCDay <- (JsFunc(getUTCDay) |> create)
-      proto?getHours <- (JsFunc(getHours) |> create)
-      proto?getUTCHours <- (JsFunc(getUTCHours) |> create)
-      proto?getMinutes <- (JsFunc(getMinutes) |> create)
-      proto?getUTCMinutes <- (JsFunc(getUTCMinutes) |> create)
-      proto?getSeconds <- (JsFunc(getSeconds) |> create)
-      proto?getUTCSeconds <- (JsFunc(getUTCSeconds) |> create)
-      proto?getMilliseconds <- (JsFunc(getMilliseconds) |> create)
-      proto?getUTCMilliseconds <- (JsFunc(getUTCMilliseconds) |> create)
-      proto?getTimezoneOffset <- (JsFunc(getTimezoneOffset) |> create)
-      proto?setTime <- (JsFunc<double>(setTime) |> create)
-      proto?setMilliseconds <- (SetFunc(setMilliseconds) |> create) 
-      proto?setUTCMilliseconds <- (SetFunc(setUTCMilliseconds) |> create)
-      proto?setSeconds <- (SetFunc(setSeconds) |> create)
-      proto?setUTCSeconds <- (SetFunc(setUTCSeconds) |> create)
-      proto?setMinutes <- (SetFunc(setMinutes) |> create)
-      proto?setUTCMinutes <- (SetFunc(setUTCMinutes) |> create)
-      proto?setHours <- (SetFunc(setHours) |> create)
-      proto?setUTCHours <- (SetFunc(setUTCHours) |> create)
-      proto?setDate <- (SetFunc(setDate) |> create)
-      proto?setUTCDate <- (SetFunc(setUTCDate) |> create)
-      proto?setMonth <- (SetFunc(setMonth) |> create)
-      proto?setUTCMonth <- (SetFunc(setUTCMonth) |> create)
-      proto?setFullYear <- (SetFunc(setFullYear) |> create)
-      proto?setUTCFullYear <- (SetFunc(setUTCFullYear) |> create)
-      proto?toUTCString <- (JsFunc(toUTCString) |> create)
+      proto.Put("constructor", env.Constructors.Date, DontEnum)
+
+      let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
+      proto.Put("valueOf", valueOf, DontEnum)
+
+      let toString = Function(toString) $ Utils.createFunction env (Some 0)
+      proto.Put("toString", toString, DontEnum)
+
+      let toDateString = Function(toDateString) $ Utils.createFunction env (Some 0)
+      proto.Put("toDateString", toDateString, DontEnum)
+
+      let toTimeString = Function(toTimeString) $ Utils.createFunction env (Some 0)
+      proto.Put("toTimeString", toTimeString, DontEnum)
+
+      let toLocaleString = Function(toLocaleString) $ Utils.createFunction env (Some 0)
+      proto.Put("toLocaleString", toLocaleString, DontEnum)
+
+      let toLocaleDateString = Function(toLocaleDateString) $ Utils.createFunction env (Some 0)
+      proto.Put("toLocaleDateString", toLocaleDateString, DontEnum)
+
+      let toLocaleTimeString = Function(toLocaleTimeString) $ Utils.createFunction env (Some 0)
+      proto.Put("toLocaleTimeString", toLocaleTimeString, DontEnum)
+
+      let toUTCString = Function(toUTCString) $ Utils.createFunction env (Some 0)
+      proto.Put("toUTCString", toUTCString, DontEnum)
+
+      let getTime = Function(getTime) $ Utils.createFunction env (Some 0)
+      proto.Put("getTime", getTime, DontEnum)
+
+      let getFullYear = Function(getFullYear) $ Utils.createFunction env (Some 0)
+      proto.Put("getFullYear", getFullYear, DontEnum)
+
+      let getUTCFullYear = Function(getUTCFullYear) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCFullYear", getUTCFullYear, DontEnum)
+
+      let getMonth = Function(getMonth) $ Utils.createFunction env (Some 0)
+      proto.Put("getMonth", getMonth, DontEnum)
+
+      let getUTCMonth = Function(getUTCMonth) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCMonth", getUTCMonth, DontEnum)
+
+      let getDate = Function(getDate) $ Utils.createFunction env (Some 0)
+      proto.Put("getDate", getDate, DontEnum)
+
+      let getUTCDate = Function(getUTCDate) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCDate", getUTCDate, DontEnum)
+
+      let getDay = Function(getDay) $ Utils.createFunction env (Some 0)
+      proto.Put("getDay", getDay, DontEnum)
+
+      let getUTCDay = Function(getUTCDay) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCDay", getUTCDay, DontEnum)
+
+      let getHours = Function(getHours) $ Utils.createFunction env (Some 0)
+      proto.Put("getHours", getHours, DontEnum)
+
+      let getUTCHours = Function(getUTCHours) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCHours", getUTCHours, DontEnum)
+
+      let getMinutes = Function(getMinutes) $ Utils.createFunction env (Some 0)
+      proto.Put("getMinutes", getMinutes, DontEnum)
+
+      let getUTCMinutes = Function(getUTCMinutes) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCMinutes", getUTCMinutes, DontEnum)
+
+      let getSeconds = Function(getSeconds) $ Utils.createFunction env (Some 0)
+      proto.Put("getSeconds", getSeconds, DontEnum)
+
+      let getUTCSeconds = Function(getUTCSeconds) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCSeconds", getUTCSeconds, DontEnum)
+
+      let getMilliseconds = Function(getMilliseconds) $ Utils.createFunction env (Some 0)
+      proto.Put("getMilliseconds", getMilliseconds, DontEnum)
+
+      let getUTCMilliseconds = Function(getUTCMilliseconds) $ Utils.createFunction env (Some 0)
+      proto.Put("getUTCMilliseconds", getUTCMilliseconds, DontEnum)
+
+      let getTimezoneOffset = Function(getTimezoneOffset) $ Utils.createFunction env (Some 0)
+      proto.Put("getTimezoneOffset", getTimezoneOffset, DontEnum)
+
+      let setTime = FunctionReturn<double, BV>(setTime) $ Utils.createFunction env (Some 1)
+      proto.Put("setTime", setTime, DontEnum)
+
+      let setMilliseconds = SetFunc(setMilliseconds) $ Utils.createFunction env (Some 1)
+      proto.Put("setMilliseconds", setMilliseconds, DontEnum)
+ 
+      let setUTCMilliseconds = SetFunc(setUTCMilliseconds) $ Utils.createFunction env (Some 1)
+      proto.Put("setUTCMilliseconds", setUTCMilliseconds, DontEnum)
+
+      let setSeconds = SetFunc(setSeconds) $ Utils.createFunction env (Some 2)
+      proto.Put("setSeconds", setSeconds, DontEnum)
+
+      let setUTCSeconds = SetFunc(setUTCSeconds) $ Utils.createFunction env (Some 2)
+      proto.Put("setUTCSeconds", setUTCSeconds, DontEnum)
+
+      let setMinutes = SetFunc(setMinutes) $ Utils.createFunction env (Some 3)
+      proto.Put("setMinutes", setMinutes, DontEnum)
+
+      let setUTCMinutes = SetFunc(setUTCMinutes) $ Utils.createFunction env (Some 3)
+      proto.Put("setUTCMinutes", setUTCMinutes, DontEnum)
+
+      let setHours = SetFunc(setHours) $ Utils.createFunction env (Some 4)
+      proto.Put("setHours", setHours, DontEnum)
+
+      let setUTCHours = SetFunc(setUTCHours) $ Utils.createFunction env (Some 4)
+      proto.Put("setUTCHours", setUTCHours, DontEnum)
+
+      let setDate = SetFunc(setDate) $ Utils.createFunction env (Some 1)
+      proto.Put("setDate", setDate, DontEnum)
+
+      let setUTCDate = SetFunc(setUTCDate) $ Utils.createFunction env (Some 1)
+      proto.Put("setUTCDate", setUTCDate, DontEnum)
+
+      let setMonth = SetFunc(setMonth) $ Utils.createFunction env (Some 2)
+      proto.Put("setMonth", setMonth, DontEnum)
+
+      let setUTCMonth = SetFunc(setUTCMonth) $ Utils.createFunction env (Some 2)
+      proto.Put("setUTCMonth", setUTCMonth, DontEnum)
+
+      let setFullYear = SetFunc(setFullYear) $ Utils.createFunction env (Some 3)
+      proto.Put("setFullYear", setFullYear, DontEnum)
+
+      let setUTCFullYear = SetFunc(setUTCFullYear) $ Utils.createFunction env (Some 3)
+      proto.Put("setUTCFullYear", setUTCFullYear, DontEnum)

@@ -73,7 +73,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.NativeECMAScriptObjects.Str
             RunFile(file);
         }
 
-        [Test]
+        [Test, Ignore("These tests are incorrect.  Consult ECMA-262, Section 15.5.4.11, Table 22, Item '$n'.")]
         [Category("Sputnik Conformance")]
         [Category("ECMA 15.5.4.11")]
         [TestCase("S15.5.4.11_A3_T1.js", Description = "replace with regexp /(uid=)(\\d+)/ returns")]

@@ -12,4 +12,4 @@ let ctx = IronJS.createContext()
 let env = ctx |> IronJS.env 
 
 ctx |> IronJS.Utils.createPrintFunction
-ctx |> IronJS.execute @"eval('while(true) { break; x = 1;  }; x = 1;') "
+ctx |> IronJS.execute @"supreme=5;for(count=0;;) {if (count===supreme)break;else count++; }"

@@ -5,10 +5,12 @@
             $ERROR = alert;
 
             (function () {
-                Array.prototype[1] = 1;
-                x = [0];
-                x.length = 2;
-                
+            	for(__key in undefined){
+                    alert(__key);
+	                var key =__key;
+	            };
+
+                alert(key);
             })();
 
         </script>

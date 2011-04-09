@@ -1228,7 +1228,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   ///
   member internal x.SetLength(newLength) =
     length <- newLength
-    base.Put("length", double length)
+    base.Put("length", double length, DescriptorAttrs.Immutable)
 
   ///
   member internal x.IsDense = 
@@ -1532,7 +1532,7 @@ and GlobalCode = delegate of FO * CO -> obj
 /// get its private, shared and dynamic scope passed
 /// into it from the calling context, it also returns
 /// a CLR boxed value like GlobalCode.
-and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> BV
+and EvalCode = delegate of FO * CO * Scope * Scope * DynamicScope -> obj
 
 /// This delegate type is used for functions that are called
 /// with more then four arguments. Instead of compiling a function

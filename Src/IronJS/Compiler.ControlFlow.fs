@@ -4,6 +4,7 @@ open System
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
+open IronJS.Dlr.Operators
 open IronJS.Compiler
 open IronJS.Compiler.Context
 
@@ -51,7 +52,7 @@ module ControlFlow =
   // 12.6.2 while
   let while' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TypeConverter.ToBoolean (ctx $ Context.compile test)
+    let test = TC.ToBoolean(ctx $ Context.compile test)
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
@@ -64,7 +65,7 @@ module ControlFlow =
   let for' (ctx:Ctx) label init test incr body =
     let break', continue' = loopLabels()
     let init = ctx $ Context.compile init
-    let test = ctx $ Context.compile test
+    let test = ctx $ Context.compile test $ TC.ToBoolean
     let incr = ctx $ Context.compile incr
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
@@ -91,52 +92,67 @@ module ControlFlow =
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
+    let source = Dlr.paramT<BV> "~source"
 
     let tempVars = 
-      [ pair; 
+      [ pair; source
         propertyEnumerator; propertyState; 
         indexCurrent; indexLength]
 
     Dlr.block tempVars [
-      (Dlr.assign pair 
-        (Dlr.call 
-          (TypeConverter.ToObject(ctx.Env, ctx $ Context.compile object')) "CollectProperties" []))
+      (Dlr.assign source (ctx $ Context.compile object' $ Utils.box))
 
-      (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
-      (Dlr.assign propertyState Dlr.true')
-      (Dlr.assign indexLength (Dlr.property pair "Item1"))
+      (Dlr.if'
+        (
+          Dlr.Expr.Not (source .-> "IsNull") 
+          .&&
+          Dlr.Expr.Not (source .-> "IsUndefined")
+        )
 
-      (Dlr.loop 
-        (break')
-        (Dlr.labelVoid "~dummyLabel")
-        (Dlr.true')
-        (Dlr.blockSimple [
+        (Dlr.Fast.block [||] [|
           
-          (Dlr.if' propertyState  
+          (Dlr.assign pair 
+            (Dlr.call 
+              (TypeConverter.ToObject(ctx.Env, source)) "CollectProperties" []))
+
+          (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
+          (Dlr.assign propertyState Dlr.true')
+          (Dlr.assign indexLength (Dlr.property pair "Item1"))
+
+          (Dlr.loop 
+            (break')
+            (Dlr.labelVoid "~dummyLabel")
+            (Dlr.true')
             (Dlr.blockSimple [
-              (Dlr.assign propertyState 
-                (Dlr.call propertyEnumerator "MoveNext" []))
-              (Dlr.if' propertyState
-                (Binary.assign ctx target (Ast.DlrExpr propertyCurrent)))]))
+          
+              (Dlr.if' propertyState  
+                (Dlr.blockSimple [
+                  (Dlr.assign propertyState 
+                    (Dlr.call propertyEnumerator "MoveNext" []))
+                  (Dlr.if' propertyState
+                    (Binary.assign ctx target (Ast.DlrExpr propertyCurrent)))]))
 
-          (Dlr.if'
-            (Dlr.eq propertyState Dlr.false')
-            (Dlr.ifElse
-              (Dlr.eq indexLength (Dlr.uint0))
-              (Dlr.break' break')
-              (Binary.assign ctx target 
-                (Ast.DlrExpr (Dlr.castT<double> indexCurrent)))))
+              (Dlr.if'
+                (Dlr.eq propertyState Dlr.false')
+                (Dlr.ifElse
+                  (Dlr.eq indexLength (Dlr.uint0))
+                  (Dlr.break' break')
+                  (Binary.assign ctx target 
+                    (Ast.DlrExpr (Dlr.castT<double> indexCurrent)))))
 
-          (body |> ctx.Compile)
+              (body |> ctx.Compile)
 
-          (Dlr.labelExprVoid continue')
+              (Dlr.labelExprVoid continue')
 
-          (Dlr.if' 
-            (Dlr.eq propertyState Dlr.false')
-            (Dlr.blockSimple [
-              (Dlr.assign indexLength (Dlr.sub indexLength Dlr.uint1))
-              (Dlr.assign indexCurrent (Dlr.add indexCurrent Dlr.uint1))]))
-        ])
+              (Dlr.if' 
+                (Dlr.eq propertyState Dlr.false')
+                (Dlr.blockSimple [
+                  (Dlr.assign indexLength (Dlr.sub indexLength Dlr.uint1))
+                  (Dlr.assign indexCurrent (Dlr.add indexCurrent Dlr.uint1))]))
+            ])
+          )
+        |]
+      )
       )
     ]
 

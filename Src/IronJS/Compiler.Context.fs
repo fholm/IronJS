@@ -122,6 +122,7 @@ module Parameters =
     PrivateScope: Dlr.Parameter
     SharedScope: Dlr.Parameter
     DynamicScope: Dlr.Parameter
+    EvalResult: Dlr.Parameter
     UserParameters: Dlr.Parameter array
   }
 

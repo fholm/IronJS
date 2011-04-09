@@ -452,10 +452,10 @@ module Scope =
       let parameters = Array.append internalParameters internalVariables
 
       let compiledAst =
-        Dlr.Fast.block [||] [|
+        Dlr.Fast.block [|ctx.Parameters.EvalResult|] [|
           ctx $ initHoistedFunctions Identifier.setValue
           ctx $ Context.compile (Ast.Block[ctx $ getAst])
-          ctx.ReturnBox
+          ctx.Parameters.EvalResult
         |]
 
       Dlr.lambdaT<EvalCode> parameters compiledAst 

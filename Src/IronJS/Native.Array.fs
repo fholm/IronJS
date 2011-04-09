@@ -176,7 +176,7 @@ module internal Array =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Array
-      proto.Put("constructor", env.Constructors.Array)
+      proto.Put("constructor", env.Constructors.Array, Immutable)
       
       let concat = concat $ Utils.createFunc1 env (Some 1)
       proto.Put("concat", concat, Immutable)

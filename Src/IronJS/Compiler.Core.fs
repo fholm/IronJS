@@ -23,13 +23,14 @@ module Core =
     for node in nodes do
       ctx $ Context.compile node $ lst.Add
 
-    let mutable i = (lst.Count-1)
-    let mutable loop = true
-    
-    while loop && i >= 0 do
-      if lst.[i].Type <> typeof<Void> then
-        loop <- false
-        lst.[i] <- Utils.assign ctx.ReturnBox lst.[i]
+    match ctx.Target.Mode with
+    | Target.Mode.Eval ->
+      let result = ctx.Parameters.EvalResult
+      for i = 0 to (lst.Count-1) do
+        if lst.[i].Type <> typeof<Void> then
+          lst.[i] <- Dlr.assign result (Dlr.castT<obj> lst.[i])
+
+    | _ -> ()
         
     lst $ Dlr.Fast.blockOfSeq []
 
@@ -148,6 +149,7 @@ module Core =
           Parameters.T.PrivateScope = Dlr.paramT<Scope> "~private"
           Parameters.T.SharedScope = Dlr.paramT<Scope> "~shared"
           Parameters.T.DynamicScope = Dlr.paramT<DynamicScope> "~dynamic"
+          Parameters.T.EvalResult = Dlr.paramT<obj> "~result"
           Parameters.T.UserParameters = target.ParameterTypes $ Array.mapi Dlr.paramI
         }
     }

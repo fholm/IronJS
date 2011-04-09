@@ -398,7 +398,7 @@ module Parser =
       p |> block [] |> Tree.Block
 
     | _ -> 
-      p |> statement
+      [p |> statement] |> Tree.Block
 
   /// Parses an argument list, which is
   /// zero or more expressions separated

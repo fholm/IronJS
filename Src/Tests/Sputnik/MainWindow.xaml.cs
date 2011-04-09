@@ -32,7 +32,7 @@ namespace IronJS.Tests.Sputnik
 
         private IList<TestGroup> testGroups;
         private TestGroup rootTestGroup;
-        private HashSet<string> skipTests = new HashSet<string>();
+        private HashSet<string> ignoreTests = new HashSet<string>();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -42,11 +42,15 @@ namespace IronJS.Tests.Sputnik
 
             InitializeComponent();
 
-            //this.skipTests.Add("S8.6_D1.2.js");
-            //this.skipTests.Add("S8.6_D1.3.js");
-            //this.skipTests.Add("S8.6_D1.4.js");
-            //this.skipTests.Add("S8.8_D1.3.js");
-            //this.skipTests.Add("S13.2_D1.2.js");
+            this.ignoreTests.Add("S15.5.4.14_A1_T6");
+            this.ignoreTests.Add("S15.5.4.14_A1_T7");
+            this.ignoreTests.Add("S15.5.4.14_A1_T8");
+            this.ignoreTests.Add("S15.5.4.14_A1_T9");
+            this.ignoreTests.Add("S15.5.4.14_A2_T7");
+            this.ignoreTests.Add("S15.5.4.8_A1_T11");
+            this.ignoreTests.Add("S15.5.4.11_A3_T1");
+            this.ignoreTests.Add("S15.5.4.11_A3_T2");
+            this.ignoreTests.Add("S15.5.4.11_A3_T3");
 
             this.worker.DoWork += this.RunTests;
             this.worker.ProgressChanged += this.Worker_ProgressChanged;
@@ -86,6 +90,11 @@ namespace IronJS.Tests.Sputnik
 
             foreach (var file in Directory.GetFiles(path, "*.js"))
             {
+                if (this.ignoreTests.Contains(Path.GetFileNameWithoutExtension(file)))
+                {
+                    continue;
+                }
+
                 var testCase = new TestCase(basePath, file);
                 var group = new TestGroup(root, testCase)
                 {
@@ -341,13 +350,8 @@ namespace IronJS.Tests.Sputnik
 
                 this.UpdateCurrentTest(testCase);
 
-                bool pass = false;
-                string resultingError = null;
-                if (!this.skipTests.Contains(testCase.TestName))
-                {
-                    resultingError = RunTest(this.libPath, testCase);
-                    pass = testCase.Negative ^ resultingError == null;
-                }
+                var resultingError = RunTest(this.libPath, testCase);
+                var pass = testCase.Negative ^ resultingError == null;
 
                 var previous = test.Status;
 

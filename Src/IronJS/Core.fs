@@ -1091,6 +1091,8 @@ and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
   static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
   static let tickScale = 10000L
 
+  override x.ClassName = "Date"
+
   [<DefaultValue>]
   val mutable Date : DateTime
 

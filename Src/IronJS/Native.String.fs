@@ -41,8 +41,7 @@ module internal String =
     ctor.MetaData.Name <- "String"
 
     //
-    let fromCharCode = new Func<Args, string>(fromCharCode)
-    let fromCharCode = fromCharCode $ Utils.createFunction env (Some 1)
+    let fromCharCode = new Func<Args, string>(fromCharCode) $ Utils.createFunction env (Some 1)
     ctor.Put("fromCharCode", fromCharCode, DontEnum)
 
     //

@@ -233,7 +233,13 @@ module internal Array =
             Array.Copy(a.Dense, newDense, a.Dense.Length)
             a.Dense <- newDense
 
-          Array.Reverse(a.Dense, 0, length)
+          let dense = a.Dense
+          for i = 0 to length-1 do
+            if not dense.[i].HasValue then
+              dense.[i].Value <- a.Prototype.Get(uint32 i)
+              dense.[i].HasValue <- true
+
+          Array.Reverse(dense, 0, length)
 
         else
           a.Sparse.Reverse(a.Length)

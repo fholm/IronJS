@@ -219,6 +219,46 @@ module internal Array =
 
         // Return value
         value
+
+    ///
+    let private reverse (func:FO) (this:CO) =
+      let mutable a = null
+
+      if this.TryCastTo<AO>(&a) then
+        if a.IsDense then
+          let length = int a.Length
+
+          if a.Dense.Length < length then
+            let newDense = Array.zeroCreate<Descriptor> length
+            Array.Copy(a.Dense, newDense, a.Dense.Length)
+            a.Dense <- newDense
+
+          Array.Reverse(a.Dense, 0, length)
+
+        else
+          a.Sparse.Reverse(a.Length)
+
+      else
+        let rec reverseObject (o:CommonObject) length (index:uint32) items =
+          if index >= length then items
+          else
+            if o.Has index then
+              let item = o.Get index
+              let newIndex = length - index - 1u
+              o.Delete index |> ignore
+              reverseObject o length (index+1u) ((newIndex, item) :: items)
+
+            else
+              reverseObject o length (index+1u) items
+
+            
+        let length = this.GetLength()
+        let items = reverseObject this length 0u []
+
+        for index, item in items do
+          this.Put(index, item)
+
+      this
           
     ///
     let create (env:Env) ownPrototype =
@@ -252,3 +292,5 @@ module internal Array =
       let join = join $ Utils.createFunc1 env (Some 1)
       proto.Put("join", join, DontEnum)
 
+      let reverse = reverse $ Utils.createFunc0 env (Some 0)
+      proto.Put("reverse", reverse, DontEnum)

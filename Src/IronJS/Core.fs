@@ -1146,7 +1146,7 @@ and AO = ArrayObject
 ///
 and [<AllowNullLiteral>] SparseArray() =
   
-  let storage = new MutableSorted<uint32, BV>()
+  let mutable storage = new MutableSorted<uint32, BV>()
 
   #if DEBUG
   member x.Values = storage
@@ -1177,6 +1177,15 @@ and [<AllowNullLiteral>] SparseArray() =
       let value = storage.[key]
       storage.Remove(key) |> ignore
       storage.Add(key, value)
+
+  ///
+  member x.Reverse(length:uint32) =
+    let newStorage = new MutableSorted<uint32, BV>()
+
+    for kvp in storage do
+      newStorage.Add(length - kvp.Key - 1u, kvp.Value)
+
+    storage <- newStorage
 
   ///
   static member OfDense (values:Descriptor array) =

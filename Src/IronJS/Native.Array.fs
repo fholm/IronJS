@@ -51,7 +51,7 @@ module internal Array =
   module Prototype = 
 
     /// Implements: 15.4.4.4 Array.prototype.concat ( [ item1 [ , item2 [ , … ] ] ] )
-    let concat (func:FO) (this:CO) (args:Args) =
+    let private concat (func:FO) (this:CO) (args:Args) =
       let a = func.Env.NewArray(uint32 args.Length)
 
       let rec concat (n:uint32) (c:BV) (i:int) =
@@ -81,7 +81,7 @@ module internal Array =
       concat 0u (BV.Box this) 0
 
     /// Implements: 15.4.4.5 Array.prototype.join (separator)
-    let join (func:FO) (this:CO) (separator:BV) =
+    let private join (func:FO) (this:CO) (separator:BV) =
       let length = this.GetLength()
       let separator =
         match separator.Tag with
@@ -106,12 +106,12 @@ module internal Array =
         buffer.ToString()
 
     /// Implements: 15.4.4.2 Array.prototype.toString ( )
-    let toString (func:FO) (this:CO) =
+    let private toString (func:FO) (this:CO) =
       this.CheckType<AO>()
       join func this Undefined.Boxed
 
     /// Implements: 15.4.4.3 Array.prototype.toLocaleString ( )
-    let toLocaleString (func:FO) (this:CO) =
+    let private toLocaleString (func:FO) (this:CO) =
       this.CheckType<AO>()
 
       let length = this.GetLength()
@@ -134,7 +134,7 @@ module internal Array =
         buffer.ToString()
 
     /// Implements: 15.4.4.6 Array.prototype.pop ( )
-    let pop (func:FO) (this:CO) = 
+    let private pop (func:FO) (this:CO) = 
       let length = this.GetLength()
       if length = 0u then 
         this.Put("length", double 0.0)
@@ -147,7 +147,7 @@ module internal Array =
         value
 
     /// Implements: 15.4.4.7 Array.prototype.push ( [ item1 [ , item2 [ , … ] ] ] )
-    let push (func:FO) (this:CO) (args:Args) = 
+    let private push (func:FO) (this:CO) (args:Args) = 
       let isArray = this :? AO
       let mutable n = this.GetLength() |> int64
 
@@ -166,7 +166,7 @@ module internal Array =
       double n
 
     /// Implements: 15.4.4.9 Array.prototype.shift ( )
-    let shift (func:FO) (this:CO) =
+    let private shift (func:FO) (this:CO) =
       let length = this.GetLength()
 
       // Length = 0, put length and return undefined
@@ -220,7 +220,7 @@ module internal Array =
         // Return value
         value
 
-    ///
+    /// Implements: 15.4.4.8 Array.prototype.reverse ( )
     let private reverse (func:FO) (this:CO) =
       let mutable a = null
 
@@ -245,7 +245,7 @@ module internal Array =
           a.Sparse.Reverse(a.Length)
 
       else
-        let rec reverseObject (o:CommonObject) length (index:uint32) items =
+        let rec reverseObject (o:CO) length (index:uint32) items =
           if index >= length then items
           else
             if o.Has index then
@@ -264,6 +264,10 @@ module internal Array =
         for index, item in items do
           this.Put(index, item)
 
+      this
+
+    /// Implements: 15.4.4.11 Array.prototype.sort (comparefn)
+    let sort (func:FO) (this:CO) (comparefn:BV) =
       this
           
     ///
@@ -300,3 +304,6 @@ module internal Array =
 
       let reverse = reverse $ Utils.createFunc0 env (Some 0)
       proto.Put("reverse", reverse, DontEnum)
+
+      let sort = sort $ Utils.createFunc1 env (Some 1)
+      proto.Put("sort", sort, DontEnum)

@@ -266,8 +266,63 @@ module internal Array =
 
       this
 
+    let private defaultSort (a:BV) (b:BV) =
+      if a.IsNull && b.IsNull then 0
+      elif a.IsNull then 1
+      elif b.IsNull then -1
+      elif a.IsUndefined && b.IsUndefined then 0
+      elif a.IsUndefined then 1
+      elif b.IsUndefined then -1
+      else String.Compare(TC.ToString(a), TC.ToString(b), StringComparison.Ordinal)
+
+    let private userSort (f:FO) (a:BV) (b:BV) =
+      if a.IsNull && b.IsNull then 0
+      elif a.IsNull then 1
+      elif b.IsNull then -1
+      elif a.IsUndefined && b.IsUndefined then 0
+      elif a.IsUndefined then 1
+      elif b.IsUndefined then -1
+      else int <| TC.ToNumber(f.Call(f.Env.Globals, a, b))
+
     /// Implements: 15.4.4.11 Array.prototype.sort (comparefn)
-    let sort (func:FO) (this:CO) (comparefn:BV) =
+    let private sort (func:FO) (this:CO) (comparefn:BV) =
+      let comparefn =
+        match comparefn.Tag with
+        | TypeTags.Function -> userSort comparefn.Func
+        | _ -> defaultSort
+
+      let mutable ao = null
+      let length = this.GetLength()
+      let ilength = int length
+
+      if this.TryCastTo<AO>(&ao) then
+        if ao.IsDense then
+
+          if ao.Dense.Length < ilength then
+            let newDense = Array.zeroCreate<Descriptor> ilength
+            Array.Copy(ao.Dense, newDense, ao.Dense.Length) 
+            ao.Dense <- newDense
+
+          for i = 0 to ilength-1 do
+            if not ao.Dense.[i].HasValue then
+              ao.Dense.[i].HasValue <- true
+              ao.Dense.[i].Value <- ao.Prototype.Get(uint32 i)
+
+          ao.Dense |> Array.sortInPlaceWith (fun a b -> comparefn a.Value b.Value)
+
+        else
+          ao.Sparse.Sort(comparefn)
+
+      else
+        let length = this.GetLength()
+        let values = new MutableDict<uint32, BV>()
+        this.GetAllIndexProperties(values, length)
+
+        values.Values 
+        |> Seq.toArray 
+        |> Array.sortWith comparefn
+        |> Array.iteri (fun i v -> this.Put(uint32 i, v))
+
       this
           
     ///

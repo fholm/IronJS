@@ -496,6 +496,18 @@ and [<AllowNullLiteral>] CommonObject =
   default x.GetLength() =
     x.Get("length") |> TC.ToUInt32
 
+  ///
+  abstract GetAllIndexProperties : MutableDict<uint32, BV> * uint32 -> unit
+  default x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, length:uint32) =
+    let mutable i = 0u
+
+    for kvp in x.PropertySchema.IndexMap do
+      if UInt32.TryParse(kvp.Key, &i) && i < length && (not <| dict.ContainsKey(i)) && x.Properties.[kvp.Value].HasValue then
+        dict.Add(i, x.Properties.[kvp.Value].Value)
+
+    if x.Prototype <> null then
+      x.Prototype.GetAllIndexProperties(dict, length)
+
   //
   member x.CastTo<'a when 'a :> CO>() =
     if x :? 'a then x :?> 'a else x.Env.RaiseTypeError()
@@ -1188,6 +1200,22 @@ and [<AllowNullLiteral>] SparseArray() =
     storage <- newStorage
 
   ///
+  member x.Sort(comparefn:BV->BV->int) =
+    let sorted = 
+      storage.Values 
+      |> Seq.toArray
+      |> Array.sortWith comparefn
+
+    storage.Clear();
+    sorted |> Array.iteri (fun i v -> storage.[uint32 i] <- v)
+    
+  ///
+  member x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, length) =
+    for kvp in storage do
+      if kvp.Key < length && not <| dict.ContainsKey(kvp.Key) then
+        dict.Add(kvp.Key, kvp.Value)
+
+  ///
   static member OfDense (values:Descriptor array) =
     let sparse = new SparseArray()
 
@@ -1233,6 +1261,18 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   override x.GetLength () = length
   override x.ClassName = "Array"
+
+  ///
+  override x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, l) =
+    if x.IsDense then
+      let length = int length
+
+      for i = 0 to length-1 do
+        if uint32 i < l && dense.[i].HasValue && not <| dict.ContainsKey(uint32 i) then
+          dict.Add(uint32 i, dense.[i].Value)
+
+    else
+      sparse.GetAllIndexProperties(dict, length)
 
   ///
   member internal x.SetLength(newLength) =
@@ -1400,7 +1440,7 @@ and ArgLink = ParameterStorageType * int
 
 ///
 and [<AllowNullLiteral>] ArgumentsObject(env:Env, linkMap:ArgLink array, locals, closedOver) as x =
-  inherit CommonObject(env, env.Maps.Base, env.Prototypes.Object)
+  inherit CO(env, env.Maps.Base, env.Prototypes.Object)
   
   [<DefaultValue>] val mutable Locals : Scope
   [<DefaultValue>] val mutable ClosedOver : Scope

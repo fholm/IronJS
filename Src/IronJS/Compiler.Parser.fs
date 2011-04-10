@@ -927,6 +927,8 @@ module Parser =
         acc <- (p |> expression S.Comma 0) :: acc
         if p |> csymbol = S.Comma
           then p |> consume
+          elif p |> csymbol <> S.RightBracket
+            then p |> unexpectedToken
 
     p |> expect S.RightBracket
     Tree.Array (acc |> List.rev)

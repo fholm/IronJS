@@ -324,6 +324,39 @@ module internal Array =
         |> Array.iteri (fun i v -> this.Put(uint32 i, v))
 
       this
+
+    /// Implements: 15.4.4.10 Array.prototype.slice (start, end)
+    let slice (func:FO) (this:CO) (start:BV) (stop:BV) =
+      let length = this.GetLength()
+
+      let mutable start = 
+        match start.Tag with
+        | TypeTags.Undefined -> 0
+        | _ -> TC.ToInteger(start)
+
+      let mutable stop = 
+        match stop.Tag with
+        | TypeTags.Undefined -> int length
+        | _ -> TC.ToInteger(stop)
+
+      if start < 0 then
+        start <- start + int length
+
+      if stop < 0 then
+        stop <- stop + int length
+
+      if stop <= start then
+        func.Env.NewArray(0u)
+          
+      else
+        let start = Math.Min(Math.Max(start, 0), int length)
+        let stop = Math.Min(Math.Max(stop, 0), int length)
+        let array = func.Env.NewArray()
+
+        for i = 0 to (stop - start) - 1 do
+          array.Put(uint32 i, this.Get(uint32(start + i)))
+
+        array
           
     ///
     let create (env:Env) ownPrototype =
@@ -362,3 +395,6 @@ module internal Array =
 
       let sort = sort $ Utils.createFunc1 env (Some 1)
       proto.Put("sort", sort, DontEnum)
+
+      let slice = slice $ Utils.createFunc2 env (Some 2)
+      proto.Put("slice", slice, DontEnum)

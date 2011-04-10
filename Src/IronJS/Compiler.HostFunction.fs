@@ -40,11 +40,11 @@ module HostFunction =
   let variadicArgs () = 
     Dlr.paramT<Args> "~args"
 
-  let defaultArg env type' =
+  let defaultArg env (type':Type) =
     if type' == typeof<BV> 
       then Utils.Constants.Boxed.undefined
-      elif type' == typeof<CO> 
-        then Dlr.defaultT<CO>
+      elif type' == typeof<CO> || type'.IsSubclassOf(typeof<CO>)
+        then Dlr.default' type'
         else TC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
 
   let compile<'a when 'a :> Delegate> (f:FO) callsiteType =

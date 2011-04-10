@@ -114,15 +114,16 @@ module internal Function =
         compiled.DynamicInvoke(args) |> BoxingUtils.JsBox)
  
     ///
-    let private call (_:FO) (func:CO) (args:Args) : BV =
+    let private call (f:FO) (func:CO) (args:Args) : BV =
       let func = func.CastTo<FO>()
 
       let this = 
         if args.Length > 0 
           then args.[0] 
-          else func.Env.RaiseTypeError()
+          else Undefined.Boxed
           
-      let args = args $ Seq.skip 1 $ Seq.map TC.ToClrObject $ Seq.toArray
+      let skip = if args.Length = 0 then 0 else 1
+      let args = args $ Seq.skip skip $ Seq.map TC.ToClrObject $ Seq.toArray
       let argTypes = args $ Array.map TypeUtils.getType
 
       let type' = argTypes $ DelegateUtils.getCallSiteDelegate

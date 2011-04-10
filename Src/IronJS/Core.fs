@@ -1224,14 +1224,12 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     Array.Copy(dense, newDense, copyLength)
     dense <- newDense
 
-  #if DEBUG
   member x.Dense
     with  get ( ) = dense 
     and   set (v) = dense <- v
 
   member x.Sparse = sparse
   member x.Length = length
-  #endif
 
   override x.GetLength () = length
   override x.ClassName = "Array"

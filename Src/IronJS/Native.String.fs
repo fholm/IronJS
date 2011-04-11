@@ -163,7 +163,7 @@ module internal String =
     let private replaceTokens =
       new Regex(@"[^$]+|\$\$|\$&|\$`|\$'|\$\d\d|\$\d|\$", RegexOptions.Compiled)
 
-    let private evaluateReplacement (matched:string) (before:string) (after:string) (replacement:string) (groups:GroupCollection) =
+    let private evaluateReplacement (matched:string) (before:unit->string) (after:unit->string) (replacement:string) (groups:GroupCollection) =
       if replacement.Contains("$") then
 
         let tokens : seq<Capture> = replaceTokens.Matches replacement |> Seq.cast
@@ -176,8 +176,8 @@ module internal String =
             | "$0" -> "$0"
             | "$00" -> "$00"
             | "$&" -> matched
-            | "$`" -> before
-            | "$'" -> after
+            | "$`" -> before()
+            | "$'" -> after()
             | _ ->
               let subPatternIndex = t.Substring 1 |> int
               if groups <> null && subPatternIndex < groups.Count
@@ -187,6 +187,15 @@ module internal String =
 
       else
         replacement
+
+    let private memoize f =
+      let cache = ref null
+      fun () ->
+        if cache.Value <> null then cache.Value
+        else
+          let value = f()
+          cache := value
+          value
 
     ///
     let private replace (_:FO) (this:CO) (search:BV) (replace:BV) =
@@ -230,8 +239,9 @@ module internal String =
             if not search.Global then
               search.Put("lastIndex", m.Index + 1 |> double)
 
-            let before = value.Substring(0, m.Index)
-            let after = value.Substring(Math.Min(value.Length - 1, m.Index + m.Length))
+            let before = memoize (fun () -> value.Substring(0, m.Index))
+            let after = memoize (fun () -> value.Substring(Math.Min(value.Length - 1, m.Index + m.Length)))
+
             evaluateReplacement m.Value before after replace m.Groups
 
           search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)
@@ -253,7 +263,7 @@ module internal String =
             let before = value.Substring(0, index)
             let after = value.Substring(index + search.Length)
             let replace = replace |> TC.ToString
-            let replace = evaluateReplacement search before after replace null
+            let replace = evaluateReplacement search (fun () -> before) (fun () -> after) replace null
             before + replace + after
 
         else

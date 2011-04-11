@@ -483,18 +483,32 @@ and [<AllowNullLiteral>] CommonObject =
     dict
   #endif
 
-  //
+  ///
   member x.HasPrototype = 
     x.Prototype |> FSharp.Utils.notNull
 
-  //
+  ///
   member x.RequiredStorage = 
     x.PropertySchema.IndexMap.Count
-    
-  //
+
+  /// Gets and sets the .length property
+  abstract Length : uint32 with get, set
+
+  /// Default implementation of Length used for
+  /// all objects except ArrayObject
+  default x.Length
+    with  get( ) = TC.ToUInt32(x.Get("length"))
+    and   set(v) = x.Put("length", double v)
+
+  ///
   abstract GetLength : unit -> uint32
   default x.GetLength() =
     x.Get("length") |> TC.ToUInt32
+
+  ///
+  abstract SetLength : uint32 -> unit
+  default x.SetLength(newLength:uint32) =
+    x.Put("length", double newLength)
 
   ///
   abstract GetAllIndexProperties : MutableDict<uint32, BV> * uint32 -> unit
@@ -508,11 +522,11 @@ and [<AllowNullLiteral>] CommonObject =
     if x.Prototype <> null then
       x.Prototype.GetAllIndexProperties(dict, length)
 
-  //
+  ///
   member x.CastTo<'a when 'a :> CO>() =
     if x :? 'a then x :?> 'a else x.Env.RaiseTypeError()
     
-  //
+  ///
   member x.TryCastTo<'a when 'a :> CO>(o:'a byref) =
     if x :? 'a then
       o <- x :?> 'a
@@ -521,11 +535,11 @@ and [<AllowNullLiteral>] CommonObject =
     else
       false
     
-  //
+  ///
   member x.CheckType<'a when 'a :> CO>() =
     x.CastTo<'a>() |> ignore
     
-  // Expands object property storage
+  /// Expands object property storage
   member x.ExpandStorage() =
     let newValues = Array.zeroCreate (x.RequiredStorage * 2)
 
@@ -534,7 +548,7 @@ and [<AllowNullLiteral>] CommonObject =
       
     x.Properties <- newValues
     
-  // Creates an index for property named 'name'
+  /// Creates an index for property named 'name'
   member x.CreateIndex(name:string) =
     x.PropertySchema <- x.PropertySchema.SubClass name
 
@@ -543,7 +557,7 @@ and [<AllowNullLiteral>] CommonObject =
 
     x.PropertySchema.IndexMap.[name]
     
-  // Finds a property in the prototype chain
+  /// Finds a property in the prototype chain
   member x.Find(name:string) =
     
     let mutable index = 0
@@ -1271,7 +1285,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   member x.Sparse = sparse
   member x.Length = length
 
-  override x.GetLength () = length
+  override x.GetLength() = length
   override x.ClassName = "Array"
 
   ///

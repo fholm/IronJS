@@ -357,6 +357,60 @@ module internal Array =
           array.Put(uint32 i, this.Get(uint32(start + i)))
 
         array
+
+    /// Implements: 15.4.4.13 Array.prototype.unshift ( [ item1 [, item2 [, ...]]])
+    let unshift (func:FO) (this:CO) (args:Args) =
+      let mutable ao = null
+      let length = this.GetLength()
+
+      if this.TryCastTo<AO>(&ao) then
+
+        if args.Length > 0 then
+          if ao.IsDense then
+            let newLength = int length + args.Length
+            let newDense = Array.zeroCreate<Descriptor> newLength
+
+            let mutable oldIndex = 0u
+
+            for i = 0 to newLength-1 do
+              newDense.[i].HasValue <- true
+
+              if i < args.Length then 
+                newDense.[i].Value <- args.[i]
+
+              else
+                newDense.[i].Value <- ao.Get(oldIndex)
+                oldIndex <- oldIndex + 1u
+
+            ao.Dense <- newDense
+
+          else
+            ao.Sparse.Unshift(args)
+
+          ao.SetLength(length + uint32 args.Length)
+          double (length + uint32 args.Length)
+
+        else
+          double length
+
+      else
+        let dict = new MutableDict<uint32, BV>()
+        this.GetAllIndexProperties(dict, length)
+
+        for i = 0 to args.Length-1 do
+          this.Put(uint32 i, args.[i])
+        
+        for kvp in dict do
+          this.Put(kvp.Key + (uint32 args.Length), kvp.Value)
+
+        let length = double (length + uint32 args.Length)
+        this.Put("length", length)
+        length
+
+
+    /// Implements: 15.4.4.12 Array.prototype.splice (start, deleteCount [ , item1 [ , item2 [ , … ] ] ] )
+    let splice (func:FO) (this:CO) (args:Args) =
+      this
           
     ///
     let create (env:Env) ownPrototype =
@@ -398,3 +452,9 @@ module internal Array =
 
       let slice = slice $ Utils.createFunc2 env (Some 2)
       proto.Put("slice", slice, DontEnum)
+
+      let unshift = unshift $ Utils.createFunc1 env (Some 1)
+      proto.Put("unshift", unshift, DontEnum)
+
+      let splice = splice $ Utils.createFunc1 env (Some 2)
+      proto.Put("splice", splice, DontEnum)

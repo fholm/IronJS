@@ -1208,6 +1208,18 @@ and [<AllowNullLiteral>] SparseArray() =
 
     storage.Clear();
     sorted |> Array.iteri (fun i v -> storage.[uint32 i] <- v)
+
+  ///
+  member x.Unshift(args:Args) =
+    let newStorage = new MutableSorted<uint32, BV>()
+
+    for kvp in storage do
+      newStorage.Add(kvp.Key + uint32 args.Length, kvp.Value)
+
+    for i = 0 to (args.Length-1) do
+      newStorage.Add(uint32 i, args.[i])
+
+    storage <- newStorage
     
   ///
   member x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, length) =

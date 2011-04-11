@@ -1398,7 +1398,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:BV) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
-      
+      x.SetAttrs("length", DescriptorAttrs.DontEnum)
+
     elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
@@ -1408,6 +1409,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:double) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
+      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
@@ -1418,6 +1420,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:obj, tag:uint32) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
+      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)

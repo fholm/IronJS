@@ -12,31 +12,24 @@ module internal RegExp =
 
   /// These steps are outlined in the ECMA-262, Section 15.10.4.1
   let private constructor' (f:FO) (o:CO) (pattern:BV) (flags:BV) =
-    let mutable P = ""
-    let mutable F = ""
+    if pattern.IsRegExp then
 
-    if pattern.IsRegExp && flags.IsUndefined then
-      let r = pattern.Object :?> RO
-      P <- r.RegExp.ToString()
+      if flags.IsUndefined then
+        pattern
 
-      F <- 
-        (if r.Global then "g" else "") + 
-        (if r.IgnoreCase then "i" else "") + 
-        (if r.MultiLine then "m" else "")
-
-    elif pattern.IsRegExp then
-      f.Env.RaiseTypeError("When specifying a RegExp as the first argument to the RegExp constructor, it is invalid to specify flags.")
+      else
+        f.Env.RaiseTypeError("When specifying a RegExp as the first argument to the RegExp constructor, it is invalid to specify flags.")
 
     else
-      P <- if pattern.IsUndefined then "" else TC.ToString(pattern)
-      F <- if flags.IsUndefined then "" else TC.ToString(flags)
+      let p = if pattern.IsUndefined then "" else TC.ToString(pattern)
+      let fl = if flags.IsUndefined then "" else TC.ToString(flags)
 
-    f.Env.NewRegExp(P, F) |> BV.Box
+      f.Env.NewRegExp(p, fl) |> BV.Box
 
   ///
   let setup (env:Env) =
     let ctor = Function<BV, BV>(constructor') $ Utils.createConstructor env (Some 2)
-    ctor.Put("prototype", env.Prototypes.RegExp, DontEnum)
+    ctor.Put("prototype", env.Prototypes.RegExp, Immutable)
     ctor.MetaData.Name <- "RegExp"
 
     env.Constructors <- {env.Constructors with RegExp=ctor}

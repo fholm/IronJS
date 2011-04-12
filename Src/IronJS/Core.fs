@@ -473,7 +473,6 @@ and [<AllowNullLiteral>] CommonObject =
   abstract ClassName : string with get
   default x.ClassName = "Object"
 
-  #if DEBUG
   member x.ClassType = x.GetType().Name
   member x.Members = 
     let dict = new MutableDict<string, obj>()
@@ -481,7 +480,6 @@ and [<AllowNullLiteral>] CommonObject =
       if x.Properties.[kvp.Value].HasValue then
         dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
     dict
-  #endif
 
   ///
   member x.HasPrototype = 
@@ -1083,6 +1081,8 @@ and [<AllowNullLiteral>] RegExpObject =
   [<DefaultValue>]
   val mutable RegExp : Regex
   val Global : bool
+  
+  override x.ClassName = "RegExp"
 
   member x.IgnoreCase:bool =
     x.RegExp.Options.HasFlag(RegexOptions.IgnoreCase)
@@ -1174,9 +1174,7 @@ and [<AllowNullLiteral>] SparseArray() =
   
   let mutable storage = new MutableSorted<uint32, BV>()
 
-  #if DEBUG
   member x.Values = storage
-  #endif
 
   member x.Put(index, value:BV) = 
     storage.[index] <- value

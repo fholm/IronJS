@@ -580,7 +580,7 @@ module Parser =
 
     // Read the expression after the colon, which
     // is the else branch of the condition
-    let elseAst = p |> powerExpression BindingPowers.Condition
+    let elseAst = p |> powerExpression (BindingPowers.Assignment-1)
 
     Tree.Ternary(testAst, trueAst, elseAst)
 

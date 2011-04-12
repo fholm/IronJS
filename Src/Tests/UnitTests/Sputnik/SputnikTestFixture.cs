@@ -108,9 +108,16 @@
         {
             StringBuilder errorText = new StringBuilder();
 
-            fileName = Path.Combine(this.testsPath, fileName);
-            var ctx = CreateContext(e => errorText.AppendLine(e));
-            ctx.ExecuteFile(fileName);
+            try
+            {
+                fileName = Path.Combine(this.testsPath, fileName);
+                var ctx = CreateContext(e => errorText.AppendLine(e));
+                ctx.ExecuteFile(fileName);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Test threw an exception.", ex);
+            }
 
             if (errorText.Length > 0)
             {

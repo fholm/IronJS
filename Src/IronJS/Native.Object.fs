@@ -68,8 +68,14 @@ module internal Object =
 
     ///
     let private propertyIsEnumerable (_:FO) (this:CO) (name:string) =
-      let descriptor = this.Find(name)
-      descriptor.HasValue && descriptor.IsEnumerable
+      let mutable index = 0
+
+      if this.PropertySchema.IndexMap.TryGetValue(name, &index) then
+        let descriptor = this.Properties.[index]
+        descriptor.HasValue && descriptor.IsEnumerable
+
+      else 
+        false
   
     ///    
     let create (env:Env) =

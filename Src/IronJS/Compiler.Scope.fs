@@ -306,7 +306,8 @@ module Scope =
       ///
       let private initVariables (variadicArgs:Dlr.Parameter) (ctx:Ctx) =
 
-        let initParameter (index:int) (_:string, var:Ast.Variable) =
+        let initParameter (index:int) (name:string) =
+          let var = ctx.Scope.Value.Variables.[name]
           let storage =
             match var with
             | Ast.Shared(storageIndex, _, _) -> Dlr.indexInt ctx.Parameters.SharedScope storageIndex
@@ -334,9 +335,9 @@ module Scope =
           |> Dlr.Fast.blockOfSeq []
 
         let parameters =
-          parameters
-          |> Map.toSeq
-          |> Seq.mapi initParameter
+          ctx.Scope 
+          |> Ast.NewVars.parameterNames 
+          |> List.mapi initParameter
           |> Dlr.Fast.blockOfSeq []
 
         Dlr.Fast.block [||] [|defined; ctx $ initSelfReference; parameters|]

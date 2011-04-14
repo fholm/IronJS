@@ -573,6 +573,7 @@ module Lexer =
     match symbol with
     | SC ->
       s.IgnoreLineTerminator <- true
+      s.Previous <- SC
       SC, null, s.StoredLine, s.StoredColumn
 
     | _ ->

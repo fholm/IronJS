@@ -274,6 +274,26 @@ and [<AbstractClass>] TypeTag() =
       then TypeTags.Clr
       else o.GetType() |> TypeTag.OfType
 
+///
+and WeakCache<'TKey, 'TValue when 'TKey : equality>() =
+  let cache = new System.Collections.Generic.Dictionary<'TKey, WeakReference>()
+
+  member x.Lookup (key:'TKey) (create:unit->'TValue) =
+    let cacheHit, reference = cache.TryGetValue(key)
+    if cacheHit then
+      match reference.Target with
+      | :? 'TValue as value -> value
+      | _ ->
+        let value = create()
+        let reference = new WeakReference(value)
+        cache.[key] <- reference
+        value
+    else
+      let value = create()
+      let reference = new WeakReference(value)
+      cache.Add(key, reference)
+      value
+
 and Env = Environment
 
 ///
@@ -290,7 +310,9 @@ and [<AllowNullLiteral>] Environment() =
 
   let rnd = new System.Random()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
-  
+
+  let regExpCache = new WeakCache<RegexOptions * string, Regex>()
+
   // We need the the special global function id 0UL to exist in 
   // the metaData dictionary but i need not actually be there so 
   // we just pass in null
@@ -305,6 +327,8 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
+
+  member x.RegExpCache = regExpCache
 
   member x.Random = rnd
 
@@ -1075,7 +1099,7 @@ and [<AllowNullLiteral>][<AbstractClass>] ValueObject =
 //  
 *)
 and RO = RegExpObject
-and [<AllowNullLiteral>] RegExpObject = 
+and [<AllowNullLiteral>]  RegExpObject = 
   inherit CO
 
   [<DefaultValue>]
@@ -1097,8 +1121,9 @@ and [<AllowNullLiteral>] RegExpObject =
     }
     then
       try
-        let options = options ||| RegexOptions.ECMAScript ||| RegexOptions.Compiled
-        this.RegExp <- new Regex(pattern, options)
+        let options = (options ||| RegexOptions.ECMAScript) &&& ~~~RegexOptions.Compiled
+        let key = (options, pattern)
+        this.RegExp <- env.RegExpCache.Lookup key (fun () -> new Regex(pattern, options ||| RegexOptions.Compiled))
 
       with
         | :? ArgumentException as e -> 

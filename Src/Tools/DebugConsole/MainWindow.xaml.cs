@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Text.RegularExpressions;
 
 namespace DebugConsole
 {
@@ -50,7 +51,16 @@ namespace DebugConsole
         {
             try
             {
-                inputText.Text = File.ReadAllText(CACHE_FILE);
+                var text = File.ReadLines(CACHE_FILE);
+                var doc = new FlowDocument();
+                doc.PageWidth = 1000;
+
+                foreach (var t in text)
+                {
+                    doc.Blocks.Add(new Paragraph(new Run(t)));
+                }
+
+                inputText.Document = doc;
             }
             catch
             {
@@ -84,30 +94,30 @@ namespace DebugConsole
             consoleOutput.Text += value;
         }
 
-        IEnumerable<TreeViewItem> renderObjectProperties(IronJS.CommonObject ijsObject)
+        IEnumerable<TreeViewItem> renderObjectProperties(IronJS.CommonObject jsObject)
         {
-            if (ijsObject != null && !alreadyRendered.Contains(ijsObject))
+            if (jsObject != null && !alreadyRendered.Contains(jsObject))
             {
-                if (ijsObject.Prototype != null)
+                if (jsObject.Prototype != null)
                 {
-                    yield return renderProperty("[[Prototype]]", ijsObject.Prototype);
+                    yield return renderProperty("[[Prototype]]", jsObject.Prototype);
                 }
 
-                if (ijsObject is IronJS.ValueObject)
+                if (jsObject is IronJS.ValueObject)
                 {
-                    var value = (ijsObject as IronJS.ValueObject).Value.Value.ClrBoxed;
+                    var value = (jsObject as IronJS.ValueObject).Value.Value.ClrBoxed;
                     yield return renderProperty("[[Value]]", value);
                 }
 
-                alreadyRendered.Add(ijsObject);
-                foreach (var member in ijsObject.Members)
+                alreadyRendered.Add(jsObject);
+                foreach (var member in jsObject.Members)
                 {
                     yield return renderProperty(member.Key, member.Value);
                 }
 
-                if (ijsObject is IronJS.ArrayObject)
+                if (jsObject is IronJS.ArrayObject)
                 {
-                    var arrayObject = ijsObject as IronJS.ArrayObject;
+                    var arrayObject = jsObject as IronJS.ArrayObject;
                     for (var i = 0u; i < arrayObject.Length; ++i)
                     {
                         yield return renderProperty("[" + i + "]", arrayObject.Get(i).ClrBoxed);
@@ -175,7 +185,7 @@ namespace DebugConsole
 
             try
             {
-                var result = context.Execute(inputText.Text);
+                var result = 0.0; //context.Execute(inputText.Text);
 
                 lastStatementOutput.Text =
                     IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(result));
@@ -197,11 +207,98 @@ namespace DebugConsole
             throw new NotImplementedException();
         }
 
+        List<string> lineContents = new List<string>();
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var documentRange = new TextRange(inputText.Document.ContentStart, inputText.Document.ContentEnd);
+            File.WriteAllText(CACHE_FILE, documentRange.Text);
+
+            var lines = Regex.Split(documentRange.Text, "\r\n");
+            var lineCount = lines.Length - 1;
+            var newLineContents = new List<string>();
+
+            var bps = new object[breakPoints.Items.Count];
+            breakPoints.Items.CopyTo(bps, 0);
+            breakPoints.Items.Clear();
+
+            for (var i = 0; i < lineCount; ++i)
+            {
+                CheckBox current = null;
+
+                if (i < bps.Length && i < lineContents.Count)
+                {
+                    current = bps[i] as CheckBox;
+                    if (current != null && lineContents[i].Trim() == lines[i].Trim())
+                    {
+                        breakPoints.Items.Add(bps[i]);
+                        continue;
+                    }
+                }
+
+                newLineContents.Add(lines[i]);
+                breakPoints.Items.Add(createBreakPointCheckBox(lines[i]));
+            }
+
+            lineContents = newLineContents;
+            highlightBreakpoints(null, null);
+        }
+
+        object createBreakPointCheckBox(string text)
+        {
+            text = text.Trim();
+
+            var checkbox = new CheckBox();
+            var isHidden = text == "" || text.StartsWith("//");
+
+            checkbox.Visibility = isHidden ? Visibility.Hidden : Visibility.Visible;
+            checkbox.Margin = new Thickness(0, 1, 0, 0);
+            checkbox.Checked += (sender, args) => highlightBreakpoints(null, null);
+            checkbox.Unchecked += (sender, args) => highlightBreakpoints(null, null);
+
+            return checkbox;
+        }
+
+        void highlightBreakpoints(object sender, TextChangedEventArgs e)
         {
             try
             {
-                File.WriteAllText(CACHE_FILE, inputText.Text);
+                if (inputText.Document == null)
+                    return;
+
+                inputText.TextChanged -= inputText_TextChanged;
+
+
+                var documentRange = new TextRange(inputText.Document.ContentStart, inputText.Document.ContentEnd);
+                documentRange.ClearAllProperties();
+
+                var navigator = inputText.Document.ContentStart;
+                var line = 0;
+                while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
+                {
+                    var context = navigator.GetPointerContext(LogicalDirection.Backward);
+                    if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
+                    {
+                        if (line < breakPoints.Items.Count)
+                        {
+                            var bp = breakPoints.Items[line] as CheckBox;
+
+                            if (bp.IsChecked ?? false)
+                            {
+                                var run = navigator.Parent as Run;
+                                var startPosition = run.ContentStart.GetPositionAtOffset(0, LogicalDirection.Forward);
+                                var endPosition = run.ContentStart.GetPositionAtOffset(run.Text.Length, LogicalDirection.Backward);
+                                var range = new TextRange(startPosition, endPosition);
+                                range.ApplyPropertyValue(TextElement.BackgroundProperty, new SolidColorBrush(Color.FromRgb(255, 174, 174)));
+                            }
+
+                            ++line;
+                        }
+                    }
+
+                    navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+                }
+                
+                inputText.TextChanged += inputText_TextChanged;
             }
             catch
             {

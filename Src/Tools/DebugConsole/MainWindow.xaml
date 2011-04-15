@@ -2,27 +2,46 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Icon="/DebugConsole;component/IronJS.ico"
-        Title="IronJS - Debug Console" Height="350" Width="525">
+        Title="IronJS - Debug Console" Height="548" Width="1046">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="210*" />
             <RowDefinition Height="101*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="279*" />
-            <ColumnDefinition Width="224*" />
+            <ColumnDefinition Width="468*" />
+            <ColumnDefinition Width="556*" />
         </Grid.ColumnDefinitions>
         
-        <TextBox TextWrapping="Wrap" AcceptsTab="True" FontFamily="Consolas" 
-            VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
-            Name="inputText" TextChanged="inputText_TextChanged" Margin="10,28,0,10" Grid.RowSpan="1" />
+        <ScrollViewer Margin="10,32,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="21" />
+                    <ColumnDefinition Width="420*" />
+                </Grid.ColumnDefinitions>
+
+                <ListBox BorderThickness="0" BorderBrush="Transparent" Name="breakPoints">
+                    
+                </ListBox>
+                
+                <RichTextBox AcceptsTab="True" FontFamily="Consolas" VerticalScrollBarVisibility="Auto" AcceptsReturn="True" BorderThickness="0"
+                    Name="inputText" TextChanged="inputText_TextChanged" BorderBrush="Transparent" HorizontalScrollBarVisibility="Auto"
+                         Background="WhiteSmoke" Grid.Column="1">
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                </RichTextBox>
+            </Grid>
+        </ScrollViewer>
         
         <TextBox TextWrapping="Wrap" Grid.Row="1"
                     AcceptsTab="True" FontFamily="Consolas" 
                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
                     Name="consoleOutput" Margin="10,25,0,43" />
 
-        <TabControl Grid.Column="1" Margin="10,5,10,10" Name="tabs" Grid.RowSpan="2">
+        <TabControl Grid.Column="1" Margin="6,5,10,10" Name="tabs" Grid.RowSpan="2">
             <TabItem Header="Expression Tree">
                 <TextBox TextWrapping="Wrap" Grid.Column="1"
                     AcceptsTab="True" FontFamily="Consolas" 
@@ -41,11 +60,14 @@
                   FontFamily="Consolas"
                   FontSize="11" />
             </TabItem>
-            <TabItem Header="Last Statement">
+            <TabItem Header="Exception">
                 <TextBox TextWrapping="Wrap" Grid.Column="1"
                     AcceptsTab="True" FontFamily="Consolas" 
                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
                     Name="lastStatementOutput" Margin="0" />
+            </TabItem>
+            <TabItem Header="Debug">
+                
             </TabItem>
         </TabControl>
         
@@ -60,13 +82,13 @@
             Name="stopButton" 
             VerticalAlignment="Bottom" HorizontalAlignment="Right" 
             Width="50" 
-            Margin="0,0,60,10" Click="stopButton_Click" Grid.Row="1" />
+            Margin="0,0,56,10" Click="stopButton_Click" Grid.Row="1" />
 
         <Button 
             Content="Reset Environment" 
             Height="23" 
             HorizontalAlignment="Right" 
-            Margin="0,0,120,10" 
+            Margin="0,0,112,10" 
             Name="resetEnvironment" 
             VerticalAlignment="Bottom" 
             Width="110" Click="resetEnvironment_Click" Grid.Row="1" />

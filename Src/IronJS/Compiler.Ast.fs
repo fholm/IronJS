@@ -52,6 +52,10 @@ module Ast =
     | Void = 8
     | Delete = 9
     | TypeOf = 10
+
+  ///
+  type Directive
+    = BreakPoint of int * int
     
   /// The AST tree type, contains all AST nodes
   /// except Case and Default nodes for switch statements
@@ -96,6 +100,7 @@ module Ast =
     | Var of Tree
     | Identifier of string
     | Block of Tree list
+    | Directive of Directive
     
     #if DEBUG
     | Line of string * int

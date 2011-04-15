@@ -306,6 +306,11 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable Prototypes : Prototypes
   [<DefaultValue>] val mutable Constructors : Constructors
 
+  #if BREAKPOINT_SUPPORT
+  [<DefaultValue>] val mutable BreakPoint : 
+    Action<int, int, MutableDict<string, obj>, MutableDict<string, obj>>
+  #endif
+
   member x.Random = rnd
 
   member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId

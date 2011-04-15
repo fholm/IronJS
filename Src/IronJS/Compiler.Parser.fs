@@ -1230,6 +1230,15 @@ module Parser =
     let block = p |> block 
     p.BlockLevel <- p.BlockLevel - 1
     block
+
+  /// Implements:
+  let directive _ (p:P) =
+    p |> expect S.Directive
+    let line, column = p.Token |> position
+    let name = p |> consumeIdentifier
+
+    match name with
+    | "bp" -> Ast.Directive(Ast.BreakPoint(line, column))
    
   let internal parserDefinition =
     create position prettyPrint
@@ -1346,6 +1355,7 @@ module Parser =
     |> nullStmt S.Semicolon
     |> nullStmt S.LineTerminator
 
+    |> smd S.Directive directive
     |> smd S.LeftBrace codeBlock
     |> smd S.Var (var false)
     |> smd S.For for'

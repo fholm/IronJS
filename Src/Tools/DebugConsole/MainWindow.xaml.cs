@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
+using System.Threading;
+using IronJS;
 
 namespace DebugConsole
 {
@@ -23,6 +25,8 @@ namespace DebugConsole
         Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
         HashSet<object> alreadyRendered = new HashSet<object>();
         IronJS.Hosting.CSharp.Context context;
+        Thread jsThread;
+        ManualResetEvent breakpointEvent = new ManualResetEvent(true);
 
         public MainWindow()
         {
@@ -38,29 +42,27 @@ namespace DebugConsole
             typeColors.Add(typeof(double), Colors.DarkOrchid);
             typeColors.Add(typeof(string), Colors.Brown);
             typeColors.Add(typeof(bool), Colors.DarkBlue);
-            typeColors.Add(typeof(IronJS.Undefined), Colors.DarkGoldenrod);
-            typeColors.Add(typeof(IronJS.CommonObject), Colors.DarkGreen);
+            typeColors.Add(typeof(Undefined), Colors.DarkGoldenrod);
+            typeColors.Add(typeof(CommonObject), Colors.DarkGreen);
             typeColors.Add(typeof(object), Colors.Black);
 
             Console.SetOut(new CallbackWriter(printConsoleText));
 
             createEnvironment();
+
+            this.Closing += MainWindow_Closing;
+        }
+
+        void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            jsThread.Abort();
         }
 
         void loadCacheFile()
         {
             try
             {
-                var text = File.ReadLines(CACHE_FILE);
-                var doc = new FlowDocument();
-                doc.PageWidth = 1000;
-
-                foreach (var t in text)
-                {
-                    doc.Blocks.Add(new Paragraph(new Run(t)));
-                }
-
-                inputText.Document = doc;
+                inputText.Text = File.ReadAllText(CACHE_FILE);
             }
             catch
             {
@@ -68,17 +70,54 @@ namespace DebugConsole
             }
         }
 
+        void breakPoint(int line, int column, Dictionary<string, object> globals, Dictionary<string, object> scope)
+        {
+            breakpointEvent.Reset();
+
+            Dispatcher.Invoke(new Action(() =>
+                {
+                    EnvironmentVariables.Items.Clear();
+
+                    foreach (var kvp in globals)
+                    {
+                        alreadyRendered.Clear();
+                        EnvironmentVariables.Items.Add(renderProperty(kvp.Key, kvp.Value));
+                    }
+                }));
+
+            Dispatcher.Invoke(new Action(() =>
+                {
+                    Locals.Items.Clear();
+
+                    foreach (var kvp in scope)
+                    {
+                        alreadyRendered.Clear();
+                        Locals.Items.Add(renderProperty(kvp.Key, kvp.Value));
+                    }
+
+                    tabs.SelectedIndex = 4;
+                }));
+
+            Dispatcher.Invoke(new Action(() =>
+                {
+                    inputText.ScrollToLine(line);
+                    activeBreakPoint.Margin = new Thickness(0, 13*line, 0, 0);
+                }));
+
+            breakpointEvent.WaitOne();
+        }
+
         void expressionTreePrinter(string expressionTree)
         {
-            expressionTreeOutput.Text += expressionTree;
+            Dispatcher.Invoke(new Action(() => expressionTreeOutput.Text += expressionTree));
         }
 
         void syntaxTreePrinter(string syntaxTree)
         {
-            syntaxTreeOutput.Text += syntaxTree;
+            Dispatcher.Invoke(new Action(() => syntaxTreeOutput.Text += syntaxTree));
         }
 
-        void printEnvironmentVariables(IronJS.CommonObject globals)
+        void printEnvironmentVariables(CommonObject globals)
         {
             EnvironmentVariables.Items.Clear();
 
@@ -91,10 +130,10 @@ namespace DebugConsole
 
         void printConsoleText(string value)
         {
-            consoleOutput.Text += value;
+            Dispatcher.Invoke(new Action(()=> consoleOutput.Text += value));
         }
 
-        IEnumerable<TreeViewItem> renderObjectProperties(IronJS.CommonObject jsObject)
+        IEnumerable<TreeViewItem> renderObjectProperties(CommonObject jsObject)
         {
             if (jsObject != null && !alreadyRendered.Contains(jsObject))
             {
@@ -103,9 +142,9 @@ namespace DebugConsole
                     yield return renderProperty("[[Prototype]]", jsObject.Prototype);
                 }
 
-                if (jsObject is IronJS.ValueObject)
+                if (jsObject is ValueObject)
                 {
-                    var value = (jsObject as IronJS.ValueObject).Value.Value.ClrBoxed;
+                    var value = (jsObject as ValueObject).Value.Value.ClrBoxed;
                     yield return renderProperty("[[Value]]", value);
                 }
 
@@ -115,9 +154,9 @@ namespace DebugConsole
                     yield return renderProperty(member.Key, member.Value);
                 }
 
-                if (jsObject is IronJS.ArrayObject)
+                if (jsObject is ArrayObject)
                 {
-                    var arrayObject = jsObject as IronJS.ArrayObject;
+                    var arrayObject = jsObject as ArrayObject;
                     for (var i = 0u; i < arrayObject.Length; ++i)
                     {
                         yield return renderProperty("[" + i + "]", arrayObject.Get(i).ClrBoxed);
@@ -135,9 +174,9 @@ namespace DebugConsole
 
             if (!typeColors.TryGetValue(value.GetType(), out color))
             {
-                if (value is IronJS.CommonObject)
+                if (value is CommonObject)
                 {
-                    color = typeColors[typeof(IronJS.CommonObject)];
+                    color = typeColors[typeof(CommonObject)];
                 }
                 else
                 {
@@ -149,7 +188,7 @@ namespace DebugConsole
 
             if (value is IronJS.CommonObject)
             {
-                var commonObject = value as IronJS.CommonObject;
+                var commonObject = value as CommonObject;
                 item.Header = name + ": " + commonObject.ClassName;
 
                 if (alreadyRendered.Contains(value))
@@ -170,7 +209,7 @@ namespace DebugConsole
             }
             else
             {
-                item.Header = name + ": " + IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(value));
+                item.Header = name + ": " + TypeConverter.ToString(BoxingUtils.JsBox(value));
             }
 
             return item;
@@ -183,133 +222,54 @@ namespace DebugConsole
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
 
-            try
-            {
-                var result = 0.0; //context.Execute(inputText.Text);
+            var input = inputText.Text as string;
 
-                lastStatementOutput.Text =
-                    IronJS.TypeConverter.ToString(IronJS.BoxingUtils.JsBox(result));
+            jsThread = new Thread(() => {
+                try
+                {
+                    var result = context.Execute(input);
+                    var asString = TypeConverter.ToString(BoxingUtils.JsBox(result));
 
-            }
-            catch (Exception exn) 
-            {
-                tabs.SelectedIndex = 3;
-                lastStatementOutput.Text = exn.ToString();
-            }
-            finally
-            {
-                printEnvironmentVariables(context.Globals);
-            }
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        consoleOutput.Text += "\r\nLast statement: " + asString;
+                    }));
+                }
+                catch (Exception exn)
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        tabs.SelectedIndex = 3;
+                        lastStatementOutput.Text = exn.ToString();
+                    }));
+                }
+                finally
+                {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        printEnvironmentVariables(context.Globals);
+                    }));
+                }
+            });
+
+            jsThread.Start();
         }
 
         void stopButton_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            breakpointEvent.Set();
         }
 
-        List<string> lineContents = new List<string>();
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var documentRange = new TextRange(inputText.Document.ContentStart, inputText.Document.ContentEnd);
-            File.WriteAllText(CACHE_FILE, documentRange.Text);
-
-            var lines = Regex.Split(documentRange.Text, "\r\n");
-            var lineCount = lines.Length - 1;
-            var newLineContents = new List<string>();
-
-            var bps = new object[breakPoints.Items.Count];
-            breakPoints.Items.CopyTo(bps, 0);
-            breakPoints.Items.Clear();
-
-            for (var i = 0; i < lineCount; ++i)
-            {
-                CheckBox current = null;
-
-                if (i < bps.Length && i < lineContents.Count)
-                {
-                    current = bps[i] as CheckBox;
-                    if (current != null && lineContents[i].Trim() == lines[i].Trim())
-                    {
-                        breakPoints.Items.Add(bps[i]);
-                        continue;
-                    }
-                }
-
-                newLineContents.Add(lines[i]);
-                breakPoints.Items.Add(createBreakPointCheckBox(lines[i]));
-            }
-
-            lineContents = newLineContents;
-            highlightBreakpoints(null, null);
-        }
-
-        object createBreakPointCheckBox(string text)
-        {
-            text = text.Trim();
-
-            var checkbox = new CheckBox();
-            var isHidden = text == "" || text.StartsWith("//");
-
-            checkbox.Visibility = isHidden ? Visibility.Hidden : Visibility.Visible;
-            checkbox.Margin = new Thickness(0, 1, 0, 0);
-            checkbox.Checked += (sender, args) => highlightBreakpoints(null, null);
-            checkbox.Unchecked += (sender, args) => highlightBreakpoints(null, null);
-
-            return checkbox;
-        }
-
-        void highlightBreakpoints(object sender, TextChangedEventArgs e)
-        {
-            try
-            {
-                if (inputText.Document == null)
-                    return;
-
-                inputText.TextChanged -= inputText_TextChanged;
-
-
-                var documentRange = new TextRange(inputText.Document.ContentStart, inputText.Document.ContentEnd);
-                documentRange.ClearAllProperties();
-
-                var navigator = inputText.Document.ContentStart;
-                var line = 0;
-                while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
-                {
-                    var context = navigator.GetPointerContext(LogicalDirection.Backward);
-                    if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
-                    {
-                        if (line < breakPoints.Items.Count)
-                        {
-                            var bp = breakPoints.Items[line] as CheckBox;
-
-                            if (bp.IsChecked ?? false)
-                            {
-                                var run = navigator.Parent as Run;
-                                var startPosition = run.ContentStart.GetPositionAtOffset(0, LogicalDirection.Forward);
-                                var endPosition = run.ContentStart.GetPositionAtOffset(run.Text.Length, LogicalDirection.Backward);
-                                var range = new TextRange(startPosition, endPosition);
-                                range.ApplyPropertyValue(TextElement.BackgroundProperty, new SolidColorBrush(Color.FromRgb(255, 174, 174)));
-                            }
-
-                            ++line;
-                        }
-                    }
-
-                    navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
-                }
-                
-                inputText.TextChanged += inputText_TextChanged;
-            }
-            catch
-            {
-
-            }
+            File.WriteAllText(CACHE_FILE, inputText.Text);
         }
 
         void createEnvironment()
         {
             context = new IronJS.Hosting.CSharp.Context();
             context.CreatePrintFunction();
+            context.Environment.BreakPoint = breakPoint;
         }
 
         void resetEnvironment_Click(object sender, RoutedEventArgs e)

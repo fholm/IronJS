@@ -45,6 +45,34 @@ module Core =
     Dlr.call ctx.Env "NewRegExp" [!!!regex; !!!flags]
 
   ///
+  let private compileDirective ast (ctx:Ctx) =
+    match ast with
+    | Ast.BreakPoint(line, column) ->
+      #if BREAKPOINT_SUPPORT
+      let globals = ctx.Globals .-> "Members"
+      let locals = 
+        Dlr.blockTmpT<MutableDict<string, obj>> (fun locals ->
+          [
+            locals .= Dlr.newT<MutableDict<string, obj>>
+
+            ctx.Variables
+            |> Map.toList
+            |> List.map (fun (name, _) -> 
+                Dlr.call locals "Add" [!!!name; (Identifier.getValue ctx name) .-> "ClrBoxed"])
+
+            |> Dlr.block []
+
+            locals :> Dlr.Expr
+
+          ] |> List.toSeq
+        )
+
+      let args = [!!!line; !!!column; globals; locals]
+      Dlr.invoke (ctx.Env .-> "BreakPoint") args
+      #else
+      Dlr.void'
+      #endif
+  ///
   let private compileAst (ctx:Ctx) ast =
     match ast with
     //Constants
@@ -104,6 +132,7 @@ module Core =
 
     //
     | Ast.Regex(regex, flags) -> ctx $ compileRegExp regex flags
+    | Ast.Directive(directive) -> ctx $ compileDirective directive
     | _ -> failwithf "Failed to compile %A" ast
 
   ///

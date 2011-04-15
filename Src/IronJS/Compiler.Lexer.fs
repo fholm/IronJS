@@ -69,7 +69,7 @@ module Lexer =
     let inline isSimplePunctuation c =
       match c with
       | '{' | '}' | '(' | ')' | '[' | ']' 
-      | ';' | ',' | '?' | ':' | '~' -> true
+      | ';' | ',' | '?' | ':' | '~' | '#' -> true
       | _ -> false
 
     let inline isPunctuation c =
@@ -168,6 +168,7 @@ module Lexer =
     let [<Literal>] Comment = 83
     let [<Literal>] HexLiteral = 84
     let [<Literal>] OctalLiteral = 85
+    let [<Literal>] Directive = 90
     
     //Markers
     let [<Literal>] StartOfInput = 120
@@ -251,6 +252,7 @@ module Lexer =
         (True, "true")
         (False, "false")
         (Null, "null")
+        (Directive, "<directive>")
         (String, "<string>")
         (Number, "<number>")
         (RegExp, "<regexp>")
@@ -559,6 +561,7 @@ module Lexer =
         s.ParenthesesNesting <- s.ParenthesesNesting - 1
         Symbol.RightParenthesis
 
+      | '#' -> Symbol.Directive
       | '{' -> Symbol.LeftBrace
       | '}' -> Symbol.RightBrace
       | '[' -> Symbol.LeftBracket

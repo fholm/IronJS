@@ -19,15 +19,20 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 
-                <Rectangle Name="activeBreakPoint" Width="441" Height="14" Fill="Red" Margin="0,-20,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
-                
-                <TextBox AcceptsTab="True" FontFamily="Consolas" 
+                <RichTextBox AcceptsTab="True" FontFamily="Consolas" 
                          VerticalScrollBarVisibility="Auto"
                          AcceptsReturn="True" BorderThickness="0"
                          Name="inputText" TextChanged="inputText_TextChanged" 
                          BorderBrush="Transparent" HorizontalScrollBarVisibility="Auto"
                          Background="Transparent" Grid.Column="0">
-                </TextBox>
+
+                    <RichTextBox.Resources>
+                        <Style TargetType="{x:Type Paragraph}">
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </RichTextBox.Resources>
+                    
+                </RichTextBox>
             </Grid>
         </ScrollViewer>
         

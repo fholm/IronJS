@@ -55,18 +55,36 @@ namespace DebugConsole
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            jsThread.Abort();
+            if (jsThread != null)
+                jsThread.Abort();
         }
 
         void loadCacheFile()
         {
             try
             {
-                inputText.Text = File.ReadAllText(CACHE_FILE);
+                inputText.TextChanged -= inputText_TextChanged;
+                var lines = File.ReadLines(CACHE_FILE);
+                inputText.Document = new FlowDocument();
+                foreach (var line in lines)
+                {
+                    inputText.Document.Blocks.Add(new Paragraph(new Run(line)));
+                }
+                inputText.TextChanged += inputText_TextChanged;
             }
             catch
             {
 
+            }
+        }
+
+        TextRange tr;
+        void highlightBreakpoint(Run run)
+        {
+            if (run.Text.Trim().StartsWith("#bp"))
+            {
+                tr = new TextRange(run.ContentStart, run.ContentEnd);
+                tr.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Red);
             }
         }
 
@@ -100,8 +118,31 @@ namespace DebugConsole
 
             Dispatcher.Invoke(new Action(() =>
                 {
-                    inputText.ScrollToLine(line);
-                    activeBreakPoint.Margin = new Thickness(0, 13*line, 0, 0);
+                    inputText.ScrollToHorizontalOffset(line);
+
+                    if (inputText.Document == null)
+                        return;
+
+                    var run = 0;
+                    var navigator = inputText.Document.ContentStart;
+
+                    inputText.TextChanged -= inputText_TextChanged;
+
+                    while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
+                    {
+                        var context = navigator.GetPointerContext(LogicalDirection.Backward);
+                        if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
+                        {
+                            ++run;
+                            if (run == line)
+                            {
+                                highlightBreakpoint((Run)navigator.Parent);
+                            }
+                        }
+                        navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+                    }
+
+                    inputText.TextChanged += inputText_TextChanged;
                 }));
 
             breakpointEvent.WaitOne();
@@ -215,6 +256,16 @@ namespace DebugConsole
             return item;
         }
 
+        string getAllText()
+        {
+            var tr = new TextRange(
+                inputText.Document.ContentStart,
+                inputText.Document.ContentEnd
+            );
+
+            return tr.Text;
+        }
+
         void runButton_Click(object sender, RoutedEventArgs e)
         {
             consoleOutput.Text = String.Empty;
@@ -222,7 +273,7 @@ namespace DebugConsole
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
 
-            var input = inputText.Text as string;
+            var input = getAllText();
 
             jsThread = new Thread(() => {
                 try
@@ -257,12 +308,15 @@ namespace DebugConsole
 
         void stopButton_Click(object sender, RoutedEventArgs e)
         {
+            if (tr != null)
+                tr.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Transparent);
+
             breakpointEvent.Set();
         }
 
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            File.WriteAllText(CACHE_FILE, inputText.Text);
+            File.WriteAllText(CACHE_FILE, getAllText());
         }
 
         void createEnvironment()

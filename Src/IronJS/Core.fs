@@ -113,12 +113,12 @@ type BV = BoxedValue
 and Args = BV array
 
 /// This is a NaN-tagged struct that is used for representing
-/// values that don't have a known or static type at runtime
+/// values that don't have a known type at runtime
 and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
 
     // Reference Types
-    [<FieldOffset(0)>] val mutable Clr : Object 
+    [<FieldOffset(0)>] val mutable Clr : Object
     [<FieldOffset(0)>] val mutable Object : CO
     [<FieldOffset(0)>] val mutable Array : AO
     [<FieldOffset(0)>] val mutable Func : FO
@@ -224,9 +224,6 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       | TypeTags.Clr        -> BoxFields.Clr
       | _ -> Error.CompileError.Raise(Error.invalidTypeTag tag)
 
-    static member op_Implicit(bv:BV) : obj =
-      box bv
-
   end
 
 and Desc = Descriptor
@@ -314,7 +311,7 @@ and [<AllowNullLiteral>] Environment() =
   let regExpCache = new WeakCache<RegexOptions * string, Regex>()
 
   // We need the the special global function id 0UL to exist in 
-  // the metaData dictionary but i need not actually be there so 
+  // the metaData dictionary but it needs not actually be there so 
   // we just pass in null
   do functionMetaData.Add(0UL, null)
 

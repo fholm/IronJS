@@ -26,6 +26,7 @@ namespace DebugConsole
         HashSet<object> alreadyRendered = new HashSet<object>();
         ManualResetEvent breakpointEvent = new ManualResetEvent(true);
         Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
+        List<TextRange> currentBreakPoints = new List<TextRange>();
 
         Thread jsThread;
         TextRange currentHighlight;
@@ -81,15 +82,15 @@ namespace DebugConsole
         {
             try
             {
-                inputText.TextChanged -= inputText_TextChanged;
-                inputText.Document = new FlowDocument();
-
-                foreach (var line in File.ReadLines(CACHE_FILE))
+                doWithoutTextChange(() =>
                 {
-                    inputText.Document.Blocks.Add(new Paragraph(new Run(line)));
-                }
+                    inputText.Document = new FlowDocument();
 
-                inputText.TextChanged += inputText_TextChanged;
+                    foreach (var line in File.ReadLines(CACHE_FILE))
+                    {
+                        inputText.Document.Blocks.Add(new Paragraph(new Run(line)));
+                    }
+                });
             }
             catch
             {
@@ -121,44 +122,69 @@ namespace DebugConsole
             }
         }
 
-        void highlightBreakpoint(Run run)
+        void highlightBreakpoint(Run run, Brush brush)
         {
             if (run.Text.Trim().StartsWith("#bp"))
             {
                 currentHighlight = new TextRange(run.ContentStart, run.ContentEnd);
-                currentHighlight.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Salmon);
+                currentHighlight.ApplyPropertyValue(TextElement.BackgroundProperty, brush);
                 var position = run.ContentStart.GetCharacterRect(LogicalDirection.Forward);
                 inputScroller.ScrollToVerticalOffset(position.Top);
+                currentBreakPoints.Add(currentHighlight);
             }
         }
 
-        void findAndHighlightCurrentBreakpoint(int line)
+        void doForEachLine(Action<Run> foreachLine)
         {
             if (inputText.Document == null)
                 return;
 
-            var run = 0;
-            var navigator = inputText.Document.ContentStart;
-
-            inputText.TextChanged -= inputText_TextChanged;
-
-            while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
+            doWithoutTextChange(() =>
             {
-                var context = navigator.GetPointerContext(LogicalDirection.Backward);
-                if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
-                {
-                    ++run;
-                    if (run == line)
-                    {
-                        highlightBreakpoint((Run)navigator.Parent);
-                        break;
-                    }
-                }
+                var navigator = inputText.Document.ContentStart;
 
-                navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+                while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
+                {
+                    var context = navigator.GetPointerContext(LogicalDirection.Backward);
+                    if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
+                    {
+                        foreachLine(navigator.Parent as Run);
+                    }
+
+                    navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+                }
+            });
+        }
+
+        void highlightActiveBreakPoint(int line)
+        {
+            int currentLine = 0;
+
+            doForEachLine((run) =>
+            {
+                ++currentLine;
+                if (currentLine == line)
+                {
+                    highlightBreakpoint(run, Brushes.Salmon);
+                }
+            });
+        }
+
+        void highlightAllBreakpoints()
+        {
+            /*
+            foreach (var textRange in currentBreakPoints.ToArray())
+            {
+                textRange.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Transparent);
             }
 
-            inputText.TextChanged += inputText_TextChanged;
+            currentBreakPoints.Clear();
+
+            doForEachLine((run) =>
+            {
+                highlightBreakpoint(run, Brushes.Orange);
+            });
+            */
         }
 
         void breakPoint(int line, int column, Dictionary<string, object> scope)
@@ -168,7 +194,7 @@ namespace DebugConsole
 
             Dispatcher.Invoke(new Action(() => displayGlobalVariables(context.Globals)));
             Dispatcher.Invoke(new Action(() => displayLocalVariables(scope)));
-            Dispatcher.Invoke(new Action(() => findAndHighlightCurrentBreakpoint(line)));
+            Dispatcher.Invoke(new Action(() => highlightActiveBreakPoint(line)));
 
             //Wait for UI thread to set event
             breakpointEvent.WaitOne();
@@ -288,6 +314,13 @@ namespace DebugConsole
             lastStatementOutput.Text = exn.ToString();
         }
 
+        void doWithoutTextChange(Action action)
+        {
+            inputText.TextChanged -= inputText_TextChanged;
+            action();
+            inputText.TextChanged += inputText_TextChanged;
+        }
+
         void runButton_Click(object sender, RoutedEventArgs e)
         {
             if (jsThread != null)
@@ -297,7 +330,11 @@ namespace DebugConsole
             expressionTreeOutput.Text = String.Empty;
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
-            inputText.Focusable = false;
+
+            doWithoutTextChange(() => {
+                inputText.Focusable = false;
+                inputText.Background = Brushes.WhiteSmoke;
+            });
 
             var input = getAllInputText();
 
@@ -316,8 +353,15 @@ namespace DebugConsole
                 }
                 finally
                 {
-                    Dispatcher.Invoke(new Action(() => inputText.Focusable = true));
-                    Dispatcher.Invoke(new Action(() => displayGlobalVariables(context.Globals)));
+                    Dispatcher.Invoke(new Action(() => {
+                        doWithoutTextChange(() => {
+                            inputText.Focusable = true;
+                            inputText.Background = Brushes.Transparent;
+                        });
+
+                        displayGlobalVariables(context.Globals);
+                    }));
+
                     jsThread = null;
                 }
             });
@@ -341,6 +385,7 @@ namespace DebugConsole
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
         {
             File.WriteAllText(CACHE_FILE, getAllInputText());
+            highlightAllBreakpoints();
         }
 
         void createEnvironment()

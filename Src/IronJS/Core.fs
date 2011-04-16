@@ -307,7 +307,6 @@ and [<AllowNullLiteral>] Environment() =
 
   let rnd = new System.Random()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
-
   let regExpCache = new WeakCache<RegexOptions * string, Regex>()
 
   // We need the the special global function id 0UL to exist in 
@@ -327,7 +326,7 @@ and [<AllowNullLiteral>] Environment() =
 
   #if BREAKPOINT_SUPPORT
   [<DefaultValue>] val mutable BreakPoint : 
-    Action<int, int, MutableDict<string, obj>, MutableDict<string, obj>>
+    Action<int, int, MutableDict<string, obj>>
   #endif
 
   member x.RegExpCache = regExpCache

@@ -9,7 +9,7 @@ open IronJS.Support.CustomOperators
 
 ///
 module Core =
-
+  
   ///
   let private compileVar ast (ctx:Ctx) =
     match ast with
@@ -48,27 +48,25 @@ module Core =
   let private compileDirective ast (ctx:Ctx) =
     match ast with
     | Ast.BreakPoint(line, column) ->
+      
       #if BREAKPOINT_SUPPORT
-      let globals = ctx.Globals .-> "Members"
+
       let locals = 
         Dlr.blockTmpT<MutableDict<string, obj>> (fun locals ->
+          let addLocal (name, _) =
+            let value = (Identifier.getValue ctx name) .-> "ClrBoxed"
+            Dlr.call locals "Add" [!!!name; value]
+
           [
             locals .= Dlr.newT<MutableDict<string, obj>>
-
-            ctx.Variables
-            |> Map.toList
-            |> List.map (fun (name, _) -> 
-                Dlr.call locals "Add" [!!!name; (Identifier.getValue ctx name) .-> "ClrBoxed"])
-
-            |> Dlr.block []
-
+            ctx.Variables $ Map.toList $ List.map addLocal $ Dlr.block []
             locals :> Dlr.Expr
-
-          ] |> List.toSeq
+          ] $ List.toSeq
         )
 
-      let args = [!!!line; !!!column; globals; locals]
+      let args = [!!!line; !!!column; locals]
       Dlr.invoke (ctx.Env .-> "BreakPoint") args
+
       #else
       Dlr.void'
       #endif

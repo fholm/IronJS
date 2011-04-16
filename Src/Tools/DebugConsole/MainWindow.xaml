@@ -13,7 +13,7 @@
             <ColumnDefinition Width="556*" />
         </Grid.ColumnDefinitions>
         
-        <ScrollViewer Margin="10,32,0,0">
+        <ScrollViewer Margin="10,32,0,0" Name="inputScroller">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -82,10 +82,10 @@
         <Button 
             Content="Continue" 
             Height="23" 
-            Name="stopButton" 
+            Name="continueButton" 
             VerticalAlignment="Bottom" HorizontalAlignment="Right" 
             Width="58" 
-            Margin="0,0,56,10" Click="stopButton_Click" Grid.Row="1" />
+            Margin="0,0,56,10" Click="continueButton_Click" Grid.Row="1" />
 
         <Button 
             Content="Reset Environment" 

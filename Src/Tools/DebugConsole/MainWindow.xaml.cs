@@ -22,11 +22,13 @@ namespace DebugConsole
     {
         const string CACHE_FILE = "input.cache";
 
-        Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
         HashSet<object> alreadyRendered = new HashSet<object>();
-        IronJS.Hosting.CSharp.Context context;
-        Thread jsThread;
         ManualResetEvent breakpointEvent = new ManualResetEvent(true);
+        Dictionary<Type, Color> typeColors = new Dictionary<Type, Color>();
+
+        Thread jsThread;
+        TextRange currentHighlight;
+        IronJS.Hosting.CSharp.Context context;
 
         public MainWindow()
         {
@@ -64,12 +66,13 @@ namespace DebugConsole
             try
             {
                 inputText.TextChanged -= inputText_TextChanged;
-                var lines = File.ReadLines(CACHE_FILE);
                 inputText.Document = new FlowDocument();
-                foreach (var line in lines)
+
+                foreach (var line in File.ReadLines(CACHE_FILE))
                 {
                     inputText.Document.Blocks.Add(new Paragraph(new Run(line)));
                 }
+
                 inputText.TextChanged += inputText_TextChanged;
             }
             catch
@@ -78,73 +81,69 @@ namespace DebugConsole
             }
         }
 
-        TextRange tr;
+        void printLocalVariables(Dictionary<string, object> locals)
+        {
+            Locals.Items.Clear();
+
+            foreach (var kvp in locals)
+            {
+                alreadyRendered.Clear();
+                Locals.Items.Add(renderProperty(kvp.Key, kvp.Value));
+            }
+
+            tabs.SelectedIndex = 4;
+        }
+
         void highlightBreakpoint(Run run)
         {
             if (run.Text.Trim().StartsWith("#bp"))
             {
-                tr = new TextRange(run.ContentStart, run.ContentEnd);
-                tr.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Red);
+                currentHighlight = new TextRange(run.ContentStart, run.ContentEnd);
+                currentHighlight.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Salmon);
+                var position = run.ContentStart.GetCharacterRect(LogicalDirection.Forward);
+                inputScroller.ScrollToVerticalOffset(position.Top);
             }
         }
 
-        void breakPoint(int line, int column, Dictionary<string, object> globals, Dictionary<string, object> scope)
+        void findAndHighlightCurrentBreakpoint(int line)
         {
+            if (inputText.Document == null)
+                return;
+
+            var run = 0;
+            var navigator = inputText.Document.ContentStart;
+
+            inputText.TextChanged -= inputText_TextChanged;
+
+            while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
+            {
+                var context = navigator.GetPointerContext(LogicalDirection.Backward);
+                if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
+                {
+                    ++run;
+                    if (run == line)
+                    {
+                        highlightBreakpoint((Run)navigator.Parent);
+                        break;
+                    }
+                }
+
+                navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
+            }
+
+            inputText.TextChanged += inputText_TextChanged;
+        }
+
+        void breakPoint(int line, int column, Dictionary<string, object> scope)
+        {
+            //Reset breakpoint event
             breakpointEvent.Reset();
 
-            Dispatcher.Invoke(new Action(() =>
-                {
-                    EnvironmentVariables.Items.Clear();
+            Dispatcher.Invoke(new Action(() => printEnvironmentVariables(context.Globals)));
+            Dispatcher.Invoke(new Action(() => printLocalVariables(scope)));
+            Dispatcher.Invoke(new Action(() => findAndHighlightCurrentBreakpoint(line)));
 
-                    foreach (var kvp in globals)
-                    {
-                        alreadyRendered.Clear();
-                        EnvironmentVariables.Items.Add(renderProperty(kvp.Key, kvp.Value));
-                    }
-                }));
-
-            Dispatcher.Invoke(new Action(() =>
-                {
-                    Locals.Items.Clear();
-
-                    foreach (var kvp in scope)
-                    {
-                        alreadyRendered.Clear();
-                        Locals.Items.Add(renderProperty(kvp.Key, kvp.Value));
-                    }
-
-                    tabs.SelectedIndex = 4;
-                }));
-
-            Dispatcher.Invoke(new Action(() =>
-                {
-                    inputText.ScrollToHorizontalOffset(line);
-
-                    if (inputText.Document == null)
-                        return;
-
-                    var run = 0;
-                    var navigator = inputText.Document.ContentStart;
-
-                    inputText.TextChanged -= inputText_TextChanged;
-
-                    while (navigator.CompareTo(inputText.Document.ContentEnd) < 0)
-                    {
-                        var context = navigator.GetPointerContext(LogicalDirection.Backward);
-                        if (context == TextPointerContext.ElementStart && navigator.Parent is Run)
-                        {
-                            ++run;
-                            if (run == line)
-                            {
-                                highlightBreakpoint((Run)navigator.Parent);
-                            }
-                        }
-                        navigator = navigator.GetNextContextPosition(LogicalDirection.Forward);
-                    }
-
-                    inputText.TextChanged += inputText_TextChanged;
-                }));
-
+            //Wait for UI thread to set event
             breakpointEvent.WaitOne();
         }
 
@@ -171,7 +170,7 @@ namespace DebugConsole
 
         void printConsoleText(string value)
         {
-            Dispatcher.Invoke(new Action(()=> consoleOutput.Text += value));
+            Dispatcher.Invoke(new Action(() => consoleOutput.Text += value));
         }
 
         IEnumerable<TreeViewItem> renderObjectProperties(CommonObject jsObject)
@@ -190,6 +189,7 @@ namespace DebugConsole
                 }
 
                 alreadyRendered.Add(jsObject);
+
                 foreach (var member in jsObject.Members)
                 {
                     yield return renderProperty(member.Key, member.Value);
@@ -227,7 +227,7 @@ namespace DebugConsole
 
             header.Foreground = new SolidColorBrush(color);
 
-            if (value is IronJS.CommonObject)
+            if (value is CommonObject)
             {
                 var commonObject = value as CommonObject;
                 item.Header = name + ": " + commonObject.ClassName;
@@ -256,7 +256,7 @@ namespace DebugConsole
             return item;
         }
 
-        string getAllText()
+        string getAllInputText()
         {
             var tr = new TextRange(
                 inputText.Document.ContentStart,
@@ -266,57 +266,68 @@ namespace DebugConsole
             return tr.Text;
         }
 
+        void printException(Exception exn)
+        {
+            tabs.SelectedIndex = 3;
+            lastStatementOutput.Text = exn.ToString();
+        }
+
         void runButton_Click(object sender, RoutedEventArgs e)
         {
+            if (jsThread != null)
+                return;
+
             consoleOutput.Text = String.Empty;
             expressionTreeOutput.Text = String.Empty;
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
+            inputText.Focusable = false;
 
-            var input = getAllText();
+            var input = getAllInputText();
 
             jsThread = new Thread(() => {
                 try
                 {
                     var result = context.Execute(input);
-                    var asString = TypeConverter.ToString(BoxingUtils.JsBox(result));
+                    var resultAsString = TypeConverter.ToString(BoxingUtils.JsBox(result));
 
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        consoleOutput.Text += "\r\nLast statement: " + asString;
-                    }));
+                    Dispatcher.Invoke(new Action(() => 
+                        consoleOutput.Text += "\r\nLast statement: " + resultAsString));
                 }
                 catch (Exception exn)
                 {
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        tabs.SelectedIndex = 3;
-                        lastStatementOutput.Text = exn.ToString();
-                    }));
+                    Dispatcher.Invoke(new Action(() => 
+                        printException(exn)));
                 }
                 finally
                 {
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        printEnvironmentVariables(context.Globals);
-                    }));
+                    Dispatcher.Invoke(new Action(() => 
+                        printEnvironmentVariables(context.Globals)));
+
+                    jsThread = null;
+                    inputText.Focusable = true;
                 }
             });
 
             jsThread.Start();
         }
 
-        void stopButton_Click(object sender, RoutedEventArgs e)
+        void continueButton_Click(object sender, RoutedEventArgs e)
         {
-            if (tr != null)
-                tr.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Transparent);
+            // We need to reset the color of the
+            // previously hit breakpoint textrange
+            if (currentHighlight != null)
+            {
+                currentHighlight.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Transparent);
+            }
 
+            // Allow the executing thread to continue
             breakpointEvent.Set();
         }
 
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
         {
-            File.WriteAllText(CACHE_FILE, getAllText());
+            File.WriteAllText(CACHE_FILE, getAllInputText());
         }
 
         void createEnvironment()

@@ -11,7 +11,7 @@ last-test
 *.pdb
 *.xml
 *.XML
-*.exe
+*.nupkg
 *.cache
 *.Cache
 *.force

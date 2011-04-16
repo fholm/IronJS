@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Platform Condition="$(Platform) == ''">x86</Platform>
+  </PropertyGroup>
+
+  <Target Name="Build" DependsOnTargets="Clean;Package" />
+
+  <Target Name="Clean">
+    <ItemGroup>
+      <ExistingNuPkgs Include="*.nupkg" />
+    </ItemGroup>
+    <Delete Files="@(ExistingNuPkgs)" />
+    <RemoveDir Directories="Binaries" Condition="Exists('Binaries\')" />
+    <RemoveDir Directories="Sources" Condition="Exists('Sources\')" />
+    <MSBuild Projects="..\Src\CLR4.sln" Targets="Clean" Properties="Configuration=Release;Platform=$(Platform)" />
+  </Target>
+
+  <Target Name="Package">
+    <!-- Build the project. -->
+    <MSBuild Projects="..\Src\CLR4.sln" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform)" />
+
+    <!-- Copy the binaries and source files local to the NuSpec files. -->
+    <MakeDir Directories="Binaries" />
+    <MakeDir Directories="Sources" />
+    <ItemGroup>
+      <Binaries Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
+      <Sources  Include="..\Src\IronJS\**\*;" Exclude="..\Src\IronJS\bin\**\*;..\Src\IronJS\obj\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="Binaries" />
+    <Copy SourceFiles="@(Sources)" DestinationFolder="Sources" />
+
+    <!-- Extract the current version number from the AssemblyInfo of the main project. -->
+    <PropertyGroup>
+      <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText(`..\Src\IronJS\AssemblyInfo.fs`)), `(?&lt;=")\d+(\.\d){1,3}(?=")`))</Version>
+    </PropertyGroup>
+
+    <!-- Write out a new version of the nuspec files, updating the version number. -->
+    <PropertyGroup>
+      <BinariesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.nuspec`).Replace(`##VERSION##`, $(Version)))</BinariesNuSpec>
+      <SourcesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.Sources.nuspec`).Replace(`##VERSION##`, $(Version)))</SourcesNuSpec>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="Binaries\IronJS.tmp.nuspec" Lines="$(BinariesNuSpec)" />
+    <WriteLinesToFile File="Sources\IronJS.Sources.tmp.nuspec" Lines="$(SourcesNuSpec)" />
+    <Exec Command="NuGet.exe pack Binaries\IronJS.tmp.nuspec" />
+    <Exec Command="NuGet.exe pack Sources\IronJS.Sources.tmp.nuspec" />
+
+    <RemoveDir Directories="Binaries" />
+    <RemoveDir Directories="Sources" />
+  </Target>
+</Project>

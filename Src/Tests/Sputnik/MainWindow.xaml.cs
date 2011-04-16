@@ -165,7 +165,9 @@ namespace IronJS.Tests.Sputnik
                 if (tests.ContainsKey(key))
                 {
                     var info = tests[key];
-                    test.Status = info.Status;
+                    test.Failed = info.Status == Status.Unknown
+                        ? (int?)null
+                        : (info.Status == Status.Failed ? 1 : 0);
                     test.Selected = info.Selected;
                 }
             }
@@ -410,7 +412,7 @@ namespace IronJS.Tests.Sputnik
 
                 if (pass)
                 {
-                    test.Status = Status.Passed;
+                    test.Failed = 0;
                     passed++;
                     if (previous == Status.Failed)
                     {
@@ -421,7 +423,7 @@ namespace IronJS.Tests.Sputnik
                 {
                     bool regression = false;
 
-                    test.Status = Status.Failed;
+                    test.Failed = 1;
                     failed++;
                     if (previous == Status.Passed)
                     {

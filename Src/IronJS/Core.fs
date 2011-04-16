@@ -1451,6 +1451,13 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     else 
       base.Put(name, value, tag)
 
+  override x.Get(name:string) =
+    let isUInt32, index = UInt32.TryParse(name)
+    if isUInt32 then
+      x.Get(index)
+    else
+      base.Get(name)
+
   override x.Get(index:uint32) =
     if index = UInt32.MaxValue then
       base.Get(string index)
@@ -1464,10 +1471,36 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       else
         x.Prototype.Get(index)
 
+  override x.Has(name:string) =
+    let isUInt32, index = UInt32.TryParse(name)
+    if isUInt32 then
+      x.Has(index)
+    else
+      base.Has(name)
+
   override x.Has(index:uint32) =
     if index = UInt32.MaxValue
       then base.Has(string index)
       else x.HasIndex(index) || x.Prototype.Has(index)
+
+  override x.HasOwn(name:string) =
+    let isUInt32, index = UInt32.TryParse(name)
+    if isUInt32 then
+      x.HasOwn(index)
+    else
+      base.HasOwn(name)
+
+  override x.HasOwn(index:uint32) =
+    if index = UInt32.MaxValue
+      then base.HasOwn(string index)
+      else x.HasIndex(index)
+
+  override x.Delete(name:string) =
+    let isUInt32, index = UInt32.TryParse(name)
+    if isUInt32 then
+      x.Delete(index)
+    else
+      base.Delete(name)
 
   override x.Delete(index:uint32) =
     if index = UInt32.MaxValue then

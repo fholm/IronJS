@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using IronJS;
+using WinFormsRichhTextBox = System.Windows.Forms.RichTextBox;
 
 namespace DebugConsole
 {
@@ -49,10 +50,25 @@ namespace DebugConsole
             typeColors.Add(typeof(object), Colors.Black);
 
             Console.SetOut(new CallbackWriter(printConsoleText));
+            DataObject.AddPastingHandler(inputText, inputText_OnPaste);
 
             createEnvironment();
 
             this.Closing += MainWindow_Closing;
+        }
+
+        void inputText_OnPaste(object sender, DataObjectPastingEventArgs e)
+        {
+            // This little hack removes the RTF formatting on the input text
+
+            if (!e.SourceDataObject.GetDataPresent(DataFormats.Rtf, true)) 
+                return;
+
+            var rtf = e.SourceDataObject.GetData(DataFormats.Rtf) as string;
+            var rtb = new WinFormsRichhTextBox();
+            rtb.Rtf = rtf;
+
+            e.DataObject = new DataObject(DataFormats.UnicodeText, rtb.Text);
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -81,7 +97,7 @@ namespace DebugConsole
             }
         }
 
-        void printLocalVariables(Dictionary<string, object> locals)
+        void displayLocalVariables(Dictionary<string, object> locals)
         {
             Locals.Items.Clear();
 
@@ -92,6 +108,17 @@ namespace DebugConsole
             }
 
             tabs.SelectedIndex = 4;
+        }
+
+        void displayGlobalVariables(CommonObject globals)
+        {
+            EnvironmentVariables.Items.Clear();
+
+            foreach (var item in renderObjectProperties(globals))
+            {
+                alreadyRendered.Clear();
+                EnvironmentVariables.Items.Add(item);
+            }
         }
 
         void highlightBreakpoint(Run run)
@@ -139,8 +166,8 @@ namespace DebugConsole
             //Reset breakpoint event
             breakpointEvent.Reset();
 
-            Dispatcher.Invoke(new Action(() => printEnvironmentVariables(context.Globals)));
-            Dispatcher.Invoke(new Action(() => printLocalVariables(scope)));
+            Dispatcher.Invoke(new Action(() => displayGlobalVariables(context.Globals)));
+            Dispatcher.Invoke(new Action(() => displayLocalVariables(scope)));
             Dispatcher.Invoke(new Action(() => findAndHighlightCurrentBreakpoint(line)));
 
             //Wait for UI thread to set event
@@ -155,17 +182,6 @@ namespace DebugConsole
         void syntaxTreePrinter(string syntaxTree)
         {
             Dispatcher.Invoke(new Action(() => syntaxTreeOutput.Text += syntaxTree));
-        }
-
-        void printEnvironmentVariables(CommonObject globals)
-        {
-            EnvironmentVariables.Items.Clear();
-
-            foreach (var item in renderObjectProperties(globals))
-            {
-                alreadyRendered.Clear();
-                EnvironmentVariables.Items.Add(item);
-            }
         }
 
         void printConsoleText(string value)
@@ -296,16 +312,13 @@ namespace DebugConsole
                 }
                 catch (Exception exn)
                 {
-                    Dispatcher.Invoke(new Action(() => 
-                        printException(exn)));
+                    Dispatcher.Invoke(new Action(() => printException(exn)));
                 }
                 finally
                 {
-                    Dispatcher.Invoke(new Action(() => 
-                        printEnvironmentVariables(context.Globals)));
-
+                    Dispatcher.Invoke(new Action(() => inputText.Focusable = true));
+                    Dispatcher.Invoke(new Action(() => displayGlobalVariables(context.Globals)));
                     jsThread = null;
-                    inputText.Focusable = true;
                 }
             });
 
@@ -341,7 +354,7 @@ namespace DebugConsole
         {
             tabs.SelectedIndex = 2;
             createEnvironment();
-            printEnvironmentVariables(context.Globals);
+            displayGlobalVariables(context.Globals);
         }
     }
 }

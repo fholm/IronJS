@@ -49,7 +49,7 @@ module Core =
     match ast with
     | Ast.BreakPoint(line, column) ->
       
-      #if BREAKPOINT_SUPPORT
+      #if ENABLE_BREAKPOINTS
 
       let locals = 
         Dlr.blockTmpT<MutableDict<string, obj>> (fun locals ->

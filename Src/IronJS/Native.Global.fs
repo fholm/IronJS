@@ -119,17 +119,9 @@ module Global =
       elif  n = NegInf  then false
                         else true
 
-  // These two arrays are copied from the Jint sources
-  let private reservedEncoded = [|';'; ','; '/'; '?'; ':'; '@'; '&'; '='; '+'; '$'; '#'|]
-  let private reservedEncodedComponent = [|'-'; '_'; '.'; '!'; '~'; '*'; '\''; '('; ')'; '['; ']'|]
-
   let private uriReserved = ";/?:@&=+$,"
   let private uriUnescaped = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"
   let private unescapedURISet = uriReserved + "#" + uriUnescaped
-
-  ///
-  let private replaceChar (uri:string) (c:char) =
-    uri.Replace(Uri.EscapeDataString(string c), string c)
 
   ///
   let decodeURI (func:FO) (_:CO) (uri:BoxedValue) =

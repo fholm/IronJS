@@ -21,7 +21,8 @@ namespace DebugConsole
 {
     public partial class MainWindow : Window
     {
-        const string CACHE_FILE = "input.cache";
+        const string CACHE_FILE = "source.cache";
+        const string CACHE_FILE_LIST = "files.cache";
 
         HashSet<object> alreadyRendered = new HashSet<object>();
         ManualResetEvent breakpointEvent = new ManualResetEvent(true);
@@ -31,6 +32,7 @@ namespace DebugConsole
         Thread jsThread;
         TextRange currentHighlight;
         IronJS.Hosting.CSharp.Context context;
+        string lastFileBrowserPath = null;
 
         public MainWindow()
         {
@@ -57,6 +59,25 @@ namespace DebugConsole
 
             this.Closing += MainWindow_Closing;
 
+            loadFilesCache();
+        }
+
+        void loadFilesCache()
+        {
+            try
+            {
+                var files = File.ReadAllLines(CACHE_FILE_LIST);
+                foreach (var file in files)
+                {
+                    if (file.Trim() != "")
+                    {
+                        addNewFilePanel(file);
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         void inputText_OnPaste(object sender, DataObjectPastingEventArgs e)
@@ -324,29 +345,44 @@ namespace DebugConsole
 
         void runButton_Click(object sender, RoutedEventArgs e)
         {
-            if (jsThread != null)
-                return;
+            runSource(getAllInputText());
+        }
 
+        void runSource(string source)
+        {
             consoleOutput.Text = String.Empty;
             expressionTreeOutput.Text = String.Empty;
             syntaxTreeOutput.Text = String.Empty;
             lastStatementOutput.Text = String.Empty;
 
-            doWithoutTextChange(() => {
+            var sources = new Stack<string>();
+            sources.Push(source);
+            runSources(sources);
+        }
+
+        void runSources(Stack<string> sources)
+        {
+            if (jsThread != null)
+                return;
+
+            doWithoutTextChange(() =>
+            {
                 inputText.Focusable = false;
                 inputText.Background = Brushes.WhiteSmoke;
             });
 
-            var input = getAllInputText();
-
-            jsThread = new Thread(() => {
+            jsThread = new Thread(() =>
+            {
                 try
                 {
-                    var result = context.Execute(input);
-                    var resultAsString = TypeConverter.ToString(BoxingUtils.JsBox(result));
+                    if (sources.Count > 0)
+                    {
+                        var result = context.Execute(sources.Pop());
+                        var resultAsString = TypeConverter.ToString(BoxingUtils.JsBox(result));
 
-                    Dispatcher.Invoke(new Action(() => 
-                        consoleOutput.Text += "\r\nLast statement: " + resultAsString));
+                        Dispatcher.Invoke(new Action(() =>
+                            consoleOutput.Text += "\r\nLast statement: " + resultAsString));
+                    }
                 }
                 catch (Exception exn)
                 {
@@ -354,8 +390,10 @@ namespace DebugConsole
                 }
                 finally
                 {
-                    Dispatcher.Invoke(new Action(() => {
-                        doWithoutTextChange(() => {
+                    Dispatcher.Invoke(new Action(() =>
+                    {
+                        doWithoutTextChange(() =>
+                        {
                             inputText.Focusable = true;
                             inputText.Background = Brushes.Transparent;
                         });
@@ -364,6 +402,14 @@ namespace DebugConsole
                     }));
 
                     jsThread = null;
+
+                    if (sources.Count > 0)
+                    {
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            runSources(sources);
+                        }));
+                    }
                 }
             });
 
@@ -403,13 +449,124 @@ namespace DebugConsole
             displayGlobalVariables(context.Globals);
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        List<string> getAllLoadedFiles()
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog();
-            if (dlg.ShowDialog() ?? false)
-            {
+            var files = new List<string>();
 
+            foreach (var child in filesPanel.Children)
+            {
+                if (child is StackPanel)
+                {
+                    foreach (var subChild in (child as StackPanel).Children)
+                    {
+                        if (subChild is TextBox)
+                        {
+                            var tb = subChild as TextBox;
+                            if (tb.Text != null && tb.Text.Trim() != "")
+                            {
+                                files.Add(tb.Text.Trim() + "\r\n");
+                            }
+                        }
+                    }
+                }
             }
+
+            return files;
+        }
+
+        void saveFileListCache()
+        {
+            File.WriteAllText(CACHE_FILE_LIST, String.Concat(getAllLoadedFiles()));
+        }
+
+        void addNewFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            addNewFilePanel(null);
+        }
+
+        void addNewFilePanel(string initialFile)
+        {
+            var panel = new StackPanel();
+            panel.Orientation = Orientation.Horizontal;
+
+            var removeButton = new Button();
+            removeButton.Content = "Remove";
+            removeButton.Width = 60;
+            removeButton.Margin = new Thickness(5);
+
+            var filePathBox = new TextBox();
+            filePathBox.Width = 400;
+            filePathBox.Margin = new Thickness(5);
+
+            var browseButton = new Button();
+            browseButton.Content = "Browse";
+            browseButton.Width = 50;
+            browseButton.Margin = new Thickness(5);
+
+            var runButton = new Button();
+            runButton.Content = "Run";
+            runButton.Width = 50;
+            runButton.Margin = new Thickness(5);
+
+            panel.Children.Add(removeButton);
+            panel.Children.Add(filePathBox);
+            panel.Children.Add(browseButton);
+            panel.Children.Add(runButton);
+
+            filesPanel.Children.Add(panel);
+
+            removeButton.Click += (s, args) =>
+            {
+                filesPanel.Children.Remove(panel);
+                saveFileListCache();
+            };
+
+            browseButton.Click += (s, args) =>
+            {
+                var dlg = new Microsoft.Win32.OpenFileDialog();
+                dlg.DefaultExt = ".js";
+
+                if (!String.IsNullOrEmpty(lastFileBrowserPath))
+                {
+                    dlg.InitialDirectory = lastFileBrowserPath;
+                }
+
+                if (dlg.ShowDialog() ?? false)
+                {
+                    lastFileBrowserPath = System.IO.Path.GetDirectoryName(dlg.FileName);
+                    filePathBox.Text = dlg.FileName;
+                }
+
+                saveFileListCache();
+            };
+
+            runButton.Click += (s, args) =>
+            {
+                var path = (filePathBox.Text ?? "").Trim();
+
+                if (path != "")
+                {
+                    try
+                    {
+                        runSource(File.ReadAllText(path));
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            };
+
+            if (initialFile != null)
+            {
+                filePathBox.Text = initialFile;
+            }
+        }
+
+        void runAllFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            var sources = new Stack<string>(getAllLoadedFiles().Reverse<string>() .Select(x => File.ReadAllText(x.Trim())));
+            runSources(sources);
         }
     }
 }

@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug-x64\</OutputPath>
     <DefineConstants>TRACE;DEBUG;X64</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -30,7 +30,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release-x64\</OutputPath>
     <DefineConstants>X64</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
@@ -67,8 +67,8 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;ENABLE_BREAKPOINTS</DefineConstants>
+    <OutputPath>bin\Debug-x86\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;ENABLE_BREAKPOINTS</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile />
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -79,7 +79,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release-x86\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <WarningLevel>4</WarningLevel>

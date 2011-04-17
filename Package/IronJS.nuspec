@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>IronJS</id>
+    <version>##VERSION##</version> <!-- NOTE: Do not update the version number here, it will be automatically updated. -->
+    <owners>Fredrik Holmström</owners>
+    <authors>Fredrik Holmström, John Gietzen</authors>
+    <description>IronJS is a ECMAScript 3.0 implementation built on top of the Dynamic Language Runtime from Microsoft which allows you to embed a javascript runtime into your .NET applications.</description>
+    <language>en-US</language>
+    <projectUrl>http://ironjs.net</projectUrl>
+    <iconUrl>https://github.com/fholm/IronJS/raw/master/IronJS.ico</iconUrl>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.Numerics" />
+      <frameworkAssembly assemblyName="FSharp.Core" />
+    </frameworkAssemblies>
+  </metadata>
+  <files>
+    <file src="IronJS.dll" target="lib" />
+    <file src="IronJS.pdb" target="lib" />
+  </files>
+</package>

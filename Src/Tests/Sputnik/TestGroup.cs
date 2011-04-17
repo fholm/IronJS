@@ -21,7 +21,7 @@ namespace IronJS.Tests.Sputnik
         public event PropertyChangedEventHandler PropertyChanged;
 
         private bool? selected;
-        private Status status;
+        private int? failed;
 
         public TestGroup(TestGroup root, Sputnik.TestCase testCase)
         {
@@ -76,16 +76,35 @@ namespace IronJS.Tests.Sputnik
         {
             get
             {
-                return this.status;
+                if (!this.failed.HasValue)
+                {
+                    return Status.Unknown;
+                }
+                else if (this.failed.Value == 0)
+                {
+                    return Status.Passed;
+                }
+                else
+                {
+                    return Status.Failed;
+                }
+            }
+        }
+
+        public int? Failed
+        {
+            get
+            {
+                return this.failed;
             }
 
             set
             {
-                this.status = value;
-                NotifyStatusChanged();
+                this.failed = value;
+                NotifyFailedChanged();
                 if (this.root != null)
                 {
-                    this.root.UpdateStatus();
+                    this.root.UpdateFailed();
                 }
             }
         }
@@ -101,11 +120,12 @@ namespace IronJS.Tests.Sputnik
             }
         }
 
-        private void NotifyStatusChanged()
+        private void NotifyFailedChanged()
         {
             var e = this.PropertyChanged;
             if (e != null)
             {
+                e(this, new PropertyChangedEventArgs("Failed"));
                 e(this, new PropertyChangedEventArgs("Status"));
             }
         }
@@ -153,38 +173,40 @@ namespace IronJS.Tests.Sputnik
             return true;
         }
 
-        private void UpdateStatus()
+        private void UpdateFailed()
         {
-            var newStatus = this.DetermineStatus();
-            if (newStatus != this.status)
+            var newFailed = this.DetermineFailed();
+            if (newFailed != this.failed)
             {
-                this.status = newStatus;
-                this.NotifyStatusChanged();
+                this.failed = newFailed;
+                this.NotifyFailedChanged();
                 if (this.root != null)
                 {
-                    this.root.UpdateStatus();
+                    this.root.UpdateFailed();
                 }
             }
         }
 
-        private Status DetermineStatus()
+        private int? DetermineFailed()
         {
             if (this.TestGroups == null || this.TestGroups.Count == 0)
             {
-                return this.status;
+                return this.failed;
             }
 
-            if (this.TestGroups.All(g => g.Status == Sputnik.Status.Passed))
+            var failed = this.TestGroups.Where(g => g.failed.HasValue && g.failed.Value > 0).Sum(g => g.failed.Value);
+
+            if (failed > 0)
             {
-                return Sputnik.Status.Passed;
+                return failed;
             }
 
-            if (this.TestGroups.Where(g => g.Status == Sputnik.Status.Failed).Any())
+            if (this.TestGroups.Where(g => !g.failed.HasValue).Any())
             {
-                return Sputnik.Status.Failed;
+                return null;
             }
 
-            return Sputnik.Status.Unknown;
+            return 0;
         }
 
         private void SetSelected(bool? value)

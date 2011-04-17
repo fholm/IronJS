@@ -8,6 +8,7 @@
     <Window.Resources>
         <convert:StatusImageConverter x:Key="StatusImage" />
         <convert:RegressionColorConverter x:Key="RegressionColor" />
+        <convert:FailureConverter x:Key="FailureText" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -78,6 +79,7 @@
                             <CheckBox IsChecked="{Binding Selected}" VerticalAlignment="Center" Margin="1" />
                             <Image Source="{Binding Status, Converter={StaticResource StatusImage}}" />
                             <TextBlock Text="{Binding Name}" Margin="1"></TextBlock>
+                            <TextBlock Text="{Binding Failed, Converter={StaticResource FailureText}}" Margin="1" Foreground="Red"></TextBlock>
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>

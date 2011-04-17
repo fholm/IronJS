@@ -21,16 +21,14 @@ module Lexer =
     let inline isQuote c = c = '"' || c = '\''
     let inline isLineTerminator c = 
       match c with
-      | '\n'|'\r'|'\u2028'|'\u2029' -> true
+      | '\n' | '\r' | '\u2028' | '\u2029' -> true
       | _ -> false
 
     let inline isWhiteSpace (c:Char) =
       match int c with
-      | 0x09   | 0x0B   | 0x0C   
-      | 0x20   | 0xA0   | 0x1680 
-      | 0x180E | 0x202F | 0x205F 
-      | 0x3000 | 0xFEFF -> true
-      | c -> c >= 8192 && c <= 8202;
+      | 0x0009 | 0x000B | 0x000C
+      | 0x0085 | 0x200B | 0xFEFF -> true
+      | _ -> Char.GetUnicodeCategory(c) = Cat.SpaceSeparator
 
     let isUnicodeIdentifierStart c =
       match c |> Char.GetUnicodeCategory with

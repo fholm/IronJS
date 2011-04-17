@@ -410,8 +410,60 @@ module internal Array =
 
     /// Implements: 15.4.4.12 Array.prototype.splice (start, deleteCount [ , item1 [ , item2 [ , … ] ] ] )
     let splice (func:FO) (this:CO) (args:Args) =
-      this
-          
+      let O = this
+      let start = if args.Length > 0 then args.[0] else Undefined.Boxed
+      let deleteCount = if args.Length > 1 then args.[1] else Undefined.Boxed
+
+      let A = func.Env.NewArray()
+      let len = O.GetLength() |> int32
+      let relativeStart = start |> TC.ToInteger
+      let actualStart = if relativeStart < 0 then Math.Max((len + relativeStart), 0) else Math.Min(relativeStart, len)
+      let actualDeleteCount = Math.Min(Math.Max(TC.ToInteger(deleteCount), 0), len - actualStart)
+      let mutable k = int32 0
+      while k < actualDeleteCount do
+        let from = relativeStart + k |> TC.ToString
+        let fromPresent = this.HasOwn(from)
+        if fromPresent then
+          let fromValue = this.Get(from)
+          A.Put(k, fromValue)
+        k <- k + 1
+      let itemCount = if args.Length <= 2 then 0 else args.Length - 2
+      if itemCount < actualDeleteCount then
+        let mutable k = actualStart
+        while k < (len - actualDeleteCount) do
+          let from = k + actualDeleteCount |> uint32
+          let to' = k + itemCount |> TC.ToString
+          let fromPresent = this.HasOwn(from)
+          if fromPresent then
+            let fromValue = this.Get(from)
+            this.Put(to', fromValue)
+          else
+            this.Delete(to') |> ignore
+          k <- k + 1
+        k <- len
+        while k > (len - actualDeleteCount + itemCount) do
+          k - 1 |> TC.ToString |> this.Delete |> ignore
+          k <- k - 1
+      elif itemCount > actualDeleteCount then
+        let mutable k = len - actualDeleteCount
+        while k > actualStart do
+          let from = k + actualDeleteCount - 1 |> uint32
+          let to' = k + itemCount - 1 |> TC.ToString
+          let fromPresent = this.HasOwn(from)
+          if fromPresent then
+            let fromValue = this.Get(from)
+            this.Put(to', fromValue)
+          else
+            this.Delete(to') |> ignore
+          k <- k - 1
+      for i = 2 to args.Length - 1 do
+        let k = actualStart + i - 2 |> TC.ToString
+        let E = args.[i]
+        this.Put(k, E)
+      let putLength = (len - actualDeleteCount + itemCount) |> double |> BV.Box
+      this.Put("length", putLength)
+      A
+
     ///
     let create (env:Env) ownPrototype =
       let prototype = env.NewArray()

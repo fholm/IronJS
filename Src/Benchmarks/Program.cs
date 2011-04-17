@@ -25,11 +25,8 @@ namespace Benchmarks
             TestSuite v8Benchmark = new V8BenchMarkTestSuite(basePath);
             v8Benchmark.Run();
 
-            if (Debugger.IsAttached)
-            {
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey(true);
-            }
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey(true);
         }
     }
 }

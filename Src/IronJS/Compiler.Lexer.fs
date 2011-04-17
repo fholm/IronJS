@@ -274,9 +274,9 @@ module Lexer =
   type Token = int * string * int * int
 
   let private keywordMap = 
-    //Sadly a normal Dictionary is so
-    //much faster then a F# Map that
-    //it's worth using it
+    // Sadly a normal Dictionary is so
+    // much faster then a F# Map that
+    // it's worth using it
     new Dictionary<string, int>(
       [
         ("break", Symbol.Break)
@@ -311,8 +311,8 @@ module Lexer =
     )
 
   let private punctuationMap =
-    //Same performance reasons for usig
-    //Dictionary as keywordMap
+    // Same performance reasons for usig
+    // Dictionary as keywordMap
     new Dictionary<string, int>(
       [
         ("!", Symbol.LogicalNot) 
@@ -702,15 +702,6 @@ module Lexer =
         c |> buffer s
         s |> advance
         c <- s |> current
-      
-    (*
-    // If the number ends with a dot, the dot
-    // is an operator, such as 2.toString() 
-    // and not part of the number itself
-    if s |> bufferLastIsDot then
-      s |> rewind
-      s |> bufferRemoveLast
-    *)
 
     s |> outputBuffer Symbol.Number
 

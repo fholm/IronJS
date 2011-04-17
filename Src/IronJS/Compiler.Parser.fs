@@ -1,9 +1,5 @@
 ﻿namespace IronJS.Compiler
 
-//Disables the warning 
-//for using inline IL
-#nowarn "42"
-
 open System
 open System.Globalization
 

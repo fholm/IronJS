@@ -121,24 +121,134 @@ module Global =
 
   let private uriReserved = ";/?:@&=+$,"
   let private uriUnescaped = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"
-  let private unescapedURISet = uriReserved + "#" + uriUnescaped
+  let private reservedURISet = uriReserved + "#"
+  let private unescapedURISet = reservedURISet + uriUnescaped
+
+  let private decodeUTF8 (b:byte[]) : int =
+    // TODO: Check for various additional invalid UTF-8 encodings.
+    let count = b.Length
+    if count = 2 then
+      let octetA = int b.[0]
+      let octetB = int b.[1]
+      if octetA &&& 0xE0 <> 0xC0 ||
+         octetB &&& 0xC0 <> 0x80 then raise (new UriFormatException("An attempt was made to decode an invalid character."))
+      ((octetA &&& 0x1F) <<< 6) ||| (octetB &&& 0x3F)
+    elif count = 3 then
+      let octetA = int b.[0]
+      let octetB = int b.[1]
+      let octetC = int b.[2]
+      if octetA &&& 0xF0 <> 0xE0 ||
+         octetB &&& 0xC0 <> 0x80 ||
+         octetC &&& 0xC0 <> 0x80 then raise (new UriFormatException("An attempt was made to decode an invalid character."))
+      ((((octetA &&& 0x0F) <<< 6) ||| (octetB &&& 0x3F)) <<< 6) ||| (octetC &&& 0x3F)
+    elif count = 4 then
+      let octetA = int b.[0]
+      let octetB = int b.[1]
+      let octetC = int b.[2]
+      let octetD = int b.[3]
+      if octetA &&& 0xF8 <> 0xF0 ||
+         octetB &&& 0xC0 <> 0x80 ||
+         octetC &&& 0xC0 <> 0x80 ||
+         octetD &&& 0xC0 <> 0x80 then raise (new UriFormatException("An attempt was made to decode an invalid character."))
+      ((((((octetA &&& 0x07) <<< 6) ||| (octetB &&& 0x3F)) <<< 6) ||| (octetC &&& 0x3F)) <<< 6) ||| (octetD &&& 0x3F)
+    else
+      raise (new UriFormatException("An attempt was made to decode an unsupported character."))
+
+  let private parseByte (s:string) (i:int) : bool*byte =
+    let pair = s.Substring(i, 2)
+    try
+      (true, Convert.ToByte(pair, 16))
+    with
+      | :? FormatException -> (false, 0uy)
+
+  let private countHighBits (c:byte) : int =
+    let mutable n = 0
+    let mutable c = c
+    while c &&& 0x80uy <> 0uy do
+      n <- n + 1
+      c <- c <<< 1
+    n
+
+  let private decode (s:string) (reservedSet:string) : string =
+    let strLen = s.Length
+    let R = new System.Text.StringBuilder(strLen)
+    let mutable k = 0
+    while k <> strLen do
+      let C = s.[k]
+      if C <> '%' then
+        R.Append(C) |> ignore
+      else
+        let start = k
+        if k + 2 >= strLen then raise (new UriFormatException("The uri terminated unexpectedly."))
+        let isHex, B = parseByte s (k + 1)
+        if not isHex then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start, 3))))
+        k <- k + 2
+        if B &&& 0x80uy = 0uy then
+          let C = char B
+          if reservedSet.IndexOf(C) = -1 then
+            R.Append(C) |> ignore
+          else
+            R.Append(s.Substring(start, 3)) |> ignore
+        else
+          let n = countHighBits B
+          if n = 1 || n > 4 then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start, 3))))
+          if k + (3 * (n - 1)) > strLen then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start))))
+          let Octets = Array.create n 0uy
+          Octets.[0] <- B
+          let mutable j = 1
+          while j < n do
+            k <- k + 1
+            if s.[k] <> '%' then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start, k - start))))
+            let isHex, B = parseByte s (k + 1)
+            if not isHex then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(k, 3))))
+            if B &&& 0xC0uy <> 0x80uy then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start, k - start + 2))))
+            k <- k + 2
+            Octets.[j] <- B
+            j <- j + 1
+          let V =
+            try
+              decodeUTF8 Octets
+            with
+              | :? FormatException as e -> raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}'). {1}", s.Substring(start, k - start), e.Message)))
+          if V < 0x10000 then
+            let C = char V
+            if reservedSet.IndexOf(C) = -1 then
+              R.Append(C) |> ignore
+            else
+              R.Append(s.Substring(k, 3)) |> ignore
+          elif V > 0x10FFFF then raise (new UriFormatException(String.Format("The uri containted an invalid escape sequence ('{0}').", s.Substring(start, k - start))))
+          else
+            let L = (((V - 0x10000) &&& 0x3FF) + 0xDC00)
+            let H = ((((V - 0x10000) >>> 10) &&& 0x3FF) + 0xD800)
+            R.Append(char H).Append(char L) |> ignore
+      k <- k + 1
+    R.ToString()
 
   ///
   let decodeURI (func:FO) (_:CO) (uri:BoxedValue) =
     match uri.Tag with
     | TypeTags.Undefined -> "" |> BV.Box
     | _ ->
-      let uri = uri |> TypeConverter.ToString
+      let uriString = uri |> TC.ToString
       try
-        Uri.UnescapeDataString(uri.Replace('+', ' ')) |> BV.Box
+        decode uriString reservedURISet |> BV.Box
 
       with
         | :? UriFormatException as e -> 
           func.Env.RaiseURIError(e.Message)
 
   ///
-  let decodeURIComponent = 
-    decodeURI
+  let decodeURIComponent (func:FO) (_:CO) (uri:BoxedValue) = 
+    match uri.Tag with
+    | TypeTags.Undefined -> "" |> BV.Box
+    | _ ->
+      let componentString = uri |> TC.ToString
+      try
+        decode componentString "" |> BV.Box
+
+      with
+        | :? UriFormatException as e -> 
+          func.Env.RaiseURIError(e.Message)
 
   let private encodeUTF8 (v:int) : byte[] =
     if v < 0x0080 then

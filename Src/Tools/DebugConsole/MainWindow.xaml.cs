@@ -56,6 +56,7 @@ namespace DebugConsole
             createEnvironment();
 
             this.Closing += MainWindow_Closing;
+
         }
 
         void inputText_OnPaste(object sender, DataObjectPastingEventArgs e)
@@ -400,6 +401,15 @@ namespace DebugConsole
             tabs.SelectedIndex = 2;
             createEnvironment();
             displayGlobalVariables(context.Globals);
+        }
+
+        private void button1_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog();
+            if (dlg.ShowDialog() ?? false)
+            {
+
+            }
         }
     }
 }

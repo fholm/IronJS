@@ -13,29 +13,44 @@
             <ColumnDefinition Width="556*" />
         </Grid.ColumnDefinitions>
         
-        <ScrollViewer Margin="10,32,0,0" Name="inputScroller">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                
-                <RichTextBox AcceptsTab="True" FontFamily="Consolas" 
-                         VerticalScrollBarVisibility="Auto"
-                         AcceptsReturn="True" BorderThickness="0"
-                         Name="inputText" TextChanged="inputText_TextChanged" 
-                         BorderBrush="Transparent" HorizontalScrollBarVisibility="Auto"
-                         Background="Transparent" Grid.Column="0">
+        <TabControl Margin="10,25,0,0">
 
-                    <RichTextBox.Resources>
-                        <Style TargetType="{x:Type Paragraph}">
-                            <Setter Property="Margin" Value="0"/>
-                        </Style>
-                    </RichTextBox.Resources>
-                    
-                </RichTextBox>
-            </Grid>
-        </ScrollViewer>
-        
+            <TabItem Header="Edit Mode">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="260*" />
+                        <RowDefinition Height="27" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ScrollViewer Margin="0,0,0,0" Name="inputScroller">
+                        <RichTextBox AcceptsTab="True" FontFamily="Consolas" 
+                             VerticalScrollBarVisibility="Auto"
+                             AcceptsReturn="True" BorderThickness="0"
+                             Name="inputText" TextChanged="inputText_TextChanged" 
+                             BorderBrush="Transparent" HorizontalScrollBarVisibility="Auto"
+                             Background="White" Grid.RowSpan="2">
+
+                            <RichTextBox.Resources>
+                                <Style TargetType="{x:Type Paragraph}">
+                                    <Setter Property="Margin" Value="0"/>
+                                </Style>
+                            </RichTextBox.Resources>
+
+                        </RichTextBox>
+                    </ScrollViewer>
+                    <Button Content="Run" Grid.Row="1" 
+                            Height="23" HorizontalAlignment="Right" 
+                            Margin="0,4,0,0" Name="runButton" VerticalAlignment="Top" 
+                            Width="53" Click="runButton_Click" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="File Mode">
+                
+            </TabItem>
+        </TabControl>
+
         <TextBox TextWrapping="Wrap" Grid.Row="1"
                     AcceptsTab="True" FontFamily="Consolas" 
                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True" 
@@ -73,25 +88,19 @@
                   FontSize="11" />
             </TabItem>
         </TabControl>
-        
-        <Button 
-            Content="Run" Name="runButton" Click="runButton_Click" 
-            Margin="0,0,0,10" Height="23" VerticalAlignment="Bottom" 
-            HorizontalAlignment="Right" Width="50" Grid.Row="1" />
-        
         <Button 
             Content="Continue" 
             Height="23" 
             Name="continueButton" 
             VerticalAlignment="Bottom" HorizontalAlignment="Right" 
             Width="58" 
-            Margin="0,0,56,10" Click="continueButton_Click" Grid.Row="1" />
+            Margin="0,0,0,10" Click="continueButton_Click" Grid.Row="1" />
 
         <Button 
             Content="Reset Environment" 
             Height="23" 
-            HorizontalAlignment="Right" 
-            Margin="0,0,120,12" 
+            HorizontalAlignment="Left" 
+            Margin="10,0,0,10" 
             Name="resetEnvironment" 
             VerticalAlignment="Bottom" 
             Width="110" Click="resetEnvironment_Click" Grid.Row="1" />
@@ -104,7 +113,7 @@
         
         <Label Content="Console Output" 
                Grid.Row="1" Height="23" FontWeight="Bold"
-               HorizontalAlignment="Left" Margin="10,0,0,0" 
+               HorizontalAlignment="Left" Margin="10,5,0,0" 
                Padding="0" VerticalAlignment="Top" />
     </Grid>
 </Window>

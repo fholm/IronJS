@@ -214,9 +214,9 @@ module Parser =
         then s.Substring(2)
         else s
 
-    let mutable i = 0
+    let mutable i = 0u
     let mutable bi = Unchecked.defaultof<bigint>
-    if Int32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
+    if UInt32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
       then i |> double
       elif bigint.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
         then bi |> double

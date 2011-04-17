@@ -5,6 +5,7 @@ namespace IronJS.Tests.UnitTests.Sputnik.Unicode
     using NUnit.Framework;
 
     [TestFixture]
+    [Ignore("Since we are eventually targeting ECMAScript 5, there is no need to check compliance with any Unicode version prior to Unicode 3.0")]
     public class Unicode218Tests : SputnikTestFixture
     {
         public Unicode218Tests()

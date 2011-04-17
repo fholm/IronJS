@@ -34,6 +34,7 @@ namespace IronJS.Tests.Sputnik
         private IList<TestGroup> testGroups;
         private TestGroup rootTestGroup;
         private HashSet<string> ignoreTests = new HashSet<string>();
+        private List<string> ignoreFixtures = new List<string>();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -52,6 +53,7 @@ namespace IronJS.Tests.Sputnik
             this.ignoreTests.Add("S15.5.4.11_A3_T1");
             this.ignoreTests.Add("S15.5.4.11_A3_T2");
             this.ignoreTests.Add("S15.5.4.11_A3_T3");
+            this.ignoreFixtures.Add("Unicode\\Unicode_218\\");
 
             this.worker.DoWork += this.RunTests;
             this.worker.ProgressChanged += this.Worker_ProgressChanged;
@@ -81,6 +83,11 @@ namespace IronJS.Tests.Sputnik
 
             foreach (var dir in Directory.GetDirectories(path))
             {
+                if (this.ignoreFixtures.Any(i => (dir + "\\").StartsWith(Path.Combine(basePath, i))))
+                {
+                    continue;
+                }
+
                 var group = new TestGroup(root, null)
                 {
                     Name = Path.GetFileName(dir),

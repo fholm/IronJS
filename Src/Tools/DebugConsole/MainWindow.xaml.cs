@@ -277,7 +277,7 @@ namespace DebugConsole
             var item = new TreeViewItem();
             var header = item as HeaderedItemsControl;
 
-            if (!typeColors.TryGetValue(value.GetType(), out color))
+            if (value != null && !typeColors.TryGetValue(value.GetType(), out color))
             {
                 if (value is CommonObject)
                 {
@@ -287,6 +287,10 @@ namespace DebugConsole
                 {
                     color = typeColors[typeof(object)];
                 }
+            }
+            else
+            {
+                color = typeColors[typeof(object)];
             }
 
             header.Foreground = new SolidColorBrush(color);

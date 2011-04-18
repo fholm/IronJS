@@ -255,7 +255,7 @@ module internal String =
       
           //replace(string, function)
           if replace.IsFunction then 
-            let replace = replace.Func.Call(this.Env.Globals, search, index, value) |> TC.ToString
+            let replace = replace.Func.Call(this.Env.Globals, search, double index, value) |> TC.ToString
             value.Substring(0, index) + replace + value.Substring(index + search.Length)
 
           //replace(string, string)

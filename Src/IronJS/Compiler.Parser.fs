@@ -867,8 +867,6 @@ module Parser =
     // Normal function call
     | _ ->
       Tree.Invoke(functionAst, argAsts)
-
-
   
   /// Implements: 12.9 The return Statement
   let return' _ p = 

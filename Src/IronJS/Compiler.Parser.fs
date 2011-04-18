@@ -862,7 +862,7 @@ module Parser =
       | Function scope -> 
         scope |> NewVars.setContainsEval
 
-      Tree.Eval(argAsts |> List.head)
+      Tree.Eval(argAsts |> FSharp.List.headOr (lazy Tree.String("")))
 
     // Normal function call
     | _ ->

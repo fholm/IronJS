@@ -43,6 +43,14 @@ module FSharp =
     ///
     let first seq' = Seq.find Utils.toTrue seq'
 
+  ///
+  module List =
+    
+    ///
+    let headOr (f:Lazy<'a>) lst =
+      match lst with
+      | [] -> f.Value
+      | x::_ -> x
 
   ///
   module Array =

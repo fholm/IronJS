@@ -72,6 +72,7 @@ module Ast =
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
     | Assign of Tree * Tree
+    | CompoundAssign of BinaryOp * Tree * Tree
     | Regex of string * string
     | Object of (string * Tree) list
     | Array of Tree list

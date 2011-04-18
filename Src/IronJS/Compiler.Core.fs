@@ -93,6 +93,7 @@ module Core =
 
     //Operators
     | Ast.Assign(ltree, rtree) -> Binary.assign ctx ltree rtree
+    | Ast.CompoundAssign(op, ltree, rtree) -> Binary.compoundAssign ctx op ltree rtree
     | Ast.Unary(op, tree) -> Unary.compile ctx op tree
     | Ast.Binary(op, left, right) -> Binary.compile ctx op left right
 

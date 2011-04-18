@@ -36,33 +36,39 @@ module Lexer =
       | Cat.LowercaseLetter
       | Cat.TitlecaseLetter
       | Cat.ModifierLetter
-      | Cat.OtherLetter 
+      | Cat.OtherLetter
       | Cat.LetterNumber -> true
-      | _ -> c = '\\'
+      | _ -> false
 
-    let inline isIdentifierStart c =
-      if c |> isAlpha || c = '_' || c = '$' 
+    let inline isIdentifierStartNoEscape c =
+      if c |> isAlpha || c = '_' || c = '$'
         then true
         else c |> isUnicodeIdentifierStart
 
+    let inline isIdentifierStart c =
+      c = '\\' || c |> isIdentifierStartNoEscape
+
     let isUnicodeIdentifier c =
       match c |> Char.GetUnicodeCategory with
-      | Cat.UppercaseLetter 
+      | Cat.UppercaseLetter
       | Cat.LowercaseLetter
       | Cat.TitlecaseLetter
       | Cat.ModifierLetter
       | Cat.OtherLetter
-      | Cat.LetterNumber 
+      | Cat.LetterNumber
       | Cat.NonSpacingMark
       | Cat.SpacingCombiningMark
       | Cat.DecimalDigitNumber
       | Cat.ConnectorPunctuation -> true
-      | _ -> c = '\\' || int c = 0x200C || int c = 0x200D
+      | _ -> int c = 0x200C || int c = 0x200D
 
-    let inline isIdentifier c = 
-      if c |> isAlpha || c = '_' || c = '$' || c |> isDecimal 
+    let inline isIdentifierNoEscape c = 
+      if c |> isAlpha || c = '_' || c = '$' || c |> isDecimal
         then true
         else c |> isUnicodeIdentifier
+
+    let inline isIdentifier c =
+      c = '\\' || c |> isIdentifierNoEscape
 
     let inline isSimplePunctuation c =
       match c with
@@ -608,7 +614,7 @@ module Lexer =
           s |> advance
 
           match s |> readUnicodeEscape with
-          | c when c |> isIdentifier -> c |> buffer s
+          | c when c |> isIdentifierNoEscape -> c |> buffer s
           | c -> c |> escapeChar |> invalidCharInIdentifier |> error s  
 
           s |> advance
@@ -616,7 +622,7 @@ module Lexer =
         else
           "\\\\" |> invalidCharInIdentifier |> error s
 
-      | c when c |> isIdentifier ->
+      | c when c |> isIdentifierNoEscape ->
         c |> buffer s
         s |> advance
 

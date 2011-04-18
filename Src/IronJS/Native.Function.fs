@@ -72,7 +72,8 @@ module internal Function =
       | TypeTags.Clr -> env.Globals
       | TypeTags.Undefined -> env.Globals
       | _ -> TC.ToObject(env, this)
-      
+
+
     ///
     let private apply (_:FO) (func:CO) (this:BV) (args:CO) : BV =
       let func = func.CastTo<FO>()
@@ -86,9 +87,8 @@ module internal Function =
             let getIndex i = args.Get(uint32 i)
 
             Seq.init (int args.Length) getIndex
-            |> Seq.cast<obj>
             |> Array.ofSeq
-          
+
           elif args :? ArgumentsObject then
           
             let args = args.CastTo<ArgumentsObject>()
@@ -96,7 +96,6 @@ module internal Function =
             let length = args.GetT<double>("length") |> int32
 
             Seq.init length getIndex
-            |> Seq.cast<obj>
             |> Array.ofSeq
 
           else
@@ -107,7 +106,13 @@ module internal Function =
 
       let this = this |> getThisObject func.Env
       let type' = DelegateUtils.getCallSiteDelegate [for a in args -> a.GetType()]
-      let args = Array.append [|func :> obj; this :> obj|] args
+      let args =
+        if type' = typeof<VariadicFunction> then
+          [|func :> obj; this :> obj; args :> obj |]
+        else
+          let args = args |> Array.map (fun a -> a:> obj)
+          Array.append [|func :> obj; this :> obj|] args
+
       let compiled = func.MetaData.GetDelegate(func, type')
 
       Utils.trapSyntaxError func.Env (fun () -> 
@@ -121,21 +126,26 @@ module internal Function =
         if args.Length > 0 
           then args.[0] 
           else Undefined.Boxed
-          
+
       let skip = if args.Length = 0 then 0 else 1
-      let args = args $ Seq.skip skip $ Seq.map TC.ToClrObject $ Seq.toArray
-      let argTypes = args $ Array.map TypeUtils.getType
+      let args = args |> Seq.skip skip |> Seq.toArray
+      let argsClr = args |> Array.map TC.ToClrObject
+      let argTypes = argsClr |> Array.map TypeUtils.getType
 
       let type' = argTypes $ DelegateUtils.getCallSiteDelegate
       let this = this $ getThisObject func .Env
 
-      let args = Array.append [|func  :> obj; this :> obj|] args
+      let args =
+        if type' = typeof<VariadicFunction> then
+          [|func :> obj; this :> obj; args :> obj |]
+        else
+          Array.append [|func :> obj; this :> obj|] argsClr
+
+      let compiled = func.MetaData.GetDelegate(func, type')
 
       Utils.trapSyntaxError func.Env (fun () -> 
-        let func = func.MetaData.GetDelegate(func, type')
-        func.DynamicInvoke(args) |> BoxingUtils.JsBox
-      )
-    
+        compiled.DynamicInvoke(args) |> BoxingUtils.JsBox)
+
     ///
     let create (env:Env) ownPrototype =
       let prototype = 

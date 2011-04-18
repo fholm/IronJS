@@ -57,10 +57,14 @@ module FSharp =
 
     ///
     let copyRange (startAt:int) (length:int) (source:'a array) =
-      let length = System.Math.Min(length, source.Length-startAt)
-      let target = Array.zeroCreate<'a> length
-      System.Array.Copy(source, startAt, target, 0, length)
-      target
+      if startAt >= source.Length then
+        Array.zeroCreate<'a> 0
+
+      else
+        let length = System.Math.Min(length, source.Length-startAt)
+        let target = Array.zeroCreate<'a> length
+        System.Array.Copy(source, startAt, target, 0, length)
+        target
 
     ///
     let copyFrom (startAt:int) (source:'a array) =
@@ -73,6 +77,14 @@ module FSharp =
       if head+tail >= source.Length 
         then Array.zeroCreate<'a> 0
         else source |> copyRange head (source.Length-head-tail)
+
+    ///
+    let shrinkStart (head:int) (source:'a array) =
+      source |> shrink head 0
+
+    ///
+    let shrinkEnd (tail:int) (source:'a array) =
+      source |> shrink 0 tail
 
     ///
     let appendOne (item:'a) (array:'a array) =

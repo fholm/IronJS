@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugConsole", "Tools\Debug
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "Tests\UnitTests\UnitTests.csproj", "{60820940-C9B1-4DFB-B88A-AF4D20C703C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreBenchmarks", "CoreBenchmarks\CoreBenchmarks.csproj", "{55877BCA-85F6-44E7-82F3-041B53E7D589}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = CLR4.vsmdi
@@ -100,6 +102,12 @@ Global
 		{60820940-C9B1-4DFB-B88A-AF4D20C703C9}.Release|x64.Build.0 = Release|x64
 		{60820940-C9B1-4DFB-B88A-AF4D20C703C9}.Release|x86.ActiveCfg = Release|x86
 		{60820940-C9B1-4DFB-B88A-AF4D20C703C9}.Release|x86.Build.0 = Release|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Debug|x64.ActiveCfg = Debug|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Debug|x86.ActiveCfg = Debug|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Debug|x86.Build.0 = Debug|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Release|x64.ActiveCfg = Release|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Release|x86.ActiveCfg = Release|x86
+		{55877BCA-85F6-44E7-82F3-041B53E7D589}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

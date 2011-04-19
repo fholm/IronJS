@@ -58,14 +58,21 @@ module Global =
 
   /// 
   let private parseWithRadix (z:string, r:int) =
+    #if CLR2
+    if r = 2 && z.Length <= 64 then new bigint(int64(Convert.ToUInt64(z, 2)))
+    elif r = 8 && z.Length <= 21 then new bigint(int64(Convert.ToUInt64(z, 8)))
+    elif r = 10 && z.Length <= 19 then new bigint(int64(Convert.ToUInt64(z, 10)))
+    elif r = 16 && z.Length <= 16 then new bigint(int64(Convert.ToUInt64(z, 16)))
+    #else
     if r = 2 && z.Length <= 64 then Convert.ToUInt64(z, 2) |> bigint.op_Implicit
     elif r = 8 && z.Length <= 21 then Convert.ToUInt64(z, 8) |> bigint.op_Implicit
     elif r = 10 && z.Length <= 19 then Convert.ToUInt64(z, 10) |> bigint.op_Implicit
     elif r = 16 && z.Length <= 16 then Convert.ToUInt64(z, 16) |> bigint.op_Implicit
+    #endif
     else
       let digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      let r = r |> bigint.op_Implicit
-      let accumulateDigit (value:bigint) (char:char) = (value * r) + (digits.IndexOf(char) |> bigint.op_Implicit)
+      let r = new bigint(r)
+      let accumulateDigit (value:bigint) (char:char) = (value * r) + (new bigint(digits.IndexOf(char)))
       z.ToCharArray() |> Array.fold accumulateDigit (bigint 0)
 
   /// These steps are outlined in the ECMA-262, Section 15.1.2.2

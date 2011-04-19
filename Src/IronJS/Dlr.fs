@@ -2,9 +2,15 @@
 
 module Dlr = 
 
-  open System.Dynamic
   open System.Reflection
+
+  #if CLR2
+  open System.Dynamic
+  open Microsoft.Scripting.Ast
+  #else
+  open System.Dynamic
   open System.Linq.Expressions
+  #endif
 
   type Expr = Expression
   type ExprType = ExpressionType
@@ -554,7 +560,7 @@ module Dlr =
 
     let private _dbgViewProp = 
       let flags = BindingFlags.NonPublic ||| BindingFlags.Instance
-      typeof<System.Linq.Expressions.Expression>.GetProperty("DebugView", flags)
+      typeof<Expr>.GetProperty("DebugView", flags)
 
     let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (expr |> debugView)
@@ -654,6 +660,10 @@ module Dlr =
     let (!!) a = not a
 
   module ExtensionMethods =
+    #if CLR2
+    type Microsoft.Scripting.Ast.Expression with
+    #else
     type System.Linq.Expressions.Expression with
+    #endif
       member x.CallMember(name) = x.CallMember(name, [])
       member x.CallMember(name, args) = call x name args

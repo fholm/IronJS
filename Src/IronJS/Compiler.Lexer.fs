@@ -481,7 +481,13 @@ module Lexer =
       t.Buffer.Length > 0 && t.Buffer.[t.Buffer.Length-1] = '.'
 
     let inline buffer (t:T) (c:Char) = t.Buffer.Append(c) |> ignore
-    let inline bufferClear (t:T) = t.Buffer.Clear() |> ignore
+    let inline bufferClear (t:T) = 
+      #if CLR2
+      t.Buffer.Remove(0, t.Buffer.Length) |> ignore
+      #else
+      t.Buffer.Clear() |> ignore
+      #endif
+
     let inline bufferValue (t:T) = t.Buffer.ToString()
 
     let inline output symbol (value:string) (t:T) =

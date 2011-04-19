@@ -21,7 +21,10 @@ module Aliases =
   
   open System.Globalization
   open System.Collections.Generic
+  #if CLR2
+  #else
   open System.Collections.Concurrent
+  #endif
 
   type MutableList<'a> = List<'a>
   type MutableStack<'a> = Stack<'a>
@@ -29,8 +32,6 @@ module Aliases =
   type MutableSorted<'k, 'v> = SortedDictionary<'k, 'v>
   type MutableSet<'a> = HashSet<'a>
   
-  type ConcurrentMutableDict<'k, 'v> = ConcurrentDictionary<'k, 'v>
-
   let anyNumber = NumberStyles.Any
   let invariantCulture = CultureInfo.InvariantCulture
   let currentCulture = CultureInfo.CurrentCulture

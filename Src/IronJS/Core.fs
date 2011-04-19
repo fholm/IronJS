@@ -1109,10 +1109,10 @@ and [<AllowNullLiteral>]  RegExpObject =
   override x.ClassName = "RegExp"
 
   member x.IgnoreCase:bool =
-    x.RegExp.Options.HasFlag(RegexOptions.IgnoreCase)
+    x.RegExp.Options &&& RegexOptions.IgnoreCase = RegexOptions.IgnoreCase
 
   member x.MultiLine:bool =
-    x.RegExp.Options.HasFlag(RegexOptions.Multiline)
+    x.RegExp.Options &&& RegexOptions.Multiline = RegexOptions.Multiline
 
   new (env, pattern, options, global') as this =
     {
@@ -2306,7 +2306,7 @@ and TypeConverter() =
   static member ToNumber(s:string) : double =
     let mutable d = 0.0
 
-    if System.String.IsNullOrWhiteSpace(s) then
+    if s = null || s.Trim() = "" then
       0.0
 
     else
@@ -2332,7 +2332,11 @@ and TypeConverter() =
           | _ -> 
           let mutable bi = Unchecked.defaultof<bigint>
 
+          #if CLR2
+          if BigIntegerParser.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
+          #else
           if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
+          #endif
             then PosInf
           elif s = "+Infinity"
             then PosInf

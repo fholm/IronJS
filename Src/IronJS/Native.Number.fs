@@ -62,7 +62,7 @@ module internal Number =
         | _ ->
           let digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           let mutable result = ""
-          let mutable number = bigint number
+          let mutable number = bigint (int64 number)
           if number < bigint.Zero then
             result <- "-"
             number <- -number

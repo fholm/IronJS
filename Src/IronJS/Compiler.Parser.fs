@@ -203,7 +203,11 @@ module Parser =
     let mutable bi = Unchecked.defaultof<Numerics.BigInteger>
     if Double.TryParse(s, anyNumber, invariantCulture, &d) 
       then d
+      #if CLR2
+      elif BigIntegerParser.TryParse(s, anyNumber, invariantCulture, &bi)
+      #else
       elif Numerics.BigInteger.TryParse(s, anyNumber, invariantCulture, &bi) 
+      #endif
         then Double.PositiveInfinity
         else s |> invalidNumber |> Error.CompileError.Raise
 
@@ -218,7 +222,11 @@ module Parser =
     let mutable bi = Unchecked.defaultof<bigint>
     if UInt32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
       then i |> double
+      #if CLR2
+      elif BigIntegerParser.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
+      #else
       elif bigint.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
+      #endif
         then bi |> double
         else failwith "Invalid integer format"
 

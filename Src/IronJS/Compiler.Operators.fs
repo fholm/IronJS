@@ -206,31 +206,21 @@ module Binary =
     
   /// Implements compilation for: 
   let compile (ctx:Ctx) op left right =
-    let l = ctx.Compile left |> Utils.box 
 
     match op with
-    | BinaryOp.And ->
+    | BinaryOp.Or -> 
+      let l = Dlr.callStaticT<TC> "ToBoolean" [left |> ctx.Compile]
+      let r = Dlr.callStaticT<TC> "ToBoolean" [right |> ctx.Compile]
+      Dlr.or' l r
 
-      match right with
-      | Identifier name when Identifier.isGlobal ctx name  -> 
-        Dlr.callStaticT<Operators> "and'" [l; !!!name; ctx.Globals]
-
-      | _ -> 
-        let r = right |> ctx.Compile
-        compileExpr ctx op l (r |> Utils.box)
-
-    | BinaryOp.Or ->
-      
-      match right with
-      | Identifier name when Identifier.isGlobal ctx name  -> 
-        Dlr.callStaticT<Operators> "or'" [l; !!!name; ctx.Globals]
-
-      | _ -> 
-        let r = right |> ctx.Compile
-        compileExpr ctx op l (r |> Utils.box)
+    | BinaryOp.And -> 
+      let l = Dlr.callStaticT<TC> "ToBoolean" [left |> ctx.Compile]
+      let r = Dlr.callStaticT<TC> "ToBoolean" [right |> ctx.Compile]
+      Dlr.and' l r
 
     | _ ->
-      let r = ctx.Compile right |> Utils.box
+      let l = left |> ctx.Compile |> Utils.box
+      let r = right |> ctx.Compile |> Utils.box
       compileExpr ctx op l r
 
   /// Implements compilation for 11.13.1 assignment operator =

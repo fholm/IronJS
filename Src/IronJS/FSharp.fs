@@ -67,6 +67,25 @@ module FSharp =
         target
 
     ///
+    let expand (size:int) (front:bool) (source:'a array) =
+      let newLength = source.Length + size
+      let target = Array.zeroCreate<'a> newLength
+
+      if front 
+        then System.Array.Copy(source, 0, target, size, source.Length)
+        else System.Array.Copy(source, 0, target, 0, source.Length)
+
+      target
+
+    ///
+    let expandFront size source = 
+      source |> expand size true
+
+    ///
+    let expandBack size source = 
+      source |> expand size false
+
+    ///
     let copyFrom (startAt:int) (source:'a array) =
       source |> copyRange startAt source.Length
 

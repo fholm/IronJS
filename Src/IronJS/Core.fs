@@ -2332,7 +2332,7 @@ and TypeConverter() =
           | _ -> 
           let mutable bi = Unchecked.defaultof<bigint>
 
-          #if CLR2
+          #if BIGINTEGER
           if BigIntegerParser.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .
           #else
           if bigint.TryParse(s, anyNumber, invariantCulture, &bi) && not (s.Contains(",")) // HACK to fix , == .

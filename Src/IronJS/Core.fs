@@ -319,6 +319,7 @@ and [<AllowNullLiteral>] Environment() =
 
   [<DefaultValue>] val mutable Return : BV
   [<DefaultValue>] val mutable Globals : CO
+  [<DefaultValue>] val mutable Line : int
 
   [<DefaultValue>] val mutable Maps : Maps
   [<DefaultValue>] val mutable Prototypes : Prototypes

@@ -7,14 +7,9 @@ module Dlr =
   open System.Linq.Expressions
 
   //Type Aliases
-  type private Et = Expression
-  type private EtParam = ParameterExpression
-
   type Expr = Expression
-  type ExprParam = ParameterExpression
   type Parameter = ParameterExpression
   type Lambda = LambdaExpression
-
   type Label = LabelTarget
   type ExprType = ExpressionType
   type Br = BindingRestrictions
@@ -41,26 +36,26 @@ module Dlr =
   type IMetaObjProvider = IDynamicMetaObjectProvider
 
   //Defaults
-  let void' = Et.Default(typeof<System.Void>) :> Et
-  let default' typ = Et.Default(typ) :> Et
+  let void' = Expr.Default(typeof<System.Void>) :> Expr
+  let default' typ = Expr.Default(typ) :> Expr
   let defaultT<'a> = default' typeof<'a>
   let null' = defaultT<System.Object>
 
   //Variables
-  let var name typ = Et.Variable(typ, name)
+  let var name typ = Expr.Variable(typ, name)
   let varT<'a> name = var name typeof<'a>
-  let paramI i typ = Et.Parameter(typ, sprintf "param%i" i)
+  let paramI i typ = Expr.Parameter(typ, sprintf "param%i" i)
   let paramIT<'a> i = paramI i typeof<'a>
-  let param name typ = Et.Parameter(typ, name)
+  let param name typ = Expr.Parameter(typ, name)
   let paramT<'a> name = param name typeof<'a>
-  let paramRef name (typ:System.Type) = Et.Parameter(typ.MakeByRefType(), name)
+  let paramRef name (typ:System.Type) = Expr.Parameter(typ.MakeByRefType(), name)
   let paramRefT<'a> name = paramRef name typeof<'a>
   
-  let constant value = Et.Constant(value, value.GetType()) :> Et
-  let inline const' value = Et.Constant(value, value.GetType()) :> Expr
-  let return' label (value:Et) = Et.Return(label, value) :> Et
-  let returnVoid label = Et.Return(label) :> Et
-  let assign (left:Et) (right:Et) = Et.Assign(left, right) :> Et
+  let constant value = Expr.Constant(value, value.GetType()) :> Expr
+  let inline const' value = Expr.Constant(value, value.GetType()) :> Expr
+  let return' label (value:Expr) = Expr.Return(label, value) :> Expr
+  let returnVoid label = Expr.Return(label) :> Expr
+  let assign (left:Expr) (right:Expr) = Expr.Assign(left, right) :> Expr
 
   //Constants
   let true'   = const' true
@@ -112,12 +107,12 @@ module Dlr =
   let dbl1 = const' 1.0
   let dbl2 = const' 2.0
 
-  let label (typ:System.Type) name = Et.Label(typ, name)
+  let label (typ:System.Type) name = Expr.Label(typ, name)
   let labelVoid = label typeof<System.Void>
   let labelT<'a> = label typeof<'a>
-  let labelExpr label (typ:System.Type) = Et.Label(label, Et.Default(typ)) :> Et
+  let labelExpr label (typ:System.Type) = Expr.Label(label, Expr.Default(typ)) :> Expr
   let labelExprT<'a> label = labelExpr label typeof<'a>
-  let labelExprVal label (value:Et) = Et.Label(label, value) :> Et
+  let labelExprVal label (value:Expr) = Expr.Label(label, value) :> Expr
   let labelExprVoid label = labelExprVal label (default' typeof<System.Void>)
   let labelBreak () = labelVoid "break"
   let labelContinue () = labelVoid "continue"
@@ -140,12 +135,12 @@ module Dlr =
       seq block.Expressions
     | _ -> seq [expr]
 
-  let block (parms:ExprParam seq) (exprs:Expr seq) =
+  let block (parms:Parameter seq) (exprs:Expr seq) =
     if Seq.length exprs = 0
       then void'
       elif Seq.length parms = 0
-        then Et.Block(exprs) :> Expr
-        else Et.Block(parms, exprs) :> Expr
+        then Expr.Block(exprs) :> Expr
+        else Expr.Block(parms, exprs) :> Expr
 
   let blockSimple (exprs:Expr seq) = 
     if Seq.length exprs = 0 
@@ -154,41 +149,41 @@ module Dlr =
         then FSharp.Seq.first exprs
         else Expr.Block(exprs) :> Expr
 
-  let blockTmp type' (f:ExprParam -> Expr seq) =
+  let blockTmp type' (f:Parameter -> Expr seq) =
     let tmp = param (tmpName()) type'
     block [tmp] (f tmp)
 
   let blockTmpT<'a> f =
     blockTmp typeof<'a> f
 
-  let field expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
-  let fieldr (name:string) expr = Et.PropertyOrField(expr, name) :> Expr
+  let field expr (name:string) = Expr.PropertyOrField(expr, name) :> Expr
+  let fieldr (name:string) expr = Expr.PropertyOrField(expr, name) :> Expr
 
-  let propertyInfoStatic (pi:PropertyInfo) = Et.Property(null, pi) :> Expr
-  let property expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
-  let propertyr (name:string) expr = Et.PropertyOrField(expr, name) :> Expr
-  let propertyStatic (type':System.Type) name = Et.Property(null, type', name) :> Expr
+  let propertyInfoStatic (pi:PropertyInfo) = Expr.Property(null, pi) :> Expr
+  let property expr (name:string) = Expr.PropertyOrField(expr, name) :> Expr
+  let propertyr (name:string) expr = Expr.PropertyOrField(expr, name) :> Expr
+  let propertyStatic (type':System.Type) name = Expr.Property(null, type', name) :> Expr
   let propertyStaticT<'a> = propertyStatic typeof<'a>
-  let propertyOrField expr (name:string) = Et.PropertyOrField(expr, name) :> Expr
+  let propertyOrField expr (name:string) = Expr.PropertyOrField(expr, name) :> Expr
 
   let private exprTypes (args:Expr seq) = [|for a in args -> a.Type|]
 
   let call (expr:Expr) name (args:Expr seq) =
     match FSharp.Reflection.getMethodArgs expr.Type name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
-    | Some(method') -> Et.Call(expr, method', args) :> Expr
+    | Some(method') -> Expr.Call(expr, method', args) :> Expr
 
   let callGeneric (expr:Expr) name typeArgs (args:Expr seq) =
     let exprTypes = (exprTypes args)
     match FSharp.Reflection.getMethodGeneric expr.Type name typeArgs exprTypes with
     | None -> 
       failwith "No method found with matching name, type args and arguments"
-    | Some(method') -> Et.Call(expr, method', args) :> Expr
+    | Some(method') -> Expr.Call(expr, method', args) :> Expr
 
   let callStatic (type':System.Type) name (args:Expr seq) =
     match FSharp.Reflection.getMethodArgs type' name (exprTypes args) with
     | None -> failwith "No method found with matching name and arguments"
-    | Some(method') -> Et.Call(null, method', args) :> Expr
+    | Some(method') -> Expr.Call(null, method', args) :> Expr
 
   let callStaticT<'a> = callStatic typeof<'a>
 
@@ -197,7 +192,7 @@ module Dlr =
     | None -> 
       failwith "No method found with matching name, type args and arguments"
 
-    | Some(method') -> Et.Call(null, method', args) :> Expr
+    | Some(method') -> Expr.Call(null, method', args) :> Expr
 
   let callStaticGenericT<'a> = callStaticGeneric typeof<'a>
 
@@ -207,13 +202,13 @@ module Dlr =
   let callMethod (mi:MethodInfo) (args:Expr seq) = 
     Expr.Call(null, mi, args) :> Expr
 
-  let cast typ expr = Et.Convert(expr, typ) :> Et
+  let cast typ expr = Expr.Convert(expr, typ) :> Expr
   let castT<'a> = cast typeof<'a> 
 
-  let castChk typ expr = Et.ConvertChecked(expr, typ) :> Et
+  let castChk typ expr = Expr.ConvertChecked(expr, typ) :> Expr
   let castChkT<'a> = castChk typeof<'a> 
 
-  let castAs typ expr = Et.TypeAs(expr, typ) :> Et
+  let castAs typ expr = Expr.TypeAs(expr, typ) :> Expr
   let castAsT<'a> = castAs typeof<'a> 
 
   let castVoid (expr:Expr) = 
@@ -221,17 +216,17 @@ module Dlr =
       then expr
       else blockSimple [expr; void']
 
-  let new' (typ:System.Type) = Et.New(typ) :> Et
+  let new' (typ:System.Type) = Expr.New(typ) :> Expr
   let newT<'a> = new' typeof<'a>
   let newGeneric (typ:System.Type) (types) = 
     new' (typ.MakeGenericType(Seq.toArray types))
 
   let newGenericT<'a> = newGeneric typedefof<'a>
 
-  let newArgs (typ:System.Type) (args:Et seq) = 
+  let newArgs (typ:System.Type) (args:Expr seq) = 
     match FSharp.Reflection.getCtor typ [for arg in args -> arg.Type] with
     | None -> failwith "No matching constructor found"
-    | Some ctor -> Et.New(ctor, args) :> Expr
+    | Some ctor -> Expr.New(ctor, args) :> Expr
 
   let newArgsT<'a> args = newArgs typeof<'a> args
 
@@ -241,36 +236,36 @@ module Dlr =
   let newGenericArgsT<'a> = newGenericArgs typedefof<'a> 
 
   let delegateType (types:System.Type seq) = 
-    Et.GetDelegateType(Seq.toArray types)
+    Expr.GetDelegateType(Seq.toArray types)
     
-  let lambda (typ:System.Type) (parms:EtParam seq) body = 
-    Et.Lambda(typ, body, parms)
+  let lambda (typ:System.Type) (parms:Parameter seq) body = 
+    Expr.Lambda(typ, body, parms)
 
-  let lambdaT<'a> (parms:EtParam seq) (body:Et) = Et.Lambda<'a>(body, parms)
-  let lambdaAuto (parms:EtParam seq) (body:Et) = Et.Lambda(body, parms)
+  let lambdaT<'a> (parms:Parameter seq) (body:Expr) = Expr.Lambda<'a>(body, parms)
+  let lambdaAuto (parms:Parameter seq) (body:Expr) = Expr.Lambda(body, parms)
 
-  let invoke (func:Et) (args:Et seq) = Et.Invoke(func, args) :> Et
+  let invoke (func:Expr) (args:Expr seq) = Expr.Invoke(func, args) :> Expr
 
-  let dynamic typ binder (args:Et seq) = Et.Dynamic(binder, typ, args) :> Et
+  let dynamic typ binder (args:Expr seq) = Expr.Dynamic(binder, typ, args) :> Expr
   let dynamicT<'a> = dynamic typeof<'a>
 
-  let length target = Et.ArrayLength(target) :> Et
+  let length target = Expr.ArrayLength(target) :> Expr
 
   let item (expr:Expr) index = 
     let item = expr.Type.GetProperty("Item")
     Expr.MakeIndex(expr, item, [const' index]) :> Expr
 
-  let index target (exprs:Et seq) = Et.ArrayAccess(target, exprs) :> Expr
+  let index target (exprs:Expr seq) = Expr.ArrayAccess(target, exprs) :> Expr
   let indexInts target indexes = index target (indexes |> Seq.map (fun (x:int) -> const' x))
   let indexInt target index = indexInts target [index]
   let index0 target = index target [const' 0]
   let index1 target = index target [const' 1]
   let index2 target = index target [const' 2]
 
-  let newArray typ (bounds:Et seq) = Et.NewArrayBounds(typ, bounds) :> Expr
+  let newArray typ (bounds:Expr seq) = Expr.NewArrayBounds(typ, bounds) :> Expr
   let newArrayT<'a> = new' typeof<'a>
 
-  let newArrayItems typ (exprs:Et seq) = Et.NewArrayInit(typ, exprs) :> Expr
+  let newArrayItems typ (exprs:Expr seq) = Expr.NewArrayInit(typ, exprs) :> Expr
   let newArrayItemsT<'a> = newArrayItems typeof<'a>
 
   let newArrayBounds typ (size:Expr) = Expr.NewArrayBounds(typ, size) :> Expr
@@ -280,53 +275,53 @@ module Dlr =
   let newArrayEmptyT<'a> = newArrayEmpty typeof<'a>
 
   let throw (typ:System.Type) (args:Expr seq) = 
-    Et.Throw(newArgs typ args) :> Expr
+    Expr.Throw(newArgs typ args) :> Expr
 
   let throwT<'a> (args:Expr seq) = throw typeof<'a> args
 
   let throwValue expr =
-    Et.Throw(expr) :> Expr
+    Expr.Throw(expr) :> Expr
 
-  let catch (typ:System.Type) body = Et.Catch(typ, body)
+  let catch (typ:System.Type) body = Expr.Catch(typ, body)
   let catchT<'a> = catch typeof<'a>
-  let catchVar (var:EtParam) body = Et.Catch(var, body)
+  let catchVar (var:Parameter) body = Expr.Catch(var, body)
 
-  let tryCatch try' catches = Et.TryCatch(try', Seq.toArray catches) :> Expr
-  let tryFinally try' finally' = Et.TryFinally(try', finally') :> Expr
+  let tryCatch try' catches = Expr.TryCatch(try', Seq.toArray catches) :> Expr
+  let tryFinally try' finally' = Expr.TryFinally(try', finally') :> Expr
   let tryCatchFinally try' catches finally' = 
-    Et.TryCatchFinally(try', finally', Seq.toArray catches) :> Expr
+    Expr.TryCatchFinally(try', finally', Seq.toArray catches) :> Expr
 
-  let tryFault try' fault = Et.TryFault(try', fault) :> Expr
+  let tryFault try' fault = Expr.TryFault(try', fault) :> Expr
 
-  let bAnd' left right = Et.And(left, right) :> Expr
-  let bAndAsn left right = Et.AndAssign(left, right) :> Expr
+  let bAnd' left right = Expr.And(left, right) :> Expr
+  let bAndAsn left right = Expr.AndAssign(left, right) :> Expr
 
-  let bOr' left right = Et.Or(left, right) :> Expr
-  let bOrAsn left right = Et.OrAssign(left, right) :> Expr
+  let bOr' left right = Expr.Or(left, right) :> Expr
+  let bOrAsn left right = Expr.OrAssign(left, right) :> Expr
 
-  let xor left right = Et.ExclusiveOr(left, right) :> Expr
-  let xorAsn left right = Et.ExclusiveOrAssign(left, right) :> Expr
+  let xor left right = Expr.ExclusiveOr(left, right) :> Expr
+  let xorAsn left right = Expr.ExclusiveOrAssign(left, right) :> Expr
 
-  let rhs left right = Et.RightShift(left, right) :> Expr
-  let rhsAsn left right = Et.RightShiftAssign(left, right) :> Expr
+  let rhs left right = Expr.RightShift(left, right) :> Expr
+  let rhsAsn left right = Expr.RightShiftAssign(left, right) :> Expr
 
-  let lhs left right = Et.LeftShift(left, right) :> Expr
-  let lhsAsn left right = Et.LeftShiftAssign(left, right) :> Expr
+  let lhs left right = Expr.LeftShift(left, right) :> Expr
+  let lhsAsn left right = Expr.LeftShiftAssign(left, right) :> Expr
 
-  let cmpl target = (Et.Not target) :> Et
+  let cmpl target = (Expr.Not target) :> Expr
 
-  let if' test ifTrue = Et.IfThen(test, ifTrue) :> Et
-  let ifElse test ifTrue ifFalse = Et.IfThenElse(test, ifTrue, ifFalse) :> Et
-  let ternary test ifTrue ifFalse = Et.Condition(test, ifTrue, ifFalse) :> Et
+  let if' test ifTrue = Expr.IfThen(test, ifTrue) :> Expr
+  let ifElse test ifTrue ifFalse = Expr.IfThenElse(test, ifTrue, ifFalse) :> Expr
+  let ternary test ifTrue ifFalse = Expr.Condition(test, ifTrue, ifFalse) :> Expr
 
   let loop_ test incr body break' (continue':Label) =
-    let test = ifElse test void' (Et.Break break')
-    let continue' = Et.Label(continue') :> Et
+    let test = ifElse test void' (Expr.Break break')
+    let continue' = Expr.Label(continue') :> Expr
 
-    Et.Loop(
-      (Et.Block [test; body; continue'; incr]),
+    Expr.Loop(
+      (Expr.Block [test; body; continue'; incr]),
       break'
-    ) :> Et
+    ) :> Expr
 
   let for' init test incr body break' continue' = 
     blockSimple [
@@ -350,66 +345,66 @@ module Dlr =
   let loop break' continue' test body =
     loop_ test void' body break' continue'
 
-  let sub left right = Et.Subtract(left, right) :> Et
-  let subChk left right = Et.SubtractChecked(left, right) :> Et
-  let subAsn left right = Et.SubtractAssign(left, right) :> Et
-  let subAsnChk left right = Et.SubtractAssignChecked(left, right) :> Et
+  let sub left right = Expr.Subtract(left, right) :> Expr
+  let subChk left right = Expr.SubtractChecked(left, right) :> Expr
+  let subAsn left right = Expr.SubtractAssign(left, right) :> Expr
+  let subAsnChk left right = Expr.SubtractAssignChecked(left, right) :> Expr
 
-  let add left right = Et.Add(left, right) :> Et
-  let addChk left right = Et.AddChecked(left, right) :> Et
-  let addAsn left right = Et.AddAssign(left, right) :> Et
-  let addAsnChk left right = Et.AddAssignChecked(left, right) :> Et
+  let add left right = Expr.Add(left, right) :> Expr
+  let addChk left right = Expr.AddChecked(left, right) :> Expr
+  let addAsn left right = Expr.AddAssign(left, right) :> Expr
+  let addAsnChk left right = Expr.AddAssignChecked(left, right) :> Expr
 
   let concat left right = callStaticT<System.String> "Concat" [left; right]
 
-  let mul left right = Et.Multiply(left, right) :> Et
-  let mulChk left right = Et.MultiplyChecked(left, right) :> Et
-  let mulAsn left right = Et.MultiplyAssign(left, right) :> Et
-  let mulAsnChk left right = Et.MultiplyAssignChecked(left, right) :> Et
+  let mul left right = Expr.Multiply(left, right) :> Expr
+  let mulChk left right = Expr.MultiplyChecked(left, right) :> Expr
+  let mulAsn left right = Expr.MultiplyAssign(left, right) :> Expr
+  let mulAsnChk left right = Expr.MultiplyAssignChecked(left, right) :> Expr
 
-  let div left right = Et.Divide(left, right) :> Et
-  let divAsn left right = Et.DivideAssign(left, right) :> Et
+  let div left right = Expr.Divide(left, right) :> Expr
+  let divAsn left right = Expr.DivideAssign(left, right) :> Expr
 
-  let pow left right = Et.Power(left, right) :> Et
-  let powAsn left right = Et.PowerAssign(left, right) :> Et
+  let pow left right = Expr.Power(left, right) :> Expr
+  let powAsn left right = Expr.PowerAssign(left, right) :> Expr
 
-  let mod' left right = Et.Modulo(left, right) :> Et
-  let modAsn left right = Et.ModuloAssign(left, right) :> Et
+  let mod' left right = Expr.Modulo(left, right) :> Expr
+  let modAsn left right = Expr.ModuloAssign(left, right) :> Expr
 
-  let or' left right = Et.OrElse(left, right) :> Et
-  let orChain (c:Et list) = 
+  let or' left right = Expr.OrElse(left, right) :> Expr
+  let orChain (c:Expr list) = 
     match c with
     | [] -> true'
     | _  -> List.fold (fun s x -> or' s x) c.Head c.Tail 
 
-  let and' left right = Et.AndAlso(left, right) :> Et
-  let andChain (c:Et list) = 
+  let and' left right = Expr.AndAlso(left, right) :> Expr
+  let andChain (c:Expr list) = 
     match c with
     | [] -> true'
     | _  -> List.fold (fun s x -> and' s x) c.Head c.Tail
 
-  let is' typ target = Et.TypeIs(target, typ) :> Et
+  let is' typ target = Expr.TypeIs(target, typ) :> Expr
   let isT<'a> = is' typeof<'a> 
 
-  let typeEq target typ = Et.TypeEqual(target, typ) :> Et
+  let typeEq target typ = Expr.TypeEqual(target, typ) :> Expr
 
-  let refEq left right = Et.ReferenceEqual(left, right) :> Et
-  let refNotEq left right = Et.ReferenceNotEqual(left, right) :> Et
+  let refEq left right = Expr.ReferenceEqual(left, right) :> Expr
+  let refNotEq left right = Expr.ReferenceNotEqual(left, right) :> Expr
 
-  let eq left right = Et.Equal(left, right) :> Et
-  let notEq left right = Et.NotEqual(left, right) :> Et
+  let eq left right = Expr.Equal(left, right) :> Expr
+  let notEq left right = Expr.NotEqual(left, right) :> Expr
 
-  let lt left right = Et.LessThan(left, right) :> Et
-  let ltEq left right = Et.LessThanOrEqual(left, right) :> Et
+  let lt left right = Expr.LessThan(left, right) :> Expr
+  let ltEq left right = Expr.LessThanOrEqual(left, right) :> Expr
 
-  let gt left right = Et.GreaterThan(left, right) :> Et
-  let gtEq left right = Et.GreaterThanOrEqual(left, right) :> Et
+  let gt left right = Expr.GreaterThan(left, right) :> Expr
+  let gtEq left right = Expr.GreaterThanOrEqual(left, right) :> Expr
 
-  let not target = Et.OnesComplement target :> Et
+  let not target = Expr.OnesComplement target :> Expr
   let notDefault target = notEq target (default' target.Type)
 
-  let isFalse target = Et.IsFalse(target) :> Et
-  let isTrue target = Et.IsTrue(target) :> Et
+  let isFalse target = Expr.IsFalse(target) :> Expr
+  let isTrue target = Expr.IsTrue(target) :> Expr
 
   let isDefault ex = eq ex (default' ex.Type)
   let isNull = isDefault
@@ -438,7 +433,7 @@ module Dlr =
     let local name type' = Expr.Variable(type', name)
     let localT<'a> name = var name typeof<'a>
     
-    let param name type' = Et.Parameter(type', name)
+    let param name type' = Expr.Parameter(type', name)
     let paramT<'a> name = param name typeof<'a>
 
     let paramRef name (type':Type) = param name (type'.MakeByRefType())
@@ -453,7 +448,7 @@ module Dlr =
     let void' = default' typeof<System.Void>
     let null' = default' typeof<System.Object>
     
-    let constant value = Et.Constant(value, value.GetType()) :> Expr
+    let constant value = Expr.Constant(value, value.GetType()) :> Expr
     let assign (left:Expr) (right:Expr) = Expr.Assign(left, right) :> Expr
 
     let returnValue label (value:Expr) = Expr.Return(label, value, value.GetType()) :> Expr
@@ -469,7 +464,7 @@ module Dlr =
     let cast type' expr = Expr.Convert(expr, type') :> Expr
     let castT<'a> = cast typeof<'a> 
 
-    let castChecked type' expr = Et.ConvertChecked(expr, type') :> Expr
+    let castChecked type' expr = Expr.ConvertChecked(expr, type') :> Expr
     let castCheckedT<'a> = castChk typeof<'a> 
 
     let castAs type' expr = Expr.TypeAs(expr, type') :> Expr
@@ -489,15 +484,15 @@ module Dlr =
       if expressions.Length = 0
         then void' 
         elif parameters.Length = 0 
-          then Et.Block(expressions) :> Expr
-          else Et.Block(parameters, expressions) :> Expr
+          then Expr.Block(expressions) :> Expr
+          else Expr.Block(parameters, expressions) :> Expr
 
-    let blockOfSeq (parameters:ExprParam seq) (expressions:Expr seq) =
+    let blockOfSeq (parameters:Parameter seq) (expressions:Expr seq) =
       if Seq.length expressions = 0
         then void' 
         elif Seq.length parameters = 0 
-          then Et.Block(expressions) :> Expr
-          else Et.Block(parameters, expressions) :> Expr
+          then Expr.Block(expressions) :> Expr
+          else Expr.Block(parameters, expressions) :> Expr
 
     let blockTemp tempType (f:Parameter -> Expr array) =
       let tmp = param (tmpName()) tempType
@@ -598,7 +593,7 @@ module Dlr =
       override x.Type = expr.Type
         
     let isStatic (expr:Expr) = 
-      expr :? Static || expr :? ExprParam || expr :? ConstantExpression
+      expr :? Static || expr :? Parameter || expr :? ConstantExpression
 
     let static' (expr:Expr) =
       if isStatic expr

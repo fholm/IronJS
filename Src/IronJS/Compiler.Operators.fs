@@ -209,14 +209,30 @@ module Binary =
 
     match op with
     | BinaryOp.Or -> 
-      let l = Dlr.callStaticT<TC> "ToBoolean" [left |> ctx.Compile]
-      let r = Dlr.callStaticT<TC> "ToBoolean" [right |> ctx.Compile]
-      Dlr.or' l r
+      let l = left |> ctx.Compile
+      let l_tmp = Dlr.param "~left" l.Type
+
+      Dlr.block [l_tmp] [
+        l_tmp .= l
+        (Dlr.ternary 
+          (Dlr.callStaticT<TC> "ToBoolean" [l_tmp])
+          (Utils.box l_tmp)
+          (Utils.box (right |> ctx.Compile))
+        )
+      ]
 
     | BinaryOp.And -> 
-      let l = Dlr.callStaticT<TC> "ToBoolean" [left |> ctx.Compile]
-      let r = Dlr.callStaticT<TC> "ToBoolean" [right |> ctx.Compile]
-      Dlr.and' l r
+      let l = left |> ctx.Compile
+      let l_tmp = Dlr.param "~left" l.Type
+
+      Dlr.block [l_tmp] [
+        l_tmp .= l
+        (Dlr.ternary 
+          (Dlr.callStaticT<TC> "ToBoolean" [l_tmp])
+          (Utils.box (right |> ctx.Compile))
+          (Utils.box l_tmp)
+        )
+      ]
 
     | _ ->
       let l = left |> ctx.Compile |> Utils.box

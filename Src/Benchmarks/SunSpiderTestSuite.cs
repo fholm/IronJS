@@ -32,9 +32,22 @@ namespace Benchmarks
             return Distribution[n];
         }
 
+        private static string GetScore(IList<long> times)
+        {
+            var runs = times.Count;
+
+            var mean = times.Sum(t => (double)t) / runs;
+            var stdDev = Math.Sqrt((from i in times
+                                    let delta = i - mean
+                                    let deltaSq = delta * delta
+                                    select deltaSq).Sum() / (runs - 1));
+            var stdErr = stdDev / Math.Sqrt(Runs);
+            var confidence = ((GetDistribution(Runs) * stdErr / mean) * 100);
+            return Math.Round(mean, 1).ToString("0.0") + "ms ± " + Math.Round(confidence, 1).ToString("0.0") + "%";
+        }
+
         protected override TestResult ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
-            var totalTime = TimeSpan.Zero;
             var times = new List<long>();
 
             try
@@ -45,7 +58,6 @@ namespace Benchmarks
                     ctx.ExecuteFile(test);
                     sw.Stop();
 
-                    totalTime += sw.Elapsed;
                     times.Add(sw.ElapsedMilliseconds);
                 }
             }
@@ -54,15 +66,7 @@ namespace Benchmarks
                 return new TestResult { Error = ex.GetBaseException().Message, Tag = Tuple.Create(test, Enumerable.Repeat(-1L, Runs).ToArray()) };
             }
 
-            var mean = (double)totalTime.TotalMilliseconds / Runs;
-            var stdDev = Math.Sqrt((from i in times
-                                    let delta = i - mean
-                                    let deltaSq = delta * delta
-                                    select deltaSq).Sum() / (Runs - 1));
-            var stdErr = stdDev / Math.Sqrt(Runs);
-            var confidence = ((GetDistribution(Runs) * stdErr / mean) * 100);
-            var scoreString = Math.Round(mean, 1).ToString("0.0") + "ms +/- " + Math.Round(confidence, 1).ToString("0.0") + "%";
-            return new TestResult { Score = scoreString, Tag = Tuple.Create(test, times.ToArray()) };
+            return new TestResult { Score = GetScore(times), Tag = Tuple.Create(test, times.ToArray()) };
         }
 
         protected override TestResult AggregateResults(IList<TestResult> results)
@@ -89,7 +93,17 @@ namespace Benchmarks
                 return new TestResult { Error = "Could not aggregate the score, because errors exist." };
             }
 
-            return new TestResult { Score = "TODO: Calculate the total and 95% confidence interval for the suite." };
+            var runs = new long[Runs];
+            foreach (var result in results)
+            {
+                var t = (result.Tag as Tuple<string, long[]>).Item2;
+                for (int i = 0; i < Runs; i++)
+                {
+                    runs[i] += t[i];
+                }
+            }
+
+            return new TestResult { Score = GetScore(runs) };
         }
     }
 }

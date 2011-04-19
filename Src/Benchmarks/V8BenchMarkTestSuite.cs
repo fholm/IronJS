@@ -84,7 +84,14 @@ namespace Benchmarks
                 return new TestResult { Error = "Could not aggregate the score, because errors exist." };
             }
 
-            return new TestResult { Score = "TODO: Calculate the geometric mean of the results." };
+            var product = 1.0;
+            foreach (var r in results)
+            {
+                product *= double.Parse(r.Score);
+            }
+
+            var geometricMean = Math.Pow(product, 1.0 / results.Count);
+            return new TestResult { Score = Math.Round(geometricMean, 2).ToString("0.0") };
         }
     }
 }

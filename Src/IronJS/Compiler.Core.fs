@@ -128,6 +128,11 @@ module Core =
     //Exceptions
     | Ast.Try(body, catch, finally') -> Exception.try' ctx body catch finally'
     | Ast.Throw tree -> Exception.throw ctx tree
+    | Ast.Line(_, line) ->
+      Dlr.block [] [
+        Dlr.assign (ctx.Env .-> "Line") !!!line
+        Dlr.void'
+      ]
 
     //
     | Ast.Regex(regex, flags) -> ctx $ compileRegExp regex flags

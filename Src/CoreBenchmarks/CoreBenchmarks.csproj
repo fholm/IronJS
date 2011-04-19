@@ -99,7 +99,9 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="benchmarks\[[Call]]-overhead.js" />
+    <Content Include="benchmarks\math-operators.js" />
+    <Content Include="benchmarks\[[Call]].js" />
+    <Content Include="benchmarks\[[Get]].js" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronJS\IronJS.fsproj">

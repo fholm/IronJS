@@ -102,10 +102,7 @@ module Ast =
     | Identifier of string
     | Block of Tree list
     | Directive of Directive
-    
-    #if DEBUG
     | Line of string * int
-    #endif
 
   /// Switch statement cases
   and Cases 

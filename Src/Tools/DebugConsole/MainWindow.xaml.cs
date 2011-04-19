@@ -194,15 +194,31 @@ namespace DebugConsole
 
         void breakPoint(int line, int column, Dictionary<string, object> scope)
         {
+            //Play a sound
+            System.Media.SystemSounds.Beep.Play();
+
             //Reset breakpoint event
             breakpointEvent.Reset();
 
-            Dispatcher.Invoke(new Action(() => displayGlobalVariables(context.Globals)));
-            Dispatcher.Invoke(new Action(() => displayLocalVariables(scope)));
-            Dispatcher.Invoke(new Action(() => highlightActiveBreakPoint(line)));
+            //
+            Dispatcher.Invoke(new Action(() =>
+            {
+                breakPointLabel.Content = "Hit breakpoint on line " + line;
+                continueButton.Visibility = Visibility.Visible;
+                displayGlobalVariables(context.Globals);
+                displayLocalVariables(scope);
+                highlightActiveBreakPoint(line);
+            }));
 
             //Wait for UI thread to set event
             breakpointEvent.WaitOne();
+
+            //
+            Dispatcher.Invoke(new Action(() =>
+            {
+                breakPointLabel.Content = "Running...";
+                continueButton.Visibility = Visibility.Collapsed;
+            }));
         }
 
         void expressionTreePrinter(string expressionTree)
@@ -364,6 +380,8 @@ namespace DebugConsole
                 {
                     if (sources.Count > 0)
                     {
+                        Dispatcher.Invoke(new Action(() => breakPointLabel.Content = "Running..."));
+
                         var result = context.Execute(sources.Pop());
                         var resultAsString = TypeConverter.ToString(BoxingUtils.JsBox(result));
 
@@ -396,6 +414,10 @@ namespace DebugConsole
                         {
                             runSources(sources);
                         }));
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(new Action(() => breakPointLabel.Content = ""));
                     }
                 }
             });

@@ -227,12 +227,6 @@ module Function =
       (Utils.assign
         (Dlr.field target "ClosureLevel") 
         (Dlr.const' (!ctx.Scope).ClosureLevel))
-
-      (*
-      (Utils.assign
-        (Dlr.field target "Closures") 
-        (Dlr.const' (!ctx.Scope).Closures))
-      *)
         
       (Utils.assign (Dlr.field target "Target") evalTarget)
       (Utils.assign (Dlr.field target "Function") ctx.Parameters.Function)

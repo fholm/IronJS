@@ -22,6 +22,7 @@ Make sure you have git installed and then run this command from a terminal windo
 
 ## Contributors
 
-* John Gietzen
+* John Gietzen - ECMA3 Conformance, Sputnik Test Runner (http://otac0n.com)
+* Christian Knutsson - Logo (http://lufthamn.com/)
 
 If you're interested in contributing to IronJS, fork it here on github and send me a pull request with your contributions.

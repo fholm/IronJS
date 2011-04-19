@@ -6,13 +6,17 @@ module Dlr =
   open System.Reflection
   open System.Linq.Expressions
 
-  //Type Aliases
   type Expr = Expression
+  type ExprType = ExpressionType
+
   type Parameter = ParameterExpression
   type Lambda = LambdaExpression
+
   type Label = LabelTarget
-  type ExprType = ExpressionType
   type Br = BindingRestrictions
+
+  type MetaObject = DynamicMetaObject
+  type IMetaObjectProvider = IDynamicMetaObjectProvider
 
   module ArrayUtils =
     
@@ -31,9 +35,6 @@ module Dlr =
       System.Array.Copy(a, 0, newArray, 1, a.Length)
       newArray.[0] <- v
       newArray
-
-  type MetaObj = DynamicMetaObject
-  type IMetaObjProvider = IDynamicMetaObjectProvider
 
   //Defaults
   let void' = Expr.Default(typeof<System.Void>) :> Expr

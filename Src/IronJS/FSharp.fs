@@ -85,6 +85,14 @@ module FSharp =
     ///
     let shrinkEnd (tail:int) (source:'a array) =
       source |> shrink 0 tail
+      
+    ///
+    let removeFirst (source:'a array) = 
+      source |> shrinkStart 1
+
+    ///
+    let removeLast (source:'a array) = 
+      source |> shrinkEnd 1
 
     ///
     let appendOne (item:'a) (array:'a array) =

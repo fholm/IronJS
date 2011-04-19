@@ -192,23 +192,6 @@ namespace DebugConsole
             });
         }
 
-        void highlightAllBreakpoints()
-        {
-            /*
-            foreach (var textRange in currentBreakPoints.ToArray())
-            {
-                textRange.ApplyPropertyValue(TextElement.BackgroundProperty, Brushes.Transparent);
-            }
-
-            currentBreakPoints.Clear();
-
-            doForEachLine((run) =>
-            {
-                highlightBreakpoint(run, Brushes.Orange);
-            });
-            */
-        }
-
         void breakPoint(int line, int column, Dictionary<string, object> scope)
         {
             //Reset breakpoint event
@@ -436,7 +419,6 @@ namespace DebugConsole
         void inputText_TextChanged(object sender, TextChangedEventArgs e)
         {
             File.WriteAllText(CACHE_FILE, getAllInputText());
-            highlightAllBreakpoints();
         }
 
         void createEnvironment()

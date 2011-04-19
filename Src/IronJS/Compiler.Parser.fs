@@ -467,7 +467,7 @@ module Parser =
         let power = BindingPowers.Assignment - 1
         let rightAst = p |> powerExpression power
 
-        Tree.Assign(leftAst, Tree.Binary(operator, leftAst, rightAst))
+        Tree.CompoundAssign(operator, leftAst, rightAst)
       )
 
   /// Implements: 11.3.1 Postfix Increment Operator

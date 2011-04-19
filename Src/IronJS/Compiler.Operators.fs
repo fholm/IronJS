@@ -3,6 +3,7 @@
 open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
+open IronJS.Support.CustomOperators
 
 module Unary =
   
@@ -203,7 +204,7 @@ module Binary =
 
     | _ -> failwithf "Invalid BinaryOp %A" op
     
-  //----------------------------------------------------------------------------
+  /// Implements compilation for: 
   let compile (ctx:Ctx) op left right =
     let l = ctx.Compile left |> Utils.box 
 
@@ -232,8 +233,7 @@ module Binary =
       let r = ctx.Compile right |> Utils.box
       compileExpr ctx op l r
 
-  //----------------------------------------------------------------------------
-  // 11.13.1 assignment operator =
+  /// Implements compilation for 11.13.1 assignment operator =
   let assign (ctx:Ctx) ltree rtree =
     let value = ctx.Compile rtree
 
@@ -262,3 +262,20 @@ module Binary =
       )
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree
+    
+  /// Implements compilation for 
+  let compoundAssign (ctx:Ctx) op ltree rtree =
+    match ltree with
+    | Ast.Index(obj, idx) ->
+      let obj = ctx $ Context.compile obj
+      let idx = ctx $ Context.compile idx
+      let tmp = Dlr.param (Dlr.tmpName()) idx.Type
+      let ltree = Ast.Index(Ast.DlrExpr obj, Ast.DlrExpr tmp)
+
+      Dlr.block [tmp] [
+        tmp .= idx
+        assign ctx ltree (Ast.Binary(op, ltree,rtree))
+      ]
+      
+    | _ ->
+      assign ctx ltree (Ast.Binary(op, ltree, rtree))

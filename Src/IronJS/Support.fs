@@ -21,10 +21,6 @@ module Aliases =
   
   open System.Globalization
   open System.Collections.Generic
-  #if CLR2
-  #else
-  open System.Collections.Concurrent
-  #endif
 
   type MutableList<'a> = List<'a>
   type MutableStack<'a> = Stack<'a>

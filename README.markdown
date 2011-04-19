@@ -10,9 +10,10 @@ IronJS is released under the [Apache License Version 2.0](http://www.apache.org/
 
 What you need to use IronJS
 
+* .NET 3.5 (Src/CLR2.sln)
 * .NET 4.0 (Src/CLR4.sln)
 
-## Getting the source (Including FSKit)
+## Getting the source
 
 Make sure you have git installed and then run this command from a terminal window (Linux/Unix) or in a "Git Bash Here" window using msysgit for Windows
 

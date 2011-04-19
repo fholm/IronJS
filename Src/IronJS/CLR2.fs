@@ -8,7 +8,9 @@ open System.Threading
 
 type Func<'a, 'b, 'c, 'd, 'e, 'r> = delegate of 'a * 'b * 'c * 'd * 'e -> 'r
 type Func<'a, 'b, 'c, 'd, 'e, 'f, 'r> = delegate of 'a * 'b * 'c * 'd * 'e * 'f -> 'r
+#endif
 
+#if BIGINTEGER
 type BigIntegerParser() =
   
   static member TryParse(s, f, i, bi:bigint byref) =
@@ -18,5 +20,4 @@ type BigIntegerParser() =
 
     with
       | _ -> false
-
 #endif

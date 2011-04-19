@@ -12,6 +12,7 @@ What you need to use IronJS
 
 * .NET 3.5 (Src/CLR2.sln)
 * .NET 4.0 (Src/CLR4.sln)
+* Mono 2.10 (Src/mono-build.sh)
 
 ## Getting the source
 

@@ -5,6 +5,7 @@
 John Gietzen for all his work on ECMA3 conformance whom without this would not have been possible
 
 ## Changelog
+
 * ECMA3 Conformance
 * Added 5,500 ECMA3 conformance tests with over 30,000 assertions
 * Major API refactoring moving all Module/Functions located in Api.fs to their appropiate classes in Core.fs instead

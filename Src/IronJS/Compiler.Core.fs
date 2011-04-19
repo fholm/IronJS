@@ -158,7 +158,7 @@ module Core =
 
       Context.T.Labels = 
         {
-          Labels.T.Return = Dlr.labelVoid "~return"
+          Labels.T.Return = Dlr.labelT<BV>  "~return"
           Labels.T.Break = None
           Labels.T.Continue = None
 

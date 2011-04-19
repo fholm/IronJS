@@ -130,13 +130,10 @@ module Scope =
           ctx $ Context.compile (ctx $ getAst)
 
           // Assign default return value (undefined)
-          Utils.assign ctx.ReturnBox Utils.Constants.Boxed.undefined
+          Dlr.return' ctx.Labels.Return Utils.Constants.Boxed.undefined
 
           // Return label
-          Dlr.labelExprVoid ctx.Labels.Return
-
-          // Last expression, return value
-          ctx.ReturnBox
+          Dlr.labelExprT<BV> ctx.Labels.Return
         |] 
           
       functionBody $ Dlr.Fast.block [||]

@@ -206,11 +206,7 @@ module Function =
   /// 12.9 the return statement
   let return' (ctx:Ctx) tree =
     match ctx.Labels.ReturnCompiler with
-    | None ->
-      Dlr.blockSimple [
-        (Utils.assign ctx.ReturnBox (ctx.Compile tree))
-        (Dlr.returnVoid ctx.Labels.Return)]
-
+    | None -> (Dlr.return' ctx.Labels.Return (ctx.Compile tree |> Utils.box))
     | Some returnCompiler ->
       tree |> ctx.Compile |> returnCompiler
 

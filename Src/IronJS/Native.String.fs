@@ -191,7 +191,7 @@ module internal String =
     let private memoize f =
       let cache = ref null
       fun () ->
-        if cache.Value <> null then cache.Value
+        if !cache |> FSharp.Utils.notNull then !cache
         else
           let value = f()
           cache := value
@@ -205,15 +205,12 @@ module internal String =
       if search.IsRegExp then 
         let search = search.Object.CastTo<RO>()
         let count = if search.Global then Int32.MaxValue else 1
-        let lastIndex = search.Get("lastIndex") |> TC.ToInt32
-        let lastIndex = if search.Global then 0 else Math.Max(0, lastIndex-1)
-        if search.Global then search.Put("lastIndex", 0.0)
 
         //replace(regex, function)
         if replace.IsFunction then
 
           let matchEval (m:Match) =
-            if not search.Global then
+            if search.Global then
               search.Put("lastIndex", m.Index + 1 |> double)
 
             let params' = MutableList<BV>()
@@ -229,22 +226,22 @@ module internal String =
             replace.Func.Call(this, args) |> TC.ToString
         
           //Run regex on our input, using matchEval for replacement
-          search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)
+          let result = search.RegExp.Replace(value, MatchEvaluator matchEval, count)
+          if search.Global then search.Put("lastIndex", 0.0)
+          result
 
         //replace(regex, string)
         else
           let replace = replace |> TC.ToString
 
           let matchEval (m:Match) =
-            if not search.Global then
-              search.Put("lastIndex", m.Index + 1 |> double)
-
             let before = memoize (fun () -> value.Substring(0, m.Index))
             let after = memoize (fun () -> value.Substring(Math.Min(value.Length - 1, m.Index + m.Length)))
-
             evaluateReplacement m.Value before after replace m.Groups
 
-          search.RegExp.Replace(value, MatchEvaluator matchEval, count, lastIndex)
+          let result = search.RegExp.Replace(value, MatchEvaluator matchEval, count)
+          if search.Global then search.Put("lastIndex", 0.0)
+          result
       
       //replace(string, _)
       else

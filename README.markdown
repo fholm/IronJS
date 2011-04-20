@@ -14,6 +14,8 @@ What you need to use IronJS
 * .NET 4.0 (Src/CLR4.sln)
 * Mono 2.10 (Src/mono-build.sh)
 
+IronJS has experimental support for .NET 2.0 and 3.0 also, compile using the CLR2 solution and set the extra NET2 flag
+
 ## Getting the source
 
 Make sure you have git installed and then run this command from a terminal window (Linux/Unix) or in a "Git Bash Here" window using msysgit for Windows

@@ -148,7 +148,14 @@ module FSharp =
 
   ///
   let internal run (compiled:Delegate) (t:T) =
-    compiled.DynamicInvoke(t.GlobalFunc, t |> globals)
+    try
+      compiled.DynamicInvoke(t.GlobalFunc, t |> globals)
+
+    with
+      | :? System.Reflection.TargetInvocationException as exn ->
+        if exn.GetBaseException() :? UserError 
+          then raise <| exn.GetBaseException()
+          else raise exn
 
   ///
   let internal compile source (t:T) =

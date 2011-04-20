@@ -651,26 +651,13 @@ module Lexer =
   let private singlelineComment (s:Input.T) =
     s |> bufferClear
     s |> advance
-    
+
     let mutable loop = true
 
     while s |> isvalid && loop do
       match s |> current with
-      | '\\' when s |> trypeek 'u' -> 
-        s |> storePosition
-        s |> advance
-        
-        match s |> readUnicodeEscape with
-        | c when c |> isLineTerminator ->
-          s |> rewindn 5
-          loop <- false
-
-        | c -> 
-          s |> advance
-
       | c when c |> isLineTerminator ->
         loop <- false
-
       | _ ->
         s |> advance
 

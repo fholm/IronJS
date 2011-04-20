@@ -392,26 +392,3 @@ type Operators =
     let l = TC.ToUInt32 l
     let r = TC.ToUInt32 r &&& 0x1Fu
     (l >>> int r) |> double
-    
-  //----------------------------------------------------------------------------
-  // &&
-  static member and' (l, r) = Dlr.callStaticT<Operators> "and'" [l; r]
-  static member and' (l:BoxedValue, r:BoxedValue) =
-    if not (TC.ToBoolean l) then l else r
-
-  // I seriously hate parts of the ECMA spec.
-  static member and' (l:BoxedValue, r:string, g:CO) =
-    if TC.ToBoolean l 
-      then GlobalScopeHelper.GetGlobal(g, r)
-      else l
-    
-  //----------------------------------------------------------------------------
-  // ||
-  static member or' (l, r) = Dlr.callStaticT<Operators> "or'" [l; r]
-  static member or' (l:BoxedValue, r:BoxedValue) =
-    if TC.ToBoolean l then l else r
-
-  static member or' (l:BoxedValue, r:string, g:CO) =
-    if TC.ToBoolean l
-      then l 
-      else GlobalScopeHelper.GetGlobal(g, r)

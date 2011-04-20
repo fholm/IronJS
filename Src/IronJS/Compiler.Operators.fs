@@ -180,9 +180,6 @@ module Binary =
     | BinaryOp.Mul -> Operators.mul(l, r)
     | BinaryOp.Mod -> Operators.mod'(l, r)
 
-    | BinaryOp.And -> Operators.and'(l, r)
-    | BinaryOp.Or -> Operators.or'(l, r)
-
     | BinaryOp.BitAnd -> Operators.bitAnd(l, r)
     | BinaryOp.BitOr -> Operators.bitOr(l, r)
     | BinaryOp.BitXor -> Operators.bitXOr(l, r)

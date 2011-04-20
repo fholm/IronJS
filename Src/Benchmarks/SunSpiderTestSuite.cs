@@ -49,11 +49,17 @@ namespace Benchmarks
         protected override TestResult ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
             var times = new List<long>();
-
             try
             {
+                //Warmup run so we don't get hit by IronJS assembly JIT overhead
+                ctx.ExecuteFile(test);
+
                 for (int i = 0; i < Runs; i++)
                 {
+                    // Collect all garbage between runs
+                    GC.Collect(2, GCCollectionMode.Forced);
+
+                    // Run and time
                     var sw = Stopwatch.StartNew();
                     ctx.ExecuteFile(test);
                     sw.Stop();

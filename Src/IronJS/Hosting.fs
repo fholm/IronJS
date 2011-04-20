@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Support.Aliases
 
 ///
 module private Environment =
@@ -114,6 +115,7 @@ module FSharp =
   type T = {
     Env: Env
     GlobalFunc: FO
+    FileCache: MutableDict<string, DateTime * Delegate>
   }
 
   ///
@@ -123,6 +125,7 @@ module FSharp =
     {
       Env = env
       GlobalFunc = FO(env)
+      FileCache = new MutableDict<string, DateTime * Delegate>()
     }
 
   ///
@@ -175,7 +178,20 @@ module FSharp =
 
   ///
   let executeFile path (t:T) =
+    #if FILE_CACHE
+    let path = IO.Path.GetFullPath(path)
+    let mutable cache = Unchecked.defaultof<DateTime * Delegate>
+    let write_time = IO.File.GetLastWriteTimeUtc(path)
+
+    if not <| t.FileCache.TryGetValue(path, &cache) || write_time <> (fst cache) then
+      cache <- write_time, t |> compileFile path
+      t.FileCache.[path] <- cache
+    
+    t |> run (snd cache)
+
+    #else
     t |> run (t |> compileFile path)
+    #endif
 
   ///
   let executeFileAs<'a> path (t:T) =

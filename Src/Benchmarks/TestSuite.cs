@@ -112,9 +112,11 @@
 
         protected virtual TestResult ExecuteTest(IronJS.Hosting.CSharp.Context ctx, string test)
         {
-            var sw = Stopwatch.StartNew();
+            Stopwatch sw;
+
             try
             {
+                sw = Stopwatch.StartNew();
                 ctx.ExecuteFile(test);
                 sw.Stop();
             }

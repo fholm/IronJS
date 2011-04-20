@@ -125,7 +125,7 @@ module Ast =
     | Effected = 2
     
   /// The two different types of lookup modes that a 
-  /// function that use, dynamic is used if a function 
+  /// function can use, dynamic is used if a function 
   /// contains either an eval call or a with statement
   /// otherwise static is used (which is a lot faster)
   and LookupMode

@@ -84,7 +84,13 @@ module ControlFlow =
     
     let propertyState = Dlr.paramT<bool> "propertyState"
     let propertySet = Dlr.property pair "Item2"
+
+    #if NET2
+    let propertyEnumerator = Dlr.paramT<System.Collections.Generic.IEnumerator<string>> "propertyEnumerator"
+    #else
     let propertyEnumerator = Dlr.paramT<MutableSet<string>.Enumerator> "propertyEnumerator"
+    #endif
+
     let propertyCurrent = Dlr.property propertyEnumerator "Current"
 
     let indexCurrent = Dlr.paramT<uint32> "indexCurrent"
@@ -128,7 +134,13 @@ module ControlFlow =
               (Dlr.if' propertyState  
                 (Dlr.blockSimple [
                   (Dlr.assign propertyState 
+                    
+                    #if NET2
+                    (Dlr.call (Dlr.castT<System.Collections.IEnumerator> propertyEnumerator) "MoveNext" []))
+                    #else
                     (Dlr.call propertyEnumerator "MoveNext" []))
+                    #endif
+
                   (Dlr.if' propertyState
                     (Binary.assign ctx target (Ast.DlrExpr propertyCurrent)))]))
 

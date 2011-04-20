@@ -16,6 +16,9 @@ module Main =
     + "\nwith ;; or send an extra blank line\n\n" |> printf "%s"
 
   let main () =
+    
+    let buffer = 
+      Text.StringBuilder()
 
     // Abstract the console input as
     // an infinite sequence of string
@@ -23,9 +26,6 @@ module Main =
       let readLine () =
         printf "> "
         Console.ReadLine()
-
-      let buffer = 
-        Text.StringBuilder()
         
       let rec sourceInput () =
         seq {
@@ -85,6 +85,8 @@ module Main =
       with
         | ex ->
           ex.Message |> printfn "%s"
+          ex.StackTrace |> printfn "%s"
+          buffer.Remove(0, buffer.Length) |> ignore
 
 
       !exitCalled

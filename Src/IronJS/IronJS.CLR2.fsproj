@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>IronJS</RootNamespace>
     <AssemblyName>IronJS</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
     <Name>IronJS</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -32,7 +32,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release-x64\</OutputPath>
-    <DefineConstants>X64; CLR2</DefineConstants>
+    <DefineConstants>X64; CLR2; BIGINTEGER</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
@@ -69,7 +69,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug-x86\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;ENABLE_BREAKPOINTS; CLR2</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2; NET2; BIGINTEGER</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile />
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -81,7 +81,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release-x86\</OutputPath>
-    <DefineConstants>ENABLE_BREAKPOINTS; CLR2; BIGINTEGER</DefineConstants>
+    <DefineConstants>ENABLE_BREAKPOINTS; CLR2; BIGINTEGER; NET2</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>

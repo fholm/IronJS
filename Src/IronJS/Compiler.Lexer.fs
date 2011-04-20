@@ -1,5 +1,7 @@
 ﻿namespace IronJS.Compiler
-module Lexer =
+
+[<RequireQualifiedAccess>]
+module internal Lexer =
   
   open IronJS
   open IronJS.Support.Aliases
@@ -271,9 +273,6 @@ module Lexer =
 
     let getName n = 
       names |> Map.find n
-
-  let [<Literal>] SC = Symbol.Semicolon
-  let [<Literal>] LT = Symbol.LineTerminator
 
   type Token = int * string * int * int
 
@@ -584,10 +583,10 @@ module Lexer =
       | _ -> Error.invalidSimplePunctuation c |> error s
 
     match symbol with
-    | SC ->
+    | Symbol.Semicolon ->
       s.IgnoreLineTerminator <- true
-      s.Previous <- SC
-      SC, null, s.StoredLine, s.StoredColumn
+      s.Previous <- Symbol.Semicolon 
+      Symbol.Semicolon , null, s.StoredLine, s.StoredColumn
 
     | _ ->
       s |> outputSymbol symbol
@@ -1062,7 +1061,7 @@ module Lexer =
 
           else 
             s.IgnoreLineTerminator <- true
-            LT, null, s.StoredLine, s.StoredColumn
+            Symbol.LineTerminator, null, s.StoredLine, s.StoredColumn
 
         | c -> 
           Error.unrecognizedInput c |> error s

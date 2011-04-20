@@ -5,6 +5,7 @@ open IronJS.Support.Aliases
 open System.Globalization
 
 ///
+[<RequireQualifiedAccess>]
 module Ast =  
 
   ///
@@ -82,7 +83,7 @@ module Ast =
     | Eval of Tree
     | New of Tree * Tree list
     | Return of Tree
-    | FunctionFast of string option * FunctionScope ref * Tree
+    | Function of string option * FunctionScope ref * Tree
     | Invoke of Tree * Tree list
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
@@ -111,8 +112,8 @@ module Ast =
     
   /// The two different types of scopes possible
   and ScopeType
-    = GlobalScope = 0
-    | FunctionScope = 1
+    = GlobalScope
+    | FunctionScope 
     
   /// The ways in a function can be effected by eval
   /// 
@@ -120,20 +121,20 @@ module Ast =
   /// Contains = An eval call exists inside this function
   /// Effected = An eval call exists in one of the scopes containing this function
   and EvalMode
-    = Clean = 0
-    | Contains = 1
-    | Effected = 2
+    = Clean 
+    | Contains 
+    | Effected 
     
   /// The two different types of lookup modes that a 
-  /// function that use, dynamic is used if a function 
+  /// function can use, dynamic is used if a function 
   /// contains either an eval call or a with statement
   /// otherwise static is used (which is a lot faster)
   and LookupMode
-    = Static = 0
-    | Dynamic = 1
+    = Static 
+    | Dynamic 
     
   /// Represents a function scope
-  and Scope = {
+  and FunctionScope = {
     Id : uint64
 
     GlobalLevel: int
@@ -154,10 +155,37 @@ module Ast =
     CatchScopes : CatchScope ref list
     ParameterNames : string list
     Globals : string Set
+  }
 
-  } with
-    static member NewGlobal = {Scope.New with ScopeType = ScopeType.GlobalScope}
-    static member New = {
+  /// Represents a catch scope
+  and CatchScope = {
+    Name : string
+    GlobalLevel : int
+    ClosureLevel : int
+    CatchScopes : CatchScope ref list
+  }
+
+  ///
+  and ScopeOption
+    = Catch of CatchScope ref
+    | Function of FunctionScope ref
+
+  ///
+  and [<NoComparison; NoEquality>] Variable
+    = Shared  of int * int * int
+    | Private of int
+
+  and VariableMap = Map<string, Variable>
+
+  ///
+  [<RequireQualifiedAccess>]
+  module Utils =
+    
+    // Type short hand for scopes
+    type private S = FunctionScope ref
+
+    ///
+    let createFunctionScope() = {
       Id = 0UL
 
       GlobalLevel = 0
@@ -180,36 +208,17 @@ module Ast =
       Globals = Set.empty
     }
 
-  /// Represents a catch scope
-  and CatchScope = {
-    Name : string
-    GlobalLevel : int
-    ClosureLevel : int
-    CatchScopes : CatchScope ref list
-  } with 
-    static member New name globalLevel closureLevel = ref {
+    ///
+    let createGlobalScope() =
+      {createFunctionScope()with ScopeType = ScopeType.GlobalScope}
+      
+    ///
+    let createCatchScope name globalLevel closureLevel = ref {
       Name = name
       GlobalLevel = globalLevel
       ClosureLevel = closureLevel
       CatchScopes = List.empty
     }
-
-  and FunctionScope = Scope
-
-  and ScopeOption
-    = Catch of CatchScope ref
-    | Function of FunctionScope ref
-
-  and [<NoComparison; NoEquality>] Variable
-    = Shared  of int * int * int
-    | Private of int
-
-  and VariableMap = Map<string, Variable>
-
-  module NewVars =
-    
-    // Type short hand for scopes
-    type private S = FunctionScope ref
 
     ///
     let clone s = ref !s
@@ -310,7 +319,7 @@ module Ast =
     ///
     let addFunction (ast:Tree) (s:S) =
       match ast with
-      | FunctionFast(Some name, _, _) ->
+      | Tree.Function(Some name, _, _) ->
         s := {!s with Functions = (!s).Functions |> Map.add name ast}
 
       | _ -> 

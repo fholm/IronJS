@@ -363,7 +363,7 @@ and [<AllowNullLiteral>] Environment() =
   member x.NewArray() = x.NewArray(0u)
   member x.NewArray(size) =
     let array = AO(x, size)
-    array.SetLength(size)
+    array.Length <- size
     array :> CO
 
   member x.NewString() = x.NewString(String.Empty)
@@ -484,10 +484,17 @@ and [<AllowNullLiteral>] CommonObject =
     Env = env
     Prototype = prototype
     PropertySchema = map
-    Properties = Array.zeroCreate (map.IndexMap.Count)
+    Properties = Array.zeroCreate map.IndexMap.Count
   }
 
-  new (env) = {
+  new (env, prototype) = {
+    Env = env
+    Prototype = prototype
+    PropertySchema = env.Maps.Base
+    Properties = Array.zeroCreate env.Maps.Base.IndexMap.Count
+  }
+
+  internal new (env) = {
     Env = env
     Prototype = null
     PropertySchema = null
@@ -523,16 +530,6 @@ and [<AllowNullLiteral>] CommonObject =
     and   set(v) = x.Put("length", double v)
 
   ///
-  abstract GetLength : unit -> uint32
-  default x.GetLength() =
-    x.Get("length") |> TC.ToUInt32
-
-  ///
-  abstract SetLength : uint32 -> unit
-  default x.SetLength(newLength:uint32) =
-    x.Put("length", double newLength)
-
-  ///
   abstract GetAllIndexProperties : MutableDict<uint32, BV> * uint32 -> unit
   default x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, length:uint32) =
     let mutable i = 0u
@@ -562,7 +559,7 @@ and [<AllowNullLiteral>] CommonObject =
     x.CastTo<'a>() |> ignore
     
   /// Expands object property storage
-  member x.ExpandStorage() =
+  member internal x.ExpandStorage() =
     let newValues = Array.zeroCreate (x.RequiredStorage * 2)
 
     if x.Properties.Length > 0 then 
@@ -571,7 +568,7 @@ and [<AllowNullLiteral>] CommonObject =
     x.Properties <- newValues
     
   /// Creates an index for property named 'name'
-  member x.CreateIndex(name:string) =
+  member internal x.CreateIndex(name:string) =
     x.PropertySchema <- x.PropertySchema.SubClass name
 
     if x.RequiredStorage >= x.Properties.Length then 
@@ -580,7 +577,7 @@ and [<AllowNullLiteral>] CommonObject =
     x.PropertySchema.IndexMap.[name]
     
   /// Finds a property in the prototype chain
-  member x.Find(name:string) =
+  member internal x.Find(name:string) =
     
     let mutable index = 0
 
@@ -600,7 +597,7 @@ and [<AllowNullLiteral>] CommonObject =
       find x.Prototype name
     
   // Can we put property named 'name' ?
-  member x.CanPut(name:string, index:int32 byref) =
+  member internal x.CanPut(name:string, index:int32 byref) =
     
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
       x.Properties.[index].IsWritable
@@ -1068,7 +1065,7 @@ and [<AllowNullLiteral>] CommonObject =
   abstract CollectIndexValues : unit -> seq<BoxedValue>
   default x.CollectIndexValues() =
     seq { 
-      let length = x.GetLength()
+      let length = x.Length
       let index = ref 0u
       while !index < length do
         yield x.Get(!index)
@@ -1306,9 +1303,12 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     and   set (v) = dense <- v
 
   member x.Sparse = sparse
-  member x.Length = length
+  override x.Length 
+    with get ( ) = length
+    and  set (v) = 
+      length <- v
+      base.Put("length", double length, DescriptorAttrs.DontEnum)
 
-  override x.GetLength() = length
   override x.ClassName = "Array"
 
   ///
@@ -1322,11 +1322,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
     else
       sparse.GetAllIndexProperties(dict, length)
-
-  ///
-  member internal x.SetLength(newLength) =
-    length <- newLength
-    base.Put("length", double length, DescriptorAttrs.DontEnum)
 
   ///
   member internal x.IsDense = 
@@ -1387,7 +1382,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
           // If we're above the current length we need to update it 
           if index >= length then 
-            x.SetLength(index + 1u)
+            x.Length <- (index + 1u)
 
         // We're above the currently allocated dense size
         // but not far enough above to switch to sparse
@@ -1396,21 +1391,21 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
           resizeDense (denseLength * 2u + 10u)
           dense.[ii].Value <- value
           dense.[ii].HasValue <- true
-          x.SetLength(index + 1u)
+          x.Length <- (index + 1u)
 
         // Switch to sparse array
         else
           sparse <- SparseArray.OfDense(dense)
           dense <- null
           sparse.Put(index, value)
-          x.SetLength(index + 1u)
+          x.Length <- (index + 1u)
 
       // Sparse array
       else
         sparse.Put(index, value)
 
         if index >= length then 
-            x.SetLength(index + 1u)
+            x.Length <- (index + 1u)
 
   override x.Put(index:uint32, value:double) = 
     x.Put(index, BV.Box(value))

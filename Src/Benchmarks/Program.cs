@@ -28,6 +28,9 @@ namespace Benchmarks
 
         static void Main(string[] args)
         {
+            System.Threading.Thread.CurrentThread.Priority =
+                System.Threading.ThreadPriority.Highest;
+
             var basePath = new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName;
 
             if (ReadYesOrNo("Run SunSpider 0.9.1 benchmark, yes/no? "))

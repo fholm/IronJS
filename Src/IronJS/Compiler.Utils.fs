@@ -5,8 +5,10 @@ open System
 open IronJS
 open IronJS.Dlr.Operators
 
-module Utils =
-    
+///
+module internal Utils =
+  
+  ///
   let (|IsBox|IsRef|IsVal|) (expr:Dlr.Expr) =
     if expr.Type = typeof<BV>
       then IsBox
@@ -14,7 +16,7 @@ module Utils =
         then IsVal
         else IsRef
     
-  //----------------------------------------------------------------------------
+  ///
   module Constants =
   
     let zero = Dlr.dbl0
@@ -22,34 +24,36 @@ module Utils =
     let two = Dlr.dbl2
     let undefined = Dlr.propertyStaticT<Undefined> "Instance"
 
+    ///
     module Boxed = 
+      
       let null' = Dlr.propertyStaticT<Environment> "BoxedNull"
       let zero = Dlr.propertyStaticT<Environment> "BoxedZero"
       let undefined = Dlr.propertyStaticT<Undefined> "Boxed"
       
-  //----------------------------------------------------------------------------
+  ///
   module Box =
     
-    let isBool box      = box?Tag    .==  !!!TypeTags.Bool
-    let isNumber box    = box?Marker .<   !!!Markers.Tagged
-    let isClr box       = box?Tag    .==  !!!TypeTags.Clr
-    let isString box    = box?Tag    .==  !!!TypeTags.String
-    let isUndefined box = box?Tag    .==  !!!TypeTags.Undefined
-    let isObject box    = box?Tag    .>=  !!!TypeTags.Object
-    let isFunction box  = box?Tag    .==  !!!TypeTags.Function
+    let isBool box      = box .-> "Tag"    .==  !!!TypeTags.Bool
+    let isNumber box    = box .-> "Marker" .<   !!!Markers.Tagged
+    let isClr box       = box .-> "Tag"    .==  !!!TypeTags.Clr
+    let isString box    = box .-> "Tag"    .==  !!!TypeTags.String
+    let isUndefined box = box .-> "Tag"    .==  !!!TypeTags.Undefined
+    let isObject box    = box .-> "Tag"    .>=  !!!TypeTags.Object
+    let isFunction box  = box .-> "Tag"    .==  !!!TypeTags.Function
 
-    let unboxNumber box = box?Number
-    let unboxBool box = box?Bool
-    let unboxClr box = box?Clr
-    let unboxString box = box?String
-    let unboxUndefined box = box?Undefined
-    let unboxObject box = box?Object
-    let unboxFunction box = box?Func
+    let unboxNumber box     = box .-> "Number"
+    let unboxBool box       = box .-> "Bool"
+    let unboxClr box        = box .-> "Clr"
+    let unboxString box     = box .-> "String"
+    let unboxUndefined box  = box .-> "Undefined"
+    let unboxObject box     = box .-> "Object"
+    let unboxFunction box   = box .-> "Func"
 
     let setTag expr t =
       match t with
       | TypeTags.Number -> Dlr.void'
-      | _ -> let expr = expr |> Dlr.Ext.unwrap in expr?Tag .= !!!t
+      | _ -> let expr = expr |> Dlr.Ext.unwrap in (expr .-> "Tag") .= !!!t
 
     let setTagOf expr (of':Dlr.Expr) = 
       setTag expr (of'.Type |> TypeTag.OfType)
@@ -59,19 +63,23 @@ module Utils =
       let field = value.Type |> TypeTag.OfType |> BV.FieldOfTag
       expr.->field .= value
       
+  ///
   let isBoxed (expr:Dlr.Expr) = 
-    Dlr.Utils.isT<BoxedValue> expr
-    
+    Dlr.Utils.isT<BV> expr
+  
+  ///  
   let voidAsUndefined (expr:Dlr.Expr) =
     if Dlr.Utils.isVoid expr
       then Dlr.blockSimple [expr; Constants.Boxed.undefined]
       else expr
   
+  ///
   let normalizeVal (expr:Dlr.Expr) =
     if Dlr.Utils.isT<bool> expr 
       then Dlr.ternary expr !!!TaggedBools.True !!!TaggedBools.False
       else expr
-    
+
+  ///
   let box value = 
     if isBoxed value then value
     else
@@ -83,17 +91,19 @@ module Utils =
         ] |> Seq.ofList
       )
 
+  ///
   let unbox type' (expr:Dlr.Expr) =
     if isBoxed expr then 
       let bf = type' |> TypeTag.OfType |> BV.FieldOfTag
       Dlr.field (Dlr.Ext.unwrap expr) bf
 
-    elif expr.Type |> FSharp.Utils.isType type' 
-      then expr
+    elif expr.Type |> FSharp.Utils.isType type' then 
+      expr
 
     else 
       failwithf "Can't unbox expression of type %A to %A" expr.Type type'
 
+  ///
   let clrBoxed (expr:Dlr.Expr) =
     if expr.Type = typeof<BV> then
       expr .-> "ClrBoxed"
@@ -104,6 +114,7 @@ module Utils =
     else
       Dlr.castT<obj> expr
 
+  ///
   let tempBlock (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
     if value |> Dlr.Ext.isStatic then
       Dlr.blockSimple (body value)
@@ -114,6 +125,7 @@ module Utils =
       let assign = Dlr.assign temp value
       Dlr.block [temp] (assign :: (body temp))
 
+  ///
   let tempBlockT<'a> (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
     if value.Type = typeof<'a> then
       tempBlock value body
@@ -126,7 +138,7 @@ module Utils =
       let value2 = value |> Dlr.cast typeof<'a>
       tempBlock value2 body
 
-  //----------------------------------------------------------------------------
+  ///
   let assign (lexpr:Dlr.Expr) rexpr = 
 
     let setBoxClrNull expr = 
@@ -152,7 +164,7 @@ module Utils =
       then assignBox lexpr rexpr 
       else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
 
-  //----------------------------------------------------------------------------
+  ///
   let compileIndex (ctx:Ctx) indexAst =
     let mutable index = 0u
     match indexAst with
@@ -160,7 +172,7 @@ module Utils =
     | Ast.String s when TC.TryToIndex(s, &index) -> !!!index
     | _ -> ctx.Compile indexAst
     
-  //----------------------------------------------------------------------------
+  ///
   let ensureObject (ctx:Ctx) (expr:Dlr.Expr) ifObj ifClr =
     match expr.Type |> TypeTag.OfType with
     | TypeTags.Function
@@ -185,7 +197,7 @@ module Utils =
               (ifObj (TC.ToObject(ctx.Env, expr))))
         ])
 
-  //----------------------------------------------------------------------------
+  ///
   let ensureFunction (ctx:Ctx) (expr:Dlr.Expr) ifFunc ifClr =
     match expr.Type |> TypeTag.OfType with
     | TypeTags.Function -> tempBlock expr (fun expr -> [ifFunc expr])

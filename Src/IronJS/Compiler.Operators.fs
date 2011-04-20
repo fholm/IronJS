@@ -5,7 +5,7 @@ open IronJS.Compiler
 open IronJS.Dlr.Operators
 open IronJS.Support.CustomOperators
 
-module Unary =
+module internal Unary =
   
   //----------------------------------------------------------------------------
   // 11.3
@@ -50,7 +50,7 @@ module Unary =
       let args = [ctx.Parameters.DynamicScope :> Dlr.Expr; ctx.Globals; Dlr.const' name]
       Dlr.callStaticT<DynamicScopeHelpers> "Delete" args
 
-    elif name = "arguments" && ctx.Scope |> Ast.NewVars.isFunction then
+    elif name = "arguments" && ctx.Scope |> Ast.Utils.isFunction then
       !!!false
 
     elif Identifier.isGlobal ctx name then
@@ -167,40 +167,35 @@ module Unary =
     | Ast.UnaryOp.Minus -> minus ctx ast
     | _ -> failwithf "Invalid unary op %A" op
 
-module Binary = 
-
-  open IronJS.Compiler.Ast
+module internal Binary = 
 
   //----------------------------------------------------------------------------
   let compileExpr (ctx:Ctx) op (l:Dlr.Expr) r =
     match op with
-    | BinaryOp.Add -> Operators.add(l, r)
-    | BinaryOp.Sub -> Operators.sub(l, r)
-    | BinaryOp.Div -> Operators.div(l, r)
-    | BinaryOp.Mul -> Operators.mul(l, r)
-    | BinaryOp.Mod -> Operators.mod'(l, r)
+    | Ast.BinaryOp.Add -> Operators.add(l, r)
+    | Ast.BinaryOp.Sub -> Operators.sub(l, r)
+    | Ast.BinaryOp.Div -> Operators.div(l, r)
+    | Ast.BinaryOp.Mul -> Operators.mul(l, r)
+    | Ast.BinaryOp.Mod -> Operators.mod'(l, r)
 
-    | BinaryOp.And -> Operators.and'(l, r)
-    | BinaryOp.Or -> Operators.or'(l, r)
+    | Ast.BinaryOp.BitAnd -> Operators.bitAnd(l, r)
+    | Ast.BinaryOp.BitOr -> Operators.bitOr(l, r)
+    | Ast.BinaryOp.BitXor -> Operators.bitXOr(l, r)
+    | Ast.BinaryOp.BitShiftLeft -> Operators.bitLhs(l, r)
+    | Ast.BinaryOp.BitShiftRight -> Operators.bitRhs(l, r)
+    | Ast.BinaryOp.BitUShiftRight -> Operators.bitURhs(l, r)
 
-    | BinaryOp.BitAnd -> Operators.bitAnd(l, r)
-    | BinaryOp.BitOr -> Operators.bitOr(l, r)
-    | BinaryOp.BitXor -> Operators.bitXOr(l, r)
-    | BinaryOp.BitShiftLeft -> Operators.bitLhs(l, r)
-    | BinaryOp.BitShiftRight -> Operators.bitRhs(l, r)
-    | BinaryOp.BitUShiftRight -> Operators.bitURhs(l, r)
+    | Ast.BinaryOp.Eq -> Operators.eq(l, r)
+    | Ast.BinaryOp.NotEq -> Operators.notEq(l, r)
+    | Ast.BinaryOp.Same -> Operators.same(l, r)
+    | Ast.BinaryOp.NotSame -> Operators.notSame(l, r)
+    | Ast.BinaryOp.Lt -> Operators.lt(l, r)
+    | Ast.BinaryOp.LtEq -> Operators.ltEq(l, r)
+    | Ast.BinaryOp.Gt -> Operators.gt(l, r)
+    | Ast.BinaryOp.GtEq -> Operators.gtEq(l, r)
 
-    | BinaryOp.Eq -> Operators.eq(l, r)
-    | BinaryOp.NotEq -> Operators.notEq(l, r)
-    | BinaryOp.Same -> Operators.same(l, r)
-    | BinaryOp.NotSame -> Operators.notSame(l, r)
-    | BinaryOp.Lt -> Operators.lt(l, r)
-    | BinaryOp.LtEq -> Operators.ltEq(l, r)
-    | BinaryOp.Gt -> Operators.gt(l, r)
-    | BinaryOp.GtEq -> Operators.gtEq(l, r)
-
-    | BinaryOp.In -> Operators.in'(ctx.Env, l, r)
-    | BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l, r)
+    | Ast.BinaryOp.In -> Operators.in'(ctx.Env, l, r)
+    | Ast.BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l, r)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
     
@@ -208,7 +203,7 @@ module Binary =
   let compile (ctx:Ctx) op left right =
 
     match op with
-    | BinaryOp.Or -> 
+    | Ast.BinaryOp.Or -> 
       let l = left |> ctx.Compile
       let l_tmp = Dlr.param "~left" l.Type
 
@@ -221,7 +216,7 @@ module Binary =
         )
       ]
 
-    | BinaryOp.And -> 
+    | Ast.BinaryOp.And -> 
       let l = left |> ctx.Compile
       let l_tmp = Dlr.param "~left" l.Type
 

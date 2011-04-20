@@ -6,14 +6,12 @@ open System.Globalization
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.Compiler
-open IronJS.Compiler.Ast
-open IronJS.Compiler.Lexer
 
-module Parser =
+module internal Parser =
 
   type ScopeData = {
     Id : uint64
-    Scope : ScopeOption
+    Scope : Ast.ScopeOption
     Parent : ScopeData option
     Children : ScopeData list ref
     Variables : string Set ref
@@ -73,25 +71,25 @@ module Parser =
     Env : Env
     File : string
     Source : string
-    Tokenizer : unit -> Token
+    Tokenizer : unit -> Lexer.Token
 
     // It's just so much faster
     // to use mutable values 
     // then creating a new State
     // object for each token consumed
-    mutable Token : Token
+    mutable Token : Lexer.Token
     mutable EndExpression : bool
     mutable LineTerminatorPassed : bool
     mutable WithStatementCount : int
     mutable BlockLevel : int
 
-    Position : Token -> int * int
-    PrettyPrint : Token -> string
+    Position : Lexer.Token -> int * int
+    PrettyPrint : Lexer.Token -> string
 
     BindingPower : int array
-    Null : (Token -> State -> Tree) array
-    Stmt : (Token -> State -> Tree) array
-    Left : (Token -> Tree -> State -> Tree) array
+    Null : (Lexer.Token -> State -> Ast.Tree) array
+    Stmt : (Lexer.Token -> State -> Ast.Tree) array
+    Left : (Lexer.Token -> Ast.Tree -> State -> Ast.Tree) array
     
     ScopeData : ScopeData ref
     FunctionData : ScopeData ref
@@ -99,7 +97,7 @@ module Parser =
     #if DEBUG
     with
     member x.TokenName = 
-      let s, _, _, _ = x.Token in s |> Symbol.getName
+      let s, _, _, _ = x.Token in s |> Lexer.Symbol.getName
 
     member x.TokenValue = 
       let _, v, _, _ = x.Token in v
@@ -112,7 +110,7 @@ module Parser =
     #endif
 
   type P = State
-  module S = Symbol
+  module S = Lexer.Symbol
 
   let unexpectedEnd () = 
     Error.CompileError.Raise(Error.unexpectedEnd)
@@ -132,16 +130,16 @@ module Parser =
     WithStatementCount = 0
     BlockLevel = 0
 
-    Token = Unchecked.defaultof<Token>
-    Tokenizer = Unchecked.defaultof<unit -> Token>
+    Token = Unchecked.defaultof<Lexer.Token>
+    Tokenizer = Unchecked.defaultof<unit -> Lexer.Token>
     
     Position = position
     PrettyPrint = prettyPrint
     
     BindingPower = Array.zeroCreate<int> 150
-    Null = Array.zeroCreate<Token -> State -> Tree> 150
-    Stmt = Array.zeroCreate<Token -> State -> Tree> 150
-    Left = Array.zeroCreate<Token -> Tree -> State -> Tree> 150
+    Null = Array.zeroCreate<Lexer.Token -> State -> Ast.Tree> 150
+    Stmt = Array.zeroCreate<Lexer.Token -> State -> Ast.Tree> 150
+    Left = Array.zeroCreate<Lexer.Token -> Ast.Tree -> State -> Ast.Tree> 150
     
     ScopeData = ref Unchecked.defaultof<ScopeData>
     FunctionData = ref Unchecked.defaultof<ScopeData>
@@ -156,7 +154,7 @@ module Parser =
   let inline value (_, v:string, _, _) = v
   let inline position (_, _, l:int, c:int) = l, c
 
-  let prettyPrint (t:Token) = 
+  let prettyPrint (t:Lexer.Token) = 
     match t with
     | symbol, null, _, _ -> sprintf "%s" (symbol |> S.getName)
     | symbol, value, _, _ -> sprintf "%s (%s)" (symbol |> S.getName) value
@@ -253,7 +251,7 @@ module Parser =
   /// terminator token
   let consume (p:P) =
     p.Token <- p.Tokenizer()
-    p.LineTerminatorPassed <- p |> csymbol = LT
+    p.LineTerminatorPassed <- p |> csymbol = S.LineTerminator
 
     if p.LineTerminatorPassed then 
       p.Token <- p.Tokenizer()
@@ -320,13 +318,13 @@ module Parser =
   /// terminator
   let tryEndStatement (p:P) =
     match p |> csymbol with
-    | Symbol.Semicolon
-    | Symbol.LineTerminator -> 
+    | S.Semicolon
+    | S.LineTerminator -> 
       p |> consume
       true
 
-    | Symbol.EndOfInput
-    | Symbol.RightBrace -> 
+    | S.EndOfInput
+    | S.RightBrace -> 
       true
 
     | _ when p.LineTerminatorPassed ->
@@ -347,15 +345,15 @@ module Parser =
 
     match expr with
     // identifier followed by a colon is a label
-    | Identifier name when p |> csymbol = S.Colon ->
+    | Ast.Identifier name when p |> csymbol = S.Colon ->
       p |> consume
 
       match p |> statement with
-      | Tree.For(_, a, b, c, d) -> Tree.For(Some name, a, b, c, d)
-      | Tree.ForIn(_, a, b, c) -> Tree.ForIn(Some name, a, b, c)
-      | Tree.While(_, a, b) -> Tree.While(Some name, a, b)
-      | Tree.DoWhile(_, a, b)-> Tree.DoWhile(Some name, a, b)
-      | stmt -> Tree.Label(name, stmt)
+      | Ast.Tree.For(_, a, b, c, d) -> Ast.Tree.For(Some name, a, b, c, d)
+      | Ast.Tree.ForIn(_, a, b, c) -> Ast.Tree.ForIn(Some name, a, b, c)
+      | Ast.Tree.While(_, a, b) -> Ast.Tree.While(Some name, a, b)
+      | Ast.Tree.DoWhile(_, a, b)-> Ast.Tree.DoWhile(Some name, a, b)
+      | stmt -> Ast.Tree.Label(name, stmt)
 
     // Normal expression, expect end of statement
     | _ ->
@@ -389,7 +387,7 @@ module Parser =
   let block (p:P) =
     let rec block acc (p:P) =
       match p |> csymbol with
-      | Symbol.RightBrace -> 
+      | S.RightBrace -> 
         p |> consume
         acc |> List.rev
 
@@ -397,12 +395,12 @@ module Parser =
         p |> block ((p |> statement) :: acc)
 
     match p |> csymbol with
-    | Symbol.LeftBrace -> 
+    | S.LeftBrace -> 
       p |> consume
-      p |> block [] |> Tree.Block
+      p |> block [] |> Ast.Tree.Block
 
     | _ -> 
-      [p |> statement] |> Tree.Block
+      [p |> statement] |> Ast.Tree.Block
 
   /// Parses an argument list, which is
   /// zero or more expressions separated
@@ -437,14 +435,14 @@ module Parser =
     p |> bpw symbol bpwr
       |> led symbol (fun _ leftAst p ->
         p |> consume
-        Tree.Binary(operator, leftAst, p |> powerExpression bpwr)
+        Ast.Tree.Binary(operator, leftAst, p |> powerExpression bpwr)
       )
 
   /// Defines a unary operator
   let unary bwpr symbol operator p =
     p |> nud symbol (fun _ p -> 
       p |> consume
-      Tree.Unary(operator, p |> powerExpression bwpr)
+      Ast.Tree.Unary(operator, p |> powerExpression bwpr)
     )
 
   /// Defines a simple symbol that has a fixed AST output
@@ -459,7 +457,7 @@ module Parser =
   /// Defines a null statement, used for single line terminators
   /// and semicolons that occur where a statement could be
   let nullStmt symbol (p:P) =
-    p |> smd symbol (fun _ p -> p |> consume; Tree.Pass)
+    p |> smd symbol (fun _ p -> p |> consume; Ast.Tree.Pass)
 
   /// Implements: 11.13.2 Compound Assignment ( op= )
   let compoundAssign symbol operator (p:P) =
@@ -475,7 +473,7 @@ module Parser =
         let power = BindingPowers.Assignment - 1
         let rightAst = p |> powerExpression power
 
-        Tree.CompoundAssign(operator, leftAst, rightAst)
+        Ast.Tree.CompoundAssign(operator, leftAst, rightAst)
       )
 
   /// Implements: 11.3.1 Postfix Increment Operator
@@ -498,7 +496,7 @@ module Parser =
           // If we didn't pass a linet terminator, consume the
           // operator token and return a unary expression
           p |> consume
-          Tree.Unary(postfix, leftAst)
+          Ast.Tree.Unary(postfix, leftAst)
       )
 
       // This binds the prefix operator
@@ -512,7 +510,7 @@ module Parser =
         let power = BindingPowers.Increment
         let targetAst = p |> powerExpression power
 
-        Tree.Unary(prefix, targetAst)
+        Ast.Tree.Unary(prefix, targetAst)
       )
 
   /// Implements: 12.14 The try statement
@@ -536,11 +534,11 @@ module Parser =
 
       let globalLevel =
         match parentData.Scope with
-        | Catch s -> (!s).GlobalLevel + 1
-        | Function s -> (!s).GlobalLevel + 1
+        | Ast.ScopeOption.Catch s -> (!s).GlobalLevel + 1
+        | Ast.ScopeOption.Function s -> (!s).GlobalLevel + 1
 
       let id = p.Env.NextFunctionId()
-      let catchScope = CatchScope.New name globalLevel -1 |> ScopeOption.Catch
+      let catchScope = Ast.Utils.createCatchScope name globalLevel -1 |> Ast.ScopeOption.Catch
       let scopeData = ScopeData.New id catchScope (Some parentData)
 
       scopeData.AddVariable name
@@ -550,22 +548,22 @@ module Parser =
       let catchBody = p |> block
       p.ScopeData := parentData
 
-      let catch = Some(Tree.Catch(name, catchBody))
+      let catch = Some(Ast.Tree.Catch(name, catchBody))
 
       match p |> csymbol with
       // try ... catch ... finally
       | S.Finally -> 
         p |> consume
-        Tree.Try(body, catch, p |> block |> Some)
+        Ast.Tree.Try(body, catch, p |> block |> Some)
 
       // try ... catch
       | _ -> 
-        Tree.Try(body, catch, None)
+        Ast.Tree.Try(body, catch, None)
 
     // try ... finally
     | S.Finally -> 
       p |> consume
-      Tree.Try(body, None, p |> block |> Some)
+      Ast.Tree.Try(body, None, p |> block |> Some)
 
     | _ -> p |> unexpectedToken
 
@@ -580,13 +578,13 @@ module Parser =
     let trueAst = p |> anyExpression
 
     // Expect and consume the colon
-    p |> expect Symbol.Colon
+    p |> expect S.Colon
 
     // Read the expression after the colon, which
     // is the else branch of the condition
     let elseAst = p |> powerExpression (BindingPowers.Assignment-1)
 
-    Tree.Ternary(testAst, trueAst, elseAst)
+    Ast.Tree.Ternary(testAst, trueAst, elseAst)
 
   /// Implements: 11.14 Comma Operator ( , )
   let comma _ leftAst p =
@@ -623,7 +621,7 @@ module Parser =
       | S.RightBrace
       | S.Case
       | S.Default -> 
-        Tree.Block (acc |> List.rev)
+        Ast.Tree.Block (acc |> List.rev)
 
       | _ ->
         let expr = p |> statement
@@ -637,7 +635,7 @@ module Parser =
         p |> consume
         p |> expect S.Colon
 
-        let case = Cases.Default(p |> parseCaseBody [])
+        let case = Ast.Cases.Default(p |> parseCaseBody [])
         p |> parseCases (case :: acc)
 
       | S.Case ->
@@ -647,7 +645,7 @@ module Parser =
         let test = p |> anyExpression
         p |> expect S.Colon 
 
-        let case = Cases.Case(test, p |> parseCaseBody [])
+        let case = Ast.Cases.Case(test, p |> parseCaseBody [])
         p |> parseCases (case :: acc)
 
       | _ ->
@@ -665,7 +663,7 @@ module Parser =
     p |> expect S.LeftBrace
 
     // Parse all cases
-    Tree.Switch(valueExpr, p |> parseCases [])
+    Ast.Tree.Switch(valueExpr, p |> parseCases [])
 
   /// Implements: 12.5 The if Statement
   let rec if' _ p =
@@ -691,8 +689,8 @@ module Parser =
       // else block
       let stmt =
         match p |> csymbol with
-        | S.If -> Tree.IfElse(testAst, bodyAst, Some(if' p.Token p))
-        | _ -> Tree.IfElse(testAst, bodyAst, Some(p |> block))
+        | S.If -> Ast.Tree.IfElse(testAst, bodyAst, Some(if' p.Token p))
+        | _ -> Ast.Tree.IfElse(testAst, bodyAst, Some(p |> block))
         
       p.BlockLevel <- p.BlockLevel - 1
       stmt
@@ -700,7 +698,7 @@ module Parser =
     // If it's not an else, insert an an empty branch
     | _ -> 
       p.BlockLevel <- p.BlockLevel - 1
-      Tree.IfElse(testAst, bodyAst, None)
+      Ast.Tree.IfElse(testAst, bodyAst, None)
 
   /// Implements: 11.13.1 Simple Assignment ( = )
   let simpleAssignment _ leftAst p =
@@ -716,7 +714,7 @@ module Parser =
     let power = BindingPowers.Assignment-1
     let rightAst = p |> powerExpression power
 
-    Tree.Assign(leftAst, rightAst)
+    Ast.Tree.Assign(leftAst, rightAst)
 
   /// Implements: 7.8.5 Regular Expression Literals
   let regExp t p =
@@ -749,7 +747,7 @@ module Parser =
     // characters from the token value
     let regex = value.Substring(0, value.Length-3)
 
-    Tree.Regex(regex, modifiers)
+    Ast.Tree.Regex(regex, modifiers)
 
   /// Implements: 12.6.2 The while statement
   let while' _ p =
@@ -762,7 +760,7 @@ module Parser =
     // Read the body block
     let bodyAst = p |> block
 
-    Tree.While(None, testAst, bodyAst)
+    Ast.Tree.While(None, testAst, bodyAst)
 
   /// Implements: 12.6.1 The do-while Statement
   let doWhile _ p =
@@ -773,12 +771,12 @@ module Parser =
     let bodyAst = p |> block
 
     // Expect and skip the while token
-    p |> expect Symbol.While
+    p |> expect S.While
 
     // Read the test ast
     let testAst = p |> grouping p.Token
 
-    Tree.DoWhile(None, testAst, bodyAst)
+    Ast.Tree.DoWhile(None, testAst, bodyAst)
 
   //// Implements: 12.10 The with Statement
   let with' _ p =
@@ -797,7 +795,7 @@ module Parser =
     //p |> cscope |> AnalyzersFastUtils.Scope.increaseWithCount
     //p |> cscope |> AnalyzersFastUtils.Scope.setDynamicLookup
 
-    Tree.With(objectAst, bodyAst)
+    Ast.Tree.With(objectAst, bodyAst)
 
   /// Implements: 11.2.1 Property Accessors
   /// The property version .
@@ -813,7 +811,7 @@ module Parser =
     /// an identifier and skip it
     p |> expect S.Identifier
 
-    Tree.Property(objectAst, identifier)
+    Ast.Tree.Property(objectAst, identifier)
     
   /// Implements: 11.2.1 Property Accessors
   /// The index version []
@@ -827,7 +825,7 @@ module Parser =
     // Expect and skip the closing bracket
     p |> expect S.RightBracket
 
-    Tree.Index(objectAst, indexAst)
+    Ast.Tree.Index(objectAst, indexAst)
 
   /// Implements: 11.2.2 The new Operator
   let new' _ p =
@@ -844,7 +842,7 @@ module Parser =
     // Note that the arguments for new
     // expressions is handled in the call
     // parser and then pushed in here
-    Tree.New(expr, [])
+    Ast.Tree.New(expr, [])
 
   /// Implements: 11.2.3 Function Calls
   let call' _ functionAst p = 
@@ -859,22 +857,22 @@ module Parser =
     // in that case de-construct it
     // and return that instead of the call
     match functionAst with
-    | Tree.New(constructorExpr, []) -> 
-      Tree.New(constructorExpr, argAsts)
+    | Ast.Tree.New(constructorExpr, []) -> 
+      Ast.Tree.New(constructorExpr, argAsts)
 
     // Eval call
-    | Identifier "eval" -> 
+    | Ast.Identifier "eval" -> 
       
       match (!p.FunctionData).Scope with
-      | Catch _ -> ()
-      | Function scope -> 
-        scope |> NewVars.setContainsEval
+      | Ast.ScopeOption.Catch _ -> ()
+      | Ast.ScopeOption.Function scope -> 
+        scope |> Ast.Utils.setContainsEval
 
-      Tree.Eval(argAsts |> FSharp.List.headOr (lazy Tree.String("")))
+      Ast.Tree.Eval(argAsts |> FSharp.List.headOr (lazy Ast.Tree.String("")))
 
     // Normal function call
     | _ ->
-      Tree.Invoke(functionAst, argAsts)
+      Ast.Tree.Invoke(functionAst, argAsts)
   
   /// Implements: 12.9 The return Statement
   let return' _ p = 
@@ -884,8 +882,8 @@ module Parser =
     // Try to end the statement right now
     // and if we can, do so
     if p |> tryEndStatement
-      then Tree.Return(Tree.Undefined)
-      else Tree.Return(p |> expressionStatement)
+      then Ast.Tree.Return(Ast.Tree.Undefined)
+      else Ast.Tree.Return(p |> expressionStatement)
 
   /// Implements: 12.13 The throw statement
   let throw _ p =
@@ -893,8 +891,8 @@ module Parser =
     p |> consume
 
     if p |> tryEndStatement 
-      then Tree.Throw(Tree.Undefined)
-      else Tree.Throw(p |> expressionStatement)
+      then Ast.Tree.Throw(Ast.Tree.Undefined)
+      else Ast.Tree.Throw(p |> expressionStatement)
       
   /// Implements: 12.8 The break Statement
   let break' _ p =
@@ -902,8 +900,8 @@ module Parser =
     p |> consume
 
     if p |> tryEndStatement
-      then Tree.Break(None)
-      else Tree.Break(p |> consumeIdentifier |> Some)
+      then Ast.Tree.Break(None)
+      else Ast.Tree.Break(p |> consumeIdentifier |> Some)
       
   /// Implements: 12.7 The continue Statement
   let continue' _ p = 
@@ -911,8 +909,8 @@ module Parser =
     p |> consume
 
     if p |> tryEndStatement
-      then Tree.Continue(None)
-      else Tree.Continue(p |> consumeIdentifier |> Some)
+      then Ast.Tree.Continue(None)
+      else Ast.Tree.Continue(p |> consumeIdentifier |> Some)
 
   /// Implements: 11.1.4 Array Initialiser
   let arrayLiteral _ p =
@@ -923,7 +921,7 @@ module Parser =
       match p |> csymbol with
       | S.Comma ->
         p |> consume
-        acc <- Tree.Pass :: acc
+        acc <- Ast.Tree.Pass :: acc
 
       | _ ->
         acc <- (p |> expression S.Comma 0) :: acc
@@ -933,7 +931,7 @@ module Parser =
             then p |> unexpectedToken
 
     p |> expect S.RightBracket
-    Tree.Array (acc |> List.rev)
+    Ast.Tree.Array (acc |> List.rev)
 
   /// Implements: 11.1.5 Object Initialiser
   let objectLiteral _ p =
@@ -942,9 +940,9 @@ module Parser =
     // from either a string or an identifier
     let propertyName (p:P) =
       match p.Token with
-      | Symbol.Number, name, _, _
-      | Symbol.Identifier, name, _, _  
-      | Symbol.String, name, _, _ -> 
+      | S.Number, name, _, _
+      | S.Identifier, name, _, _  
+      | S.String, name, _, _ -> 
         p |> consume
         p |> expect S.Colon
         name
@@ -970,7 +968,7 @@ module Parser =
 
     // Expect and consume the closing right brace
     p |> expect S.RightBrace
-    Tree.Object (acc |> List.rev)
+    Ast.Tree.Object (acc |> List.rev)
 
   /// Implements: 11.2.5 Function Expressions
   /// Implements: 13 Function Definition
@@ -997,17 +995,17 @@ module Parser =
 
       // Create a new scope object
       let scope =
-        ref {Scope.New with 
+        ref {Ast.Utils.createFunctionScope() with 
               Id = id
               GlobalLevel = 
                 match parent.Scope with
-                | Catch(s) -> (!s).GlobalLevel + 1
-                | Function s -> (!s).GlobalLevel + 1
+                | Ast.ScopeOption.Catch(s) -> (!s).GlobalLevel + 1
+                | Ast.ScopeOption.Function s -> (!s).GlobalLevel + 1
             }
 
       let scopeData = 
         let parent = Some parent
-        let scope = ScopeOption.Function scope
+        let scope = Ast.ScopeOption.Function scope
         ScopeData.New id scope parent
 
       // Consume tokens untill we reach a right parenthesis
@@ -1051,7 +1049,7 @@ module Parser =
     let scopeId = (!scope).Id
 
     if p.WithStatementCount > 0 then
-      scope |> NewVars.setDynamicLookup
+      scope |> Ast.Utils.setDynamicLookup
     
     // Store the previous block level, function and scope data
     let prevBlockLevel = p.BlockLevel
@@ -1076,23 +1074,23 @@ module Parser =
 
     match name with
     | Some name when isDefinition -> 
-      let func = Tree.FunctionFast(Some name, scope, body)
+      let func = Ast.Tree.Function(Some name, scope, body)
 
       match (!p.FunctionData).Scope with
-      | Catch _ -> ()
-      | Function s -> 
-        s |> NewVars.addFunction func
+      | Ast.ScopeOption.Catch _ -> ()
+      | Ast.ScopeOption.Function s -> 
+        s |> Ast.Utils.addFunction func
 
-      Tree.Pass
+      Ast.Tree.Pass
 
     | Some name -> 
-      scope |> NewVars.setSelfReference name
+      scope |> Ast.Utils.setSelfReference name
       scopeData.AddVariable name 
 
-      Tree.FunctionFast(None, scope, body)
+      Ast.Tree.Function(None, scope, body)
 
     | None ->
-      Tree.FunctionFast(None, scope, body)
+      Ast.Tree.Function(None, scope, body)
 
   /// Implements: 12.2 Variable statement
   let var inForStatement _ p =
@@ -1102,7 +1100,7 @@ module Parser =
 
     let rec parseVariables (p:P) =
       let name = p |> consumeIdentifier 
-      let identifier = Tree.Identifier name
+      let identifier = Ast.Tree.Identifier name
 
       (!p.FunctionData).AddVariable name
 
@@ -1111,10 +1109,10 @@ module Parser =
         | S.Assign -> 
           p |> consume
           let value = p |> expression S.Comma 0 
-          Tree.Assign(identifier, value) |> Tree.Var
+          Ast.Tree.Assign(identifier, value) |> Ast.Tree.Var
 
         | _ -> 
-          identifier |> Tree.Var
+          identifier |> Ast.Tree.Var
 
       match p |> csymbol with
       | S.Comma ->
@@ -1131,7 +1129,7 @@ module Parser =
       | _ -> p |> unexpectedToken
 
     // Parse all defined variables in this var statement
-    p |> parseVariables |> Tree.Block
+    p |> parseVariables |> Ast.Tree.Block
     
   /// Implements: 12.6.3 The for Statement
   /// Implements: 12.6.4 The for-in Statement
@@ -1191,7 +1189,7 @@ module Parser =
     | _ ->
       let vars = 
         match p |> csymbol with
-        | S.Semicolon -> Tree.Pass
+        | S.Semicolon -> Ast.Tree.Pass
         | _ -> p |> stopExpression S.In
 
       match p |> csymbol with
@@ -1215,16 +1213,16 @@ module Parser =
       if name = "arguments" then
 
         match (!p.FunctionData).Scope with
-        | Catch _ -> ()
-        | Function s -> 
-          s|> NewVars.setContainsArguments
+        | Ast.ScopeOption.Catch _ -> ()
+        | Ast.ScopeOption.Function s -> 
+          s|> Ast.Utils.setContainsArguments
 
         name |> (!p.FunctionData).AddVariable
 
       else
         name |> (!p.FunctionData).AddMissing
 
-    Tree.Identifier(name)
+    Ast.Tree.Identifier(name)
 
   /// Implements: 
   let codeBlock _ (p:P) =
@@ -1249,17 +1247,17 @@ module Parser =
     // Value Symbols
     *)
 
-    |> simple S.Comment Tree.Pass
-    |> simple S.Null Tree.Null
-    |> simple S.True (Tree.Boolean true)
-    |> simple S.False (Tree.Boolean false)
-    |> simple S.This Tree.This
-    |> simplef S.String (value >> Tree.String)
-    |> simplef S.Identifier (value >> Tree.Identifier)
-    |> simplef S.Number (value >> parseNumber >> Tree.Number)
-    |> simplef S.HexLiteral (value >> hexToNumber >> Tree.Number)
-    |> simplef S.OctalLiteral (value >> toOctal >> double >> Tree.Number)
-    |> simplef S.Identifier (value >> Tree.Identifier)
+    |> simple S.Comment Ast.Tree.Pass
+    |> simple S.Null Ast.Tree.Null
+    |> simple S.True (Ast.Tree.Boolean true)
+    |> simple S.False (Ast.Tree.Boolean false)
+    |> simple S.This Ast.Tree.This
+    |> simplef S.String (value >> Ast.Tree.String)
+    |> simplef S.Identifier (value >> Ast.Tree.Identifier)
+    |> simplef S.Number (value >> parseNumber >> Ast.Tree.Number)
+    |> simplef S.HexLiteral (value >> hexToNumber >> Ast.Tree.Number)
+    |> simplef S.OctalLiteral (value >> toOctal >> double >> Ast.Tree.Number)
+    |> simplef S.Identifier (value >> Ast.Tree.Identifier)
 
     |> nud S.LeftParenthesis grouping 
     |> nud S.RegExp regExp
@@ -1274,63 +1272,63 @@ module Parser =
     *)
 
     // Unary operators
-    |> unary BindingPowers.LogicalNot S.LogicalNot  UnaryOp.Not
-    |> unary BindingPowers.BitwiseNot S.BitwiseNot  UnaryOp.BitCmpl
-    |> unary BindingPowers.UnaryMinus S.Minus       UnaryOp.Minus
-    |> unary BindingPowers.UnaryPlus  S.Plus        UnaryOp.Plus
-    |> unary BindingPowers.Delete     S.Delete      UnaryOp.Delete
-    |> unary BindingPowers.TypeOf     S.TypeOf      UnaryOp.TypeOf
-    |> unary BindingPowers.Void       S.Void        UnaryOp.Void
+    |> unary BindingPowers.LogicalNot S.LogicalNot  Ast.UnaryOp.Not
+    |> unary BindingPowers.BitwiseNot S.BitwiseNot  Ast.UnaryOp.BitCmpl
+    |> unary BindingPowers.UnaryMinus S.Minus       Ast.UnaryOp.Minus
+    |> unary BindingPowers.UnaryPlus  S.Plus        Ast.UnaryOp.Plus
+    |> unary BindingPowers.Delete     S.Delete      Ast.UnaryOp.Delete
+    |> unary BindingPowers.TypeOf     S.TypeOf      Ast.UnaryOp.TypeOf
+    |> unary BindingPowers.Void       S.Void        Ast.UnaryOp.Void
 
     // Unary ++ and --
-    |> postfixOrPrefix S.Increment UnaryOp.Inc UnaryOp.PostInc
-    |> postfixOrPrefix S.Decrement UnaryOp.Dec UnaryOp.PostDec
+    |> postfixOrPrefix S.Increment Ast.UnaryOp.Inc Ast.UnaryOp.PostInc
+    |> postfixOrPrefix S.Decrement Ast.UnaryOp.Dec Ast.UnaryOp.PostDec
 
     // Binary math operators
-    |> binary BindingPowers.Multiply  S.Multiply  BinaryOp.Mul
-    |> binary BindingPowers.Divide    S.Divide    BinaryOp.Div
-    |> binary BindingPowers.Modulo    S.Modulo    BinaryOp.Mod
-    |> binary BindingPowers.Add       S.Plus      BinaryOp.Add
-    |> binary BindingPowers.Subtract  S.Minus     BinaryOp.Sub
+    |> binary BindingPowers.Multiply  S.Multiply  Ast.BinaryOp.Mul
+    |> binary BindingPowers.Divide    S.Divide    Ast.BinaryOp.Div
+    |> binary BindingPowers.Modulo    S.Modulo    Ast.BinaryOp.Mod
+    |> binary BindingPowers.Add       S.Plus      Ast.BinaryOp.Add
+    |> binary BindingPowers.Subtract  S.Minus     Ast.BinaryOp.Sub
 
     // Binary bitwise operators
-    |> binary BindingPowers.BitwiseShift  S.LeftShift   BinaryOp.BitShiftLeft
-    |> binary BindingPowers.BitwiseShift  S.RightShift  BinaryOp.BitShiftRight
-    |> binary BindingPowers.BitwiseShift  S.URightShift BinaryOp.BitUShiftRight
-    |> binary BindingPowers.BitwiseAnd    S.BitwiseAnd  BinaryOp.BitAnd
-    |> binary BindingPowers.BitwiseXor    S.BitwiseXor  BinaryOp.BitXor
-    |> binary BindingPowers.BitwiseOr     S.BitwiseOr   BinaryOp.BitOr
+    |> binary BindingPowers.BitwiseShift  S.LeftShift   Ast.BinaryOp.BitShiftLeft
+    |> binary BindingPowers.BitwiseShift  S.RightShift  Ast.BinaryOp.BitShiftRight
+    |> binary BindingPowers.BitwiseShift  S.URightShift Ast.BinaryOp.BitUShiftRight
+    |> binary BindingPowers.BitwiseAnd    S.BitwiseAnd  Ast.BinaryOp.BitAnd
+    |> binary BindingPowers.BitwiseXor    S.BitwiseXor  Ast.BinaryOp.BitXor
+    |> binary BindingPowers.BitwiseOr     S.BitwiseOr   Ast.BinaryOp.BitOr
 
     // Binary relational operators
-    |> binary BindingPowers.Relational S.LessThan           BinaryOp.Lt
-    |> binary BindingPowers.Relational S.LessThanOrEqual    BinaryOp.LtEq
-    |> binary BindingPowers.Relational S.GreaterThan        BinaryOp.Gt
-    |> binary BindingPowers.Relational S.GreaterThanOrEqual BinaryOp.GtEq
-    |> binary BindingPowers.Relational S.InstanceOf         BinaryOp.InstanceOf
-    |> binary BindingPowers.Relational S.In                 BinaryOp.In
+    |> binary BindingPowers.Relational S.LessThan           Ast.BinaryOp.Lt
+    |> binary BindingPowers.Relational S.LessThanOrEqual    Ast.BinaryOp.LtEq
+    |> binary BindingPowers.Relational S.GreaterThan        Ast.BinaryOp.Gt
+    |> binary BindingPowers.Relational S.GreaterThanOrEqual Ast.BinaryOp.GtEq
+    |> binary BindingPowers.Relational S.InstanceOf         Ast.BinaryOp.InstanceOf
+    |> binary BindingPowers.Relational S.In                 Ast.BinaryOp.In
 
     // Binary equality operators
-    |> binary BindingPowers.Equality S.Equal          BinaryOp.Eq
-    |> binary BindingPowers.Equality S.NotEqual       BinaryOp.NotEq
-    |> binary BindingPowers.Equality S.StrictEqual    BinaryOp.Same
-    |> binary BindingPowers.Equality S.StrictNotEqual BinaryOp.NotSame
+    |> binary BindingPowers.Equality S.Equal          Ast.BinaryOp.Eq
+    |> binary BindingPowers.Equality S.NotEqual       Ast.BinaryOp.NotEq
+    |> binary BindingPowers.Equality S.StrictEqual    Ast.BinaryOp.Same
+    |> binary BindingPowers.Equality S.StrictNotEqual Ast.BinaryOp.NotSame
 
     // Binary logical operators
-    |> binary BindingPowers.LogicalAnd  S.LogicalAnd  BinaryOp.And
-    |> binary BindingPowers.LogicalOr   S.LogicalOr   BinaryOp.Or
+    |> binary BindingPowers.LogicalAnd  S.LogicalAnd  Ast.BinaryOp.And
+    |> binary BindingPowers.LogicalOr   S.LogicalOr   Ast.BinaryOp.Or
 
     // Compound Assignment
-    |> compoundAssign S.AssignAdd                 BinaryOp.Add
-    |> compoundAssign S.AssignBitwiseAnd          BinaryOp.BitAnd
-    |> compoundAssign S.AssignBitwiseOr           BinaryOp.BitOr
-    |> compoundAssign S.AssignBitwiseXor          BinaryOp.BitXor
-    |> compoundAssign S.AssignDivide              BinaryOp.Div
-    |> compoundAssign S.AssignLeftShift           BinaryOp.BitShiftLeft
-    |> compoundAssign S.AssignModulo              BinaryOp.Mod
-    |> compoundAssign S.AssignMultiply            BinaryOp.Mul
-    |> compoundAssign S.AssignSignedRightShift    BinaryOp.BitShiftRight
-    |> compoundAssign S.AssignSubtract            BinaryOp.Sub
-    |> compoundAssign S.AssignUnsignedRightShift  BinaryOp.BitUShiftRight
+    |> compoundAssign S.AssignAdd                 Ast.BinaryOp.Add
+    |> compoundAssign S.AssignBitwiseAnd          Ast.BinaryOp.BitAnd
+    |> compoundAssign S.AssignBitwiseOr           Ast.BinaryOp.BitOr
+    |> compoundAssign S.AssignBitwiseXor          Ast.BinaryOp.BitXor
+    |> compoundAssign S.AssignDivide              Ast.BinaryOp.Div
+    |> compoundAssign S.AssignLeftShift           Ast.BinaryOp.BitShiftLeft
+    |> compoundAssign S.AssignModulo              Ast.BinaryOp.Mod
+    |> compoundAssign S.AssignMultiply            Ast.BinaryOp.Mul
+    |> compoundAssign S.AssignSignedRightShift    Ast.BinaryOp.BitShiftRight
+    |> compoundAssign S.AssignSubtract            Ast.BinaryOp.Sub
+    |> compoundAssign S.AssignUnsignedRightShift  Ast.BinaryOp.BitUShiftRight
 
     |> bpw S.Assign BindingPowers.Assignment
     |> led S.Assign simpleAssignment
@@ -1379,10 +1377,10 @@ module Parser =
     let lexer = source |> Lexer.create
 
     let scope = 
-      ref {Ast.Scope.NewGlobal with GlobalLevel = 0}
+      ref {Ast.Utils.createGlobalScope() with GlobalLevel = 0}
 
     let scopeData =
-      ScopeData.New 0UL (Function scope) None
+      ScopeData.New 0UL (Ast.ScopeOption.Function scope) None
 
     let parser = 
       {parserDefinition with 
@@ -1396,8 +1394,8 @@ module Parser =
         FunctionData = ref scopeData
       }
 
-    let ast = parser |> statementList |> Tree.Block
-    Tree.FunctionFast(None, scope, ast), scopeData
+    let ast = parser |> statementList |> Ast.Tree.Block
+    Ast.Tree.Function(None, scope, ast), scopeData
     
   let parseString env string = 
     env |> parse string

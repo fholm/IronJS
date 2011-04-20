@@ -68,7 +68,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug-x86\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;ENABLE_BREAKPOINTS</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FILE_CACHE</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile />
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -80,8 +80,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release-x86\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants>FILE_CACHE</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
@@ -91,7 +90,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="CLR2.fs" />
+    <Compile Include="Legacy.fs" />
     <Compile Include="FSharp.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
@@ -99,6 +98,7 @@
     <Compile Include="Core.fs" />
     <Compile Include="Core.Helpers.fs" />
     <Compile Include="Core.Operators.fs" />
+    <Compile Include="ReflectionCache.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Parser.fs" />

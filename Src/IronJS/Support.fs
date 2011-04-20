@@ -26,7 +26,11 @@ module Aliases =
   type MutableStack<'a> = Stack<'a>
   type MutableDict<'k, 'v> = Dictionary<'k, 'v>
   type MutableSorted<'k, 'v> = SortedDictionary<'k, 'v>
+  #if NET2
+  type MutableSet<'a when 'a : equality> = HashSet<'a>
+  #else
   type MutableSet<'a> = HashSet<'a>
+  #endif
   
   let anyNumber = NumberStyles.Any
   let invariantCulture = CultureInfo.InvariantCulture

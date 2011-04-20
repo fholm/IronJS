@@ -8,7 +8,7 @@ open IronJS.Dlr.Operators
 open IronJS.Compiler.Context
 open IronJS.Support.CustomOperators
 
-module Exception =
+module internal Exception =
 
   ///
   let throw (ctx:Ctx) expr =

@@ -2,10 +2,9 @@
 
 open IronJS
 open IronJS.Compiler
-open IronJS.Compiler.Ast
 open IronJS.Compiler.Parser
 
-module Analyzer =
+module internal Analyzer =
   
   /// Tries to find a variable in a ScopeData chain
   let rec findVariable name (d:ScopeData option) =
@@ -13,7 +12,7 @@ module Analyzer =
     | None -> None // We're past the top scope, means we didn't find anything
     | Some d ->
       match d.Scope with
-      | Catch s ->
+      | Ast.ScopeOption.Catch s ->
         // Catch scopes are simple, they only
         // contain one variable so check the name
         // and if it matches return 1 (which is the storage
@@ -24,7 +23,7 @@ module Analyzer =
           then (1, (!s).GlobalLevel) |> Some
           else d.Parent |> findVariable name
 
-      | Function s ->
+      | Ast.ScopeOption.Function s ->
         // Try to locate the variable in 
         // the current function scope
         match (!s).Variables |> Map.tryFind name with
@@ -34,13 +33,13 @@ module Analyzer =
           // original owning scope, we got everything we need
           // so just return the same values
           match var with
-          | Shared(storageIndex, globalLevel, _) ->
+          | Ast.Variable.Shared(storageIndex, globalLevel, _) ->
             (storageIndex, globalLevel) |> Some
 
           // But it can also be a private variable in the current scope
           // which means we have to turn it into a shared variable instead
-          | Private _ ->
-            s |> Ast.NewVars.promotePrivateToShared name |> Some
+          | Ast.Variable.Private _ ->
+            s |> Ast.Utils.promotePrivateToShared name |> Some
 
         | _ ->
           d.Parent |> findVariable name
@@ -48,22 +47,22 @@ module Analyzer =
   let rec buildVariables (d:ScopeData) =
     // First create variables in function scopes
     match d.Scope with
-    | Catch _ -> () // Don't need to do anything for catch scopes
-    | Function s ->   
+    | Ast.ScopeOption.Catch _ -> () // Don't need to do anything for catch scopes
+    | Ast.ScopeOption.Function s ->   
       match (!s).ScopeType with
-      | ScopeType.GlobalScope ->
+      | Ast.ScopeType.GlobalScope ->
         // Global scopes are easy, just copy
         // the variable set to the Globals property
         s := {!s with Globals = !d.Variables}
 
-      | ScopeType.FunctionScope ->
+      | Ast.ScopeType.FunctionScope ->
         // First, copy all parameter names to the correct property
         s := {!s with ParameterNames = !d.Parameters}
 
         // Create private variables for all
         // all variables in this scope
         for name in !d.Variables do
-          s |> NewVars.createPrivateVariable name
+          s |> Ast.Utils.createPrivateVariable name
 
         // Then step through all missing 
         // variables for this scope
@@ -74,7 +73,7 @@ module Analyzer =
             // We found a variable in the scope chain - either a previously shared
             // or one that used to be private and that was turned into a shared.
             // Create a new shared variable in this scope for the variable
-            s |> NewVars.createSharedVariable name storageIndex globalLevel |> ignore
+            s |> Ast.Utils.createSharedVariable name storageIndex globalLevel |> ignore
 
     // Then build all child scopes variables
     for child in !d.Children do
@@ -84,15 +83,15 @@ module Analyzer =
     let globalLevel, closureLevel = 
       
       match d.Scope with
-      | Catch s ->
+      | Ast.ScopeOption.Catch s ->
         // Catch scope is simple, always increase closure level
         s := {!s with ClosureLevel = closureLevel + 1}
         (!s).GlobalLevel, (!s).ClosureLevel
 
-      | Function s ->
+      | Ast.ScopeOption.Function s ->
         
         let globalLevel = 
-          s |> NewVars.globalLevel
+          s |> Ast.Utils.globalLevel
 
         // Calculate the new closure level
         // which is either the same as previous
@@ -108,10 +107,10 @@ module Analyzer =
         // shared variables in the current scope
         let updateClosureLevels _ var =
           match var with
-          | Shared(s, g, _) ->
+          | Ast.Variable.Shared(s, g, _) ->
             if g = globalLevel
-              then Shared(s, g, closureLevel)
-              else Shared(s, g, levels.[g])
+              then Ast.Variable.Shared(s, g, closureLevel)
+              else Ast.Variable.Shared(s, g, levels.[g])
 
           | _ -> var
 

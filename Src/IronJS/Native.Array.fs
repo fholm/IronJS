@@ -82,7 +82,7 @@ module internal Array =
 
     /// Implements: 15.4.4.5 Array.prototype.join (separator)
     let private join (func:FO) (this:CO) (separator:BV) =
-      let length = this.GetLength()
+      let length = this.Length
       let separator =
         match separator.Tag with
         | TypeTags.Undefined -> ","
@@ -114,7 +114,7 @@ module internal Array =
     let private toLocaleString (func:FO) (this:CO) =
       this.CheckType<AO>()
 
-      let length = this.GetLength()
+      let length = this.Length
       let separator = ","
       let buffer = Text.StringBuilder(16)
       let mutable i = 0u
@@ -135,7 +135,7 @@ module internal Array =
 
     /// Implements: 15.4.4.6 Array.prototype.pop ( )
     let private pop (func:FO) (this:CO) = 
-      let length = this.GetLength()
+      let length = this.Length
       if length = 0u then 
         this.Put("length", double 0.0)
         Undefined.Boxed
@@ -149,7 +149,7 @@ module internal Array =
     /// Implements: 15.4.4.7 Array.prototype.push ( [ item1 [ , item2 [ , … ] ] ] )
     let private push (func:FO) (this:CO) (args:Args) = 
       let isArray = this :? AO
-      let mutable n = this.GetLength() |> int64
+      let mutable n = this.Length |> int64
 
       for arg in args do
         this.Put(double n, arg)
@@ -167,7 +167,7 @@ module internal Array =
 
     /// Implements: 15.4.4.9 Array.prototype.shift ( )
     let private shift (func:FO) (this:CO) =
-      let length = this.GetLength()
+      let length = this.Length
 
       // Length = 0, put length and return undefined
       if length = 0u then
@@ -258,7 +258,7 @@ module internal Array =
               reverseObject o length (index+1u) items
 
             
-        let length = this.GetLength()
+        let length = this.Length
         let items = reverseObject this length 0u []
 
         for index, item in items do
@@ -292,7 +292,7 @@ module internal Array =
         | _ -> defaultSort
 
       let mutable ao = null
-      let length = this.GetLength()
+      let length = this.Length
       let ilength = int length
 
       if this.TryCastTo<AO>(&ao) then
@@ -314,7 +314,7 @@ module internal Array =
           ao.Sparse.Sort(comparefn)
 
       else
-        let length = this.GetLength()
+        let length = this.Length
         let values = new MutableDict<uint32, BV>()
         this.GetAllIndexProperties(values, length)
 
@@ -327,7 +327,7 @@ module internal Array =
 
     /// Implements: 15.4.4.10 Array.prototype.slice (start, end)
     let slice (func:FO) (this:CO) (start:BV) (stop:BV) =
-      let length = this.GetLength()
+      let length = this.Length
 
       let mutable start = 
         match start.Tag with
@@ -361,7 +361,7 @@ module internal Array =
     /// Implements: 15.4.4.13 Array.prototype.unshift ( [ item1 [, item2 [, ...]]])
     let unshift (func:FO) (this:CO) (args:Args) =
       let mutable ao = null
-      let length = this.GetLength()
+      let length = this.Length
 
       if this.TryCastTo<AO>(&ao) then
 
@@ -387,7 +387,7 @@ module internal Array =
           else
             ao.Sparse.Unshift(args)
 
-          ao.SetLength(length + uint32 args.Length)
+          ao.Length <- (length + uint32 args.Length)
           double (length + uint32 args.Length)
 
         else
@@ -415,7 +415,7 @@ module internal Array =
       let deleteCount = if args.Length > 1 then args.[1] else Undefined.Boxed
 
       let A = func.Env.NewArray()
-      let len = O.GetLength() |> int32
+      let len = O.Length |> int32
       let relativeStart = start |> TC.ToInteger
       let actualStart = if relativeStart < 0 then Math.Max((len + relativeStart), 0) else Math.Min(relativeStart, len)
       let actualDeleteCount = Math.Min(Math.Max(TC.ToInteger(deleteCount), 0), len - actualStart)

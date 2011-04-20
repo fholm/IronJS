@@ -10,7 +10,7 @@ open IronJS.Compiler
 open IronJS.Compiler.Utils
 open IronJS.Compiler.Context
 
-module Object =
+module internal Object =
 
   module Property = 
 

@@ -8,7 +8,7 @@ open IronJS.Dlr.Operators
 open IronJS.Support.CustomOperators
 
 ///
-module Function =
+module internal Function =
 
   /// 
   let private createCompiler (compiler:Target.T -> Delegate) ast (ctx:Ctx) =
@@ -31,7 +31,7 @@ module Function =
         }
 
   ///
-  let private getScopeParameterStorage (scope:Ast.Scope) =
+  let private getScopeParameterStorage (scope:Ast.FunctionScope) =
     [|
       for parameter in scope.ParameterNames ->
         match scope.Variables.[parameter] with
@@ -40,7 +40,7 @@ module Function =
     |]
 
   /// 
-  let create (ctx:Ctx) (scope:Ast.Scope ref) ast =
+  let create (ctx:Ctx) (scope:Ast.FunctionScope ref) ast =
     let scope = !scope
 
     // Make sure a meta data object exists for this function

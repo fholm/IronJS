@@ -1,6 +1,6 @@
 ﻿namespace IronJS.Compiler
 
-module HostFunction =
+module internal HostFunction =
 
   open System
   open IronJS

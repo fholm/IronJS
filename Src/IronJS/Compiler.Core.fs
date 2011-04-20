@@ -50,7 +50,6 @@ module Core =
     | Ast.BreakPoint(line, column) ->
       
       #if ENABLE_BREAKPOINTS
-
       let locals = 
         Dlr.blockTmpT<MutableDict<string, obj>> (fun locals ->
           let addLocal (name, _) =
@@ -66,7 +65,6 @@ module Core =
 
       let args = [!!!line; !!!column; locals]
       Dlr.invoke (ctx.Env .-> "BreakPoint") args
-
       #else
       Dlr.void'
       #endif
@@ -110,7 +108,7 @@ module Core =
     | Ast.Invoke(func, args)  -> Function.invoke ctx func args
     | Ast.New(func, args) -> Function.new' ctx func args
     | Ast.Return tree -> Function.return' ctx tree
-    | Ast.FunctionFast(_, scope, _) -> Function.create ctx scope ast
+    | Ast.Function(_, scope, _) -> Function.create ctx scope ast
 
     //Control Flow
     | Ast.Switch(value, cases) -> ControlFlow.switch ctx value cases
@@ -142,7 +140,7 @@ module Core =
   ///
   let private cloneScope (target:Target.T) =
     match target.Ast with
-    | Ast.FunctionFast(_, s, ast) -> ref !s
+    | Ast.Function(_, s, ast) -> ref !s
 
   ///
   let rec private compile (target:Target.T) =
@@ -157,9 +155,9 @@ module Core =
       Context.T.CompileFunction = compile
       Context.T.InsideWith = false
       Context.T.Scope = scope
-      Context.T.ClosureLevel = scope $ Ast.NewVars.closureLevel
-      Context.T.Variables = scope $ Ast.NewVars.variables
-      Context.T.CatchScopes = scope $ Ast.NewVars.catchScopes $ ref
+      Context.T.ClosureLevel = scope $ Ast.Utils.closureLevel
+      Context.T.Variables = scope $ Ast.Utils.variables
+      Context.T.CatchScopes = scope $ Ast.Utils.catchScopes $ ref
 
       Context.T.Labels = 
         {

@@ -23,8 +23,8 @@ module Global =
             |> Parser.parse target.Target.String 
             |> fst
 
-          let scope = ref {Ast.Scope.New with Variables = target.Closures}
-          let tree = Ast.FunctionFast(None, scope, ast)
+          let scope = ref {Ast.Utils.createFunctionScope() with Variables = target.Closures}
+          let tree = Ast.Function(None, scope, ast)
           let levels = Some(target.GlobalLevel, target.ClosureLevel)
           let env = target.Function.Env
 

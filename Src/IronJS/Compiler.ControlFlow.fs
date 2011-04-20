@@ -8,7 +8,7 @@ open IronJS.Dlr.Operators
 open IronJS.Compiler
 open IronJS.Compiler.Context
 
-module ControlFlow =
+module internal ControlFlow =
 
   //----------------------------------------------------------------------------
   // 11.12 conditional

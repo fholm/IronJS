@@ -10,12 +10,9 @@ open System.Globalization
 open IronJS
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.ExtensionMethods
 open IronJS.DescriptorAttrs
 
 module Date =
-
-  open IronJS.FSharpOperators
 
   module private Formats = 
     let full = "ddd, dd MMM yyyy HH':'mm':'ss 'GMT'zzz"
@@ -60,7 +57,7 @@ module Date =
       match args.Length with
       | 0 -> f.Env.NewDate(DT.Now.ToLocalTime())
       | 1 -> 
-        let value = args.[0].ToPrimitive()
+        let value = args.[0] |> TC.ToPrimitive
 
         match value.Tag with
         | TypeTags.String ->
@@ -72,23 +69,23 @@ module Date =
             else f.Env.NewDate(localZeroDate())
 
         | _ -> 
-          let value = value.ToNumber()
+          let value = value |> TC.ToNumber
           f.Env.NewDate(value |> DateObject.TicksToDateTime)
 
       | _ ->
         let mutable date = localZeroDate()
 
         //Year and Month
-        let mutable year = args.[0].ToInt32() - 1
+        let mutable year = (args.[0] |> TC.ToInt32) - 1
         if year < 100 then year <- year + 1900
         date <- date.AddYears(year)
-        date <- date.AddMonths(args.[1].ToInt32())
+        date <- date.AddMonths(args.[1] |> TC.ToInt32)
 
-        if args.Length > 2 then date <- date.AddDays(args.[2].ToNumber() - 1.0)
-        if args.Length > 3 then date <- date.AddHours(args.[3].ToNumber())
-        if args.Length > 4 then date <- date.AddMinutes(args.[4].ToNumber())
-        if args.Length > 5 then date <- date.AddSeconds(args.[5].ToNumber())
-        if args.Length > 6 then date <- date.AddMilliseconds(args.[6].ToNumber())
+        if args.Length > 2 then date <- date.AddDays((args.[2] |> TC.ToNumber) - 1.0)
+        if args.Length > 3 then date <- date.AddHours(args.[3] |> TC.ToNumber)
+        if args.Length > 4 then date <- date.AddMinutes(args.[4] |> TC.ToNumber)
+        if args.Length > 5 then date <- date.AddSeconds(args.[5] |> TC.ToNumber)
+        if args.Length > 6 then date <- date.AddMilliseconds(args.[6] |> TC.ToNumber)
 
         f.Env.NewDate(date)
 
@@ -160,8 +157,6 @@ module Date =
       let setSeconds (value:double) (d:DT) = d.AddSeconds(-(d.Second |> double)).AddSeconds(value)
       let setMilliseconds (value:double) (d:DT) = 
         d.AddMilliseconds(-(d.Millisecond |> double)).AddMilliseconds(value)
-
-    open IronJS.FSharpOperators
 
     let private toStringGeneric (o:CO) (format:string) culture =
       o.CastTo<DO>().Date.ToLocalTime().ToString(Formats.full, culture) |> BV.Box

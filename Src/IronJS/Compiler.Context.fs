@@ -66,7 +66,7 @@ module Target =
     env |> create ast Mode.Global None
 
 ///
-module Labels = 
+module internal Labels = 
 
   type LabelGroup =
     Map<string, int * Dlr.Label> * Map<int, Dlr.Label> ref
@@ -113,7 +113,7 @@ module Labels =
       }
 
 ///
-module Parameters =
+module internal Parameters =
     
   ///
   type T = {
@@ -147,7 +147,7 @@ module Parameters =
     (t |> environment) .-> "Return"
 
 ///
-module Context = 
+module internal Context = 
   
   type T = {
     CompileFunction : Target.T -> Delegate
@@ -167,7 +167,7 @@ module Context =
     member x.Env = x.Parameters |> Parameters.environment
     member x.Globals = x.Parameters |> Parameters.globals
     member x.ReturnBox = x.Parameters |> Parameters.returnBox
-    member x.DynamicLookup = x.Scope |> Ast.NewVars.hasDynamicLookup || x.InsideWith
+    member x.DynamicLookup = x.Scope |> Ast.Utils.hasDynamicLookup || x.InsideWith
     member x.Compile ast = x.Compiler x ast
 
   ///
@@ -192,7 +192,8 @@ module Context =
 type Ctx = Context.T
 
 ///
-type [<AllowNullLiteral>] EvalTarget() = 
+[<AllowNullLiteral>] 
+type EvalTarget() = 
   [<DefaultValue>] val mutable Target : BV
   [<DefaultValue>] val mutable GlobalLevel : int
   [<DefaultValue>] val mutable ClosureLevel : int

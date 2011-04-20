@@ -9,7 +9,7 @@ open IronJS.Compiler
 open IronJS.Dlr.Operators
 
 ///
-module Scope =
+module internal Scope =
 
   /// 12.10 the with statement
   let with' (ctx:Ctx) init tree =
@@ -51,7 +51,7 @@ module Scope =
   ///
   let private getAst (ctx:Ctx) =
     match ctx.Target.Ast with
-    | Ast.FunctionFast(_, _, ast) -> ast
+    | Ast.Function(_, _, ast) -> ast
     | _ -> failwith "Top node must be of type FunctionFast" 
 
   /// 
@@ -59,7 +59,7 @@ module Scope =
     
     let initFunction = 
       function
-      | _, (Ast.FunctionFast(Some name, scope, body) as func) ->
+      | _, (Ast.Function(Some name, scope, body) as func) ->
         Function.create ctx scope func $ f ctx name
 
     (!ctx.Scope).Functions
@@ -106,7 +106,7 @@ module Scope =
 
     /// Initializes the private scope storage
     let private initPrivateScope (ctx:Ctx) =
-      match ctx.Scope $ Ast.NewVars.privateCount with
+      match ctx.Scope $ Ast.Utils.privateCount with
       | 0 -> Dlr.void'
       | n -> ctx.Parameters.PrivateScope .= Dlr.newArrayBoundsT<BV> !!!n
 
@@ -115,7 +115,7 @@ module Scope =
       let functionSharedScope = 
         ctx.Parameters.Function .-> "SharedScope"
 
-      match ctx.Scope $ Ast.NewVars.sharedCount with
+      match ctx.Scope $ Ast.Utils.sharedCount with
       | 0 -> Dlr.assign ctx.Parameters.SharedScope functionSharedScope
       | n -> 
         Dlr.block [] [
@@ -154,7 +154,7 @@ module Scope =
     ///
     let private fromThisScope (ctx:Ctx) (_, var:Ast.Variable) =
       let globalLevel = 
-        ctx.Scope $ Ast.NewVars.globalLevel
+        ctx.Scope $ Ast.Utils.globalLevel
 
       match var with
       | Ast.Shared(_, g, _) when g <> globalLevel -> false
@@ -165,7 +165,7 @@ module Scope =
       match (!ctx.Scope).SelfReference with
       | None -> Dlr.void'
       | Some name -> 
-        match ctx.Scope $ Ast.NewVars.variables $ Map.tryFind name with
+        match ctx.Scope $ Ast.Utils.variables $ Map.tryFind name with
         | None -> Dlr.void'
         | Some variable ->
           match variable with
@@ -179,9 +179,9 @@ module Scope =
 
     ///
     let private initArgumentsObject f (ctx:Ctx) =
-      if ctx.Scope |> Ast.NewVars.hasArgumentsObject then
+      if ctx.Scope |> Ast.Utils.hasArgumentsObject then
         
-        match ctx.Scope |> Ast.NewVars.variables |> Map.find "arguments" with
+        match ctx.Scope |> Ast.Utils.variables |> Map.find "arguments" with
         | Ast.Private storageIndex ->
           
           let storage = 
@@ -202,14 +202,14 @@ module Scope =
 
         let parameterMap = 
           ctx.Scope 
-          |> Ast.NewVars.parameterNames 
+          |> Ast.Utils.parameterNames 
           |> List.mapi (fun i n -> n, i)
           |> List.filter (fun (_, i) -> i < parameterCount)
           |> Map.ofList
 
         let parameters, defined =
           ctx.Scope
-          |> Ast.NewVars.variables
+          |> Ast.Utils.variables
           |> Map.partition (fun name _ -> parameterMap.ContainsKey name)
 
         let initParameter (name, var:Ast.Variable) =
@@ -247,7 +247,7 @@ module Scope =
       let private initArguments (ctx:Ctx) storage =
         
         let parameterCount = 
-          ctx.Scope $ Ast.NewVars.parameterCount
+          ctx.Scope $ Ast.Utils.parameterCount
 
         let unnamedParameters =
 
@@ -316,12 +316,12 @@ module Scope =
 
         let parameterSet = 
           ctx.Scope 
-          $ Ast.NewVars.parameterNames 
+          $ Ast.Utils.parameterNames 
           $ Set.ofList
 
         let parameters, defined =
           ctx.Scope
-          $ Ast.NewVars.variables
+          $ Ast.Utils.variables
           $ Map.partition (fun name _ -> parameterSet $ Set.contains name)
 
         let defined =
@@ -333,7 +333,7 @@ module Scope =
 
         let parameters =
           ctx.Scope 
-          |> Ast.NewVars.parameterNames 
+          |> Ast.Utils.parameterNames 
           |> List.mapi initParameter
           |> Dlr.Fast.blockOfSeq []
 

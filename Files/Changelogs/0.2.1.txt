@@ -8,3 +8,16 @@ John Gietzen
 
 * Exceptions of type System.Reflection.TargetInvocationException caused by a JavaScript-catchable 
   error will no longer bubble up to the hosting code.
+* Renamed the Ast.NewVars module to Ast.Utils
+* Renamed Ast.Scope to Ast.FunctionScope
+* Renamed Ast.Tree.FunctionFast to Ast.Tree.Function
+* Renamed CLR2.fs to Legacy.fs
+* Removed the ExtensionMethods module
+* Removed GlobalScopeHelper.GetGlobalNice and Compiler.Identifier.getValueNice
+* Removed the FSharpOperators module
+* Changed several types, modules, constructors, methods and functions from public to private/internal
+* Added new constructor to CommonObject that only takes two parameters (Environment and CommonObject)
+  and defaults to using the Environment.Maps.Base property schema
+* Converted Ast.GlobalScope, Ast.EvalMode and Ast.LookupMode from enums to unions
+* Added the RequireQualifiedAccess attribute to several modules and removed alot of cryptic aliases
+  to keep the code clean and easy to read

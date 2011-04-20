@@ -5,7 +5,7 @@ open IronJS.Compiler
 open IronJS.Dlr.Operators
   
 ///
-module Identifier =
+module internal Identifier =
 
   /// 
   let getVariableStorage (name:string) (ctx:Ctx)  =
@@ -29,7 +29,7 @@ module Identifier =
         Some(expr, storageIndex, globalLevel)
 
       | Ast.Private(storageIndex) ->
-        let globalLevel = ctx.Scope |> Ast.NewVars.globalLevel
+        let globalLevel = ctx.Scope |> Ast.Utils.globalLevel
         Some(ctx.Parameters.PrivateScope :> Dlr.Expr, storageIndex, globalLevel)
 
     | None ->
@@ -68,15 +68,6 @@ module Identifier =
       match ctx |> getVariableStorage name with
       | Some(expr, i, _) -> Dlr.Ext.static' (Dlr.indexInt expr i)
       | _ -> Dlr.callStaticT<GlobalScopeHelper> "GetGlobal" [ctx.Globals; !!!name]
-
-  /// 
-  let getValueNice (ctx:Ctx) name =
-    match ctx.DynamicLookup with
-    | true -> getValueDynamic ctx name
-    | _ -> 
-      match ctx |> getVariableStorage name with
-      | Some(expr, i, _) -> Dlr.Ext.static' (Dlr.indexInt expr i)
-      | _ ->  Dlr.callStaticT<GlobalScopeHelper> "GetGlobalNice" [ctx.Globals; !!!name]
         
   ///
   let setValue (ctx:Ctx) name value =
@@ -86,9 +77,7 @@ module Identifier =
       match ctx |> getVariableStorage name with
       | None -> 
         let name = Dlr.const' name
-        Utils.tempBlock value (fun value ->
-          [ctx.Globals |> Object.Property.put name value]
-        )
+        Utils.tempBlock value (fun value -> [ctx.Globals |> Object.Property.put name value])
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)

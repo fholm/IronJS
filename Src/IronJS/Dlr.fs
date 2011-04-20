@@ -615,9 +615,6 @@ module Dlr =
     let inline (!!!) x = const' x
     let inline (!@) x = Ext.unwrap x
 
-    // Dynamic bind operator for accessing fields
-    let (?) (expr:Expr) field = propertyOrField expr field
-
     // Dot operator for binding field access
     let (.->) a b = propertyOrField a b
 

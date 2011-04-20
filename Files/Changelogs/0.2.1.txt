@@ -1,0 +1,10 @@
+# IronJS 0.2.1
+
+## Thanks to
+
+John Gietzen 
+
+## Changelog
+
+* Exceptions of type System.Reflection.TargetInvocationException caused by a JavaScript-catchable 
+  error will no longer bubble up to the hosting code.

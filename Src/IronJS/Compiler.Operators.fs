@@ -168,34 +168,72 @@ module internal Unary =
     | _ -> failwithf "Invalid unary op %A" op
 
 module internal Binary = 
+  
+  ///
+  let private toNumber (expr:Dlr.Expr) =
+    match TypeTag.OfType(expr.Type) with
+    | TypeTags.Number -> expr
+    | TypeTags.Box ->
+      Utils.tempBlock expr (fun tmp ->
+        [
+          Dlr.ternary 
+            (Utils.Box.isNumber tmp) 
+            (Utils.Box.unboxNumber tmp)
+            (TC.ToNumber(tmp))
+        ]
+      )
 
-  //----------------------------------------------------------------------------
+    | _ -> 
+      TC.ToNumber(expr)
+
+  ///
+  let private toUInt32 (expr:Dlr.Expr) =
+    expr |> toNumber |> Dlr.castT<uint32>
+
+  ///
+  let private toInt32 (expr:Dlr.Expr) =
+    expr |> toUInt32 |> Dlr.castT<int32>
+
+  ///
+  let private numericOperator op l r : Dlr.Expr =
+    op (toNumber l) (toNumber r)
+
+  ///
+  let private bitOperator op l r : Dlr.Expr = 
+    op (toInt32 l) (toInt32 r) |> Dlr.castT<double>
+
+  ///
+  let private bitShiftOperator op convert l r : Dlr.Expr = 
+    let r = ((r |> toUInt32) .& (!!!0x1Fu)) |> Dlr.castT<int>
+    op (convert l) r |> Dlr.castT<double>
+
+  ///
   let compileExpr (ctx:Ctx) op (l:Dlr.Expr) r =
     match op with
-    | Ast.BinaryOp.Add -> Operators.add(l, r)
-    | Ast.BinaryOp.Sub -> Operators.sub(l, r)
-    | Ast.BinaryOp.Div -> Operators.div(l, r)
-    | Ast.BinaryOp.Mul -> Operators.mul(l, r)
-    | Ast.BinaryOp.Mod -> Operators.mod'(l, r)
+    | Ast.BinaryOp.Add -> Operators.add(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.Sub -> numericOperator Dlr.sub   l r
+    | Ast.BinaryOp.Div -> numericOperator Dlr.div   l r
+    | Ast.BinaryOp.Mul -> numericOperator Dlr.mul   l r
+    | Ast.BinaryOp.Mod -> numericOperator Dlr.mod'  l r
 
-    | Ast.BinaryOp.BitAnd -> Operators.bitAnd(l, r)
-    | Ast.BinaryOp.BitOr -> Operators.bitOr(l, r)
-    | Ast.BinaryOp.BitXor -> Operators.bitXOr(l, r)
-    | Ast.BinaryOp.BitShiftLeft -> Operators.bitLhs(l, r)
-    | Ast.BinaryOp.BitShiftRight -> Operators.bitRhs(l, r)
-    | Ast.BinaryOp.BitUShiftRight -> Operators.bitURhs(l, r)
+    | Ast.BinaryOp.BitAnd -> bitOperator Dlr.bAnd' l r
+    | Ast.BinaryOp.BitOr -> bitOperator Dlr.bOr' l r
+    | Ast.BinaryOp.BitXor -> bitOperator Dlr.xor l r
+    | Ast.BinaryOp.BitShiftLeft -> bitShiftOperator Dlr.lhs toInt32 l r
+    | Ast.BinaryOp.BitShiftRight -> bitShiftOperator Dlr.rhs toInt32 l r
+    | Ast.BinaryOp.BitUShiftRight -> bitShiftOperator Dlr.rhs toUInt32 l r
 
-    | Ast.BinaryOp.Eq -> Operators.eq(l, r)
-    | Ast.BinaryOp.NotEq -> Operators.notEq(l, r)
-    | Ast.BinaryOp.Same -> Operators.same(l, r)
-    | Ast.BinaryOp.NotSame -> Operators.notSame(l, r)
-    | Ast.BinaryOp.Lt -> Operators.lt(l, r)
-    | Ast.BinaryOp.LtEq -> Operators.ltEq(l, r)
-    | Ast.BinaryOp.Gt -> Operators.gt(l, r)
-    | Ast.BinaryOp.GtEq -> Operators.gtEq(l, r)
+    | Ast.BinaryOp.Eq -> Operators.eq(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.NotEq -> Operators.notEq(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.Same -> Operators.same(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.NotSame -> Operators.notSame(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.Lt -> Operators.lt(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.LtEq -> Operators.ltEq(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.Gt -> Operators.gt(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.GtEq -> Operators.gtEq(l |> Utils.box, r |> Utils.box)
 
-    | Ast.BinaryOp.In -> Operators.in'(ctx.Env, l, r)
-    | Ast.BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l, r)
+    | Ast.BinaryOp.In -> Operators.in'(ctx.Env, l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l |> Utils.box, r |> Utils.box)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
     
@@ -230,8 +268,8 @@ module internal Binary =
       ]
 
     | _ ->
-      let l = left |> ctx.Compile |> Utils.box
-      let r = right |> ctx.Compile |> Utils.box
+      let l = left |> ctx.Compile
+      let r = right |> ctx.Compile
       compileExpr ctx op l r
 
   /// Implements compilation for 11.13.1 assignment operator =

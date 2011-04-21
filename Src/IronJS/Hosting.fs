@@ -185,7 +185,6 @@ module FSharp =
 
   ///
   let executeFile path (t:T) =
-    #if FILE_CACHE
     let path = IO.Path.GetFullPath(path)
     let mutable cache = Unchecked.defaultof<DateTime * Delegate>
     let write_time = IO.File.GetLastWriteTimeUtc(path)
@@ -195,10 +194,6 @@ module FSharp =
       t.FileCache.[path] <- cache
     
     t |> run (snd cache)
-
-    #else
-    t |> run (t |> compileFile path)
-    #endif
 
   ///
   let executeFileAs<'a> path (t:T) =

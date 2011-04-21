@@ -91,7 +91,6 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="CLR2.fs" />
     <Compile Include="FSharp.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
@@ -127,6 +126,7 @@
     <Compile Include="Native.Boolean.fs" />
     <Compile Include="Native.Error.fs" />
     <Compile Include="Hosting.fs" />
+    <Compile Include="Legacy.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">

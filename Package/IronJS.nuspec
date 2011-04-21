@@ -15,8 +15,4 @@
       <frameworkAssembly assemblyName="FSharp.Core" />
     </frameworkAssemblies>
   </metadata>
-  <files>
-    <file src="IronJS.dll" target="lib" />
-    <file src="IronJS.pdb" target="lib" />
-  </files>
 </package>

@@ -22,3 +22,6 @@ last-test
 *.config
 *.trx
 Thumbs.db
+Package/Binaries/
+Package/Sources/
+Package/IronJS.snk

@@ -13,22 +13,32 @@
     <Delete Files="@(ExistingNuPkgs)" />
     <RemoveDir Directories="Binaries" Condition="Exists('Binaries\')" />
     <RemoveDir Directories="Sources" Condition="Exists('Sources\')" />
-    <MSBuild Projects="..\Src\CLR4.sln" Targets="Clean" Properties="Configuration=Release;Platform=$(Platform)" />
+    <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean" Properties="Configuration=Release;Platform=$(Platform)" />
   </Target>
 
   <Target Name="Package">
-    <!-- Build the project. -->
-    <MSBuild Projects="..\Src\CLR4.sln" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform)" />
-
-    <!-- Copy the binaries and source files local to the NuSpec files. -->
-    <MakeDir Directories="Binaries" />
+    <!-- Copy the sources to be local to NuGet. -->
     <MakeDir Directories="Sources" />
     <ItemGroup>
-      <Binaries Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
       <Sources  Include="..\Src\IronJS\**\*;" Exclude="..\Src\IronJS\bin\**\*;..\Src\IronJS\obj\**\*" />
     </ItemGroup>
-    <Copy SourceFiles="@(Binaries)" DestinationFolder="Binaries" />
     <Copy SourceFiles="@(Sources)" DestinationFolder="Sources" />
+
+    <!-- Build the project for .NET 4.0 and copy the binaries local to NuGet. -->
+    <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
+    <ItemGroup>
+      <BinariesNet40 Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
+    </ItemGroup>
+    <MakeDir Directories="Binaries\lib\net40" />
+    <Copy SourceFiles="@(BinariesNet40)" DestinationFolder="Binaries\lib\net40" />
+
+    <!-- Build the project for .NET 2.0 and copy the binaries local to NuGet. -->
+    <MSBuild Projects="..\Src\IronJS\IronJS.CLR2.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
+    <ItemGroup>
+      <BinariesNet20 Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
+    </ItemGroup>
+    <MakeDir Directories="Binaries\lib\net20" />
+    <Copy SourceFiles="@(BinariesNet20)" DestinationFolder="Binaries\lib\net20" />
 
     <!-- Extract the current version number from the AssemblyInfo of the main project. -->
     <PropertyGroup>
@@ -40,12 +50,14 @@
       <BinariesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.nuspec`).Replace(`##VERSION##`, $(Version)))</BinariesNuSpec>
       <SourcesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.Sources.nuspec`).Replace(`##VERSION##`, $(Version)))</SourcesNuSpec>
     </PropertyGroup>
-
     <WriteLinesToFile File="Binaries\IronJS.tmp.nuspec" Lines="$(BinariesNuSpec)" />
     <WriteLinesToFile File="Sources\IronJS.Sources.tmp.nuspec" Lines="$(SourcesNuSpec)" />
+
+    <!-- Package-up the NuGet packages. -->
     <Exec Command="NuGet.exe pack Binaries\IronJS.tmp.nuspec" />
     <Exec Command="NuGet.exe pack Sources\IronJS.Sources.tmp.nuspec" />
 
+    <!-- Clean-up. -->
     <RemoveDir Directories="Binaries" />
     <RemoveDir Directories="Sources" />
   </Target>

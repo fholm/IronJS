@@ -2293,6 +2293,9 @@ and TypeConverter() =
     | TypeTags.Function -> TC.ToNumber(v.Object)
     | _ -> v.Number
 
+  static member ToNumber(f:FO) : double = 
+    TC.ToNumber(f :> CO)
+
   static member ToNumber(o:CO) : double = 
     if o :? NumberObject 
       then (o :?> ValueObject).Value.Value.Number

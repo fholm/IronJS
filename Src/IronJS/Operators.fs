@@ -58,7 +58,7 @@ type Operators =
   //----------------------------------------------------------------------------
   // !
   static member not (o) = Dlr.callStaticT<Operators> "not" [o]
-  static member not (o:BoxedValue) =
+  static member not (o:BV) =
     not (TC.ToBoolean o)
     
   //----------------------------------------------------------------------------
@@ -291,6 +291,7 @@ type Operators =
         (TC.ToString l + r.String) |> BV.Box
       else
         fallback()
+
     elif l.IsString then
       if r.IsNumber then
         (l.String + TC.ToString r) |> BV.Box
@@ -298,97 +299,6 @@ type Operators =
         (l.String + r.String) |> BV.Box
       else
         fallback()
+
     else
       fallback()
-
-  //----------------------------------------------------------------------------
-  // -
-  static member sub (l, r) = Dlr.callStaticT<Operators> "sub" [l; r]
-  static member sub (l:BoxedValue, r:BoxedValue) =
-    if l.IsNumber && r.IsNumber
-      then BV.Box (l.Number - r.Number)
-      else BV.Box (TC.ToNumber l - TC.ToNumber r)
-      
-  //----------------------------------------------------------------------------
-  // /
-  static member div (l, r) = Dlr.callStaticT<Operators> "div" [l; r]
-  static member div (l:BoxedValue, r:BoxedValue) =
-    if l.IsNumber && r.IsNumber
-      then BV.Box (l.Number / r.Number)
-      else BV.Box (TC.ToNumber l / TC.ToNumber r)
-      
-  //----------------------------------------------------------------------------
-  // *
-  static member mul (l, r) = Dlr.callStaticT<Operators> "mul" [l; r]
-  static member mul (l:BoxedValue, r:BoxedValue) =
-    if l.IsNumber && r.IsNumber
-      then BV.Box (l.Number * r.Number)
-      else BV.Box (TC.ToNumber l * TC.ToNumber r)
-      
-  //----------------------------------------------------------------------------
-  // %
-  static member mod' (l, r) = Dlr.callStaticT<Operators> "mod'" [l; r]
-  static member mod' (l:BoxedValue, r:BoxedValue) =
-    if l.IsNumber && r.IsNumber
-      then BV.Box (l.Number % r.Number)
-      else BV.Box (TC.ToNumber l % TC.ToNumber r)
-    
-  //----------------------------------------------------------------------------
-  // &
-  static member bitAnd (l, r) = Dlr.callStaticT<Operators> "bitAnd" [l; r]
-  static member bitAnd (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToInt32 l
-    let r = TC.ToInt32 r
-    (l &&& r) |> double
-    
-  //----------------------------------------------------------------------------
-  // |
-  static member bitOr (l, r) = Dlr.callStaticT<Operators> "bitOr" [l; r]
-  static member bitOr (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToInt32 l
-    let r = TC.ToInt32 r
-    (l ||| r) |> double
-    
-  //----------------------------------------------------------------------------
-  // ^
-  static member bitXOr (l, r) = Dlr.callStaticT<Operators> "bitXOr" [l; r]
-  static member bitXOr (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToInt32 l
-    let r = TC.ToInt32 r
-    (l ^^^ r) |> double
-    
-  //----------------------------------------------------------------------------
-  // <<
-  static member bitLhs (l, r) = Dlr.callStaticT<Operators> "bitLhs" [l; r]
-  static member bitLhs (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToInt32 l
-    let r = TC.ToUInt32 r &&& 0x1Fu
-    (l <<< int r) |> double
-    
-  //----------------------------------------------------------------------------
-  // >>
-  static member bitRhs (l, r) = Dlr.callStaticT<Operators> "bitRhs" [l; r]
-  static member bitRhs (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToInt32 l
-    let r = TC.ToUInt32 r &&& 0x1Fu
-    (l >>> int r) |> double
-    
-  //----------------------------------------------------------------------------
-  // >>>
-  static member bitURhs (l, r) = Dlr.callStaticT<Operators> "bitURhs" [l; r]
-  static member bitURhs (l:BoxedValue, r:BoxedValue) =
-    let l = TC.ToNumber l
-    let r = TC.ToNumber r
-    let l = TC.ToUInt32 l
-    let r = TC.ToUInt32 r &&& 0x1Fu
-    (l >>> int r) |> double

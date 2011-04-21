@@ -136,6 +136,9 @@ module Dlr =
     _tmpCounter := !_tmpCounter + 1L
     sprintf "~tmp_%x" !_tmpCounter
 
+  let tempFor (expr:Expr) =
+    param (tmpName()) expr.Type
+
   let breakBlock (expr:Expr) =
     match expr with
     | :? BlockExpression as block when block.Variables.Count = 0 -> 
@@ -521,6 +524,25 @@ module Dlr =
         let left = left |> Object.toString
         let right = right |> Object.toString
         callStaticT<string> "Concat" [left; right]
+        
+  let rec isStatic (expr:Expr) = 
+    if expr :? Parameter || expr :? ConstantExpression || expr :? DefaultExpression then
+      true
+
+    elif expr :? IndexExpression then
+      let expr = expr :?> IndexExpression
+      expr.Object |> isStatic && expr.Arguments.Count = 1 && expr.Arguments.[0] |> isStatic
+
+    elif expr :? MemberExpression then
+      let expr = expr :?> MemberExpression
+      expr.Expression |> isStatic
+
+    elif expr :? UnaryExpression then
+      let expr = expr :?> UnaryExpression
+      expr.Operand |> isStatic
+
+    else
+      false
 
   module Restrict =
     let notAtAll = Br.Empty

@@ -61,30 +61,29 @@ module Ast =
   /// The AST tree type, contains all AST nodes
   /// except Case and Default nodes for switch statements
   type Tree
-    = String of string
-    | Number of double
-    | Boolean of bool
-    | DlrExpr of Dlr.Expr
-    | This
-    | Pass
+    // Literals
+    = This
     | Null
     | Undefined
-    | Convert of uint32 * Tree
+    | String of string
+    | Number of double
+    | Boolean of bool
+    | Regex of string * string
+    | Object of (string * Tree) list
+    | Array of Tree list
+
+    // Operators
     | Unary of UnaryOp  * Tree
     | Binary of BinaryOp * Tree * Tree
     | Assign of Tree * Tree
     | CompoundAssign of BinaryOp * Tree * Tree
-    | Regex of string * string
-    | Object of (string * Tree) list
-    | Array of Tree list
-    | With of Tree * Tree
-    | Property of Tree * string
-    | Index of Tree * Tree
-    | Eval of Tree
+    | Ternary of Tree * Tree * Tree
+    | Comma of Tree * Tree
     | New of Tree * Tree list
+
+    // Statements
+    | With of Tree * Tree
     | Return of Tree
-    | Function of string option * FunctionScope ref * Tree
-    | Invoke of Tree * Tree list
     | Label of string * Tree
     | For of string option * Tree * Tree * Tree * Tree
     | ForIn of string option * Tree * Tree * Tree
@@ -93,17 +92,27 @@ module Ast =
     | Break of string option
     | Continue of string option
     | IfElse of Tree * Tree * Tree option
-    | Ternary of Tree * Tree * Tree
     | Switch of Tree * Cases list
-    | Comma of Tree * Tree
     | Try of Tree * Tree option * Tree option
     | Catch of string * Tree
     | Throw of Tree
     | Var of Tree
-    | Identifier of string
     | Block of Tree list
+
+    // Expressions
+    | Eval of Tree
+    | Identifier of string
+    | Index of Tree * Tree
+    | Property of Tree * string
+    | Invoke of Tree * Tree list
+    | Function of string option * FunctionScope ref * Tree
+
+    // Internal node types
+    | Pass
+    | DlrExpr   of Dlr.Expr
+    | Convert   of uint32 * Tree
     | Directive of Directive
-    | Line of string * int
+    | Line      of string * int
 
   /// Switch statement cases
   and Cases 
@@ -151,7 +160,7 @@ module Ast =
     SelfReference : string option
 
     Functions: Map<string, Tree>
-    Variables : VariableMap
+    Variables : Map<string, Variable>
     CatchScopes : CatchScope ref list
     ParameterNames : string list
     Globals : string Set
@@ -174,8 +183,6 @@ module Ast =
   and [<NoComparison; NoEquality>] Variable
     = Shared  of int * int * int
     | Private of int
-
-  and VariableMap = Map<string, Variable>
 
   ///
   [<RequireQualifiedAccess>]
@@ -209,8 +216,10 @@ module Ast =
     }
 
     ///
-    let createGlobalScope() =
-      {createFunctionScope()with ScopeType = ScopeType.GlobalScope}
+    let createGlobalScope() = {
+      createFunctionScope() with 
+        ScopeType = ScopeType.GlobalScope
+    }
       
     ///
     let createCatchScope name globalLevel closureLevel = ref {

@@ -196,7 +196,28 @@ module internal Binary =
 
   ///
   let private numericOperator op l r : Dlr.Expr =
-    op (toNumber l) (toNumber r)
+    let tempL = Dlr.paramT<double> "left"
+    let tempR = Dlr.paramT<double> "right"
+    let l = toNumber l
+    let r = toNumber r
+    let variables = ref []
+    let body = ref []
+
+    let realL = 
+      if l |> Dlr.isStatic then l 
+      else 
+        variables := [tempL]
+        body := [tempL .= l]
+        tempL :> Dlr.Expr
+
+    let realR = 
+      if r |> Dlr.isStatic then r 
+      else 
+        variables := tempR :: !variables
+        body := !body @ [tempR .= r]
+        tempR :> Dlr.Expr
+
+    Dlr.block !variables (!body @ [op realL realR])
 
   ///
   let private bitOperator op l r : Dlr.Expr = 

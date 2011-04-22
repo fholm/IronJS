@@ -94,9 +94,19 @@ module internal Function =
         invokeVariadic func (Some this) args
 
       else
-        let argTypes = [for (a:Dlr.Expr) in args -> a.Type]
-        let args = this :: args
-        Dlr.callGeneric func "Call" argTypes args
+        let argTypes = [|for (a:Dlr.Expr) in args -> a.Type|]
+        let invokeCacheType = Runtime.Optimizations.Utils.getInvokeInlineCache(argTypes)
+        let invokeCache = !!!invokeCacheType.GetConstructor([|typeof<Env>|]).Invoke([|ctx.Target.Environment|])
+        let cachedId = invokeCache .-> "CachedId"
+        let cachedDelegate = invokeCache .-> "CachedDelegate"
+        let metaDataId = func .-> "MetaData" .-> "Id"
+        
+        let args = func :: this :: args
+
+        Dlr.ternary
+          (cachedId .== metaDataId)
+          (Dlr.invoke cachedDelegate args)
+          (Dlr.call invokeCache "Invoke" args)
 
     //
     let invokeClr func =

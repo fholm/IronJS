@@ -143,17 +143,35 @@ module internal Object =
         [tmp.CallMember("Delete", [index])]
       )
 
-  // MemberExpression . Identifier
-  let getProperty (ctx:Ctx) object' (name:string) =
+  /// MemberExpression . Identifier
+  let getPropertyReal (ctx:Ctx) object' (name:string) throwOnMissing =
     let object' = ctx $ compile object'
+    let inlineCache = !!!Runtime.Optimizations.InlinePropertyGetCache(ctx.Target.Environment, throwOnMissing)
+    let cachedId = inlineCache .-> "CachedId"
+    let cachedIndex = inlineCache .-> "CachedIndex"
 
-    ensureObject ctx object'
-      (Property.get !!!name)
-      (fun x -> 
-        Constants.Boxed.undefined
-      )
+    match TypeTag.OfType(object'.Type) with
+    | TypeTags.Object
+    | TypeTags.Function ->
+      let objectId = object' .-> "PropertySchema" .-> "Id"
+      let properties = object' .-> "Properties"
+      Dlr.ternary
+        (objectId .== cachedId)
+        (Dlr.index properties [cachedIndex] .-> "Value")
+        (Dlr.call inlineCache "Get" [object'; !!!name])
 
-  // MemberExpression [ Expression ]
+    | _ ->
+      ensureObject ctx object'
+        (Property.get !!!name)
+        (fun x -> 
+          Constants.Boxed.undefined
+        )
+
+  ///
+  let getProperty ctx object' name =
+    getPropertyReal ctx object' name false
+
+  /// MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let index = index |> Utils.compileIndex ctx
     let object' = ctx $ compile object'

@@ -612,7 +612,7 @@ and [<AllowNullLiteral>] CommonObject =
           else cobj <- cobj.Prototype
 
       if FSharp.Utils.isNull cobj || cobj.Properties.[index].IsWritable then 
-        index <- x.CreateIndex name
+        index <- x.CreateIndex(name)
         true
 
       else
@@ -643,7 +643,6 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Put : string * BV -> unit
   default x.Put(name:string, value:BV) : unit =
-    let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
       x.Properties.[index].Value <- value
@@ -651,7 +650,6 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Put : string * obj * uint32 -> unit
   default x.Put(name:string, value:obj, tag:uint32) : unit =
-    let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
       x.Properties.[index].Value.Clr <- value
@@ -660,7 +658,6 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Put : string * double -> unit
   default x.Put(name:string, value:double) : unit =
-    let mutable holder = null
     let mutable index = 0
     if x.CanPut(name, &index) then
       x.Properties.[index].Value.Number <- value
@@ -668,7 +665,7 @@ and [<AllowNullLiteral>] CommonObject =
 
   abstract Get : string -> BV
   default x.Get(name:string) =
-    let descriptor = x.Find name
+    let descriptor = x.Find(name)
     if descriptor.HasValue 
       then descriptor.Value
       else Undefined.Boxed
@@ -1290,6 +1287,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   /// Internal length property
   let mutable length = length
 
+  let mutable isDense = dense <> null
+
   ///
   let resizeDense newCapacity =
     let newCapacity = if newCapacity = 0u then 2u else newCapacity
@@ -1397,6 +1396,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
         else
           sparse <- SparseArray.OfDense(dense)
           dense <- null
+          isDense <- false
           sparse.Put(index, value)
           x.Length <- (index + 1u)
 
@@ -1418,7 +1418,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1429,7 +1429,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1440,7 +1440,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)
 
     else 
@@ -1458,13 +1458,18 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       base.Get(string index)
 
     else
-      if x.HasIndex(index) then
-        if x.IsDense 
-          then dense.[int index].Value
-          else sparse.Get(index)
+      let ii = int index
+      if sparse |> FSharp.Utils.isNull && ii < dense.Length && dense.[ii].HasValue then
+        dense.[ii].Value
 
       else
-        x.Prototype.Get(index)
+        if x.HasIndex(index) then
+          if x.IsDense 
+            then dense.[int index].Value
+            else sparse.Get(index)
+
+        else
+          x.Prototype.Get(index)
 
   override x.Has(name:string) =
     let isUInt32, index = UInt32.TryParse(name)
@@ -1731,6 +1736,9 @@ and [<AllowNullLiteral>] FunctionObject =
   val mutable MetaData : FunctionMetaData
   val mutable SharedScope : Scope
   val mutable DynamicScope : DynamicScope
+
+  [<DefaultValue>] 
+  val mutable ReusablePrivateScope : BV array
      
   new (env:Env, id, closureScope, dynamicScope) = { 
     inherit CO(env, env.Maps.Function, env.Prototypes.Function)

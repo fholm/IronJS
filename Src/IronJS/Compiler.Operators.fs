@@ -167,6 +167,7 @@ module internal Unary =
     | Ast.UnaryOp.Minus -> minus ctx ast
     | _ -> failwithf "Invalid unary op %A" op
 
+///
 module internal Binary = 
   
   ///
@@ -196,28 +197,23 @@ module internal Binary =
 
   ///
   let private numericOperator op l r : Dlr.Expr =
-    let tempL = Dlr.paramT<double> "left"
-    let tempR = Dlr.paramT<double> "right"
-    let l = toNumber l
-    let r = toNumber r
     let variables = ref []
     let body = ref []
 
-    let realL = 
-      if l |> Dlr.isStatic then l 
-      else 
-        variables := [tempL]
-        body := [tempL .= l]
-        tempL :> Dlr.Expr
+    let getStaticExpression expr =
+      if r |> Dlr.isStatic then 
+        expr
 
-    let realR = 
-      if r |> Dlr.isStatic then r 
       else 
-        variables := tempR :: !variables
-        body := !body @ [tempR .= r]
-        tempR :> Dlr.Expr
+        let temp = Dlr.paramT<double> "~tmp"
+        variables := temp :: !variables
+        body := !body @ [temp .= expr]
+        temp :> Dlr.Expr
 
-    Dlr.block !variables (!body @ [op realL realR])
+    let l = l |> toNumber |> getStaticExpression
+    let r = r |> toNumber |> getStaticExpression
+
+    Dlr.block !variables (!body @ [op l r])
 
   ///
   let private bitOperator op l r : Dlr.Expr = 

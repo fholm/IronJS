@@ -33,20 +33,31 @@ namespace Benchmarks
 
             var basePath = new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName;
 
+#if !DISABLE_QUESTIONS
             if (ReadYesOrNo("Run SunSpider 0.9.1 benchmark, yes/no? "))
             {
+#endif
                 TestSuite sunSpider = new SunSpiderTestSuite(basePath);
                 sunSpider.Run();
+#if !DISABLE_QUESTIONS
             }
-
+#endif
+            
+#if !DISABLE_QUESTIONS
             if (ReadYesOrNo("Run V8 Benchmark v6, yes/no? "))
             {
+#endif
                 TestSuite v8Benchmark = new V8BenchMarkTestSuite(basePath);
                 v8Benchmark.Run();
-            }
 
+#if !DISABLE_QUESTIONS
+            }
+#endif
+            
+#if !DISABLE_QUESTIONS
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey(true);
+#endif
         }
     }
 }

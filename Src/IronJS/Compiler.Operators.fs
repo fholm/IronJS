@@ -4,6 +4,7 @@ open IronJS
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 open IronJS.Support.CustomOperators
+open IronJS.Support.Aliases
 
 module internal Unary =
   
@@ -195,25 +196,29 @@ module internal Binary =
   let private toInt32 (expr:Dlr.Expr) =
     expr |> toUInt32 |> Dlr.castT<int32>
 
+  /// This method is intended for internal use only 
+  /// and uses mutable lists for performance reasons
+  let private getStaticExpression (vars:Dlr.ParameterList) (body:Dlr.ExprList) expr =
+    if expr |> Dlr.isStatic then 
+      expr
+
+    else 
+      let temp = Dlr.param "~tmp" expr.Type
+      vars.Add(temp)
+      body.Add(temp .= expr)
+      temp :> Dlr.Expr
+
   ///
   let private numericOperator op l r : Dlr.Expr =
-    let variables = ref []
-    let body = ref []
+    let vars = new Dlr.ParameterList()
+    let body = new Dlr.ExprList()
 
-    let getStaticExpression expr =
-      if r |> Dlr.isStatic then 
-        expr
+    let l = l |> toNumber |> getStaticExpression vars body
+    let r = r |> toNumber |> getStaticExpression vars body
 
-      else 
-        let temp = Dlr.paramT<double> "~tmp"
-        variables := temp :: !variables
-        body := !body @ [temp .= expr]
-        temp :> Dlr.Expr
+    body.Add(op l r)
 
-    let l = l |> toNumber |> getStaticExpression
-    let r = r |> toNumber |> getStaticExpression
-
-    Dlr.block !variables (!body @ [op l r])
+    Dlr.block vars body
 
   ///
   let private bitOperator op l r : Dlr.Expr = 
@@ -225,29 +230,148 @@ module internal Binary =
     op (convert l) r |> Dlr.castT<double>
 
   ///
+  let private addOperator l r =
+    let vars = new Dlr.ParameterList()
+    let body = new Dlr.ExprList()
+    
+    let l = l |> getStaticExpression vars body
+    let r = r |> getStaticExpression vars body
+
+    body.Add (
+      match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
+      | TypeTags.Number, TypeTags.Number -> Dlr.add l r
+      | TypeTags.Number, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber r) 
+          (Dlr.add l (Utils.Box.unboxNumber r) |> Utils.box)
+          (Operators.add (Utils.box l, Utils.box r))
+        
+      | TypeTags.Box, TypeTags.Number ->
+        Dlr.ternary (Utils.Box.isNumber l) 
+          (Dlr.add (Utils.Box.unboxNumber l) r |> Utils.box)
+          (Operators.add(Utils.box l, Utils.box r))
+
+      | TypeTags.Box, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+          (Dlr.add (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r) |> Utils.box)
+          (Operators.add(l, r))
+
+      | TypeTags.String, TypeTags.String ->
+        Dlr.Fast.String.concat l r
+
+      | TypeTags.String, _ ->
+        Dlr.Fast.String.concat l (TC.ToString(r))
+
+      | _, TypeTags.String ->
+        Dlr.Fast.String.concat (TC.ToString(l)) r
+
+      | _ ->
+        Operators.add(Utils.box l, Utils.box r)
+    )
+
+    if vars.Count = 0 && body.Count = 1 
+      then body.[0]
+      else Dlr.block vars body
+
+  ///
+  let private relationalOperator op fallback l r =
+    let vars = new Dlr.ParameterList()
+    let body = new Dlr.ExprList()
+    
+    let l = l |> getStaticExpression vars body
+    let r = r |> getStaticExpression vars body
+
+    body.Add (
+      match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
+      | TypeTags.Number, TypeTags.Number -> 
+        op l r
+
+      | TypeTags.Number, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber r) 
+          (op l (Utils.Box.unboxNumber r))
+          (fallback (Utils.box l, Utils.box r))
+
+      | TypeTags.Box, TypeTags.Number ->
+        Dlr.ternary (Utils.Box.isNumber l) 
+          (op (Utils.Box.unboxNumber l) r)
+          (fallback (Utils.box l, Utils.box r))
+
+      | TypeTags.Box, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+          (op (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r))
+          (fallback (l, r))
+
+      | _ ->
+        fallback(Utils.box l, Utils.box r)
+    )
+
+    if vars.Count = 0 && body.Count = 1 
+      then body.[0]
+      else Dlr.block vars body
+
+  ///
+  let private equalityOperator op fallback isStrict l r =
+    let vars = new Dlr.ParameterList()
+    let body = new Dlr.ExprList()
+    
+    let l  = l |> getStaticExpression vars body
+    let r = r |> getStaticExpression vars body
+
+    body.Add (
+      match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
+      | TypeTags.Box, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+          (op (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r))
+          (fallback (l, r))
+
+      | TypeTags.Number, TypeTags.Number
+      | TypeTags.String, TypeTags.String
+      | TypeTags.Bool, TypeTags.Bool ->
+        op l r
+
+      | TypeTags.Number, TypeTags.Box ->
+        Dlr.ternary (Utils.Box.isNumber r) 
+          (op l (Utils.Box.unboxNumber r))
+          (if isStrict then !!!false else fallback (Utils.box l, Utils.box r))
+
+      | TypeTags.Box, TypeTags.Number ->
+        Dlr.ternary (Utils.Box.isNumber l) 
+          (op (Utils.Box.unboxNumber l) r)
+          (if isStrict then !!!false else fallback (Utils.box l, Utils.box r))
+
+      | _ ->
+        fallback(Utils.box l, Utils.box r)
+    )
+
+    if vars.Count = 0 && body.Count = 1 
+      then body.[0]
+      else Dlr.block vars body
+
+  ///
   let compileExpr (ctx:Ctx) op (l:Dlr.Expr) r =
     match op with
-    | Ast.BinaryOp.Add -> Operators.add(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.Sub -> numericOperator Dlr.sub   l r
-    | Ast.BinaryOp.Div -> numericOperator Dlr.div   l r
-    | Ast.BinaryOp.Mul -> numericOperator Dlr.mul   l r
-    | Ast.BinaryOp.Mod -> numericOperator Dlr.mod'  l r
+    | Ast.BinaryOp.Add -> addOperator l r
+    | Ast.BinaryOp.Sub -> numericOperator Dlr.sub  l r
+    | Ast.BinaryOp.Div -> numericOperator Dlr.div  l r
+    | Ast.BinaryOp.Mul -> numericOperator Dlr.mul  l r
+    | Ast.BinaryOp.Mod -> numericOperator Dlr.mod' l r
 
     | Ast.BinaryOp.BitAnd -> bitOperator Dlr.bAnd' l r
-    | Ast.BinaryOp.BitOr -> bitOperator Dlr.bOr' l r
-    | Ast.BinaryOp.BitXor -> bitOperator Dlr.xor l r
-    | Ast.BinaryOp.BitShiftLeft -> bitShiftOperator Dlr.lhs toInt32 l r
-    | Ast.BinaryOp.BitShiftRight -> bitShiftOperator Dlr.rhs toInt32 l r
+    | Ast.BinaryOp.BitOr  -> bitOperator Dlr.bOr'  l r
+    | Ast.BinaryOp.BitXor -> bitOperator Dlr.xor   l r
+
+    | Ast.BinaryOp.BitShiftLeft   -> bitShiftOperator Dlr.lhs toInt32  l r
+    | Ast.BinaryOp.BitShiftRight  -> bitShiftOperator Dlr.rhs toInt32  l r
     | Ast.BinaryOp.BitUShiftRight -> bitShiftOperator Dlr.rhs toUInt32 l r
 
-    | Ast.BinaryOp.Eq -> Operators.eq(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.NotEq -> Operators.notEq(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.Same -> Operators.same(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.NotSame -> Operators.notSame(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.Lt -> Operators.lt(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.LtEq -> Operators.ltEq(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.Gt -> Operators.gt(l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.GtEq -> Operators.gtEq(l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq Operators.eq false l r
+    | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq Operators.notEq false l r
+    | Ast.BinaryOp.Same -> equalityOperator Dlr.eq Operators.same true l r
+    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.eq Operators.notSame true l r
+
+    | Ast.BinaryOp.Lt -> relationalOperator Dlr.lt Operators.lt l r
+    | Ast.BinaryOp.LtEq -> relationalOperator Dlr.ltEq Operators.ltEq l r
+    | Ast.BinaryOp.Gt -> relationalOperator Dlr.gt Operators.gt l r
+    | Ast.BinaryOp.GtEq -> relationalOperator Dlr.gtEq Operators.gtEq l r
 
     | Ast.BinaryOp.In -> Operators.in'(ctx.Env, l |> Utils.box, r |> Utils.box)
     | Ast.BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l |> Utils.box, r |> Utils.box)

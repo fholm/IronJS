@@ -13,9 +13,11 @@ module Dlr =
   #endif
 
   type Expr = Expression
+  type ExprList = System.Collections.Generic.List<Expr>
   type ExprType = ExpressionType
 
   type Parameter = ParameterExpression
+  type ParameterList = System.Collections.Generic.List<Parameter>
   type Lambda = LambdaExpression
 
   type Label = LabelTarget

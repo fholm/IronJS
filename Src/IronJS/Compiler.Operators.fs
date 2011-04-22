@@ -366,7 +366,7 @@ module internal Binary =
     | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq Operators.eq false l r
     | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq Operators.notEq false l r
     | Ast.BinaryOp.Same -> equalityOperator Dlr.eq Operators.same true l r
-    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.eq Operators.notSame true l r
+    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.notEq Operators.notSame true l r
 
     | Ast.BinaryOp.Lt -> relationalOperator Dlr.lt Operators.lt l r
     | Ast.BinaryOp.LtEq -> relationalOperator Dlr.ltEq Operators.ltEq l r

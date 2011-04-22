@@ -43,6 +43,7 @@
                             Height="23" HorizontalAlignment="Right" 
                             Margin="0,4,0,0" Name="runButton" VerticalAlignment="Top" 
                             Width="53" Click="runButton_Click" />
+                    <CheckBox Content="Disable Globals" Height="16" HorizontalAlignment="Right" Margin="0,-22,0,0" Name="disableGlobalsCheckbox" VerticalAlignment="Top" />
                 </Grid>
             </TabItem>
             <TabItem Header="File Loader">

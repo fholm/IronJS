@@ -135,12 +135,15 @@ namespace DebugConsole
 
         void displayGlobalVariables(CommonObject globals)
         {
-            EnvironmentVariables.Items.Clear();
-
-            foreach (var item in renderObjectProperties(globals))
+            if (!(disableGlobalsCheckbox.IsChecked ?? false))
             {
-                alreadyRendered.Clear();
-                EnvironmentVariables.Items.Add(item);
+                EnvironmentVariables.Items.Clear();
+
+                foreach (var item in renderObjectProperties(globals))
+                {
+                    alreadyRendered.Clear();
+                    EnvironmentVariables.Items.Add(item);
+                }
             }
         }
 

@@ -9,6 +9,7 @@ type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedIndex : int32
   
+  ///
   member x.Get(co:CO, name:string) =
     let mutable index = 0
 
@@ -25,6 +26,7 @@ type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =
       elif throwOnMissing then env.RaiseReferenceError(sprintf "%s is not defined" name)
       else Undefined.Boxed
 
+  ///
   member x.Get(bv:BV, name:string) : BV =
     match bv.Tag with
     | TypeTags.Function
@@ -37,6 +39,7 @@ type InlineInvokeCache(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : Func<FO, CO, BV>
 
+  ///
   member x.Invoke(func:FO, this:CO) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<Func<FO, CO, BV>>(func) 
@@ -48,6 +51,7 @@ type InlineInvokeCache<'a>(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : Func<FO, CO, 'a, BV>
 
+  ///
   member x.Invoke(func:FO, this:CO, a) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<Func<FO, CO, 'a, BV>>(func) 
@@ -59,6 +63,7 @@ type InlineInvokeCache<'a, 'b>(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : Func<FO, CO, 'a, 'b, BV>
 
+  ///
   member x.Invoke(func:FO, this:CO, a, b) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<Func<FO, CO, 'a, 'b, BV>>(func) 
@@ -70,6 +75,7 @@ type InlineInvokeCache<'a, 'b, 'c>(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : Func<FO, CO, 'a, 'b, 'c, BV>
 
+  ///
   member x.Invoke(func:FO, this:CO, a, b, c) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<Func<FO, CO, 'a, 'b, 'c, BV>>(func) 
@@ -81,6 +87,7 @@ type InlineInvokeCache<'a, 'b, 'c, 'd>(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : Func<FO, CO, 'a, 'b, 'c, 'd, BV>
 
+  ///
   member x.Invoke(func:FO, this:CO, a, b, c, d) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<Func<FO, CO, 'a, 'b, 'c, 'd, BV>>(func) 
@@ -92,6 +99,7 @@ type InlineVariadicInvokeCache(env:Env) =
   [<DefaultValue>] val mutable CachedId : uint64
   [<DefaultValue>] val mutable CachedDelegate : VariadicFunction
 
+  ///
   member x.Invoke(func:FO, this:CO, args) =
     x.CachedId <- func.MetaData.Id
     x.CachedDelegate <- func.MetaData.GetDelegate<VariadicFunction>(func) 

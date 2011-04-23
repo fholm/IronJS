@@ -96,7 +96,7 @@
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
-    <Compile Include="String.fs" />
+    <Compile Include="SuffixString.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Core.Helpers.fs" />
     <Compile Include="Operators.fs" />

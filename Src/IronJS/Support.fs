@@ -8,16 +8,6 @@ module CustomOperators =
   let inline (==) a b = Object.ReferenceEquals(a, b)
   let inline (!==) a b = not(Object.ReferenceEquals(a, b))
 
-module Attributes = 
-
-  type HiddenMethod() = inherit Attribute()
-  type HiddenProperty() = inherit Attribute()
-  type HiddenField() = inherit Attribute()
-
-  type JsArgumentsLength(length:int) =
-    inherit Attribute()
-    member x.Length = length
-
 module Aliases = 
   
   open System.Globalization

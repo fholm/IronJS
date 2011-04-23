@@ -244,7 +244,7 @@ module internal Binary =
         Dlr.ternary (Utils.Box.isNumber r) 
           (Dlr.add l (Utils.Box.unboxNumber r) |> Utils.box)
           (Operators.add (Utils.box l, Utils.box r))
-        
+
       | TypeTags.Box, TypeTags.Number ->
         Dlr.ternary (Utils.Box.isNumber l) 
           (Dlr.add (Utils.Box.unboxNumber l) r |> Utils.box)

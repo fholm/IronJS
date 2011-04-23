@@ -52,6 +52,12 @@ module FSharp =
       | [] -> f.Value
       | x::_ -> x
 
+    ///
+    let tryHead lst =
+      match lst with
+      | [] -> None
+      | x::_ -> Some x
+
   ///
   module Array =
 

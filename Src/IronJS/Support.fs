@@ -3,11 +3,14 @@
 open IronJS
 open System
 
+///
 module CustomOperators =
+
   let inline ($) a b = b a
   let inline (==) a b = Object.ReferenceEquals(a, b)
   let inline (!==) a b = not(Object.ReferenceEquals(a, b))
-
+  
+///
 module Aliases = 
   
   open System.Globalization
@@ -30,7 +33,8 @@ module Aliases =
   let NaN = Double.NaN
   let NegInf = Double.NegativeInfinity 
   let PosInf = Double.PositiveInfinity
-
+  
+///
 module Debug =
   
   let private astPrinters = new Aliases.MutableList<Action<string>>()

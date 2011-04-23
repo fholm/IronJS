@@ -2140,54 +2140,55 @@ and TypeConverter() =
   static member ToClrObject(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToClrObject" [expr]
 
-  (**)
-  static member ToObject(env:Env, o:CO) : CO = o
-  static member ToObject(env:Env, f:FO) : CO = f :> CO
+  ///
+  static member ToObject(_:Env, o:CO) : CO = 
+    o
 
   ///
-  static member ToObject(env:Env, u:Undef) : CO = 
+  static member ToObject(_:Env, f:FO) : CO = 
+    f :> CO
+
+  ///
+  static member ToObject(env:Env, _:Undef) : CO = 
     env.RaiseTypeError("Can't convert Undefined to Object")
 
   ///
-  static member ToObject(env:Env, o:obj) : CO = 
+  static member ToObject(env:Env, _:obj) : CO = 
     env.RaiseTypeError("Can't convert Null or CLR to Object")
 
-  static member ToObject(env:Env, s:string) : CO = env.NewString(s)
-  static member ToObject(env:Env, n:double) : CO = env.NewNumber(n)
-  static member ToObject(env:Env, b:bool) : CO = env.NewBoolean(b)
+  ///
+  static member ToObject(env:Env, s:string) : CO = 
+    env.NewString(s)
+
+  ///
+  static member ToObject(env:Env, n:double) : CO = 
+    env.NewNumber(n)
+
+  ///
+  static member ToObject(env:Env, b:bool) : CO = 
+    env.NewBoolean(b)
+
+  ///
   static member ToObject(env:Env, v:BV) : CO =
     match v.Tag with
     | TypeTags.Object 
-    | TypeTags.Function -> v.Object
-    
-    | TypeTags.String -> env.NewString(v.String)
-    | TypeTags.Bool -> env.NewBoolean(v.Bool)
+    | TypeTags.Function -> 
+      v.Object
+
+    | TypeTags.String -> 
+      env.NewString(v.String)
+
+    | TypeTags.Bool -> 
+      env.NewBoolean(v.Bool)
 
     | TypeTags.Undefined
     | TypeTags.Clr -> 
       env.RaiseTypeError("Can't convert Undefined, Null or CLR to Object")
 
-    | _ -> env.NewNumber(v.Number)
-    
-  //
+    | _ -> 
+      env.NewNumber(v.Number)
 
-  static member ToObjectOrGlobal(env:Env, o:CO) : CO = o
-  static member ToObjectOrGlobal(env:Env, f:FO) : CO = f :> CO
-  static member ToObjectOrGlobal(env:Env, u:Undef) : CO = env.Globals
-  static member ToObjectOrGlobal(env:Env, o:obj) : CO = env.Globals
-  static member ToObjectOrGlobal(env:Env, s:string) : CO = env.NewString(s)
-  static member ToObjectOrGlobal(env:Env, n:double) : CO = env.NewNumber(n)
-  static member ToObjectOrGlobal(env:Env, b:bool) : CO = env.NewBoolean(b)
-  static member ToObjectOrGlobal(env:Env, v:BV) : CO =
-    match v.Tag with
-    | TypeTags.Object 
-    | TypeTags.Function -> v.Object
-    | TypeTags.String -> env.NewString(v.String)
-    | TypeTags.Bool -> env.NewBoolean(v.Bool)
-    | TypeTags.Undefined
-    | TypeTags.Clr -> env.Globals
-    | _ -> env.NewNumber(v.Number)
-
+  ///
   static member ToObject(env:Dlr.Expr, expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToObject" [env; expr]
 

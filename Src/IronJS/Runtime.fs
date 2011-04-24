@@ -162,7 +162,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
         | _ -> false
 
     member x.ClrBoxed =
-      if x.IsNumber then x.Number :> obj
+      if x.IsNumber then box x.Number
       else
         match x.Tag with
         | TypeTags.Bool -> box x.Bool

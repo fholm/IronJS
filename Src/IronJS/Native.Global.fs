@@ -16,20 +16,26 @@ module Global =
     match target.Target.Tag with
     | TypeTags.String
     | TypeTags.SuffixString ->
-      
+      let env = target.Function.Env
+
       let compiled = 
-        Utils.trapSyntaxError target.Function.Env (fun () ->
-          let ast =
-            target.Function.Env 
-            |> Parser.parse (target.Target.Clr.ToString())
-            |> fst
+        Utils.trapSyntaxError env (fun () ->
+          let source = target.Target.Clr.ToString()
+          env.EvalCache.Lookup(source,
+            (lazy
+              let ast =
+                target.Function.Env 
+                |> Parser.parse source
+                |> fst
 
-          let scope = ref {Ast.Utils.createFunctionScope() with Variables = target.Closures}
-          let tree = Ast.Function(None, scope, ast)
-          let levels = Some(target.GlobalLevel, target.ClosureLevel)
-          let env = target.Function.Env
+              let scope = ref {Ast.Utils.createFunctionScope() with Variables = target.Closures}
+              let tree = Ast.Function(None, scope, ast)
+              let levels = Some(target.GlobalLevel, target.ClosureLevel)
+              let env = target.Function.Env
 
-          ast |> Core.compileEval env
+              ast |> Core.compileEval env :?> EvalCode
+            )
+          )
         )
 
       let localScope =

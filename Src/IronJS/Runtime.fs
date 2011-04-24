@@ -284,31 +284,10 @@ and [<AbstractClass>] TypeTag() =
       then TypeTags.Clr
       else o.GetType() |> TypeTag.OfType
 
-///
-and WeakCache<'TKey, 'TValue when 'TKey : equality>() =
-  let cache = new System.Collections.Generic.Dictionary<'TKey, WeakReference>()
-
-  member x.Lookup (key:'TKey) (create:unit->'TValue) =
-    let cacheHit, reference = cache.TryGetValue(key)
-    if cacheHit then
-      match reference.Target with
-      | :? 'TValue as value -> value
-      | _ ->
-        let value = create()
-        let reference = new WeakReference(value)
-        cache.[key] <- reference
-        value
-    else
-      let value = create()
-      let reference = new WeakReference(value)
-      cache.Add(key, reference)
-      value
-
 and Env = Environment
 
 ///
 and [<AllowNullLiteral>] Environment() =
-  
   static let null' =
     let mutable box = BV()
     box.Tag <- TypeTags.Clr
@@ -320,7 +299,8 @@ and [<AllowNullLiteral>] Environment() =
 
   let rnd = new System.Random()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
-  let regExpCache = new WeakCache<RegexOptions * string, Regex>()
+  let regExpCache = new Caches.WeakCache<RegexOptions * string, Regex>()
+  let evalCache = new Caches.LimitCache<string, EvalCode>(100)
 
   // We need the the special global function id 0UL to exist in 
   // the metaData dictionary but it needs not actually be there so 
@@ -340,29 +320,29 @@ and [<AllowNullLiteral>] Environment() =
 
   [<DefaultValue>] val mutable BreakPoint : 
     Action<int, int, MutableDict<string, obj>>
-
-  member internal x.RegExpCache = regExpCache
-
+    
   member x.Random = rnd
 
-  member x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
-  member x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
+  member internal x.RegExpCache = regExpCache
+  member internal x.EvalCache = evalCache
+  member internal x.NextFunctionId() = FSharp.Ref.incru64 currentFunctionId
+  member internal x.NextPropertyMapId() = FSharp.Ref.incru64 currentSchemaId
 
-  member x.GetFunctionMetaData(id:uint64) = functionMetaData.[id]
-  member x.HasFunctionMetaData(id:uint64) = functionMetaData.ContainsKey(id)
-  member x.AddFunctionMetaData(metaData:FunctionMetaData) = 
+  member internal x.GetFunctionMetaData(id:uint64) = functionMetaData.[id]
+  member internal x.HasFunctionMetaData(id:uint64) = functionMetaData.ContainsKey(id)
+  member internal x.AddFunctionMetaData(metaData:FunctionMetaData) = 
     functionMetaData.[metaData.Id] <- metaData
     
-  member x.CreateHostMetaData(functionType:FunctionType, compiler:FunctionCompiler) =
+  member internal x.CreateHostMetaData(functionType:FunctionType, compiler:FunctionCompiler) =
     let id = x.NextFunctionId()
     let metaData = new FunctionMetaData(id, functionType, compiler)
     x.AddFunctionMetaData(metaData)
     metaData
 
-  member x.CreateHostConstructorMetaData(compiler) =
+  member internal x.CreateHostConstructorMetaData(compiler) =
     x.CreateHostMetaData(FunctionType.NativeConstructor, compiler)
 
-  member x.CreateHostFunctionMetaData(compiler) =
+  member internal x.CreateHostFunctionMetaData(compiler) =
     x.CreateHostMetaData(FunctionType.NativeFunction, compiler)
 
   member x.NewObject() =
@@ -1130,7 +1110,7 @@ and [<AllowNullLiteral>]  RegExpObject =
       try
         let options = (options ||| RegexOptions.ECMAScript) &&& ~~~RegexOptions.Compiled
         let key = (options, pattern)
-        this.RegExp <- env.RegExpCache.Lookup key (fun () -> new Regex(pattern, options ||| RegexOptions.Compiled))
+        this.RegExp <- env.RegExpCache.Lookup(key, (lazy new Regex(pattern, options ||| RegexOptions.Compiled)))
 
       with
         | :? ArgumentException as e -> 

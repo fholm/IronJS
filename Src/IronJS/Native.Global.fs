@@ -14,13 +14,14 @@ module Global =
   ///
   let eval (target:Compiler.EvalTarget) =
     match target.Target.Tag with
-    | TypeTags.String ->
+    | TypeTags.String
+    | TypeTags.SuffixString ->
       
       let compiled = 
         Utils.trapSyntaxError target.Function.Env (fun () ->
           let ast =
             target.Function.Env 
-            |> Parser.parse target.Target.String 
+            |> Parser.parse (target.Target.Clr.ToString())
             |> fst
 
           let scope = ref {Ast.Utils.createFunctionScope() with Variables = target.Closures}

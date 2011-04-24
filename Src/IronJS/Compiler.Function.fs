@@ -110,7 +110,7 @@ module internal Function =
 
     //
     let invokeClr func =
-      Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+      Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()]
 
     //
     Utils.ensureFunction ctx func invokeJs invokeClr
@@ -137,7 +137,7 @@ module internal Function =
       (fun x -> 
         (Dlr.ternary
           (Dlr.isNull_Real x)
-          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [])
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()])
           (Utils.Constants.Boxed.undefined)
         )
       ))
@@ -149,7 +149,7 @@ module internal Function =
       (fun x -> 
         (Dlr.ternary
           (Dlr.isNull_Real x)
-          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [])
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()])
           (Utils.Constants.Boxed.undefined)
         )
       ))
@@ -183,7 +183,7 @@ module internal Function =
       )
 
       (fun _ -> 
-        Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] []
+        Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()]
       )
       
   /// 11.2.3 function calls

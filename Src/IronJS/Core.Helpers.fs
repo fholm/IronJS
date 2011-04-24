@@ -6,6 +6,15 @@ open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 
 ///
+module ErrorUtils =
+  
+  let private typeErrorId = ref 0UL
+
+  let nextErrorId() =
+    typeErrorId := !typeErrorId + 1UL
+    string !typeErrorId
+
+///
 module TypeUtils =
   
   ///

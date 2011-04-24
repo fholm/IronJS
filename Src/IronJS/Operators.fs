@@ -117,61 +117,85 @@ type Operators =
   // <
   static member lt (l, r) = Dlr.callStaticT<Operators> "lt" [l; r]
   static member lt (l:BV, r:BV) =
-    if l.IsNumber && r.IsNumber
-      then l.Number < r.Number
-      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
-        then l.String < r.String
-        else
-          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
-          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
-          if l'.IsString && r'.IsString
-            then l'.String < r'.String
-            else TC.ToNumber l' < TC.ToNumber r'
+    match l.Tag, r.Tag with
+    | TypeTags.String, TypeTags.SuffixString
+    | TypeTags.SuffixString, TypeTags.String ->
+      l.Clr.ToString() < r.Clr.ToString()
+
+    | _ ->
+      if l.IsNumber && r.IsNumber
+        then l.Number < r.Number
+        elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
+          then l.String < r.String
+          else
+            let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+            let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+            if l'.IsString && r'.IsString
+              then l'.String < r'.String
+              else TC.ToNumber l' < TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // <=
   static member ltEq (l, r) = Dlr.callStaticT<Operators> "ltEq" [l; r]
   static member ltEq (l:BV, r:BV) =
-    if l.IsNumber && r.IsNumber
-      then l.Number <= r.Number
-      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
-        then l.String <= r.String
-        else
-          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
-          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
-          if l'.IsString && r'.IsString
-            then l'.String <= r'.String
-            else TC.ToNumber l' <= TC.ToNumber r'
+    match l.Tag, r.Tag with
+    | TypeTags.String, TypeTags.SuffixString
+    | TypeTags.SuffixString, TypeTags.String ->
+      l.Clr.ToString() <= r.Clr.ToString()
+
+    | _ ->
+      if l.IsNumber && r.IsNumber
+        then l.Number <= r.Number
+        elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
+          then l.String <= r.String
+          else
+            let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+            let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+            if l'.IsString && r'.IsString
+              then l'.String <= r'.String
+              else TC.ToNumber l' <= TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // >
   static member gt (l, r) = Dlr.callStaticT<Operators> "gt" [l; r]
   static member gt (l:BV, r:BV) =
-    if l.IsNumber && r.IsNumber
-      then l.Number > r.Number
-      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
-        then l.String > r.String
-        else
-          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
-          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
-          if l'.IsString && r'.IsString
-            then l'.String > r'.String
-            else TC.ToNumber l' > TC.ToNumber r'
+    match l.Tag, r.Tag with
+    | TypeTags.String, TypeTags.SuffixString
+    | TypeTags.SuffixString, TypeTags.String ->
+      l.Clr.ToString() > r.Clr.ToString()
+
+    | _ ->
+      if l.IsNumber && r.IsNumber
+        then l.Number > r.Number
+        elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
+          then l.String > r.String
+          else
+            let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+            let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+            if l'.IsString && r'.IsString
+              then l'.String > r'.String
+              else TC.ToNumber l' > TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // >=
   static member gtEq (l, r) = Dlr.callStaticT<Operators> "gtEq" [l; r]
   static member gtEq (l:BV, r:BV) =
-    if l.IsNumber && r.IsNumber
-      then l.Number >= r.Number
-      elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
-        then l.String >= r.String
-        else
-          let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
-          let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
-          if l'.IsString && r'.IsString
-            then l'.String >= r'.String
-            else TC.ToNumber l' >= TC.ToNumber r'
+    match l.Tag, r.Tag with
+    | TypeTags.String, TypeTags.SuffixString
+    | TypeTags.SuffixString, TypeTags.String ->
+      l.Clr.ToString() >= r.Clr.ToString()
+
+    | _ ->
+      if l.IsNumber && r.IsNumber
+        then l.Number >= r.Number
+        elif l.Tag = TypeTags.String && r.Tag = TypeTags.String
+          then l.String >= r.String
+          else
+            let l' = TC.ToPrimitive(l, DefaultValueHint.Number)
+            let r' = TC.ToPrimitive(r, DefaultValueHint.Number)
+            if l'.IsString && r'.IsString
+              then l'.String >= r'.String
+              else TC.ToNumber l' >= TC.ToNumber r'
         
   //----------------------------------------------------------------------------
   // ==
@@ -184,6 +208,7 @@ type Operators =
       match l.Tag with
       | TypeTags.Undefined -> true
       | TypeTags.String -> l.String = r.String
+      | TypeTags.SuffixString -> l.Clr.ToString() = r.Clr.ToString()
       | TypeTags.Bool -> l.Bool = r.Bool
       | TypeTags.Clr
       | TypeTags.Function
@@ -191,56 +216,64 @@ type Operators =
       | _ -> false
 
     else
-      if l.Tag = TypeTags.Clr 
-        && l.Clr = null 
-        && r.Tag = TypeTags.Undefined then true
+      match l.Tag, r.Tag with
+      | TypeTags.String, TypeTags.SuffixString
+      | TypeTags.SuffixString, TypeTags.String ->
+        l.Clr.ToString() = r.Clr.ToString()
+
+      | _ ->
+        if l.Tag = TypeTags.Clr 
+          && l.Clr = null 
+          && r.Tag = TypeTags.Undefined then true
       
-      elif r.Tag = TypeTags.Clr 
-        && r.Clr = null 
-        && l.Tag = TypeTags.Undefined then true
+        elif r.Tag = TypeTags.Clr 
+          && r.Clr = null 
+          && l.Tag = TypeTags.Undefined then true
 
-      elif l.IsNumber && r.IsString then
-        l.Number = TC.ToNumber r.String
+        elif l.IsNumber && r.IsString then
+          l.Number = TC.ToNumber r.String
         
-      elif l.IsString && r.IsNumber then
-        TC.ToNumber l.String = r.Number
+        elif l.IsString && r.IsNumber then
+          TC.ToNumber l.String = r.Number
 
-      elif l.Tag = TypeTags.Bool then
-        let mutable l = BV.Box(TC.ToNumber l)
-        Operators.eq(l, r)
-
-      elif r.Tag = TypeTags.Bool then
-        let mutable r = BV.Box(TC.ToNumber r)
-        Operators.eq(l, r)
-
-      elif r.Tag >= TypeTags.Object then
-        match l.Tag with
-        | TypeTags.String -> 
-          let r = TC.ToPrimitive(r.Object, DefaultValueHint.None)
+        elif l.Tag = TypeTags.Bool then
+          let mutable l = BV.Box(TC.ToNumber l)
           Operators.eq(l, r)
 
-        | _ -> 
-          if l.IsNumber then
+        elif r.Tag = TypeTags.Bool then
+          let mutable r = BV.Box(TC.ToNumber r)
+          Operators.eq(l, r)
+
+        elif r.Tag >= TypeTags.Object then
+          match l.Tag with
+          | TypeTags.SuffixString
+          | TypeTags.String -> 
             let r = TC.ToPrimitive(r.Object, DefaultValueHint.None)
             Operators.eq(l, r)
-          else
-            false
 
-      elif l.Tag >= TypeTags.Object then
-        match r.Tag with
-        | TypeTags.String -> 
-          let l = TC.ToPrimitive(l.Object, DefaultValueHint.None)
-          Operators.eq(l, r)
+          | _ -> 
+            if l.IsNumber then
+              let r = TC.ToPrimitive(r.Object, DefaultValueHint.None)
+              Operators.eq(l, r)
+            else
+              false
 
-        | _ -> 
-          if r.IsNumber then
+        elif l.Tag >= TypeTags.Object then
+          match r.Tag with
+          | TypeTags.SuffixString
+          | TypeTags.String -> 
             let l = TC.ToPrimitive(l.Object, DefaultValueHint.None)
             Operators.eq(l, r)
-          else
-            false
 
-      else
-        false
+          | _ -> 
+            if r.IsNumber then
+              let l = TC.ToPrimitive(l.Object, DefaultValueHint.None)
+              Operators.eq(l, r)
+            else
+              false
+
+        else
+          false
         
   //----------------------------------------------------------------------------
   // !=
@@ -262,43 +295,47 @@ type Operators =
       | TypeTags.Clr
       | TypeTags.Function
       | TypeTags.Object -> Object.ReferenceEquals(l.Clr, r.Clr)
+      | TypeTags.SuffixString -> l.Clr.ToString() = r.Clr.ToString()
       | _ -> false
 
     else
-      false
+      match l.Tag, r.Tag with
+      | TypeTags.SuffixString, TypeTags.String -> l.Clr.ToString() = r.String
+      | TypeTags.String, TypeTags.SuffixString -> l.String = r.Clr.ToString()
+      | _ -> false
       
   //----------------------------------------------------------------------------
   // !==
   static member notSame (l, r) = Dlr.callStaticT<Operators> "notSame" [l; r]
-  static member notSame (l:BoxedValue, r:BoxedValue) =
+  static member notSame (l:BV, r:BV) =
     Operators.same(l, r) |> not
     
   //----------------------------------------------------------------------------
   // +
   static member add (l, r) = Dlr.callStaticT<Operators> "add" [l; r]
-  static member add (l:BoxedValue, r:BoxedValue) =
-    let fallback() =
-      let l' = l |> TC.ToPrimitive
-      let r' = r |> TC.ToPrimitive
-      if l'.IsString || r'.IsString 
-        then (TC.ToString l' + TC.ToString r') |> BV.Box
-        else (TC.ToNumber l' + TC.ToNumber r') |> BV.Box
+  static member add (l:BV, r:BV) =
+    let rec fallback (l:BV) (r:BV) =
+      let l = TC.ToPrimitive(l)
+      let r = TC.ToPrimitive(r)
 
-    if l.IsNumber then
-      if r.IsNumber then
-        (l.Number + r.Number) |> BV.Box
-      elif r.IsString then
-        (TC.ToString l + r.String) |> BV.Box
-      else
-        fallback()
+      match l.Tag, r.Tag with
+      | TypeTags.SuffixString, _ -> 
+        BV.Box(SuffixString.Concat(l.SuffixString, TC.ToString(r)))
 
-    elif l.IsString then
-      if r.IsNumber then
-        (l.String + TC.ToString r) |> BV.Box
-      elif r.IsString then
-        (l.String + r.String) |> BV.Box
-      else
-        fallback()
+      | TypeTags.String, _
+      | _, TypeTags.String -> 
+        BV.Box(SuffixString.Concat(TC.ToString(l), TC.ToString(r)))
 
-    else
-      fallback()
+      | _ ->
+        BV.Box(TC.ToNumber(l) + TC.ToNumber(r))
+
+    match l.Tag, r.Tag with
+    | TypeTags.SuffixString, _ -> 
+      BV.Box(SuffixString.Concat(l.SuffixString, TC.ToString(TC.ToPrimitive(r))))
+
+    | TypeTags.String, _
+    | _, TypeTags.String -> 
+      BV.Box(SuffixString.Concat(TC.ToString(TC.ToPrimitive(l)), TC.ToString(TC.ToPrimitive(r))))
+
+    | _ ->
+      fallback l r

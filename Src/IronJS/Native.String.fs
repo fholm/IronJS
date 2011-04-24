@@ -15,7 +15,7 @@ module internal String =
   let private constructor' (ctor:FO) (this:CO) (args:Args) =
     let value = 
       match args.Length with
-      | 0 -> ""
+      | 0 -> "" 
       | _ -> args.[0] |> TC.ToString
 
     match this with

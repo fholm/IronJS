@@ -187,6 +187,12 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box.Tag <- TypeTags.String
       box
 
+    static member Box(value:SuffixString) =
+      let mutable box = BV()
+      box.Clr <- value
+      box.Tag <- TypeTags.SuffixString
+      box
+
     static member Box(value:int) =
       let mutable box = BV()
       box.Number <- double value

@@ -6,6 +6,7 @@
 
 open IronJS
 open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 
 open System
 open System.Reflection
@@ -1267,13 +1268,13 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   /// Internal dense array
   let mutable dense = 
-    if length <= 16384u
+    if length <= 131072u
       then Array.zeroCreate<Descriptor>(int length)
       else null
 
   /// Internal sparse array
   let mutable sparse =
-    if length > 16384u
+    if length > 131072u
       then new SparseArray()
       else null
       
@@ -1322,9 +1323,11 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   ///
   member internal x.HasIndex(index:uint32) = 
     if index < length then
-      if x.IsDense 
-        then index < uint32 dense.Length && dense.[int index].HasValue
-        else sparse.Has(index)
+      if x.IsDense then 
+        index < uint32 dense.Length && dense.[int index].HasValue
+
+      else
+        sparse.Has(index)
 
     else
       false
@@ -1409,7 +1412,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1420,7 +1423,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1431,16 +1434,21 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)
 
     else 
       base.Put(name, value, tag)
 
   override x.Get(name:string) =
-    let isUInt32, index = UInt32.TryParse(name)
-    if isUInt32 then
+    let mutable index = 0u
+
+    if UInt32.TryParse(name, &index)then
       x.Get(index)
+
+    elif name = "length" then
+      BV.Box(length |> double)
+
     else
       base.Get(name)
 
@@ -1450,7 +1458,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
     else
       let ii = int index
-      if sparse |> FSharp.Utils.isNull && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
+      if sparse == null && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
         dense.[ii].Value
 
       else

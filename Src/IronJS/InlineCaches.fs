@@ -22,9 +22,15 @@ type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =
 
     else
       let descriptor = co.Find(name)
-      if descriptor.HasValue then descriptor.Value
-      elif throwOnMissing then env.RaiseReferenceError(sprintf "%s is not defined" name)
-      else Undefined.Boxed
+
+      if descriptor.HasValue then 
+        descriptor.Value
+
+      elif throwOnMissing then 
+        env.RaiseReferenceError(sprintf "%s is not defined" name)
+
+      else 
+        Undefined.Boxed
 
   ///
   member x.Get(bv:BV, name:string) : BV =
@@ -32,6 +38,39 @@ type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =
     | TypeTags.Function
     | TypeTags.Object -> x.Get(bv.Object, name)
     | _ -> TC.ToObject(env, bv).Get(name)
+
+///
+type InlinePropertyPutCache() =
+  
+  [<DefaultValue>] val mutable CachedId : uint64
+  [<DefaultValue>] val mutable CachedIndex : int32
+
+  member private x.UpdateCache(co:CO, index:int32) =
+    if not(co.PropertySchema :? DynamicSchema) then
+      x.CachedId <- co.PropertySchema.Id
+      x.CachedIndex <- index
+
+  member x.Put(co:CO, name:string, value:BV) : unit =
+    let mutable index = 0
+    if co.CanPut(name, &index) then
+      co.Properties.[index].Value <- value
+      co.Properties.[index].HasValue <- true
+      x.UpdateCache(co, index)
+
+  member x.Put(co:CO, name:string, value:obj, tag:uint32) : unit =
+    let mutable index = 0
+    if co.CanPut(name, &index) then
+      co.Properties.[index].Value.Clr <- value
+      co.Properties.[index].Value.Tag <- tag
+      co.Properties.[index].HasValue <- true
+      x.UpdateCache(co, index)
+
+  member x.Put(co:CO, name:string, value:double) : unit =
+    let mutable index = 0
+    if co.CanPut(name, &index) then
+      co.Properties.[index].Value.Number <- value
+      co.Properties.[index].HasValue <- true
+      x.UpdateCache(co, index)
     
 ///
 type InlineInvokeCache(env:Env) =

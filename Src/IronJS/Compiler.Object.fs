@@ -10,46 +10,101 @@ open IronJS.Compiler
 open IronJS.Compiler.Utils
 open IronJS.Compiler.Context
 
+///
 module internal Object =
 
+  ///
   module Property = 
 
-    //
+    ///
+    let private makeInlineCache() =
+      let cache = !!!(new Runtime.Optimizations.InlinePropertyPutCache())
+      let cacheId = cache .-> "CachedId"
+      let cacheIndex = cache .-> "CachedIndex"
+      cache, cacheId, cacheIndex
+
+    ///
     let putBox expr name value =
+      let cache, cacheId, cacheIndex = makeInlineCache()
+
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
-          let args = [name; valueTmp]
-          [call tmp "Put" args; valueTmp]
+          let args = [expr; name; valueTmp]
+
+          [
+            Dlr.ternary 
+              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
+              (Dlr.block [] [(Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value") .= valueTmp; Dlr.void'])
+              (call cache "Put" args)
+
+            valueTmp
+          ]
         )]
       )
     
-    //
+    ///
     let putRef expr name (value:Dlr.Expr) =
+      let cache, cacheId, cacheIndex = makeInlineCache()
+
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
           let tag = valueTmp.Type |> TypeTag.OfType |> Dlr.const'
-          let args = [name; valueTmp; tag]
-          [call tmp "Put" args; valueTmp]
+          let args = [expr; name; valueTmp; tag]
+
+          [
+            Dlr.ternary 
+              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
+              (Dlr.block [] [
+                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value" .-> "Clr" .= valueTmp
+                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value" .-> "Tag" .= tag
+                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "HasValue" .= !!!true
+                Dlr.void'
+              ])
+              (call cache "Put" args)
+
+            valueTmp
+          ]
         )]
       )
     
-    //
+    ///
     let putVal expr name (value:Dlr.Expr) =
+      let cache, cacheId, cacheIndex = makeInlineCache()
+
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
-          let args = [name; Utils.normalizeVal valueTmp]
-          [call tmp "Put" args; valueTmp]
+          let args = [expr; name; Utils.normalizeVal valueTmp]
+          
+          let idx = Dlr.paramT<int> "~index"
+          let prp = Dlr.paramT<Descriptor array> "~properties"
+
+          [
+            Dlr.ternary 
+              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
+
+              (Dlr.block [idx; prp] [
+                idx .= cacheIndex
+                prp .= (expr .-> "Properties")
+                Dlr.index prp [idx] .-> "Value" .-> "Number" .= (Utils.normalizeVal valueTmp)
+                Dlr.index prp [idx] .-> "HasValue" .= !!!true
+                Dlr.void'
+              ])
+
+              (call cache "Put" args)
+
+            valueTmp
+          ]
         )]
       )
 
-    //
+    ///
     let put name (value:Dlr.Expr) expr = 
       match value with
       | IsBox -> putBox expr name value
       | IsRef -> putRef expr name value
       | IsVal -> putVal expr name value
 
-    //
+    ///
     let putName expr name (value:Dlr.Expr) = 
       let name = Dlr.const' name
       match value with
@@ -57,27 +112,28 @@ module internal Object =
       | IsRef -> putRef expr name value
       | IsVal -> putVal expr name value
   
-    //
+    ///
     let get name expr = 
       tempBlockT<CO> expr (fun tmp -> 
         [call tmp "Get" [name]]
       )
 
-    //
+    ///
     let delete expr name = 
       tempBlockT<CO> expr (fun tmp -> 
         [call tmp "Delete" [name]]
       )
 
-    //
+    ///
     let attr name (attr:uint16) cobj =
       tempBlockT<CO> cobj (fun tmp -> 
         [call tmp "SetAttrs" [name; !!!attr]]
       )
    
+  ///
   module Index =
   
-    //
+    ///
     let private putConvert expr index value tag =
       Utils.tempBlockT<CommonObject> expr (fun tmp -> 
         let normalizedValue = normalizeVal value

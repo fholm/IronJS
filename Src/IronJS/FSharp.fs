@@ -10,7 +10,13 @@ module FSharp =
   module Char =
 
     ///
-    let isDigit c = c >= '0' && c <= '9'
+    let inline isDigit c = c >= '0' && c <= '9'
+
+  ///
+  module String =
+    
+    ///
+    let inline couldBeNumber (s:string) = s.Length > 0 && Char.isDigit s.[0]
 
   ///
   module Utils =

@@ -302,8 +302,8 @@ and [<AllowNullLiteral>] Environment() =
     box.Clr <- null
     box
 
-  let currentFunctionId = ref 0UL
-  let currentSchemaId = ref 0UL
+  let currentFunctionId = ref 5UL
+  let currentSchemaId = ref 5UL
 
   let rnd = new System.Random()
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
@@ -328,7 +328,7 @@ and [<AllowNullLiteral>] Environment() =
   [<DefaultValue>] val mutable BreakPoint : 
     Action<int, int, MutableDict<string, obj>>
 
-  member x.RegExpCache = regExpCache
+  member internal x.RegExpCache = regExpCache
 
   member x.Random = rnd
 
@@ -1341,13 +1341,12 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     if x.IsDense then
       
       while newLength < length do
-        let i = int (length-1u)
-
-        if length < uint32 dense.Length then
-          x.Dense.[i].Value <- BV()
-          x.Dense.[i].HasValue <- false
-
         length <- length - 1u
+        if length < uint32 dense.Length then
+          let i = int length
+          dense.[i].Value <- BV()
+          dense.[i].HasValue <- false
+
 
     else
       sparse.PutLength(newLength, length)
@@ -1418,7 +1417,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1429,7 +1428,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(value))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
 
     else
@@ -1440,7 +1439,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
       x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
-    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '0' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
+    elif name.Length > 0 && name.[0] >= '0' && name.[0] <= '9' && (string <| TC.ToUInt32(TC.ToNumber name)) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)
 
     else 
@@ -1459,7 +1458,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
     else
       let ii = int index
-      if sparse |> FSharp.Utils.isNull && ii < dense.Length && dense.[ii].HasValue then
+      if sparse |> FSharp.Utils.isNull && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
         dense.[ii].Value
 
       else
@@ -1984,7 +1983,7 @@ and [<AllowNullLiteral>] Schema =
   }
   
   new(env, indexMap, subSchemas) = {
-    Id = 0UL
+    Id = 1UL
     Env = env
     IndexMap = indexMap
     SubSchemas = subSchemas
@@ -2240,6 +2239,12 @@ and TypeConverter() =
 
   static member ToPrimitive(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToPrimitive" [expr]
+
+  static member ToPrimitiveHintNumber(expr:Dlr.Expr) : Dlr.Expr = 
+    Dlr.callStaticT<TC> "ToPrimitive" [expr; Dlr.const' DefaultValueHint.Number]
+
+  static member ToPrimitiveHintString(expr:Dlr.Expr) : Dlr.Expr = 
+    Dlr.callStaticT<TC> "ToPrimitive" [expr; Dlr.const' DefaultValueHint.String]
     
   (**)
   static member ToString(b:bool) : string = if b then "true" else "false"

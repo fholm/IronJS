@@ -14,7 +14,7 @@ type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =
     let mutable index = 0
 
     if co.PropertySchema.IndexMap.TryGetValue(name, &index) && co.Properties.[index].HasValue then
-      if co.PropertySchema.Id > 0UL then
+      if co.PropertySchema.Id > 1UL then
         x.CachedId <- co.PropertySchema.Id
         x.CachedIndex <- index
 

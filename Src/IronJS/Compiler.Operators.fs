@@ -259,10 +259,10 @@ module internal Binary =
         Dlr.Fast.String.concat l r
 
       | TypeTags.String, _ ->
-        Dlr.Fast.String.concat l (TC.ToString(r))
+        Dlr.Fast.String.concat l (TC.ToString(TC.ToPrimitiveHintNumber(r)))
 
       | _, TypeTags.String ->
-        Dlr.Fast.String.concat (TC.ToString(l)) r
+        Dlr.Fast.String.concat (TC.ToString(TC.ToPrimitiveHintNumber(l))) r
 
       | _ ->
         Operators.add(Utils.box l, Utils.box r)
@@ -309,7 +309,7 @@ module internal Binary =
       else Dlr.block vars body
 
   ///
-  let private equalityOperator op fallback isStrict l r =
+  let private equalityOperator op fallback constResult l r =
     let vars = new Dlr.ParameterList()
     let body = new Dlr.ExprList()
     
@@ -331,12 +331,19 @@ module internal Binary =
       | TypeTags.Number, TypeTags.Box ->
         Dlr.ternary (Utils.Box.isNumber r) 
           (op l (Utils.Box.unboxNumber r))
-          (if isStrict then !!!false else fallback (Utils.box l, Utils.box r))
+          (fallback(Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Number ->
         Dlr.ternary (Utils.Box.isNumber l) 
           (op (Utils.Box.unboxNumber l) r)
-          (if isStrict then !!!false else fallback (Utils.box l, Utils.box r))
+          (fallback(Utils.box l, Utils.box r))
+          (*
+          (
+            match constResult with
+            | None -> fallback (Utils.box l, Utils.box r)
+            | Some (boolean:bool) -> !!!boolean
+          )
+          *)
 
       | _ ->
         fallback(Utils.box l, Utils.box r)
@@ -363,10 +370,10 @@ module internal Binary =
     | Ast.BinaryOp.BitShiftRight  -> bitShiftOperator Dlr.rhs toInt32  l r
     | Ast.BinaryOp.BitUShiftRight -> bitShiftOperator Dlr.rhs toUInt32 l r
 
-    | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq Operators.eq false l r
-    | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq Operators.notEq false l r
-    | Ast.BinaryOp.Same -> equalityOperator Dlr.eq Operators.same true l r
-    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.notEq Operators.notSame true l r
+    | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq Operators.eq None l r
+    | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq Operators.notEq None l r
+    | Ast.BinaryOp.Same -> equalityOperator Dlr.eq Operators.same (Some true) l r
+    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.notEq Operators.notSame (Some true) l r
 
     | Ast.BinaryOp.Lt -> relationalOperator Dlr.lt Operators.lt l r
     | Ast.BinaryOp.LtEq -> relationalOperator Dlr.ltEq Operators.ltEq l r

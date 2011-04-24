@@ -270,6 +270,7 @@ and [<AbstractClass>] TypeTag() =
     if   t |> FSharp.Utils.isTypeT<bool>   then TypeTags.Bool
     elif t |> FSharp.Utils.isTypeT<double> then TypeTags.Number
     elif t |> FSharp.Utils.isTypeT<string> then TypeTags.String
+    elif t |> FSharp.Utils.isTypeT<SuffixString> then TypeTags.SuffixString
     elif t |> FSharp.Utils.isTypeT<Undef>  then TypeTags.Undefined
     elif t |> FSharp.Utils.isTypeT<FO>     then TypeTags.Function
     elif t |> FSharp.Utils.isTypeT<CO>     then TypeTags.Object

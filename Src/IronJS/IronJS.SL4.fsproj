@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{39c4fa2b-26ab-4fbd-9966-e945f3215514}</ProjectGuid>
+    <ProjectGuid>{0856bee6-6c83-422b-8ce6-829bcaf1617b}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AssemblyName>IronJS.SL4</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
@@ -52,8 +52,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Module1.fs" />
-    <None Include="Script.fsx" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Legacy.fs" />
+    <Compile Include="FSharp.fs" />
+    <Compile Include="Dlr.fs" />
+    <Compile Include="Support.fs" />
+    <Compile Include="Error.fs" />
+    <Compile Include="SuffixString.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

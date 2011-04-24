@@ -70,3 +70,10 @@ type BigIntegerParser() =
     with
       | _ -> false
 #endif
+
+#if SILVERLIGHT
+type SortedDictionary<'k, 'v>() =
+  class
+
+  end
+#endif

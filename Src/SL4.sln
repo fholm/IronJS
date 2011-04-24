@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.SL4", "IronJS\IronJS.SL4.fsproj", "{0856BEE6-6C83-422B-8CE6-829BCAF1617B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0856BEE6-6C83-422B-8CE6-829BCAF1617B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0856BEE6-6C83-422B-8CE6-829BCAF1617B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0856BEE6-6C83-422B-8CE6-829BCAF1617B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0856BEE6-6C83-422B-8CE6-829BCAF1617B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

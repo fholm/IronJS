@@ -255,15 +255,6 @@ module internal Binary =
           (Dlr.add (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r) |> Utils.box)
           (Operators.add(l, r))
 
-      | TypeTags.String, TypeTags.String ->
-        Dlr.Fast.String.concat l r
-
-      | TypeTags.String, _ ->
-        Dlr.Fast.String.concat l (TC.ToString(TC.ToPrimitiveHintNumber(r)))
-
-      | _, TypeTags.String ->
-        Dlr.Fast.String.concat (TC.ToString(TC.ToPrimitiveHintNumber(l))) r
-
       | _ ->
         Operators.add(Utils.box l, Utils.box r)
     )
@@ -337,13 +328,6 @@ module internal Binary =
         Dlr.ternary (Utils.Box.isNumber l) 
           (op (Utils.Box.unboxNumber l) r)
           (fallback(Utils.box l, Utils.box r))
-          (*
-          (
-            match constResult with
-            | None -> fallback (Utils.box l, Utils.box r)
-            | Some (boolean:bool) -> !!!boolean
-          )
-          *)
 
       | _ ->
         fallback(Utils.box l, Utils.box r)

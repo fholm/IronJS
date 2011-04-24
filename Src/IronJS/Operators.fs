@@ -245,12 +245,12 @@ type Operators =
   //----------------------------------------------------------------------------
   // !=
   static member notEq (l, r) = Dlr.callStaticT<Operators> "notEq" [l; r]
-  static member notEq (l:BoxedValue, r:BoxedValue) = not (Operators.eq(l, r))
+  static member notEq (l:BV, r:BV) = not (Operators.eq(l, r))
   
   //----------------------------------------------------------------------------
   // ===
   static member same (l, r) = Dlr.callStaticT<Operators> "same" [l; r]
-  static member same (l:BoxedValue, r:BoxedValue) = 
+  static member same (l:BV, r:BV) = 
     if l.IsNumber && r.IsNumber then
       l.Number = r.Number
 

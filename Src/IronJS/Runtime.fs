@@ -139,7 +139,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
 
     member x.IsNumber = x.Marker < Markers.Tagged
     member x.IsTagged = x.Marker > Markers.Number
-    member x.IsString = x.IsTagged && x.Tag = TypeTags.String
+    member x.IsString = x.IsTagged && (x.Tag = TypeTags.String || x.Tag = TypeTags.SuffixString)
     member x.IsObject = x.IsTagged && x.Tag >= TypeTags.Object
     member x.IsFunction = x.IsTagged && x.Tag >= TypeTags.Function
     member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool

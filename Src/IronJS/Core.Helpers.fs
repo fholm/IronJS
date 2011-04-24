@@ -82,16 +82,6 @@ module DelegateUtils =
   let getCallSiteDelegateForArguments (arguments:'a array) =
     arguments $ TypeUtils.getTypeArray $ getCallSiteDelegate
 
-/// Helper functions for the global scope
-type GlobalScopeHelper() =
-  
-  ///
-  static member GetGlobal(globals:CO, name:string) =
-    let descriptor = globals.Find(name)
-    if descriptor.HasValue 
-      then descriptor.Value
-      else globals.Env.RaiseReferenceError(sprintf "%s is not defined" name)
-
 ///
 type DynamicScopeHelpers() =
 

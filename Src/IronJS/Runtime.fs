@@ -20,9 +20,10 @@ module TypeTags =
   let [<Literal>] Number = 0xFFFFFF02u
   let [<Literal>] Clr = 0xFFFFFF03u
   let [<Literal>] String = 0xFFFFFF04u
-  let [<Literal>] Undefined = 0xFFFFFF05u
-  let [<Literal>] Object = 0xFFFFFF06u
-  let [<Literal>] Function = 0xFFFFFF07u
+  let [<Literal>] SuffixString = 0xFFFFFF05u
+  let [<Literal>] Undefined = 0xFFFFFF06u
+  let [<Literal>] Object = 0xFFFFFF07u
+  let [<Literal>] Function = 0xFFFFFF08u
 
   let Names = 
     Map.ofList [
@@ -31,6 +32,7 @@ module TypeTags =
       (Number, "number")
       (Clr, "clr")
       (String, "string")
+      (SuffixString, "string")
       (Undefined, "undefined")
       (Object, "object")
       (Function, "function")]
@@ -43,6 +45,7 @@ module BoxFields =
   let [<Literal>] Clr = "Clr"
   let [<Literal>] Undefined = "Clr"
   let [<Literal>] String = "String"
+  let [<Literal>] SuffixString = "SuffixString"
   let [<Literal>] Object = "Object"
   let [<Literal>] Function = "Func"
 
@@ -123,6 +126,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
     [<FieldOffset(0)>] val mutable Array : AO
     [<FieldOffset(0)>] val mutable Func : FO
     [<FieldOffset(0)>] val mutable String : string
+    [<FieldOffset(0)>] val mutable SuffixString : SuffixString
     [<FieldOffset(0)>] val mutable Scope : BV array
 
     // Value Types

@@ -157,15 +157,17 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       else 
         match x.Tag with
         | TypeTags.String
+        | TypeTags.SuffixString
         | TypeTags.Bool -> true
         | _ -> false
 
     member x.ClrBoxed =
-      if x.IsNumber 
-        then x.Number :> obj
-        elif x.Tag = TypeTags.Bool 
-          then x.Bool :> obj
-          else x.Clr
+      if x.IsNumber then x.Number :> obj
+      else
+        match x.Tag with
+        | TypeTags.Bool -> box x.Bool
+        | TypeTags.SuffixString -> box (x.SuffixString.ToString())
+        | _ -> x.Clr
 
     member x.Unbox<'a>() = x.ClrBoxed :?> 'a
 

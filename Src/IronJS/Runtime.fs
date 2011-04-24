@@ -1267,13 +1267,13 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   /// Internal dense array
   let mutable dense = 
-    if length <= 1024u
+    if length <= 16384u
       then Array.zeroCreate<Descriptor>(int length)
       else null
 
   /// Internal sparse array
   let mutable sparse =
-    if length > 1024u
+    if length > 16384u
       then new SparseArray()
       else null
       
@@ -1339,7 +1339,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
           let i = int length
           dense.[i].Value <- BV()
           dense.[i].HasValue <- false
-
 
     else
       sparse.PutLength(newLength, length)

@@ -2125,6 +2125,7 @@ and TypeConverter() =
   static member ToBoxedValue(d:double) = BV.Box(d)
   static member ToBoxedValue(b:bool) = BV.Box(b)
   static member ToBoxedValue(s:string) = BV.Box(s)
+  static member ToBoxedValue(s:SuffixString) = BV.Box(s)
   static member ToBoxedValue(o:CO) = BV.Box(o)
   static member ToBoxedValue(f:FO) = BV.Box(f)
   static member ToBoxedValue(u:Undef) = BV.Box(u)
@@ -2147,6 +2148,7 @@ and TypeConverter() =
     | TypeTags.Function
     | TypeTags.String
     | TypeTags.Clr -> v.Clr
+    | TypeTags.SuffixString -> box (v.Clr.ToString())
     | _ -> box v.Number
 
   static member ToClrObject(expr:Dlr.Expr) : Dlr.Expr = 
@@ -2187,6 +2189,9 @@ and TypeConverter() =
     | TypeTags.Function -> 
       v.Object
 
+    | TypeTags.SuffixString ->
+      env.NewString(v.Clr.ToString())
+
     | TypeTags.String -> 
       env.NewString(v.String)
 
@@ -2217,13 +2222,27 @@ and TypeConverter() =
   static member ToBoolean(o:CO) : bool = true
   static member ToBoolean(v:BV) : bool =
     match v.Tag with
-    | TypeTags.Bool -> v.Bool
-    | TypeTags.String -> TC.ToBoolean(v.String)
-    | TypeTags.Undefined -> false
-    | TypeTags.Clr -> TC.ToBoolean(v.Clr)
+    | TypeTags.Bool -> 
+      v.Bool
+
+    | TypeTags.String -> 
+      TC.ToBoolean(v.String)
+
+    | TypeTags.SuffixString ->
+      TC.ToBoolean(v.Clr.ToString())
+
+    | TypeTags.Undefined -> 
+      false
+
+    | TypeTags.Clr -> 
+      TC.ToBoolean(v.Clr)
+
     | TypeTags.Object
-    | TypeTags.Function -> true
-    | _ -> TC.ToBoolean(v.Number)
+    | TypeTags.Function -> 
+      true
+
+    | _ -> 
+      TC.ToBoolean(v.Number)
 
   static member ToBoolean(expr:Dlr.Expr) : Dlr.Expr = 
     Dlr.callStaticT<TC> "ToBoolean" [expr]
@@ -2248,6 +2267,7 @@ and TypeConverter() =
     | TypeTags.Clr -> TC.ToPrimitive(v.Clr, hint)
     | TypeTags.Object 
     | TypeTags.Function -> v.Object.DefaultValue(hint)
+    | TypeTags.SuffixString -> BV.Box(v.Clr.ToString())
     | _ -> v
 
   static member ToPrimitive(expr:Dlr.Expr) : Dlr.Expr = 
@@ -2297,6 +2317,7 @@ and TypeConverter() =
     match v.Tag with
     | TypeTags.Bool -> TC.ToString(v.Bool)
     | TypeTags.String -> v.String
+    | TypeTags.SuffixString -> v.Clr.ToString()
     | TypeTags.Clr -> TC.ToString(v.Clr)
     | TypeTags.Undefined -> "undefined"
     | TypeTags.Object 
@@ -2314,6 +2335,7 @@ and TypeConverter() =
     match v.Tag with
     | TypeTags.Bool -> TC.ToNumber(v.Bool)
     | TypeTags.String -> TC.ToNumber(v.String)
+    | TypeTags.SuffixString -> TC.ToNumber(v.Clr.ToString())
     | TypeTags.Clr -> TC.ToNumber(v.Clr)
     | TypeTags.Undefined -> NaN
     | TypeTags.Object 

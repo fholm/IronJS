@@ -363,7 +363,12 @@ and [<AllowNullLiteral>] Environment() =
   member x.NewString() = x.NewString(String.Empty)
   member x.NewString(value:string) =
     let string = SO(x)
-    string.Put("length", double value.Length, DescriptorAttrs.DontEnum ||| DescriptorAttrs.ReadOnly)
+
+    // A lot faster to set the property directly instead of going through Put
+    string.Properties.[0].Value.Number <- double value.Length
+    string.Properties.[0].Attributes <- DescriptorAttrs.DontEnum ||| DescriptorAttrs.ReadOnly
+    string.Properties.[0].HasValue <- true
+
     string.Value.Value.Clr <- value
     string.Value.Value.Tag <- TypeTags.String
     string.Value.HasValue <- true
@@ -1304,9 +1309,11 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   override x.ClassName = "Array"
 
+  member x.IsDense = isDense
+
   ///
   override x.GetAllIndexProperties(dict:MutableDict<uint32, BV>, l) =
-    if x.IsDense then
+    if isDense then
       let length = int length
 
       for i = 0 to length-1 do
@@ -1317,13 +1324,9 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       sparse.GetAllIndexProperties(dict, length)
 
   ///
-  member internal x.IsDense = 
-    FSharp.Utils.notNull dense 
-
-  ///
   member internal x.HasIndex(index:uint32) = 
     if index < length then
-      if x.IsDense then 
+      if isDense then 
         index < uint32 dense.Length && dense.[int index].HasValue
 
       else
@@ -1334,7 +1337,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
   ///
   member private x.PutLength(newLength) =
-    if x.IsDense then
+    if isDense then
       
       while newLength < length do
         length <- length - 1u
@@ -1364,7 +1367,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       base.Put(string index, value)
 
     else
-      if x.IsDense then
+      if isDense then
         let ii = int index
         let denseLength = uint32 dense.Length
 
@@ -1464,7 +1467,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
 
       else
         if x.HasIndex(index) then
-          if x.IsDense 
+          if isDense 
             then dense.[int index].Value
             else sparse.Get(index)
 
@@ -1509,7 +1512,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
     else
       if x.HasIndex(index) then
       
-        if x.IsDense then
+        if isDense then
           let ii = int index
           dense.[ii].Value <- BV()
           dense.[ii].HasValue <- false

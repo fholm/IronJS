@@ -7,9 +7,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "REPL", "Tools\REPL\REPL.fsp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Files", "Files", "{7E895BE2-763D-4384-B17C-4EEC183D7479}"
 	ProjectSection(SolutionItems) = preProject
-		..\IronJS.ico = ..\IronJS.ico
-		..\IronJS.png = ..\IronJS.png
-		..\IronJS.svg = ..\IronJS.svg
 		..\LICENSE.txt = ..\LICENSE.txt
 		..\README.markdown = ..\README.markdown
 		..\Files\todo.txt = ..\Files\todo.txt

@@ -415,12 +415,7 @@ module internal Binary =
 
     //Property assignment: foo.bar = 1;
     | Ast.Property(object', name) -> 
-      Utils.tempBlock value (fun value ->
-        let object' = object' |> ctx.Compile
-        let ifObj = Object.Property.put !!!name value
-        let ifClr _ = value
-        [Utils.ensureObject ctx object' ifObj ifClr]
-      )
+      Object.putMember ctx (object' |> ctx.Compile) name value
 
     //Index assignemnt: foo[0] = "bar";
     | Ast.Index(object', index) -> 
@@ -445,7 +440,7 @@ module internal Binary =
 
       Dlr.block [tmp] [
         tmp .= idx
-        assign ctx ltree (Ast.Binary(op, ltree,rtree))
+        assign ctx ltree (Ast.Binary(op, ltree, rtree))
       ]
       
     | _ ->

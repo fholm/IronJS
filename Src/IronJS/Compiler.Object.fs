@@ -15,85 +15,32 @@ module internal Object =
 
   ///
   module Property = 
-
-    ///
-    let private makeInlineCache() =
-      let cache = !!!(new Runtime.Optimizations.InlinePropertyPutCache())
-      let cacheId = cache .-> "CachedId"
-      let cacheIndex = cache .-> "CachedIndex"
-      cache, cacheId, cacheIndex
-
-    ///
+    
+    //
     let putBox expr name value =
-      let cache, cacheId, cacheIndex = makeInlineCache()
-
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
-          let args = [expr; name; valueTmp]
-
-          [
-            Dlr.ternary 
-              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
-              (Dlr.block [] [(Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value") .= valueTmp; Dlr.void'])
-              (call cache "Put" args)
-
-            valueTmp
-          ]
+          let args = [name; valueTmp]
+          [call tmp "Put" args; valueTmp]
         )]
       )
-    
-    ///
-    let putRef expr name (value:Dlr.Expr) =
-      let cache, cacheId, cacheIndex = makeInlineCache()
 
+    //
+    let putRef expr name (value:Dlr.Expr) =
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
           let tag = valueTmp.Type |> TypeTag.OfType |> Dlr.const'
-          let args = [expr; name; valueTmp; tag]
-
-          [
-            Dlr.ternary 
-              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
-              (Dlr.block [] [
-                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value" .-> "Clr" .= valueTmp
-                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "Value" .-> "Tag" .= tag
-                Dlr.index (expr .-> "Properties") [cacheIndex] .-> "HasValue" .= !!!true
-                Dlr.void'
-              ])
-              (call cache "Put" args)
-
-            valueTmp
-          ]
+          let args = [name; valueTmp; tag]
+          [call tmp "Put" args; valueTmp]
         )]
       )
-    
-    ///
-    let putVal expr name (value:Dlr.Expr) =
-      let cache, cacheId, cacheIndex = makeInlineCache()
 
+    //
+    let putVal expr name (value:Dlr.Expr) =
       tempBlockT<CO> expr (fun tmp -> 
         [tempBlock value (fun valueTmp ->
-          let args = [expr; name; Utils.normalizeVal valueTmp]
-          
-          let idx = Dlr.paramT<int> "~index"
-          let prp = Dlr.paramT<Descriptor array> "~properties"
-
-          [
-            Dlr.ternary 
-              (cacheId .== (expr .-> "PropertySchema" .-> "Id"))
-
-              (Dlr.block [idx; prp] [
-                idx .= cacheIndex
-                prp .= (expr .-> "Properties")
-                Dlr.index prp [idx] .-> "Value" .-> "Number" .= (Utils.normalizeVal valueTmp)
-                Dlr.index prp [idx] .-> "HasValue" .= !!!true
-                Dlr.void'
-              ])
-
-              (call cache "Put" args)
-
-            valueTmp
-          ]
+          let args = [name; Utils.normalizeVal valueTmp]
+          [call tmp "Put" args; valueTmp]
         )]
       )
 
@@ -104,14 +51,6 @@ module internal Object =
       | IsRef -> putRef expr name value
       | IsVal -> putVal expr name value
 
-    ///
-    let putName expr name (value:Dlr.Expr) = 
-      let name = Dlr.const' name
-      match value with
-      | IsBox -> putBox expr name value
-      | IsRef -> putRef expr name value
-      | IsVal -> putVal expr name value
-  
     ///
     let get name expr = 
       tempBlockT<CO> expr (fun tmp -> 
@@ -250,12 +189,115 @@ module internal Object =
       (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList
     )
 
+  /// MemberExpression [ Expression ]
+  let getIndex (ctx:Ctx) object' index =
+    ensureObject ctx object'
+      (fun x -> Index.get x index)
+      (fun x -> 
+        (Dlr.ternary 
+          (Dlr.callStaticT<Object> "ReferenceEquals" [Dlr.castT<obj> x; Dlr.null'])
+          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()])
+          (Utils.Constants.Boxed.undefined)
+        )
+      )
+
+  ///
+  let getIndex_Ast (ctx:Ctx) (expr:Ast.Tree) (index:Ast.Tree) =
+    getIndex ctx (ctx |> compile expr) (ctx |> compile index)
+
+  /// MemberExpression . String = Expression
+  let putMember (ctx:Ctx) (expr:Dlr.Expr) (name:string) (value:Dlr.Expr) =
+    
+    //
+    let makePropertyPutCache (env:Env) =
+      let cache = !!!(new Runtime.Optimizations.InlinePropertyPutCache())
+      let cacheId = cache .-> "CachedId"
+      let cacheIndex = cache .-> "CachedIndex"
+      cache, cacheId, cacheIndex
+
+    //
+    let fromJsObject (jsobj:Dlr.Expr) (name:string) (value:Dlr.Expr) (ctx:Ctx) =
+      let env = ctx.Target.Environment
+      let cache, cacheId, cacheIndex = env |> makePropertyPutCache
+
+      match name with
+      | "length" -> Property.put !!!name value jsobj
+      | _ ->
+        let index = Dlr.paramT<int> "~index"
+        let properties = Dlr.paramT<Descriptor array> "~properties"
+        let fallbackArgs =
+          match value with
+          | IsBox -> [|jsobj; !!!name; value|]
+          | IsVal -> [|jsobj; !!!name; value |> Utils.normalizeVal|]
+          | IsRef -> [|jsobj; !!!name; value; !!!TypeTag.OfType(value.Type)|] 
+
+        Dlr.Fast.block [||] [|
+          Dlr.ifElse 
+            (cacheId .== jsobj .-> "PropertySchema" .-> "Id")
+            (Dlr.Fast.block [|index; properties|] [|
+              properties .= jsobj .-> "Properties"
+              index .= cacheIndex
+              Utils.assign (Dlr.index properties [index] .-> "Value") value
+            |])
+            (Dlr.call cache "Put" fallbackArgs)
+          value
+        |]
+
+    //
+    let fromClrObject (clrobj:Dlr.Expr) (name:string)  (value:Dlr.Expr) (ctx:Ctx) = 
+      let env = ctx.Target.Environment
+      value
+      
+    //
+    let fromJsValue (jsval:Dlr.Expr) (name:string)  (value:Dlr.Expr) (ctx:Ctx) =
+      Dlr.Fast.block [||] [|value|]
+
+    //
+    let fromBox (expr:Dlr.Expr) (name:string) throw (ctx:Ctx) =
+      Dlr.ternary
+        (Utils.Box.isObject expr)
+        (fromJsObject (Utils.Box.unboxObject expr) name throw ctx)
+        (Dlr.ternary
+          (Utils.Box.isClr expr)
+          (fromClrObject (Utils.Box.unboxClr expr) name value ctx)
+          (fromJsValue expr name value ctx)
+        )
+
+    let body = new Dlr.ExprList(3)
+    let vars = new Dlr.ParameterList(2)
+    let expr = expr |> Utils.toStatic vars body
+    let value = value |> Utils.toStatic vars body
+
+    match TypeTag.OfType(expr.Type) with
+    | TypeTags.Box -> 
+      body.Add(fromBox expr name value ctx)
+
+    | TypeTags.Object
+    | TypeTags.Function ->
+      body.Add(fromJsObject expr name value ctx)
+
+    | TypeTags.String
+    | TypeTags.SuffixString
+    | TypeTags.Undefined
+    | TypeTags.Bool
+    | TypeTags.Number ->
+      body.Add(fromJsValue expr name value ctx)
+
+    | TypeTags.Clr ->
+      body.Add(fromClrObject expr name value ctx)
+
+    Dlr.block vars body
+
+  ///
+  let putMember_Ast (ctx:Ctx) (ast:Ast.Tree) (name:string) (value:Ast.Tree) =
+    putMember ctx (ctx |> compile ast) name (ctx |> compile value)
+
   ///
   let getMember (ctx:Ctx) (expr:Dlr.Expr) (name:string) (throwOnMissing:bool) =
     
     //
     let makePropertyGetCache (throwOnMissing:bool) (env:Env) =
-      let cache = !!!Runtime.Optimizations.InlinePropertyGetCache(env, throwOnMissing)
+      let cache = !!!(new Runtime.Optimizations.InlinePropertyGetCache(env, throwOnMissing))
       let cacheId = cache .-> "CachedId"
       let cacheIndex = cache .-> "CachedIndex"
       cache, cacheId, cacheIndex

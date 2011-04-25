@@ -170,6 +170,55 @@ module internal Utils =
     | Ast.Number n when TC.TryToIndex(n, &index) -> !!!index
     | Ast.String s when TC.TryToIndex(s, &index) -> !!!index
     | _ -> ctx.Compile indexAst
+
+  /// 
+  let toStatic (vars:Dlr.ParameterList) (body:Dlr.ExprList) (expr:Dlr.Expr) =
+    if expr |> Dlr.isStatic then
+      expr
+
+    else
+      let temp = Dlr.tempFor expr
+      vars.Add(temp)
+      body.Add(temp .= expr)
+      temp :> Dlr.Expr
+
+  ///
+  module internal Convert =
+
+    ///
+    let private convert (expr:Dlr.Expr) test unbox fallback =
+      match TypeTag.OfType(expr.Type) with
+      | TypeTags.Box ->
+        let body = new Dlr.ExprList(2)
+        let vars = new Dlr.ParameterList(1)
+        let expr = expr |> toStatic vars body
+
+        body.Add(
+          Dlr.ternary
+            (test expr)
+            (unbox expr)
+            (fallback())
+        )
+
+        if body.Count = 1 && vars.Count = 0
+          then body.[0]
+          else Dlr.block vars body
+
+      | _ ->
+        fallback()
+
+    ///
+    let toNumber (expr:Dlr.Expr) =
+      let fallback () = Dlr.callStaticT<TC> "ToNumber" [expr]
+      //convert expr Box.isNumber Box.unboxNumber fallback
+      Dlr.callStaticT<TC> "ToNumber" [expr]
+
+    ///
+    let toObject (ctx:Ctx) (expr:Dlr.Expr) =
+      let fallback () = Dlr.callStaticT<TC> "ToObject" [ctx.Env; expr]
+      //convert expr Box.isObject Box.unboxObject fallback
+      Dlr.callStaticT<TC> "ToObject" [ctx.Env; expr]
+
     
   ///
   let ensureObject (ctx:Ctx) (expr:Dlr.Expr) ifObj ifClr =

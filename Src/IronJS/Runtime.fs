@@ -1362,7 +1362,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(index:uint32, value:BV) =
     if index = System.UInt32.MaxValue then
       base.Put(string index, value)
-        
+
     else
       if x.IsDense then
         let ii = int index
@@ -1453,13 +1453,14 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       base.Get(name)
 
   override x.Get(index:uint32) =
-    if index = UInt32.MaxValue then
-      base.Get(string index)
+    let ii = int index
 
+    if sparse == null && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
+      dense.[ii].Value
+          
     else
-      let ii = int index
-      if sparse == null && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
-        dense.[ii].Value
+      if index = UInt32.MaxValue then
+        base.Get(string index)
 
       else
         if x.HasIndex(index) then
@@ -2319,15 +2320,19 @@ and TypeConverter() =
   static member ToNumber(c:obj) : double = if c = null then 0.0 else 1.0
   static member ToNumber(u:Undef) : double = NaN
   static member ToNumber(v:BV) : double =
-    match v.Tag with
-    | TypeTags.Bool -> TC.ToNumber(v.Bool)
-    | TypeTags.String -> TC.ToNumber(v.String)
-    | TypeTags.SuffixString -> TC.ToNumber(v.Clr.ToString())
-    | TypeTags.Clr -> TC.ToNumber(v.Clr)
-    | TypeTags.Undefined -> NaN
-    | TypeTags.Object 
-    | TypeTags.Function -> TC.ToNumber(v.Object)
-    | _ -> v.Number
+    if v.Marker < Markers.Tagged then
+      v.Number
+
+    else
+      match v.Tag with
+      | TypeTags.Bool -> TC.ToNumber(v.Bool)
+      | TypeTags.String -> TC.ToNumber(v.String)
+      | TypeTags.SuffixString -> TC.ToNumber(v.Clr.ToString())
+      | TypeTags.Clr -> TC.ToNumber(v.Clr)
+      | TypeTags.Undefined -> NaN
+      | TypeTags.Object 
+      | TypeTags.Function -> TC.ToNumber(v.Object)
+      | _ -> v.Number
 
   static member ToNumber(f:FO) : double = 
     TC.ToNumber(f :> CO)

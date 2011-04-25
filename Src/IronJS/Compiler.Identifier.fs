@@ -48,7 +48,7 @@ module internal Identifier =
     let dynamicArgs = getDynamicArgs ctx name
     let args = defaultArgs @ dynamicArgs
     Dlr.callStaticT<DynamicScopeHelpers> "Get" args
-          
+
   ///
   let private setValueDynamic (ctx:Ctx) name value =
     let defaultArgs = [Dlr.const' name; Utils.box value; ctx.Parameters.DynamicScope :> Dlr.Expr]
@@ -76,8 +76,7 @@ module internal Identifier =
     | _ ->
       match ctx |> getVariableStorage name with
       | None -> 
-        let name = Dlr.const' name
-        Utils.tempBlock value (fun value -> [ctx.Globals |> Object.Property.put name value])
+        Object.putMember ctx ctx.Globals name value
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)

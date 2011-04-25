@@ -99,6 +99,7 @@
     <Compile Include="SuffixString.fs" />
     <Compile Include="Caches.fs" />
     <Compile Include="Runtime.fs" />
+    <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Core.Helpers.fs" />
     <Compile Include="Operators.fs" />
     <Compile Include="InlineCaches.fs" />

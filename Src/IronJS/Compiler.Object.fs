@@ -199,34 +199,6 @@ module internal Object =
         [tmp.CallMember("Delete", [index])]
       )
 
-  /// MemberExpression . Identifier
-  let getPropertyReal (ctx:Ctx) object' (name:string) throwOnMissing =
-    let object' = ctx $ compile object'
-    let inlineCache = !!!Runtime.Optimizations.InlinePropertyGetCache(ctx.Target.Environment, throwOnMissing)
-    let cachedId = inlineCache .-> "CachedId"
-    let cachedIndex = inlineCache .-> "CachedIndex"
-
-    match TypeTag.OfType(object'.Type) with
-    | TypeTags.Object
-    | TypeTags.Function ->
-      let objectId = object' .-> "PropertySchema" .-> "Id"
-      let properties = object' .-> "Properties"
-      Dlr.ternary
-        (objectId .== cachedId)
-        (Dlr.index properties [cachedIndex] .-> "Value")
-        (Dlr.call inlineCache "Get" [object'; !!!name])
-
-    | _ ->
-      ensureObject ctx object'
-        (Property.get !!!name)
-        (fun x -> 
-          Constants.Boxed.undefined
-        )
-
-  ///
-  let getProperty ctx object' name =
-    getPropertyReal ctx object' name false
-
   /// MemberExpression [ Expression ]
   let getIndex (ctx:Ctx) object' index =
     let index = index |> Utils.compileIndex ctx
@@ -278,69 +250,78 @@ module internal Object =
       (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList
     )
 
-  ///
-  let ``[[Get]]`` (ctx:Ctx) (ast:Ast.Tree) (name:string) (throwOnMissing:bool) =
-    let expr = ctx |> compile ast
-    let cobj = Dlr.paramT<CO> "~cobj"
+  /// 
+  let toStatic (vars:Dlr.ParameterList) (body:Dlr.ExprList) (expr:Dlr.Expr) =
+    if expr |> Dlr.isStatic then
+      expr
 
-    let cache = !!!Runtime.Optimizations.InlinePropertyGetCache(ctx.Target.Environment, throwOnMissing)
+    else
+      let temp = Dlr.tempFor expr
+      vars.Add(temp)
+      body.Add(temp .= expr)
+      temp :> Dlr.Expr
+
+  ///
+  let makePropertyGetCache (throwOnMissing:bool) (env:Env) =
+    let cache = !!!Runtime.Optimizations.InlinePropertyGetCache(env, throwOnMissing)
     let cacheId = cache .-> "CachedId"
     let cacheIndex = cache .-> "CachedIndex"
+    cache, cacheId, cacheIndex
+
+  ///
+  let getMember (ctx:Ctx) (expr:Dlr.Expr) (name:string) (throwOnMissing:bool) =
+    
+    //
+    let fromJsObject (jsobj:Dlr.Expr) (name:string) throw (ctx:Ctx) =
+      let env = ctx.Target.Environment
+      let cache, cacheId, cacheIndex = env |> makePropertyGetCache throw
+
+      Dlr.ternary 
+        (cacheId .== jsobj .-> "PropertySchema" .-> "Id")
+        (Dlr.index (jsobj .-> "Properties") [cacheIndex] .-> "Value")
+        (Dlr.call cache "Get" [|jsobj; !!!name|])
+
+    //
+    let fromClrObject (clrobj:Dlr.Expr) (name:string) (ctx:Ctx) =
+      Utils.Constants.Boxed.undefined
+      
+    //
+    let fromJsValue (jsval:Dlr.Expr) (name:string) (ctx:Ctx) =
+      Dlr.call (TC.ToObject(ctx.Env, jsval)) "Get" [!!!name]
+      
+    let body = new Dlr.ExprList(2)
+    let vars = new Dlr.ParameterList(2)
+    let expr = expr |> toStatic vars body
 
     match TypeTag.OfType(expr.Type) with
     | TypeTags.Box -> 
-      let body = new Dlr.ExprList(2)
-      let vars = new Dlr.ParameterList(2)
-      let cobj = Utils.Box.unboxObject expr
-
-      let expr =
-        if expr |> Dlr.isStatic then
-          expr
-
-        else
-          let temp = Dlr.tempFor expr
-          vars.Add(temp)
-          body.Add(temp .= expr)
-          temp :> Dlr.Expr
-
       body.Add(
         Dlr.ternary
           (Utils.Box.isObject expr)
-          (Dlr.ternary 
-            (cacheId .== cobj .-> "PropertySchema" .-> "Id")
-            (Dlr.index (cobj .-> "Properties") [cacheIndex] .-> "Value")
-            (Dlr.call cache "Get" [|cobj; !!!name|])
-          )
+          (fromJsObject (Utils.Box.unboxObject expr) name throwOnMissing ctx)
           (Dlr.ternary
             (Utils.Box.isClr expr)
-            (Utils.Constants.Boxed.undefined)
-            (Dlr.call (TC.ToObject(ctx.Env, expr)) "Get" [!!!name])
+            (fromClrObject (Utils.Box.unboxClr expr) name ctx)
+            (fromJsValue expr name ctx)
           )
       )
 
-      Dlr.block vars body
-    (*
-    jsObject = null;
-    target = ...;
+    | TypeTags.Object
+    | TypeTags.Function ->
+      body.Add(fromJsObject expr name throwOnMissing ctx)
 
-    if(target.IsJsObject) {
-      jsObject = ...;
+    | TypeTags.String
+    | TypeTags.SuffixString
+    | TypeTags.Undefined
+    | TypeTags.Bool
+    | TypeTags.Number ->
+      body.Add(fromJsValue expr name ctx)
 
-      js:
-        if(jsObject.Schema.Id == cache.Id) {
-          jsObject.Properties.[cache.Index]
-        } else {
-          cache.Get(jsObject, "name")
-        }
+    | TypeTags.Clr ->
+      body.Add(fromClrObject expr name ctx)
 
-    } else {
-      if(!target.IsClr) {
-        jsObject = TC.ToObject(target, env);
-        goto js;
-      }
+    Dlr.block vars body
 
-      BV.Box(DynamicGetBinder(target.Clr, "name"))
-    }
-    *)
-
-
+  ///
+  let getMember_Ast (ctx:Ctx) (ast:Ast.Tree) (name:string) (throwOnMissing:bool) =
+    getMember ctx (ctx |> compile ast) name throwOnMissing

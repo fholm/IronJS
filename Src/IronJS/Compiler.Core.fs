@@ -102,7 +102,7 @@ module Core =
     | Ast.Object properties -> Object.literalObject ctx properties
     | Ast.Array indexes -> Object.literalArray ctx indexes
     | Ast.Index(tree, index) -> Object.getIndex ctx tree index
-    | Ast.Property(tree, name) -> Object.``[[Get]]`` ctx tree name false
+    | Ast.Property(tree, name) -> Object.getMember_Ast ctx tree name false
     
     //Functions
     | Ast.Invoke(func, args)  -> Function.invoke ctx func args

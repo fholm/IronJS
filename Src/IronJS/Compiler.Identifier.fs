@@ -67,7 +67,7 @@ module internal Identifier =
     | _ -> 
       match ctx |> getVariableStorage name with
       | Some(expr, i, _) -> Dlr.indexInt expr i
-      | _ -> Object.getPropertyReal ctx (Ast.DlrExpr ctx.Globals) name true
+      | _ -> Object.getMember ctx ctx.Globals name true
         
   ///
   let setValue (ctx:Ctx) name value =

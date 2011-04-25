@@ -609,35 +609,9 @@ module Dlr =
         #endif
       #endif
 
-  module Ext =
-
-    //-------------------------------------------------------------------------
-    // Type that flags a containing expression as static
-    type Static(expr) =
-      inherit Expr()
-
-      member x.Inner = expr
-
-      override x.NodeType = ExprType.Extension
-      override x.CanReduce = true
-      override x.Reduce() = expr
-      override x.Type = expr.Type
-        
-    let isStatic (expr:Expr) = 
-      expr :? Static || expr :? Parameter || expr :? ConstantExpression
-
-    let static' (expr:Expr) =
-      if isStatic expr
-        then expr
-        else (Static expr) :> Expr 
-
-    let unwrap (expr:Expr) = 
-      if expr :? Static then (expr :?> Static).Inner else expr
-
   module Operators =
     
     let inline (!!!) x = const' x
-    let inline (!@) x = Ext.unwrap x
 
     // Dot operator for binding field access
     let (.->) a b = propertyOrField a b

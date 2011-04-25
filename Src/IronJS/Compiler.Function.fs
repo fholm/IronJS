@@ -158,7 +158,7 @@ module internal Function =
   let createTempVars args =
     List.foldBack (fun a (temps, args:Dlr.Expr list, ass) -> 
 
-      if Dlr.Ext.isStatic a then (temps, a :: args, ass)
+      if Dlr.isStatic a then (temps, a :: args, ass)
       else
         let tmp = Dlr.param (Dlr.tmpName()) a.Type
         let assign = Dlr.assign tmp a

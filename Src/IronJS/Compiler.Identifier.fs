@@ -66,7 +66,7 @@ module internal Identifier =
     | true -> getValueDynamic ctx name
     | _ -> 
       match ctx |> getVariableStorage name with
-      | Some(expr, i, _) -> Dlr.Ext.static' (Dlr.indexInt expr i)
+      | Some(expr, i, _) -> Dlr.indexInt expr i
       | _ -> Object.getPropertyReal ctx (Ast.DlrExpr ctx.Globals) name true
         
   ///
@@ -81,4 +81,4 @@ module internal Identifier =
 
       | Some(expr, i, _) -> 
         let varExpr = (Dlr.indexInt expr i)
-        Utils.assign (Dlr.Ext.static' varExpr) value
+        Utils.assign varExpr value

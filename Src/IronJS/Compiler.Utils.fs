@@ -53,13 +53,12 @@ module internal Utils =
     let setTag expr t =
       match t with
       | TypeTags.Number -> Dlr.void'
-      | _ -> let expr = expr |> Dlr.Ext.unwrap in (expr .-> "Tag") .= !!!t
+      | _ -> (expr .-> "Tag") .= !!!t
 
     let setTagOf expr (of':Dlr.Expr) = 
       setTag expr (of'.Type |> TypeTag.OfType)
 
     let setValue (expr:Dlr.Expr) (value:Dlr.Expr)= 
-      let expr = Dlr.Ext.unwrap expr
       let field = value.Type |> TypeTag.OfType |> BV.FieldOfTag
       expr.->field .= value
       
@@ -95,7 +94,7 @@ module internal Utils =
   let unbox type' (expr:Dlr.Expr) =
     if isBoxed expr then 
       let bf = type' |> TypeTag.OfType |> BV.FieldOfTag
-      Dlr.field (Dlr.Ext.unwrap expr) bf
+      Dlr.field expr bf
 
     elif expr.Type |> FSharp.Utils.isType type' then 
       expr
@@ -116,7 +115,7 @@ module internal Utils =
 
   ///
   let tempBlock (value:Dlr.Expr) (body:Dlr.Expr -> Dlr.Expr list) =
-    if value |> Dlr.Ext.isStatic then
+    if value |> Dlr.isStatic then
       Dlr.blockSimple (body value)
 
     else
@@ -142,16 +141,16 @@ module internal Utils =
   let assign (lexpr:Dlr.Expr) rexpr = 
 
     let setBoxClrNull expr = 
-      Dlr.assign (Dlr.field (Dlr.Ext.unwrap expr) BoxFields.Clr) Dlr.null'
+      Dlr.assign (Dlr.field expr BoxFields.Clr) Dlr.null'
 
     let assignBox (lexpr:Dlr.Expr) (rexpr:Dlr.Expr) =
       if isBoxed rexpr then 
-        Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
+        Dlr.assign lexpr rexpr
 
       else
         let typeCode = rexpr.Type |> TypeTag.OfType
-        let box = Dlr.Ext.unwrap lexpr
-        let val' = Dlr.Ext.unwrap rexpr
+        let box = lexpr
+        let val' = rexpr
         if typeCode <= TypeTags.Number then
           Dlr.blockSimple
             [setBoxClrNull box; Box.setTagOf box val'; Box.setValue box val']
@@ -162,7 +161,7 @@ module internal Utils =
 
     if isBoxed lexpr 
       then assignBox lexpr rexpr 
-      else Dlr.assign (Dlr.Ext.unwrap lexpr) rexpr
+      else Dlr.assign lexpr rexpr
 
   ///
   let compileIndex (ctx:Ctx) indexAst =

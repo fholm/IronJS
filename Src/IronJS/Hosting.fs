@@ -147,6 +147,26 @@ module FSharp =
     (t |> globals).GetT<'a>(name)
 
   ///
+  let getFunctionAs<'a when 'a :> Delegate> (name:string) (t:T) =
+    let parameterTypes = FSharp.Reflection.getDelegateParameterTypesT<'a>
+    let returnType = FSharp.Reflection.getDelegateReturnTypeT<'a>
+    let jsFunctionType = DelegateUtils.getCallSiteDelegate parameterTypes
+    let jsFunction = t |> getGlobalAs<FO> name
+    let jsDelegate = jsFunction.MetaData.GetDelegate(jsFunction, jsFunctionType)
+    let parameters = parameterTypes |> Array.mapi Dlr.paramI
+
+    let args = 
+      Array.append [|Dlr.const' jsFunction; Dlr.const' t.Env.Globals|] (
+        if jsFunctionType = typeof<VariadicFunction> 
+          then [|Dlr.newArrayItemsT<BV> (parameters |> Array.map Compiler.Utils.box)|]
+          else parameters |> Seq.cast<Dlr.Expr> |> Array.ofSeq
+      )
+
+    let invoke = Dlr.callGeneric (Dlr.invoke (Dlr.const' jsDelegate) args) "Unbox" [returnType] []
+    let lambda = Dlr.lambdaT<'a> parameters invoke
+    lambda.Compile()
+
+  ///
   let internal run (compiled:Delegate) (t:T) =
     try
       compiled.DynamicInvoke(t.GlobalFunc, t |> globals)
@@ -236,6 +256,10 @@ module CSharp =
     ///
     member x.GetGlobalAs<'a>(name) =
       context |> FSharp.getGlobalAs<'a> name
+
+    ///
+    member x.GetFunctionAs<'a when 'a :> Delegate>(name) =
+      context |> FSharp.getFunctionAs<'a> name
 
     ///
     member x.Execute(source) =

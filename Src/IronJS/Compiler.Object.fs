@@ -138,21 +138,6 @@ module internal Object =
         [tmp.CallMember("Delete", [index])]
       )
 
-  /// MemberExpression [ Expression ]
-  let getIndex (ctx:Ctx) object' index =
-    let index = index |> Utils.compileIndex ctx
-    let object' = ctx $ compile object'
-
-    ensureObject ctx object'
-      (fun x -> Index.get x index)
-      (fun x -> 
-        (Dlr.ternary 
-          (Dlr.callStaticT<Object> "ReferenceEquals" [Dlr.castT<obj> x; Dlr.null'])
-          (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV>] [!!!ErrorUtils.nextErrorId()])
-          (Utils.Constants.Boxed.undefined)
-        )
-      )
-
   // 11.1.4 array initialiser
   let literalArray (ctx:Ctx) (indexes:Ast.Tree list) = 
     let length = indexes.Length |> uint32
@@ -287,12 +272,12 @@ module internal Object =
       body.Add(fromClrObject expr name value ctx)
 
     Dlr.block vars body
-
-  ///
+    
+  /// MemberExpression . String = Expression
   let putMember_Ast (ctx:Ctx) (ast:Ast.Tree) (name:string) (value:Ast.Tree) =
     putMember ctx (ctx |> compile ast) name (ctx |> compile value)
 
-  ///
+  /// MemberExpression . String
   let getMember (ctx:Ctx) (expr:Dlr.Expr) (name:string) (throwOnMissing:bool) =
     
     //
@@ -321,7 +306,7 @@ module internal Object =
       
     //
     let fromJsValue (jsval:Dlr.Expr) (name:string) (ctx:Ctx) =
-      Dlr.call (TC.ToObject(ctx.Env, jsval)) "Get" [!!!name]
+      Dlr.call (Utils.Convert.toObject ctx jsval) "Get" [!!!name]
 
     //
     let fromBox (expr:Dlr.Expr) (name:string) throw (ctx:Ctx) =
@@ -358,6 +343,6 @@ module internal Object =
 
     Dlr.block vars body
 
-  ///
+  /// MemberExpression . String
   let getMember_Ast (ctx:Ctx) (ast:Ast.Tree) (name:string) (throwOnMissing:bool) =
     getMember ctx (ctx |> compile ast) name throwOnMissing

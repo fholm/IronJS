@@ -18,7 +18,9 @@ module Dlr =
 
   type Parameter = ParameterExpression
   type ParameterList = System.Collections.Generic.List<Parameter>
+
   type Lambda = LambdaExpression
+  type Constant = ConstantExpression
 
   type Label = LabelTarget
   type Br = BindingRestrictions

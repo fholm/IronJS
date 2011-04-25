@@ -210,14 +210,19 @@ module internal Utils =
     ///
     let toNumber (expr:Dlr.Expr) =
       let fallback () = Dlr.callStaticT<TC> "ToNumber" [expr]
-      //convert expr Box.isNumber Box.unboxNumber fallback
-      Dlr.callStaticT<TC> "ToNumber" [expr]
+      match TypeTag.OfType(expr.Type) with
+      | TypeTags.Number -> expr
+      | _ -> convert expr Box.isNumber Box.unboxNumber fallback
+      //Dlr.callStaticT<TC> "ToNumber" [expr]
 
     ///
     let toObject (ctx:Ctx) (expr:Dlr.Expr) =
       let fallback () = Dlr.callStaticT<TC> "ToObject" [ctx.Env; expr]
-      //convert expr Box.isObject Box.unboxObject fallback
-      Dlr.callStaticT<TC> "ToObject" [ctx.Env; expr]
+      match TypeTag.OfType(expr.Type) with
+      | TypeTags.Function
+      | TypeTags.Object -> expr
+      | _ -> convert expr Box.isObject Box.unboxObject fallback
+      //Dlr.callStaticT<TC> "ToObject" [ctx.Env; expr]
 
     
   ///
@@ -230,7 +235,7 @@ module internal Utils =
     | TypeTags.String
     | TypeTags.Undefined
     | TypeTags.Number -> 
-      let expr = TC.ToObject(ctx.Env, expr)
+      let expr = Convert.toObject ctx expr
       tempBlock expr (fun expr -> [ifObj expr])
 
     | TypeTags.Box -> 
@@ -242,7 +247,7 @@ module internal Utils =
             (Dlr.ternary
               (Box.isClr expr)
               (ifClr (Box.unboxClr expr))
-              (ifObj (TC.ToObject(ctx.Env, expr))))
+              (ifObj (Convert.toObject ctx expr)))
         ])
 
   ///
@@ -269,14 +274,3 @@ module internal Utils =
               (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV> ] [!!!ErrorUtils.nextErrorId()])
             )
         ])
-
-  /// 
-  let toStatic (vars:Dlr.ParameterList) (body:Dlr.ExprList) (expr:Dlr.Expr) =
-    if expr |> Dlr.isStatic then
-      expr
-
-    else
-      let temp = Dlr.tempFor expr
-      vars.Add(temp)
-      body.Add(temp .= expr)
-      temp :> Dlr.Expr

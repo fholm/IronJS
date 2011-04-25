@@ -23,7 +23,7 @@ module internal Unary =
     Dlr.blockTmp expr.Type (fun tmp ->
      [
       Dlr.assign tmp expr; incrementExpr
-      TC.ToNumber(tmp :> Dlr.Expr) //HACK
+      Utils.Convert.toNumber (tmp :> Dlr.Expr) //HACK
      ] |> Seq.ofList)
 
   //----------------------------------------------------------------------------
@@ -173,20 +173,7 @@ module internal Binary =
   
   ///
   let private toNumber (expr:Dlr.Expr) =
-    match TypeTag.OfType(expr.Type) with
-    | TypeTags.Number -> expr
-    | TypeTags.Box ->
-      Utils.tempBlock expr (fun tmp ->
-        [
-          Dlr.ternary 
-            (Utils.Box.isNumber tmp) 
-            (Utils.Box.unboxNumber tmp)
-            (TC.ToNumber(tmp))
-        ]
-      )
-
-    | _ -> 
-      TC.ToNumber(expr)
+    Utils.Convert.toNumber expr
 
   ///
   let private toUInt32 (expr:Dlr.Expr) =

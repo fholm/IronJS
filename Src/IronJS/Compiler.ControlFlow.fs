@@ -119,7 +119,7 @@ module internal ControlFlow =
           
           (Dlr.assign pair 
             (Dlr.call 
-              (TypeConverter.ToObject(ctx.Env, source)) "CollectProperties" []))
+              (Utils.Convert.toObject ctx source) "CollectProperties" []))
 
           (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
           (Dlr.assign propertyState Dlr.true')

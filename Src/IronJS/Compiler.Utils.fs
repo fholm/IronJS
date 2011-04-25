@@ -220,3 +220,14 @@ module internal Utils =
               (Dlr.callGeneric ctx.Env "RaiseTypeError" [typeof<BV> ] [!!!ErrorUtils.nextErrorId()])
             )
         ])
+
+  /// 
+  let toStatic (vars:Dlr.ParameterList) (body:Dlr.ExprList) (expr:Dlr.Expr) =
+    if expr |> Dlr.isStatic then
+      expr
+
+    else
+      let temp = Dlr.tempFor expr
+      vars.Add(temp)
+      body.Add(temp .= expr)
+      temp :> Dlr.Expr

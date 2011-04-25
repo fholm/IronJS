@@ -250,27 +250,16 @@ module internal Object =
       (Dlr.assign tmp newExpr :: initExprs) @ [tmp] |> Seq.ofList
     )
 
-  /// 
-  let toStatic (vars:Dlr.ParameterList) (body:Dlr.ExprList) (expr:Dlr.Expr) =
-    if expr |> Dlr.isStatic then
-      expr
-
-    else
-      let temp = Dlr.tempFor expr
-      vars.Add(temp)
-      body.Add(temp .= expr)
-      temp :> Dlr.Expr
-
-  ///
-  let makePropertyGetCache (throwOnMissing:bool) (env:Env) =
-    let cache = !!!Runtime.Optimizations.InlinePropertyGetCache(env, throwOnMissing)
-    let cacheId = cache .-> "CachedId"
-    let cacheIndex = cache .-> "CachedIndex"
-    cache, cacheId, cacheIndex
-
   ///
   let getMember (ctx:Ctx) (expr:Dlr.Expr) (name:string) (throwOnMissing:bool) =
     
+    //
+    let makePropertyGetCache (throwOnMissing:bool) (env:Env) =
+      let cache = !!!Runtime.Optimizations.InlinePropertyGetCache(env, throwOnMissing)
+      let cacheId = cache .-> "CachedId"
+      let cacheIndex = cache .-> "CachedIndex"
+      cache, cacheId, cacheIndex
+
     //
     let fromJsObject (jsobj:Dlr.Expr) (name:string) throw (ctx:Ctx) =
       let env = ctx.Target.Environment
@@ -288,23 +277,25 @@ module internal Object =
     //
     let fromJsValue (jsval:Dlr.Expr) (name:string) (ctx:Ctx) =
       Dlr.call (TC.ToObject(ctx.Env, jsval)) "Get" [!!!name]
-      
+
+    //
+    let fromBox (expr:Dlr.Expr) (name:string) throw (ctx:Ctx) =
+      Dlr.ternary
+        (Utils.Box.isObject expr)
+        (fromJsObject (Utils.Box.unboxObject expr) name throw ctx)
+        (Dlr.ternary
+          (Utils.Box.isClr expr)
+          (fromClrObject (Utils.Box.unboxClr expr) name ctx)
+          (fromJsValue expr name ctx)
+        )
+
     let body = new Dlr.ExprList(2)
     let vars = new Dlr.ParameterList(2)
-    let expr = expr |> toStatic vars body
+    let expr = expr |> Utils.toStatic vars body
 
     match TypeTag.OfType(expr.Type) with
     | TypeTags.Box -> 
-      body.Add(
-        Dlr.ternary
-          (Utils.Box.isObject expr)
-          (fromJsObject (Utils.Box.unboxObject expr) name throwOnMissing ctx)
-          (Dlr.ternary
-            (Utils.Box.isClr expr)
-            (fromClrObject (Utils.Box.unboxClr expr) name ctx)
-            (fromJsValue expr name ctx)
-          )
-      )
+      body.Add(fromBox expr name throwOnMissing ctx)
 
     | TypeTags.Object
     | TypeTags.Function ->

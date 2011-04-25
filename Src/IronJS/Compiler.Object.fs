@@ -271,8 +271,11 @@ module internal Object =
         (Dlr.call cache "Get" [|jsobj; !!!name|])
 
     //
-    let fromClrObject (clrobj:Dlr.Expr) (name:string) (ctx:Ctx) =
-      Utils.Constants.Boxed.undefined
+    let fromClrObject (clrobj:Dlr.Expr) (name:string) (ctx:Ctx) = 
+      let env = ctx.Target.Environment
+      Dlr.callStaticT<BoxingUtils> "JsBox" [
+        Dlr.dynamic typeof<obj> (new Runtime.Binders.GetMemberBinder(name,env)) [clrobj]
+      ]
       
     //
     let fromJsValue (jsval:Dlr.Expr) (name:string) (ctx:Ctx) =
@@ -290,7 +293,7 @@ module internal Object =
         )
 
     let body = new Dlr.ExprList(2)
-    let vars = new Dlr.ParameterList(2)
+    let vars = new Dlr.ParameterList(1)
     let expr = expr |> Utils.toStatic vars body
 
     match TypeTag.OfType(expr.Type) with

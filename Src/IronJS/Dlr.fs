@@ -257,6 +257,8 @@ module Dlr =
   let lambdaAuto (parms:Parameter seq) (body:Expr) = Expr.Lambda(body, parms)
 
   let invoke (func:Expr) (args:Expr seq) = Expr.Invoke(func, args) :> Expr
+  
+  let dynamicExpr typ binder (arg:Expr) = Expr.Dynamic(binder, typ, arg) :> Expr
 
   let dynamic typ binder (args:Expr seq) = Expr.Dynamic(binder, typ, args) :> Expr
   let dynamicT<'a> = dynamic typeof<'a>

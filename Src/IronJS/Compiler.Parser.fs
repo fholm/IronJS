@@ -9,12 +9,19 @@ open IronJS.Compiler
 
 module internal Parser =
 
+  type VariableData = {
+    DefinedAt : (int * int) option
+    AccessedAt : int * int
+    AssignedFrom : Ast.Tree list
+  }
+
   type ScopeData = {
     Id : uint64
     Scope : Ast.ScopeOption
     Parent : ScopeData option
     Children : ScopeData list ref
     Variables : string Set ref
+    VariableData : Map<string, VariableData> ref
     Parameters : string list ref
     Missing : string Set ref
   } with
@@ -24,6 +31,7 @@ module internal Parser =
       Parent = parent
       Children = ref List.empty
       Variables = ref Set.empty
+      VariableData = ref Map.empty
       Parameters = ref List.empty
       Missing = ref Set.empty
     }

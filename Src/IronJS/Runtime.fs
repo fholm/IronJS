@@ -1458,7 +1458,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Get(index:uint32) =
     let ii = int index
 
-    if sparse == null && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
+    if isDense && ii >= 0 && ii < dense.Length && dense.[ii].HasValue then
       dense.[ii].Value
           
     else

@@ -182,7 +182,7 @@ module Ast =
   ///
   and [<NoComparison; NoEquality>] Variable
     = Shared  of int * int * int // storageIndex * globalLevel * closureLevel
-    | Private of int * uint32 // storageIndex * typeTags
+    | Private of int //* uint32 // storageIndex * typeTags
 
   ///
   [<RequireQualifiedAccess>]

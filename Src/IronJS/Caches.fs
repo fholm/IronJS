@@ -2,6 +2,7 @@
 
 open System
 open IronJS.Support.Aliases
+open IronJS.SplayTree
 
 ///
 type LimitCache<'k, 'v when 'k : equality>(size:int) =
@@ -19,6 +20,21 @@ type LimitCache<'k, 'v when 'k : equality>(size:int) =
 
     | Some(_, cached) -> 
       cached
+
+///
+type SplayCache<'k, 'v when 'k :> IComparable<'k> and 'v : equality>() =
+  let storage = new SplayTree<'k, 'v>()
+
+  member x.Lookup(key:'k, value:Lazy<'v>) =
+      let result = storage.TryGetValue(key)
+      if result.IsNone then
+        let result = value.Value
+        storage.[key] <- result
+        if storage.Count > 1024 then
+          storage.Trim(10)
+        result
+      else
+         result.Value
 
 ///
 type WeakCache<'TKey, 'TValue when 'TKey : equality>() =

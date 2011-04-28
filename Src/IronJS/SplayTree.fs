@@ -1,4 +1,4 @@
-﻿module SplayTree
+﻿module IronJS.SplayTree
 
 open System
 open System.Collections
@@ -76,7 +76,7 @@ type TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : 
         }
         sequence.GetEnumerator()
 
-and SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>() =
+and public SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>() =
     [<DefaultValue>]
     val mutable root:SplayTreeNode<'TKey,'TValue>
 
@@ -224,18 +224,15 @@ and SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equa
                 this.count <- this.count - 1
                 true
 
-    member this.TryGetValue(key:'TKey, value:'TValue byref) =
+    member this.TryGetValue(key:'TKey) =
         if this.count = 0 then
-            value <- Unchecked.defaultof<'TValue>
-            false
+            None
         else
             this.Splay(key)
             if key.CompareTo(this.root.Key) <> 0 then
-                value <- Unchecked.defaultof<'TValue>
-                false
+                None
             else
-                value <- this.root.Value
-                true
+                Some(this.root.Value)
 
     member this.Item
         with get(key:'TKey) =

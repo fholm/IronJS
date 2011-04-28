@@ -97,6 +97,7 @@
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
     <Compile Include="SuffixString.fs" />
+    <Compile Include="SplayTree.fs" />
     <Compile Include="Caches.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Binders.fs" />

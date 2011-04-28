@@ -18,8 +18,65 @@ type SplayTreeNode<'TKey, 'TValue> =
 
     new(key:'TKey, value:'TValue) = { Key = key; Value = value }
 
+type TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>(tree:SplayTree<'TKey, 'TValue>, version:int, backingList:IList<'T>) =
+    let tree = tree
+    let version = version
+    let backingList:IList<'T> = backingList
 
-type SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>() as this =
+    member private this.CheckVersion() =
+        if version <> tree.version then
+            raise (new InvalidOperationException("The collection has been modified."))
+
+    member this.Count
+        with get() = tree.count
+
+    member this.IsReadOnly
+        with get() = true
+
+    member this.Item
+        with get index =
+            this.CheckVersion()
+            backingList.[index]
+        and set index value =
+            raise (new NotSupportedException())
+
+    member this.IndexOf item =
+        this.CheckVersion()
+        backingList.IndexOf(item)
+
+    member this.Insert(index:int, item:'T) =
+        raise (new NotSupportedException())
+
+    member this.RemoveAt(index:int) =
+        raise (new NotSupportedException())
+
+    member this.Add(item:'T) =
+        raise (new NotSupportedException())
+
+    member this.Clear() =
+        raise (new NotSupportedException())
+
+    member this.Contains item =
+        this.CheckVersion()
+        backingList.Contains(item)
+
+    member this.CopyTo array arrayIndex =
+        this.CheckVersion()
+        backingList.CopyTo(array, arrayIndex)
+
+    member this.Remove(item:'T) =
+        raise (new NotSupportedException())
+
+    member this.GetEnumerator() : IEnumerator<'T> =
+        let sequence = seq {
+            this.CheckVersion()
+            for i in backingList do
+                yield i
+                this.CheckVersion()
+        }
+        sequence.GetEnumerator()
+
+and SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>() =
     [<DefaultValue>]
     val mutable root:SplayTreeNode<'TKey,'TValue>
 
@@ -227,7 +284,9 @@ type SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equ
         this.AsList(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value)).CopyTo(array, arrayIndex)
 
     member this.GetEnumerator() : IEnumerator<KeyValuePair<'TKey, 'TValue>> =
-        (new TiedList<KeyValuePair<'TKey, 'TValue>,'TKey, 'TValue>(this, this.version, this.AsList(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value)))).GetEnumerator()
+        let backingList = this.AsList<KeyValuePair<'TKey, 'Value>>(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value));
+        let tiedList = new TiedList<KeyValuePair<'TKey, 'Value>, 'TKey, 'TValue>(this, this.version, backingList)
+        tiedList.GetEnumerator()
 
     member private this.AsList<'TEnumerator>(selector:SplayTreeNode<'TKey, 'TValue>->'TEnumerator) : IList<'TEnumerator> =
         let result = new List<'TEnumerator>(this.count)
@@ -239,60 +298,4 @@ type SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equ
         if node.Left <> null then this.PopulateList(node.Left, list, selector)
         list.Add(selector(node))
         if node.Right <> null then this.PopulateList(node.Right, list, selector)
-
-and TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : equality>(tree:SplayTree<'TKey, 'TValue>, version:int, backingList:IList<'T>) as this =
-    let tree = tree
-    let version = version
-    let backingList = backingList
-
-    member private this.CheckVersion() =
-        if version <> tree.version then
-            raise (new InvalidOperationException("The collection has been modified."))
-
-    member this.Count
-        with get() = tree.count
-
-    member this.IsReadOnly
-        with get() = true
-
-    member this.Item
-        with get index =
-            this.CheckVersion()
-            backingList.[index]
-        and set index =
-            raise (new NotSupportedException())
-
-    member this.IndexOf item =
-        this.CheckVersion()
-        backingList.IndexOf(item)
-
-    member this.Insert(index:int, item:'T) =
-        raise (new NotSupportedException())
-
-    member this.RemoveAt(index:int) =
-        raise (new NotSupportedException())
-
-    member this.Add(item:'T) =
-        raise (new NotSupportedException())
-
-    member this.Clear() =
-        raise (new NotSupportedException())
-
-    member this.Contains item =
-        this.CheckVersion()
-        backingList.Contains(item)
-
-    member this.CopyTo array arrayIndex =
-        this.CheckVersion()
-        backingList.CopyTo(array, arrayIndex)
-
-    member this.Remove(item:'T) =
-        raise (new NotSupportedException())
-
-    member this.GetEnumerator() =
-        seq { for i in backingList do yield i }
-
-//    interface IList<'T> with
-//        member this.Count = this.Count ??
-//        ...
 

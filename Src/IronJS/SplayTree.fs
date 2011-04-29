@@ -23,6 +23,21 @@ type TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : 
     let version = version
     let backingList:IList<'T> = backingList
 
+    interface IEnumerable with
+        member this.GetEnumerator() = this.GetEnumerator() :> IEnumerator
+
+    interface ICollection<'T> with
+        member this.Add(item:'T) = this.Add(item)
+        member this.Clear() = this.Clear()
+        member this.Contains(item) = this.Contains(item)
+        member this.CopyTo(array, arrayIndex) = this.CopyTo(array, arrayIndex)
+        member this.Remove(item:'T) = this.Remove(item)
+        member this.GetEnumerator() = this.GetEnumerator()
+        member this.Count
+            with get() = this.Count
+        member this.IsReadOnly
+            with get() = this.IsReadOnly
+
     member private this.CheckVersion() =
         if version <> tree.version then
             raise (new InvalidOperationException("The collection has been modified."))
@@ -34,13 +49,13 @@ type TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : 
         with get() = true
 
     member this.Item
-        with get index =
+        with get(index) =
             this.CheckVersion()
             backingList.[index]
-        and set index value =
+        and set(index) value =
             raise (new NotSupportedException())
 
-    member this.IndexOf item =
+    member this.IndexOf(item) =
         this.CheckVersion()
         backingList.IndexOf(item)
 
@@ -56,11 +71,11 @@ type TiedList<'T, 'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue : 
     member this.Clear() =
         raise (new NotSupportedException())
 
-    member this.Contains item =
+    member this.Contains(item) =
         this.CheckVersion()
         backingList.Contains(item)
 
-    member this.CopyTo array arrayIndex =
+    member this.CopyTo(array, arrayIndex) =
         this.CheckVersion()
         backingList.CopyTo(array, arrayIndex)
 
@@ -85,6 +100,39 @@ and public SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue
 
     [<DefaultValue>]
     val mutable version:int
+
+    interface IEnumerable with
+        member this.GetEnumerator() = this.GetEnumerator() :> IEnumerator
+
+    interface IDictionary<'TKey, 'TValue> with
+        member this.Add(key:'TKey, value:'TValue) = this.Add(key, value)
+        member this.Add(item:KeyValuePair<'TKey, 'TValue>) = this.Add(item)
+        member this.Clear() = this.Clear()
+        member this.ContainsKey(key:'TKey) = this.ContainsKey(key)
+        member this.Contains(item:KeyValuePair<'TKey, 'TValue>) = this.Contains(item)
+        member this.Remove(key:'TKey) = this.Remove(key)
+        member this.Remove(item:KeyValuePair<'TKey, 'TValue>) = this.Remove(item)
+        member this.CopyTo(array:KeyValuePair<'TKey, 'TValue>[], arrayIndex:int) = this.CopyTo(array, arrayIndex)
+        member this.GetEnumerator() = this.GetEnumerator()
+        member this.TryGetValue(key:'TKey, value:byref<'TValue>) =
+            let result = this.TryGetValue(key)
+            if result.IsSome then
+                value <- result.Value
+                true
+            else
+                value <- Unchecked.defaultof<'TValue>
+                false
+        member this.Item
+            with get(key:'TKey) = this.[key]
+            and set(key:'TKey) value = this.[key] <- value
+        member this.Keys
+            with get() = this.Keys
+        member this.Values
+            with get() = this.Values
+        member this.Count
+            with get() = this.Count
+        member this.IsReadOnly
+            with get() = this.IsReadOnly
 
     member this.Add(key:'TKey, value:'TValue) =
         this.Set(key, value, true)
@@ -280,11 +328,6 @@ and public SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue
     member this.CopyTo(array:KeyValuePair<'TKey, 'TValue>[], arrayIndex:int) =
         this.AsList(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value)).CopyTo(array, arrayIndex)
 
-    member this.GetEnumerator() : IEnumerator<KeyValuePair<'TKey, 'TValue>> =
-        let backingList = this.AsList<KeyValuePair<'TKey, 'Value>>(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value));
-        let tiedList = new TiedList<KeyValuePair<'TKey, 'Value>, 'TKey, 'TValue>(this, this.version, backingList)
-        tiedList.GetEnumerator()
-
     member private this.AsList<'TEnumerator>(selector:SplayTreeNode<'TKey, 'TValue>->'TEnumerator) : IList<'TEnumerator> =
         let result = new List<'TEnumerator>(this.count)
         if this.root <> null then
@@ -296,3 +339,13 @@ and public SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue
         list.Add(selector(node))
         if node.Right <> null then this.PopulateList(node.Right, list, selector)
 
+    member this.GetEnumerator() : IEnumerator<KeyValuePair<'TKey, 'TValue>> =
+        let backingList = this.AsList(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value));
+        let tiedList = new TiedList<KeyValuePair<'TKey, 'Value>, 'TKey, 'TValue>(this, this.version, backingList)
+        tiedList.GetEnumerator()
+
+    member this.Keys
+        with get() : ICollection<'TKey> = new TiedList<'TKey, 'TKey, 'TValue>(this, this.version, this.AsList(fun node -> node.Key)) :> ICollection<'TKey>
+
+    member this.Values
+        with get() : ICollection<'TValue> = new TiedList<'TValue, 'TKey, 'TValue>(this, this.version, this.AsList(fun node -> node.Value)) :> ICollection<'TValue>

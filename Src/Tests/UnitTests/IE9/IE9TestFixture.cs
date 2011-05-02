@@ -30,6 +30,10 @@
         {
             var ctx = new IronJS.Hosting.CSharp.Context();
 
+            Func<BoxedValue, bool> fnExists = f => f.IsFunction;
+            var fnExistsFunc = IronJS.Native.Utils.CreateFunction(ctx.Environment, 1, fnExists);
+            ctx.SetGlobal("fnExists", fnExistsFunc);
+
             ctx.Execute("var currentTest; var ES5Harness = { registerTest: function (test) { currentTest = test; } };");
 
             return ctx;
@@ -43,11 +47,23 @@
 
             var descriptor = ctx.GetGlobal("currentTest").Object;
 
-            var precondition = descriptor.GetT<FunctionObject>("precondition");
-            var preconditionFunc = precondition.MetaData.GetDelegate<Func<FunctionObject, CommonObject, BoxedValue>>(precondition);
-            var preconditionMet = preconditionFunc.Invoke(precondition, ctx.Globals).Bool;
+            var preconditionBoxed = descriptor.Get("precondition");
+            if (!preconditionBoxed.IsUndefined)
+            {
+                var precondition = preconditionBoxed.Unbox<FunctionObject>();
+                var preconditionFunc = precondition.MetaData.GetDelegate<Func<FunctionObject, CommonObject, BoxedValue>>(precondition);
+                bool preconditionMet;
+                try
+                {
+                    preconditionMet = preconditionFunc.Invoke(precondition, ctx.Globals).Bool;
+                }
+                catch (Exception ex)
+                {
+                    Assume.That(false, ex.Message); return;
+                }
 
-            Assume.That(preconditionMet);
+                Assume.That(preconditionMet);
+            }
 
             var test = descriptor.GetT<FunctionObject>("test");
             var testFunc = test.MetaData.GetDelegate<Func<FunctionObject, CommonObject, BoxedValue>>(test);

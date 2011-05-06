@@ -226,17 +226,17 @@ namespace DebugConsole
 
         void expressionTreePrinter(string expressionTree)
         {
-            Dispatcher.Invoke(new Action(() => expressionTreeOutput.Text += expressionTree));
+            Dispatcher.Invoke(new Action(() => expressionTreeOutput.AppendText(expressionTree)));
         }
 
         void syntaxTreePrinter(string syntaxTree)
         {
-            Dispatcher.Invoke(new Action(() => syntaxTreeOutput.Text += syntaxTree));
+            Dispatcher.Invoke(new Action(() => syntaxTreeOutput.AppendText(syntaxTree)));
         }
 
         void printConsoleText(string value)
         {
-            Dispatcher.Invoke(new Action(() => consoleOutput.Text += value));
+            Dispatcher.Invoke(new Action(() => consoleOutput.AppendText(value)));
         }
 
         IEnumerable<TreeViewItem> renderObjectProperties(CommonObject jsObject)

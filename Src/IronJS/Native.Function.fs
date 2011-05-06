@@ -129,7 +129,7 @@ module internal Function =
 
       let skip = if args.Length = 0 then 0 else 1
       let args = args |> Seq.skip skip |> Seq.toArray
-      let argsClr = args |> Array.map TC.ToClrObject
+      let argsClr = args |> Array.map (fun i -> if not i.IsNull && i.IsClr then TC.ToClrObject i else i :> obj)
       let argTypes = argsClr |> Array.map TypeUtils.getType
 
       let type' = argTypes $ DelegateUtils.getCallSiteDelegate

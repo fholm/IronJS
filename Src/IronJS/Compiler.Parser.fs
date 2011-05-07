@@ -12,6 +12,7 @@ module internal Parser =
   type VariableData = {
     DefinedAt : (int * int) option
     AccessedAt : int * int
+    AssignedValueAt : int * int
     AssignedFrom : Ast.Tree list
   }
 

@@ -25,3 +25,4 @@ Thumbs.db
 Package/Binaries/
 Package/Sources/
 Package/IronJS.snk
+*.exe

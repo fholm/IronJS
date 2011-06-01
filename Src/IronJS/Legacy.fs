@@ -34,7 +34,6 @@ type HashSet<'a when 'a : equality>() =
 
     member x.GetEnumerator() : IEnumerator = 
      (seq { for x in storage do yield x.Key }).GetEnumerator() :> IEnumerator
-
 #endif
 
 #if LEGACY_DELEGATES

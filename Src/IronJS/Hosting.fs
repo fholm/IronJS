@@ -11,35 +11,9 @@ module private Environment =
   let create () =
     let env = Environment()
 
-    env.Prototypes <- {
-      Object = null; Function = null; Array = null
-      String = null; Number = null; Boolean = null
-      Date = null; RegExp = null; Error = null
-      EvalError = null; RangeError = null; ReferenceError = null
-      SyntaxError = null; TypeError  = null; URIError = null
-    }
-
-    env.Constructors <- {
-      Object = null; Function = null; Array = null
-      String = null; Number = null; Boolean = null
-      Date = null; RegExp = null; Error = null
-      EvalError = null; RangeError = null; ReferenceError = null
-      SyntaxError = null; TypeError = null; URIError  = null
-    }
-    
-    let baseMap = 
-      env |> Schema.CreateBaseSchema 
-
-    env.Maps <- {
-      Base = baseMap
-      Array = baseMap.SubClass "length"
-      Function = baseMap.SubClass ["length"; "prototype"]
-      Prototype = baseMap.SubClass "constructor"
-      String = baseMap.SubClass "length"
-      Number = baseMap
-      Boolean = baseMap
-      RegExp = baseMap.SubClass ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
-    }
+    env.Prototypes <- Prototypes.Empty
+    env.Constructors <- Constructors.Empty
+    env.Maps <- env |> Schema.CreateBaseSchema |> Maps.Create 
 
     let objectPrototype = Native.Object.Prototype.create env
     let errorPrototype = Native.Error.createPrototype env objectPrototype

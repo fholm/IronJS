@@ -270,15 +270,15 @@ and [<AllowNullLiteral>] Undefined() =
 and [<AbstractClass>] TypeTag() =
 
   static member OfType (t:Type) =
-    if   t |> FSharp.Utils.isTypeT<bool>   then TypeTags.Bool
-    elif t |> FSharp.Utils.isTypeT<double> then TypeTags.Number
-    elif t |> FSharp.Utils.isTypeT<string> then TypeTags.String
+    if   t |> FSharp.Utils.isTypeT<bool>         then TypeTags.Bool
+    elif t |> FSharp.Utils.isTypeT<double>       then TypeTags.Number
+    elif t |> FSharp.Utils.isTypeT<string>       then TypeTags.String
     elif t |> FSharp.Utils.isTypeT<SuffixString> then TypeTags.SuffixString
-    elif t |> FSharp.Utils.isTypeT<Undef>  then TypeTags.Undefined
-    elif t |> FSharp.Utils.isTypeT<FO>     then TypeTags.Function
-    elif t |> FSharp.Utils.isTypeT<CO>     then TypeTags.Object
-    elif t |> FSharp.Utils.isTypeT<BV>     then TypeTags.Box
-                                           else TypeTags.Clr
+    elif t |> FSharp.Utils.isTypeT<Undef>        then TypeTags.Undefined
+    elif t |> FSharp.Utils.isTypeT<FO>           then TypeTags.Function
+    elif t |> FSharp.Utils.isTypeT<CO>           then TypeTags.Object
+    elif t |> FSharp.Utils.isTypeT<BV>           then TypeTags.Box
+                                                 else TypeTags.Clr
 
   static member OfObject (o:obj) = 
     if o |> FSharp.Utils.isNull 
@@ -289,6 +289,7 @@ and Env = Environment
 
 ///
 and [<AllowNullLiteral>] Environment() =
+
   static let null' =
     let mutable box = BV()
     box.Tag <- TypeTags.Clr
@@ -302,6 +303,9 @@ and [<AllowNullLiteral>] Environment() =
   let functionMetaData = new MutableDict<uint64, FunctionMetaData>()
   let regExpCache = new Caches.WeakCache<RegexOptions * string, Regex>()
   let evalCache = new Caches.LimitCache<string, EvalCode>(100)
+
+  //
+  let breakPointEvent = new Event<_>()
 
   // We need the the special global function id 0UL to exist in 
   // the metaData dictionary but it needs not actually be there so 
@@ -323,6 +327,7 @@ and [<AllowNullLiteral>] Environment() =
     Action<int, int, MutableDict<string, obj>>
     
   member x.Random = rnd
+  member x.OnBreakPoint = breakPointEvent.Publish
 
   member internal x.RegExpCache = regExpCache
   member internal x.EvalCache = evalCache
@@ -2454,7 +2459,18 @@ and Maps = {
   Number : Schema
   Boolean : Schema
   RegExp : Schema
-}
+} with
+  static member Create baseSchema =
+    {
+      Base = baseSchema
+      Array = baseSchema.SubClass "length"
+      Function = baseSchema.SubClass ["length"; "prototype"]
+      Prototype = baseSchema.SubClass "constructor"
+      String = baseSchema.SubClass "length"
+      Number = baseSchema
+      Boolean = baseSchema
+      RegExp = baseSchema.SubClass ["source"; "global"; "ignoreCase"; "multiline"; "lastIndex"]
+    }
 
 ///
 and Prototypes = {
@@ -2473,7 +2489,14 @@ and Prototypes = {
   SyntaxError : CO
   TypeError : CO
   URIError : CO
-}
+} with
+  static member Empty = {
+    Object = null; Function = null; Array = null
+    String = null; Number = null; Boolean = null
+    Date = null; RegExp = null; Error = null
+    EvalError = null; RangeError = null; ReferenceError = null
+    SyntaxError = null; TypeError  = null; URIError = null
+  }
 
 ///
 and Constructors = {
@@ -2492,7 +2515,14 @@ and Constructors = {
   SyntaxError : FO
   TypeError : FO
   URIError : FO
-}
+} with
+  static member Empty = {
+    Object = null; Function = null; Array = null
+    String = null; Number = null; Boolean = null
+    Date = null; RegExp = null; Error = null
+    EvalError = null; RangeError = null; ReferenceError = null
+    SyntaxError = null; TypeError = null; URIError  = null
+  }
 
 and ClrArgs = obj array
 and Scope = BV array

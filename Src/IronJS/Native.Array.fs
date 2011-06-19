@@ -421,7 +421,7 @@ module internal Array =
       let actualDeleteCount = Math.Min(Math.Max(TC.ToInteger(deleteCount), 0), len - actualStart)
       let mutable k = int32 0
       while k < actualDeleteCount do
-        let from = relativeStart + k |> TC.ToString
+        let from = actualStart + k |> TC.ToString
         let fromPresent = this.HasOwn(from)
         if fromPresent then
           let fromValue = this.Get(from)

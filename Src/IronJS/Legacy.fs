@@ -1,21 +1,13 @@
-﻿namespace IronJS
+﻿namespace IronJS.Legacy
 
 // This file contains support classes needed in IronJS 
-// that are not available on .NET versions before 4.0
+// that are not available on Mono and .NET version that 
+// are earlier then 4.0
 
-#if NET2
 open System.Collections
 open System.Collections.Generic
-#endif
 
-#if CLR2
-open System.Threading
-
-type Func<'a, 'b, 'c, 'd, 'e, 'r> = delegate of 'a * 'b * 'c * 'd * 'e -> 'r
-type Func<'a, 'b, 'c, 'd, 'e, 'f, 'r> = delegate of 'a * 'b * 'c * 'd * 'e * 'f -> 'r
-#endif
-
-#if NET2
+#if LEGACY_HASHSET
 type HashSet<'a when 'a : equality>() =
   let o = obj()
   let storage = new Dictionary<'a, obj>();
@@ -36,18 +28,16 @@ type HashSet<'a when 'a : equality>() =
     member x.Count = storage.Count
     member x.IsReadOnly = false
     member x.Remove(item) = storage.Remove(item)
+
     member x.GetEnumerator() : IEnumerator<'a> = 
      (seq { for x in storage do yield x.Key }).GetEnumerator()
 
     member x.GetEnumerator() : IEnumerator = 
      (seq { for x in storage do yield x.Key }).GetEnumerator() :> IEnumerator
-
 #endif
 
-#if NET2
+#if LEGACY_DELEGATES
 type Action = delegate of unit -> unit
-//Already exists
-//type Action<'a> = delegate of 'a -> unit
 type Action<'a, 'b> = delegate of 'a * 'b -> unit
 type Action<'a, 'b, 'c> = delegate of 'a * 'b * 'c -> unit
 type Action<'a, 'b, 'c, 'd> = delegate of 'a * 'b * 'c * 'd -> unit
@@ -59,7 +49,19 @@ type Func<'a, 'b, 'c,  'r> = delegate of 'a * 'b * 'c -> 'r
 type Func<'a, 'b, 'c, 'd, 'r> = delegate of 'a * 'b * 'c * 'd -> 'r
 #endif
 
-#if BIGINTEGER
+#if LEGACY_DELEGATES_HIGH_ARITY
+type Func<'a, 'b, 'c, 'd, 'e, 'r> = delegate of 'a * 'b * 'c * 'd * 'e -> 'r
+type Func<'a, 'b, 'c, 'd, 'e, 'f, 'r> = delegate of 'a * 'b * 'c * 'd * 'e * 'f -> 'r
+#endif
+
+#if LEGACY_SORTED_DICT
+type SortedDictionary<'k, 'v>() =
+  class
+    
+  end
+#endif
+
+#if LEGACY_BIGINT_TRYPARSE
 type BigIntegerParser() =
   
   static member TryParse(s, f, i, bi:bigint byref) =
@@ -69,11 +71,4 @@ type BigIntegerParser() =
 
     with
       | _ -> false
-#endif
-
-#if SILVERLIGHT
-type SortedDictionary<'k, 'v>() =
-  class
-
-  end
 #endif

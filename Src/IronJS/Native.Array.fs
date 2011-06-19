@@ -52,7 +52,7 @@ module internal Array =
 
     /// Implements: 15.4.4.4 Array.prototype.concat ( [ item1 [ , item2 [ , … ] ] ] )
     let private concat (func:FO) (this:CO) (args:Args) =
-      let a = func.Env.NewArray(uint32 args.Length)
+      let a = func.Env.NewArray()
 
       let rec concat (n:uint32) (c:BV) (i:int) =
         let n =

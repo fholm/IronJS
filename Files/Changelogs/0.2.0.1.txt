@@ -1,0 +1,29 @@
+# IronJS 0.2.0.1
+
+## Thanks to
+
+John Gietzen 
+
+## Changelog
+
+* Exceptions of type System.Reflection.TargetInvocationException caused by a JavaScript-catchable error will no longer bubble up to the hosting code.
+* Renamed the Ast.NewVars module to Ast.Utils
+* Renamed Ast.Scope to Ast.FunctionScope
+* Renamed Ast.Tree.FunctionFast to Ast.Tree.Function
+* Renamed CLR2.fs to Legacy.fs
+* Removed the ExtensionMethods module
+* Removed GlobalScopeHelper.GetGlobalNice and Compiler.Identifier.getValueNice
+* Removed the FSharpOperators module
+* Moved all Legacy type definitions into the IronJS.Legacy namespace
+* Changed several types, modules, constructors, methods and functions from public to private/internal
+* Added new constructor to CommonObject that only takes two parameters (Environment and CommonObject) and defaults to using the Environment.Maps.Base property schema
+* Converted Ast.GlobalScope, Ast.EvalMode and Ast.LookupMode from enums to unions
+* Added the RequireQualifiedAccess attribute to several modules and removed alot of cryptic aliases to keep the code clean and easy to read
+* Implemented inline caches for the [[Call]] and [[Get]] internal operations
+
+## Closed Issues
+
+* Fixed #39 - .concat returning invalid length when concating several empty arrays
+* Fixed #38 - JS Null and Undefined objects are not treated correctly in .call and .apply
+* Fixed #33 - error happened while reading a single line comment
+* Implemented #37 - JS Function => CLR Delegate

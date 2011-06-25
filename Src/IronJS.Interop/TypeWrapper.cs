@@ -34,14 +34,13 @@ namespace IronJS.Interop
         {
             get
             {
-                return this.type.FullName;
+                return "typeof(" + this.type.FullName + ")";
             }
         }
 
         public static TypeWrapper Create(Environment env, Type type)
         {
-            var prototype = (CommonObject)null;
-
+            var prototype = env.Prototypes.Object;
             return new TypeWrapper(type, env, prototype);
         }
     }

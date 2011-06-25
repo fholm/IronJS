@@ -10,6 +10,7 @@ namespace IronJS.Interop
         static void Main(string[] args)
         {
             var ctx = new IronJS.Hosting.CSharp.Context();
+            ctx.CreatePrintFunction();
 
             Func<FunctionObject, CommonObject, string, CommonObject> require = (func, @this, uriString) =>
             {
@@ -25,7 +26,12 @@ namespace IronJS.Interop
             };
 
             ctx.SetGlobal("require", Native.Utils.CreateFunction(ctx.Environment, 1, require));
-            ctx.Execute("var a = require('clr:System.IO.File');");
+            ctx.Execute(@"
+                var a = require('clr:System.IO.File');
+                print(a);
+            ");
+
+            Console.ReadKey(true);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace IronJS.Interop
 
         public static TypeWrapper<T> Create(Environment env)
         {
-            var prototype = env.Prototypes.Object;
+            var prototype = new CommonObject(env, env.Prototypes.Object);
             return new TypeWrapper<T>(env, prototype);
         }
     }

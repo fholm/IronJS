@@ -51,7 +51,7 @@ namespace IronJS.Interop
         public static CommonObject Create(Type type, Environment env)
         {
             var typeWrapper = typeof(TypeWrapper<>).MakeGenericType(new[] { type });
-            var createMethod = typeWrapper.GetMethod("Create", BindingFlags.Static);
+            var createMethod = typeWrapper.GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
             var result = createMethod.Invoke(null, new[] { env });
             return (CommonObject)result;
         }

@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace IronJS.Interop
 {
-    internal class TypeWrapper : CommonObject
+    internal class TypeWrapper<T> : CommonObject
     {
         private readonly Type type;
 
-        private TypeWrapper(Type type, Environment env, CommonObject prototype)
+        private TypeWrapper(Environment env, CommonObject prototype)
             : base(env, prototype)
         {
-            this.type = type;
+            this.type = typeof(T);
         }
 
         public override BoxedValue Get(string name)
@@ -38,10 +39,21 @@ namespace IronJS.Interop
             }
         }
 
-        public static TypeWrapper Create(Environment env, Type type)
+        public static TypeWrapper<T> Create(Environment env)
         {
             var prototype = env.Prototypes.Object;
-            return new TypeWrapper(type, env, prototype);
+            return new TypeWrapper<T>(env, prototype);
+        }
+    }
+
+    internal static class TypeWrapper
+    {
+        public static CommonObject Create(Type type, Environment env)
+        {
+            var typeWrapper = typeof(TypeWrapper<>).MakeGenericType(new[] { type });
+            var createMethod = typeWrapper.GetMethod("Create", BindingFlags.Static);
+            var result = createMethod.Invoke(null, new[] { env });
+            return (CommonObject)result;
         }
     }
 }

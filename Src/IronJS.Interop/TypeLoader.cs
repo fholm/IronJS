@@ -29,7 +29,7 @@
 
             var type = Type.GetType(typeName);
 
-            return TypeWrapper.Create(func.Env, type);
+            return TypeWrapper.Create(type, func.Env);
         }
 
         private static Tuple<string, string> ParseClrUri(Uri uri)

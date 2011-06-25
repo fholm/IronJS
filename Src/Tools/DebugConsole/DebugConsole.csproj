@@ -131,6 +131,10 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\IronJS.Interop\IronJS.Interop.csproj">
+      <Project>{5E372886-E29B-4C65-A681-18BD75B38DF7}</Project>
+      <Name>IronJS.Interop</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>

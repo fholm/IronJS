@@ -16,6 +16,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using IronJS;
 using WinFormsRichhTextBox = System.Windows.Forms.RichTextBox;
+using IronJS.Interop;
+using IronJS.Native;
 
 namespace DebugConsole
 {
@@ -450,6 +452,22 @@ namespace DebugConsole
         {
             context = new IronJS.Hosting.CSharp.Context();
             context.CreatePrintFunction();
+
+            Func<FunctionObject, CommonObject, string, CommonObject> require = (func, @this, uriString) =>
+            {
+                try
+                {
+                    return TypeLoader.Require(func, @this, uriString);
+                }
+                catch (UriFormatException ex)
+                {
+                    context.Environment.RaiseReferenceError<object>(ex.Message);
+                    throw;
+                }
+            };
+
+            context.SetGlobal("require", Utils.CreateFunction(context.Environment, 1, require));
+
             context.Environment.BreakPoint = breakPoint;
         }
 

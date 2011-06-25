@@ -29,6 +29,11 @@
 
             var type = Type.GetType(typeName);
 
+            if (type == null)
+            {
+                func.Env.RaiseReferenceError<object>("The type '" + typeName + "' could not be found.");
+            }
+
             return TypeWrapper.Create(type, func.Env);
         }
 

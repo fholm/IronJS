@@ -1297,8 +1297,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Length 
     with get ( ) = length
     and  set (v) = 
-      length <- v
-      base.Put("length", double length, DescriptorAttrs.DontEnum)
+      x.PutLength(v)
 
   override x.ClassName = "Array"
 
@@ -1343,7 +1342,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       sparse.PutLength(newLength, length)
 
     length <- newLength
-    base.Put("length", double newLength)
+    base.Put("length", BV.Box(newLength))
+    x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
   ///
   member private x.PutLength(newLength:double) =
@@ -1406,7 +1406,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:BV) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
@@ -1417,7 +1416,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:double) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
@@ -1428,7 +1426,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:obj, tag:uint32) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)

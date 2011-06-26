@@ -153,7 +153,7 @@ module internal String =
             else
               previousLastIndex <- thisIndex
             let matchStr = result.Array.Get(0).String
-            A.Put(uint32 n, matchStr)
+            A.Put(string n, matchStr)
             n <- n + 1
         if n = 0 then
           Environment.BoxedNull
@@ -318,7 +318,7 @@ module internal String =
 
       let array = f.Env.NewArray(parts.Length |> uint32)
       for i = 0 to parts.Length-1 do
-        array.Put(uint32 i, parts.[i])
+        array.Put(string i, parts.[i])
 
       array
 

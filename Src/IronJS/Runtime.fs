@@ -752,13 +752,6 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(name:String, value:CO) : unit = x.Put(name, value, TypeTags.Object)
   member x.Put(name:String, value:FO) : unit = x.Put(name, value, TypeTags.Function)
 
-  member x.Put(index:uint32, value:bool) : unit = x.Put(index, value |> TaggedBools.ToTagged)
-  member x.Put(index:uint32, value:obj) : unit = x.Put(index, value, TypeTags.Clr)
-  member x.Put(index:uint32, value:String) : unit = x.Put(index, value, TypeTags.String)
-  member x.Put(index:uint32, value:Undefined) : unit = x.Put(index, value, TypeTags.Undefined)
-  member x.Put(index:uint32, value:CO) : unit = x.Put(index, value, TypeTags.Object)
-  member x.Put(index:uint32, value:FO) : unit = x.Put(index, value, TypeTags.Function)
-
   member x.Put(name:String, value:BV, attrs:uint16) : unit =
     x.Put(name, value)
     x.SetAttrs(name, attrs)

@@ -103,15 +103,10 @@ module TaggedBools =
   let ToTagged b = if b then True else False
 
 module BoxedValueOffsets =
-  #if X64
-  let [<Literal>] ValueType = 8
-  let [<Literal>] Tag = 12
-  let [<Literal>] Marker = 14
-  #else
-  let [<Literal>] ValueType = 4
-  let [<Literal>] Tag = 8
-  let [<Literal>] Marker = 10
-  #endif
+  let [<Literal>] ValueType = 0
+  let [<Literal>] Tag = 4
+  let [<Literal>] Marker = 6
+  let [<Literal>] ReferenceType = 8
 
 type BV = BoxedValue
 and Args = BV array
@@ -122,13 +117,13 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
 
     // Reference Types
-    [<FieldOffset(0)>] val mutable Clr : Object
-    [<FieldOffset(0)>] val mutable Object : CO
-    [<FieldOffset(0)>] val mutable Array : AO
-    [<FieldOffset(0)>] val mutable Func : FO
-    [<FieldOffset(0)>] val mutable String : string
-    [<FieldOffset(0)>] val mutable SuffixString : SuffixString
-    [<FieldOffset(0)>] val mutable Scope : BV array
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Clr : Object
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Object : CO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Array : AO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Func : FO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable String : string
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable SuffixString : SuffixString
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Scope : BV array
 
     // Value Types
     [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Bool : bool

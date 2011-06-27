@@ -103,15 +103,10 @@ module TaggedBools =
   let ToTagged b = if b then True else False
 
 module BoxedValueOffsets =
-  #if X64
-  let [<Literal>] ValueType = 8
-  let [<Literal>] Tag = 12
-  let [<Literal>] Marker = 14
-  #else
-  let [<Literal>] ValueType = 4
-  let [<Literal>] Tag = 8
-  let [<Literal>] Marker = 10
-  #endif
+  let [<Literal>] ValueType = 0
+  let [<Literal>] Tag = 4
+  let [<Literal>] Marker = 6
+  let [<Literal>] ReferenceType = 8
 
 type BV = BoxedValue
 and Args = BV array
@@ -122,13 +117,13 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
   struct 
 
     // Reference Types
-    [<FieldOffset(0)>] val mutable Clr : Object
-    [<FieldOffset(0)>] val mutable Object : CO
-    [<FieldOffset(0)>] val mutable Array : AO
-    [<FieldOffset(0)>] val mutable Func : FO
-    [<FieldOffset(0)>] val mutable String : string
-    [<FieldOffset(0)>] val mutable SuffixString : SuffixString
-    [<FieldOffset(0)>] val mutable Scope : BV array
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Clr : Object
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Object : CO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Array : AO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Func : FO
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable String : string
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable SuffixString : SuffixString
+    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Scope : BV array
 
     // Value Types
     [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Bool : bool
@@ -757,13 +752,6 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(name:String, value:CO) : unit = x.Put(name, value, TypeTags.Object)
   member x.Put(name:String, value:FO) : unit = x.Put(name, value, TypeTags.Function)
 
-  member x.Put(index:uint32, value:bool) : unit = x.Put(index, value |> TaggedBools.ToTagged)
-  member x.Put(index:uint32, value:obj) : unit = x.Put(index, value, TypeTags.Clr)
-  member x.Put(index:uint32, value:String) : unit = x.Put(index, value, TypeTags.String)
-  member x.Put(index:uint32, value:Undefined) : unit = x.Put(index, value, TypeTags.Undefined)
-  member x.Put(index:uint32, value:CO) : unit = x.Put(index, value, TypeTags.Object)
-  member x.Put(index:uint32, value:FO) : unit = x.Put(index, value, TypeTags.Function)
-
   member x.Put(name:String, value:BV, attrs:uint16) : unit =
     x.Put(name, value)
     x.SetAttrs(name, attrs)
@@ -1309,8 +1297,7 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Length 
     with get ( ) = length
     and  set (v) = 
-      length <- v
-      base.Put("length", double length, DescriptorAttrs.DontEnum)
+      x.PutLength(v)
 
   override x.ClassName = "Array"
 
@@ -1355,7 +1342,8 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
       sparse.PutLength(newLength, length)
 
     length <- newLength
-    base.Put("length", double newLength)
+    base.Put("length", BV.Box(newLength))
+    x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
   ///
   member private x.PutLength(newLength:double) =
@@ -1418,7 +1406,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:BV) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
@@ -1429,7 +1416,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:double) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(value))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value)
@@ -1440,7 +1426,6 @@ and [<AllowNullLiteral>] ArrayObject(env:Env, length:uint32) =
   override x.Put(name:string, value:obj, tag:uint32) =
     if name = "length" then 
       x.PutLength(TC.ToNumber(BV.Box(value, tag)))
-      x.SetAttrs("length", DescriptorAttrs.DontEnum)
 
     elif FSharp.String.couldBeNumber name && (string <| TC.ToUInt32(TC.ToNumber(name))) = name then
       x.Put(TC.ToUInt32(TC.ToNumber name), value, tag)

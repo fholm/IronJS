@@ -1,6 +1,6 @@
 #!/bin/bash
 
-platform='x86'
+platform='anycpu'
 monopath='/usr/lib/mono/4.0/'
 fscorepath='/usr/local/lib/mono/4.0/'
 

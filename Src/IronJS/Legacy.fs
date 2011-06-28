@@ -1,4 +1,4 @@
-﻿namespace IronJS.Legacy
+﻿namespace IronJS
 
 // This file contains support classes needed in IronJS 
 // that are not available on Mono and .NET version that 
@@ -61,7 +61,7 @@ type SortedDictionary<'k, 'v>() =
   end
 #endif
 
-#if LEGACY_BIGINT_TRYPARSE
+#if LEGACY_BIGINT
 type BigIntegerParser() =
   
   static member TryParse(s, f, i, bi:bigint byref) =

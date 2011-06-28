@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>IronJS</RootNamespace>
     <AssemblyName>IronJS</AssemblyName>
-    <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <Name>IronJS</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -19,7 +19,7 @@
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CLR2;BIGINTEGER</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR2;LEGACY_BIGINT;LEGACY_DELEGATES_HIGH_ARITY</DefineConstants>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\IronJS.XML</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -31,7 +31,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>CLR2;BIGINTEGER</DefineConstants>
+    <DefineConstants>CLR2;LEGACY_BIGINT;LEGACY_DELEGATES_HIGH_ARITY</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -41,13 +41,20 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Legacy.fs" />
     <Compile Include="FSharp.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
-    <Compile Include="Core.fs" />
-    <Compile Include="Core.Helpers.fs" />
-    <Compile Include="Core.Operators.fs" />
+    <Compile Include="SuffixString.fs" />
+    <Compile Include="SplayTree.fs" />
+    <Compile Include="Caches.fs" />
+    <Compile Include="Runtime.fs" />
+    <Compile Include="Runtime.Binders.fs" />
+    <Compile Include="Helpers.fs" />
+    <Compile Include="Operators.fs" />
+    <Compile Include="InlineCaches.fs" />
+    <Compile Include="ReflectionCache.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Parser.fs" />
@@ -76,7 +83,6 @@
     <Compile Include="Native.Boolean.fs" />
     <Compile Include="Native.Error.fs" />
     <Compile Include="Hosting.fs" />
-    <Compile Include="Legacy.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Dynamic">

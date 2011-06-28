@@ -28,7 +28,7 @@
     <!-- Build the project for .NET 4.0 and copy the binaries local to NuGet. -->
     <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
     <ItemGroup>
-      <BinariesNet40 Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
+      <BinariesNet40 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>
     <MakeDir Directories="Binaries\lib\net40" />
     <Copy SourceFiles="@(BinariesNet40)" DestinationFolder="Binaries\lib\net40" />
@@ -36,7 +36,7 @@
     <!-- Build the project for .NET 2.0 and copy the binaries local to NuGet. -->
     <MSBuild Projects="..\Src\IronJS\IronJS.CLR2.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
     <ItemGroup>
-      <BinariesNet20 Include="..\Src\IronJS\bin\Release-$(Platform)\**\*" />
+      <BinariesNet20 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>
     <MakeDir Directories="Binaries\lib\net20" />
     <Copy SourceFiles="@(BinariesNet20)" DestinationFolder="Binaries\lib\net20" />

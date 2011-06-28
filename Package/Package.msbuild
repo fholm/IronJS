@@ -12,6 +12,7 @@
     </ItemGroup>
     <Delete Files="@(ExistingNuPkgs)" />
     <RemoveDir Directories="Binaries" Condition="Exists('Binaries\')" />
+    <RemoveDir Directories="Composite" Condition="Exists('Composite\')" />
     <RemoveDir Directories="Sources" Condition="Exists('Sources\')" />
     <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean" Properties="Configuration=Release;Platform=$(Platform)" />
   </Target>
@@ -48,14 +49,19 @@
     <!-- Write out a new version of the nuspec files, updating the version number. -->
     <PropertyGroup>
       <CoreNuSpec>$([System.IO.File]::ReadAllText(`IronJS.Core.nuspec`).Replace(`##VERSION##`, $(Version)))</CoreNuSpec>
+      <CompositeNuSpec>$([System.IO.File]::ReadAllText(`IronJS.nuspec`).Replace(`##VERSION##`, $(Version)))</CompositeNuSpec>
     </PropertyGroup>
     <WriteLinesToFile File="Binaries\IronJS.Core.tmp.nuspec" Lines="$(CoreNuSpec)" />
+    <MakeDir Directories="Composite" />
+    <WriteLinesToFile File="Composite\IronJS.tmp.nuspec" Lines="$(CompositeNuSpec)" />
 
     <!-- Package-up the NuGet packages. -->
     <Exec Command="NuGet.exe pack Binaries\IronJS.Core.tmp.nuspec" />
+    <Exec Command="NuGet.exe pack Composite\IronJS.tmp.nuspec" />
 
     <!-- Clean-up. -->
     <RemoveDir Directories="Binaries" />
+    <RemoveDir Directories="Composite" />
     <RemoveDir Directories="Sources" />
   </Target>
 </Project>

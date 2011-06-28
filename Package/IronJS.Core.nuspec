@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>IronJS</id>
+    <id>IronJS.Core</id>
     <version>##VERSION##</version> <!-- NOTE: Do not update the version number here, it will be automatically updated. -->
     <owners>Fredrik Holmström</owners>
     <authors>Fredrik Holmström, John Gietzen</authors>

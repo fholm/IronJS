@@ -47,15 +47,12 @@
 
     <!-- Write out a new version of the nuspec files, updating the version number. -->
     <PropertyGroup>
-      <BinariesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.nuspec`).Replace(`##VERSION##`, $(Version)))</BinariesNuSpec>
-      <SourcesNuSpec>$([System.IO.File]::ReadAllText(`IronJS.Sources.nuspec`).Replace(`##VERSION##`, $(Version)))</SourcesNuSpec>
+      <CoreNuSpec>$([System.IO.File]::ReadAllText(`IronJS.Core.nuspec`).Replace(`##VERSION##`, $(Version)))</CoreNuSpec>
     </PropertyGroup>
-    <WriteLinesToFile File="Binaries\IronJS.tmp.nuspec" Lines="$(BinariesNuSpec)" />
-    <WriteLinesToFile File="Sources\IronJS.Sources.tmp.nuspec" Lines="$(SourcesNuSpec)" />
+    <WriteLinesToFile File="Binaries\IronJS.Core.tmp.nuspec" Lines="$(CoreNuSpec)" />
 
     <!-- Package-up the NuGet packages. -->
-    <Exec Command="NuGet.exe pack Binaries\IronJS.tmp.nuspec" />
-    <Exec Command="NuGet.exe pack Sources\IronJS.Sources.tmp.nuspec" />
+    <Exec Command="NuGet.exe pack Binaries\IronJS.Core.tmp.nuspec" />
 
     <!-- Clean-up. -->
     <RemoveDir Directories="Binaries" />

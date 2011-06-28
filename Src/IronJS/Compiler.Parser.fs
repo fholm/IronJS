@@ -210,7 +210,7 @@ module internal Parser =
     let mutable bi = Unchecked.defaultof<Numerics.BigInteger>
     if Double.TryParse(s, anyNumber, invariantCulture, &d) 
       then d
-      #if BIGINTEGER
+      #if LEGACY_BIGINT
       elif BigIntegerParser.TryParse(s, anyNumber, invariantCulture, &bi)
       #else
       elif Numerics.BigInteger.TryParse(s, anyNumber, invariantCulture, &bi) 
@@ -229,7 +229,7 @@ module internal Parser =
     let mutable bi = Unchecked.defaultof<bigint>
     if UInt32.TryParse(s, NumberStyles.HexNumber, invariantCulture, &i) 
       then i |> double
-      #if BIGINTEGER
+      #if LEGACY_BIGINT
       elif BigIntegerParser.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 
       #else
       elif bigint.TryParse(s, NumberStyles.HexNumber, invariantCulture, &bi) 

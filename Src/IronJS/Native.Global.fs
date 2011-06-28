@@ -65,7 +65,7 @@ module Global =
 
   /// 
   let private parseWithRadix (z:string, r:int) =
-    #if BIGINTEGER
+    #if LEGACY_BIGINT
     if r = 2 && z.Length <= 64 then new bigint(int64(Convert.ToUInt64(z, 2)))
     elif r = 8 && z.Length <= 21 then new bigint(int64(Convert.ToUInt64(z, 8)))
     elif r = 10 && z.Length <= 19 then new bigint(int64(Convert.ToUInt64(z, 10)))

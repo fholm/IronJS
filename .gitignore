@@ -26,3 +26,5 @@ Package/Binaries/
 Package/Sources/
 Package/IronJS.snk
 *.exe
+*.orig
+*.docstates

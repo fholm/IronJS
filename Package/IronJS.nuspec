@@ -8,12 +8,11 @@
     <description>IronJS is an ECMAScript 3.0 implementation built on top of the Dynamic Language Runtime from Microsoft, which allows you to embed a JavaScript runtime into your .NET applications.</description>
     <language>en-US</language>
     <projectUrl>http://ironjs.net</projectUrl>
-    <iconUrl>https://github.com/fholm/IronJS/raw/master/IronJS.ico</iconUrl>
+    <iconUrl>https://github.com/fholm/IronJS/raw/master/IronJS.png</iconUrl>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <tags>javascript dlr</tags>
-    <frameworkAssemblies>
-      <frameworkAssembly assemblyName="System.Numerics" />
-      <frameworkAssembly assemblyName="FSharp.Core" />
-    </frameworkAssemblies>
+    <dependencies>
+      <dependency id="IronJS.Core" version="##VERSION##" />
+    </dependencies>
   </metadata>
 </package>

@@ -341,7 +341,7 @@ and public SplayTree<'TKey, 'TValue when 'TKey :> IComparable<'TKey> and 'TValue
 
     member this.GetEnumerator() : IEnumerator<KeyValuePair<'TKey, 'TValue>> =
         let backingList = this.AsList(fun node -> new KeyValuePair<'TKey, 'TValue>(node.Key, node.Value));
-        let tiedList = new TiedList<KeyValuePair<'TKey, 'Value>, 'TKey, 'TValue>(this, this.version, backingList)
+        let tiedList = new TiedList<KeyValuePair<'TKey, 'TValue>, 'TKey, 'TValue>(this, this.version, backingList)
         tiedList.GetEnumerator()
 
     member this.Keys

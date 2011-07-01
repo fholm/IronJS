@@ -421,7 +421,7 @@ module internal String =
       let substring = FunctionReturn<double, BV, string>(substring) $ Utils.createFunction env (Some 2)
       proto.Put("substring", substring, DontEnum)
 
-      let substring = FunctionReturn<BV, BV, string>(substr) $ Utils.createFunction env (Some 2)
+      let substr = FunctionReturn<BV, BV, string>(substr) $ Utils.createFunction env (Some 2)
       proto.Put("substr", substr, DontEnum)
 
       let toLowerCase = FunctionReturn<string>(toLowerCase) $ Utils.createFunction env (Some 0)

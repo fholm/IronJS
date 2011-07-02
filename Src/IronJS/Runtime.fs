@@ -523,12 +523,8 @@ and [<AllowNullLiteral>] CommonObject =
 
   override x.TryGetMember(binder:GetMemberBinder, result:obj byref) : bool =
     let item:Descriptor = x.Find(binder.Name)
-    if item.HasValue
-      then
-        result <- item.Value.UnboxObject()
-        true
-      else
-        false
+    result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
+    true
 
   override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
     x.Put(binder.Name, value)

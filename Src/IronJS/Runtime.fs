@@ -179,6 +179,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
           | TypeTags.Object -> x.Object :> obj
           | TypeTags.String -> x.String :> obj
           | TypeTags.SuffixString -> x.SuffixString :> obj
+          | TypeTags.Undefined -> Undefined.Instance :> obj
           | _ -> x :> obj
 
     static member Box(value:CO) =
@@ -224,6 +225,7 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
         | :? SuffixString as s -> BV.Box(s)
         | :? FO as f -> BV.Box(f)
         | :? CO as o -> BV.Box(o)
+        | :? Undef as u -> BV.Box(u)
         | _ ->
           let mutable box = BV()
           box.Clr <- value

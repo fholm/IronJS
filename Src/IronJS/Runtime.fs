@@ -205,11 +205,6 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box.Tag <- TypeTags.SuffixString
       box
 
-    static member Box(value:int) =
-      let mutable box = BV()
-      box.Number <- double value
-      box
-
     static member Box(value:double) =
       let mutable box = BV()
       box.Number <- value
@@ -221,10 +216,19 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box
 
     static member Box(value:obj) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.Clr
-      box
+      match value with
+        | :? double as d -> BV.Box(d)
+        | :? int as i -> BV.Box(double i)
+        | :? bool as b -> BV.Box(b)
+        | :? string as s -> BV.Box(s)
+        | :? SuffixString as s -> BV.Box(s)
+        | :? FO as f -> BV.Box(f)
+        | :? CO as o -> BV.Box(o)
+        | _ ->
+          let mutable box = BV()
+          box.Clr <- value
+          box.Tag <- TypeTags.Clr
+          box
 
     static member Box(value:obj, tag:uint32) =
       let mutable box = BV()
@@ -527,6 +531,21 @@ and [<AllowNullLiteral>] CommonObject =
   override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
     x.Put(binder.Name, value)
     true
+
+  override x.TryInvokeMember(binder:InvokeMemberBinder, args:obj array, result:obj byref) : bool =
+    let item:Descriptor = x.Find(binder.Name)
+    if item.HasValue then
+      let box = item.Value
+      if box.IsFunction then
+        let func = box.Func
+        let args:Args = args |> Array.map (fun a -> BV.Box(a))
+        let ret = func.Call(x, args)
+        result <- ret.UnboxObject()
+        true
+      else
+        false
+    else
+      false
 
   abstract ClassName : string with get
   default x.ClassName = "Object"

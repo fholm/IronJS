@@ -308,7 +308,10 @@ module internal Array =
               ao.Dense.[i].HasValue <- true
               ao.Dense.[i].Value <- ao.Prototype.Get(uint32 i)
 
-          ao.Dense |> Array.sortInPlaceWith (fun a b -> comparefn a.Value b.Value)
+          let sortable = Array.zeroCreate<Descriptor> ilength
+          Array.Copy(ao.Dense, sortable, ilength)
+          sortable |> Array.sortInPlaceWith (fun a b -> comparefn a.Value b.Value)
+          Array.Copy(sortable, ao.Dense, ilength)
 
         else
           ao.Sparse.Sort(comparefn)

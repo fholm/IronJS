@@ -334,6 +334,19 @@ module internal String =
       let to' = Math.Max(finalStart, finalEnd)
       S.Substring(from, to' - from)
 
+    /// These steps are outlined in the ECMA-262, Appendix B.1.2
+    let private substr (_:FO) (this:CO) (start:BV) (length:BV) =
+      let S = this |> TC.ToString
+      let start = TC.ToInteger(start)
+      let length = if length.IsUndefined then Int32.MaxValue else TC.ToInteger length
+      let sLength = S.Length
+      let start = if start >= 0 then start else max (sLength + start) 0
+      let length = min (max length 0) (sLength - start)
+      if length <= 0 then
+        ""
+      else
+        S.Substring(start, length)
+
     ///
     let private toLowerCase (_:FO) (this:CO) =
       let value = this |> TypeConverter.ToString
@@ -407,6 +420,9 @@ module internal String =
 
       let substring = FunctionReturn<double, BV, string>(substring) $ Utils.createFunction env (Some 2)
       proto.Put("substring", substring, DontEnum)
+
+      let substr = FunctionReturn<BV, BV, string>(substr) $ Utils.createFunction env (Some 2)
+      proto.Put("substr", substr, DontEnum)
 
       let toLowerCase = FunctionReturn<string>(toLowerCase) $ Utils.createFunction env (Some 0)
       proto.Put("toLowerCase", toLowerCase, DontEnum)

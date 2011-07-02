@@ -9,6 +9,7 @@ open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 
 open System
+open System.Dynamic
 open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
@@ -167,6 +168,20 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
 
     member x.Unbox<'a>() = x.ClrBoxed :?> 'a
 
+    member x.UnboxObject() : obj =
+        if x.Marker < Markers.Tagged then
+            x.Number :> obj
+        else
+          match x.Tag with
+          | TypeTags.Bool -> x.Bool :> obj
+          | TypeTags.Clr -> x.Clr
+          | TypeTags.Function -> x.Func :> obj
+          | TypeTags.Object -> x.Object :> obj
+          | TypeTags.String -> x.String :> obj
+          | TypeTags.SuffixString -> x.SuffixString :> obj
+          | TypeTags.Undefined -> Undefined.Instance :> obj
+          | _ -> x :> obj
+
     static member Box(value:CO) =
       let mutable box = BV()
       box.Clr <- value
@@ -191,11 +206,6 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box.Tag <- TypeTags.SuffixString
       box
 
-    static member Box(value:int) =
-      let mutable box = BV()
-      box.Number <- double value
-      box
-
     static member Box(value:double) =
       let mutable box = BV()
       box.Number <- value
@@ -207,10 +217,20 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
       box
 
     static member Box(value:obj) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.Clr
-      box
+      match value with
+        | :? double as d -> BV.Box(d)
+        | :? int as i -> BV.Box(double i)
+        | :? bool as b -> BV.Box(b)
+        | :? string as s -> BV.Box(s)
+        | :? SuffixString as s -> BV.Box(s)
+        | :? FO as f -> BV.Box(f)
+        | :? CO as o -> BV.Box(o)
+        | :? Undef as u -> BV.Box(u)
+        | _ ->
+          let mutable box = BV()
+          box.Clr <- value
+          box.Tag <- TypeTags.Clr
+          box
 
     static member Box(value:obj, tag:uint32) =
       let mutable box = BV()
@@ -472,7 +492,8 @@ and [<AllowNullLiteral>] Environment() =
     x.RaiseError(x.Prototypes.ReferenceError, message)
 
 and CO = CommonObject
-and [<AllowNullLiteral>] CommonObject = 
+and [<AllowNullLiteral>] CommonObject =
+  inherit DynamicObject
 
   val Env : Environment
   val mutable Prototype : CO
@@ -500,6 +521,30 @@ and [<AllowNullLiteral>] CommonObject =
     Properties = null
   }
 
+  override x.TryGetMember(binder:GetMemberBinder, result:obj byref) : bool =
+    let item:Descriptor = x.Find(binder.Name)
+    result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
+    true
+
+  override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
+    x.Put(binder.Name, value)
+    true
+
+  override x.TryInvokeMember(binder:InvokeMemberBinder, args:obj array, result:obj byref) : bool =
+    let item:Descriptor = x.Find(binder.Name)
+    if item.HasValue then
+      let box = item.Value
+      if box.IsFunction then
+        let func = box.Func
+        let args:Args = args |> Array.map (fun a -> BV.Box(a))
+        let ret = func.Call(x, args)
+        result <- ret.UnboxObject()
+        true
+      else
+        false
+    else
+      false
+
   abstract ClassName : string with get
   default x.ClassName = "Object"
 
@@ -510,6 +555,10 @@ and [<AllowNullLiteral>] CommonObject =
       if x.Properties.[kvp.Value].HasValue then
         dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
     dict
+
+  override x.GetDynamicMemberNames() =
+    seq { for p in x.Members.Keys do
+            yield p }
 
   ///
   member x.HasPrototype = 
@@ -1757,6 +1806,12 @@ and [<AllowNullLiteral>] FunctionObject =
   override x.ClassName = "Function"
 
   member x.Name = x.MetaData.Name
+
+  override x.TryInvoke(binder:InvokeBinder, args:obj array, result:obj byref) =
+    let args:Args = args |> Array.map (fun a -> BV.Box(a))
+    let ret = x.Call(x.Env.Globals, args)
+    result <- ret.UnboxObject()
+    true
 
   member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")

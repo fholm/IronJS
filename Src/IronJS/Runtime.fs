@@ -9,6 +9,7 @@ open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 
 open System
+open System.Dynamic
 open System.Reflection
 open System.Reflection.Emit
 open System.Runtime.InteropServices
@@ -166,6 +167,19 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
         | _ -> x.Clr
 
     member x.Unbox<'a>() = x.ClrBoxed :?> 'a
+
+    member x.UnboxObject() : obj =
+        if x.Marker < Markers.Tagged then
+            x.Number :> obj
+        else
+          match x.Tag with
+          | TypeTags.Bool -> x.Bool :> obj
+          | TypeTags.Clr -> x.Clr
+          | TypeTags.Function -> x.Func :> obj
+          | TypeTags.Object -> x.Object :> obj
+          | TypeTags.String -> x.String :> obj
+          | TypeTags.SuffixString -> x.SuffixString :> obj
+          | _ -> x :> obj
 
     static member Box(value:CO) =
       let mutable box = BV()
@@ -472,7 +486,8 @@ and [<AllowNullLiteral>] Environment() =
     x.RaiseError(x.Prototypes.ReferenceError, message)
 
 and CO = CommonObject
-and [<AllowNullLiteral>] CommonObject = 
+and [<AllowNullLiteral>] CommonObject =
+  inherit DynamicObject
 
   val Env : Environment
   val mutable Prototype : CO
@@ -500,6 +515,19 @@ and [<AllowNullLiteral>] CommonObject =
     Properties = null
   }
 
+  override x.TryGetMember(binder:GetMemberBinder, result:obj byref) : bool =
+    let item:Descriptor = x.Find(binder.Name)
+    if item.HasValue
+      then
+        result <- item.Value.UnboxObject()
+        true
+      else
+        false
+
+  override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
+    x.Put(binder.Name, value)
+    true
+
   abstract ClassName : string with get
   default x.ClassName = "Object"
 
@@ -510,6 +538,10 @@ and [<AllowNullLiteral>] CommonObject =
       if x.Properties.[kvp.Value].HasValue then
         dict.Add(kvp.Key, x.Properties.[kvp.Value].Value.ClrBoxed)
     dict
+
+  override x.GetDynamicMemberNames() =
+    seq { for p in x.Members.Keys do
+            yield p }
 
   ///
   member x.HasPrototype = 

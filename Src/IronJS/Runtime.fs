@@ -1817,6 +1817,12 @@ and [<AllowNullLiteral>] FunctionObject =
 
   member x.Name = x.MetaData.Name
 
+  override x.TryInvoke(binder:InvokeBinder, args:obj array, result:obj byref) =
+    let args:Args = args |> Array.map (fun a -> BV.Box(a))
+    let ret = x.Call(x.Env.Globals, args)
+    result <- ret.UnboxObject()
+    true
+
   member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")
     match prototype.Tag with

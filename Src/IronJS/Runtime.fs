@@ -526,6 +526,14 @@ and [<AllowNullLiteral>] CommonObject =
     result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
     true
 
+  override x.TryGetIndex(binder:GetIndexBinder, indexes:obj array, result:obj byref) : bool =
+    if indexes.Length <> 1 then
+      false
+    else
+      let item:Descriptor = x.Find(string indexes.[0])
+      result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
+      true
+
   override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
     x.Put(binder.Name, value)
     true

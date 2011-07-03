@@ -281,6 +281,9 @@ and [<AllowNullLiteral>] Undefined() =
   static member Instance = instance
   static member Boxed = boxed
 
+  override x.ToString() : string =
+    "undefined"
+
 ///
 and [<AbstractClass>] TypeTag() =
 
@@ -552,6 +555,19 @@ and [<AllowNullLiteral>] CommonObject =
         false
     else
       false
+
+  override x.ToString() : string =
+    let item:Descriptor = x.Find("toString")
+    if item.HasValue then
+      let box = item.Value
+      if box.IsFunction then
+        let func = box.Func
+        let ret = func.Call(x)
+        TC.ToString(ret)
+      else
+        base.ToString()
+    else
+      base.ToString()
 
   abstract ClassName : string with get
   default x.ClassName = "Object"

@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{ADB528F1-B
 	ProjectSection(SolutionItems) = preProject
 		..\Files\Docs\E262-3.pdf = ..\Files\Docs\E262-3.pdf
 		..\Files\Docs\ECMA-262 (ECMAScript 5).pdf = ..\Files\Docs\ECMA-262 (ECMAScript 5).pdf
+		..\Files\Docs\ECMA-262 (ECMAScript 5.1).pdf = ..\Files\Docs\ECMA-262 (ECMAScript 5.1).pdf
 		..\Files\Docs\ECMA-335 (CLI).pdf = ..\Files\Docs\ECMA-335 (CLI).pdf
 		..\Files\Docs\ES5 Errata 7-1-10.pdf = ..\Files\Docs\ES5 Errata 7-1-10.pdf
 	EndProjectSection

@@ -525,21 +525,28 @@ and [<AllowNullLiteral>] CommonObject =
   }
 
   override x.TryGetMember(binder:GetMemberBinder, result:obj byref) : bool =
-    let item:Descriptor = x.Find(binder.Name)
-    result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
+    let prop = x.Get(binder.Name)
+    result <- prop.UnboxObject()
     true
 
   override x.TryGetIndex(binder:GetIndexBinder, indexes:obj array, result:obj byref) : bool =
     if indexes.Length <> 1 then
       false
     else
-      let item:Descriptor = x.Find(string indexes.[0])
-      result <- if item.HasValue then item.Value.UnboxObject() else Undefined.Instance :> obj
+      let prop = x.Get(string indexes.[0])
+      result <- prop.UnboxObject()
       true
 
   override x.TrySetMember(binder:SetMemberBinder, value:obj) : bool =
     x.Put(binder.Name, value)
     true
+
+  override x.TrySetIndex(binder:SetIndexBinder, indexes:obj array, value:obj) : bool =
+    if indexes.Length <> 1 then
+      false
+    else
+      x.Put(string indexes.[0], value)
+      true
 
   override x.TryInvokeMember(binder:InvokeMemberBinder, args:obj array, result:obj byref) : bool =
     let item:Descriptor = x.Find(binder.Name)

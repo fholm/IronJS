@@ -1767,7 +1767,9 @@ and FunctionReturn<'a, 'b, 'c, 'd, 'r> = Func<FO, CO, 'a, 'b, 'c, 'd, 'r>
 /// Alias for FunctionObject
 and FO = FunctionObject
 
-/// 
+/// <summary>
+/// The class that contains the metadata that describes a <see cref="FunctionObject"/>.
+/// </summary>
 and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, parameterStorage) =
   let delegateCache = new MutableDict<Type, Delegate>()
   
@@ -1779,13 +1781,17 @@ and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, par
   member x.FunctionType : FunctionType = functionType
   member x.ParameterStorage : (ParameterStorageType * int) array = parameterStorage
 
+  /// <summary>
   /// This constructor is for user functions, which we know
   /// always have ConstructorMode.User.
+  /// </summary>
   new (id:uint64, compiler:FunctionCompiler, parameterStorage:(ParameterStorageType * int) array) =
     FunctionMetaData(id, FunctionType.UserDefined, compiler, parameterStorage)
 
+  /// <summary>
   /// This constructor is for host functions, which we don't
   /// need parameter storage information about.
+  /// </summary>
   new (id:uint64, mode:FunctionType, compiler:FunctionCompiler) =
     FunctionMetaData(id, mode, compiler, Array.empty)
 
@@ -1799,13 +1805,18 @@ and [<AllowNullLiteral>] FunctionMetaData(id:uint64, functionType, compiler, par
 
     compiled
 
+  /// <summary>
   /// Retrieves and already compiled delegate for the current
   /// function, or compiles a new one if there is needed.
+  /// </summary>
   member x.GetDelegate<'a when 'a :> Delegate>(f:FO) =
     x.GetDelegate(f, typeof<'a>) :?> 'a
 
+/// <summary>
 /// Type that is used for representing objects that also
-/// support the [[Call]] and [[Construct]] functions
+/// support the <see cref="M:FunctionObject.Call"/> and
+/// <see cref="M:FunctionObject.Construct"/> functions
+/// </summary>
 and [<AllowNullLiteral>] FunctionObject =
   inherit CO
 
@@ -1816,6 +1827,12 @@ and [<AllowNullLiteral>] FunctionObject =
   [<DefaultValue>] 
   val mutable ReusablePrivateScope : BV array
      
+  /// <summary>
+  /// Initializes a new instance of the <see cref="FunctionObject"/> class.
+  /// </summary>
+  /// <param name="env">The <see cref="Environment"/> the function is to exist within.</param>
+  /// <param name="closureScope">The closure scope the function is enclosed in.</param>
+  /// <param name="dynamicScope">The dynamic scope the function is enclosed in.</param>
   new (env:Env, id, closureScope, dynamicScope) = { 
     inherit CO(env, env.Maps.Function, env.Prototypes.Function)
     MetaData = env.GetFunctionMetaData(id)
@@ -1823,6 +1840,12 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = dynamicScope
   }
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="FunctionObject"/> class.
+  /// </summary>
+  /// <param name="env">The <see cref="Environment"/> the function is to exist within.</param>
+  /// <param name="metaData">The <see cref="FunctionMetaData"/> that describes the function.</param>
+  /// <param name="propertyMap">The <see cref="Schema"/> that contains the function's properties.</param>
   new (env:Env, metaData, propertyMap) = {
     inherit CO(env, propertyMap, env.Prototypes.Function)
     MetaData = metaData
@@ -1830,6 +1853,10 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = List.empty
   }
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="FunctionObject"/> class.
+  /// </summary>
+  /// <param name="env">The <see cref="Environment"/> the function is to exist within.</param>
   new (env:Env) = {
     inherit CO(env)
     MetaData = env.GetFunctionMetaData(0UL)
@@ -1837,16 +1864,33 @@ and [<AllowNullLiteral>] FunctionObject =
     DynamicScope = List.empty
   }
 
+  /// <summary>
+  /// Gets the name of the object class.
+  /// </summary>
   override x.ClassName = "Function"
 
+  /// <summary>
+  /// Gets the name of the function.
+  /// </summary>
   member x.Name = x.MetaData.Name
 
+  /// <summary>
+  /// Tries to invoke the function bound by the <paramref name="binder"/> with the
+  /// arguments specified in <paramref name="args"/>.
+  /// </summary>
+  /// <param name="binder">The <see cref="InvokeBinder"/> that is bound to the function which is to be invoked.</param>
+  /// <param name="binder">The object array to pass to the function.</param>
+  /// <param name="result">The result returned from the function invokation.</param>
+  /// <returns><c>true</c> if the function invokation succeeded; otherwise <c>false</c>.</returns>
   override x.TryInvoke(binder:InvokeBinder, args:obj array, result:obj byref) =
     let args:Args = args |> Array.map (fun a -> BV.Box(a))
     let ret = x.Call(x.Env.Globals, args)
     result <- ret.UnboxObject()
     true
 
+  /// <summary>
+  /// Gets the prototype object the instance of the function this <see cref="FunctionObject"/> represents.
+  /// </summary>
   member x.InstancePrototype : CO =
     let prototype = x.Get("prototype")
     match prototype.Tag with
@@ -1854,11 +1898,20 @@ and [<AllowNullLiteral>] FunctionObject =
     | TypeTags.Object -> prototype.Object
     | _ -> x.Env.Prototypes.Object
     
+  /// <summary>
+  /// Initializes a new instance of the JavaScript function this <see cref="FunctionObject"/> represents.
+  /// </summary>
+  /// <returns>The <see cref="CommonObject"/> representing the JavaScript object of the function.</returns>
   member x.NewInstance() =
     let o = x.Env.NewObject()
     o.Prototype <- x.InstancePrototype
     o
 
+  /// <summary>
+  /// Checks whether the JavaScript function this <see cref="FunctionObject"/> represents is an instance of <paramref name="v"/>.
+  /// </summary>
+  /// <param name="v">The object the JavaScript function this <see cref="FunctionObject"/> represents should be an instance of.</param>
+  /// <returns><c>true</c> if the JavaScript function this <see cref="FunctionObject"/> represents is an instance of <paramref name="v"/>; otherwise <c>false</c>.</returns>
   member x.HasInstance(v:CO) : bool =
     let o = x.Get("prototype")
 
@@ -1874,30 +1927,75 @@ and [<AllowNullLiteral>] FunctionObject =
 
     found
 
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this) : BV  =
     let func = x.MetaData.GetDelegate<Function>(x)
     func.Invoke(x, this)
 
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <param name="a">The first argument passed to the function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this,a:'a) : BV  =
     let func = x.MetaData.GetDelegate<Function<'a>>(x)
     func.Invoke(x, this, a)
 
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <param name="a">The first argument passed to the function.</param>
+  /// <param name="b">The second argument passed to the function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this,a:'a,b:'b) : BV  =
     let func = x.MetaData.GetDelegate<Function<'a,'b>>(x)
     func.Invoke(x, this, a, b)
     
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <param name="a">The first argument passed to the function.</param>
+  /// <param name="b">The second argument passed to the function.</param>
+  /// <param name="c">The third argument passed to the function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this,a:'a,b:'b,c:'c) : BV  =
     let func = x.MetaData.GetDelegate<Function<'a,'b,'c>>(x)
     func.Invoke(x, this, a, b, c)
 
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <param name="a">The first argument passed to the function.</param>
+  /// <param name="b">The second argument passed to the function.</param>
+  /// <param name="c">The third argument passed to the function.</param>
+  /// <param name="d">The fourth argument passed to the function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this,a:'a,b:'b,c:'c,d:'d) : BV  =
     let func = x.MetaData.GetDelegate<Function<'a,'b,'c,'d>>(x)
     func.Invoke(x, this, a, b, c, d)
 
+  /// <summary>
+  /// Calls the function with the given <paramref name="this"/> context.
+  /// </summary>
+  /// <param name="this">The context for <c>this</c> in the invoked function.</param>
+  /// <param name="args">The unbound list of arguments passed to the function.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the function call.</returns>
   member x.Call(this,args:Args) : BV =
     let func = x.MetaData.GetDelegate<VariadicFunction>(x)
     func.Invoke(x, this, args)
     
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct() =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null)
@@ -1907,6 +2005,11 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
     
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <param name="a">The first argument passed to the constructor.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct(a:'a) =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null, a)
@@ -1916,6 +2019,12 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
     
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <param name="a">The first argument passed to the constructor.</param>
+  /// <param name="b">The second argument passed to the constructor.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct(a, b) =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null, a, b)
@@ -1925,6 +2034,13 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
     
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <param name="a">The first argument passed to the constructor.</param>
+  /// <param name="b">The second argument passed to the constructor.</param>
+  /// <param name="c">The third argument passed to the constructor.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct(a, b, c) =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null, a, b, c)
@@ -1934,6 +2050,14 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <param name="a">The first argument passed to the constructor.</param>
+  /// <param name="b">The second argument passed to the constructor.</param>
+  /// <param name="c">The third argument passed to the constructor.</param>
+  /// <param name="d">The fourth argument passed to the constructor.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct(a, b, c, d) =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null, a, b, c, d)
@@ -1943,6 +2067,11 @@ and [<AllowNullLiteral>] FunctionObject =
 
     | _ -> x.Env.RaiseTypeError()
 
+  /// <summary>
+  /// Calls the constructor on the JavaScript function represented by the <see cref="FunctionObject"/>.
+  /// </summary>
+  /// <param name="args">The unbound list of arguments passed to the constructor.</param>
+  /// <returns>The <see cref="BoxedValue"/> result of the constructor call.</returns>
   member x.Construct(args:Args) =
     match x.MetaData.FunctionType with
     | FunctionType.NativeConstructor -> x.Call(null, args)

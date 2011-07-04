@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 
 ///
 type InlinePropertyGetCache(env:Env, throwOnMissing:bool) =

@@ -236,7 +236,11 @@ module CSharp =
       context |> FSharp.getFunctionAs<'T> name
 
     ///
+#if CLR2
+    member x.Execute(source) : obj =
+#else
     member x.Execute(source) : [<return: System.Runtime.CompilerServices.Dynamic>]obj =
+#endif
       context |> FSharp.execute source
 
     ///
@@ -244,7 +248,11 @@ module CSharp =
       context |> FSharp.executeAs<'T> source
 
     ///
+#if CLR2
+    member x.ExecuteFile(path) : obj =
+#else
     member x.ExecuteFile(path) : [<return: System.Runtime.CompilerServices.Dynamic>]obj =
+#endif
       context |> FSharp.executeFile path
 
     ///

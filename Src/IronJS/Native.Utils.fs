@@ -3,6 +3,7 @@
 open System
 open System.Reflection
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 
 ///

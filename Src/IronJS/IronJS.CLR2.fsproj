@@ -41,7 +41,6 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Legacy.fs" />
     <Compile Include="FSharp.fs" />
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
@@ -100,6 +99,13 @@
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronJS.Runtime\IronJS.Runtime.CLR2.csproj">
+      <Name>IronJS.Runtime.CLR2</Name>
+      <Project>{e186e25a-34ff-4bd9-bbbe-b0b15849a828}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

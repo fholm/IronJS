@@ -4,6 +4,7 @@ open System
 open System.Globalization
 
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Compiler
 

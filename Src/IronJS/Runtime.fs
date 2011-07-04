@@ -5,6 +5,9 @@
 #nowarn "9"
 
 open IronJS
+#if CLR2
+open IronJS.Runtime
+#endif
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 

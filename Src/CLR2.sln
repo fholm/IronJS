@@ -5,6 +5,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IronJS.CLR2", "IronJS\IronJ
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "REPL.CLR2", "Tools\REPL\REPL.CLR2.fsproj", "{0F78334F-EA74-4C5C-8232-B7D329BE2226}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronJS.Runtime.CLR2", "IronJS.Runtime\IronJS.Runtime.CLR2.csproj", "{E186E25A-34FF-4BD9-BBBE-B0B15849A828}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = CLR4.vsmdi
@@ -22,6 +24,10 @@ Global
 		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F78334F-EA74-4C5C-8232-B7D329BE2226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E186E25A-34FF-4BD9-BBBE-B0B15849A828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E186E25A-34FF-4BD9-BBBE-B0B15849A828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E186E25A-34FF-4BD9-BBBE-B0B15849A828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E186E25A-34FF-4BD9-BBBE-B0B15849A828}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

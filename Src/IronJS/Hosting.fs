@@ -228,28 +228,28 @@ module CSharp =
       context |> FSharp.getGlobal name
 
     ///
-    member x.GetGlobalAs<'a>(name) =
-      context |> FSharp.getGlobalAs<'a> name
+    member x.GetGlobalAs<'T>(name) =
+      context |> FSharp.getGlobalAs<'T> name
 
     ///
-    member x.GetFunctionAs<'a when 'a :> Delegate>(name) =
-      context |> FSharp.getFunctionAs<'a> name
+    member x.GetFunctionAs<'T when 'T :> Delegate>(name) =
+      context |> FSharp.getFunctionAs<'T> name
 
     ///
-    member x.Execute(source) =
+    member x.Execute(source) : [<return: System.Runtime.CompilerServices.Dynamic>]obj =
       context |> FSharp.execute source
 
     ///
-    member x.Execute<'a>(source) =
-      context |> FSharp.executeAs<'a> source
+    member x.Execute<'T>(source) =
+      context |> FSharp.executeAs<'T> source
 
     ///
-    member x.ExecuteFile(path) =
+    member x.ExecuteFile(path) : [<return: System.Runtime.CompilerServices.Dynamic>]obj =
       context |> FSharp.executeFile path
 
     ///
-    member x.ExecuteFile<'a>(path) =
-      context |> FSharp.executeFileAs<'a> path
+    member x.ExecuteFile<'T>(path) =
+      context |> FSharp.executeFileAs<'T> path
 
     ///
     member x.CreatePrintFunction() =

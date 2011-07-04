@@ -2,9 +2,9 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 
 module internal Number =
 
@@ -26,14 +26,14 @@ module internal Number =
     
     ctor.MetaData.Name <- "Number"
 
-    ctor.Put("prototype", env.Prototypes.Number, Immutable) 
-    ctor.Put("MAX_VALUE", Double.MaxValue, Immutable) 
-    ctor.Put("MIN_VALUE", Double.Epsilon, Immutable) 
-    ctor.Put("NaN", Double.NaN, Immutable) 
-    ctor.Put("NEGATIVE_INFINITY", NegInf, Immutable) 
-    ctor.Put("POSITIVE_INFINITY", PosInf, Immutable) 
+    ctor.Put("prototype", env.Prototypes.Number, DescriptorAttrs.Immutable) 
+    ctor.Put("MAX_VALUE", Double.MaxValue, DescriptorAttrs.Immutable) 
+    ctor.Put("MIN_VALUE", Double.Epsilon, DescriptorAttrs.Immutable) 
+    ctor.Put("NaN", Double.NaN, DescriptorAttrs.Immutable) 
+    ctor.Put("NEGATIVE_INFINITY", NegInf, DescriptorAttrs.Immutable) 
+    ctor.Put("POSITIVE_INFINITY", PosInf, DescriptorAttrs.Immutable) 
 
-    env.Globals.Put("Number", ctor, DontEnum)
+    env.Globals.Put("Number", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Number=ctor}
 
   ///
@@ -164,29 +164,29 @@ module internal Number =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Number;
-      proto.Put("constructor", env.Constructors.Number, DontEnum)
+      proto.Put("constructor", env.Constructors.Number, DescriptorAttrs.DontEnum)
 
       let toString = new Func<FO, CO, BV, string>(toString)
       let toString = toString $ Utils.createFunction env (Some 1)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
       let toLocaleString = new Func<FO, CO, string>(toLocaleString)
       let toLocaleString = Utils.createHostFunction env toLocaleString
-      proto.Put("toLocaleString", toLocaleString, DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
 
       let valueOf = new Func<FO, CO, BV>(valueOf)
       let valueOf = valueOf $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
 
       let toFixed = new Func<FO, CO, double, string>(toFixed)
       let toFixed = toFixed $ Utils.createFunction env (Some 1)
-      proto.Put("toFixed", toFixed, DontEnum)
+      proto.Put("toFixed", toFixed, DescriptorAttrs.DontEnum)
     
       let toExponential = new Func<FO, CO, BV, string>(toExponential)
       let toExponential = toExponential $ Utils.createFunction env (Some 1)
-      proto.Put("toExponential", toExponential, DontEnum)
+      proto.Put("toExponential", toExponential, DescriptorAttrs.DontEnum)
     
       let toPrecision = new Func<FO, CO, BV, string>(toPrecision)
       let toPrecision = toPrecision $ Utils.createFunction env (Some 1)
-      proto.Put("toPrecision", toPrecision, DontEnum)
+      proto.Put("toPrecision", toPrecision, DescriptorAttrs.DontEnum)
     

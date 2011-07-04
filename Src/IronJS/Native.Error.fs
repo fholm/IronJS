@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.DescriptorAttrs
+open IronJS.Runtime
 
 module Error =
 
@@ -13,7 +13,7 @@ module Error =
 
       if message.Tag <> TypeTags.Undefined then
         let msg = message |> TypeConverter.ToString
-        error.Put("message", msg, DontEnum)
+        error.Put("message", msg, DescriptorAttrs.DontEnum)
 
       error.Prototype <- proto
       error :> CO
@@ -23,15 +23,15 @@ module Error =
       let ctor = ctor |> Utils.createConstructor env (Some 1)
       
       ctor.Prototype <- env.Prototypes.Function
-      ctor.Put("prototype", proto, Immutable)
+      ctor.Put("prototype", proto, DescriptorAttrs.Immutable)
 
-      env.Globals.Put(name, ctor, DontEnum)
+      env.Globals.Put(name, ctor, DescriptorAttrs.DontEnum)
       env.Constructors <- update env.Constructors ctor
 
     let setupPrototype (n:string) (ctor:FO) (proto:CO) =
-      proto.Put("name", n, DontEnum)
-      proto.Put("constructor", ctor, DontEnum)
-      proto.Put("message", "", DontEnum)
+      proto.Put("name", n, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", ctor, DescriptorAttrs.DontEnum)
+      proto.Put("message", "", DescriptorAttrs.DontEnum)
 
   let private name = "Error"
   let private updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
@@ -56,7 +56,7 @@ module Error =
     
     let toString = Function(toString)
     let toString = Utils.createHostFunction env toString
-    proto.Put("toString", toString, DontEnum)
+    proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
     Utils.setupPrototype name ctor proto
 

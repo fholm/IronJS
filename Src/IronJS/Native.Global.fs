@@ -3,9 +3,9 @@
 open System
 open IronJS
 open IronJS.Compiler
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 open System.Text.RegularExpressions
 
 ///
@@ -344,33 +344,33 @@ module Global =
   ///
   let setup (env:Environment) =
     env.Globals <- env.NewObject()
-    env.Globals.Put("NaN", NaN, DontEnumOrDelete) //15.1.1.1
-    env.Globals.Put("Infinity", PosInf, DontEnumOrDelete) //15.1.1.2
-    env.Globals.Put("undefined", Undefined.Instance, DontEnumOrDelete) //15.1.1.3
+    env.Globals.Put("NaN", NaN, DescriptorAttrs.DontEnumOrDelete) //15.1.1.1
+    env.Globals.Put("Infinity", PosInf, DescriptorAttrs.DontEnumOrDelete) //15.1.1.2
+    env.Globals.Put("undefined", Undefined.Instance, DescriptorAttrs.DontEnumOrDelete) //15.1.1.3
 
     let eval = Func<Compiler.EvalTarget, BV>(eval) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("eval", eval, DontEnum)
+    env.Globals.Put("eval", eval, DescriptorAttrs.DontEnum)
 
     let parseFloat = Func<BV, BV>(parseFloat) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("parseFloat", parseFloat, DontEnum)
+    env.Globals.Put("parseFloat", parseFloat, DescriptorAttrs.DontEnum)
     
     let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env (Some 2)
-    env.Globals.Put("parseInt", parseInt, DontEnum)
+    env.Globals.Put("parseInt", parseInt, DescriptorAttrs.DontEnum)
     
     let isNaN = Func<double, BV>(isNaN) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("isNaN", isNaN, DontEnum)
+    env.Globals.Put("isNaN", isNaN, DescriptorAttrs.DontEnum)
     
     let isFinite = Func<double, bool>(isFinite) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("isFinite", isFinite, DontEnum)
+    env.Globals.Put("isFinite", isFinite, DescriptorAttrs.DontEnum)
 
     let decodeURI = Function<BV>(decodeURI) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("decodeURI", decodeURI, DontEnum)
+    env.Globals.Put("decodeURI", decodeURI, DescriptorAttrs.DontEnum)
     
     let decodeURIComponent = Function<BV>(decodeURIComponent) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("decodeURIComponent", decodeURIComponent, DontEnum)
+    env.Globals.Put("decodeURIComponent", decodeURIComponent, DescriptorAttrs.DontEnum)
     
     let encodeURI = Function<BV>(encodeURI) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("encodeURI", encodeURI, DontEnum)
+    env.Globals.Put("encodeURI", encodeURI, DescriptorAttrs.DontEnum)
 
     let encodeURIComponent = Function<BV>(encodeURIComponent) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("encodeURIComponent", encodeURIComponent, DontEnum)
+    env.Globals.Put("encodeURIComponent", encodeURIComponent, DescriptorAttrs.DontEnum)

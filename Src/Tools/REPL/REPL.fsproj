@@ -48,6 +48,11 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <ProjectReference Include="..\..\IronJS.Runtime\IronJS.Runtime.csproj">
+      <Name>IronJS.Runtime</Name>
+      <Project>{f2322575-40e5-4e98-be72-bf4af9c77e77}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\IronJS\IronJS.fsproj">
       <Name>IronJS</Name>
       <Project>{9e257324-94e7-49af-ae83-718288e925d8}</Project>

@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.DescriptorAttrs
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 
 ///
@@ -158,16 +158,16 @@ module internal Function =
     let setup (env:Env) =
       //
       let proto = env.Prototypes.Function
-      proto.Put("constructor", env.Constructors.Function, DontEnum)
+      proto.Put("constructor", env.Constructors.Function, DescriptorAttrs.DontEnum)
 
       //
       let call = call $ Utils.createVariadicFunc env (Some 1)
-      proto.Put("call", call, DontEnum)
+      proto.Put("call", call, DescriptorAttrs.DontEnum)
 
       //
       let apply = apply $ Utils.createFunc2 env (Some 2)
-      proto.Put("apply", apply, DontEnum)
+      proto.Put("apply", apply, DescriptorAttrs.DontEnum)
     
       //
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)

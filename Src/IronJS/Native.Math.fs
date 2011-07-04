@@ -2,9 +2,9 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 
 module internal Math =
 
@@ -53,67 +53,67 @@ module internal Math =
     let math = env.NewMath()
     
     math.Prototype <- env.Prototypes.Object
-    math.Put("E", Math.E, Immutable)
-    math.Put("LN10", Math.Log(10.0), Immutable)
-    math.Put("LN2", Math.Log(2.0), Immutable)
-    math.Put("LOG2E", 1.0 / Math.Log(2.0), Immutable)
-    math.Put("LOG10E", Math.Log10(Math.E), Immutable)
-    math.Put("PI", Math.PI, Immutable)
-    math.Put("SQRT1_2", Math.Sqrt(0.5), Immutable)
-    math.Put("SQRT2", Math.Sqrt(2.0), Immutable)
+    math.Put("E", Math.E, DescriptorAttrs.Immutable)
+    math.Put("LN10", Math.Log(10.0), DescriptorAttrs.Immutable)
+    math.Put("LN2", Math.Log(2.0), DescriptorAttrs.Immutable)
+    math.Put("LOG2E", 1.0 / Math.Log(2.0), DescriptorAttrs.Immutable)
+    math.Put("LOG10E", Math.Log10(Math.E), DescriptorAttrs.Immutable)
+    math.Put("PI", Math.PI, DescriptorAttrs.Immutable)
+    math.Put("SQRT1_2", Math.Sqrt(0.5), DescriptorAttrs.Immutable)
+    math.Put("SQRT2", Math.Sqrt(2.0), DescriptorAttrs.Immutable)
 
-    env.Globals.Put("Math", math, DontEnum)
+    env.Globals.Put("Math", math, DescriptorAttrs.DontEnum)
 
     let abs = Func<double, double>(Math.Abs) $ Utils.createFunction env (Some 1)
-    math.Put("abs", abs, DontEnum)
+    math.Put("abs", abs, DescriptorAttrs.DontEnum)
 
     let acos = Func<double, double>(Math.Acos) $ Utils.createFunction env (Some 1)
-    math.Put("acos", acos, DontEnum)
+    math.Put("acos", acos, DescriptorAttrs.DontEnum)
 
     let asin = Func<double, double>(Math.Asin) $ Utils.createFunction env (Some 1)
-    math.Put("asin", asin, DontEnum)
+    math.Put("asin", asin, DescriptorAttrs.DontEnum)
 
     let atan = Func<double, double>(Math.Atan) $ Utils.createFunction env (Some 1)
-    math.Put("atan", atan, DontEnum)
+    math.Put("atan", atan, DescriptorAttrs.DontEnum)
 
     let atan2 = Func<double, double, double>(atan2) $ Utils.createFunction env (Some 2)
-    math.Put("atan2", atan2, DontEnum)
+    math.Put("atan2", atan2, DescriptorAttrs.DontEnum)
 
     let ceil = Func<double, double>(Math.Ceiling) $ Utils.createFunction env (Some 1)
-    math.Put("ceil", ceil, DontEnum)
+    math.Put("ceil", ceil, DescriptorAttrs.DontEnum)
 
     let cos = Func<double, double>(Math.Cos) $ Utils.createFunction env (Some 1)
-    math.Put("cos", cos, DontEnum)
+    math.Put("cos", cos, DescriptorAttrs.DontEnum)
 
     let exp = Func<double, double>(Math.Exp) $ Utils.createFunction env (Some 1)
-    math.Put("exp", exp, DontEnum)
+    math.Put("exp", exp, DescriptorAttrs.DontEnum)
 
     let floor = Func<double, double>(Math.Floor) $ Utils.createFunction env (Some 1)
-    math.Put("floor", floor, DontEnum)
+    math.Put("floor", floor, DescriptorAttrs.DontEnum)
 
     let log = Func<double, double>(Math.Log) $ Utils.createFunction env (Some 1)
-    math.Put("log", log, DontEnum)
+    math.Put("log", log, DescriptorAttrs.DontEnum)
 
     let max = Func<Args, double>(max) $ Utils.createFunction env (Some 2)
-    math.Put("max", max, DontEnum)
+    math.Put("max", max, DescriptorAttrs.DontEnum)
 
     let min = Func<Args, double>(min) $ Utils.createFunction env (Some 2)
-    math.Put("min", min, DontEnum)
+    math.Put("min", min, DescriptorAttrs.DontEnum)
 
     let pow = Func<double, double, double>(pow) $ Utils.createFunction env (Some 2)
-    math.Put("pow", pow, DontEnum)
+    math.Put("pow", pow, DescriptorAttrs.DontEnum)
 
     let random = Func<FO, CO, double>(random) $ Utils.createFunction env (Some 1)
-    math.Put("random", random, DontEnum)
+    math.Put("random", random, DescriptorAttrs.DontEnum)
 
     let round = Func<double, double>(round) $ Utils.createFunction env (Some 1)
-    math.Put("round", round, DontEnum)
+    math.Put("round", round, DescriptorAttrs.DontEnum)
     
     let sin = Func<double, double>(Math.Sin) $ Utils.createFunction env (Some 1)
-    math.Put("sin", sin, DontEnum)
+    math.Put("sin", sin, DescriptorAttrs.DontEnum)
     
     let sqrt = Func<double, double>(Math.Sqrt) $ Utils.createFunction env (Some 1)
-    math.Put("sqrt", sqrt, DontEnum)
+    math.Put("sqrt", sqrt, DescriptorAttrs.DontEnum)
     
     let tan = Func<double, double>(Math.Tan) $ Utils.createFunction env (Some 1)
-    math.Put("tan", tan, DontEnum)
+    math.Put("tan", tan, DescriptorAttrs.DontEnum)

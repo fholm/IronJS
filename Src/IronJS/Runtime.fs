@@ -5,9 +5,7 @@
 #nowarn "9"
 
 open IronJS
-#if CLR2
 open IronJS.Runtime
-#endif
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
 
@@ -53,13 +51,6 @@ module BoxFields =
   let [<Literal>] SuffixString = "SuffixString"
   let [<Literal>] Object = "Object"
   let [<Literal>] Function = "Func"
-
-module DescriptorAttrs =
-  let [<Literal>] ReadOnly = 1us
-  let [<Literal>] DontEnum = 2us
-  let [<Literal>] DontDelete = 4us
-  let [<Literal>] DontEnumOrDelete = 6us
-  let [<Literal>] Immutable = 7us
 
 module ParamsModes =
   let [<Literal>] NoParams = 0uy
@@ -263,12 +254,12 @@ and Desc = Descriptor
 and [<NoComparison>] Descriptor =
   struct
     val mutable Value : BV
-    val mutable Attributes : uint16
+    val mutable Attributes : DescriptorAttrs
     val mutable HasValue : bool
 
-    member x.IsWritable = (x.Attributes &&& DescriptorAttrs.ReadOnly) = 0us
-    member x.IsDeletable = (x.Attributes &&& DescriptorAttrs.DontDelete) = 0us
-    member x.IsEnumerable = (x.Attributes &&& DescriptorAttrs.DontEnum) = 0us
+    member x.IsWritable = (x.Attributes &&& DescriptorAttrs.ReadOnly) = DescriptorAttrs.None
+    member x.IsDeletable = (x.Attributes &&& DescriptorAttrs.DontDelete) = DescriptorAttrs.None
+    member x.IsEnumerable = (x.Attributes &&& DescriptorAttrs.DontEnum) = DescriptorAttrs.None
   end
 
 ///
@@ -701,7 +692,7 @@ and [<AllowNullLiteral>] CommonObject =
         false
 
   //
-  member x.SetAttrs(name:string, attrs:uint16) =
+  member x.SetAttrs(name:string, attrs:DescriptorAttrs) =
     let mutable index = 0
 
     if x.PropertySchema.IndexMap.TryGetValue(name, &index) then
@@ -842,35 +833,35 @@ and [<AllowNullLiteral>] CommonObject =
   member x.Put(index:uint32, value:CO) : unit = x.Put(index, value, TypeTags.Object)
   member x.Put(index:uint32, value:FO) : unit = x.Put(index, value, TypeTags.Function)
 
-  member x.Put(name:String, value:BV, attrs:uint16) : unit =
+  member x.Put(name:String, value:BV, attrs:DescriptorAttrs) : unit =
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:bool, attrs:uint16) : unit = 
+  member x.Put(name:String, value:bool, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:double, attrs:uint16) : unit = 
+  member x.Put(name:String, value:double, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:obj, attrs:uint16) : unit = 
+  member x.Put(name:String, value:obj, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:String, attrs:uint16) : unit = 
+  member x.Put(name:String, value:String, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:Undefined, attrs:uint16) : unit = 
+  member x.Put(name:String, value:Undefined, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:CO, attrs:uint16) : unit = 
+  member x.Put(name:String, value:CO, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
 
-  member x.Put(name:String, value:FO, attrs:uint16) : unit = 
+  member x.Put(name:String, value:FO, attrs:DescriptorAttrs) : unit = 
     x.Put(name, value)
     x.SetAttrs(name, attrs)
     
@@ -950,23 +941,23 @@ and [<AllowNullLiteral>] CommonObject =
       
   //----------------------------------------------------------------------------
   // Put methods for setting indexes to doubles
-  member x.Put(index:BV, value:obj, tag:uint32) =
+  member x.Put(index:BV, value:obj, tag:DescriptorAttrs) =
     let mutable i = 0u
     if TC.TryToIndex(index, &i) 
       then x.Put(i, value, tag)
       else x.Put(TC.ToString(index), value, tag)
       
-  member x.Put(index:bool, value:obj, tag:uint32) =
+  member x.Put(index:bool, value:obj, tag:DescriptorAttrs) =
     x.Put(TC.ToString(index), value, tag)
     
-  member x.Put(index:double, value:obj, tag:uint32) : unit = 
+  member x.Put(index:double, value:obj, tag:DescriptorAttrs) : unit = 
     let mutable parsed = 0u
 
     if TC.TryToIndex(index, &parsed) 
       then x.Put(parsed, value, tag)
       else x.Put(TC.ToString(index), value, tag)
 
-  member x.Put(index:obj, value:obj, tag:uint32) : unit =
+  member x.Put(index:obj, value:obj, tag:DescriptorAttrs) : unit =
     let index = TC.ToString(index)
     let mutable parsed = 0u
     
@@ -974,10 +965,10 @@ and [<AllowNullLiteral>] CommonObject =
       then x.Put(parsed, value, tag)
       else x.Put(index, value, tag)
 
-  member x.Put(index:Undefined, value:obj, tag:uint32) : unit = 
+  member x.Put(index:Undefined, value:obj, tag:DescriptorAttrs) : unit = 
     x.Put("undefined", value, tag)
 
-  member x.Put(index:CO, value:obj, tag:uint32) : unit = 
+  member x.Put(index:CO, value:obj, tag:DescriptorAttrs) : unit = 
     let index = TC.ToString(index)
     let mutable parsed = 0u
     

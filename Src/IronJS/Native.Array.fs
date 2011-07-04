@@ -2,9 +2,9 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 
 ///
 module internal Array =
@@ -41,10 +41,10 @@ module internal Array =
     let ctor = new Func<FO, CO, Args, CO>(constructor')
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
-    ctor.Put("prototype", env.Prototypes.Array, Immutable)
+    ctor.Put("prototype", env.Prototypes.Array, DescriptorAttrs.Immutable)
     ctor.MetaData.Name <- "Array"
 
-    env.Globals.Put("Array", ctor, DontEnum)
+    env.Globals.Put("Array", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Array = ctor}
 
   ///
@@ -476,40 +476,40 @@ module internal Array =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Array
-      proto.Put("constructor", env.Constructors.Array, DontEnum)
+      proto.Put("constructor", env.Constructors.Array, DescriptorAttrs.DontEnum)
       
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
       let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toLocaleString", toLocaleString, DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
 
       let concat = concat $ Utils.createFunc1 env (Some 1)
-      proto.Put("concat", concat, DontEnum)
+      proto.Put("concat", concat, DescriptorAttrs.DontEnum)
 
       let push = push $ Utils.createFunc1 env (Some 1)
-      proto.Put("push", push, DontEnum)
+      proto.Put("push", push, DescriptorAttrs.DontEnum)
 
       let pop = pop $ Utils.createFunc0 env (Some 0)
-      proto.Put("pop", pop, DontEnum)
+      proto.Put("pop", pop, DescriptorAttrs.DontEnum)
 
       let shift = shift $ Utils.createFunc0 env (Some 0)
-      proto.Put("shift", shift, DontEnum)
+      proto.Put("shift", shift, DescriptorAttrs.DontEnum)
 
       let join = join $ Utils.createFunc1 env (Some 1)
-      proto.Put("join", join, DontEnum)
+      proto.Put("join", join, DescriptorAttrs.DontEnum)
 
       let reverse = reverse $ Utils.createFunc0 env (Some 0)
-      proto.Put("reverse", reverse, DontEnum)
+      proto.Put("reverse", reverse, DescriptorAttrs.DontEnum)
 
       let sort = sort $ Utils.createFunc1 env (Some 1)
-      proto.Put("sort", sort, DontEnum)
+      proto.Put("sort", sort, DescriptorAttrs.DontEnum)
 
       let slice = slice $ Utils.createFunc2 env (Some 2)
-      proto.Put("slice", slice, DontEnum)
+      proto.Put("slice", slice, DescriptorAttrs.DontEnum)
 
       let unshift = unshift $ Utils.createFunc1 env (Some 1)
-      proto.Put("unshift", unshift, DontEnum)
+      proto.Put("unshift", unshift, DescriptorAttrs.DontEnum)
 
       let splice = splice $ Utils.createFunc1 env (Some 2)
-      proto.Put("splice", splice, DontEnum)
+      proto.Put("splice", splice, DescriptorAttrs.DontEnum)

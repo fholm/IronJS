@@ -5,7 +5,7 @@
 #nowarn "46"
 
 open IronJS
-open IronJS.DescriptorAttrs
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 
 module internal RegExp =
@@ -29,11 +29,11 @@ module internal RegExp =
   ///
   let setup (env:Env) =
     let ctor = Function<BV, BV>(constructor') $ Utils.createConstructor env (Some 2)
-    ctor.Put("prototype", env.Prototypes.RegExp, Immutable)
+    ctor.Put("prototype", env.Prototypes.RegExp, DescriptorAttrs.Immutable)
     ctor.MetaData.Name <- "RegExp"
 
     env.Constructors <- {env.Constructors with RegExp=ctor}
-    env.Globals.Put("RegExp", ctor, DontEnum)
+    env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
 
   ///
   module Prototype =
@@ -138,16 +138,16 @@ module internal RegExp =
       let proto = env.Prototypes.RegExp
 
       //
-      proto.Put("constructor", env.Constructors.RegExp, DontEnum)
+      proto.Put("constructor", env.Constructors.RegExp, DescriptorAttrs.DontEnum)
 
       //
       let toString = Function(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
       //
       let exec = Function<BV>(exec)  $ Utils.createFunction env (Some 1)
-      proto.Put("exec", exec, DontEnum)
+      proto.Put("exec", exec, DescriptorAttrs.DontEnum)
 
       //
       let test = Function<BV>(test)  $ Utils.createFunction env (Some 1)
-      proto.Put("test", test, DontEnum)
+      proto.Put("test", test, DescriptorAttrs.DontEnum)

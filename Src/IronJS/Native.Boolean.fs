@@ -2,7 +2,7 @@
 
 open System
 open IronJS
-open IronJS.DescriptorAttrs
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 
 module internal Boolean =
@@ -21,9 +21,9 @@ module internal Boolean =
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.MetaData.Name <- "Boolean"
-    ctor.Put("prototype", env.Prototypes.Boolean, Immutable)
+    ctor.Put("prototype", env.Prototypes.Boolean, DescriptorAttrs.Immutable)
 
-    env.Globals.Put("Boolean", ctor, DontEnum)
+    env.Globals.Put("Boolean", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Boolean=ctor}
 
   ///
@@ -49,10 +49,10 @@ module internal Boolean =
     let setup (env:Env) =
       let proto = env.Prototypes.Boolean;
 
-      proto.Put("constructor", env.Constructors.Boolean, DontEnum)    
+      proto.Put("constructor", env.Constructors.Boolean, DescriptorAttrs.DontEnum)    
     
       let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
 
       let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)

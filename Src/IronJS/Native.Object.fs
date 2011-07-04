@@ -2,8 +2,8 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 
 ///
 module internal Object =
@@ -21,9 +21,9 @@ module internal Object =
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.MetaData.Name <- "Object"
-    ctor.Put("prototype", env.Prototypes.Object, Immutable)
+    ctor.Put("prototype", env.Prototypes.Object, DescriptorAttrs.Immutable)
 
-    env.Globals.Put("Object", ctor, DontEnum)
+    env.Globals.Put("Object", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with Object = ctor}
       
   ///
@@ -85,28 +85,28 @@ module internal Object =
     let setup (env:Env) =
       //
       let proto = env.Prototypes.Object
-      proto.Put("constructor", env.Constructors.Object, DontEnum)
+      proto.Put("constructor", env.Constructors.Object, DescriptorAttrs.DontEnum)
 
       //
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
       //
       let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toLocaleString", toLocaleString, DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
 
       //
       let valueOf = valueOf $ Utils.createFunc0 env (Some 0)
-      proto.Put("valueOf", valueOf, DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
 
       //
       let hasOwnProperty = hasOwnProperty $ Utils.createFunc1 env (Some 1)
-      proto.Put("hasOwnProperty", hasOwnProperty, DontEnum)
+      proto.Put("hasOwnProperty", hasOwnProperty, DescriptorAttrs.DontEnum)
     
       //
       let isPrototypeOf = isPrototypeOf $ Utils.createFunc1 env (Some 1)
-      proto.Put("isPrototypeOf", isPrototypeOf, DontEnum)
+      proto.Put("isPrototypeOf", isPrototypeOf, DescriptorAttrs.DontEnum)
 
       //
       let isNumerable = propertyIsEnumerable $ Utils.createFunc1 env (Some 1)
-      proto.Put("propertyIsEnumerable", isNumerable, DontEnum)
+      proto.Put("propertyIsEnumerable", isNumerable, DescriptorAttrs.DontEnum)

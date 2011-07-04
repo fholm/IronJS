@@ -4,9 +4,9 @@ open System
 open System.Text.RegularExpressions
 
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 open IronJS.Support.CustomOperators
-open IronJS.DescriptorAttrs
 
 ///
 module internal String =
@@ -42,13 +42,13 @@ module internal String =
 
     //
     let fromCharCode = new Func<Args, string>(fromCharCode) $ Utils.createFunction env (Some 1)
-    ctor.Put("fromCharCode", fromCharCode, DontEnum)
+    ctor.Put("fromCharCode", fromCharCode, DescriptorAttrs.DontEnum)
 
     //
-    ctor.Put("prototype", env.Prototypes.String, Immutable)
+    ctor.Put("prototype", env.Prototypes.String, DescriptorAttrs.Immutable)
 
     //
-    env.Globals.Put("String", ctor, DontEnum)
+    env.Globals.Put("String", ctor, DescriptorAttrs.DontEnum)
     env.Constructors <- {env.Constructors with String=ctor}
 
   ///
@@ -377,61 +377,61 @@ module internal String =
     let setup (env:Env) =
       let proto = env.Prototypes.String;
 
-      proto.Put("constructor", env.Constructors.String, DontEnum)
+      proto.Put("constructor", env.Constructors.String, DescriptorAttrs.DontEnum)
 
       let toString = Function(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
 
       let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
 
       let charAt = FunctionReturn<double, string>(charAt) $ Utils.createFunction env (Some 1)
-      proto.Put("charAt", charAt, DontEnum)
+      proto.Put("charAt", charAt, DescriptorAttrs.DontEnum)
 
       let charCodeAt = FunctionReturn<double, double>(charCodeAt)  $ Utils.createFunction env (Some 1)
-      proto.Put("charCodeAt", charCodeAt, DontEnum)
+      proto.Put("charCodeAt", charCodeAt, DescriptorAttrs.DontEnum)
 
       let concat = FunctionReturn<Args, string>(concat) $ Utils.createFunction env (Some 1)
-      proto.Put("concat", concat, DontEnum)
+      proto.Put("concat", concat, DescriptorAttrs.DontEnum)
 
       let indexOf = FunctionReturn<string, double, double>(indexOf) $ Utils.createFunction env (Some 1)
-      proto.Put("indexOf", indexOf, DontEnum)
+      proto.Put("indexOf", indexOf, DescriptorAttrs.DontEnum)
 
       let lastIndexOf = FunctionReturn<BV, BV, double>(lastIndexOf) $ Utils.createFunction env (Some 1)
-      proto.Put("lastIndexOf", lastIndexOf, DontEnum)
+      proto.Put("lastIndexOf", lastIndexOf, DescriptorAttrs.DontEnum)
 
       let localeCompare = FunctionReturn<string, double>(localeCompare) $ Utils.createFunction env (Some 1)
-      proto.Put("localeCompare", localeCompare, DontEnum)
+      proto.Put("localeCompare", localeCompare, DescriptorAttrs.DontEnum)
 
       let match' = Function<BV>(match') $ Utils.createFunction env (Some 1)
-      proto.Put("match", match', DontEnum)
+      proto.Put("match", match', DescriptorAttrs.DontEnum)
 
       let replace = FunctionReturn<BV, BV, string>(replace) $ Utils.createFunction env (Some 2)
-      proto.Put("replace", replace, DontEnum)
+      proto.Put("replace", replace, DescriptorAttrs.DontEnum)
 
       let search = FunctionReturn<BV, double>(search) $ Utils.createFunction env (Some 1)
-      proto.Put("search", search, DontEnum)
+      proto.Put("search", search, DescriptorAttrs.DontEnum)
 
       let slice = FunctionReturn<double, BV, string>(slice) $ Utils.createFunction env (Some 2)
-      proto.Put("slice", slice, DontEnum)
+      proto.Put("slice", slice, DescriptorAttrs.DontEnum)
 
       let split = FunctionReturn<BV, BV, CO>(split) $ Utils.createFunction env (Some 2)
-      proto.Put("split", split, DontEnum)
+      proto.Put("split", split, DescriptorAttrs.DontEnum)
 
       let substring = FunctionReturn<double, BV, string>(substring) $ Utils.createFunction env (Some 2)
-      proto.Put("substring", substring, DontEnum)
+      proto.Put("substring", substring, DescriptorAttrs.DontEnum)
 
       let substr = FunctionReturn<BV, BV, string>(substr) $ Utils.createFunction env (Some 2)
-      proto.Put("substr", substr, DontEnum)
+      proto.Put("substr", substr, DescriptorAttrs.DontEnum)
 
       let toLowerCase = FunctionReturn<string>(toLowerCase) $ Utils.createFunction env (Some 0)
-      proto.Put("toLowerCase", toLowerCase, DontEnum)
+      proto.Put("toLowerCase", toLowerCase, DescriptorAttrs.DontEnum)
     
       let toLocaleLowerCase = FunctionReturn<string>(toLocaleLowerCase) $ Utils.createFunction env (Some 0)
-      proto.Put("toLocaleLowerCase", toLocaleLowerCase, DontEnum)
+      proto.Put("toLocaleLowerCase", toLocaleLowerCase, DescriptorAttrs.DontEnum)
 
       let toUpperCase = FunctionReturn<string>(toUpperCase) $ Utils.createFunction env (Some 0)
-      proto.Put("toUpperCase", toUpperCase, DontEnum)
+      proto.Put("toUpperCase", toUpperCase, DescriptorAttrs.DontEnum)
 
       let toLocaleUpperCase = FunctionReturn<string>(toLocaleUpperCase) $ Utils.createFunction env (Some 0)
-      proto.Put("toLocaleUpperCase", toLocaleUpperCase, DontEnum)
+      proto.Put("toLocaleUpperCase", toLocaleUpperCase, DescriptorAttrs.DontEnum)

@@ -59,9 +59,8 @@ namespace IronJS.Runtime
             }
             else
             {
-                var oldValue = current.ToString();
                 var newLength = current.Length + value.Length;
-                builder = new StringBuilder(oldValue, newLength);
+                builder = new StringBuilder(current.ToString(), newLength);
                 builder.Append(value);
             }
 

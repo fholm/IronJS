@@ -1774,16 +1774,6 @@ and [<AllowNullLiteral>] StringObject(env:Env) =
 
 and NO = NumberObject
 
-///
-and [<AllowNullLiteral>] NumberObject =
-  inherit ValueObject
-  
-  override x.ClassName = "Number"
-
-  new (env:Env) = {
-    inherit ValueObject(env, env.Maps.Number, env.Prototypes.Number)
-  }
-
 and BO = BooleanObject
 
 ///

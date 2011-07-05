@@ -17,72 +17,9 @@ open System.Runtime.InteropServices
 open System.Globalization
 open System.Text.RegularExpressions
 
-module TypeTags =
-  let [<Literal>] Box = 0x00000000u
-  let [<Literal>] Bool = 0xFFFFFF01u
-  let [<Literal>] Number = 0xFFFFFF02u
-  let [<Literal>] Clr = 0xFFFFFF03u
-  let [<Literal>] String = 0xFFFFFF04u
-  let [<Literal>] SuffixString = 0xFFFFFF05u
-  let [<Literal>] Undefined = 0xFFFFFF06u
-  let [<Literal>] Object = 0xFFFFFF07u
-  let [<Literal>] Function = 0xFFFFFF08u
-
-  let Names = 
-    Map.ofList [
-      (Box, "internal")
-      (Bool, "boolean")
-      (Number, "number")
-      (Clr, "clr")
-      (String, "string")
-      (SuffixString, "string")
-      (Undefined, "undefined")
-      (Object, "object")
-      (Function, "function")]
-
-  let getName (tag:uint32) = Names.[tag]
-
-module BoxFields =
-  let [<Literal>] Bool = "Bool"
-  let [<Literal>] Number = "Number"
-  let [<Literal>] Clr = "Clr"
-  let [<Literal>] Undefined = "Clr"
-  let [<Literal>] String = "String"
-  let [<Literal>] SuffixString = "SuffixString"
-  let [<Literal>] Object = "Object"
-  let [<Literal>] Function = "Func"
-
-module ParamsModes =
-  let [<Literal>] NoParams = 0uy
-  let [<Literal>] ObjectParams = 1uy
-  let [<Literal>] BoxParams = 2uy
-
-type DefaultValueHint
-    = None = 0
-    | String = 1
-    | Number = 2
-
-module MarshalModes =
-  let [<Literal>] Default = 2
-  let [<Literal>] This = 1
-  let [<Literal>] Function = 0
-
 module Array =
   let [<Literal>] DenseMaxIndex = 2147483646u
   let [<Literal>] DenseMaxSize = 2147483647u
-
-module ArgumentsLinkArray =
-  let [<Literal>] Locals = 0uy
-  let [<Literal>] ClosedOver = 1uy
-
-type ParameterStorageType 
-  = Private
-  | Shared
-
-type FunctionType
-  = UserDefined
-  | NativeConstructor
-  | NativeFunction
 
 module Markers =
   let [<Literal>] Number = 0xFFF8us

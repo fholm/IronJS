@@ -3,6 +3,7 @@
 open System
 
 open IronJS
+open IronJS.Runtime
 open IronJS.Compiler
 open IronJS.Dlr.Operators
 open IronJS.Support.CustomOperators

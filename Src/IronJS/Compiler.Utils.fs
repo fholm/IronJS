@@ -3,6 +3,7 @@
 open System
 
 open IronJS
+open IronJS.Runtime
 open IronJS.Dlr.Operators
 
 ///

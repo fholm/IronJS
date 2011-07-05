@@ -5,6 +5,7 @@ open IronJS
 open IronJS.Dlr
 open IronJS.Dlr.Operators
 open IronJS.Dlr.ExtensionMethods
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 open IronJS.Compiler
 open IronJS.Compiler.Utils

@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 
 (*
@@ -51,7 +52,7 @@ type Operators =
   static member typeOf (o:BV) = 
     if o.IsNumber then "number"
     elif o.IsNull then "object"
-    else TypeTags.Names.[o.Tag]
+    else TypeTags.GetName(o.Tag)
 
   static member typeOf expr = Dlr.callStaticT<Operators> "typeOf" [expr]
   

@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgumentsLinkArray.cs" />
+    <Compile Include="BoxedValue.cs" />
     <Compile Include="BoxFields.cs" />
     <Compile Include="DefaultValueHint.cs" />
     <Compile Include="Descriptor.cs" />
@@ -55,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SplayTree.cs" />
     <Compile Include="SuffixString.cs" />
+    <Compile Include="TaggedBools.cs" />
     <Compile Include="TypeTags.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -21,169 +21,9 @@ module Array =
   let [<Literal>] DenseMaxIndex = 2147483646u
   let [<Literal>] DenseMaxSize = 2147483647u
 
-module Markers =
-  let [<Literal>] Number = 0xFFF8us
-  let [<Literal>] Tagged = 0xFFF9us
-
-module TaggedBools =
-  let TrueBitPattern = -1095216660479L 
-  let True = TrueBitPattern |> BitConverter.Int64BitsToDouble
-
-  let FalseBitPattern = -1095216660480L
-  let False = FalseBitPattern |> BitConverter.Int64BitsToDouble
-
-  let ToTagged b = if b then True else False
-
-module BoxedValueOffsets =
-  let [<Literal>] ValueType = 0
-  let [<Literal>] Tag = 4
-  let [<Literal>] Marker = 6
-  let [<Literal>] ReferenceType = 8
 
 type BV = BoxedValue
 and Args = BV array
-
-/// This is a NaN-tagged struct that is used for representing
-/// values that don't have a known type at runtime
-and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
-  struct 
-
-    // Reference Types
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Clr : Object
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Object : CO
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Array : AO
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Func : FO
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable String : string
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable SuffixString : SuffixString
-    [<FieldOffset(BoxedValueOffsets.ReferenceType)>] val mutable Scope : BV array
-
-    // Value Types
-    [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Bool : bool
-    [<FieldOffset(BoxedValueOffsets.ValueType)>] val mutable Number : double
-
-    // Type & Tag
-    [<FieldOffset(BoxedValueOffsets.Tag)>] val mutable Tag : uint32
-    [<FieldOffset(BoxedValueOffsets.Marker)>] val mutable Marker : uint16
-
-    member x.IsNumber = x.Marker < Markers.Tagged
-    member x.IsTagged = x.Marker > Markers.Number
-    member x.IsString = x.IsTagged && (x.Tag = TypeTags.String || x.Tag = TypeTags.SuffixString)
-    member x.IsObject = x.IsTagged && x.Tag >= TypeTags.Object
-    member x.IsFunction = x.IsTagged && x.Tag >= TypeTags.Function
-    member x.IsBoolean = x.IsTagged && x.Tag = TypeTags.Bool
-    member x.IsUndefined = x.IsTagged && x.Tag = TypeTags.Undefined
-    member x.IsClr = x.IsTagged && x.Tag = TypeTags.Clr
-    member x.IsRegExp = x.IsObject && x.Object :? RO
-    member x.IsNull = x.IsClr && x.Clr |> FSharp.Utils.isNull
-
-    member x.IsPrimitive =
-      // As per ECMA-262, Section 8.6.2, the following types are primitive:
-      //  Undefined, Null, Boolean, String, or Number
-      if x.IsNumber || x.IsUndefined || x.IsNull then 
-        true
-
-      else 
-        match x.Tag with
-        | TypeTags.String
-        | TypeTags.SuffixString
-        | TypeTags.Bool -> true
-        | _ -> false
-
-    member x.ClrBoxed =
-      if x.IsNumber then box x.Number
-      else
-        match x.Tag with
-        | TypeTags.Bool -> box x.Bool
-        | TypeTags.SuffixString -> box (x.SuffixString.ToString())
-        | _ -> x.Clr
-
-    member x.Unbox<'a>() = x.ClrBoxed :?> 'a
-
-    member x.UnboxObject() : obj =
-        if x.Marker < Markers.Tagged then
-            x.Number :> obj
-        else
-          match x.Tag with
-          | TypeTags.Bool -> x.Bool :> obj
-          | TypeTags.Clr -> x.Clr
-          | TypeTags.Function -> x.Func :> obj
-          | TypeTags.Object -> x.Object :> obj
-          | TypeTags.String -> x.String :> obj
-          | TypeTags.SuffixString -> x.SuffixString :> obj
-          | TypeTags.Undefined -> Undefined.Instance :> obj
-          | _ -> x :> obj
-
-    static member Box(value:CO) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.Object
-      box
-
-    static member Box(value:FO) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.Function
-      box
-
-    static member Box(value:string) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.String
-      box
-
-    static member Box(value:SuffixString) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- TypeTags.SuffixString
-      box
-
-    static member Box(value:double) =
-      let mutable box = BV()
-      box.Number <- value
-      box
-
-    static member Box(value:bool) =
-      let mutable box = BV()
-      box.Number <- TaggedBools.ToTagged value
-      box
-
-    static member Box(value:obj) =
-      match value with
-        | :? double as d -> BV.Box(d)
-        | :? int as i -> BV.Box(double i)
-        | :? bool as b -> BV.Box(b)
-        | :? string as s -> BV.Box(s)
-        | :? SuffixString as s -> BV.Box(s)
-        | :? FO as f -> BV.Box(f)
-        | :? CO as o -> BV.Box(o)
-        | :? Undef as u -> BV.Box(u)
-        | _ ->
-          let mutable box = BV()
-          box.Clr <- value
-          box.Tag <- TypeTags.Clr
-          box
-
-    static member Box(value:obj, tag:uint32) =
-      let mutable box = BV()
-      box.Clr <- value
-      box.Tag <- tag
-      box
-
-    static member Box(value:Undef) =
-      Undefined.Boxed
-
-    static member FieldOfTag tag =
-      match tag with
-      | TypeTags.Bool       -> BoxFields.Bool
-      | TypeTags.Number     -> BoxFields.Number   
-      | TypeTags.String     -> BoxFields.String   
-      | TypeTags.Undefined  -> BoxFields.Undefined
-      | TypeTags.Object     -> BoxFields.Object   
-      | TypeTags.Function   -> BoxFields.Function 
-      | TypeTags.Clr        -> BoxFields.Clr
-      | _ -> Error.CompileError.Raise(Error.invalidTypeTag tag)
-
-  end
 
 and Desc = Descriptor
 
@@ -227,12 +67,6 @@ and Env = Environment
 ///
 and [<AllowNullLiteral>] Environment() =
 
-  static let null' =
-    let mutable box = BV()
-    box.Tag <- TypeTags.Clr
-    box.Clr <- null
-    box
-
   let currentFunctionId = ref 5UL
   let currentSchemaId = ref 5UL
 
@@ -249,8 +83,8 @@ and [<AllowNullLiteral>] Environment() =
   // we just pass in null
   do functionMetaData.Add(0UL, null)
 
-  static member BoxedZero = BV()
-  static member BoxedNull = null'
+  static member BoxedZero = BV.Box(0)
+  static member BoxedNull = BV.Box(null, TypeTags.Clr)
 
   [<DefaultValue>] val mutable Return : BV
   [<DefaultValue>] val mutable Globals : CO

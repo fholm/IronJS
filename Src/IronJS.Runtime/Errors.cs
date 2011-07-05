@@ -24,7 +24,7 @@ namespace IronJS.Runtime
             return builder + "^";
         }
 
-        internal string PrettyPrintSourceError(Tuple<int, int> aboveBelow, Tuple<int, int> lineCol, string source)
+        internal static string PrettyPrintSourceError(Tuple<int, int> aboveBelow, Tuple<int, int> lineCol, string source)
         {
             var above = aboveBelow.Item1;
             var below = aboveBelow.Item2;

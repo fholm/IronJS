@@ -62,6 +62,11 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\IronJS.Runtime\IronJS.Runtime.CLR2.csproj">
+      <Name>IronJS.Runtime.CLR2</Name>
+      <Project>{e186e25a-34ff-4bd9-bbbe-b0b15849a828}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\IronJS\IronJS.CLR2.fsproj">
       <Name>IronJS.CLR2</Name>
       <Project>{9e257324-94e7-49af-ae83-718288e925d8}</Project>

@@ -187,18 +187,6 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
 
 and Desc = Descriptor
 
-/// 
-and [<NoComparison>] Descriptor =
-  struct
-    val mutable Value : BV
-    val mutable Attributes : DescriptorAttrs
-    val mutable HasValue : bool
-
-    member x.IsWritable = (x.Attributes &&& DescriptorAttrs.ReadOnly) = DescriptorAttrs.None
-    member x.IsDeletable = (x.Attributes &&& DescriptorAttrs.DontDelete) = DescriptorAttrs.None
-    member x.IsEnumerable = (x.Attributes &&& DescriptorAttrs.DontEnum) = DescriptorAttrs.None
-  end
-
 ///
 and Undef = Undefined
 and [<AllowNullLiteral>] Undefined() =

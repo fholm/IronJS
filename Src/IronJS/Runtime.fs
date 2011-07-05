@@ -29,19 +29,6 @@ and Desc = Descriptor
 
 ///
 and Undef = Undefined
-and [<AllowNullLiteral>] Undefined() =
-  static let instance = new Undefined()
-  static let boxed = 
-    let mutable box = BV()
-    box.Clr <- instance
-    box.Tag <- TypeTags.Undefined
-    box
-
-  static member Instance = instance
-  static member Boxed = boxed
-
-  override x.ToString() : string =
-    "undefined"
 
 ///
 and [<AbstractClass>] TypeTag() =

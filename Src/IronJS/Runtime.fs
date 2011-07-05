@@ -912,38 +912,6 @@ and [<AllowNullLiteral>][<AbstractClass>] ValueObject =
 //  
 *)
 and RO = RegExpObject
-and [<AllowNullLiteral>]  RegExpObject = 
-  inherit CO
-
-  [<DefaultValue>]
-  val mutable RegExp : Regex
-  val Global : bool
-  
-  override x.ClassName = "RegExp"
-
-  member x.IgnoreCase:bool =
-    x.RegExp.Options &&& RegexOptions.IgnoreCase = RegexOptions.IgnoreCase
-
-  member x.MultiLine:bool =
-    x.RegExp.Options &&& RegexOptions.Multiline = RegexOptions.Multiline
-
-  new (env, pattern, options, global') as this =
-    {
-      inherit CO(env, env.Maps.RegExp, env.Prototypes.RegExp)
-      Global = global'
-    }
-    then
-      try
-        let options = (options ||| RegexOptions.ECMAScript) &&& ~~~RegexOptions.Compiled
-        let key = (options, pattern)
-        this.RegExp <- env.RegExpCache.Lookup(key, (lazy new Regex(pattern, options ||| RegexOptions.Compiled)))
-
-      with
-        | :? ArgumentException as e -> 
-          env.RaiseSyntaxError(e.Message)
-
-  new (env, pattern) = 
-    RegExpObject(env, pattern, RegexOptions.None, false)
 
 (*
 //  

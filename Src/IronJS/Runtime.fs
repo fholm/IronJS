@@ -902,61 +902,6 @@ and RO = RegExpObject
 //  
 *)
 and DO = DateObject
-and [<AllowNullLiteral>] DateObject(env:Env, date:DateTime) as x =
-  inherit CO(env, env.Maps.Base, env.Prototypes.Date)
-
-  static let offset = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).Ticks
-  static let tickScale = 10000L
-
-  override x.ClassName = "Date"
-
-  [<DefaultValue>]
-  val mutable Date : DateTime
-
-  do 
-    x.Date <- date
-
-  new (env:Env, ticks:int64) = 
-    DateObject(env, DateObject.TicksToDateTime ticks)
-
-  new (env:Env, ticks:double) = 
-    DateObject(env, DateObject.TicksToDateTime ticks)
-
-  member x.HasValidDate =
-    x.Date <> DateTime.MinValue
-
-  override x.DefaultValue(hint:DefaultValueHint) =
-    match hint with
-    | DefaultValueHint.Number ->
-      match x.TryCallMember("valueOf") with
-      | Some v when v.IsPrimitive -> v
-      | _ -> 
-        match x.TryCallMember("toString") with
-        | Some v when v.IsPrimitive -> v
-        | _ -> x.Env.RaiseTypeError()
-
-    | DefaultValueHint.None 
-    | _ ->
-      let a = x.TryCallMember("toString")
-      match a with
-      | Some v when v.IsPrimitive -> v
-      | _ -> 
-        let b = x.TryCallMember("valueOf")
-        match b with
-        | Some v when v.IsPrimitive -> v
-        | _ -> x.Env.RaiseTypeError()
-
-  static member TicksToDateTime(ticks:int64) : DateTime =
-    new DateTime(ticks * tickScale + offset, DateTimeKind.Utc)
-    
-  static member TicksToDateTime(ticks:double) : DateTime =
-    if FSharp.Utils.isNaNOrInf ticks then
-        DateTime.MinValue
-    else
-        DateObject.TicksToDateTime(int64 ticks)
-
-  static member DateTimeToTicks(date:DateTime) : int64 =
-    (date.ToUniversalTime().Ticks - offset) / tickScale
 
 and AO = ArrayObject
 

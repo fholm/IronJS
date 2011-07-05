@@ -51,6 +51,7 @@
     <Compile Include="FunctionType.cs" />
     <Compile Include="Legacy.cs" />
     <Compile Include="MarshalModes.cs" />
+    <Compile Include="Objects\DateObject.cs" />
     <Compile Include="Objects\MathObject.cs" />
     <Compile Include="Objects\RegExpObject.cs" />
     <Compile Include="Objects\ValueObject.cs" />

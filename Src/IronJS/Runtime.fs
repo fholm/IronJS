@@ -1776,16 +1776,6 @@ and NO = NumberObject
 
 and BO = BooleanObject
 
-///
-and [<AllowNullLiteral>] BooleanObject =
-  inherit ValueObject
-
-  override x.ClassName = "Boolean"
-
-  new (env:Env) = {
-    inherit ValueObject(env, env.Maps.Boolean, env.Prototypes.Boolean)
-  }
-
 and MO = MathObject
 
 and EO = ErrorObject

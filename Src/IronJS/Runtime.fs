@@ -1780,16 +1780,6 @@ and MO = MathObject
 
 and EO = ErrorObject
 
-///
-and [<AllowNullLiteral>] ErrorObject =
-  inherit CO
-
-  override x.ClassName = "Error"
-
-  new (env:Env) = {
-    inherit CO(env, env.Maps.Base, env.Prototypes.Error)
-  }
-    
 and IndexMap   = MutableDict<string, int>
 and IndexStack = MutableStack<int>
 and SchemaMap  = MutableDict<string, Schema>

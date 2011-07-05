@@ -45,6 +45,7 @@
     <Compile Include="Errors.cs" />
     <Compile Include="Legacy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SplayTree.cs" />
     <Compile Include="SuffixString.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

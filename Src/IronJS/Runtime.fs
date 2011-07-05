@@ -1868,16 +1868,6 @@ and [<AllowNullLiteral>] BooleanObject =
 
 and MO = MathObject
 
-///
-and [<AllowNullLiteral>] MathObject =
-  inherit CO
-
-  override x.ClassName = "Math"
-
-  new (env:Env) = {
-    inherit CO(env, env.Maps.Base, env.Prototypes.Object)
-  }
-  
 and EO = ErrorObject
 
 ///

@@ -892,21 +892,6 @@ and [<AllowNullLiteral>] CommonObject =
 //    
 *)
 and VO = ValueObject
-and [<AllowNullLiteral>][<AbstractClass>] ValueObject = 
-  inherit CO
-
-  [<DefaultValue>]
-  val mutable Value : Descriptor
-  
-  new (env, map, prototype) = {
-    inherit CO(env, map, prototype)
-  }
-
-  static member GetValue(o:CO) =
-    if not(o :? ValueObject) then
-      o.Env.RaiseTypeError()
-
-    (o :?> ValueObject).Value.Value
 
 (*
 //  

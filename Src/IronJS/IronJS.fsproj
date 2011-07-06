@@ -45,7 +45,6 @@
     <Compile Include="Dlr.fs" />
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
-    <Compile Include="SuffixString.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Helpers.fs" />

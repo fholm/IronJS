@@ -725,7 +725,7 @@ namespace IronJS.Runtime
         // Put methods for setting indexes to doubles
         //----------------------------------------------------------------------------
 
-        public void Put(BoxedValue index, object value, DescriptorAttrs tag)
+        public void Put(BoxedValue index, object value, ushort tag)
         {
             uint i = 0;
             if (TypeConverter.TryToIndex(index, ref i))
@@ -738,12 +738,12 @@ namespace IronJS.Runtime
             }
         }
 
-        public void Put(bool index, object value, DescriptorAttrs tag)
+        public void Put(bool index, object value, ushort tag)
         {
             this.Put(TypeConverter.ToString(index), value, tag);
         }
 
-        public void Put(double index, object value, DescriptorAttrs tag)
+        public void Put(double index, object value, ushort tag)
         {
             uint parsed = 0;
             if (TypeConverter.TryToIndex(index, ref parsed))
@@ -756,7 +756,7 @@ namespace IronJS.Runtime
             }
         }
 
-        public void Put(object index, object value, DescriptorAttrs tag)
+        public void Put(object index, object value, ushort tag)
         {
             var s = TypeConverter.ToString(index);
             var parsed = 0u;
@@ -771,12 +771,12 @@ namespace IronJS.Runtime
             }
         }
 
-        public void Put(Undefined index, object value, DescriptorAttrs tag)
+        public void Put(Undefined index, object value, ushort tag)
         {
             this.Put("undefined", value, tag);
         }
 
-        public void Put(CommonObject index, object value, DescriptorAttrs tag)
+        public void Put(CommonObject index, object value, ushort tag)
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;

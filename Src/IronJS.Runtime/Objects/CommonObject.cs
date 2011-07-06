@@ -351,7 +351,7 @@ namespace IronJS.Runtime
             }
         }
 
-        public override void Put(string name, double value)
+        public virtual void Put(string name, double value)
         {
             int index = 0;
             if (this.CanPut(name, out index))
@@ -361,7 +361,7 @@ namespace IronJS.Runtime
             }
         }
 
-        public override BoxedValue Get(string name)
+        public virtual BoxedValue Get(string name)
         {
             Descriptor descriptor = this.Find(name);
             if (descriptor.HasValue)
@@ -371,18 +371,18 @@ namespace IronJS.Runtime
             return Undefined.Boxed;
         }
 
-        public override bool Has(string name)
+        public virtual bool Has(string name)
         {
             return this.Find(name).HasValue;
         }
 
-        public override bool HasOwn(string name)
+        public virtual bool HasOwn(string name)
         {
             int index = 0;
             return this.PropertySchema.IndexMap.TryGetValue(name, out index) && this.Properties[index].HasValue;
         }
 
-        public override bool Delete(string name)
+        public virtual bool Delete(string name)
         {
             int index = 0;
             if (!this.PropertySchema.IndexMap.TryGetValue(name, out index))

@@ -52,6 +52,7 @@
     <Compile Include="Legacy.cs" />
     <Compile Include="MarshalModes.cs" />
     <Compile Include="Objects\BooleanObject.cs" />
+    <Compile Include="Objects\CommonObject.cs" />
     <Compile Include="Objects\DateObject.cs" />
     <Compile Include="Objects\ErrorObject.cs" />
     <Compile Include="Objects\MathObject.cs" />

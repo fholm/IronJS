@@ -1749,29 +1749,6 @@ and [<AllowNullLiteral>] HostFunction<'a when 'a :> Delegate> =
 
 and SO = StringObject
 
-///
-and [<AllowNullLiteral>] StringObject(env:Env) =
-  inherit ValueObject(env, env.Maps.String, env.Prototypes.String)
-
-  override x.ClassName = "String"
-
-  override x.Get(i:uint32) =
-    let i = int i
-    let s = x.Value.Value.String
-
-    if x.Value.HasValue && i < s.Length 
-      then s.[i].ToString() |> BV.Box
-      else Undefined.Boxed
-
-  override x.Get(s:string) =
-    let mutable i = 0
-    if Int32.TryParse(s, &i) then 
-      if i >= 0
-        then x.Get(uint32 i)
-        else Undefined.Boxed
-    else
-      base.Get(s)
-
 and NO = NumberObject
 
 and BO = BooleanObject

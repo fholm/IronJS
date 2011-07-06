@@ -57,6 +57,7 @@
     <Compile Include="Objects\MathObject.cs" />
     <Compile Include="Objects\NumberObject.cs" />
     <Compile Include="Objects\RegExpObject.cs" />
+    <Compile Include="Objects\StringObject.cs" />
     <Compile Include="Objects\ValueObject.cs" />
     <Compile Include="ParameterStorageType.cs" />
     <Compile Include="ParamsMode.cs" />

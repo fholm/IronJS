@@ -35,7 +35,7 @@ namespace IronJS.Runtime.Objects
             get { return this.Date != DateTime.MinValue; }
         }
 
-        public override DefaultValue(DefaultValueHint hint)
+        public override BoxedValue DefaultValue(DefaultValueHint hint)
         {
             if (hint == DefaultValueHint.None)
             {

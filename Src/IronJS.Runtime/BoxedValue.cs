@@ -26,31 +26,31 @@ namespace IronJS.Runtime
     {
         // Reference Types
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private object Clr;
+        public object Clr;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private CommonObject Object;
+        public CommonObject Object;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private ArrayObject Array;
+        public ArrayObject Array;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private FunctionObject Func;
+        public FunctionObject Func;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private string String;
+        public string String;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private SuffixString SuffixString;
+        public SuffixString SuffixString;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
         private BoxedValue[] Scope;
 
         // Value Types
         [FieldOffset(BoxedValueOffsets.ValueType)]
-        private bool Bool;
+        public bool Bool;
         [FieldOffset(BoxedValueOffsets.ValueType)]
-        private double Number;
+        public double Number;
 
         // Type & Tag
         [FieldOffset(BoxedValueOffsets.Tag)]
-        private uint Tag;
+        public uint Tag;
         [FieldOffset(BoxedValueOffsets.Marker)]
-        private ushort Marker;
+        public ushort Marker;
 
         public bool IsNumber { get { return this.Marker < Markers.Tagged; } }
         public bool IsTagged { get { return this.Marker > Markers.Number; } }

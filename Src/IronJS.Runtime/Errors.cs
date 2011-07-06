@@ -31,6 +31,8 @@ namespace IronJS.Runtime
             var line = lineCol.Item1;
             var column = lineCol.Item2;
 
+            //TODO: Implement Source Code Pretty Printer
+
             throw new NotImplementedException();
         }
     }
@@ -57,6 +59,8 @@ namespace IronJS.Runtime
             Source = source ?? "<unknown>";
             Path = path ?? "<unknown>";
         }
+
+        //TODO: Implement Raise methods
     }
 
     public class RuntimeError : Error
@@ -65,6 +69,23 @@ namespace IronJS.Runtime
             : base(message)
         {
 
+        }
+
+        //TODO: Implement Raise methods
+    }
+
+    public class UserError : Error
+    {
+        public BoxedValue Value { get; private set; }
+        public int Line { get; private set; }
+        public int Column { get; private set; }
+
+        public UserError(BoxedValue value, int line, int column)
+            : base("") //TODO: Call TypeConverter.ToString on Value
+        {
+            Value = value;
+            Line = line;
+            Column = column;
         }
     }
 }

@@ -46,13 +46,11 @@
     <Compile Include="Support.fs" />
     <Compile Include="Error.fs" />
     <Compile Include="SuffixString.fs" />
-    <Compile Include="Caches.fs" />
     <Compile Include="Runtime.fs" />
     <Compile Include="Runtime.Binders.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Operators.fs" />
     <Compile Include="InlineCaches.fs" />
-    <Compile Include="ReflectionCache.fs" />
     <Compile Include="Compiler.Ast.fs" />
     <Compile Include="Compiler.Lexer.fs" />
     <Compile Include="Compiler.Parser.fs" />

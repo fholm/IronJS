@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IronJS.Runtime.Objects
+namespace IronJS.Runtime
 {
     public class DateObject : CommonObject
     {

@@ -35,4 +35,52 @@ namespace IronJS.Runtime
             return names[tag];
         }
     }
+
+    public static class TypeTag
+    {
+        static Dictionary<Type, uint> map
+            = new Dictionary<Type, uint>();
+
+        static TypeTag()
+        {
+            map.Add(typeof(bool), TypeTags.Bool);
+            map.Add(typeof(double), TypeTags.Number);
+            map.Add(typeof(string), TypeTags.String);
+            map.Add(typeof(SuffixString), TypeTags.SuffixString);
+            map.Add(typeof(Undefined), TypeTags.Undefined);
+            map.Add(typeof(FunctionObject), TypeTags.Function);
+            map.Add(typeof(ArrayObject), TypeTags.Object);
+            map.Add(typeof(CommonObject), TypeTags.Object);
+            map.Add(typeof(ValueObject), TypeTags.Object);
+            map.Add(typeof(StringObject), TypeTags.Object);
+            map.Add(typeof(NumberObject), TypeTags.Object);
+            map.Add(typeof(ErrorObject), TypeTags.Object);
+            map.Add(typeof(MathObject), TypeTags.Object);
+            map.Add(typeof(BooleanObject), TypeTags.Object);
+            map.Add(typeof(RegExpObject), TypeTags.Object);
+            map.Add(typeof(DateObject), TypeTags.Object);
+        }
+
+        public static uint OfType(Type type)
+        {
+            uint tag;
+
+            if (map.TryGetValue(type, out tag))
+            {
+                return tag;
+            }
+
+            return  type.IsSubclassOf(typeof(CommonObject)) 
+                    ? TypeTags.Object 
+                    : TypeTags.Clr;
+        }
+
+        public static uint OfObject(object o)
+        {
+            if (o == null)
+                return TypeTags.Clr;
+
+            return OfType(o.GetType());
+        }
+    }
 }

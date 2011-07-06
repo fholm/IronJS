@@ -2,14 +2,13 @@
 
 namespace IronJS.Runtime
 {
-    [Flags]
-    public enum DescriptorAttrs : ushort
+    public static class DescriptorAttrs
     {
-        None = 0,
-        ReadOnly = 1,
-        DontEnum = 2,
-        DontDelete = 4,
-        DontEnumOrDelete = DontEnum | DontDelete,
-        Immutable = ReadOnly | DontEnum | DontDelete,
+        public const ushort None = 0;
+        public const ushort ReadOnly = 1;
+        public const ushort DontEnum = 2;
+        public const ushort DontDelete = 4;
+        public const ushort DontEnumOrDelete = 2 | 4;
+        public const ushort Immutable = 1 | 2 | 3;
     }
 }

@@ -1,15 +1,15 @@
 ﻿using System;
 
-namespace IronJS.Runtime.Objects
+namespace IronJS.Runtime
 {
     public abstract class ValueObject : CommonObject
     {
+        public Descriptor Value;
+
         public ValueObject(Environment env, Schema map, CommonObject prototype)
             : base(env, map, prototype)
         {
         }
-
-        public Descriptor Value { get; set; }
 
         public static BoxedValue GetValue(CommonObject o)
         {

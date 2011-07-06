@@ -8,10 +8,10 @@ namespace IronJS.Runtime
 {
     public class CommonObject : DynamicObject
     {
-        private Environment Env;
-        private CommonObject Prototype;
-        private Schema PropertySchema;
-        private Descriptor[] Properties;
+        public Environment Env;
+        public CommonObject Prototype;
+        public Schema PropertySchema;
+        public Descriptor[] Properties;
 
         public CommonObject(Environment env, Schema map, CommonObject prototype)
         {
@@ -301,13 +301,12 @@ namespace IronJS.Runtime
             }
         }
 
-        public void SetAttrs(string name, DescriptorAttrs attrs)
+        public void SetAttrs(string name, ushort attrs)
         {
             int index = 0;
             if (this.PropertySchema.IndexMap.TryGetValue(name, out index))
             {
-                DescriptorAttrs currentAttrs = this.Properties[index].Attributes;
-                this.Properties[index].Attributes = currentAttrs | attrs;
+                this.Properties[index].Attributes |= attrs;
             }
         }
 
@@ -538,49 +537,49 @@ namespace IronJS.Runtime
             this.Put(index, value, TypeTags.Function);
         }
 
-        public void Put(string name, BoxedValue value, DescriptorAttrs attrs)
+        public void Put(string name, BoxedValue value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, bool value, DescriptorAttrs attrs)
+        public void Put(string name, bool value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, double value, DescriptorAttrs attrs)
+        public void Put(string name, double value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, object value, DescriptorAttrs attrs)
+        public void Put(string name, object value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, string value, DescriptorAttrs attrs)
+        public void Put(string name, string value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, Undefined value, DescriptorAttrs attrs)
+        public void Put(string name, Undefined value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, CommonObject value, DescriptorAttrs attrs)
+        public void Put(string name, CommonObject value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
         }
 
-        public void Put(string name, FunctionObject value, DescriptorAttrs attrs)
+        public void Put(string name, FunctionObject value, ushort attrs)
         {
             this.Put(name, value);
             this.SetAttrs(name, attrs);
@@ -689,9 +688,9 @@ namespace IronJS.Runtime
             }
         }
 
-        public void Put(object index, double value)
+        public void Put(object index0, double value)
         {
-            string index = TypeConverter.ToString(index);
+            string index = TypeConverter.ToString(index0);
             uint parsed = 0;
             if (TypeConverter.TryToIndex(index, out parsed))
             {
@@ -985,7 +984,7 @@ namespace IronJS.Runtime
                 var array = current as ArrayObject;
                 if (array != null)
                 {
-                    length = length < array.Length ? array.Lenght : length;
+                    length = length < array.Length ? array.Length : length;
                 }
 
                 foreach (var pair in current.PropertySchema.IndexMap)

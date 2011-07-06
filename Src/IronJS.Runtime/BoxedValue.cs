@@ -231,4 +231,32 @@ namespace IronJS.Runtime
             }
         }
     }
+
+    public static class BoxingUtils
+    {
+        public static BoxedValue JsBox(object o)
+        {
+            if (o is BoxedValue)
+                return (BoxedValue)o;
+
+            if (o == null)
+                return Environment.BoxedNull;
+
+            var tag = TypeTag.OfType(o.GetType());
+            switch (tag)
+            {
+                case TypeTags.Bool: return BoxedValue.Box((bool)o);
+                case TypeTags.Number: return BoxedValue.Box((double)o);
+                default: return BoxedValue.Box(o, tag);
+            }
+        }
+
+        public static object ClrBox(object o)
+        {
+            if (o is BoxedValue)
+                return ((BoxedValue)o).ClrBoxed;
+
+            return o;
+        }
+    }
 }

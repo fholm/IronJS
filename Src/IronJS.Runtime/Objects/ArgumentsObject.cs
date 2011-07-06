@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace IronJS.Runtime.Objects
+namespace IronJS.Runtime
 {
     using ArgLink = Tuple<ParameterStorageType, int>;
 
@@ -15,9 +15,9 @@ namespace IronJS.Runtime.Objects
         public bool LinkIntact = true;
 
         public ArgumentsObject(
-            Environment env, 
-            ArgLink[] linkMap, 
-            BoxedValue[] privateScope, 
+            Environment env,
+            ArgLink[] linkMap,
+            BoxedValue[] privateScope,
             BoxedValue[] sharedScope)
             : base(env, env.Maps.Base, env.Prototypes.Object)
         {
@@ -27,16 +27,16 @@ namespace IronJS.Runtime.Objects
         }
 
         public static ArgumentsObject CreateForVariadicFunction(
-            FunctionObject f, 
-            BoxedValue[] privateScope, 
-            BoxedValue[] sharedScope, 
+            FunctionObject f,
+            BoxedValue[] privateScope,
+            BoxedValue[] sharedScope,
             BoxedValue[] variadicArgs)
         {
-            var x = 
+            var x =
                 new ArgumentsObject(
-                    f.Env, 
+                    f.Env,
                     f.MetaData.ParameterStorage,
-                    privateScope, 
+                    privateScope,
                     sharedScope
                 );
 
@@ -66,16 +66,16 @@ namespace IronJS.Runtime.Objects
         )
         {
             var length = namedArgsPassed + extraArgs.Length;
-            var storage = 
+            var storage =
                 f.MetaData.ParameterStorage
                     .Take(namedArgsPassed)
                     .ToArray();
 
-            var x = 
+            var x =
                 new ArgumentsObject(
-                    f.Env, 
-                    storage, 
-                    privateScope, 
+                    f.Env,
+                    storage,
+                    privateScope,
                     sharedScope
                 );
 
@@ -164,8 +164,8 @@ namespace IronJS.Runtime.Objects
 
         public override bool Has(uint index)
         {
-            return 
-                (LinkIntact && (int)index < LinkMap.Length) 
+            return
+                (LinkIntact && (int)index < LinkMap.Length)
                 || base.Has(index);
         }
 
@@ -173,7 +173,7 @@ namespace IronJS.Runtime.Objects
         {
             var ii = (int)index;
 
-            if(LinkIntact && ii < LinkMap.Length)
+            if (LinkIntact && ii < LinkMap.Length)
             {
                 CopyLinkedValues();
                 LinkIntact = false;

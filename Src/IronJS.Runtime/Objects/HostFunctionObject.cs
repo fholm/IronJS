@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace IronJS.Runtime.Objects
+namespace IronJS.Runtime
 {
     public class HostFunctionObject<T> : FunctionObject
         where T : class

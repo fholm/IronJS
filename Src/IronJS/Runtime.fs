@@ -17,10 +17,6 @@ open System.Runtime.InteropServices
 open System.Globalization
 open System.Text.RegularExpressions
 
-module Array =
-  let [<Literal>] DenseMaxIndex = 2147483646u
-  let [<Literal>] DenseMaxSize = 2147483647u
-
 type BV = BoxedValue
 and Args = BV array
 and Desc = Descriptor

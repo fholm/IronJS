@@ -1,6 +1,7 @@
 ﻿namespace IronJS.Runtime.Binders
 
 open IronJS
+open IronJS.Runtime
 open System.Dynamic
 open System.Reflection
 

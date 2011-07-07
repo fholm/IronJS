@@ -242,7 +242,7 @@ namespace IronJS.Runtime
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        protected Descriptor Find(string name)
+        public Descriptor Find(string name)
         {
             return Find(this, name);
         }

@@ -7,7 +7,7 @@ using Microsoft.FSharp.Core;
 
 namespace IronJS.Runtime
 {
-    class TypeConverter
+    public class TypeConverter
     {
         public static BoxedValue ToBoxedValue(BoxedValue v)
         {

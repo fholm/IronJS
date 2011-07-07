@@ -4,6 +4,7 @@ module Main =
 
   open System
   open IronJS
+  open IronJS.Runtime
   open IronJS.Compiler
   open IronJS.Compiler.Core
   open IronJS.Hosting.FSharp

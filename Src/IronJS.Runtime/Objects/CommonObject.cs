@@ -114,18 +114,21 @@ namespace IronJS.Runtime
 
         public string ClassType { get { return this.GetType().Name; } }
 
-        public Dictionary<string, object> Members()
+        public Dictionary<string, object> Members
         {
-            var dict = new Dictionary<string, object>();
-            foreach (var kvp in this.PropertySchema.IndexMap)
+            get
             {
-                if (this.Properties[kvp.Value].HasValue)
+                var dict = new Dictionary<string, object>();
+                foreach (var kvp in this.PropertySchema.IndexMap)
                 {
-                    dict.Add(kvp.Key, this.Properties[kvp.Value].Value.ClrBoxed);
+                    if (this.Properties[kvp.Value].HasValue)
+                    {
+                        dict.Add(kvp.Key, this.Properties[kvp.Value].Value.ClrBoxed);
+                    }
                 }
-            }
 
-            return dict;
+                return dict;
+            }
         }
 
         public override IEnumerable<string> GetDynamicMemberNames()

@@ -6,6 +6,7 @@
     using System.IO;
     using System.Linq;
     using System.Text;
+    using IronJS.Runtime;
     using NUnit.Framework;
 
     public class IE9TestFixture

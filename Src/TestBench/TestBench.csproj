@@ -59,6 +59,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\IronJS.Runtime\IronJS.Runtime.csproj">
+      <Project>{F2322575-40E5-4E98-BE72-BF4AF9C77E77}</Project>
+      <Name>IronJS.Runtime</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IronJS\IronJS.fsproj">
       <Project>{9E257324-94E7-49AF-AE83-718288E925D8}</Project>
       <Name>IronJS</Name>

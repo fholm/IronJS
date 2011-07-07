@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using IronJS;
+using IronJS.Runtime;
 using WinFormsRichhTextBox = System.Windows.Forms.RichTextBox;
 
 namespace DebugConsole
@@ -450,7 +451,7 @@ namespace DebugConsole
         {
             context = new IronJS.Hosting.CSharp.Context();
             context.CreatePrintFunction();
-            context.Environment.BreakPoint = breakPoint;
+            //TODO: context.Environment.BreakPoint = breakPoint;
         }
 
         void resetEnvironment_Click(object sender, RoutedEventArgs e)

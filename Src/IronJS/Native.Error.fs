@@ -26,7 +26,7 @@ module Error =
       ctor.Put("prototype", proto, DescriptorAttrs.Immutable)
 
       env.Globals.Put(name, ctor, DescriptorAttrs.DontEnum)
-      env.Constructors <- update env.Constructors ctor
+      env.Constructors.Error <- ctor
 
     let setupPrototype (n:string) (ctor:FO) (proto:CO) =
       proto.Put("name", n, DescriptorAttrs.DontEnum)
@@ -34,7 +34,7 @@ module Error =
       proto.Put("message", "", DescriptorAttrs.DontEnum)
 
   let private name = "Error"
-  let private updater (ctors:Constructors) ctor = {ctors with Error=ctor} 
+  let private updater (ctors:Constructors) ctor = ctors.Error <- ctor
 
   let toString (func:FO) (this:CO) =
     let name = this.Get("name") |> TC.ToString
@@ -62,8 +62,8 @@ module Error =
 
 module EvalError =
   let private name = "EvalError" 
-  let private updater (ctors:Constructors) ctor = {ctors with EvalError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.EvalError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.EvalError
     Error.Utils.setupConstructor env name proto updater
@@ -75,8 +75,8 @@ module EvalError =
 
 module RangeError =
   let private name = "RangeError" 
-  let private updater (ctors:Constructors) ctor = {ctors with RangeError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.RangeError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.RangeError
     Error.Utils.setupConstructor env name proto updater
@@ -88,8 +88,8 @@ module RangeError =
 
 module ReferenceError =
   let private name = "ReferenceError" 
-  let private updater (ctors:Constructors) ctor = {ctors with ReferenceError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.ReferenceError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.ReferenceError
     Error.Utils.setupConstructor env name proto updater
@@ -101,8 +101,8 @@ module ReferenceError =
 
 module SyntaxError =
   let private name = "SyntaxError" 
-  let private updater (ctors:Constructors) ctor = {ctors with SyntaxError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.SyntaxError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.SyntaxError
     Error.Utils.setupConstructor env name proto updater
@@ -114,8 +114,8 @@ module SyntaxError =
 
 module URIError =
   let private name = "URIError" 
-  let private updater (ctors:Constructors) ctor = {ctors with URIError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.URIError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.URIError
     Error.Utils.setupConstructor env name proto updater
@@ -127,8 +127,8 @@ module URIError =
 
 module TypeError =
   let private name = "TypeError" 
-  let private updater (ctors:Constructors) ctor = {ctors with TypeError=ctor} 
-  
+  let private updater (ctors:Constructors) ctor = ctors.TypeError <- ctor
+
   let setupConstructor (env:Env) =
     let proto = env.Prototypes.TypeError
     Error.Utils.setupConstructor env name proto updater

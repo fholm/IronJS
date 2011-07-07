@@ -24,7 +24,7 @@ module internal Boolean =
     ctor.Put("prototype", env.Prototypes.Boolean, DescriptorAttrs.Immutable)
 
     env.Globals.Put("Boolean", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with Boolean=ctor}
+    env.Constructors.Boolean <- ctor
 
   ///
   module Prototype =

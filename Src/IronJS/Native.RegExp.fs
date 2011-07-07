@@ -32,8 +32,8 @@ module internal RegExp =
     ctor.Put("prototype", env.Prototypes.RegExp, DescriptorAttrs.Immutable)
     ctor.MetaData.Name <- "RegExp"
 
-    env.Constructors <- {env.Constructors with RegExp=ctor}
     env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
+    env.Constructors.RegExp <- ctor
 
   ///
   module Prototype =

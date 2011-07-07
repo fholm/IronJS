@@ -2,11 +2,12 @@
 
 open System
 open IronJS
-open IronJS.Support.Aliases
-open IronJS.Support.CustomOperators
-open IronJS.Dlr.Operators
 open IronJS.Compiler
 open IronJS.Compiler.Context
+open IronJS.Dlr.Operators
+open IronJS.Runtime
+open IronJS.Support.Aliases
+open IronJS.Support.CustomOperators
 
 module internal ControlFlow =
 

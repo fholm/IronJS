@@ -34,7 +34,7 @@ module internal Number =
     ctor.Put("POSITIVE_INFINITY", PosInf, DescriptorAttrs.Immutable) 
 
     env.Globals.Put("Number", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with Number=ctor}
+    env.Constructors.Number <- ctor
 
   ///
   module Prototype =

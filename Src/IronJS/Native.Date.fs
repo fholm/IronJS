@@ -140,7 +140,7 @@ module Date =
     ctor.Put("prototype", env.Prototypes.Date, DescriptorAttrs.Immutable)
 
     env.Globals.Put("Date", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with Date=ctor}
+    env.Constructors.Date <- ctor
 
   module Prototype =
     

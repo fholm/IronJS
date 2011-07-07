@@ -24,7 +24,7 @@ module internal Object =
     ctor.Put("prototype", env.Prototypes.Object, DescriptorAttrs.Immutable)
 
     env.Globals.Put("Object", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with Object = ctor}
+    env.Constructors.Object <- ctor
       
   ///
   module Prototype = 

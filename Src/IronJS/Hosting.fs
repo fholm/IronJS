@@ -2,6 +2,7 @@
 
 open System
 open IronJS
+open IronJS.Runtime
 open IronJS.Support.Aliases
 
 ///
@@ -9,7 +10,7 @@ module private Environment =
   
   ///
   let create () =
-    let env = Environment()
+    let env = Env()
 
     env.Prototypes <- Prototypes.Empty
     env.Constructors <- Constructors.Empty

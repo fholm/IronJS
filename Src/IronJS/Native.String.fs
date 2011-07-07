@@ -49,7 +49,7 @@ module internal String =
 
     //
     env.Globals.Put("String", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with String=ctor}
+    env.Constructors.String <- ctor
 
   ///
   module Prototype = 

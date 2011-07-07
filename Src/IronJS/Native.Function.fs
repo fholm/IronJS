@@ -51,7 +51,7 @@ module internal Function =
     ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)
 
     env.Globals.Put("Function", ctor, DescriptorAttrs.DontEnum)
-    env.Constructors <- {env.Constructors with Function = ctor}
+    env.Constructors.Function <- ctor
 
   module Prototype = 
 

@@ -143,7 +143,7 @@ namespace IronJS.Runtime
             number.Value.HasValue = true;
             return number;
         }
- 
+
         public CommonObject NewPrototype()
         {
             return new CommonObject(this, this.Maps.Prototype, this.Prototypes.Object);
@@ -292,6 +292,7 @@ namespace IronJS.Runtime
         public CommonObject Array;
         public FunctionObject Function;
         public CommonObject String;
+        public CommonObject Number;
         public CommonObject Boolean;
         public CommonObject Date;
         public CommonObject RegExp;
@@ -318,6 +319,7 @@ namespace IronJS.Runtime
         public FunctionObject Array;
         public FunctionObject Function;
         public FunctionObject String;
+        public FunctionObject Number;
         public FunctionObject Boolean;
         public FunctionObject Date;
         public FunctionObject RegExp;

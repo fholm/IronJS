@@ -54,11 +54,6 @@ namespace IronJS.Runtime
             return BoxedValue.Box(c);
         }
 
-        public static Expression ToBoxedValue(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToBoxedValue", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-        }
-
         public static object ToClrObject(double d)
         {
             return d;
@@ -111,11 +106,6 @@ namespace IronJS.Runtime
                 default:
                     return v.Number;
             }
-        }
-
-        public static Expression ToClrObject(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToClrObject", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
         }
 
         public static CommonObject ToObject(Environment env, CommonObject o)
@@ -179,11 +169,6 @@ namespace IronJS.Runtime
             }
         }
 
-        public static Expression ToObject(Expression env, Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToObject", FSharpList<Expression>.Cons(env, FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty)));
-        }
-
         public static bool ToBoolean(bool b)
         {
             return b;
@@ -243,11 +228,6 @@ namespace IronJS.Runtime
             }
         }
 
-        public static Expression ToBoolean(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToBoolean", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-        }
-
         public static BoxedValue ToPrimitive(bool b, DefaultValueHint hint)
         {
             return BoxedValue.Box(b);
@@ -305,25 +285,6 @@ namespace IronJS.Runtime
                 default:
                     return v;
             }
-        }
-
-        public static Expression ToPrimitive(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToPrimitive", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-        }
-
-        public static Expression ToPrimitiveHintNumber(Expression expr)
-        {
-            DefaultValueHint number = DefaultValueHint.Number;
-            FSharpList<Expression> list = FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Cons(Expression.Constant(DefaultValueHint.Number, number.GetType()), FSharpList<Expression>.Empty));
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToPrimitive", list);
-        }
-
-        public static Expression ToPrimitiveHintString(Expression expr)
-        {
-            DefaultValueHint hint = DefaultValueHint.String;
-            FSharpList<Expression> list = FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Cons(Expression.Constant(DefaultValueHint.String, hint.GetType()), FSharpList<Expression>.Empty));
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToPrimitive", list);
         }
 
         public static string ToString(bool b)
@@ -427,11 +388,6 @@ namespace IronJS.Runtime
                 default:
                     return ToString(v.Number);
             }
-        }
-
-        public static Expression ToString(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToString", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
         }
 
         public static double ToNumber(bool b)
@@ -566,11 +522,6 @@ namespace IronJS.Runtime
             return d;
         }
 
-        public static Expression ToNumber(Expression expr)
-        {
-            return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToNumber", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-        }
-
         public static int ToInt32(double d)
         {
             return (int)(uint)d;
@@ -634,44 +585,6 @@ namespace IronJS.Runtime
 
             index = default(uint);
             return false;
-        }
-
-        public static Expression ConvertTo(Expression envExpr, Expression expr, Type t)
-        {
-            if (object.ReferenceEquals(expr.Type, t))
-            {
-                return expr;
-            }
-            if (t.IsAssignableFrom(expr.Type))
-            {
-                return Expression.Convert(expr, t);
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(double)))
-            {
-                return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToNumber", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(string)))
-            {
-                return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToString", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(bool)))
-            {
-                return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToBoolean", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(BoxedValue)))
-            {
-                return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToBoxedValue", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(CommonObject)))
-            {
-                return ToObject(envExpr, expr);
-            }
-            if (LanguagePrimitives.HashCompare.GenericEqualityIntrinsic<Type>(t, typeof(object)))
-            {
-                return FSharpFunc<string, FSharpList<Expression>>.InvokeFast<Expression>(Dlr.callStaticT<TypeConverter>(), "ToClrObject", FSharpList<Expression>.Cons(expr, FSharpList<Expression>.Empty));
-            }
-
-            return Error.CompileError.Raise<Expression>(Error.missingNoConversion(expr.Type, t));
         }
     }
 }

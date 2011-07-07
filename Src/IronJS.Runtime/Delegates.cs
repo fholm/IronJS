@@ -1,5 +1,5 @@
 ﻿using System;
-using IronJS.Runtime.Objects;
+using IronJS.Runtime;
 using Microsoft.FSharp.Collections;
 
 namespace IronJS.Runtime
@@ -9,10 +9,10 @@ namespace IronJS.Runtime
     public delegate Delegate FunctionCompiler(FunctionObject self, Type type);
     public delegate Object GlobalCode(FunctionObject self, CommonObject @this);
     public delegate Object EvalCode(
-        FunctionObject self, 
+        FunctionObject self,
         CommonObject @this,
-        BoxedValue[] privateScope, 
-        BoxedValue[] sharedScope, 
+        BoxedValue[] privateScope,
+        BoxedValue[] sharedScope,
         DynamicScope scope
     );
 }

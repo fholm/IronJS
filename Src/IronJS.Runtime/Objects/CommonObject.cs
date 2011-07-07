@@ -150,17 +150,17 @@ namespace IronJS.Runtime
         // all objects except ArrayObject
         public virtual uint Length
         {
-            get { return TypeConverter.Touint(this.Get("length")); }
+            get { return TypeConverter.ToUInt32(this.Get("length")); }
             set { this.Put("length", value); }
         }
 
-        public virtual void GetAllIndexProperties(Dictionary<uint, BoxedValue> dict, uint length)
+        public virtual void GetAllIndexProperties(IDictionary<uint, BoxedValue> dict, uint length)
         {
             var i = 0u;
 
             foreach (var kvp in this.PropertySchema.IndexMap)
             {
-                if (uint.TryParse(kvp.Key, &i) && i < length && !dict.ContainsKey(i) && this.Properties[kvp.Value].HasValue)
+                if (uint.TryParse(kvp.Key, out i) && i < length && !dict.ContainsKey(i) && this.Properties[kvp.Value].HasValue)
                 {
                     dict.Add(i, this.Properties[kvp.Value].Value);
                 }
@@ -180,7 +180,7 @@ namespace IronJS.Runtime
                 return o;
             }
 
-            this.Env.RaiseTypeError("Could not cast " + this.GetType().Name + " to " + typeof(T).Name);
+            return this.Env.RaiseTypeError<T>("Could not cast " + this.GetType().Name + " to " + typeof(T).Name);
         }
 
         public bool TryCastTo<T>(out T result) where T : CommonObject
@@ -200,7 +200,8 @@ namespace IronJS.Runtime
         {
             if (!(this is T))
             {
-                this.Env.RaiseTypeError(this.GetType().Name + " is not " + typeof(T).Name);
+                this.Env.RaiseTypeError<object>(this.GetType().Name + " is not " + typeof(T).Name);
+                return;
             }
         }
 

@@ -76,6 +76,7 @@
     <Compile Include="SplayTree.cs" />
     <Compile Include="SuffixString.cs" />
     <Compile Include="TaggedBools.cs" />
+    <Compile Include="TypeConverter.cs" />
     <Compile Include="TypeTags.cs" />
     <Compile Include="Undefined.cs" />
   </ItemGroup>

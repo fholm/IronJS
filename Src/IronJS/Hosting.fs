@@ -12,31 +12,26 @@ module private Environment =
   let create () =
     let env = Env()
 
-    env.Prototypes <- Prototypes.Empty
-    env.Constructors <- Constructors.Empty
     env.Maps <- env |> Schema.CreateBaseSchema |> Maps.Create 
 
     let objectPrototype = Native.Object.Prototype.create env
     let errorPrototype = Native.Error.createPrototype env objectPrototype
 
-    env.Prototypes <- {
-      Object = objectPrototype
-      Function = Native.Function.Prototype.create env objectPrototype
-      Array = Native.Array.Prototype.create env objectPrototype
-      String = Native.String.Prototype.create env objectPrototype
-      Number = Native.Number.Prototype.create env objectPrototype
-      Boolean = Native.Boolean.Prototype.create env objectPrototype
-      Date = Native.Date.Prototype.create env objectPrototype
-      RegExp = Native.RegExp.Prototype.create env objectPrototype
-      Error = errorPrototype
-
-      EvalError = Native.Error.createPrototype env errorPrototype
-      RangeError = Native.Error.createPrototype env errorPrototype
-      ReferenceError = Native.Error.createPrototype env errorPrototype
-      SyntaxError = Native.Error.createPrototype env errorPrototype
-      TypeError = Native.Error.createPrototype env errorPrototype
-      URIError = Native.Error.createPrototype env errorPrototype
-    }
+    env.Prototypes.Object <- objectPrototype
+    env.Prototypes.Function <- Native.Function.Prototype.create env objectPrototype
+    env.Prototypes.Array <- Native.Array.Prototype.create env objectPrototype
+    env.Prototypes.String <- Native.String.Prototype.create env objectPrototype
+    env.Prototypes.Number <- Native.Number.Prototype.create env objectPrototype
+    env.Prototypes.Boolean <- Native.Boolean.Prototype.create env objectPrototype
+    env.Prototypes.Date <- Native.Date.Prototype.create env objectPrototype
+    env.Prototypes.RegExp <- Native.RegExp.Prototype.create env objectPrototype
+    env.Prototypes.Error <- errorPrototype
+    env.Prototypes.EvalError <- Native.Error.createPrototype env errorPrototype
+    env.Prototypes.RangeError <- Native.Error.createPrototype env errorPrototype
+    env.Prototypes.ReferenceError <- Native.Error.createPrototype env errorPrototype
+    env.Prototypes.SyntaxError <- Native.Error.createPrototype env errorPrototype
+    env.Prototypes.TypeError <- Native.Error.createPrototype env errorPrototype
+    env.Prototypes.URIError <- Native.Error.createPrototype env errorPrototype
 
     env |> Native.Global.setup
     env |> Native.Math.setup

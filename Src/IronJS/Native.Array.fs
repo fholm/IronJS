@@ -266,7 +266,7 @@ module internal Array =
 
       this
 
-    let private defaultSort (a:BV, b:BV) =
+    let private defaultSort (a:BV) (b:BV) =
       if a.IsNull && b.IsNull then 0
       elif a.IsNull then 1
       elif b.IsNull then -1
@@ -275,7 +275,7 @@ module internal Array =
       elif b.IsUndefined then -1
       else String.Compare(TC.ToString(a), TC.ToString(b), StringComparison.Ordinal)
 
-    let private userSort (f:FO, a:BV, b:BV) =
+    let private userSort (f:FO) (a:BV) (b:BV) =
       if a.IsNull && b.IsNull then 0
       elif a.IsNull then 1
       elif b.IsNull then -1
@@ -314,7 +314,7 @@ module internal Array =
           Array.Copy(sortable, ao.Dense, ilength)
 
         else
-          ao.Sparse.Sort(comparefn)
+          ao.Sparse.Sort(Comparison(comparefn))
 
       else
         let length = this.Length

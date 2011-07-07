@@ -18,7 +18,7 @@ namespace IronJS.Runtime
         internal readonly Caches.WeakCache<Tuple<RegexOptions, string>, Regex> RegExpCache
             = new Caches.WeakCache<Tuple<RegexOptions, string>, Regex>();
 
-        internal readonly Caches.LimitCache<string, EvalCode> EvalCache
+        public readonly Caches.LimitCache<string, EvalCode> EvalCache
             = new Caches.LimitCache<string, EvalCode>(100);
 
         public BoxedValue Return;

@@ -49,7 +49,7 @@ module internal Object =
       elif this :? AO && name.Length > 0 && FSharp.Char.isDigit name.[0] then
         let mutable ai = 0u
         let mutable ao = this :?> AO
-        UInt32.TryParse(name, &ai) && ao.HasIndex(ai)
+        UInt32.TryParse(name, &ai) && ao.Has(ai)
 
       else
         false

@@ -12,7 +12,7 @@ module Utils =
   /// Deprecated
   let createHostFunction (env:Environment) (delegate':'a) =
     let compiler = Compiler.HostFunction.compile<'a>
-    let metaData = env.CreateHostConstructorMetaData(compiler)
+    let metaData = env.CreateHostConstructorMetaData(FunctionCompiler(compiler))
     let h = HostFunctionObject<'a>(env, delegate', metaData)
     h.Put("length", double 0.0, DescriptorAttrs.Immutable)
     h :> FunctionObject
@@ -34,7 +34,7 @@ module Utils =
   ///
   let createFunction (env:Env) (length:int option) (func:'a when 'a :> Delegate) =
     let compiler = Compiler.HostFunction.compile<'a>
-    let metaData = env.CreateHostFunctionMetaData(compiler)
+    let metaData = env.CreateHostFunctionMetaData(FunctionCompiler(compiler))
     createHostFunctionObject env length func metaData
 
   let CreateFunction (env:Env) (length:Nullable<int>) (func:'a when 'a :> Delegate) =
@@ -47,7 +47,7 @@ module Utils =
   ///
   let createConstructor (env:Env) (length:int option) (ctor:'a when 'a :> Delegate) =
     let compiler = Compiler.HostFunction.compile<'a>
-    let metaData = env.CreateHostConstructorMetaData(compiler)
+    let metaData = env.CreateHostConstructorMetaData(FunctionCompiler(compiler))
     createHostFunctionObject env length ctor metaData
 
   let CreateConstructor (env:Env) (length:Nullable<int>) (func:'a when 'a :> Delegate) =

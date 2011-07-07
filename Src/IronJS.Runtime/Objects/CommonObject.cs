@@ -269,7 +269,7 @@ namespace IronJS.Runtime
         /// <param name="name"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        private bool CanPut(string name, out int index)
+        public bool CanPut(string name, out int index)
         {
             if (this.PropertySchema.IndexMap.TryGetValue(name, out index))
             {

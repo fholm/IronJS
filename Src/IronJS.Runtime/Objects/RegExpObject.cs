@@ -35,6 +35,11 @@ namespace IronJS.Runtime
             get { return "RegExp"; }
         }
 
+        public bool Global
+        {
+            get { return this.global; }
+        }
+
         public bool IgnoreCase
         {
             get
@@ -49,6 +54,11 @@ namespace IronJS.Runtime
             {
                 return (this.regExp.Options & RegexOptions.Multiline) == RegexOptions.Multiline;
             }
+        }
+
+        public Regex RegExp
+        {
+            get { return this.regExp; }
         }
     }
 }

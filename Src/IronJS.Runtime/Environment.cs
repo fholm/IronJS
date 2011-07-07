@@ -102,6 +102,11 @@ namespace IronJS.Runtime
             return new ArrayObject(this, size) { Length = size };
         }
 
+        public CommonObject NewDate(DateTime date)
+        {
+            return new DateObject(this, date);
+        }
+
         public CommonObject NewBoolean()
         {
             return this.NewBoolean(false);

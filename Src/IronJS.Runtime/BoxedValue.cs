@@ -11,7 +11,7 @@ namespace IronJS.Runtime
         public const int ReferenceType = 8;
     }
 
-    internal static class Markers
+    public static class Markers
     {
         public const ushort Number = 0xFFF8;
         public const ushort Tagged = 0xFFF9;

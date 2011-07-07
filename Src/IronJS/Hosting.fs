@@ -110,7 +110,7 @@ module FSharp =
 
   ///
   let setGlobal (name:string) (value:obj) (t:T) =
-    (t |> globals).Put(name, value |> BoxingUtils.JsBox)
+    (t |> globals).Put(name, value |> BV.Box)
 
   ///
   let getGlobal (name:string) (t:T) =

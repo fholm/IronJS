@@ -4,8 +4,9 @@ open System
 
 open IronJS
 open IronJS.Compiler
-open IronJS.Dlr.Operators
 open IronJS.Compiler.Context
+open IronJS.Dlr.Operators
+open IronJS.Runtime
 open IronJS.Support.CustomOperators
 
 module internal Exception =

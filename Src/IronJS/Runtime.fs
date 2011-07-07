@@ -18,50 +18,50 @@ open System.Globalization
 open System.Text.RegularExpressions
 
 type BV = BoxedValue
-and Args = BV array
-and Desc = Descriptor
-and Undef = Undefined
-and Env = Environment
-and CO = CommonObject
-and VO = ValueObject
-and RO = RegExpObject
-and DO = DateObject
-and AO = ArrayObject
+type Args = BV array
+type Desc = Descriptor
+type Undef = Undefined
+type Env = IronJS.Runtime.Environment
+type CO = CommonObject
+type VO = ValueObject
+type RO = RegExpObject
+type DO = DateObject
+type AO = ArrayObject
 
-and ArgLink = ParameterStorageType * int
-and CompiledCache = MutableDict<Type, Delegate>
+type ArgLink = ParameterStorageType * int
+type CompiledCache = MutableDict<Type, Delegate>
 
 /// This delegate type is used for functions that are called
 /// with more then four arguments. Instead of compiling a function
 /// for each arity above six we pass in an array of BV values 
 /// instead and then sort it out inside the function body.
-and VariadicFunction = Func<FO, CO, Args, BV>
+type VariadicFunction = Func<FO, CO, Args, BV>
 
 // We only optimize for aritys that is <= 4, any more then that
 // and we'll use the VariadicFunction delegate instead.
-and Function = Func<FO, CO, BV>
-and Function<'a> = Func<FO, CO, 'a, BV>
-and Function<'a, 'b> = Func<FO, CO, 'a, 'b, BV>
-and Function<'a, 'b, 'c> = Func<FO, CO, 'a, 'b, 'c, BV>
-and Function<'a, 'b, 'c, 'd> = Func<FO, CO, 'a, 'b, 'c, 'd, BV>
+type Function = Func<FO, CO, BV>
+type Function<'a> = Func<FO, CO, 'a, BV>
+type Function<'a, 'b> = Func<FO, CO, 'a, 'b, BV>
+type Function<'a, 'b, 'c> = Func<FO, CO, 'a, 'b, 'c, BV>
+type Function<'a, 'b, 'c, 'd> = Func<FO, CO, 'a, 'b, 'c, 'd, BV>
 
-and FunctionReturn<'r> = Func<FO, CO, 'r>
-and FunctionReturn<'a, 'r> = Func<FO, CO, 'a, 'r>
-and FunctionReturn<'a, 'b, 'r> = Func<FO, CO, 'a, 'b, 'r>
-and FunctionReturn<'a, 'b, 'c, 'r> = Func<FO, CO, 'a, 'b, 'c, 'r>
-and FunctionReturn<'a, 'b, 'c, 'd, 'r> = Func<FO, CO, 'a, 'b, 'c, 'd, 'r>
+type FunctionReturn<'r> = Func<FO, CO, 'r>
+type FunctionReturn<'a, 'r> = Func<FO, CO, 'a, 'r>
+type FunctionReturn<'a, 'b, 'r> = Func<FO, CO, 'a, 'b, 'r>
+type FunctionReturn<'a, 'b, 'c, 'r> = Func<FO, CO, 'a, 'b, 'c, 'r>
+type FunctionReturn<'a, 'b, 'c, 'd, 'r> = Func<FO, CO, 'a, 'b, 'c, 'd, 'r>
 
-and HFO<'a when 'a :> Delegate> = HostFunctionObject<'a>
-and SO = StringObject
-and NO = NumberObject
-and BO = BooleanObject
-and MO = MathObject
-and EO = ErrorObject
-and FO = FunctionObject
+type HFO<'a when 'a :> Delegate> = HostFunctionObject<'a>
+type SO = StringObject
+type NO = NumberObject
+type BO = BooleanObject
+type MO = MathObject
+type EO = ErrorObject
+type FO = FunctionObject
 
-and TC = TypeConverter
+type TC = TypeConverter
 
-and DlrTC = DlrTypeConverter
+type DlrTC = DlrTypeConverter
 and DlrTypeConverter() =
   static member ToBoxedValue(expr:Dlr.Expr) : Dlr.Expr = Dlr.callStaticT<TC> "ToBoxedValue" [expr]
 
@@ -98,6 +98,6 @@ and DlrTypeConverter() =
       elif t = typeof<obj> then DlrTC.ToClrObject expr
       else Error.CompileError.Raise(Error.missingNoConversion expr.Type t)
 
-and ClrArgs = obj array
-and Scope = BV array
-and DynamicScope = (int * CO) list
+type ClrArgs = obj array
+type Scope = BV array
+type DynamicScope = (int * CO) list

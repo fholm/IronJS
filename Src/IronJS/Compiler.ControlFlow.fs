@@ -13,7 +13,7 @@ module internal ControlFlow =
   //----------------------------------------------------------------------------
   // 11.12 conditional
   let ternary (ctx:Ctx) test ifTrue ifFalse =
-    let test = TC.ToBoolean (ctx $ Context.compile test)
+    let test = DlrTC.ToBoolean (ctx $ Context.compile test)
     let ifTrue = ctx $ compile ifTrue
     let ifFalse = ctx $ compile ifFalse
 
@@ -27,7 +27,7 @@ module internal ControlFlow =
   //----------------------------------------------------------------------------
   // 12.5 if
   let if' (ctx:Ctx) test ifTrue ifFalse =
-    let test = TC.ToBoolean (ctx $ compile test)
+    let test = DlrTC.ToBoolean (ctx $ compile test)
     let ifTrue = Dlr.castVoid (ctx $ compile ifTrue)
     match ifFalse with
     | None -> Dlr.if' test ifTrue
@@ -40,7 +40,7 @@ module internal ControlFlow =
 
   let doWhile' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TypeConverter.ToBoolean (ctx $ Context.compile test)
+    let test = DlrTC.ToBoolean (ctx $ Context.compile test)
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
@@ -52,7 +52,7 @@ module internal ControlFlow =
   // 12.6.2 while
   let while' (ctx:Ctx) label test body =
     let break', continue' = loopLabels()
-    let test = TC.ToBoolean(ctx $ Context.compile test)
+    let test = DlrTC.ToBoolean(ctx $ Context.compile test)
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'
     let ctx = {ctx with Labels = labels}
@@ -65,7 +65,7 @@ module internal ControlFlow =
   let for' (ctx:Ctx) label init test incr body =
     let break', continue' = loopLabels()
     let init = ctx $ Context.compile init
-    let test = ctx $ Context.compile test $ TC.ToBoolean
+    let test = ctx $ Context.compile test $ DlrTC.ToBoolean
     let incr = ctx $ Context.compile incr
 
     let labels = ctx.Labels |> Labels.addLoopLabels label break' continue'

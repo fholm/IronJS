@@ -127,7 +127,7 @@ type DynamicScopeHelpers() =
     | _ -> if s = null then g.Put(name, v) else s.[i] <- v
     
   ///
-  static member Call<'a when 'a :> Delegate> (name:string, args, dc, stop, g, s:Scope, i) =
+  static member Call<'a when 'a :> Delegate and 'a : not struct> (name:string, args, dc, stop, g, s:Scope, i) =
     let this, func = 
       match findObject name dc stop with
       | Some o -> o, o.Get(name)

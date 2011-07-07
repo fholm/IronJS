@@ -63,8 +63,8 @@ module internal Function =
     let private toString (toString:FO) (o:CO) =
       let f = o.CastTo<FO>()
       match f.MetaData.Source with
-      | None -> "function() { [native code] }"
-      | Some source -> source
+      | null -> "function() { [native code] }"
+      | source -> source
 
     ///
     let private getThisObject (env:Env) (this:BV) =

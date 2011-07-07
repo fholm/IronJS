@@ -13,7 +13,7 @@ module Utils =
   let createHostFunction (env:Environment) (delegate':'a) =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(compiler)
-    let h = HostFunction<'a>(env, delegate', metaData)
+    let h = HostFunctionObject<'a>(env, delegate', metaData)
     h.Put("length", double 0.0, DescriptorAttrs.Immutable)
     h :> FunctionObject
 
@@ -27,7 +27,7 @@ module Utils =
         $ DelegateUtils.getPublicParameterTypes 
         $ Array.length
 
-    let hfo = HostFunction<'a>(env, func, metaData)
+    let hfo = HostFunctionObject<'a>(env, func, metaData)
     hfo.Put("length", double length, DescriptorAttrs.Immutable)
     hfo :> FunctionObject
 
@@ -87,7 +87,7 @@ module Utils =
         f()
 
       with
-      | :? IronJS.UserError as x ->
+      | :? IronJS.Runtime.UserError as x ->
         raise x
 
       | :? Error.CompileError as x ->

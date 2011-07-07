@@ -11,7 +11,7 @@ module internal HostFunction =
   let private functionParameter() = Dlr.paramT<FO> "~function"
   let private thisParameter() = Dlr.paramT<CO> "~this"
 
-  let makeInvoke<'a when 'a :> Delegate> func arguments =
+  let makeInvoke<'a when 'a :> Delegate and 'a : not struct> func arguments =
     let delegateField = (Dlr.castT<HFO<'a>> func) .-> "Delegate"
     let invoke = Dlr.invoke delegateField arguments
     if invoke.Type = typeof<Void> 
@@ -45,9 +45,9 @@ module internal HostFunction =
       then Utils.Constants.Boxed.undefined
       elif type' == typeof<CO> || type'.IsSubclassOf(typeof<CO>)
         then Dlr.default' type'
-        else TC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
+        else DlrTC.ConvertTo(env, Utils.Constants.Boxed.undefined, type')
 
-  let compile<'a when 'a :> Delegate> (f:FO) callsiteType =
+  let compile<'a when 'a :> Delegate and 'a : not struct> (f:FO) callsiteType =
     let hostType = typeof<'a>
 
     if hostType == callsiteType then 
@@ -115,7 +115,7 @@ module internal HostFunction =
                 let argsIndex = Dlr.indexInt callsiteArgs i
 
                 Dlr.ternary (!!!i .< argsLength) 
-                  (TC.ConvertTo(env, argsIndex, type'))
+                  (DlrTC.ConvertTo(env, argsIndex, type'))
                   (defaultArg env type')
               )
 
@@ -167,7 +167,7 @@ module internal HostFunction =
 
         //
         let convert = 
-          Microsoft.FSharp.Core.FuncConvert.FuncFromTupled(TC.ConvertTo)
+          Microsoft.FSharp.Core.FuncConvert.FuncFromTupled(DlrTC.ConvertTo)
 
         //
         let hostArguments =

@@ -23,7 +23,7 @@ namespace IronJS.Runtime
             DynamicScope = dynamicScope;
         }
 
-        public FunctionObject(Environment env, FunctionMetaData metaData, Schema schema) : 
+        public FunctionObject(Environment env, FunctionMetaData metaData, Schema schema) :
             base(env, schema, env.Prototypes.Function)
         {
             MetaData = metaData;
@@ -91,7 +91,7 @@ namespace IronJS.Runtime
             var o = Get("prototype");
 
             if (!o.IsObject)
-                Env.RaiseTypeError("prototype property is not an object");
+                return Env.RaiseTypeError<bool>("prototype property is not an object");
 
             v = (v != null) ? v.Prototype : null;
 
@@ -108,7 +108,7 @@ namespace IronJS.Runtime
 
         public BoxedValue Call(CommonObject @this)
         {
-            return 
+            return
                 MetaData
                     .GetDelegate<Func<FunctionObject, CommonObject, BoxedValue>>(this)
                     .Invoke(this, @this);
@@ -166,7 +166,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 
@@ -182,7 +182,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o, a0), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 
@@ -198,7 +198,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o, a0, a1), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 
@@ -214,7 +214,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o, a0, a1, a2), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 
@@ -230,7 +230,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o, a0, a1, a2, a3), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 
@@ -246,7 +246,7 @@ namespace IronJS.Runtime
                     return PickReturnObject(Call(o, args), o);
 
                 default:
-                    return Env.RaiseTypeError();
+                    return Env.RaiseTypeError<BoxedValue>();
             }
         }
 

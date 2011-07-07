@@ -16,7 +16,7 @@ namespace IronJS.Runtime
             var vo = o as ValueObject;
 
             if (vo == null)
-                o.Env.RaiseTypeError("Cannot read the value of a non-value object.");
+                return o.Env.RaiseTypeError<BoxedValue>("Cannot read the value of a non-value object.");
 
             return vo.Value.Value;
         }

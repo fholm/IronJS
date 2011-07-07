@@ -457,8 +457,7 @@ namespace IronJS.Runtime
                         return val.Value;
                     }
 
-                    this.Env.RaiseTypeError("Could not get the default value.");
-                    break;
+                    return this.Env.RaiseTypeError<BoxedValue>("Could not get the default value.");
 
                 default:
                     val = this.TryCallMember("valueOf");
@@ -473,8 +472,7 @@ namespace IronJS.Runtime
                         return val.Value;
                     }
 
-                    this.Env.RaiseTypeError("Could not get the default value.");
-                    break;
+                    return this.Env.RaiseTypeError<BoxedValue>("Could not get the default value.");
             }
         }
 
@@ -625,7 +623,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 this.Put(parsed, value);
             }
@@ -644,7 +642,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 this.Put(parsed, value);
             }
@@ -729,7 +727,7 @@ namespace IronJS.Runtime
         public void Put(BoxedValue index, object value, ushort tag)
         {
             uint i = 0;
-            if (TypeConverter.TryToIndex(index, ref i))
+            if (TypeConverter.TryToIndex(index, out i))
             {
                 this.Put(i, value, tag);
             }
@@ -747,7 +745,7 @@ namespace IronJS.Runtime
         public void Put(double index, object value, ushort tag)
         {
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(index, ref parsed))
+            if (TypeConverter.TryToIndex(index, out parsed))
             {
                 this.Put(parsed, value, tag);
             }
@@ -762,7 +760,7 @@ namespace IronJS.Runtime
             var s = TypeConverter.ToString(index);
             var parsed = 0u;
 
-            if (TypeConverter.TryToIndex(index, out parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 this.Put(parsed, value, tag);
             }
@@ -781,7 +779,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 this.Put(parsed, value, tag);
             }
@@ -799,7 +797,7 @@ namespace IronJS.Runtime
         public BoxedValue Get(BoxedValue index)
         {
             uint i = 0;
-            if (TypeConverter.TryToIndex(index, ref i))
+            if (TypeConverter.TryToIndex(index, out i))
             {
                 return this.Get(i);
             }
@@ -814,7 +812,7 @@ namespace IronJS.Runtime
         public BoxedValue Get(double index)
         {
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(index, ref parsed))
+            if (TypeConverter.TryToIndex(index, out parsed))
             {
                 return this.Get(parsed);
             }
@@ -825,7 +823,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 return this.Get(parsed);
             }
@@ -841,7 +839,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 return this.Get(parsed);
             }
@@ -866,7 +864,7 @@ namespace IronJS.Runtime
         public bool Has(BoxedValue index)
         {
             uint i = 0;
-            if (TypeConverter.TryToIndex(index, ref i))
+            if (TypeConverter.TryToIndex(index, out i))
             {
                 return this.Has(i);
             }
@@ -908,7 +906,7 @@ namespace IronJS.Runtime
         {
             string s = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(s, ref parsed))
+            if (TypeConverter.TryToIndex(s, out parsed))
             {
                 return this.Has(parsed);
             }
@@ -924,7 +922,7 @@ namespace IronJS.Runtime
         public bool Delete(BoxedValue index)
         {
             uint i = 0;
-            if (TypeConverter.TryToIndex(index, ref i))
+            if (TypeConverter.TryToIndex(index, out i))
             {
                 return this.Delete(i);
             }
@@ -939,7 +937,7 @@ namespace IronJS.Runtime
         public bool Delete(double index)
         {
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(index, ref parsed))
+            if (TypeConverter.TryToIndex(index, out parsed))
             {
                 return this.Delete(parsed);
             }
@@ -948,13 +946,13 @@ namespace IronJS.Runtime
 
         public bool Delete(object index)
         {
-            string index = TypeConverter.ToString(index);
+            string name = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(index, ref parsed))
+            if (TypeConverter.TryToIndex(name, out parsed))
             {
                 return this.Delete(parsed);
             }
-            return this.Delete(index);
+            return this.Delete(name);
         }
 
         public bool Delete(Undefined index)
@@ -964,13 +962,13 @@ namespace IronJS.Runtime
 
         public bool Delete(CommonObject index)
         {
-            string index = TypeConverter.ToString(index);
+            string name = TypeConverter.ToString(index);
             uint parsed = 0;
-            if (TypeConverter.TryToIndex(index, ref parsed))
+            if (TypeConverter.TryToIndex(name, out parsed))
             {
                 return this.Delete(parsed);
             }
-            return this.Delete(index);
+            return this.Delete(name);
         }
 
         public virtual Tuple<uint, HashSet<string>> CollectProperties()

@@ -20,7 +20,8 @@ namespace IronJS.Runtime
             }
             catch (ArgumentException ex)
             {
-                env.RaiseSyntaxError(ex.Message);
+                env.RaiseSyntaxError<object>(ex.Message);
+                return;
             }
         }
 

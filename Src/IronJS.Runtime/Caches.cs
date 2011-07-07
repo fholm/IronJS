@@ -39,7 +39,7 @@ namespace IronJS.Runtime.Caches
     public class SplayCache<K, V>
         where K : IComparable<K>
     {
-        SplayTree<K, V> storage = 
+        SplayTree<K, V> storage =
             new SplayTree<K, V>();
 
         public V Lookup(K key, Lazy<V> value)
@@ -65,17 +65,18 @@ namespace IronJS.Runtime.Caches
         Dictionary<K, WeakReference> storage =
             new Dictionary<K, WeakReference>();
 
-        public V Lookup(K key, Lazy<V> value)
+        public V Lookup(K key, Func<V> value)
         {
             WeakReference cached;
 
             if (storage.TryGetValue(key, out cached) && cached.Target is V)
             {
-                return (V) cached.Target;
+                return (V)cached.Target;
             }
 
-            storage[key] = new WeakReference(value.Value);
-            return value.Value;
+            var newValue = value();
+            storage[key] = new WeakReference(newValue);
+            return newValue;
         }
     }
 }

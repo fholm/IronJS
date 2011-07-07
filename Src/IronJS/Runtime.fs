@@ -22,11 +22,20 @@ type Args = BV array
 type Desc = Descriptor
 type Undef = Undefined
 type Env = IronJS.Runtime.Environment
+
 type CO = CommonObject
 type VO = ValueObject
 type RO = RegExpObject
 type DO = DateObject
 type AO = ArrayObject
+type SO = StringObject
+type NO = NumberObject
+type BO = BooleanObject
+type MO = MathObject
+type EO = ErrorObject
+type FO = FunctionObject
+
+type HFO<'a when 'a :> Delegate and 'a : not struct> = HostFunctionObject<'a>
 
 type ArgLink = ParameterStorageType * int
 type CompiledCache = MutableDict<Type, Delegate>
@@ -50,14 +59,6 @@ type FunctionReturn<'a, 'r> = Func<FO, CO, 'a, 'r>
 type FunctionReturn<'a, 'b, 'r> = Func<FO, CO, 'a, 'b, 'r>
 type FunctionReturn<'a, 'b, 'c, 'r> = Func<FO, CO, 'a, 'b, 'c, 'r>
 type FunctionReturn<'a, 'b, 'c, 'd, 'r> = Func<FO, CO, 'a, 'b, 'c, 'd, 'r>
-
-type HFO<'a when 'a :> Delegate> = HostFunctionObject<'a>
-type SO = StringObject
-type NO = NumberObject
-type BO = BooleanObject
-type MO = MathObject
-type EO = ErrorObject
-type FO = FunctionObject
 
 type TC = TypeConverter
 

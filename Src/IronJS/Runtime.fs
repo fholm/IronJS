@@ -105,9 +105,8 @@ module TaggedBools =
 
 module BoxedValueOffsets =
   let [<Literal>] ValueType = 0
-  let [<Literal>] Tag = 4
-  let [<Literal>] Marker = 6
-  let [<Literal>] ReferenceType = 8
+  let [<Literal>] Tag = 8
+  let [<Literal>] ReferenceType = 12
 
 type BV = BoxedValue
 and Args = BV array
@@ -132,7 +131,8 @@ and [<NoComparison>] [<StructLayout(LayoutKind.Explicit)>] BoxedValue =
 
     // Type & Tag
     [<FieldOffset(BoxedValueOffsets.Tag)>] val mutable Tag : uint32
-    [<FieldOffset(BoxedValueOffsets.Marker)>] val mutable Marker : uint16
+    //[<FieldOffset(BoxedValueOffsets.Marker)>] val mutable Marker : uint16
+    member x.Marker = (uint16)(x.Tag >> 16)
 
     member x.IsNumber = x.Marker < Markers.Tagged
     member x.IsTagged = x.Marker > Markers.Number

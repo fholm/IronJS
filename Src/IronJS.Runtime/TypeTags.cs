@@ -59,6 +59,7 @@ namespace IronJS.Runtime
             map.Add(typeof(BooleanObject), TypeTags.Object);
             map.Add(typeof(RegExpObject), TypeTags.Object);
             map.Add(typeof(DateObject), TypeTags.Object);
+            map.Add(typeof(BoxedValue), TypeTags.Box);
         }
 
         public static uint OfType(Type type)
@@ -70,8 +71,8 @@ namespace IronJS.Runtime
                 return tag;
             }
 
-            return  type.IsSubclassOf(typeof(CommonObject)) 
-                    ? TypeTags.Object 
+            return type.IsSubclassOf(typeof(CommonObject))
+                    ? TypeTags.Object
                     : TypeTags.Clr;
         }
 

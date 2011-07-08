@@ -22,7 +22,7 @@ module Global =
         Utils.trapSyntaxError env (fun () ->
           let source = target.Target.Clr.ToString()
           env.EvalCache.Lookup(source,
-            (lazy
+            (fun (unit) ->
               let ast =
                 target.Function.Env 
                 |> Parser.parse source

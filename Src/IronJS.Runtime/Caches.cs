@@ -10,21 +10,21 @@ namespace IronJS.Runtime.Caches
         where V : class
     {
         int size;
-        List<Tuple<K, V>> storage =
-            new List<Tuple<K, V>>();
+        List<Tuple<K, V>> storage = new List<Tuple<K, V>>();
 
         public LimitCache(int halfSize)
         {
             this.size = halfSize * 2;
         }
 
-        public V Lookup(K key, Lazy<V> value)
+        public V Lookup(K key, Func<V> value)
         {
             var result = storage.FirstOrDefault(x => x.Item1.Equals(key));
 
             if (result == null)
             {
-                storage.Add(Tuple.Create(key, value.Value));
+                result = Tuple.Create(key, value());
+                storage.Add(result);
 
                 if (storage.Count > size)
                 {
@@ -42,13 +42,13 @@ namespace IronJS.Runtime.Caches
         SplayTree<K, V> storage =
             new SplayTree<K, V>();
 
-        public V Lookup(K key, Lazy<V> value)
+        public V Lookup(K key, Func<V> value)
         {
             V cached;
 
             if (!storage.TryGetValue(key, out cached))
             {
-                storage[key] = cached = value.Value;
+                storage[key] = cached = value();
 
                 if (storage.Count > 1024)
                 {

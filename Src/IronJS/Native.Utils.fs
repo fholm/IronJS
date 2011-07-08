@@ -83,7 +83,7 @@ module Utils =
 
   ///
   let internal trapSyntaxError (env:Env) (f:unit -> 'a) =
-      try 
+      try
         f()
 
       with

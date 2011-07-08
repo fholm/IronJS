@@ -24,7 +24,7 @@ namespace IronJS.Runtime
         public BoxedValue Return;
         public CommonObject Globals;
         public int Line;
-        Action<int, int, Dictionary<string, object>> BreakPoint;
+        public Action<int, int, Dictionary<string, object>> BreakPoint;
 
         public Maps Maps;
         public readonly Random Random = new Random();

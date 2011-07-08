@@ -253,11 +253,11 @@ namespace IronJS.Runtime
             return Undefined.Boxed;
         }
 
-        public static BoxedValue ToPrimitive(object c, DefaultValueHint _arg14)
+        public static BoxedValue ToPrimitive(object c, DefaultValueHint hint)
         {
             if (c == null)
             {
-                return BoxedValue.Box(new object());
+                return BoxedValue.Box(default(object));
             }
 
             return BoxedValue.Box(c.ToString());

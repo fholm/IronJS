@@ -167,6 +167,7 @@ namespace IronJS.Runtime
                     {
                         this.Length = index + 1;
                     }
+                    return;
                 }
                 else if (index < (denseLength + 10))
                 {
@@ -177,6 +178,7 @@ namespace IronJS.Runtime
                     this.dense[index].Value = value;
                     this.dense[index].HasValue = true;
                     this.Length = index + 1;
+                    return;
                 }
                 else
                 {

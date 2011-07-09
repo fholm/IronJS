@@ -438,7 +438,7 @@ namespace IronJS.Runtime
                     return;
                 }
 
-                foreach (var key in this.storage.Keys)
+                foreach (var key in this.storage.Keys.ToList())
                 {
                     if (key >= newLength)
                         this.storage.Remove(key);

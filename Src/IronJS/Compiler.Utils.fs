@@ -75,8 +75,10 @@ module internal Utils =
   
   ///
   let normalizeVal (expr:Dlr.Expr) =
-    if Dlr.Utils.isT<bool> expr 
-      then Dlr.ternary expr !!!TaggedBools.True !!!TaggedBools.False
+    if Dlr.Utils.isT<bool> expr
+      then match expr with
+           | :? System.Linq.Expressions.ConstantExpression as l -> !!!TaggedBools.ToTagged(l.Value :?> bool)
+           | _ -> Dlr.ternary expr !!!TaggedBools.True !!!TaggedBools.False
       else expr
 
   ///

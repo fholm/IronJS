@@ -81,7 +81,7 @@ namespace IronJS.Runtime
         public int Column { get; private set; }
 
         public UserError(BoxedValue value, int line, int column)
-            : base("") //TODO: Call TypeConverter.ToString on Value
+            : base(TypeConverter.ToString(value))
         {
             Value = value;
             Line = line;

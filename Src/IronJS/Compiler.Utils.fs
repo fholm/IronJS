@@ -1,6 +1,11 @@
 ﻿namespace IronJS.Compiler
 
 open System
+#if CLR2
+open Microsoft.Scripting.Ast
+#else
+open System.Linq.Expressions
+#endif
 
 open IronJS
 open IronJS.Runtime
@@ -77,7 +82,7 @@ module internal Utils =
   let normalizeVal (expr:Dlr.Expr) =
     if Dlr.Utils.isT<bool> expr
       then match expr with
-           | :? System.Linq.Expressions.ConstantExpression as l -> !!!TaggedBools.ToTagged(l.Value :?> bool)
+           | :? ConstantExpression as l -> !!!TaggedBools.ToTagged(l.Value :?> bool)
            | _ -> Dlr.ternary expr !!!TaggedBools.True !!!TaggedBools.False
       else expr
 

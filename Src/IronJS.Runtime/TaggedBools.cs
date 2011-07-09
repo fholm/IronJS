@@ -17,5 +17,15 @@ namespace IronJS.Runtime
         {
             return value ? True : False;
         }
+
+        internal static bool IsTrue(double d)
+        {
+            return double.IsNaN(d) && (BitConverter.DoubleToInt64Bits(d) == TrueBitPattern);
+        }
+
+        internal static bool IsFalse(double d)
+        {
+            return double.IsNaN(d) && (BitConverter.DoubleToInt64Bits(d) == TrueBitPattern);
+        }
     }
 }

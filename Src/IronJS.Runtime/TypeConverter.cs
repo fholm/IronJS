@@ -509,12 +509,12 @@ namespace IronJS.Runtime
 
         public static double ToNumber(double d)
         {
-            if (double.IsNaN(d) && (TaggedBools.True == BitConverter.DoubleToInt64Bits(d)))
+            if (TaggedBools.IsTrue(d))
             {
                 return 1.0;
             }
 
-            if (double.IsNaN(d) && (TaggedBools.False == BitConverter.DoubleToInt64Bits(d)))
+            if (TaggedBools.IsFalse(d))
             {
                 return 0.0;
             }

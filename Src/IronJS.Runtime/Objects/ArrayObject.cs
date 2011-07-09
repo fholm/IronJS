@@ -151,7 +151,7 @@ namespace IronJS.Runtime
         {
             if (index == uint.MaxValue)
             {
-                base.Put(index, value);
+                base.Put(index.ToString(), value);
                 return;
             }
 
@@ -287,7 +287,7 @@ namespace IronJS.Runtime
         {
             if (index == uint.MaxValue)
             {
-                return base.Get(index);
+                return base.Get(index.ToString());
             }
 
             if (this.HasIndex(index))

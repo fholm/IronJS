@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Platform Condition="$(Platform) == ''">AnyCPU</Platform>
+    <Platform Condition="$(Platform) == ''">Any CPU</Platform>
   </PropertyGroup>
 
   <Target Name="Build" DependsOnTargets="Clean;Package" />
@@ -13,20 +13,11 @@
     <Delete Files="@(ExistingNuPkgs)" />
     <RemoveDir Directories="Binaries" Condition="Exists('Binaries\')" />
     <RemoveDir Directories="Composite" Condition="Exists('Composite\')" />
-    <RemoveDir Directories="Sources" Condition="Exists('Sources\')" />
-    <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean" Properties="Configuration=Release;Platform=$(Platform)" />
   </Target>
 
   <Target Name="Package">
-    <!-- Copy the sources to be local to NuGet. -->
-    <MakeDir Directories="Sources" />
-    <ItemGroup>
-      <Sources  Include="..\Src\IronJS\**\*;" Exclude="..\Src\IronJS\bin\**\*;..\Src\IronJS\obj\**\*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(Sources)" DestinationFolder="Sources" />
-
     <!-- Build the project for .NET 4.0 and copy the binaries local to NuGet. -->
-    <MSBuild Projects="..\Src\IronJS\IronJS.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
+    <MSBuild Projects="..\Src\CLR4.sln" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);" />
     <ItemGroup>
       <BinariesNet40 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>
@@ -34,7 +25,7 @@
     <Copy SourceFiles="@(BinariesNet40)" DestinationFolder="Binaries\lib\net40" />
 
     <!-- Build the project for .NET 2.0 and copy the binaries local to NuGet. -->
-    <MSBuild Projects="..\Src\IronJS\IronJS.CLR2.fsproj" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);OtherFlags=--keyfile:&quot;$(MSBuildProjectDirectory)\IronJS.snk&quot;" />
+    <MSBuild Projects="..\Src\CLR2.sln" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);" />
     <ItemGroup>
       <BinariesNet20 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>

@@ -73,7 +73,7 @@ namespace IronJS.Runtime
 
         public override string ClassName
         {
-            get { return "Boolean"; }
+            get { return "Array"; }
         }
 
         public bool IsDense { get { return this.isDense; } }

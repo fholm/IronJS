@@ -62,7 +62,7 @@ namespace IronJS.Runtime
         public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
         {
             var boxedArgs = args.Select(x => BoxedValue.Box(x)).ToArray();
-            result = Call(Env.Globals, args).UnboxObject();
+            result = Call(Env.Globals, boxedArgs).UnboxObject();
             return true;
         }
 #endif

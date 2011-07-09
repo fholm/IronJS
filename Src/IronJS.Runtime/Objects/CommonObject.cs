@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+#if !CLR2
 using System.Dynamic;
+#endif
 
 namespace IronJS.Runtime
 {
-    public class CommonObject : DynamicObject
+    public class CommonObject
+#if !CLR2
+        : DynamicObject
+#endif
     {
         public Environment Env;
         public CommonObject Prototype;
@@ -38,6 +43,7 @@ namespace IronJS.Runtime
             this.Properties = null;
         }
 
+#if !CLR2
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             var prop = this.Get(binder.Name);
@@ -93,6 +99,15 @@ namespace IronJS.Runtime
             return false;
         }
 
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            foreach (var kvp in this.PropertySchema.IndexMap)
+            {
+                yield return kvp.Key;
+            }
+        }
+#endif
+
         public override string ToString()
         {
             var item = this.Find("toString");
@@ -128,14 +143,6 @@ namespace IronJS.Runtime
                 }
 
                 return dict;
-            }
-        }
-
-        public override IEnumerable<string> GetDynamicMemberNames()
-        {
-            foreach (var kvp in this.PropertySchema.IndexMap)
-            {
-                yield return kvp.Key;
             }
         }
 

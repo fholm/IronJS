@@ -8,8 +8,8 @@
     <ProjectGuid>{E186E25A-34FF-4BD9-BBBE-B0B15849A828}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IronJS.Runtime.CLR2</RootNamespace>
-    <AssemblyName>IronJS.Runtime.CLR2</AssemblyName>
+    <RootNamespace>IronJS.Runtime</RootNamespace>
+    <AssemblyName>IronJS.Runtime</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

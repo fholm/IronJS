@@ -174,29 +174,34 @@ module FSharp =
     let private _fstSome x =
       match x with Some s -> Some (fst s) | _ -> None
 
-    let private _paramsMatches (x:System.Type) (y:ParamInfo) =
-      y.ParameterType.IsAssignableFrom x 
-      || (y.ParameterType.IsByRef 
-          && not x.IsByRef
-          && y.ParameterType = x.MakeByRefType())
+    let private _paramsDiff (x:System.Type) (y:ParamInfo) =
+      if y.ParameterType = x || (not x.IsByRef && x.MakeByRefType() = y.ParameterType) then
+        Some 0
+      elif y.ParameterType.IsAssignableFrom(x)|| (y.ParameterType.IsByRef && not x.IsByRef && y.ParameterType = x.MakeByRefType()) then
+        Some 1
+      else
+        None
 
-    let private _sndParamsMatches 
-      (types:System.Type array) (_, params':ParamInfo array) =
-      params' |> Array.forall2 _paramsMatches types
+    let private _sndParamsDiff 
+      (types:System.Type array) (params':ParamInfo array) =
+      Seq.zip params' types
+      |> Seq.map (fun (p, t) -> _paramsDiff t p )
+      |> Seq.fold (fun s r -> match s with
+                              | None -> None
+                              | Some i ->
+                                 match r with
+                                 | Some j -> Some (i + j)
+                                 | None -> None) (Some 0)
 
-    let private _sndParamsMatchesExact 
-      (types:System.Type array) (_, params':ParamInfo array) =
-      params' |> Array.forall2 (
-        fun x y ->
-          x = y.ParameterType 
-          || (not x.IsByRef && x.MakeByRefType() = y.ParameterType)
-      ) types
-
-    let private _findExactMatch methods args =
-      methods |> Seq.tryFind (_sndParamsMatchesExact args) |> _fstSome
-        
-    let private _findMatch methods args =
-      methods |> Seq.tryFind (_sndParamsMatches args) |> _fstSome  // FIXME:  This does not find the best match, this only finds the first acceptable match.  This is also non-deterministic, exhibiting different behavior for debug vs. release mode.
+    let private _findBestMatch methods args =
+      let mutable bestMethod = None
+      let mutable bestDiff = None
+      for (m, p) in methods do
+        let diff = _sndParamsDiff args p
+        if diff.IsSome && (bestDiff.IsNone || bestDiff.Value > diff.Value) then
+          bestDiff <- diff
+          bestMethod <- Some m
+      bestMethod
 
     let getMethods (type':System.Type) = type'.GetMethods()
     let getMethodsT<'a> = getMethods typeof<'a>
@@ -208,9 +213,7 @@ module FSharp =
           |> Seq.map (fun x -> x, x.GetParameters())
           |> Seq.filter (_sndLength args.Length)
 
-      match _findExactMatch methods args with
-      | None -> _findMatch methods args
-      | x -> x
+      _findBestMatch methods args
 
     let getMethodArgsT<'a> = getMethodArgs typeof<'a>
     let getMethod (type':System.Type) name = type'.GetMethod(name)
@@ -235,9 +238,7 @@ module FSharp =
             |> Seq.filter (_sndLength args.Length)
             |> Array.ofSeq
             
-        match _findExactMatch methods args with
-        | None -> _findMatch methods args
-        | x -> x
+        _findBestMatch methods args
 
     let getMethodGenericT<'a> = getMethodGeneric typeof<'a>
 
@@ -250,9 +251,7 @@ module FSharp =
           |> Seq.map (fun x -> x, x.GetParameters())
           |> Seq.filter (_sndLength args.Length)
 
-      match _findExactMatch ctors args with
-      | None -> _findMatch ctors args
-      | x -> x
+      _findBestMatch ctors args
 
     let getCtorT<'a> = getCtor typeof<'a>
 

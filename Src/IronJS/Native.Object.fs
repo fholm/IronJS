@@ -46,10 +46,9 @@ module internal Object =
       if this.PropertySchema.IndexMap.TryGetValue(name, &index) then 
         this.Properties.[index].HasValue
 
-      elif this :? AO && name.Length > 0 && FSharp.Char.isDigit name.[0] then
+      elif name.Length > 0 && FSharp.Char.isDigit name.[0] then
         let mutable ai = 0u
-        let mutable ao = this :?> AO
-        UInt32.TryParse(name, &ai) && ao.Has(ai)
+        UInt32.TryParse(name, &ai) && this.HasOwn(ai)
 
       else
         false

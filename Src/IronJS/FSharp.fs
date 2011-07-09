@@ -196,7 +196,7 @@ module FSharp =
       methods |> Seq.tryFind (_sndParamsMatchesExact args) |> _fstSome
         
     let private _findMatch methods args =
-      methods |> Seq.tryFind (_sndParamsMatches args) |> _fstSome
+      methods |> Seq.tryFind (_sndParamsMatches args) |> _fstSome  // FIXME:  This does not find the best match, this only finds the first acceptable match.  This is also non-deterministic, exhibiting different behavior for debug vs. release mode.
 
     let getMethods (type':System.Type) = type'.GetMethods()
     let getMethodsT<'a> = getMethods typeof<'a>

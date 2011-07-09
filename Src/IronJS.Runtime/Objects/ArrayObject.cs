@@ -231,7 +231,7 @@ namespace IronJS.Runtime
         {
             if (name == "length")
             {
-                this.PutLength(value);
+                this.PutLength(TypeConverter.ToNumber(value));
                 this.SetAttrs("length", DescriptorAttrs.DontEnum); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
                 return;
             }

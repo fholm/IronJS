@@ -21,16 +21,28 @@
     <ItemGroup>
       <BinariesNet40 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>
-    <MakeDir Directories="Binaries\lib\net40" />
+    <MakeDir Directories="Binaries\lib\net40\merged" />
     <Copy SourceFiles="@(BinariesNet40)" DestinationFolder="Binaries\lib\net40" />
+    <Exec Command="ilmerge /targetplatform:v4,%systemroot%\Microsoft.NET\Framework\v4.0.30319 /keyfile:IronJS.snk /out:Binaries\lib\net40\merged\IronJS.dll Binaries\lib\net40\IronJS.dll Binaries\lib\net40\IronJS.Runtime.dll" />
+    <ItemGroup>
+      <ClearNet40 Include="Binaries\lib\net40\IronJS*.*;Binaries\lib\net40\FSharp*.*;Binaries\lib\net40\Microsoft*.*" />
+    </ItemGroup>
+    <Delete Files="@(ClearNet40)" />
+    <Move SourceFiles="Binaries\lib\net40\merged\IronJS.dll;Binaries\lib\net40\merged\IronJS.pdb" DestinationFiles="Binaries\lib\net40\IronJS.dll;Binaries\lib\net40\IronJS.pdb" />
 
     <!-- Build the project for .NET 2.0 and copy the binaries local to NuGet. -->
     <MSBuild Projects="..\Src\CLR2.sln" Targets="Clean;Build" Properties="Configuration=Release;Platform=$(Platform);" />
     <ItemGroup>
       <BinariesNet20 Include="..\Src\IronJS\bin\Release\**\*" />
     </ItemGroup>
-    <MakeDir Directories="Binaries\lib\net20" />
+    <MakeDir Directories="Binaries\lib\net20\merged" />
     <Copy SourceFiles="@(BinariesNet20)" DestinationFolder="Binaries\lib\net20" />
+    <Exec Command="ilmerge /keyfile:IronJS.snk /out:Binaries\lib\net20\merged\IronJS.dll Binaries\lib\net20\IronJS.dll Binaries\lib\net20\IronJS.Runtime.dll" />
+    <ItemGroup>
+      <ClearNet20 Include="Binaries\lib\net20\IronJS*.*;Binaries\lib\net20\FSharp*.*" />
+    </ItemGroup>
+    <Delete Files="@(ClearNet20)" />
+    <Move SourceFiles="Binaries\lib\net20\merged\IronJS.dll;Binaries\lib\net20\merged\IronJS.pdb" DestinationFiles="Binaries\lib\net20\IronJS.dll;Binaries\lib\net20\IronJS.pdb" />
 
     <!-- Extract the current version number from the AssemblyInfo of the main project. -->
     <PropertyGroup>

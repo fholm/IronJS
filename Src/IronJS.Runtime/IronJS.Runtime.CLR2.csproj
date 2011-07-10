@@ -69,6 +69,7 @@
     <Compile Include="Objects\RegExpObject.cs" />
     <Compile Include="Objects\StringObject.cs" />
     <Compile Include="Objects\ValueObject.cs" />
+    <Compile Include="Operators.cs" />
     <Compile Include="ParameterStorageType.cs" />
     <Compile Include="ParamsMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

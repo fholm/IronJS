@@ -19,7 +19,7 @@ module internal ControlFlow =
     let ifFalse = ctx $ compile ifFalse
 
     let ifTrue, ifFalse =
-      if ifTrue.Type <> ifFalse.Type 
+      if ifTrue.Type <> ifFalse.Type
         then Utils.box ifTrue, Utils.box ifFalse
         else ifTrue, ifFalse
 
@@ -74,7 +74,7 @@ module internal ControlFlow =
 
     let body = ctx $ Context.compile body
     Dlr.for' init test incr body break' continue'
-    
+
   //----------------------------------------------------------------------------
   // 12.6.4 for-in
   let forIn (ctx:Ctx) label target object' body =
@@ -82,7 +82,7 @@ module internal ControlFlow =
     let target = match target with Ast.Var ast -> ast | _ -> target
 
     let pair = Dlr.paramT<Tuple<uint32, MutableSet<string>>> "pair"
-    
+
     let propertyState = Dlr.paramT<bool> "propertyState"
     let propertySet = Dlr.property pair "Item2"
 
@@ -101,9 +101,9 @@ module internal ControlFlow =
     let ctx = {ctx with Labels = labels}
     let source = Dlr.paramT<BV> "~source"
 
-    let tempVars = 
+    let tempVars =
       [ pair; source
-        propertyEnumerator; propertyState; 
+        propertyEnumerator; propertyState;
         indexCurrent; indexLength]
 
     Dlr.block tempVars [
@@ -111,31 +111,31 @@ module internal ControlFlow =
 
       (Dlr.if'
         (
-          Dlr.Expr.Not (source .-> "IsNull") 
+          Dlr.Expr.Not (source .-> "IsNull")
           .&&
           Dlr.Expr.Not (source .-> "IsUndefined")
         )
 
         (Dlr.Fast.block [||] [|
-          
-          (Dlr.assign pair 
-            (Dlr.call 
+
+          (Dlr.assign pair
+            (Dlr.call
               (Utils.Convert.toObject ctx source) "CollectProperties" []))
 
           (Dlr.assign propertyEnumerator (Dlr.call propertySet "GetEnumerator" []))
           (Dlr.assign propertyState Dlr.true')
           (Dlr.assign indexLength (Dlr.property pair "Item1"))
 
-          (Dlr.loop 
+          (Dlr.loop
             (break')
             (Dlr.labelVoid "~dummyLabel")
             (Dlr.true')
             (Dlr.blockSimple [
-          
-              (Dlr.if' propertyState  
+
+              (Dlr.if' propertyState
                 (Dlr.blockSimple [
-                  (Dlr.assign propertyState 
-                    
+                  (Dlr.assign propertyState
+
                     #if NET2
                     (Dlr.call (Dlr.castT<System.Collections.IEnumerator> propertyEnumerator) "MoveNext" []))
                     #else
@@ -150,14 +150,14 @@ module internal ControlFlow =
                 (Dlr.ifElse
                   (Dlr.eq indexLength (Dlr.uint0))
                   (Dlr.break' break')
-                  (Binary.assign ctx target 
+                  (Binary.assign ctx target
                     (Ast.DlrExpr (Dlr.castT<double> indexCurrent)))))
 
               (body |> ctx.Compile)
 
               (Dlr.labelExprVoid continue')
 
-              (Dlr.if' 
+              (Dlr.if'
                 (Dlr.eq propertyState Dlr.false')
                 (Dlr.blockSimple [
                   (Dlr.assign indexLength (Dlr.sub indexLength Dlr.uint1))
@@ -176,7 +176,7 @@ module internal ControlFlow =
     | (available, used)::groups ->
       match available |> Map.tryFind name with
       | Some(id, label) when FSharp.Utils.refEq label compareLabel ->
-        
+
         match locateLabelGroup name groups compareLabel with
         | None ->
           used := !used |> Map.add id label
@@ -198,39 +198,39 @@ module internal ControlFlow =
   /// 12.7 continue
   let continue' (ctx:Ctx) (name:string option) =
     match name with
-    | None -> 
+    | None ->
       match ctx.Labels.Continue with
-      | Some label -> 
+      | Some label ->
         let groups = ctx.Labels.ContinueCompilers
-        compileJump<FinallyContinueJump> groups "~default" label  
+        compileJump<FinallyContinueJump> groups "~default" label
 
       | _ -> Error.CompileError.Raise(Error.missingContinue)
 
     | Some name ->
       match ctx.Labels.ContinueLabels.TryFind name with
-      | Some label -> 
+      | Some label ->
         let groups = ctx.Labels.ContinueCompilers
-        compileJump<FinallyContinueJump> groups name label  
+        compileJump<FinallyContinueJump> groups name label
 
       | _ -> Error.CompileError.Raise(Error.missingLabel name)
-    
+
   //----------------------------------------------------------------------------
   // 12.8 break
   let break' (ctx:Ctx) (name:string option) =
     match name with
-    | None -> 
+    | None ->
       match ctx.Labels.Break with
-      | Some label -> 
-        let groups = ctx.Labels.BreakCompilers 
-        compileJump<FinallyBreakJump> groups "~default" label  
+      | Some label ->
+        let groups = ctx.Labels.BreakCompilers
+        compileJump<FinallyBreakJump> groups "~default" label
 
       | _ -> Error.CompileError.Raise(Error.missingBreak)
 
     | Some name ->
       match ctx.Labels.BreakLabels.TryFind name with
-      | Some label -> 
-        let groups = ctx.Labels.BreakCompilers 
-        compileJump<FinallyBreakJump> groups name label  
+      | Some label ->
+        let groups = ctx.Labels.BreakCompilers
+        compileJump<FinallyBreakJump> groups name label
 
       | _ -> Error.CompileError.Raise(Error.missingLabel name)
 
@@ -242,7 +242,7 @@ module internal ControlFlow =
     let valueVar = Dlr.paramT<BV> "~value"
 
     let breakLabel = Dlr.labelBreak()
-    
+
     let labels = ctx.Labels |> Labels.setDefaultBreak breakLabel
     let ctx = {ctx with Labels = labels}
 
@@ -255,13 +255,13 @@ module internal ControlFlow =
         | Ast.Cases.Case(value, body) ->
           let value = ctx.Compile value
           let label = Dlr.labelVoid (sprintf "case-%i" i)
-          let test = 
-            (Dlr.if' 
-              (Operators.same(valueVar, Utils.box value)) 
+          let test =
+            (Dlr.if'
+              (DlrOps.same(valueVar, Utils.box value))
               (Dlr.jump label)
             )
 
-          let body = 
+          let body =
             Dlr.block [] [
               Dlr.labelExprVoid label
               ctx $ Context.compile body
@@ -299,7 +299,7 @@ module internal ControlFlow =
       Dlr.block [] [for test, _ in compiledCases -> test]
 
       // Default jump, which could be either directly to
-      // break in the case of no default-case or to 
+      // break in the case of no default-case or to
       // the default case body
       !defaultJump
 

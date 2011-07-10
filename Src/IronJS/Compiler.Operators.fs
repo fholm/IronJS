@@ -8,17 +8,17 @@ open IronJS.Support.CustomOperators
 open IronJS.Support.Aliases
 
 module internal Unary =
-  
+
   //----------------------------------------------------------------------------
   // 11.3
   let postIncDec (ctx:Ctx) (ast:Ast.Tree) op =
     let expr = ctx.Compile ast
 
-    let incrementExpr = 
+    let incrementExpr =
       ctx.Compile(
-        Ast.Assign(ast, 
-          Ast.Binary(op, 
-            Ast.Convert(TypeTags.Number, ast), 
+        Ast.Assign(ast,
+          Ast.Binary(op,
+            Ast.Convert(TypeTags.Number, ast),
             Ast.Number 1.0)))
 
     Dlr.blockTmp expr.Type (fun tmp ->
@@ -34,19 +34,19 @@ module internal Unary =
   //----------------------------------------------------------------------------
   // 11.3.2
   let postDecrement ctx ast = postIncDec ctx ast Ast.BinaryOp.Sub
-  
+
   //----------------------------------------------------------------------------
   // 11.4.1 delete
   let deleteIndex (ctx:Ctx) object' index =
     (Utils.ensureObject ctx object'
       (fun x -> Dlr.call x "Delete" [index])
       (fun x -> Dlr.false'))
-    
+
   let deleteProperty (ctx:Ctx) object' name =
     (Utils.ensureObject ctx object'
       (fun x -> Dlr.call x "Delete" [!!!name])
       (fun x -> Dlr.false'))
-    
+
   let deleteIdentifier (ctx:Ctx) name =
     if ctx.DynamicLookup then
       let args = [ctx.Parameters.DynamicScope :> Dlr.Expr; ctx.Globals; Dlr.const' name]
@@ -63,7 +63,7 @@ module internal Unary =
 
   let delete (ctx:Ctx) tree =
     match tree with
-    | Ast.Identifier name -> 
+    | Ast.Identifier name ->
       deleteIdentifier ctx name
 
     | Ast.Index(object', index) ->
@@ -84,67 +84,67 @@ module internal Unary =
   // 11.4.2
   let void' (ctx:Ctx) ast =
     Dlr.blockSimple [ctx.Compile ast; Utils.Constants.undefined]
-        
+
   //----------------------------------------------------------------------------
   // 11.4.3
-  let typeOf (ctx:Ctx) (ast:Ast.Tree) = 
+  let typeOf (ctx:Ctx) (ast:Ast.Tree) =
     match ast with
     | Ast.Identifier name ->
 
       let expr =
 
-        if name |> Identifier.isGlobal ctx then 
-          
-          // We have to use the proper 
+        if name |> Identifier.isGlobal ctx then
+
+          // We have to use the proper
           // .Get method of the global object
           // here to make sure we don't throw
           // a reference exception when a non
           // defined variable is accessed
           Object.Property.get !!!name ctx.Globals
 
-        else 
+        else
           ast |> ctx.Compile
 
-      expr |> Utils.box |> Operators.typeOf
-      
+      expr |> Utils.box |> DlrOps.typeOf
+
     | _ ->
-      ast |> ctx.Compile |> Utils.box |> Operators.typeOf
-      
+      ast |> ctx.Compile |> Utils.box |> DlrOps.typeOf
+
   //----------------------------------------------------------------------------
   // 11.4.4, 11.4.5
   let preIncDec (ctx:Ctx) ast op =
-    let incrementExpr = 
+    let incrementExpr =
       ctx.Compile(
-        Ast.Assign(ast, 
-          Ast.Binary(op, 
-            Ast.Convert(TypeTags.Number, ast), 
+        Ast.Assign(ast,
+          Ast.Binary(op,
+            Ast.Convert(TypeTags.Number, ast),
             Ast.Number 1.0)))
 
     Dlr.blockSimple [incrementExpr; ctx.Compile ast]
-    
+
   let increment ctx ast = preIncDec ctx ast Ast.BinaryOp.Add
   let decrement ctx ast = preIncDec ctx ast Ast.BinaryOp.Sub
-  
+
   //----------------------------------------------------------------------------
   // 11.4.6
   let plus (ctx:Ctx) ast =
-    Dlr.callStaticT<Operators> "plus" [ctx.Compile ast |> Utils.box]
+    DlrOps.plus (ctx.Compile ast |> Utils.box)
 
   //----------------------------------------------------------------------------
   // 11.4.7
   let minus (ctx:Ctx) ast =
-    Dlr.callStaticT<Operators> "minus" [ctx.Compile ast |> Utils.box]
-  
+    DlrOps.minus (ctx.Compile ast |> Utils.box)
+
   //----------------------------------------------------------------------------
   // 11.4.8
   let complement (ctx:Ctx) ast =
-    Dlr.callStaticT<Operators> "bitCmpl" [ctx.Compile ast |> Utils.box]
+    DlrOps.bitCmpl (ctx.Compile ast |> Utils.box)
 
   //----------------------------------------------------------------------------
   // 11.4.9
   let not (ctx:Ctx) ast =
-    Dlr.callStaticT<Operators> "not" [ctx.Compile ast |> Utils.box]
-    
+    DlrOps.not (ctx.Compile ast |> Utils.box)
+
   //----------------------------------------------------------------------------
   let convert (ctx:Ctx) (tag:uint32) (ast:Ast.Tree) =
     match tag with
@@ -153,7 +153,7 @@ module internal Unary =
 
     | _ -> failwith "Que?"
 
-  /// 
+  ///
   let compile ctx op ast =
     match op with
     | Ast.UnaryOp.Delete -> delete ctx ast
@@ -170,8 +170,8 @@ module internal Unary =
     | _ -> failwithf "Invalid unary op %A" op
 
 ///
-module internal Binary = 
-  
+module internal Binary =
+
   ///
   let private toNumber (expr:Dlr.Expr) =
     Utils.Convert.toNumber expr
@@ -184,13 +184,13 @@ module internal Binary =
   let private toInt32 (expr:Dlr.Expr) =
     expr |> toUInt32 |> Dlr.castT<int32>
 
-  /// This method is intended for internal use only 
+  /// This method is intended for internal use only
   /// and uses mutable lists for performance reasons
   let private getStaticExpression (vars:Dlr.ParameterList) (body:Dlr.ExprList) expr =
-    if expr |> Dlr.isStatic then 
+    if expr |> Dlr.isStatic then
       expr
 
-    else 
+    else
       let temp = Dlr.param "~tmp" expr.Type
       vars.Add(temp)
       body.Add(temp .= expr)
@@ -209,11 +209,11 @@ module internal Binary =
     Dlr.block vars body
 
   ///
-  let private bitOperator op l r : Dlr.Expr = 
+  let private bitOperator op l r : Dlr.Expr =
     op (toInt32 l) (toInt32 r) |> Dlr.castT<double>
 
   ///
-  let private bitShiftOperator op convert l r : Dlr.Expr = 
+  let private bitShiftOperator op convert l r : Dlr.Expr =
     let r = ((r |> toUInt32) .& (!!!0x1Fu)) |> Dlr.castT<int>
     op (convert l) r |> Dlr.castT<double>
 
@@ -221,7 +221,7 @@ module internal Binary =
   let private addOperator l r =
     let vars = new Dlr.ParameterList()
     let body = new Dlr.ExprList()
-    
+
     let l = l |> getStaticExpression vars body
     let r = r |> getStaticExpression vars body
 
@@ -229,25 +229,25 @@ module internal Binary =
       match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
       | TypeTags.Number, TypeTags.Number -> Dlr.add l r
       | TypeTags.Number, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber r)
           (Dlr.add l (Utils.Box.unboxNumber r) |> Utils.box)
-          (Operators.add (Utils.box l, Utils.box r))
+          (DlrOps.add (Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Number ->
-        Dlr.ternary (Utils.Box.isNumber l) 
+        Dlr.ternary (Utils.Box.isNumber l)
           (Dlr.add (Utils.Box.unboxNumber l) r |> Utils.box)
-          (Operators.add(Utils.box l, Utils.box r))
+          (DlrOps.add(Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r)
           (Dlr.add (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r) |> Utils.box)
-          (Operators.add(l, r))
+          (DlrOps.add(l, r))
 
       | _ ->
-        Operators.add(Utils.box l, Utils.box r)
+        DlrOps.add(Utils.box l, Utils.box r)
     )
 
-    if vars.Count = 0 && body.Count = 1 
+    if vars.Count = 0 && body.Count = 1
       then body.[0]
       else Dlr.block vars body
 
@@ -255,27 +255,27 @@ module internal Binary =
   let private relationalOperator op fallback l r =
     let vars = new Dlr.ParameterList()
     let body = new Dlr.ExprList()
-    
+
     let l = l |> getStaticExpression vars body
     let r = r |> getStaticExpression vars body
 
     body.Add (
       match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
-      | TypeTags.Number, TypeTags.Number -> 
+      | TypeTags.Number, TypeTags.Number ->
         op l r
 
       | TypeTags.Number, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber r)
           (op l (Utils.Box.unboxNumber r))
           (fallback (Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Number ->
-        Dlr.ternary (Utils.Box.isNumber l) 
+        Dlr.ternary (Utils.Box.isNumber l)
           (op (Utils.Box.unboxNumber l) r)
           (fallback (Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r)
           (op (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r))
           (fallback (l, r))
 
@@ -283,7 +283,7 @@ module internal Binary =
         fallback(Utils.box l, Utils.box r)
     )
 
-    if vars.Count = 0 && body.Count = 1 
+    if vars.Count = 0 && body.Count = 1
       then body.[0]
       else Dlr.block vars body
 
@@ -291,14 +291,14 @@ module internal Binary =
   let private equalityOperator op fallback constResult l r =
     let vars = new Dlr.ParameterList()
     let body = new Dlr.ExprList()
-    
+
     let l  = l |> getStaticExpression vars body
     let r = r |> getStaticExpression vars body
 
     body.Add (
       match TypeTag.OfType(l.Type), TypeTag.OfType(r.Type) with
       | TypeTags.Box, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber l .&& Utils.Box.isNumber r)
           (op (Utils.Box.unboxNumber l) (Utils.Box.unboxNumber r))
           (fallback (l, r))
 
@@ -308,12 +308,12 @@ module internal Binary =
         op l r
 
       | TypeTags.Number, TypeTags.Box ->
-        Dlr.ternary (Utils.Box.isNumber r) 
+        Dlr.ternary (Utils.Box.isNumber r)
           (op l (Utils.Box.unboxNumber r))
           (fallback(Utils.box l, Utils.box r))
 
       | TypeTags.Box, TypeTags.Number ->
-        Dlr.ternary (Utils.Box.isNumber l) 
+        Dlr.ternary (Utils.Box.isNumber l)
           (op (Utils.Box.unboxNumber l) r)
           (fallback(Utils.box l, Utils.box r))
 
@@ -321,7 +321,7 @@ module internal Binary =
         fallback(Utils.box l, Utils.box r)
     )
 
-    if vars.Count = 0 && body.Count = 1 
+    if vars.Count = 0 && body.Count = 1
       then body.[0]
       else Dlr.block vars body
 
@@ -342,45 +342,45 @@ module internal Binary =
     | Ast.BinaryOp.BitShiftRight  -> bitShiftOperator Dlr.rhs toInt32  l r
     | Ast.BinaryOp.BitUShiftRight -> bitShiftOperator Dlr.rhs toUInt32 l r
 
-    | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq Operators.eq None l r
-    | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq Operators.notEq None l r
-    | Ast.BinaryOp.Same -> equalityOperator Dlr.eq Operators.same (Some true) l r
-    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.notEq Operators.notSame (Some true) l r
+    | Ast.BinaryOp.Eq -> equalityOperator Dlr.eq DlrOps.eq None l r
+    | Ast.BinaryOp.NotEq -> equalityOperator Dlr.notEq DlrOps.notEq None l r
+    | Ast.BinaryOp.Same -> equalityOperator Dlr.eq DlrOps.same (Some true) l r
+    | Ast.BinaryOp.NotSame -> equalityOperator Dlr.notEq DlrOps.notSame (Some true) l r
 
-    | Ast.BinaryOp.Lt -> relationalOperator Dlr.lt Operators.lt l r
-    | Ast.BinaryOp.LtEq -> relationalOperator Dlr.ltEq Operators.ltEq l r
-    | Ast.BinaryOp.Gt -> relationalOperator Dlr.gt Operators.gt l r
-    | Ast.BinaryOp.GtEq -> relationalOperator Dlr.gtEq Operators.gtEq l r
+    | Ast.BinaryOp.Lt -> relationalOperator Dlr.lt DlrOps.lt l r
+    | Ast.BinaryOp.LtEq -> relationalOperator Dlr.ltEq DlrOps.ltEq l r
+    | Ast.BinaryOp.Gt -> relationalOperator Dlr.gt DlrOps.gt l r
+    | Ast.BinaryOp.GtEq -> relationalOperator Dlr.gtEq DlrOps.gtEq l r
 
-    | Ast.BinaryOp.In -> Operators.in'(ctx.Env, l |> Utils.box, r |> Utils.box)
-    | Ast.BinaryOp.InstanceOf -> Operators.instanceOf(ctx.Env, l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.In -> DlrOps.in'(ctx.Env, l |> Utils.box, r |> Utils.box)
+    | Ast.BinaryOp.InstanceOf -> DlrOps.instanceOf(ctx.Env, l |> Utils.box, r |> Utils.box)
 
     | _ -> failwithf "Invalid BinaryOp %A" op
-    
-  /// Implements compilation for: 
+
+  /// Implements compilation for:
   let compile (ctx:Ctx) op left right =
 
     match op with
-    | Ast.BinaryOp.Or -> 
+    | Ast.BinaryOp.Or ->
       let l = left |> ctx.Compile
       let l_tmp = Dlr.param "~left" l.Type
 
       Dlr.block [l_tmp] [
         l_tmp .= l
-        (Dlr.ternary 
+        (Dlr.ternary
           (Dlr.callStaticT<TC> "ToBoolean" [l_tmp])
           (Utils.box l_tmp)
           (Utils.box (right |> ctx.Compile))
         )
       ]
 
-    | Ast.BinaryOp.And -> 
+    | Ast.BinaryOp.And ->
       let l = left |> ctx.Compile
       let l_tmp = Dlr.param "~left" l.Type
 
       Dlr.block [l_tmp] [
         l_tmp .= l
-        (Dlr.ternary 
+        (Dlr.ternary
           (Dlr.callStaticT<TC> "ToBoolean" [l_tmp])
           (Utils.box (right |> ctx.Compile))
           (Utils.box l_tmp)
@@ -398,15 +398,15 @@ module internal Binary =
 
     match ltree with
     //Variable assignment: foo = 1;
-    | Ast.Identifier(name) -> 
+    | Ast.Identifier(name) ->
       Identifier.setValue ctx name value
 
     //Property assignment: foo.bar = 1;
-    | Ast.Property(object', name) -> 
+    | Ast.Property(object', name) ->
       Object.putMember ctx (object' |> ctx.Compile) name value
 
     //Index assignemnt: foo[0] = "bar";
-    | Ast.Index(object', index) -> 
+    | Ast.Index(object', index) ->
       Utils.tempBlock value (fun value ->
         let object' = object' |> ctx.Compile
         let index = Utils.compileIndex ctx index
@@ -416,8 +416,8 @@ module internal Binary =
       )
 
     | _ -> failwithf "Failed to compile assign for: %A" ltree
-    
-  /// Implements compilation for 
+
+  /// Implements compilation for
   let compoundAssign (ctx:Ctx) op ltree rtree =
     match ltree with
     | Ast.Index(obj, idx) ->
@@ -430,6 +430,6 @@ module internal Binary =
         tmp .= idx
         assign ctx ltree (Ast.Binary(op, ltree, rtree))
       ]
-      
+
     | _ ->
       assign ctx ltree (Ast.Binary(op, ltree, rtree))

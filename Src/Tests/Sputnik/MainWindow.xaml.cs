@@ -61,7 +61,7 @@ namespace IronJS.Tests.Sputnik
             this.worker.WorkerReportsProgress = true;
             this.worker.WorkerSupportsCancellation = true;
 
-            var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.FullName, "sputnik-v1");
+            var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.Parent.FullName, "sputnik_converted");
             libPath = Path.Combine(rootPath, "lib");
             var testsPath = Path.Combine(rootPath, "tests");
 

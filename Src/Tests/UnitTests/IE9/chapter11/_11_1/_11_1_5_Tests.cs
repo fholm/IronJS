@@ -22,11 +22,20 @@ namespace IronJS.Tests.UnitTests.IE9.chapter11._11_1
         [Test(Description = "Object literal - SyntaxError for duplicate property name (set,get,set)")] public void _11_1_5_4__4__d__4() { RunFile(@"11.1.5_4-4-d-4.js"); }
         [Test(Description = "Object initialization using PropertyNameAndValueList (PropertyNameAndValueList , PropertyAssignment) when property (read-only) exists in Object.prototype (Step 5)")] public void _11_1_5_4__5__1() { RunFile(@"11.1.5_4-5-1.js"); }
         [Test(Description = "Object literal - property descriptor for assignment expression")] public void _11_1_5_5__4__1() { RunFile(@"11.1.5_5-4-1.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when an assignment to a reserved word or a future reserved word is contained in strict code")] public void _11_1_5_6__2__1__s() { RunFile(@"11.1.5_6-2-1-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when an assignment to a reserved word or a future reserved word is made inside a strict mode FunctionBody of a PropertyAssignment")] public void _11_1_5_6__2__2__s() { RunFile(@"11.1.5_6-2-2-s.js"); }
         [Test(Description = "Object literal - property descriptor for get property assignment")] public void _11_1_5_6__3__1() { RunFile(@"11.1.5_6-3-1.js"); }
         [Test(Description = "Object literal - property descriptor for get property assignment should not create a set function")] public void _11_1_5_6__3__2() { RunFile(@"11.1.5_6-3-2.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when an assignment to a reserved word is contained in strict code")] public void _11_1_5_7__2__1__s() { RunFile(@"11.1.5_7-2-1-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when an assignment to a reserved word is made in  a strict FunctionBody of a PropertyAssignment")] public void _11_1_5_7__2__2__s() { RunFile(@"11.1.5_7-2-2-s.js"); }
         [Test(Description = "Object literal - property descriptor for set property assignment")] public void _11_1_5_7__3__1() { RunFile(@"11.1.5_7-3-1.js"); }
         [Test(Description = "Object literal - property descriptor for set property assignment should not create a get function")] public void _11_1_5_7__3__2() { RunFile(@"11.1.5_7-3-2.js"); }
         [Test(Description = "Object literal - get set property")] public void _11_1_5__0__1() { RunFile(@"11.1.5-0-1.js"); }
         [Test(Description = "Object literal - multiple get set properties")] public void _11_1_5__0__2() { RunFile(@"11.1.5-0-2.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when \'eval\' occurs as the Identifier in a PropertySetParameterList of a PropertyAssignment that is contained in strict code")] public void _11_1_5__1__s() { RunFile(@"11.1.5-1-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when \'arguments\' occurs as the Identifier in a PropertySetParameterList of a PropertyAssignment that is contained in strict code")] public void _11_1_5__2__s() { RunFile(@"11.1.5-2-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when  \'evals\'  occurs as the Identifier in a PropertySetParameterList of a PropertyAssignment  if its FunctionBody is strict code")] public void _11_1_5__3__s() { RunFile(@"11.1.5-3-s.js"); }
+        [Test(Description = "Object literal - SyntaxError for duplicate date property name in strict mode")] public void _11_1_5__4__4__a__1__s() { RunFile(@"11.1.5-4-4-a-1-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown when \'arguments\'  occurs as the Identifier in a PropertySetParameterList of a PropertyAssignment  if its FunctionBody is strict code")] public void _11_1_5__4__s() { RunFile(@"11.1.5-4-s.js"); }
     }
 }

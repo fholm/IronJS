@@ -10,12 +10,25 @@ namespace IronJS.Tests.UnitTests.IE9.chapter10
         public _10_6_Tests() : base(@"chapter10\10.6") { }
 
         [Test(Description = "arguments[i] change with actual parameters")] public void _10_6__10__c__ii__1() { RunFile(@"10.6-10-c-ii-1.js"); }
+        [Test(Description = "arguments[i] remains same after changing actual parameters in strict mode")] public void _10_6__10__c__ii__1__s() { RunFile(@"10.6-10-c-ii-1-s.js"); }
         [Test(Description = "arguments[i] map to actual parameter")] public void _10_6__10__c__ii__2() { RunFile(@"10.6-10-c-ii-2.js"); }
+        [Test(Description = "arguments[i] doesn\'t map to actual parameters in strict mode")] public void _10_6__10__c__ii__2__s() { RunFile(@"10.6-10-c-ii-2-s.js"); }
         [Test(Description = "Arguments Object has index property \'0\' as its own property, it shoulde be writable, enumerable, configurable and does not invoke the setter defined on Object.prototype[0] (Step 11.b)")] public void _10_6__11__b__1() { RunFile(@"10.6-11-b-1.js"); }
         [Test(Description = "Accessing callee property of Arguments object is allowed")] public void _10_6__12__1() { RunFile(@"10.6-12-1.js"); }
         [Test(Description = "arguments.callee has correct attributes")] public void _10_6__12__2() { RunFile(@"10.6-12-2.js"); }
         [Test(Description = "Accessing caller property of Arguments object is allowed")] public void _10_6__13__1() { RunFile(@"10.6-13-1.js"); }
         [Test(Description = "In non-strict mode, arguments object should have its own \'callee\' property defined (Step 13.a)")] public void _10_6__13__a__1() { RunFile(@"10.6-13-a-1.js"); }
+        [Test(Description = "Accessing caller property of Arguments object throws TypeError in strict mode")] public void _10_6__13__b__1__s() { RunFile(@"10.6-13-b-1-s.js"); }
+        [Test(Description = "arguments.caller exists in strict mode")] public void _10_6__13__b__2__s() { RunFile(@"10.6-13-b-2-s.js"); }
+        [Test(Description = "arguments.caller is non-configurable in strict mode")] public void _10_6__13__b__3__s() { RunFile(@"10.6-13-b-3-s.js"); }
+        [Test(Description = "Accessing callee property of Arguments object throws TypeError in strict mode")] public void _10_6__13__c__1__s() { RunFile(@"10.6-13-c-1-s.js"); }
+        [Test(Description = "arguments.callee is exists in strict mode")] public void _10_6__13__c__2__s() { RunFile(@"10.6-13-c-2-s.js"); }
+        [Test(Description = "arguments.callee is non-configurable in strict mode")] public void _10_6__13__c__3__s() { RunFile(@"10.6-13-c-3-s.js"); }
+        [Test(Description = "Strict Mode - \'callee\' exists and \'caller\' exists under strict mode")] public void _10_6__14__1__s() { RunFile(@"10.6-14-1-s.js"); }
+        [Test(Description = "Strict Mode - [[Enumerable]] attribute value in \'caller\' is false under strict mode")] public void _10_6__14__b__1__s() { RunFile(@"10.6-14-b-1-s.js"); }
+        [Test(Description = "Strict Mode - TypeError is thrown when accessing the [[Set]] attribute in \'caller\' under strict mode")] public void _10_6__14__b__4__s() { RunFile(@"10.6-14-b-4-s.js"); }
+        [Test(Description = "Strict Mode - [[Enumerable]] attribute value in \'callee\' is false under strict mode")] public void _10_6__14__c__1__s() { RunFile(@"10.6-14-c-1-s.js"); }
+        [Test(Description = "Strict Mode - TypeError is thrown when accessing the [[Set]] attribute in \'callee\' under strict mode")] public void _10_6__14__c__4__s() { RunFile(@"10.6-14-c-4-s.js"); }
         [Test(Description = "[[Prototype]] property of Arguments is set to Object prototype object")] public void _10_6__5__1() { RunFile(@"10.6-5-1.js"); }
         [Test(Description = "\'length property of arguments object exists")] public void _10_6__6__1() { RunFile(@"10.6-6-1.js"); }
         [Test(Description = "\'length\' property of arguments object has correct attributes")] public void _10_6__6__2() { RunFile(@"10.6-6-2.js"); }

@@ -9,7 +9,23 @@ namespace IronJS.Tests.UnitTests.IE9.chapter12._12_2
     {
         public _12_2_1_Tests() : base(@"chapter12\12.2\12.2.1") { }
 
+        [Test(Description = "Strict Mode: an indirect eval assigning into \'eval\' does not throw")] public void _12_2_1__10__s() { RunFile(@"12.2.1-10-s.js"); }
         [Test(Description = "arguments as var identifier in eval code is allowed")] public void _12_2_1__11() { RunFile(@"12.2.1-11.js"); }
         [Test(Description = "arguments as local var identifier is allowed")] public void _12_2_1__12() { RunFile(@"12.2.1-12.js"); }
+        [Test(Description = "arguments as local var identifier throws SyntaxError in strict mode")] public void _12_2_1__12__s() { RunFile(@"12.2.1-12-s.js"); }
+        [Test(Description = "arguments assignment throws SyntaxError in strict mode")] public void _12_2_1__13__s() { RunFile(@"12.2.1-13-s.js"); }
+        [Test(Description = "eval - a function declaring a var named \'eval\' throws SyntaxError in strict mode")] public void _12_2_1__1__s() { RunFile(@"12.2.1-1-s.js"); }
+        [Test(Description = "eval - a function assigning into \'eval\' throws SyntaxError in strict mode")] public void _12_2_1__2__s() { RunFile(@"12.2.1-2-s.js"); }
+        [Test(Description = "\'for(var eval in ...) {...}\' throws SyntaxError in strict mode")] public void _12_2_1__34__s() { RunFile(@"12.2.1-34-s.js"); }
+        [Test(Description = "\'for(var eval = 42 in ...) {...}\' throws SyntaxError in strict mode")] public void _12_2_1__35__s() { RunFile(@"12.2.1-35-s.js"); }
+        [Test(Description = "\'for(var arguments in ...) {...}\' throws SyntaxError in strict mode")] public void _12_2_1__36__s() { RunFile(@"12.2.1-36-s.js"); }
+        [Test(Description = "\'for(var arguments = 42 in ...) {...}\' throws SyntaxError in strict mode")] public void _12_2_1__37__s() { RunFile(@"12.2.1-37-s.js"); }
+        [Test(Description = "eval - a function expr declaring a var named \'eval\' throws SyntaxError in strict mode")] public void _12_2_1__3__s() { RunFile(@"12.2.1-3-s.js"); }
+        [Test(Description = "eval - a function expr assigning into \'eval\' throws a SyntaxError in strict mode")] public void _12_2_1__4__s() { RunFile(@"12.2.1-4-s.js"); }
+        [Test(Description = "Strict Mode - a Function declaring var named \'eval\' does not throw SyntaxError")] public void _12_2_1__5__s() { RunFile(@"12.2.1-5-s.js"); }
+        [Test(Description = "eval - a Function assigning into \'eval\' will not throw any error if contained within strict mode and its body does not start with strict mode")] public void _12_2_1__6__s() { RunFile(@"12.2.1-6-s.js"); }
+        [Test(Description = "eval - a direct eval declaring a var named \'eval\' throws SyntaxError in strict mode")] public void _12_2_1__7__s() { RunFile(@"12.2.1-7-s.js"); }
+        [Test(Description = "eval - a direct eval assigning into \'eval\' throws SyntaxError in strict mode")] public void _12_2_1__8__s() { RunFile(@"12.2.1-8-s.js"); }
+        [Test(Description = "Strict Mode: an indirect eval declaring a var named \'eval\' does not throw")] public void _12_2_1__9__s() { RunFile(@"12.2.1-9-s.js"); }
     }
 }

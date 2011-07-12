@@ -10,7 +10,16 @@ namespace IronJS.Tests.UnitTests.IE9.chapter15._15_3._15_3_2
         public _15_3_2_1_Tests() : base(@"chapter15\15.3\15.3.2\15.3.2.1") { }
 
         [Test(Description = "Duplicate separate parameter name in Function constructor allowed if body not strict")] public void _15_3_2_1__11__1() { RunFile(@"15.3.2.1-11-1.js"); }
+        [Test(Description = "Duplicate seperate parameter name in Function constructor throws SyntaxError in strict mode")] public void _15_3_2_1__11__1__s() { RunFile(@"15.3.2.1-11-1-s.js"); }
+        [Test(Description = "Duplicate seperate parameter name in Function constructor called from strict mode allowed if body not strict")] public void _15_3_2_1__11__2__s() { RunFile(@"15.3.2.1-11-2-s.js"); }
         [Test(Description = "Function constructor may have a formal parameter named \'eval\' if body is not strict mode")] public void _15_3_2_1__11__3() { RunFile(@"15.3.2.1-11-3.js"); }
+        [Test(Description = "Function constructor having a formal parameter named \'eval\' throws SyntaxError if function body is strict mode")] public void _15_3_2_1__11__3__s() { RunFile(@"15.3.2.1-11-3-s.js"); }
+        [Test(Description = "Function constructor call from strict code with formal parameter named \'eval\' does not throws SyntaxError if function body is not strict mode")] public void _15_3_2_1__11__4__s() { RunFile(@"15.3.2.1-11-4-s.js"); }
         [Test(Description = "Duplicate combined parameter name in Function constructor allowed if body is not strict")] public void _15_3_2_1__11__5() { RunFile(@"15.3.2.1-11-5.js"); }
+        [Test(Description = "Duplicate combined parameter name in Function constructor throws SyntaxError in strict mode")] public void _15_3_2_1__11__5__s() { RunFile(@"15.3.2.1-11-5-s.js"); }
+        [Test(Description = "Duplicate combined parameter name allowed in Function constructor called in strict mode if body not strict")] public void _15_3_2_1__11__6__s() { RunFile(@"15.3.2.1-11-6-s.js"); }
+        [Test(Description = "Function constructor call from strict code with formal parameter named arguments does not throws SyntaxError if function body is not strict mode")] public void _15_3_2_1__11__7__s() { RunFile(@"15.3.2.1-11-7-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is not thrown if a function is created using a Function constructor that has two identical parameters, which are separated by a unique parameter name and there is no explicit \'use strict\' in the function constructor\'s body")] public void _15_3_2_1__11__8__s() { RunFile(@"15.3.2.1-11-8-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown if a function is created using the Function constructor that has three identical parameters and there is no explicit \'use strict\' in the function constructor\'s body")] public void _15_3_2_1__11__9__s() { RunFile(@"15.3.2.1-11-9-s.js"); }
     }
 }

@@ -262,6 +262,7 @@ namespace IronJS.Tests.UnitTests.IE9.chapter15._15_4._15_4_4
         [Test(Description = "Array.prototype.reduceRight - the Arguments object can be used as accumulator")] public void _15_4_4_22__9__c__ii__35() { RunFile(@"15.4.4.22-9-c-ii-35.js"); }
         [Test(Description = "Array.prototype.reduceRight - the global object can be used as accumulator")] public void _15_4_4_22__9__c__ii__37() { RunFile(@"15.4.4.22-9-c-ii-37.js"); }
         [Test(Description = "Array.prototype.reduceRight - k values are passed in acending numeric order")] public void _15_4_4_22__9__c__ii__4() { RunFile(@"15.4.4.22-9-c-ii-4.js"); }
+        [Test(Description = "Array.prototype.reduceRight - undefined passed as thisValue to strict callbackfn")] public void _15_4_4_22__9__c__ii__4__s() { RunFile(@"15.4.4.22-9-c-ii-4-s.js"); }
         [Test(Description = "Array.prototype.reduceRight - k values are accessed during each iteration and not prior to starting the loop on an Array")] public void _15_4_4_22__9__c__ii__5() { RunFile(@"15.4.4.22-9-c-ii-5.js"); }
         [Test(Description = "Array.prototype.reduceRight - unhandled exceptions happened in callbackfn terminate iteration")] public void _15_4_4_22__9__c__ii__7() { RunFile(@"15.4.4.22-9-c-ii-7.js"); }
         [Test(Description = "Array.prototype.reduceRight - element changed by callbackfn on previous iterations is observed")] public void _15_4_4_22__9__c__ii__8() { RunFile(@"15.4.4.22-9-c-ii-8.js"); }

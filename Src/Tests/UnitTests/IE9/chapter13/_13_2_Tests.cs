@@ -12,5 +12,12 @@ namespace IronJS.Tests.UnitTests.IE9.chapter13
         [Test(Description = "Function Object has length as its own property and does not invoke the setter defined on Function.prototype.length (Step 15)")] public void _13_2__15__1() { RunFile(@"13.2-15-1.js"); }
         [Test(Description = "Function Object has \'constructor\' as its own property, it is not enumerable and does not invoke the setter defined on Function.prototype.constructor (Step 17)")] public void _13_2__17__1() { RunFile(@"13.2-17-1.js"); }
         [Test(Description = "Function Object has \'prototype\' as its own property, it is not enumerable and does not invoke the setter defined on Function.prototype (Step 18)")] public void _13_2__18__1() { RunFile(@"13.2-18-1.js"); }
+        [Test(Description = "StrictMode -  Writing or reading from a property named \'caller\' of function objects is allowed under both strict and normal modes.")] public void _13_2__1__s() { RunFile(@"13.2-1-s.js"); }
+        [Test(Description = "StrictMode - A TypeError is thrown when a strict mode code writes to properties named \'caller\' of function instances.")] public void _13_2__2__s() { RunFile(@"13.2-2-s.js"); }
+        [Test(Description = "StrictMode - Writing or reading from a property named \'arguments\' of function objects is allowed under both strict and normal modes.")] public void _13_2__3__s() { RunFile(@"13.2-3-s.js"); }
+        [Test(Description = "StrictMode - A TypeError is thrown when a code in strict mode tries to write to \'arguments\' of function instances.")] public void _13_2__4__s() { RunFile(@"13.2-4-s.js"); }
+        [Test(Description = "StrictMode - reading a property named \'caller\' of function objects is not allowed outside the function")] public void _13_2__5__s() { RunFile(@"13.2-5-s.js"); }
+        [Test(Description = "StrictMode - enumerating over a function object looking for \'caller\' fails outside of the function")] public void _13_2__7__s() { RunFile(@"13.2-7-s.js"); }
+        [Test(Description = "StrictMode - enumerating over a function object looking for \'caller\' fails inside the function")] public void _13_2__8__s() { RunFile(@"13.2-8-s.js"); }
     }
 }

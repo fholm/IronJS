@@ -13,6 +13,16 @@ namespace IronJS.Tests.UnitTests.IE9.chapter11._11_13
         [Test(Description = "simple assignment throws ReferenceError if LeftHandSide is not a reference (string)")] public void _11_13_1__1__2() { RunFile(@"11.13.1-1-2.js"); }
         [Test(Description = "simple assignment throws ReferenceError if LeftHandSide is not a reference (boolean)")] public void _11_13_1__1__3() { RunFile(@"11.13.1-1-3.js"); }
         [Test(Description = "simple assignment throws ReferenceError if LeftHandSide is not a reference (null)")] public void _11_13_1__1__4() { RunFile(@"11.13.1-1-4.js"); }
+        [Test(Description = "simple assignment throws ReferenceError if LeftHandSide is an unresolvable reference in strict mode (base obj undefined)")] public void _11_13_1__1__6__s() { RunFile(@"11.13.1-1-6-s.js"); }
+        [Test(Description = "Strict Mode - TypeError is thrown if The LeftHandSide is a reference to a data property with the attribute value {[[Writable]]:false} under strict mode")] public void _11_13_1__1__s() { RunFile(@"11.13.1-1-s.js"); }
+        [Test(Description = "Strict Mode - TypeError is thrown if The LeftHandSide is a reference to an accessor property with the attribute value {[[Set]]:undefined} under strict mode")] public void _11_13_1__2__s() { RunFile(@"11.13.1-2-s.js"); }
+        [Test(Description = "Strict Mode - TypeError is thrown if The LeftHandSide is a reference to a non-existent property of an object whose [[Extensible]] internal property has the value false under strict mode")] public void _11_13_1__3__s() { RunFile(@"11.13.1-3-s.js"); }
         [Test(Description = "simple assignment creates property on the global object if LeftHandSide is an unresolvable reference")] public void _11_13_1__4__1() { RunFile(@"11.13.1-4-1.js"); }
+        [Test(Description = "simple assignment throws TypeError if LeftHandSide is a readonly property in strict mode (Number.MAX_VALUE)")] public void _11_13_1__4__14__s() { RunFile(@"11.13.1-4-14-s.js"); }
+        [Test(Description = "simple assignment throws TypeError if LeftHandSide is a readonly property in strict mode (Global.undefined)")] public void _11_13_1__4__27__s() { RunFile(@"11.13.1-4-27-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown if the identifier \'eval\' appears as the LeftHandSideExpression of simple assignment(=) under strict mode")] public void _11_13_1__4__28__s() { RunFile(@"11.13.1-4-28-s.js"); }
+        [Test(Description = "Strict Mode - SyntaxError is thrown if the identifier \'arguments\' appears as the LeftHandSideExpression of simple assignment(=) under strict mode")] public void _11_13_1__4__29__s() { RunFile(@"11.13.1-4-29-s.js"); }
+        [Test(Description = "simple assignment throws TypeError if LeftHandSide is a readonly property in strict mode (Global.Infinity)")] public void _11_13_1__4__3__s() { RunFile(@"11.13.1-4-3-s.js"); }
+        [Test(Description = "simple assignment throws TypeError if LeftHandSide is a readonly property in strict mode (Function.length)")] public void _11_13_1__4__6__s() { RunFile(@"11.13.1-4-6-s.js"); }
     }
 }

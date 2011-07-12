@@ -94,6 +94,7 @@ namespace IronJS.Tests.UnitTests.IE9.chapter15._15_4._15_4_4
         [Test(Description = "Array.prototype.every - the JSON object can be used as thisArg")] public void _15_4_4_16__5__17() { RunFile(@"15.4.4.16-5-17.js"); }
         [Test(Description = "Array.prototype.every - Error Object can be used as thisArg")] public void _15_4_4_16__5__18() { RunFile(@"15.4.4.16-5-18.js"); }
         [Test(Description = "Array.prototype.every - the Arguments object can be used as thisArg")] public void _15_4_4_16__5__19() { RunFile(@"15.4.4.16-5-19.js"); }
+        [Test(Description = "Array.prototype.every - thisArg not passed to strict callbackfn")] public void _15_4_4_16__5__1__s() { RunFile(@"15.4.4.16-5-1-s.js"); }
         [Test(Description = "Array.prototype.every - thisArg is Object")] public void _15_4_4_16__5__2() { RunFile(@"15.4.4.16-5-2.js"); }
         [Test(Description = "Array.prototype.every - the global object can be used as thisArg")] public void _15_4_4_16__5__21() { RunFile(@"15.4.4.16-5-21.js"); }
         [Test(Description = "Array.prototype.every - boolean primitive can be used as thisArg")] public void _15_4_4_16__5__22() { RunFile(@"15.4.4.16-5-22.js"); }

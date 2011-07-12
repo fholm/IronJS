@@ -95,6 +95,7 @@ namespace IronJS.Tests.UnitTests.IE9.chapter15._15_4._15_4_4
         [Test(Description = "Array.prototype.map - the JSON object can be used as thisArg")] public void _15_4_4_19__5__17() { RunFile(@"15.4.4.19-5-17.js"); }
         [Test(Description = "Array.prototype.map - Error object can be used as thisArg")] public void _15_4_4_19__5__18() { RunFile(@"15.4.4.19-5-18.js"); }
         [Test(Description = "Array.prototype.map - the Arguments object can be used as thisArg")] public void _15_4_4_19__5__19() { RunFile(@"15.4.4.19-5-19.js"); }
+        [Test(Description = "Array.prototype.map - thisArg not passed to strict callbackfn")] public void _15_4_4_19__5__1__s() { RunFile(@"15.4.4.19-5-1-s.js"); }
         [Test(Description = "Array.prototype.map - thisArg is Object")] public void _15_4_4_19__5__2() { RunFile(@"15.4.4.19-5-2.js"); }
         [Test(Description = "Array.prototype.map - the global object can be used as thisArg")] public void _15_4_4_19__5__21() { RunFile(@"15.4.4.19-5-21.js"); }
         [Test(Description = "Array.prototype.map - boolean primitive can be used as thisArg")] public void _15_4_4_19__5__22() { RunFile(@"15.4.4.19-5-22.js"); }

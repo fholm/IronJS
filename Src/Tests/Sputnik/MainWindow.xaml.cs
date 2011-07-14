@@ -96,14 +96,27 @@ namespace IronJS.Tests.Sputnik
 
             var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.Parent.FullName);
             libPath = Path.Combine(rootPath, "harness");
-            var testsPath = Path.Combine(rootPath, "sputnik_converted");
             var ignorePath = Path.Combine(rootPath, "config", "excludelist.xml");
 
             this.rootTestGroup = new TestGroup(null, null)
             {
+                Name = "test262"
+            };
+
+            var sputnikTestGroup = new TestGroup(this.rootTestGroup, null)
+            {
                 Name = "Sputnik"
             };
-            rootTestGroup.TestGroups = GenerateTestsList(rootTestGroup, testsPath, testsPath);
+            sputnikTestGroup.TestGroups = GenerateTestsList(sputnikTestGroup, Path.Combine(rootPath, "sputnik_converted"), Path.Combine(rootPath, "sputnik_converted"));
+
+            var ieTestGroup = new TestGroup(this.rootTestGroup, null)
+            {
+                Name = "IE Test Center"
+            };
+            ieTestGroup.TestGroups = GenerateTestsList(ieTestGroup, Path.Combine(rootPath, "ietestcenter"), Path.Combine(rootPath, "ietestcenter"));
+
+            this.rootTestGroup.TestGroups = new[] { sputnikTestGroup, ieTestGroup };
+
             this.TestGroups = new[] { rootTestGroup };
 
             this.LoadResults();

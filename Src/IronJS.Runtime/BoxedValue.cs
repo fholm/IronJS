@@ -104,22 +104,14 @@ namespace IronJS.Runtime
             {
                 switch (this.Tag)
                 {
-                    case TypeTags.Bool:
-                        return this.Bool;
-                    case TypeTags.Clr:
-                        return this.Clr;
-                    case TypeTags.Function:
-                        return this.Func;
-                    case TypeTags.Object:
-                        return this.Object;
-                    case TypeTags.String:
-                        return this.String;
-                    case TypeTags.SuffixString:
-                        return this.SuffixString;
-                    case TypeTags.Undefined:
-                        return Undefined.Instance;
-                    default:
-                        return this;
+                    case TypeTags.Bool: return Bool;
+                    case TypeTags.Clr: return Clr;
+                    case TypeTags.Function: return Func;
+                    case TypeTags.Object: return Object;
+                    case TypeTags.String: return String;
+                    case TypeTags.SuffixString: return SuffixString;
+                    case TypeTags.Undefined: return Undefined.Instance;
+                    default: return this;
                 }
             }
         }
@@ -177,20 +169,13 @@ namespace IronJS.Runtime
 
         public static BoxedValue Box(object value)
         {
-            if (value is double)
-                return Box((double)value);
-            if (value is bool)
-                return Box((bool)value);
-            if (value is string)
-                return Box((string)value);
-            if (value is SuffixString)
-                return Box((SuffixString)value);
-            if (value is FunctionObject)
-                return Box((FunctionObject)value);
-            if (value is CommonObject)
-                return Box((CommonObject)value);
-            if (value is Undefined)
-                return Box((Undefined)value);
+            if (value is double) return Box((double)value);
+            if (value is bool) return Box((bool)value);
+            if (value is string) return Box((string)value);
+            if (value is SuffixString) return Box((SuffixString)value);
+            if (value is FunctionObject) return Box((FunctionObject)value);
+            if (value is CommonObject) return Box((CommonObject)value);
+            if (value is Undefined) return Box((Undefined)value);
 
             if (value != null)
             {
@@ -228,22 +213,14 @@ namespace IronJS.Runtime
         {
             switch (tag)
             {
-                case TypeTags.Bool:
-                    return BoxFields.Bool;
-                case TypeTags.Clr:
-                    return BoxFields.Clr;
-                case TypeTags.Function:
-                    return BoxFields.Function;
-                case TypeTags.Object:
-                    return BoxFields.Object;
-                case TypeTags.String:
-                    return BoxFields.String;
-                case TypeTags.SuffixString:
-                    return BoxFields.SuffixString;
-                case TypeTags.Undefined:
-                    return BoxFields.Undefined;
-                case TypeTags.Number:
-                    return BoxFields.Number;
+                case TypeTags.Bool: return BoxFields.Bool;
+                case TypeTags.Clr: return BoxFields.Clr;
+                case TypeTags.Function: return BoxFields.Function;
+                case TypeTags.Object: return BoxFields.Object;
+                case TypeTags.String: return BoxFields.String;
+                case TypeTags.SuffixString: return BoxFields.SuffixString;
+                case TypeTags.Undefined: return BoxFields.Undefined;
+                case TypeTags.Number: return BoxFields.Number;
                 default:
                     throw new ArgumentException(string.Format("Invalid type tag '{0}'", tag));
             }

@@ -20,12 +20,16 @@ using System.Windows.Threading;
 using System.Xml.Linq;
 using System.Xml;
 using System.Collections.ObjectModel;
+using IronJS.Runtime;
 
 namespace IronJS.Tests.Sputnik
 {
 
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        private static readonly string harnessCode;
+        private static readonly Dictionary<string, TestDescriptor> negativeTests;
+
         private BackgroundWorker worker = new BackgroundWorker();
         private string libPath;
         private static readonly Dictionary<string, string> includeCache = new Dictionary<string, string>();
@@ -38,22 +42,51 @@ namespace IronJS.Tests.Sputnik
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        static MainWindow()
+        {
+            harnessCode = ReadResource("harness.js");
+            var negativeTestCode = ReadResource("SputnikGlobalScope.js");
+            negativeTests = BuildNegativeTests(negativeTestCode);
+        }
+
+        private static string ReadResource(string name)
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("IronJS.Tests.Sputnik." + name))
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+
+        private static Dictionary<string, TestDescriptor> BuildNegativeTests(string negativeTestCode)
+        {
+            var negativeTests = new Dictionary<string, TestDescriptor>();
+            var ctx = new IronJS.Hosting.CSharp.Context();
+            ctx.Execute(negativeTestCode);
+
+            Action<string, CommonObject> addNegative = (id, test) =>
+            {
+                dynamic t = test;
+                negativeTests.Add(id, new TestDescriptor
+                {
+                    Assertion = t.assertion.ToString(),
+                    Description = t.description.ToString(),
+                    Negative = t.negative.ToString(),
+                    Path = t.path.ToString(),
+                });
+            };
+            ctx.SetGlobal("addNegative", IronJS.Native.Utils.CreateFunction(ctx.Environment, 2, addNegative));
+            ctx.Execute("for (var k in GlobalScopeTests) { addNegative(k, GlobalScopeTests[k]); }");
+            return negativeTests;
+        }
+
         public MainWindow()
         {
             this.FailedTests = new ObservableCollection<FailedTest>();
 
             InitializeComponent();
-
-            this.ignoreTests.Add("S15.5.4.14_A1_T6");
-            this.ignoreTests.Add("S15.5.4.14_A1_T7");
-            this.ignoreTests.Add("S15.5.4.14_A1_T8");
-            this.ignoreTests.Add("S15.5.4.14_A1_T9");
-            this.ignoreTests.Add("S15.5.4.14_A2_T7");
-            this.ignoreTests.Add("S15.5.4.8_A1_T11");
-            this.ignoreTests.Add("S15.5.4.11_A3_T1");
-            this.ignoreTests.Add("S15.5.4.11_A3_T2");
-            this.ignoreTests.Add("S15.5.4.11_A3_T3");
-            this.ignoreFixtures.Add("Unicode\\Unicode_218\\");
 
             this.worker.DoWork += this.RunTests;
             this.worker.ProgressChanged += this.Worker_ProgressChanged;
@@ -61,13 +94,14 @@ namespace IronJS.Tests.Sputnik
             this.worker.WorkerReportsProgress = true;
             this.worker.WorkerSupportsCancellation = true;
 
-            var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.Parent.FullName, "sputnik_converted");
-            libPath = Path.Combine(rootPath, "lib");
-            var testsPath = Path.Combine(rootPath, "tests");
+            var rootPath = Path.Combine(new DirectoryInfo(GetExecutableDirectory()).Parent.Parent.Parent.FullName);
+            libPath = Path.Combine(rootPath, "harness");
+            var testsPath = Path.Combine(rootPath, "sputnik_converted");
+            var ignorePath = Path.Combine(rootPath, "config", "excludelist.xml");
 
             this.rootTestGroup = new TestGroup(null, null)
             {
-                Name = "Sputnik v1"
+                Name = "Sputnik"
             };
             rootTestGroup.TestGroups = GenerateTestsList(rootTestGroup, testsPath, testsPath);
             this.TestGroups = new[] { rootTestGroup };
@@ -365,6 +399,9 @@ namespace IronJS.Tests.Sputnik
             ctx.SetGlobal("$ERROR", errorFunc);
             ctx.SetGlobal("$PRINT", printFunc);
             ctx.SetGlobal("$INCLUDE", includeFunc);
+
+            ctx.Execute(harnessCode);
+
             return ctx;
         }
 
@@ -452,18 +489,45 @@ namespace IronJS.Tests.Sputnik
         {
             var errorText = new StringBuilder();
             var ctx = CreateContext(libPath, e => errorText.AppendLine(e));
+            dynamic globals = ctx.Globals;
+            var test = globals.currentTest;
 
-            try
+            if (negativeTests.ContainsKey(testCase.TestName))
             {
-                ctx.ExecuteFile(testCase.FullPath);
+                var descr = negativeTests[testCase.TestName];
+                try
+                {
+                    ctx.ExecuteFile(testCase.FullPath);
+                    errorText.AppendLine("Expected Exception");
+                }
+                catch (Exception)
+                {
+                }
             }
-            catch (Exception ex)
+            else
             {
-                errorText.AppendLine("Exception: " + ex.ToString());
+                try
+                {
+                    ctx.ExecuteFile(testCase.FullPath);
+                    globals.testFinished();
+                }
+                catch (Exception ex)
+                {
+                    errorText.AppendLine(ex.ToString());
+                }
+
+                string result = test.result.ToString();
+                string error = test.error.ToString();
+
+                if (result != "pass")
+                {
+                    errorText.AppendLine(error);
+                }
             }
 
-            var error = errorText.ToString();
-            return string.IsNullOrEmpty(error) ? null : error;
+            return errorText.Length > 0
+                ? errorText.ToString()
+                : null;
         }
 
         private void ShowExprTrees_Checked(object sender, RoutedEventArgs e)

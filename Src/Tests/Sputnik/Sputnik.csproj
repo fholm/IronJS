@@ -114,6 +114,7 @@
     <Compile Include="Converters\StatusImageConverter.cs" />
     <Compile Include="FailedTest.cs" />
     <Compile Include="TestCase.cs" />
+    <Compile Include="TestDescriptor.cs" />
     <Compile Include="TestGroup.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -176,6 +177,14 @@
     <Resource Include="..\..\..\IronJS.ico">
       <Link>IronJS.ico</Link>
     </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="harness.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\SputnikGlobalScope.js">
+      <Link>SputnikGlobalScope.js</Link>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

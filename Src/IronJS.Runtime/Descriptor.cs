@@ -44,7 +44,7 @@ namespace IronJS.Runtime
             NotWritable | NotEnumerable | NotConfigurable;
     }
 
-    public class AccessorDescriptor
+    public class Accessor
     {
         public FunctionObject Get;
         public FunctionObject Set;
@@ -106,6 +106,31 @@ namespace IronJS.Runtime
         public static void SetIsAccessor(ref Descriptor d)
         {
             d.Attributes |= DescriptorAttrs.IsAccessor;
+        }
+
+        public static void ClearNotWritable(ref Descriptor d)
+        {
+            clearAttribute(ref d, DescriptorAttrs.NotWritable);
+        }
+
+        public static void ClearNotEnumerable(ref Descriptor d)
+        {
+            clearAttribute(ref d, DescriptorAttrs.NotEnumerable);
+        }
+
+        public static void ClearNotConfigurable(ref Descriptor d)
+        {
+            clearAttribute(ref d, DescriptorAttrs.NotConfigurable);
+        }
+
+        public static void ClearIsAccessor(ref Descriptor d)
+        {
+            clearAttribute(ref d, DescriptorAttrs.IsAccessor);
+        }
+
+        static void clearAttribute(ref Descriptor d, ushort attribute)
+        {
+            d.Attributes &= (ushort)~attribute;
         }
     }
 }

@@ -81,7 +81,6 @@
     <Compile Include="BoxedValue.cs" />
     <Compile Include="BoxFields.cs" />
     <Compile Include="DefaultValueHint.cs" />
-    <Compile Include="DescriptorAttrs.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="Errors.cs" />
     <Compile Include="FunctionMetaData.cs" />

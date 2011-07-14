@@ -38,7 +38,9 @@ namespace IronJS.Runtime
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
         public SuffixString SuffixString;
         [FieldOffset(BoxedValueOffsets.ReferenceType)]
-        private BoxedValue[] Scope;
+        public BoxedValue[] Scope;
+        [FieldOffset(BoxedValueOffsets.ReferenceType)]
+        public AccessorDescriptor Accessor;
 
         // Value Types
         [FieldOffset(BoxedValueOffsets.ValueType)]

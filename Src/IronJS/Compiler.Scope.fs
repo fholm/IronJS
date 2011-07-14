@@ -406,7 +406,7 @@ module internal Scope =
       
       //
       let setUnintializedGlobal name =
-        let attributes = DescriptorAttrs.DontDelete
+        let attributes = DescriptorAttrs.NotConfigurable
         let value = Utils.Constants.undefined
         let args = [|!!!name; value; !!!attributes|]
         Dlr.call ctx.Globals "Put" args
@@ -418,7 +418,7 @@ module internal Scope =
 
     ///
     let private putHoistedFunction (ctx:Ctx) (name:string) (func:Dlr.Expr) =
-      let attribute = DescriptorAttrs.DontDelete
+      let attribute = DescriptorAttrs.NotConfigurable
       let setVariable = Identifier.setValue ctx name func
       let setAttribute = Dlr.call ctx.Globals "SetAttrs" [!!!name; !!!attribute]
       Dlr.Fast.block [||] [|setVariable; setAttribute|]

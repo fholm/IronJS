@@ -41,10 +41,10 @@ module internal Array =
     let ctor = new Func<FO, CO, Args, CO>(constructor')
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
-    ctor.Put("prototype", env.Prototypes.Array, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.Array, DescriptorAttrs.NotWEC)
     ctor.MetaData.Name <- "Array"
 
-    env.Globals.Put("Array", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Array", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Array <- ctor
 
   ///
@@ -476,40 +476,40 @@ module internal Array =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Array
-      proto.Put("constructor", env.Constructors.Array, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.Array, DescriptorAttrs.NotEnumerable)
       
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
       let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.NotEnumerable)
 
       let concat = concat $ Utils.createFunc1 env (Some 1)
-      proto.Put("concat", concat, DescriptorAttrs.DontEnum)
+      proto.Put("concat", concat, DescriptorAttrs.NotEnumerable)
 
       let push = push $ Utils.createFunc1 env (Some 1)
-      proto.Put("push", push, DescriptorAttrs.DontEnum)
+      proto.Put("push", push, DescriptorAttrs.NotEnumerable)
 
       let pop = pop $ Utils.createFunc0 env (Some 0)
-      proto.Put("pop", pop, DescriptorAttrs.DontEnum)
+      proto.Put("pop", pop, DescriptorAttrs.NotEnumerable)
 
       let shift = shift $ Utils.createFunc0 env (Some 0)
-      proto.Put("shift", shift, DescriptorAttrs.DontEnum)
+      proto.Put("shift", shift, DescriptorAttrs.NotEnumerable)
 
       let join = join $ Utils.createFunc1 env (Some 1)
-      proto.Put("join", join, DescriptorAttrs.DontEnum)
+      proto.Put("join", join, DescriptorAttrs.NotEnumerable)
 
       let reverse = reverse $ Utils.createFunc0 env (Some 0)
-      proto.Put("reverse", reverse, DescriptorAttrs.DontEnum)
+      proto.Put("reverse", reverse, DescriptorAttrs.NotEnumerable)
 
       let sort = sort $ Utils.createFunc1 env (Some 1)
-      proto.Put("sort", sort, DescriptorAttrs.DontEnum)
+      proto.Put("sort", sort, DescriptorAttrs.NotEnumerable)
 
       let slice = slice $ Utils.createFunc2 env (Some 2)
-      proto.Put("slice", slice, DescriptorAttrs.DontEnum)
+      proto.Put("slice", slice, DescriptorAttrs.NotEnumerable)
 
       let unshift = unshift $ Utils.createFunc1 env (Some 1)
-      proto.Put("unshift", unshift, DescriptorAttrs.DontEnum)
+      proto.Put("unshift", unshift, DescriptorAttrs.NotEnumerable)
 
       let splice = splice $ Utils.createFunc1 env (Some 2)
-      proto.Put("splice", splice, DescriptorAttrs.DontEnum)
+      proto.Put("splice", splice, DescriptorAttrs.NotEnumerable)

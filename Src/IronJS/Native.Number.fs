@@ -26,14 +26,14 @@ module internal Number =
     
     ctor.MetaData.Name <- "Number"
 
-    ctor.Put("prototype", env.Prototypes.Number, DescriptorAttrs.Immutable) 
-    ctor.Put("MAX_VALUE", Double.MaxValue, DescriptorAttrs.Immutable) 
-    ctor.Put("MIN_VALUE", Double.Epsilon, DescriptorAttrs.Immutable) 
-    ctor.Put("NaN", Double.NaN, DescriptorAttrs.Immutable) 
-    ctor.Put("NEGATIVE_INFINITY", NegInf, DescriptorAttrs.Immutable) 
-    ctor.Put("POSITIVE_INFINITY", PosInf, DescriptorAttrs.Immutable) 
+    ctor.Put("prototype", env.Prototypes.Number, DescriptorAttrs.NotWEC) 
+    ctor.Put("MAX_VALUE", Double.MaxValue, DescriptorAttrs.NotWEC) 
+    ctor.Put("MIN_VALUE", Double.Epsilon, DescriptorAttrs.NotWEC) 
+    ctor.Put("NaN", Double.NaN, DescriptorAttrs.NotWEC) 
+    ctor.Put("NEGATIVE_INFINITY", NegInf, DescriptorAttrs.NotWEC) 
+    ctor.Put("POSITIVE_INFINITY", PosInf, DescriptorAttrs.NotWEC) 
 
-    env.Globals.Put("Number", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Number", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Number <- ctor
 
   ///
@@ -164,29 +164,29 @@ module internal Number =
     ///
     let setup (env:Env) =
       let proto = env.Prototypes.Number;
-      proto.Put("constructor", env.Constructors.Number, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.Number, DescriptorAttrs.NotEnumerable)
 
       let toString = new Func<FO, CO, BV, string>(toString)
       let toString = toString $ Utils.createFunction env (Some 1)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
       let toLocaleString = new Func<FO, CO, string>(toLocaleString)
       let toLocaleString = Utils.createHostFunction env toLocaleString
-      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.NotEnumerable)
 
       let valueOf = new Func<FO, CO, BV>(valueOf)
       let valueOf = valueOf $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.NotEnumerable)
 
       let toFixed = new Func<FO, CO, double, string>(toFixed)
       let toFixed = toFixed $ Utils.createFunction env (Some 1)
-      proto.Put("toFixed", toFixed, DescriptorAttrs.DontEnum)
+      proto.Put("toFixed", toFixed, DescriptorAttrs.NotEnumerable)
     
       let toExponential = new Func<FO, CO, BV, string>(toExponential)
       let toExponential = toExponential $ Utils.createFunction env (Some 1)
-      proto.Put("toExponential", toExponential, DescriptorAttrs.DontEnum)
+      proto.Put("toExponential", toExponential, DescriptorAttrs.NotEnumerable)
     
       let toPrecision = new Func<FO, CO, BV, string>(toPrecision)
       let toPrecision = toPrecision $ Utils.createFunction env (Some 1)
-      proto.Put("toPrecision", toPrecision, DescriptorAttrs.DontEnum)
+      proto.Put("toPrecision", toPrecision, DescriptorAttrs.NotEnumerable)
     

@@ -81,8 +81,8 @@ namespace IronJS.Runtime
 
             x.CopyLinkedValues();
             x.Put("constructor", f.Env.Constructors.Object);
-            x.Put("length", (double)length, DescriptorAttrs.DontEnum);
-            x.Put("callee", f, DescriptorAttrs.DontEnum);
+            x.Put("length", (double)length, DescriptorAttrs.NotEnumerable);
+            x.Put("callee", f, DescriptorAttrs.NotEnumerable);
 
             for (var i = 0; i < extraArgs.Length; ++i)
             {

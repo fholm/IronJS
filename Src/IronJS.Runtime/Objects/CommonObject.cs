@@ -401,7 +401,7 @@ namespace IronJS.Runtime
                 return true;
             }
 
-            if ((this.Properties[index].Attributes & DescriptorAttrs.DontDelete) == DescriptorAttrs.None)
+            if ((this.Properties[index].Attributes & DescriptorAttrs.NotConfigurable) == DescriptorAttrs.None)
             {
                 this.PropertySchema = this.PropertySchema.Delete(name);
                 this.Properties[index] = new Descriptor();

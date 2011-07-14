@@ -14,7 +14,7 @@ module Utils =
     let compiler = Compiler.HostFunction.compile<'a>
     let metaData = env.CreateHostConstructorMetaData(FunctionCompiler(compiler))
     let h = HostFunctionObject<'a>(env, delegate', metaData)
-    h.Put("length", double 0.0, DescriptorAttrs.Immutable)
+    h.Put("length", double 0.0, DescriptorAttrs.NotWEC)
     h :> FunctionObject
 
   ///
@@ -28,7 +28,7 @@ module Utils =
         $ Array.length
 
     let hfo = HostFunctionObject<'a>(env, func, metaData)
-    hfo.Put("length", double length, DescriptorAttrs.Immutable)
+    hfo.Put("length", double length, DescriptorAttrs.NotWEC)
     hfo :> FunctionObject
 
   ///

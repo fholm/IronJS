@@ -67,7 +67,7 @@ namespace IronJS.Runtime
             set
             {
                 this.length = value;
-                base.Put("length", (double)value, DescriptorAttrs.DontEnum);
+                base.Put("length", (double)value, DescriptorAttrs.NotEnumerable);
             }
         }
 
@@ -213,7 +213,7 @@ namespace IronJS.Runtime
             if (name == "length")
             {
                 this.PutLength(TypeConverter.ToNumber(value));
-                this.SetAttrs("length", DescriptorAttrs.DontEnum); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
+                this.SetAttrs("length", DescriptorAttrs.NotEnumerable); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
                 return;
             }
 
@@ -232,7 +232,7 @@ namespace IronJS.Runtime
             if (name == "length")
             {
                 this.PutLength(TypeConverter.ToNumber(value));
-                this.SetAttrs("length", DescriptorAttrs.DontEnum); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
+                this.SetAttrs("length", DescriptorAttrs.NotEnumerable); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
                 return;
             }
 
@@ -253,7 +253,7 @@ namespace IronJS.Runtime
             if (name == "length")
             {
                 this.PutLength(TypeConverter.ToNumber(boxed));
-                this.SetAttrs("length", DescriptorAttrs.DontEnum); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
+                this.SetAttrs("length", DescriptorAttrs.NotEnumerable); //TODO: Shouldn't `PutLength` keep the `DontEnum` flag?
                 return;
             }
 

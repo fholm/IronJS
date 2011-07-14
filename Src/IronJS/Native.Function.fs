@@ -48,9 +48,9 @@ module internal Function =
 
     ctor.MetaData.Name <- "Function"      
     ctor.Prototype <- env.Prototypes.Function
-    ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.Function, DescriptorAttrs.NotWEC)
 
-    env.Globals.Put("Function", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Function", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Function <- ctor
 
   module Prototype = 
@@ -158,16 +158,16 @@ module internal Function =
     let setup (env:Env) =
       //
       let proto = env.Prototypes.Function
-      proto.Put("constructor", env.Constructors.Function, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.Function, DescriptorAttrs.NotEnumerable)
 
       //
       let call = call $ Utils.createVariadicFunc env (Some 1)
-      proto.Put("call", call, DescriptorAttrs.DontEnum)
+      proto.Put("call", call, DescriptorAttrs.NotEnumerable)
 
       //
       let apply = apply $ Utils.createFunc2 env (Some 2)
-      proto.Put("apply", apply, DescriptorAttrs.DontEnum)
+      proto.Put("apply", apply, DescriptorAttrs.NotEnumerable)
     
       //
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)

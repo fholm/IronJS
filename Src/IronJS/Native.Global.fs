@@ -344,33 +344,33 @@ module Global =
   ///
   let setup (env:Environment) =
     env.Globals <- env.NewObject()
-    env.Globals.Put("NaN", NaN, DescriptorAttrs.DontEnumOrDelete) //15.1.1.1
-    env.Globals.Put("Infinity", PosInf, DescriptorAttrs.DontEnumOrDelete) //15.1.1.2
-    env.Globals.Put("undefined", Undefined.Instance, DescriptorAttrs.DontEnumOrDelete) //15.1.1.3
+    env.Globals.Put("NaN", NaN, DescriptorAttrs.NotEC) //15.1.1.1
+    env.Globals.Put("Infinity", PosInf, DescriptorAttrs.NotEC) //15.1.1.2
+    env.Globals.Put("undefined", Undefined.Instance, DescriptorAttrs.NotEC) //15.1.1.3
 
     let eval = Func<Compiler.EvalTarget, BV>(eval) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("eval", eval, DescriptorAttrs.DontEnum)
+    env.Globals.Put("eval", eval, DescriptorAttrs.NotEnumerable)
 
     let parseFloat = Func<BV, BV>(parseFloat) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("parseFloat", parseFloat, DescriptorAttrs.DontEnum)
+    env.Globals.Put("parseFloat", parseFloat, DescriptorAttrs.NotEnumerable)
     
     let parseInt = Func<BV, BV, BV>(parseInt) $ Utils.createFunction env (Some 2)
-    env.Globals.Put("parseInt", parseInt, DescriptorAttrs.DontEnum)
+    env.Globals.Put("parseInt", parseInt, DescriptorAttrs.NotEnumerable)
     
     let isNaN = Func<double, BV>(isNaN) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("isNaN", isNaN, DescriptorAttrs.DontEnum)
+    env.Globals.Put("isNaN", isNaN, DescriptorAttrs.NotEnumerable)
     
     let isFinite = Func<double, bool>(isFinite) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("isFinite", isFinite, DescriptorAttrs.DontEnum)
+    env.Globals.Put("isFinite", isFinite, DescriptorAttrs.NotEnumerable)
 
     let decodeURI = Function<BV>(decodeURI) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("decodeURI", decodeURI, DescriptorAttrs.DontEnum)
+    env.Globals.Put("decodeURI", decodeURI, DescriptorAttrs.NotEnumerable)
     
     let decodeURIComponent = Function<BV>(decodeURIComponent) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("decodeURIComponent", decodeURIComponent, DescriptorAttrs.DontEnum)
+    env.Globals.Put("decodeURIComponent", decodeURIComponent, DescriptorAttrs.NotEnumerable)
     
     let encodeURI = Function<BV>(encodeURI) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("encodeURI", encodeURI, DescriptorAttrs.DontEnum)
+    env.Globals.Put("encodeURI", encodeURI, DescriptorAttrs.NotEnumerable)
 
     let encodeURIComponent = Function<BV>(encodeURIComponent) $ Utils.createFunction env (Some 1)
-    env.Globals.Put("encodeURIComponent", encodeURIComponent, DescriptorAttrs.DontEnum)
+    env.Globals.Put("encodeURIComponent", encodeURIComponent, DescriptorAttrs.NotEnumerable)

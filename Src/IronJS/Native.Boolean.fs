@@ -21,9 +21,9 @@ module internal Boolean =
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.MetaData.Name <- "Boolean"
-    ctor.Put("prototype", env.Prototypes.Boolean, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.Boolean, DescriptorAttrs.NotWEC)
 
-    env.Globals.Put("Boolean", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Boolean", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Boolean <- ctor
 
   ///
@@ -49,10 +49,10 @@ module internal Boolean =
     let setup (env:Env) =
       let proto = env.Prototypes.Boolean;
 
-      proto.Put("constructor", env.Constructors.Boolean, DescriptorAttrs.DontEnum)    
+      proto.Put("constructor", env.Constructors.Boolean, DescriptorAttrs.NotEnumerable)    
     
       let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.NotEnumerable)
 
       let toString = FunctionReturn<string>(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)

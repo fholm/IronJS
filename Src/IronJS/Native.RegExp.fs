@@ -29,10 +29,10 @@ module internal RegExp =
   ///
   let setup (env:Env) =
     let ctor = Function<BV, BV>(constructor') $ Utils.createConstructor env (Some 2)
-    ctor.Put("prototype", env.Prototypes.RegExp, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.RegExp, DescriptorAttrs.NotWEC)
     ctor.MetaData.Name <- "RegExp"
 
-    env.Globals.Put("RegExp", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("RegExp", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.RegExp <- ctor
 
   ///
@@ -138,16 +138,16 @@ module internal RegExp =
       let proto = env.Prototypes.RegExp
 
       //
-      proto.Put("constructor", env.Constructors.RegExp, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.RegExp, DescriptorAttrs.NotEnumerable)
 
       //
       let toString = Function(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
       //
       let exec = Function<BV>(exec)  $ Utils.createFunction env (Some 1)
-      proto.Put("exec", exec, DescriptorAttrs.DontEnum)
+      proto.Put("exec", exec, DescriptorAttrs.NotEnumerable)
 
       //
       let test = Function<BV>(test)  $ Utils.createFunction env (Some 1)
-      proto.Put("test", test, DescriptorAttrs.DontEnum)
+      proto.Put("test", test, DescriptorAttrs.NotEnumerable)

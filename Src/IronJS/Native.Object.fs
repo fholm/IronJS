@@ -21,9 +21,9 @@ module internal Object =
     let ctor = ctor $ Utils.createConstructor env (Some 1)
 
     ctor.MetaData.Name <- "Object"
-    ctor.Put("prototype", env.Prototypes.Object, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.Object, DescriptorAttrs.NotWEC)
 
-    env.Globals.Put("Object", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Object", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Object <- ctor
       
   ///
@@ -84,28 +84,28 @@ module internal Object =
     let setup (env:Env) =
       //
       let proto = env.Prototypes.Object
-      proto.Put("constructor", env.Constructors.Object, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.Object, DescriptorAttrs.NotEnumerable)
 
       //
       let toString = toString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
       //
       let toLocaleString = toLocaleString $ Utils.createFunc0 env (Some 0)
-      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.NotEnumerable)
 
       //
       let valueOf = valueOf $ Utils.createFunc0 env (Some 0)
-      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.NotEnumerable)
 
       //
       let hasOwnProperty = hasOwnProperty $ Utils.createFunc1 env (Some 1)
-      proto.Put("hasOwnProperty", hasOwnProperty, DescriptorAttrs.DontEnum)
+      proto.Put("hasOwnProperty", hasOwnProperty, DescriptorAttrs.NotEnumerable)
     
       //
       let isPrototypeOf = isPrototypeOf $ Utils.createFunc1 env (Some 1)
-      proto.Put("isPrototypeOf", isPrototypeOf, DescriptorAttrs.DontEnum)
+      proto.Put("isPrototypeOf", isPrototypeOf, DescriptorAttrs.NotEnumerable)
 
       //
       let isNumerable = propertyIsEnumerable $ Utils.createFunc1 env (Some 1)
-      proto.Put("propertyIsEnumerable", isNumerable, DescriptorAttrs.DontEnum)
+      proto.Put("propertyIsEnumerable", isNumerable, DescriptorAttrs.NotEnumerable)

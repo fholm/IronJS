@@ -13,7 +13,7 @@ module Error =
 
       if message.Tag <> TypeTags.Undefined then
         let msg = message |> TypeConverter.ToString
-        error.Put("message", msg, DescriptorAttrs.DontEnum)
+        error.Put("message", msg, DescriptorAttrs.NotEnumerable)
 
       error.Prototype <- proto
       error :> CO
@@ -23,15 +23,15 @@ module Error =
       let ctor = ctor |> Utils.createConstructor env (Some 1)
       
       ctor.Prototype <- env.Prototypes.Function
-      ctor.Put("prototype", proto, DescriptorAttrs.Immutable)
+      ctor.Put("prototype", proto, DescriptorAttrs.NotWEC)
 
-      env.Globals.Put(name, ctor, DescriptorAttrs.DontEnum)
+      env.Globals.Put(name, ctor, DescriptorAttrs.NotEnumerable)
       env.Constructors.Error <- ctor
 
     let setupPrototype (n:string) (ctor:FO) (proto:CO) =
-      proto.Put("name", n, DescriptorAttrs.DontEnum)
-      proto.Put("constructor", ctor, DescriptorAttrs.DontEnum)
-      proto.Put("message", "", DescriptorAttrs.DontEnum)
+      proto.Put("name", n, DescriptorAttrs.NotEnumerable)
+      proto.Put("constructor", ctor, DescriptorAttrs.NotEnumerable)
+      proto.Put("message", "", DescriptorAttrs.NotEnumerable)
 
   let private name = "Error"
   let private updater (ctors:Constructors) ctor = ctors.Error <- ctor
@@ -56,7 +56,7 @@ module Error =
     
     let toString = Function(toString)
     let toString = Utils.createHostFunction env toString
-    proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+    proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
     Utils.setupPrototype name ctor proto
 

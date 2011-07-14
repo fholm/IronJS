@@ -129,17 +129,17 @@ module Date =
     ctor.MetaData.Name <- "Date"
 
     let parse = FunctionReturn<string, BV>(parse) $ Utils.createFunction env (Some 1)
-    ctor.Put("parse", parse, DescriptorAttrs.DontEnum)
+    ctor.Put("parse", parse, DescriptorAttrs.NotEnumerable)
 
     let parseLocal = FunctionReturn<string, BV>(parseLocal) $ Utils.createFunction env (Some 1)
-    ctor.Put("parseLocal", parseLocal, DescriptorAttrs.DontEnum)
+    ctor.Put("parseLocal", parseLocal, DescriptorAttrs.NotEnumerable)
 
     let utc = VariadicFunction(utc) $ Utils.createFunction env (Some 7)
-    ctor.Put("UTC", utc, DescriptorAttrs.DontEnum)
+    ctor.Put("UTC", utc, DescriptorAttrs.NotEnumerable)
 
-    ctor.Put("prototype", env.Prototypes.Date, DescriptorAttrs.Immutable)
+    ctor.Put("prototype", env.Prototypes.Date, DescriptorAttrs.NotWEC)
 
-    env.Globals.Put("Date", ctor, DescriptorAttrs.DontEnum)
+    env.Globals.Put("Date", ctor, DescriptorAttrs.NotEnumerable)
     env.Constructors.Date <- ctor
 
   module Prototype =
@@ -245,127 +245,127 @@ module Date =
     let setup (env:Env) =
       let proto = env.Prototypes.Date
 
-      proto.Put("constructor", env.Constructors.Date, DescriptorAttrs.DontEnum)
+      proto.Put("constructor", env.Constructors.Date, DescriptorAttrs.NotEnumerable)
 
       let valueOf = Function(valueOf) $ Utils.createFunction env (Some 0)
-      proto.Put("valueOf", valueOf, DescriptorAttrs.DontEnum)
+      proto.Put("valueOf", valueOf, DescriptorAttrs.NotEnumerable)
 
       let toString = Function(toString) $ Utils.createFunction env (Some 0)
-      proto.Put("toString", toString, DescriptorAttrs.DontEnum)
+      proto.Put("toString", toString, DescriptorAttrs.NotEnumerable)
 
       let toDateString = Function(toDateString) $ Utils.createFunction env (Some 0)
-      proto.Put("toDateString", toDateString, DescriptorAttrs.DontEnum)
+      proto.Put("toDateString", toDateString, DescriptorAttrs.NotEnumerable)
 
       let toTimeString = Function(toTimeString) $ Utils.createFunction env (Some 0)
-      proto.Put("toTimeString", toTimeString, DescriptorAttrs.DontEnum)
+      proto.Put("toTimeString", toTimeString, DescriptorAttrs.NotEnumerable)
 
       let toLocaleString = Function(toLocaleString) $ Utils.createFunction env (Some 0)
-      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleString", toLocaleString, DescriptorAttrs.NotEnumerable)
 
       let toLocaleDateString = Function(toLocaleDateString) $ Utils.createFunction env (Some 0)
-      proto.Put("toLocaleDateString", toLocaleDateString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleDateString", toLocaleDateString, DescriptorAttrs.NotEnumerable)
 
       let toLocaleTimeString = Function(toLocaleTimeString) $ Utils.createFunction env (Some 0)
-      proto.Put("toLocaleTimeString", toLocaleTimeString, DescriptorAttrs.DontEnum)
+      proto.Put("toLocaleTimeString", toLocaleTimeString, DescriptorAttrs.NotEnumerable)
 
       let toUTCString = Function(toUTCString) $ Utils.createFunction env (Some 0)
-      proto.Put("toUTCString", toUTCString, DescriptorAttrs.DontEnum)
+      proto.Put("toUTCString", toUTCString, DescriptorAttrs.NotEnumerable)
 
       let getTime = Function(getTime) $ Utils.createFunction env (Some 0)
-      proto.Put("getTime", getTime, DescriptorAttrs.DontEnum)
+      proto.Put("getTime", getTime, DescriptorAttrs.NotEnumerable)
 
       let getFullYear = Function(getFullYear) $ Utils.createFunction env (Some 0)
-      proto.Put("getFullYear", getFullYear, DescriptorAttrs.DontEnum)
+      proto.Put("getFullYear", getFullYear, DescriptorAttrs.NotEnumerable)
 
       let getUTCFullYear = Function(getUTCFullYear) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCFullYear", getUTCFullYear, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCFullYear", getUTCFullYear, DescriptorAttrs.NotEnumerable)
 
       let getMonth = Function(getMonth) $ Utils.createFunction env (Some 0)
-      proto.Put("getMonth", getMonth, DescriptorAttrs.DontEnum)
+      proto.Put("getMonth", getMonth, DescriptorAttrs.NotEnumerable)
 
       let getUTCMonth = Function(getUTCMonth) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCMonth", getUTCMonth, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCMonth", getUTCMonth, DescriptorAttrs.NotEnumerable)
 
       let getDate = Function(getDate) $ Utils.createFunction env (Some 0)
-      proto.Put("getDate", getDate, DescriptorAttrs.DontEnum)
+      proto.Put("getDate", getDate, DescriptorAttrs.NotEnumerable)
 
       let getUTCDate = Function(getUTCDate) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCDate", getUTCDate, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCDate", getUTCDate, DescriptorAttrs.NotEnumerable)
 
       let getDay = Function(getDay) $ Utils.createFunction env (Some 0)
-      proto.Put("getDay", getDay, DescriptorAttrs.DontEnum)
+      proto.Put("getDay", getDay, DescriptorAttrs.NotEnumerable)
 
       let getUTCDay = Function(getUTCDay) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCDay", getUTCDay, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCDay", getUTCDay, DescriptorAttrs.NotEnumerable)
 
       let getHours = Function(getHours) $ Utils.createFunction env (Some 0)
-      proto.Put("getHours", getHours, DescriptorAttrs.DontEnum)
+      proto.Put("getHours", getHours, DescriptorAttrs.NotEnumerable)
 
       let getUTCHours = Function(getUTCHours) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCHours", getUTCHours, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCHours", getUTCHours, DescriptorAttrs.NotEnumerable)
 
       let getMinutes = Function(getMinutes) $ Utils.createFunction env (Some 0)
-      proto.Put("getMinutes", getMinutes, DescriptorAttrs.DontEnum)
+      proto.Put("getMinutes", getMinutes, DescriptorAttrs.NotEnumerable)
 
       let getUTCMinutes = Function(getUTCMinutes) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCMinutes", getUTCMinutes, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCMinutes", getUTCMinutes, DescriptorAttrs.NotEnumerable)
 
       let getSeconds = Function(getSeconds) $ Utils.createFunction env (Some 0)
-      proto.Put("getSeconds", getSeconds, DescriptorAttrs.DontEnum)
+      proto.Put("getSeconds", getSeconds, DescriptorAttrs.NotEnumerable)
 
       let getUTCSeconds = Function(getUTCSeconds) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCSeconds", getUTCSeconds, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCSeconds", getUTCSeconds, DescriptorAttrs.NotEnumerable)
 
       let getMilliseconds = Function(getMilliseconds) $ Utils.createFunction env (Some 0)
-      proto.Put("getMilliseconds", getMilliseconds, DescriptorAttrs.DontEnum)
+      proto.Put("getMilliseconds", getMilliseconds, DescriptorAttrs.NotEnumerable)
 
       let getUTCMilliseconds = Function(getUTCMilliseconds) $ Utils.createFunction env (Some 0)
-      proto.Put("getUTCMilliseconds", getUTCMilliseconds, DescriptorAttrs.DontEnum)
+      proto.Put("getUTCMilliseconds", getUTCMilliseconds, DescriptorAttrs.NotEnumerable)
 
       let getTimezoneOffset = Function(getTimezoneOffset) $ Utils.createFunction env (Some 0)
-      proto.Put("getTimezoneOffset", getTimezoneOffset, DescriptorAttrs.DontEnum)
+      proto.Put("getTimezoneOffset", getTimezoneOffset, DescriptorAttrs.NotEnumerable)
 
       let setTime = FunctionReturn<double, BV>(setTime) $ Utils.createFunction env (Some 1)
-      proto.Put("setTime", setTime, DescriptorAttrs.DontEnum)
+      proto.Put("setTime", setTime, DescriptorAttrs.NotEnumerable)
 
       let setMilliseconds = SetFunc(setMilliseconds) $ Utils.createFunction env (Some 1)
-      proto.Put("setMilliseconds", setMilliseconds, DescriptorAttrs.DontEnum)
+      proto.Put("setMilliseconds", setMilliseconds, DescriptorAttrs.NotEnumerable)
  
       let setUTCMilliseconds = SetFunc(setUTCMilliseconds) $ Utils.createFunction env (Some 1)
-      proto.Put("setUTCMilliseconds", setUTCMilliseconds, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCMilliseconds", setUTCMilliseconds, DescriptorAttrs.NotEnumerable)
 
       let setSeconds = SetFunc(setSeconds) $ Utils.createFunction env (Some 2)
-      proto.Put("setSeconds", setSeconds, DescriptorAttrs.DontEnum)
+      proto.Put("setSeconds", setSeconds, DescriptorAttrs.NotEnumerable)
 
       let setUTCSeconds = SetFunc(setUTCSeconds) $ Utils.createFunction env (Some 2)
-      proto.Put("setUTCSeconds", setUTCSeconds, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCSeconds", setUTCSeconds, DescriptorAttrs.NotEnumerable)
 
       let setMinutes = SetFunc(setMinutes) $ Utils.createFunction env (Some 3)
-      proto.Put("setMinutes", setMinutes, DescriptorAttrs.DontEnum)
+      proto.Put("setMinutes", setMinutes, DescriptorAttrs.NotEnumerable)
 
       let setUTCMinutes = SetFunc(setUTCMinutes) $ Utils.createFunction env (Some 3)
-      proto.Put("setUTCMinutes", setUTCMinutes, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCMinutes", setUTCMinutes, DescriptorAttrs.NotEnumerable)
 
       let setHours = SetFunc(setHours) $ Utils.createFunction env (Some 4)
-      proto.Put("setHours", setHours, DescriptorAttrs.DontEnum)
+      proto.Put("setHours", setHours, DescriptorAttrs.NotEnumerable)
 
       let setUTCHours = SetFunc(setUTCHours) $ Utils.createFunction env (Some 4)
-      proto.Put("setUTCHours", setUTCHours, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCHours", setUTCHours, DescriptorAttrs.NotEnumerable)
 
       let setDate = SetFunc(setDate) $ Utils.createFunction env (Some 1)
-      proto.Put("setDate", setDate, DescriptorAttrs.DontEnum)
+      proto.Put("setDate", setDate, DescriptorAttrs.NotEnumerable)
 
       let setUTCDate = SetFunc(setUTCDate) $ Utils.createFunction env (Some 1)
-      proto.Put("setUTCDate", setUTCDate, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCDate", setUTCDate, DescriptorAttrs.NotEnumerable)
 
       let setMonth = SetFunc(setMonth) $ Utils.createFunction env (Some 2)
-      proto.Put("setMonth", setMonth, DescriptorAttrs.DontEnum)
+      proto.Put("setMonth", setMonth, DescriptorAttrs.NotEnumerable)
 
       let setUTCMonth = SetFunc(setUTCMonth) $ Utils.createFunction env (Some 2)
-      proto.Put("setUTCMonth", setUTCMonth, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCMonth", setUTCMonth, DescriptorAttrs.NotEnumerable)
 
       let setFullYear = SetFunc(setFullYear) $ Utils.createFunction env (Some 3)
-      proto.Put("setFullYear", setFullYear, DescriptorAttrs.DontEnum)
+      proto.Put("setFullYear", setFullYear, DescriptorAttrs.NotEnumerable)
 
       let setUTCFullYear = SetFunc(setUTCFullYear) $ Utils.createFunction env (Some 3)
-      proto.Put("setUTCFullYear", setUTCFullYear, DescriptorAttrs.DontEnum)
+      proto.Put("setUTCFullYear", setUTCFullYear, DescriptorAttrs.NotEnumerable)

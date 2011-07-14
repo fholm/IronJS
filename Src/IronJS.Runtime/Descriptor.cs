@@ -2,6 +2,10 @@
 
 namespace IronJS.Runtime
 {
+    /// <summary>
+    /// This class contains the required descriptor attribute
+    /// bit flags that are needed to satisfy the ECMAScript 5 standard
+    /// </summary>
     public static class DescriptorAttrs
     {
         /// <summary>

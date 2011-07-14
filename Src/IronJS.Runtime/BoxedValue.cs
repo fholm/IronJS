@@ -170,12 +170,15 @@ namespace IronJS.Runtime
             return box;
         }
 
+        public static BoxedValue Box(Undefined value)
+        {
+            return Undefined.Boxed;
+        }
+
         public static BoxedValue Box(object value)
         {
             if (value is double)
                 return Box((double)value);
-            if (value is int)
-                return Box((int)value);
             if (value is bool)
                 return Box((bool)value);
             if (value is string)
@@ -189,10 +192,27 @@ namespace IronJS.Runtime
             if (value is Undefined)
                 return Box((Undefined)value);
 
-            var box = new BoxedValue();
-            box.Clr = value;
-            box.Tag = TypeTags.Clr;
-            return box;
+            if (value != null)
+            {
+                switch (Type.GetTypeCode(value.GetType()))
+                {
+                    case TypeCode.Byte: return Box((double)(byte)value);
+                    case TypeCode.Int16: return Box((double)(short)value);
+                    case TypeCode.Int32: return Box((double)(int)value);
+                    case TypeCode.Int64: return Box((double)(long)value);
+                    case TypeCode.SByte: return Box((double)(sbyte)value);
+                    case TypeCode.UInt16: return Box((double)(ushort)value);
+                    case TypeCode.UInt32: return Box((double)(uint)value);
+                    case TypeCode.UInt64: return Box((double)(ulong)value);
+                    default:
+                        var box = new BoxedValue();
+                        box.Clr = value;
+                        box.Tag = TypeTags.Clr;
+                        return box;
+                }
+            }
+
+            return Environment.BoxedNull;
         }
 
         public static BoxedValue Box(object value, uint tag)
@@ -201,11 +221,6 @@ namespace IronJS.Runtime
             box.Clr = value;
             box.Tag = tag;
             return box;
-        }
-
-        public static BoxedValue Box(Undefined value)
-        {
-            return Undefined.Boxed;
         }
 
         public static string FieldOfTag(uint tag)

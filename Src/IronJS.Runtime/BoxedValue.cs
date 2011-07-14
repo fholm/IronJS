@@ -204,6 +204,7 @@ namespace IronJS.Runtime
                     case TypeCode.UInt16: return Box((double)(ushort)value);
                     case TypeCode.UInt32: return Box((double)(uint)value);
                     case TypeCode.UInt64: return Box((double)(ulong)value);
+                    case TypeCode.Single: return Box((double)(float)value);
                     default:
                         var box = new BoxedValue();
                         box.Clr = value;

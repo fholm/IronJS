@@ -12,15 +12,6 @@ function testFinished() {
     }
 }
 
-function fnSupportsStrict() { return true; }
-
-function fnExists(/*arguments*/) {
-    for (var i = 0; i < arguments.length; i++) {
-        if (typeof (arguments[i]) !== "function") return false;
-    }
-    return true;
-}
-
 ES5Harness = {};
 ES5Harness.registerTest = function (test) {
     finished = false;

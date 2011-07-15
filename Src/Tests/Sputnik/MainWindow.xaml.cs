@@ -44,7 +44,7 @@ namespace IronJS.Tests.Sputnik
 
         static MainWindow()
         {
-            harnessCode = ReadResource("harness.js");
+            harnessCode = ReadResource("sta.js") + "\r\n" + ReadResource("harness.js");
             var negativeTestCode = ReadResource("SputnikGlobalScope.js");
             negativeTests = BuildNegativeTests(negativeTestCode);
         }

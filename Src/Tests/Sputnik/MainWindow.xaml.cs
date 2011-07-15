@@ -528,14 +528,6 @@ namespace IronJS.Tests.Sputnik
                 {
                     errorText.AppendLine(ex.ToString());
                 }
-
-                string result = test.result.ToString();
-                string error = test.error.ToString();
-
-                if (result != "pass")
-                {
-                    errorText.AppendLine(error);
-                }
             }
 
             return errorText.Length > 0

@@ -20,7 +20,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\IronJS.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\IronJS.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,7 +33,7 @@
     <DefineConstants>
     </DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\IronJS.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\IronJS.xml</DocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <EnableUnmanagedDebugging>true</EnableUnmanagedDebugging>
   </PropertyGroup>

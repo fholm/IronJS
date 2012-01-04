@@ -590,7 +590,10 @@ module Dlr =
       let flags = BindingFlags.NonPublic ||| BindingFlags.Instance
       typeof<Expr>.GetProperty("DebugView", flags)
 
-    let debugView (expr:Expr) = string (_dbgViewProp.GetValue(expr, null))
+    let debugView (expr:Expr) = 
+        if _dbgViewProp = null 
+        then ""
+        else string (_dbgViewProp.GetValue(expr, null))
     let printDebugView (expr:Expr) = printf "%s" (expr |> debugView)
 
     let is type' (expr:Expr) = FSharp.Utils.isType type' expr.Type

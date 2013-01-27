@@ -30,6 +30,7 @@ namespace IronJS.Runtime
                 this.dense = new Descriptor[length];
                 this.isDense = true;
             }
+            this.Put("length", (double)length, DescriptorAttrs.DontEnum);
         }
 
         private void ResizeDense(uint newCapacity)

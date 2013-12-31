@@ -62,9 +62,10 @@ module internal Number =
         | _ ->
           let digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
           let mutable result = ""
+          let mutable isNegative = false
           let mutable number = bigint (int64 number)
           if number < bigint.Zero then
-            result <- "-"
+            isNegative <- true
             number <- -number
           if number = bigint.Zero then "0"
           else
@@ -72,8 +73,11 @@ module internal Number =
             while number > bigint.Zero do
               let digit = int (number % radix)
               number <- number / radix
-              result <- result + digits.[digit].ToString()
-            result
+              result <- digits.[digit].ToString() + result
+            if isNegative then
+              "-" + result
+            else
+              result
 
     ///
     let private toLocaleString (f:FO) (this:CO) = 

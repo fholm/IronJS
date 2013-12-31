@@ -165,5 +165,15 @@ namespace IronJS.Tests.UnitTests.Sputnik.Conformance.Types
         {
             RunFile(file);
         }
+
+        [Test]
+        [Category("Sputnik Conformance")]
+        [Category("ECMA 7.8.3")]
+        [Category("ECMA 8.5")]
+        [TestCase("S8.5_A15.js", Description = "Number.toString(16) should return valid number")]
+        public void ToStringBase16IsCorrect(string file)
+        {
+            RunFile(file);
+        }
     }
 }
